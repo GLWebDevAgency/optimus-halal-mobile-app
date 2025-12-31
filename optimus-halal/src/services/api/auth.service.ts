@@ -51,6 +51,13 @@ export const authService = {
   },
 
   /**
+   * Get full user profile after login
+   */
+  async getProfile(): Promise<Types.UserProfile> {
+    return apiClient.mobile.getProfile.query();
+  },
+
+  /**
    * Request password reset
    */
   async requestPasswordReset(email: string): Promise<Types.SuccessResponse> {

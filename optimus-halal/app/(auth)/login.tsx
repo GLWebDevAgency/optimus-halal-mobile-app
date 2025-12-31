@@ -25,6 +25,7 @@ import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated"
 
 import { Button, Input } from "@/components/ui";
 import { useAuthStore } from "@/store";
+import { authService } from "@/services/api/auth.service";
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
@@ -64,28 +65,45 @@ export default function LoginScreen() {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Real API call to Railway backend
+      const response = await authService.login(email, password);
 
-      // Mock user for demo
-      setUser({
-        id: "1",
-        email,
-        fullName: "Yassine",
-        preferences: {
-          preferredCertifications: ["AVS", "Achahada"],
-          dietaryExclusions: [],
-          pushNotificationsEnabled: true,
-          darkModeEnabled: "system",
-          language: "fr",
-        },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
+      if (response.success && response.user) {
+        // Fetch full profile from backend
+        let profile;
+        try {
+          profile = await authService.getProfile();
+        } catch (profileError) {
+          console.warn("[Login] Could not fetch profile, using basic info:", profileError);
+        }
 
-      router.replace("/(tabs)");
-    } catch (error) {
-      Alert.alert("Erreur", "Identifiants incorrects");
+        // Set authenticated user with full profile or basic info
+        setUser({
+          id: response.user.id,
+          email: response.user.email,
+          fullName: profile?.displayName || response.user.displayName || email.split('@')[0],
+          avatarUrl: profile?.avatarUrl || undefined,
+          preferences: {
+            preferredCertifications: ["AVS", "Achahada"],
+            dietaryExclusions: profile?.dietaryRestrictions || [],
+            pushNotificationsEnabled: profile?.notificationEnabled ?? true,
+            darkModeEnabled: "system",
+            language: profile?.preferredLanguage || "fr",
+          },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+
+        router.replace("/(tabs)");
+      } else {
+        Alert.alert("Erreur", "Identifiants incorrects");
+      }
+    } catch (error: any) {
+      console.error("[Login] Error:", error);
+      Alert.alert(
+        "Erreur", 
+        error.message || "Une erreur est survenue lors de la connexion. Vérifiez votre connexion internet."
+      );
     } finally {
       setIsLoading(false);
     }

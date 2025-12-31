@@ -23,6 +23,7 @@ import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated"
 
 import { Button, Input, IconButton } from "@/components/ui";
 import { useAuthStore } from "@/store";
+import { authService } from "@/services/api/auth.service";
 
 export default function SignUpScreen() {
   const insets = useSafeAreaInsets();
@@ -68,29 +69,43 @@ export default function SignUpScreen() {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Create user
-      setUser({
-        id: "1",
+      // Real API call to Railway backend
+      const response = await authService.register({
         email,
-        fullName,
-        location: location ? { city: location, country: "France" } : undefined,
-        preferences: {
-          preferredCertifications: [],
-          dietaryExclusions: [],
-          pushNotificationsEnabled: true,
-          darkModeEnabled: "system",
-          language: "fr",
-        },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        password,
+        displayName: fullName,
+        phoneNumber: undefined,
+        preferredLanguage: "fr",
       });
 
-      router.replace("/(tabs)");
-    } catch (error) {
-      Alert.alert("Erreur", "Une erreur est survenue lors de l'inscription");
+      if (response.success && response.user) {
+        // Set authenticated user
+        setUser({
+          id: response.user.id,
+          email: response.user.email,
+          fullName: response.user.displayName || fullName,
+          location: location ? { city: location, country: "France" } : undefined,
+          preferences: {
+            preferredCertifications: [],
+            dietaryExclusions: [],
+            pushNotificationsEnabled: true,
+            darkModeEnabled: "system",
+            language: "fr",
+          },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+
+        router.replace("/(tabs)");
+      } else {
+        Alert.alert("Erreur", response.message || "Échec de l'inscription");
+      }
+    } catch (error: any) {
+      console.error("[Signup] Error:", error);
+      Alert.alert(
+        "Erreur", 
+        error.message || "Une erreur est survenue lors de l'inscription. Vérifiez votre connexion internet."
+      );
     } finally {
       setIsLoading(false);
     }
