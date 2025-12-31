@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Points of Sale Map &amp; List</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2bee6c",
+                        "primary-content": "#0d1b12",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1a2e22",
+                        "text-main": "#1e293b", // Dark Slate Grey
+                        "text-sub": "#64748b",
+                        "gold": "#fbbf24",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.375rem", 
+                        "lg": "0.5rem", 
+                        "xl": "0.75rem", 
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        'float': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                        'sheet': '0 -4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-text-main antialiased h-screen w-full overflow-hidden flex flex-col relative">
+<!-- Map Layer (Background) -->
+<div class="absolute inset-0 z-0 w-full h-full bg-slate-200">
+<!-- Interactive Map Simulation -->
+<div class="relative w-full h-full bg-cover bg-center" data-alt="Detailed city map view with streets and parks" data-location="Paris" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBYIKA5a0FeZU9C9EfDX-8wvGXljSyovGnPZrYXKcMzyiy2RxkFKrXfAo2M1M0_etwk27ZD2QkAeDysIKRGwCITJkwkZIjkulQ_j0GawjhXMkoW9WmQFFhNkOfAOPSj2rY6R2zTIzGwu98nyYuJvCVSY6S2ot88mj0gyXcidEFYxiPT10UpH2E6Om3yUHjkZ6HQwB9apITnYGqV4dm8AgWT9xIVtl4niS_DydRv5jmgTFv6j7M4QB0276EHezcSrTy7y3Y0lO7KMjkV');">
+<!-- Dark Overlay for Map Contrast if needed -->
+<div class="absolute inset-0 bg-white/10 pointer-events-none"></div>
+<!-- User Location Pin (Pulsing) -->
+<div class="absolute top-[45%] left-[48%] flex items-center justify-center">
+<div class="w-16 h-16 bg-primary/30 rounded-full animate-ping absolute"></div>
+<div class="w-4 h-4 bg-primary border-2 border-white rounded-full shadow-lg relative z-10"></div>
+</div>
+<!-- Map Pin 1: Butcher (Selected) -->
+<div class="absolute top-[40%] left-[30%] flex flex-col items-center group cursor-pointer">
+<div class="bg-primary text-primary-content px-3 py-1 rounded-lg shadow-lg mb-1 whitespace-nowrap text-xs font-bold transform transition-transform scale-100 origin-bottom">
+                    $12 • 4.8★
+                </div>
+<div class="w-10 h-10 bg-surface-light dark:bg-surface-dark rounded-full shadow-xl flex items-center justify-center border-2 border-primary transform -translate-y-1">
+<span class="material-symbols-outlined text-primary text-[20px]">kitchen</span>
+</div>
+<!-- Triangle pointer -->
+<div class="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-primary -mt-[1px]"></div>
+</div>
+<!-- Map Pin 2: Restaurant -->
+<div class="absolute top-[35%] left-[60%] flex flex-col items-center group cursor-pointer hover:z-10">
+<div class="w-8 h-8 bg-surface-light dark:bg-surface-dark rounded-full shadow-md flex items-center justify-center border border-gray-200 dark:border-gray-700">
+<span class="material-symbols-outlined text-text-sub text-[18px]">restaurant</span>
+</div>
+<div class="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[6px] border-t-surface-light -mt-[1px]"></div>
+</div>
+<!-- Map Pin 3: Grocery -->
+<div class="absolute top-[55%] left-[55%] flex flex-col items-center group cursor-pointer hover:z-10">
+<div class="w-8 h-8 bg-surface-light dark:bg-surface-dark rounded-full shadow-md flex items-center justify-center border border-gray-200 dark:border-gray-700">
+<span class="material-symbols-outlined text-text-sub text-[18px]">storefront</span>
+</div>
+<div class="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[6px] border-t-surface-light -mt-[1px]"></div>
+</div>
+<!-- Map Controls -->
+<div class="absolute right-4 top-[25%] flex flex-col gap-2">
+<button class="bg-surface-light dark:bg-surface-dark w-10 h-10 rounded-lg shadow-float flex items-center justify-center text-text-main hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+<span class="material-symbols-outlined text-[20px]">my_location</span>
+</button>
+<button class="bg-surface-light dark:bg-surface-dark w-10 h-10 rounded-lg shadow-float flex items-center justify-center text-text-main hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+<span class="material-symbols-outlined text-[20px]">layers</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Top Floating UI (Search & Filters) -->
+<div class="absolute top-0 left-0 w-full z-20 flex flex-col pointer-events-none">
+<!-- Safe Area Spacer & Gradient for readability -->
+<div class="absolute inset-0 h-40 bg-gradient-to-b from-black/20 to-transparent -z-10"></div>
+<div class="pt-12 px-4 pb-2 w-full pointer-events-auto">
+<!-- Search Bar -->
+<div class="flex gap-3 mb-4">
+<div class="flex-1 h-12 bg-surface-light dark:bg-surface-dark rounded-lg shadow-float flex items-center px-4 transition-all focus-within:ring-2 focus-within:ring-primary/50">
+<span class="material-symbols-outlined text-text-sub mr-3">search</span>
+<input class="bg-transparent border-none outline-none text-text-main placeholder-text-sub w-full h-full text-base focus:ring-0 p-0" placeholder="Search for kebab, wagyu..." type="text"/>
+</div>
+<button class="h-12 w-12 rounded-full bg-surface-light dark:bg-surface-dark shadow-float flex items-center justify-center shrink-0 border border-transparent overflow-hidden">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="User profile picture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgUOoq5-nzgYA-dLU6oBR171GmCZcLLrYTei4irvVfr56MVFg5t3zjMJHUA0jKsFW21JSEKZlE4cP68cseV9PEReQSuCqq3ci0keN3WNb8dg_Bcm7vlM2sigSiNY2zihqaQXxOTboLxtiqYigPzNSiXn_ldBAapzYjl5Hk-6Tilvj4OLW_fXdeDAscrGitp40ErD-4Ruatk5LSawfkZikqs9HZg3CQwy7uKxC_nFPakUvH_VvdJX1T2JXelMtxJBOwKaWH0k9jUEXD"/>
+</button>
+</div>
+<!-- Sticky Filters -->
+<div class="flex gap-2 overflow-x-auto no-scrollbar pb-2 mask-linear">
+<!-- Active Filter -->
+<button class="flex h-9 shrink-0 items-center gap-x-1.5 rounded-full bg-primary pl-4 pr-3 shadow-md">
+<span class="text-primary-content text-sm font-semibold">Butchers</span>
+<span class="material-symbols-outlined text-primary-content text-[18px]">close</span>
+</button>
+<!-- Inactive Filters -->
+<button class="flex h-9 shrink-0 items-center gap-x-1.5 rounded-full bg-surface-light dark:bg-surface-dark pl-4 pr-3 shadow-sm border border-gray-100 dark:border-gray-800">
+<span class="text-text-main dark:text-gray-200 text-sm font-medium">Restaurants</span>
+</button>
+<button class="flex h-9 shrink-0 items-center gap-x-1.5 rounded-full bg-surface-light dark:bg-surface-dark pl-4 pr-3 shadow-sm border border-gray-100 dark:border-gray-800">
+<span class="text-text-main dark:text-gray-200 text-sm font-medium">Grocery</span>
+</button>
+<button class="flex h-9 shrink-0 items-center gap-x-1.5 rounded-full bg-surface-light dark:bg-surface-dark pl-4 pr-3 shadow-sm border border-gray-100 dark:border-gray-800">
+<span class="text-text-main dark:text-gray-200 text-sm font-medium">Cert: AVS</span>
+<span class="material-symbols-outlined text-text-sub text-[18px]">expand_more</span>
+</button>
+<button class="flex h-9 shrink-0 items-center gap-x-1.5 rounded-full bg-surface-light dark:bg-surface-dark pl-4 pr-3 shadow-sm border border-gray-100 dark:border-gray-800">
+<span class="text-text-main dark:text-gray-200 text-sm font-medium">Rating 4.0+</span>
+</button>
+</div>
+</div>
+</div>
+<!-- List View Toggle (FAB) -->
+<div class="absolute bottom-[280px] right-4 z-30 pointer-events-auto">
+<button class="flex items-center gap-2 bg-text-main text-white h-12 pl-4 pr-5 rounded-full shadow-lg hover:scale-105 transition-transform">
+<span class="material-symbols-outlined">format_list_bulleted</span>
+<span class="font-semibold text-sm">List</span>
+</button>
+</div>
+<!-- Bottom Sheet -->
+<div class="absolute bottom-0 left-0 w-full z-40 h-[260px] bg-surface-light dark:bg-surface-dark rounded-t-2xl shadow-sheet flex flex-col transition-transform">
+<!-- Handle -->
+<div class="w-full h-6 flex items-center justify-center pt-2 cursor-grab">
+<div class="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></div>
+</div>
+<!-- Sheet Content -->
+<div class="flex-1 flex flex-col px-0 pb-6 overflow-hidden">
+<div class="px-5 mb-3 flex justify-between items-center">
+<h2 class="text-lg font-bold text-text-main dark:text-white">Nearest Locations</h2>
+<button class="text-primary text-sm font-semibold">See All</button>
+</div>
+<!-- Horizontal Cards Scroll -->
+<div class="flex overflow-x-auto no-scrollbar gap-4 px-5 pb-2 snap-x">
+<!-- Card 1: Selected Item -->
+<div class="flex-shrink-0 w-[280px] bg-white dark:bg-gray-800 rounded-xl border border-primary/30 shadow-md p-3 snap-center relative overflow-hidden group">
+<div class="flex gap-3">
+<div class="w-20 h-20 rounded-lg bg-gray-100 overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="Display of fresh meat cuts in a butcher shop" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDaJTiM5FZsVGCC4NwciZBljJsRhP6Nvqc2lH9lFjXYCzwYwfsOP9OtZB2BF_QGvp1fqlXtvth5oQhnm4KYneWmKC8zyxUDFgc5KlWCLssjHSHbljUUL_8ZL4GTWnzi1ijVam7NCyjr4hfIjnFiPHaNauW6HYrkMVolqGLpwpsQzLxFn5IW2oPpb421-CypZn65orcjpwW2nomeTOHxtLxoRe5hr0K8-N62sWP1RFrNk-vZpcAcSyN1b_k1ad4hh3a5iQ1EHrqASPYx"/>
+</div>
+<div class="flex-1 flex flex-col justify-center min-w-0">
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-text-main dark:text-white truncate pr-2">Al-Baraka Butcher</h3>
+<span class="bg-primary/10 text-primary-dark text-[10px] font-bold px-1.5 py-0.5 rounded text-primary">AVS</span>
+</div>
+<p class="text-xs text-text-sub truncate mb-1">Ethical &amp; Organic Meat</p>
+<div class="flex items-center gap-1 mb-1">
+<span class="material-symbols-outlined text-gold text-[16px] fill-1">star</span>
+<span class="text-xs font-bold text-text-main dark:text-white">4.8</span>
+<span class="text-xs text-text-sub">(124)</span>
+</div>
+<div class="flex items-center gap-1 text-xs text-text-sub">
+<span class="material-symbols-outlined text-[14px]">near_me</span>
+<span>0.8 mi</span>
+<span class="mx-1">•</span>
+<span class="text-green-600 font-medium">Open</span>
+</div>
+</div>
+</div>
+<!-- Quick Action -->
+<button class="mt-3 w-full bg-primary/10 hover:bg-primary/20 text-primary-dark font-semibold text-sm py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-primary">
+<span class="material-symbols-outlined text-[18px]">directions</span>
+                       Directions
+                   </button>
+</div>
+<!-- Card 2 -->
+<div class="flex-shrink-0 w-[280px] bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-3 snap-center opacity-80 hover:opacity-100 transition-opacity">
+<div class="flex gap-3">
+<div class="w-20 h-20 rounded-lg bg-gray-100 overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="Plated kebab dish on a restaurant table" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSe1YI3Als-HS7uVbYrGvXup-uMxRjH_rVwfAxVpw-STD_oeQXSXaIEMGg5h8uVfsRVTNV8Qb24ncJOFQGCSzPsvrpexPMWNOQyGk2mMJKZxSQpcKg45pD72eDi9i4ZtKeXbR_0HULAlhdRhGWsmNn4Bak92D4wUmHj18k5TPS34NyCwVvzQGCCeiOleglw8S8jLS-QpaKpr3ZYQ8M4iLuc1KrVJeIObg_MkXaCSSBICluuR74mCXvDKuYllriW_V3gLpp6Xno7AXn"/>
+</div>
+<div class="flex-1 flex flex-col justify-center min-w-0">
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-text-main dark:text-white truncate pr-2">Sultan's Table</h3>
+<span class="bg-gray-100 dark:bg-gray-700 text-gray-500 text-[10px] font-bold px-1.5 py-0.5 rounded">HMS</span>
+</div>
+<p class="text-xs text-text-sub truncate mb-1">Authentic Turkish Cuisine</p>
+<div class="flex items-center gap-1 mb-1">
+<span class="material-symbols-outlined text-gold text-[16px] fill-1">star</span>
+<span class="text-xs font-bold text-text-main dark:text-white">4.5</span>
+<span class="text-xs text-text-sub">(89)</span>
+</div>
+<div class="flex items-center gap-1 text-xs text-text-sub">
+<span class="material-symbols-outlined text-[14px]">near_me</span>
+<span>1.2 mi</span>
+<span class="mx-1">•</span>
+<span class="text-red-500 font-medium">Closed</span>
+</div>
+</div>
+</div>
+<button class="mt-3 w-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-text-main dark:text-gray-200 font-semibold text-sm py-2 rounded-lg flex items-center justify-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+                        View Details
+                    </button>
+</div>
+<!-- Card 3 -->
+<div class="flex-shrink-0 w-[280px] bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-3 snap-center opacity-80 hover:opacity-100 transition-opacity">
+<div class="flex gap-3">
+<div class="w-20 h-20 rounded-lg bg-gray-100 overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="Aisle of a grocery store with produce" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCFlUgl8XN7yNCmbG5kcQZBDSDDJPODyXGxiVZ-jqhUZBhRbZz-9FZNqlHY2LaWqsC3hWCrGmgygtcWs8zZANTg4qMsK73SrthCBaS6XajuZAdTRFCrrYlvZbxRC9-tDZjr6OU68ipZd8sxyTDCWp60Zb8h41qRliosGcoS2bJwPuvIFZCVvh9JH67h69EA18i0AhHA5FDAnQZR-wbqCLic7d92uE2kA4gxM6i6hrb6N7YnWMd_qXRvLJQ6XN8-vTVnW3QUwzMSoMF"/>
+</div>
+<div class="flex-1 flex flex-col justify-center min-w-0">
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-text-main dark:text-white truncate pr-2">Medina Market</h3>
+</div>
+<p class="text-xs text-text-sub truncate mb-1">Grocery &amp; Spices</p>
+<div class="flex items-center gap-1 mb-1">
+<span class="material-symbols-outlined text-gold text-[16px] fill-1">star</span>
+<span class="text-xs font-bold text-text-main dark:text-white">4.2</span>
+<span class="text-xs text-text-sub">(56)</span>
+</div>
+<div class="flex items-center gap-1 text-xs text-text-sub">
+<span class="material-symbols-outlined text-[14px]">near_me</span>
+<span>2.4 mi</span>
+<span class="mx-1">•</span>
+<span class="text-green-600 font-medium">Open</span>
+</div>
+</div>
+</div>
+<button class="mt-3 w-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-text-main dark:text-gray-200 font-semibold text-sm py-2 rounded-lg flex items-center justify-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+                        View Details
+                    </button>
+</div>
+</div>
+</div>
+</div>
+</body></html>

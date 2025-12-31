@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Establishment Cert Details</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Noto+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            // Removed darkMode: "class" as we are now in light mode
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec6a", // Emerald Green
+                        "primary-dark": "#0fb350",
+                        "background-light": "#f6f8f7",
+                        "background-dark": "#102217", // Dark Slate (not used for body in light mode)
+                        "accent-gold": "#D4AF37", // Gold
+                        "slate-dark": "#1e293b", // Not used for element backgrounds in light mode
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "Noto Sans", "sans-serif"],
+                        "body": ["Inter", "Noto Sans", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "3xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+          min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="antialiased bg-background-light text-gray-900 font-display">
+<div class="relative flex min-h-screen w-full flex-col overflow-hidden max-w-md mx-auto bg-background-light">
+<div class="absolute top-[-10%] right-[-20%] w-[300px] h-[300px] bg-primary/10 rounded-full blur-[80px] pointer-events-none"></div>
+<div class="absolute bottom-[-10%] left-[-10%] w-[200px] h-[200px] bg-accent-gold/10 rounded-full blur-[60px] pointer-events-none"></div>
+<div class="flex items-center justify-between px-6 pt-12 pb-4 z-10">
+<button class="group flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 border border-gray-200 hover:bg-gray-200 transition-colors">
+<span class="material-symbols-outlined text-gray-700 group-hover:text-gray-900 transition-colors">arrow_back</span>
+</button>
+<h1 class="text-base font-semibold tracking-wide text-gray-800 uppercase">Certification</h1>
+<div class="w-10"></div>
+</div>
+<div class="flex-1 px-6 pb-8 overflow-y-auto">
+<div class="flex flex-col items-center justify-center p-6 mb-8 mt-2 bg-gradient-to-b from-white to-gray-50 rounded-3xl border border-gray-200 shadow-lg shadow-gray-200/50">
+<div class="relative w-24 h-24 mb-4">
+<div class="absolute inset-0 bg-primary/20 rounded-full blur-xl"></div>
+<div class="relative w-full h-full bg-white rounded-full border border-gray-200 flex items-center justify-center overflow-hidden">
+<span class="material-symbols-outlined text-5xl text-primary">shield_person</span>
+</div>
+<div class="absolute -bottom-2 -right-2 bg-primary text-white text-[10px] font-bold px-2 py-1 rounded-full border-2 border-white flex items-center gap-1 shadow-lg">
+<span class="material-symbols-outlined text-[12px] font-bold">check</span>
+                        ACTIF
+                    </div>
+</div>
+<h2 class="text-xl font-bold text-gray-900 mb-1">Halal Quality Control</h2>
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-accent-gold text-sm">verified</span>
+<span class="text-sm text-gray-600 font-medium">Organisme Certifié</span>
+</div>
+<div class="flex items-center gap-1 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">
+<span class="text-xs text-gray-600">Niveau de confiance:</span>
+<div class="flex gap-0.5">
+<span class="material-symbols-outlined text-accent-gold text-xs fill-[1]">star</span>
+<span class="material-symbols-outlined text-accent-gold text-xs fill-[1]">star</span>
+<span class="material-symbols-outlined text-accent-gold text-xs fill-[1]">star</span>
+<span class="material-symbols-outlined text-accent-gold text-xs fill-[1]">star</span>
+<span class="material-symbols-outlined text-accent-gold text-xs fill-[1]">star</span>
+</div>
+</div>
+</div>
+<div class="space-y-4">
+<h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider ml-1 mb-2">Détails techniques</h3>
+<div class="group relative overflow-hidden bg-white rounded-2xl p-4 border border-gray-200 hover:border-primary/30 transition-colors shadow-sm">
+<div class="flex items-start justify-between">
+<div>
+<p class="text-xs text-gray-500 mb-1">Numéro de Certification</p>
+<p class="text-lg font-mono font-semibold text-gray-900 tracking-widest">FR-23-9982-HQC</p>
+</div>
+<div class="p-2 bg-gray-100 rounded-lg text-primary">
+<span class="material-symbols-outlined">fingerprint</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-gray-500 text-lg">calendar_month</span>
+<span class="text-xs text-gray-500">Date d'émission</span>
+</div>
+<p class="text-sm font-semibold text-gray-900">12 Janvier 2023</p>
+</div>
+<div class="bg-white rounded-2xl p-4 border border-gray-200 relative overflow-hidden shadow-sm">
+<div class="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-primary to-transparent w-[75%]"></div>
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-accent-gold text-lg">event_upcoming</span>
+<span class="text-xs text-gray-500">Date d'expiration</span>
+</div>
+<p class="text-sm font-semibold text-accent-gold">12 Janvier 2024</p>
+</div>
+</div>
+<div class="relative bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl p-5 border border-primary/20 overflow-hidden mt-2 shadow-sm">
+<div class="absolute -right-6 -top-6 text-primary/10 rotate-12">
+<span class="material-symbols-outlined text-9xl">fact_check</span>
+</div>
+<div class="relative z-10">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center gap-2">
+<span class="flex h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_rgba(19,236,106,0.8)]"></span>
+<p class="text-xs font-bold text-primary uppercase tracking-wider">Dernier Contrôle</p>
+</div>
+<span class="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded border border-primary/20">Conforme</span>
+</div>
+<div class="flex items-baseline gap-2">
+<p class="text-2xl font-bold text-gray-900">15 Nov 2023</p>
+</div>
+<p class="text-xs text-gray-600 mt-1">Audit physique effectué sans réserve.</p>
+</div>
+</div>
+</div>
+<div class="mt-8">
+<button class="w-full py-4 rounded-xl bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-800 font-medium flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-xl">
+<span class="material-symbols-outlined text-gray-600">description</span>
+                    Voir le certificat officiel (PDF)
+                </button>
+</div>
+<p class="text-center text-[10px] text-gray-500 mt-6">
+                Données fournies par Optimus Halal Blockchain.<br/>Dernière synchro: Aujourd'hui à 09:41
+            </p>
+</div>
+</div>
+
+</body></html>

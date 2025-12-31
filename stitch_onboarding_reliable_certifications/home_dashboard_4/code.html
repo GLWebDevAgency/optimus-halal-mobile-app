@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Notification Preferences</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec6a",
+                        "primary-dark": "#0ea64b",
+                        "background-light": "#f6f8f7",
+                        "background-dark": "#102217",
+                        "card-light": "#ffffff",
+                        "card-dark": "#1a2e22",
+                        "text-main": "#0d1b13",
+                        "text-main-dark": "#e8f5e9",
+                        "text-secondary": "#4b5563",
+                        "text-secondary-dark": "#9ca3af",
+                        "toggle-bg-off": "#2d4436",
+                        "toggle-bg-on": "#13ec6a"
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }.toggle-checkbox:checked {
+            right: 0;
+            border-color: #13ec6a;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #13ec6a;
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display bg-background-dark text-text-main-dark transition-colors duration-200">
+<div class="relative flex min-h-screen w-full flex-col overflow-hidden pb-24 mx-auto max-w-md bg-background-dark shadow-2xl">
+<header class="flex items-center gap-4 px-5 pt-8 pb-4 border-b border-white/5">
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-card-dark text-text-main-dark hover:bg-white/10 transition">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div class="flex-1">
+<h1 class="text-xl font-bold leading-tight text-text-main-dark">Notifications</h1>
+<p class="text-xs font-medium text-text-secondary-dark">Gérez vos préférences</p>
+</div>
+<button class="relative flex h-10 w-10 items-center justify-center rounded-full bg-card-dark text-text-secondary-dark hover:text-white transition">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</header>
+<div class="flex-1 overflow-y-auto px-5 py-6 space-y-8">
+<section>
+<h2 class="text-sm font-bold uppercase tracking-wider text-text-secondary-dark mb-4 pl-1">Général</h2>
+<div class="bg-card-dark rounded-2xl overflow-hidden shadow-sm border border-white/5">
+<div class="flex items-center justify-between p-4 border-b border-white/5">
+<div class="flex items-center gap-3">
+<div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined">notifications_active</span>
+</div>
+<div>
+<h3 class="text-base font-semibold text-text-main-dark">Push Notifications</h3>
+<p class="text-xs text-text-secondary-dark">Activer toutes les notifications</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-toggle-bg-off peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center justify-between p-4">
+<div class="flex items-center gap-3">
+<div class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/10 text-blue-400">
+<span class="material-symbols-outlined">volume_up</span>
+</div>
+<div>
+<h3 class="text-base font-semibold text-text-main-dark">Sons &amp; Vibreur</h3>
+<p class="text-xs text-text-secondary-dark">Alertes sonores</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-toggle-bg-off peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+</section>
+<section>
+<h2 class="text-sm font-bold uppercase tracking-wider text-text-secondary-dark mb-4 pl-1">Catégories</h2>
+<div class="bg-card-dark rounded-2xl overflow-hidden shadow-sm border border-white/5">
+<div class="flex items-center justify-between p-4 border-b border-white/5">
+<div class="flex items-center gap-3">
+<div class="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/10 text-green-400">
+<span class="material-symbols-outlined">eco</span>
+</div>
+<div>
+<h3 class="text-base font-semibold text-text-main-dark">Alertes Éthiques</h3>
+<p class="text-xs text-text-secondary-dark">Mises à jour sur les marques</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-toggle-bg-off peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center justify-between p-4 border-b border-white/5">
+<div class="flex items-center gap-3">
+<div class="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500/10 text-orange-400">
+<span class="material-symbols-outlined">inventory_2</span>
+</div>
+<div>
+<h3 class="text-base font-semibold text-text-main-dark">Nouveaux Produits</h3>
+<p class="text-xs text-text-secondary-dark">Sorties et disponibilités</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-toggle-bg-off peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center justify-between p-4">
+<div class="flex items-center gap-3">
+<div class="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/10 text-purple-400">
+<span class="material-symbols-outlined">local_offer</span>
+</div>
+<div>
+<h3 class="text-base font-semibold text-text-main-dark">Offres &amp; Promos</h3>
+<p class="text-xs text-text-secondary-dark">Bons plans partenaires</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-toggle-bg-off peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+</section>
+<section>
+<h2 class="text-sm font-bold uppercase tracking-wider text-text-secondary-dark mb-4 pl-1">Fréquence</h2>
+<div class="bg-card-dark rounded-2xl overflow-hidden shadow-sm border border-white/5">
+<div class="p-4 border-b border-white/5 last:border-0 hover:bg-white/5 transition cursor-pointer">
+<div class="flex items-center justify-between">
+<span class="text-sm font-medium text-text-main-dark">Résumé quotidien</span>
+<span class="material-symbols-outlined text-primary text-lg">check</span>
+</div>
+</div>
+<div class="p-4 border-b border-white/5 last:border-0 hover:bg-white/5 transition cursor-pointer">
+<div class="flex items-center justify-between">
+<span class="text-sm font-medium text-text-secondary-dark">Résumé hebdomadaire</span>
+</div>
+</div>
+<div class="p-4 last:border-0 hover:bg-white/5 transition cursor-pointer">
+<div class="flex items-center justify-between">
+<span class="text-sm font-medium text-text-secondary-dark">En temps réel</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+<nav class="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-md border-t border-white/10 bg-background-dark/90 px-2 pb-5 pt-2 backdrop-blur-lg">
+<div class="flex items-center justify-between">
+<button class="flex flex-1 flex-col items-center gap-1 p-2 text-text-secondary-dark hover:text-white">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[10px] font-medium">Accueil</span>
+</button>
+<button class="flex flex-1 flex-col items-center gap-1 p-2 text-text-secondary-dark hover:text-white">
+<span class="material-symbols-outlined">search</span>
+<span class="text-[10px] font-medium">Recherche</span>
+</button>
+<div class="relative -top-6 flex flex-1 justify-center">
+<button class="flex h-14 w-14 items-center justify-center rounded-full bg-white text-background-dark shadow-lg ring-4 ring-background-dark">
+<span class="material-symbols-outlined text-[28px]">qr_code_scanner</span>
+</button>
+</div>
+<button class="flex flex-1 flex-col items-center gap-1 p-2 text-text-secondary-dark hover:text-white">
+<span class="material-symbols-outlined">favorite</span>
+<span class="text-[10px] font-medium">Favoris</span>
+</button>
+<button class="flex flex-1 flex-col items-center gap-1 p-2 text-primary">
+<span class="material-symbols-outlined filled">person</span>
+<span class="text-[10px] font-medium">Profil</span>
+</button>
+</div>
+</nav>
+</div>
+
+</body></html>

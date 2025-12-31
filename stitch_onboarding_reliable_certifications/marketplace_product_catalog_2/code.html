@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html class="dark"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Marketplace - Optimus Halal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2bee6c",
+                        "primary-dark": "#23c458",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "slate-dark": "#1e293b",
+                        "gold": "#fbbf24",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem", 
+                        "lg": "0.5rem", 
+                        "xl": "0.75rem", 
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        "soft": "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
+                    }
+                },
+            },
+        }
+    </script>
+<style>.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }.no-scrollbar {
+            -ms-overflow-style: none;scrollbar-width: none;}
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-dark dark:text-gray-100 antialiased pb-24 selection:bg-primary selection:text-slate-dark transition-colors duration-300">
+<header class="sticky top-0 z-40 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-b border-gray-200/50 dark:border-slate-800 transition-colors duration-300">
+<div class="flex items-center justify-between px-4 py-3">
+<div class="flex items-center gap-3">
+<div class="h-9 w-9 rounded-full bg-cover bg-center border border-gray-200 dark:border-slate-700 shadow-sm" data-alt="User profile avatar image" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC21UIb5DPLKk9hCMsQFts76mIFDU9E59eHURz_1sJY7VCuIdFDM3dF4uWvbol6S4YsiI_I8V_Uxb75wJIsSMhoN44b87aYjZPtRRDKA7meEVYi_tUecDyCISlPFaoE-A414mdoDdW3CsHQzmyTBMR3VuPE_VFY6FnRAVBTF29U0N6JyZ8-AD7tTXjSV98_LL5rCswxiaIMnbGsRi2KtWUm2lJKaccwbssUxibPATHQzjbQ30J49KwYw7lOKC5nWJfI6SKUlxINJvsT");'>
+</div>
+<h1 class="text-xl font-bold tracking-tight text-slate-dark dark:text-white">Marketplace</h1>
+</div>
+<button class="relative group p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-slate-dark dark:text-white">shopping_bag</span>
+<span class="absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-primary rounded-full border-2 border-background-light dark:border-background-dark"></span>
+</button>
+</div>
+<div class="px-4 pb-3">
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors">search</span>
+</div>
+<input class="block w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border-none rounded-2xl text-sm text-slate-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50 shadow-sm transition-all" placeholder="Search ethical products, brands..." type="text" value=""/>
+</div>
+</div>
+</header>
+<div class="py-2">
+<div class="flex gap-3 px-4 overflow-x-auto no-scrollbar pb-2">
+<button class="flex shrink-0 items-center justify-center px-5 py-2 rounded-full bg-primary text-slate-dark font-semibold text-sm shadow-sm shadow-primary/20 transition-transform active:scale-95">
+                All
+            </button>
+<button class="flex shrink-0 items-center justify-center px-5 py-2 rounded-full bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 text-slate-dark dark:text-gray-300 font-medium text-sm whitespace-nowrap transition-transform active:scale-95">
+                Food &amp; Drink
+            </button>
+<button class="flex shrink-0 items-center justify-center px-5 py-2 rounded-full bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 text-slate-dark dark:text-gray-300 font-medium text-sm whitespace-nowrap transition-transform active:scale-95">
+                Cosmetics
+            </button>
+<button class="flex shrink-0 items-center justify-center px-5 py-2 rounded-full bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 text-slate-dark dark:text-gray-300 font-medium text-sm whitespace-nowrap transition-transform active:scale-95">
+                Supplements
+            </button>
+<button class="flex shrink-0 items-center justify-center px-5 py-2 rounded-full bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 text-slate-dark dark:text-gray-300 font-medium text-sm whitespace-nowrap transition-transform active:scale-95">
+                Fashion
+            </button>
+</div>
+</div>
+<div class="mt-2 px-4">
+<div class="relative w-full aspect-[2/1] rounded-2xl overflow-hidden shadow-soft group">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Premium dates and nuts arrangement for Ramadan" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBSydPdxZkbVTmdP0z1yTXIQ4kfDkK9f0tJTboDSHFVpxaIERf0-KjUPVCm02rM3wH9Zvc-fhRgX-Wo4F_rc8H2_f3QuEv75cIQAXIHuZrnTtTbVLECemqmRhRr_vMMos-0jvwBkvjOjrr5_pin7l_A92wUlqUdflCqiIbRedV8yfhelyGCaLIw07bOhswLhJ2oQuUFxOKF_UWcU-EkfEnnommR9nnpcONndGg_JYMhrD8QMtEIZcSybIjoekxWDz7v3fwPpDRT8UGZ");'>
+</div>
+<div class="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-900/40 to-transparent flex flex-col justify-center pl-6 pr-12">
+<div class="bg-gold/90 text-[10px] font-bold uppercase tracking-wider text-slate-900 px-2 py-1 rounded w-fit mb-2 backdrop-blur-sm">
+                    Featured
+                </div>
+<h2 class="text-white text-xl font-bold leading-tight mb-1">Ramadan Essentials</h2>
+<p class="text-gray-200 text-xs mb-4 font-medium max-w-[200px]">Ethically sourced, premium quality dates &amp; honey up to 20% off.</p>
+<button class="bg-primary hover:bg-primary-dark text-slate-dark text-xs font-bold px-4 py-2.5 rounded-lg w-fit transition-colors shadow-lg shadow-primary/20">
+                    Browse Collection
+                </button>
+</div>
+</div>
+</div>
+<div class="flex items-end justify-between px-4 pt-6 pb-3">
+<h3 class="text-slate-dark dark:text-white text-lg font-bold leading-none">Popular Picks</h3>
+<button class="text-primary text-sm font-medium hover:text-primary-dark transition-colors">View All</button>
+</div>
+<div class="grid grid-cols-2 gap-4 px-4 pb-4">
+<div class="group relative flex flex-col bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-md transition-shadow">
+<div class="relative aspect-[4/5] overflow-hidden bg-gray-100 dark:bg-slate-700">
+<div class="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-500" data-alt="Jar of organic sidr honey" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBdIiUR4fY67MPw4owAn-A9H27gIwfWc24nLl8PIPZBnKIZRkJcP4k6Fyi9QGh4b0lzJklAM4B3WURgNrhaSEO7FlTGPnPrbtO3mjksFhgxxF8o_RK7Y9jVqKp106t3awgaz6AZxD2OukOnEmZEHFRN5wHGd-myBS6CsSY9k1BIKsKf-BRykq5EGah9LrnAP4n6yYilz9t9hzGsCl1Usga_x1BZ8pWCmI6apcNGY-AG4w1ua2lIgZEw0Wt6BxBWytLyy07sNxUWAVKt");'>
+</div>
+<div class="absolute top-2 left-2 flex flex-col gap-1">
+<span class="inline-flex items-center gap-1 bg-white/95 dark:bg-slate-900/90 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold text-green-700 dark:text-primary shadow-sm">
+<span class="material-symbols-outlined text-[12px]">verified_user</span>
+                        HALAL
+                    </span>
+</div>
+<button class="absolute top-2 right-2 h-8 w-8 rounded-full bg-white/60 dark:bg-black/40 backdrop-blur-md flex items-center justify-center text-slate-600 dark:text-white hover:bg-white hover:text-red-500 transition-all">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+</div>
+<div class="p-3 flex flex-col flex-1">
+<div class="flex items-center gap-1 mb-1">
+<span class="material-symbols-outlined text-gold text-[14px] fill-current" style="font-variation-settings: 'FILL' 1">star</span>
+<span class="text-xs text-slate-500 dark:text-slate-400 font-medium">4.9 (120)</span>
+</div>
+<h4 class="text-sm font-semibold text-slate-dark dark:text-white leading-snug line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+                    Pure Organic Sidr Honey
+                </h4>
+<div class="mt-auto flex items-center justify-between">
+<span class="text-base font-bold text-slate-dark dark:text-white">$24.99</span>
+<button class="flex items-center justify-center h-8 w-8 rounded-lg bg-primary hover:bg-primary-dark text-slate-dark shadow-sm shadow-primary/30 transition-all active:scale-90">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+</div>
+</div>
+<div class="group relative flex flex-col bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-md transition-shadow">
+<div class="relative aspect-[4/5] overflow-hidden bg-gray-100 dark:bg-slate-700">
+<div class="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-500" data-alt="Pack of halal beef jerky snacks" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAoGC4fmXbGWty8vcc5jGibgsVTzyLlW3pN2YROoOver_ohA-p5DbecKc4HgqLdh3ywSPQ60bjvhow2YXEO81B0ejYKn-cAn55WwRN5PxhAKpnfpwFGRtE7BmJ_PsnuZeBuWp64M_6rImswZwkJuV0um8lfn8FsqP3of9dv88ED57R6T719WCSVDkbHmclQcj3X2znv3My7d2pJdoMv4FLzrdLdWFwpW7dDmKJ36frndQu3FqXo9qIdXQ-AN9iGJNbfRJHcQwehdYYX");'>
+</div>
+<div class="absolute top-2 left-2 flex flex-col gap-1">
+<span class="inline-flex items-center gap-1 bg-white/95 dark:bg-slate-900/90 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold text-green-700 dark:text-primary shadow-sm">
+<span class="material-symbols-outlined text-[12px]">verified</span>
+                        HMC
+                    </span>
+</div>
+<button class="absolute top-2 right-2 h-8 w-8 rounded-full bg-white/60 dark:bg-black/40 backdrop-blur-md flex items-center justify-center text-slate-600 dark:text-white hover:bg-white hover:text-red-500 transition-all">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+</div>
+<div class="p-3 flex flex-col flex-1">
+<div class="flex items-center gap-1 mb-1">
+<span class="material-symbols-outlined text-gold text-[14px] fill-current" style="font-variation-settings: 'FILL' 1">star</span>
+<span class="text-xs text-slate-500 dark:text-slate-400 font-medium">4.5 (86)</span>
+</div>
+<h4 class="text-sm font-semibold text-slate-dark dark:text-white leading-snug line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+                    Artisan Beef Jerky - Spicy
+                </h4>
+<div class="mt-auto flex items-center justify-between">
+<span class="text-base font-bold text-slate-dark dark:text-white">$8.50</span>
+<button class="flex items-center justify-center h-8 w-8 rounded-lg bg-primary hover:bg-primary-dark text-slate-dark shadow-sm shadow-primary/30 transition-all active:scale-90">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+</div>
+</div>
+<div class="group relative flex flex-col bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-md transition-shadow">
+<div class="relative aspect-[4/5] overflow-hidden bg-gray-100 dark:bg-slate-700">
+<div class="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-500" data-alt="Bottle of organic multivitamin supplements" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDQcX_h8brP3kWe2211PQtu-qws1p9Lm6DI9oIjZPjUo5waFoh9F_dfpxg9SMqrVEVVenOtVLnkSDOGxeAB5CUqsEVFTapweYCJotS0cGYp3xzFNxnDKA3mPZFu1ig391LUzTKOeDtVHIq6Ht1m80I3-R2w7Fq5Yju1mi7-PT93mQ8wuHMheZXV4E9UVtDBURrc4d0zbxAJHNjjYXCIlCCDV9KkCLPD8OU2TpGt-9neQD5AnTwEjWoVdIizj_PPy4iw1G-NBXckbGBn");'>
+</div>
+<div class="absolute top-2 left-2 flex flex-col gap-1">
+<span class="inline-flex items-center gap-1 bg-white/95 dark:bg-slate-900/90 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold text-blue-600 dark:text-blue-400 shadow-sm">
+<span class="material-symbols-outlined text-[12px]">eco</span>
+                        VEGAN
+                    </span>
+</div>
+<button class="absolute top-2 right-2 h-8 w-8 rounded-full bg-white/60 dark:bg-black/40 backdrop-blur-md flex items-center justify-center text-slate-600 dark:text-white hover:bg-white hover:text-red-500 transition-all">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+</div>
+<div class="p-3 flex flex-col flex-1">
+<div class="flex items-center gap-1 mb-1">
+<span class="material-symbols-outlined text-gold text-[14px] fill-current" style="font-variation-settings: 'FILL' 1">star</span>
+<span class="text-xs text-slate-500 dark:text-slate-400 font-medium">5.0 (42)</span>
+</div>
+<h4 class="text-sm font-semibold text-slate-dark dark:text-white leading-snug line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+                    Daily Multivitamin Complex
+                </h4>
+<div class="mt-auto flex items-center justify-between">
+<span class="text-base font-bold text-slate-dark dark:text-white">$32.00</span>
+<button class="flex items-center justify-center h-8 w-8 rounded-lg bg-primary hover:bg-primary-dark text-slate-dark shadow-sm shadow-primary/30 transition-all active:scale-90">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+</div>
+</div>
+<div class="group relative flex flex-col bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-md transition-shadow">
+<div class="relative aspect-[4/5] overflow-hidden bg-gray-100 dark:bg-slate-700">
+<div class="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-500" data-alt="Halal certified cosmetic skincare bottle" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuASof1TuGWqJsGX_B0xOFVlJFp3v_mS8T3M_rZq7xqMSDtcavOmNwoiwcP2T25awCKDmd0LbxIMhDrIW16qwIvj1Y1kMS3GZmqF8KESHhMSliFZoOg2pNN9Ti4NE0bgVifa9Du6JfbwyJdv6tkh6mCQl6TavH55hoIlCpmBZbHL62XV3VpQ7qCwINuTGK-LGqaPBSr0CFz8zg3lEycETNhJOiyLi9RuZhT0WL6denrqTLewNhi8WTvq1iICuus453FiHV9_3PuQBHdO");'>
+</div>
+<div class="absolute top-2 left-2 flex flex-col gap-1">
+<span class="inline-flex items-center gap-1 bg-white/95 dark:bg-slate-900/90 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold text-green-700 dark:text-primary shadow-sm">
+<span class="material-symbols-outlined text-[12px]">water_drop</span>
+                        WUDHU
+                    </span>
+</div>
+<button class="absolute top-2 right-2 h-8 w-8 rounded-full bg-white/60 dark:bg-black/40 backdrop-blur-md flex items-center justify-center text-slate-600 dark:text-white hover:bg-white hover:text-red-500 transition-all">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+</div>
+<div class="p-3 flex flex-col flex-1">
+<div class="flex items-center gap-1 mb-1">
+<span class="material-symbols-outlined text-gold text-[14px] fill-current" style="font-variation-settings: 'FILL' 1">star</span>
+<span class="text-xs text-slate-500 dark:text-slate-400 font-medium">4.7 (203)</span>
+</div>
+<h4 class="text-sm font-semibold text-slate-dark dark:text-white leading-snug line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+                    Breathable Nail Polish
+                </h4>
+<div class="mt-auto flex items-center justify-between">
+<span class="text-base font-bold text-slate-dark dark:text-white">$14.99</span>
+<button class="flex items-center justify-center h-8 w-8 rounded-lg bg-primary hover:bg-primary-dark text-slate-dark shadow-sm shadow-primary/30 transition-all active:scale-90">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<nav class="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-slate-800 shadow-[0_-5px_10px_rgba(0,0,0,0.02)] pb-safe transition-colors duration-300">
+<div class="flex justify-between items-center px-6 h-[72px]">
+<a class="flex flex-col items-center justify-center gap-1 w-16 text-gray-400 hover:text-slate-600 dark:hover:text-gray-200 transition-colors" href="#">
+<span class="material-symbols-outlined text-[26px]">home</span>
+<span class="text-[10px] font-medium tracking-wide">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 w-16 text-gray-400 hover:text-slate-600 dark:hover:text-gray-200 transition-colors" href="#">
+<span class="material-symbols-outlined text-[26px]">qr_code_scanner</span>
+<span class="text-[10px] font-medium tracking-wide">Scan</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 w-16 text-primary scale-110 transform transition-transform" href="#">
+<span class="material-symbols-outlined text-[28px] fill-current" style="font-variation-settings: 'FILL' 1">storefront</span>
+<span class="text-[10px] font-bold tracking-wide text-slate-900 dark:text-primary">Shop</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 w-16 text-gray-400 hover:text-slate-600 dark:hover:text-gray-200 transition-colors" href="#">
+<span class="material-symbols-outlined text-[26px]">person</span>
+<span class="text-[10px] font-medium tracking-wide">Profile</span>
+</a>
+</div>
+</nav>
+
+</body></html>

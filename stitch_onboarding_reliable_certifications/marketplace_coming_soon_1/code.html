@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Marketplace Coming Soon</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2bee6c",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "emerald-dark": "#064e3b",
+                        "gold-accent": "#D4AF37",
+                        "slate-dark": "#1e293b",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display antialiased text-slate-dark dark:text-white transition-colors duration-200">
+<div class="relative flex h-full min-h-screen w-full flex-col overflow-hidden">
+<!-- Header -->
+<header class="flex items-center justify-between px-4 py-4 md:px-6 sticky top-0 z-10 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-sm">
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors group">
+<span class="material-symbols-outlined text-slate-dark dark:text-white group-hover:scale-110 transition-transform">arrow_back_ios_new</span>
+</button>
+<div class="flex items-center gap-2">
+<!-- Simple Logo Placeholder using CSS shapes/colors -->
+<div class="w-6 h-6 rounded bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-background-dark text-[16px]">verified</span>
+</div>
+<span class="font-bold text-lg tracking-tight text-slate-dark dark:text-white">Halalify</span>
+</div>
+<div class="w-10"></div> <!-- Spacer for centering -->
+</header>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col items-center justify-center px-6 pb-10 w-full max-w-lg mx-auto">
+<!-- Hero Visual -->
+<div class="relative w-full aspect-square max-w-[320px] mb-8 group">
+<!-- Decorative Elements behind -->
+<div class="absolute inset-0 bg-gradient-to-tr from-primary/20 to-gold-accent/20 rounded-full blur-3xl opacity-60"></div>
+<!-- Main Image Card -->
+<div class="relative w-full h-full bg-white dark:bg-slate-800 rounded-3xl shadow-2xl shadow-primary/10 overflow-hidden border border-white/50 dark:border-white/5 flex items-center justify-center bg-center bg-cover" data-alt="Minimalist abstract shopping bag with green leaves indicating ethical products" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB-zk3K5A99Er3WNEbx4SxaPom-9DdbJj0G-kV6nyGVVBRr_0rxOr5JrFEPqnElHJlQgEFbgcEthfz0AEZNpU7rfVE_naDRaiwqsq3kl_0hlNkm9T1KsgJ0Df0-E3YU7c3bpBiWj5AYVCfug5KI9QHdAqChHavZ-dVjMwOs9sT36_Yr4Zo1Fisw0B02JdXSXFMIy2n7A0X2RCr6r2ETHvu1LBvOw9dm882-gQ6wf2-tLzpwozz-yMHb1v-e3f_hR8DrJyhQUl_kwf-k');">
+<!-- Overlay for text readability if needed or just style -->
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+<!-- Floating Badge -->
+<div class="absolute bottom-6 left-6 right-6 p-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl border border-gold-accent/30 shadow-lg flex items-center gap-3">
+<div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-emerald-600 dark:text-primary">workspace_premium</span>
+</div>
+<div>
+<p class="text-xs font-bold text-gold-accent uppercase tracking-wider mb-0.5">Certified</p>
+<p class="text-sm font-medium text-slate-dark dark:text-white leading-tight">100% Transparent Sourcing</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Typography Block -->
+<div class="text-center w-full mb-8">
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold-accent/10 border border-gold-accent/20 mb-4">
+<span class="w-2 h-2 rounded-full bg-gold-accent animate-pulse"></span>
+<span class="text-xs font-semibold text-amber-600 dark:text-gold-accent tracking-wide uppercase">Coming Soon</span>
+</div>
+<h1 class="text-3xl md:text-4xl font-bold text-slate-dark dark:text-white leading-tight tracking-tight mb-3">
+                    Ethical Shopping,<br/>Simplified.
+                </h1>
+<p class="text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-xs mx-auto">
+                    We are building a marketplace for certified, transparent halal products. Join the waitlist for early access.
+                </p>
+</div>
+<!-- Input Form -->
+<form class="w-full flex flex-col gap-4">
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-slate-400 group-focus-within:text-primary transition-colors">mail</span>
+</div>
+<input class="w-full pl-11 pr-4 py-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all shadow-sm" placeholder="Enter your email address" required="" type="email"/>
+</div>
+<button class="w-full bg-primary hover:bg-[#25d360] active:scale-[0.98] text-background-dark font-bold text-lg py-4 rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 group" type="button">
+<span>Notify Me</span>
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</form>
+<!-- Social Proof / Footer -->
+<div class="mt-6 flex flex-col items-center gap-3">
+<div class="flex -space-x-2 overflow-hidden p-1">
+<img alt="User avatar 1" class="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-background-dark object-cover" data-alt="Portrait of a waiting user" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4ovN9jYOXt22g2xyrUQerj1gvBMDUkGo-XFHAnonmyn_aDXxmVJoVnINp0eOLrzYsyJiOFxFHAm5DB3xxovgGbJ4r51BrbKest7aA5RSAWaf34JSbNPU2UD3HrKX0b2sscTejq3gY2z0A1xMikHMXEr389sXO6DD9_XQnRCgt7lEG0mYipI2pwdXjqhcIf8TO4JQQOj0w_c0GxyO8ezWjWcwZaKY84RCg0Q6NzSUfkdU4KmS_N4JMlFR8c-tri67J4nQwAizW_vix"/>
+<img alt="User avatar 2" class="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-background-dark object-cover" data-alt="Portrait of a waiting user" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAG_GH3aBzJIXZIeNILJBWRe7Lt49NTDpcgByFLg-VDkn-PYPuAxGZjrs50m3P6NTywUw9YrGYOcvWo8PqxfFbCVLiasvNHvy-76HZ1KhL4rYl0oVf4qGVjbo2c4UhXs45DtuaPP5o78fugeErOopjPG8St_tcJhho4wzwBbPZ1rNA4iOkQExdauGvbB43G9i1UO9VU10-qFGpXXqMb5YU5H6QmmfVgBPeK7IiJJXLjZRi2fZz4uYaEwSOhwQdvKJXuf2Etil_VuEB-"/>
+<img alt="User avatar 3" class="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-background-dark object-cover" data-alt="Portrait of a waiting user" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAH7W-dqDcpi1VNtdWJGWzeeWTWM7wNFjZOUzQ-GMLk8UfsQoTKHdVI-GaCN6hRySyyj51nepTbVvG25zdJGeozqktCEcIktpdH1kNgw8_uFyxUc-6krxI5QGNwbi5OoHe21ybS94zQFfGg5Kx-lJk8W5F2EuhkumOpXLjmcFCIYzbTww2BnDuc1Qmh8Dn-dXep9pr2A-0mfchS9WJ3riREpt_2roMLw6m7GdvoXTm0C35Pnk5h9cSTM0yPEGzGOZuPZ4XPP-I-3WMR"/>
+<div class="h-6 w-6 rounded-full ring-2 ring-white dark:ring-background-dark bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[8px] font-bold text-slate-500 dark:text-slate-300">
+                        +2k
+                    </div>
+</div>
+<p class="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                    Join 2,000+ others waiting for launch. <br class="block sm:hidden"/> No spam, we promise.
+                </p>
+</div>
+</main>
+<!-- Bottom safe area spacer if needed -->
+<div class="h-4"></div>
+</div>
+</body></html>

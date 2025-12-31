@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Marketplace Product Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2bee6c",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }.no-scrollbar {
+            -ms-overflow-style: none;scrollbar-width: none;}
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display antialiased text-slate-900 dark:text-slate-50 transition-colors duration-200">
+<div class="relative flex min-h-screen w-full flex-col group/design-root overflow-x-hidden pb-24">
+<header class="sticky top-0 z-50 flex items-center justify-between bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md p-4 transition-colors">
+<button class="flex size-10 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-[#0d1b12] dark:text-white" style="font-size: 24px;">arrow_back</span>
+</button>
+<h1 class="text-[#0d1b12] dark:text-white text-base font-semibold opacity-0 transition-opacity duration-300 pointer-events-none lg:opacity-100">Product Details</h1>
+<button class="flex size-10 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors relative">
+<span class="material-symbols-outlined text-[#0d1b12] dark:text-white" style="font-size: 24px;">shopping_cart</span>
+<span class="absolute top-2 right-2 size-2 bg-primary rounded-full"></span>
+</button>
+</header>
+<div class="w-full px-4 pt-2 pb-6">
+<div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-white dark:bg-gray-800/50 shadow-sm border dark:border-white/5">
+<div class="w-full h-full bg-center bg-no-repeat bg-cover" data-alt="Golden organic honey jar with honeycomb background" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAFtTnyzAGtNaS8T5GarLWHx0QA4SBfpxz9ZA09l67lDiDBMYU5HR58-_qZgsrRIaKKmPKQX_vu2z93pd1nn0f8a3RTpv0t3A2UVBabXYV9QZOZkeV7XCrZKwZVL2kBxyuVzXuc-YL-SiEYDSjGEiLybg3dhryTNTvQ46cWcrAvJL8lh2f6zpjkOF5C6XGrY0Vc4s3CCZ9HvnXMc8Cty0dEDQGRpKgbKCh34GEuTK2y7I66TRMbE4l7HcwixTDfFCn9NU-Z07Pe0M8J");'>
+</div>
+<div class="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+<div class="size-2 rounded-full bg-primary shadow-sm"></div>
+<div class="size-2 rounded-full bg-white/60 backdrop-blur-sm"></div>
+<div class="size-2 rounded-full bg-white/60 backdrop-blur-sm"></div>
+</div>
+</div>
+</div>
+<div class="flex flex-col px-4 gap-1">
+<div class="flex justify-between items-start">
+<div class="flex flex-col">
+<span class="text-sm font-medium text-primary dark:text-primary mb-1">Nature's Gold</span>
+<h2 class="text-[#0d1b12] dark:text-white text-2xl font-bold leading-tight tracking-tight">Free-Range Organic Honey</h2>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-2xl font-bold text-[#0d1b12] dark:text-white">$12.99</span>
+<span class="text-xs text-gray-500 dark:text-gray-400">500g</span>
+</div>
+</div>
+</div>
+<div class="px-4 py-6">
+<div class="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-white/5 border border-gray-100 dark:border-white/5 shadow-sm">
+<div class="relative size-14 shrink-0 flex items-center justify-center">
+<svg class="size-full -rotate-90" viewBox="0 0 36 36">
+<path class="text-gray-100 dark:text-gray-700/50" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3"></path>
+<path class="text-primary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="98, 100" stroke-width="3"></path>
+</svg>
+<span class="absolute text-xs font-bold text-[#0d1b12] dark:text-white">A+</span>
+</div>
+<div class="flex-1">
+<div class="flex items-center gap-2 mb-1">
+<h3 class="text-base font-bold text-[#0d1b12] dark:text-white">Ethical Score: 98/100</h3>
+<span class="material-symbols-outlined text-primary text-sm">verified</span>
+</div>
+<p class="text-xs text-gray-500 dark:text-gray-400 leading-snug">Excellent transparency. Sourced from sustainable, cruelty-free farms with full supply chain traceability.</p>
+</div>
+<button class="shrink-0 text-gray-400 dark:text-gray-500">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+<div class="px-4 pb-6">
+<div class="flex gap-3 overflow-x-auto no-scrollbar">
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-800/20 shrink-0">
+<span class="material-symbols-outlined text-green-700 dark:text-green-400 text-[18px]">workspace_premium</span>
+<span class="text-xs font-semibold text-green-800 dark:text-green-400">Halal Certified</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-800/20 shrink-0">
+<span class="material-symbols-outlined text-orange-700 dark:text-orange-400 text-[18px]">eco</span>
+<span class="text-xs font-semibold text-orange-800 dark:text-orange-400">Organic</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/20 shrink-0">
+<span class="material-symbols-outlined text-blue-700 dark:text-blue-400 text-[18px]">handshake</span>
+<span class="text-xs font-semibold text-blue-800 dark:text-blue-400">Fair Trade</span>
+</div>
+</div>
+</div>
+<div class="px-4 pb-8 flex flex-col gap-4">
+<div>
+<h3 class="text-lg font-bold text-[#0d1b12] dark:text-white mb-2">Description</h3>
+<p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                    Our Nature's Gold Organic Honey is raw, unfiltered, and harvested with the utmost care for the bees and the environment. It boasts a rich, floral aroma and a smooth texture that crystallizes naturally over time. Perfect for sweetening tea, drizzling over yogurt, or enjoying straight from the spoon.
+                </p>
+</div>
+<div class="flex flex-col divide-y divide-gray-100 dark:divide-white/10">
+<button class="flex items-center justify-between py-3 text-left group">
+<span class="text-sm font-semibold text-[#0d1b12] dark:text-white group-hover:text-primary transition-colors">Ingredients &amp; Nutrition</span>
+<span class="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors">expand_more</span>
+</button>
+<button class="flex items-center justify-between py-3 text-left group">
+<span class="text-sm font-semibold text-[#0d1b12] dark:text-white group-hover:text-primary transition-colors">Traceability Report</span>
+<span class="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors">expand_more</span>
+</button>
+</div>
+</div>
+<div class="px-4 pb-8">
+<h3 class="text-sm font-semibold text-[#0d1b12] dark:text-white mb-3">Quantity</h3>
+<div class="flex items-center gap-4">
+<div class="flex items-center rounded-lg border border-gray-200 dark:border-white/10 p-1 bg-white dark:bg-white/5">
+<button class="size-10 flex items-center justify-center rounded-md hover:bg-gray-100 dark:hover:bg-white/10 text-[#0d1b12] dark:text-white transition-colors">
+<span class="material-symbols-outlined">remove</span>
+</button>
+<div class="w-12 text-center font-bold text-lg text-[#0d1b12] dark:text-white">1</div>
+<button class="size-10 flex items-center justify-center rounded-md bg-primary text-[#0d1b12] shadow-sm hover:brightness-95 transition-all">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<div class="text-sm text-gray-500 dark:text-gray-400">
+<span class="text-green-600 dark:text-green-400 font-medium">In Stock</span> • Ships tomorrow
+                </div>
+</div>
+</div>
+<div class="flex flex-col gap-4 pb-8 border-t border-gray-100 dark:border-white/10 pt-8 bg-white dark:bg-background-dark">
+<div class="px-4 flex items-center justify-between">
+<h3 class="text-lg font-bold text-[#0d1b12] dark:text-white">You might also like</h3>
+<a class="text-sm font-semibold text-primary hover:underline" href="#">View all</a>
+</div>
+<div class="flex overflow-x-auto no-scrollbar px-4 pb-4 gap-4">
+<div class="flex flex-col gap-2 min-w-[160px] w-[160px] group cursor-pointer">
+<div class="relative w-full aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
+<div class="w-full h-full bg-center bg-no-repeat bg-cover transition-transform duration-500 group-hover:scale-105" data-alt="Bag of organic oats on a rustic table" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA3NEB9XwxYqOF9dmPA43aItsxAjGv5NuFLXDnchqleK9zmSKL3atP34x8GVzIrePFXTHdqu47xFygf82pDDgVEEja5i13Rl34xLqeQMJpBiLj4eGQqOkCmfMpq1j_mXJJP8FULjq1VRztL_ZYqI6tdQkIsevnxfFdsN9iQjf1LwTydb7dTNr0Ln6ssjHg6UY3uqBGWDyQoBrodOPn64uhbOyGkugEj1LEPjDI8_lCysSw7dDgXfeYllUfUFlI1IYijuIufnOqJoxB7");'>
+</div>
+<div class="absolute top-2 right-2 bg-white/90 dark:bg-black/60 backdrop-blur-sm rounded-full p-1 shadow-sm">
+<span class="material-symbols-outlined text-primary text-[16px] block">eco</span>
+</div>
+</div>
+<div class="flex flex-col">
+<h4 class="text-sm font-semibold text-[#0d1b12] dark:text-white truncate">Organic Oats</h4>
+<span class="text-xs text-gray-500 dark:text-gray-400">Grain Masters</span>
+<div class="flex items-center justify-between mt-1">
+<span class="text-sm font-bold text-[#0d1b12] dark:text-white">$4.99</span>
+<span class="text-[10px] bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300 px-1.5 py-0.5 rounded border dark:border-green-800/30">A+</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-2 min-w-[160px] w-[160px] group cursor-pointer">
+<div class="relative w-full aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
+<div class="w-full h-full bg-center bg-no-repeat bg-cover transition-transform duration-500 group-hover:scale-105" data-alt="Bottle of extra virgin olive oil" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuANqkIXSLfL5zsGM8nxUo8ADFCKXU4qNAkLEI9WkRHAFZKoFtvtBwaFNo4by1yQ3YD2Ey5ovfeyz92AmzoEc4Euky7Ak6DRwtT3SjcPcz7LhpxqYhBBblTMBx668TfnclgvFvD3S2TaDC2YL0tk16CZXJ1wiM2KpksSFckKBo_7Z5lIIsxTC_UiQWhG142gBeQi8ZlJB7NbYWPip1hRDNtO1AUrkYGBTNjhuEKKVaL1ezJFuIS9hncNIG5OAgNbY1a-voH1W1g8nBSN");'>
+</div>
+<div class="absolute top-2 right-2 bg-white/90 dark:bg-black/60 backdrop-blur-sm rounded-full p-1 shadow-sm">
+<span class="material-symbols-outlined text-primary text-[16px] block">eco</span>
+</div>
+</div>
+<div class="flex flex-col">
+<h4 class="text-sm font-semibold text-[#0d1b12] dark:text-white truncate">Extra Virgin Olive Oil</h4>
+<span class="text-xs text-gray-500 dark:text-gray-400">Pure Press</span>
+<div class="flex items-center justify-between mt-1">
+<span class="text-sm font-bold text-[#0d1b12] dark:text-white">$18.50</span>
+<span class="text-[10px] bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300 px-1.5 py-0.5 rounded border dark:border-green-800/30">A</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-2 min-w-[160px] w-[160px] group cursor-pointer">
+<div class="relative w-full aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
+<div class="w-full h-full bg-center bg-no-repeat bg-cover transition-transform duration-500 group-hover:scale-105" data-alt="Box of herbal tea bags" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBGWjuWycrOlE5G0EJOAd2CqN38hMNmK62jYOyGCQr_ZbOAFQZ3End4qLzyb18h__2R2zxL5WZOhvzoh53oRcPXT3em9K944SwjguoTeBEFyBqCsbttd494EvBrlGkBN4r_x7IOo7KyTRG06RTDt8iKc8klZQcdvFRRy6pL-KOsHubuaHRjw0aZus9wgMIWTxbb6kSFIb2Q7JJAiGAawl0GqvXoeRLaDveONKPFJznrBxzjvXks9eW8mQCchKhNZ184KrDLsxT_x08q");'>
+</div>
+<div class="absolute top-2 right-2 bg-white/90 dark:bg-black/60 backdrop-blur-sm rounded-full p-1 shadow-sm">
+<span class="material-symbols-outlined text-primary text-[16px] block">eco</span>
+</div>
+</div>
+<div class="flex flex-col">
+<h4 class="text-sm font-semibold text-[#0d1b12] dark:text-white truncate">Calm Herbal Tea</h4>
+<span class="text-xs text-gray-500 dark:text-gray-400">Leafy Life</span>
+<div class="flex items-center justify-between mt-1">
+<span class="text-sm font-bold text-[#0d1b12] dark:text-white">$8.99</span>
+<span class="text-[10px] bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300 px-1.5 py-0.5 rounded border dark:border-yellow-800/30">B+</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-[#152a1d] border-t border-gray-100 dark:border-white/5 px-4 py-4 pb-8 safe-area-pb shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.2)]">
+<div class="flex items-center gap-4 max-w-2xl mx-auto">
+<div class="flex flex-col">
+<span class="text-xs text-gray-500 dark:text-gray-400">Total Price</span>
+<span class="text-xl font-bold text-[#0d1b12] dark:text-white">$12.99</span>
+</div>
+<button class="flex-1 flex items-center justify-center gap-2 h-12 bg-primary hover:bg-primary/90 active:scale-[0.98] transition-all rounded-lg text-[#0d1b12] font-bold text-base shadow-lg shadow-primary/25">
+<span class="material-symbols-outlined">shopping_bag</span>
+                Add to Cart
+            </button>
+</div>
+</div>
+</body></html>

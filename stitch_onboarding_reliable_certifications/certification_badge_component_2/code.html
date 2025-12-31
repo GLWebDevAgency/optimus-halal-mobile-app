@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Halal Certification Badge Component</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2bee6c",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "badge-green": "#047857", // Darker emerald for contrast with white text
+                        "badge-orange": "#f97316",
+                        "badge-red": "#dc2626",
+                        "accent-gold": "#fbbf24",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                    boxShadow: {
+                        'soft': '0 2px 10px rgba(0, 0, 0, 0.03)',
+                        'card': '0 0 0 1px rgba(0,0,0,0.03), 0 2px 8px rgba(0,0,0,0.04)',
+                        'badge': '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+        body {
+          min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-display">
+<header class="w-full px-6 py-8 pb-4">
+<h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">Certification Badges</h1>
+<p class="text-slate-500 dark:text-slate-400 text-sm max-w-md">Reusable UI components for indicating halal status across product lists, cards, and scanner results.</p>
+</header>
+<main class="flex-1 w-full max-w-md mx-auto px-4 pb-12 space-y-8">
+<section class="space-y-4">
+<h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 ml-1">Badge Variants</h2>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-card space-y-8">
+<div class="space-y-4">
+<p class="text-sm font-medium text-slate-500 mb-2">Standard (Prominent)</p>
+<div class="flex items-center justify-between">
+<span class="text-xs text-slate-400">Certified</span>
+<div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-badge-green text-white shadow-badge ring-1 ring-white/20 border border-transparent">
+<span class="material-symbols-outlined text-[18px] text-accent-gold drop-shadow-sm">verified</span>
+<span class="text-xs font-bold tracking-wide uppercase">Certifié Halal</span>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-xs text-slate-400">Doubtful</span>
+<div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-badge-orange text-white shadow-badge ring-1 ring-white/20 border border-transparent">
+<span class="material-symbols-outlined text-[18px] drop-shadow-sm">warning</span>
+<span class="text-xs font-bold tracking-wide uppercase">Douteuse</span>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-xs text-slate-400">Non-Halal</span>
+<div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-badge-red text-white shadow-badge ring-1 ring-white/20 border border-transparent">
+<span class="material-symbols-outlined text-[18px] drop-shadow-sm">cancel</span>
+<span class="text-xs font-bold tracking-wide uppercase">Non Halal</span>
+</div>
+</div>
+</div>
+<div class="border-t border-slate-100 dark:border-slate-800"></div>
+<div class="space-y-4">
+<p class="text-sm font-medium text-slate-500 mb-2">Compact (Rectangular)</p>
+<div class="flex flex-wrap gap-3 justify-center">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-badge-green text-white shadow-sm border-l-4 border-accent-gold">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+<span class="text-[11px] font-bold">Halal</span>
+</div>
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-badge-orange text-white shadow-sm border-l-4 border-orange-200">
+<span class="material-symbols-outlined text-[16px]">warning</span>
+<span class="text-[11px] font-bold">Douteuse</span>
+</div>
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-badge-red text-white shadow-sm border-l-4 border-red-200">
+<span class="material-symbols-outlined text-[16px]">dangerous</span>
+<span class="text-[11px] font-bold">Interdit</span>
+</div>
+</div>
+</div>
+<div class="border-t border-slate-100 dark:border-slate-800"></div>
+<div class="space-y-4">
+<p class="text-sm font-medium text-slate-500 mb-2">Micro (Icon Only)</p>
+<div class="flex gap-6 justify-center">
+<div class="flex items-center justify-center size-8 rounded-full bg-badge-green text-white shadow-badge ring-2 ring-white dark:ring-slate-800 relative">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<div class="absolute -top-1 -right-1 size-2.5 bg-accent-gold rounded-full border border-white dark:border-slate-800"></div>
+</div>
+<div class="flex items-center justify-center size-8 rounded-full bg-badge-orange text-white shadow-badge ring-2 ring-white dark:ring-slate-800">
+<span class="material-symbols-outlined text-[18px]">warning</span>
+</div>
+<div class="flex items-center justify-center size-8 rounded-full bg-badge-red text-white shadow-badge ring-2 ring-white dark:ring-slate-800">
+<span class="material-symbols-outlined text-[18px]">dangerous</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="space-y-4">
+<h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 ml-1">Context: Product Card</h2>
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-card overflow-hidden">
+<div class="relative h-48 w-full">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="Close up of fresh raw chicken breast fillets on a wooden board" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBhtKqzFxEC9QGFZor9YGhl4AIAESq769W08viGnuyDVrKZyXQEkdbXFByAvP245uFadzGM4qenAKoQAYMr0zB4WDxx_TJ-IOyxOvZpalVqE_jw8xLgoQwIDfj4_NSM1vQXeTHISJnwJW51BPP7Jx9fxW9LaezU_5jGTtqsdlYTAuwN27pF4wA3TesIFENelXcXW7_bZeIQX5zvuaqQCWGJPyRgEUsGlDSsqRjeeEFhPlWk6b5VkVhqjIIkOLUhbQaSbr8HxcQC8jmj');"></div>
+<div class="absolute top-3 left-3">
+<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-badge-green/95 backdrop-blur-md text-white shadow-lg border border-white/20">
+<span class="material-symbols-outlined text-[16px] text-accent-gold">verified</span>
+<span class="text-[11px] font-bold tracking-wide uppercase">Certifié Halal</span>
+</div>
+</div>
+</div>
+<div class="p-4 flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white leading-tight">Chicken Breast Fillet</h3>
+<p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Brand: Al-Safa • 500g</p>
+</div>
+<div class="size-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</div>
+</div>
+<div class="flex gap-2 mt-1">
+<span class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-medium text-slate-600 dark:text-slate-300 uppercase tracking-wide">Poulet</span>
+<span class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-medium text-slate-600 dark:text-slate-300 uppercase tracking-wide">Frais</span>
+</div>
+</div>
+</div>
+</section>
+<section class="space-y-4">
+<h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 ml-1">Context: Scan History List</h2>
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-card overflow-hidden divide-y divide-slate-100 dark:divide-slate-800">
+<div class="p-4 flex items-center gap-4 relative">
+<div class="size-14 rounded-lg bg-slate-100 dark:bg-slate-800 shrink-0 bg-cover bg-center" data-alt="Package of chocolate cookies" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC5EPJ0r4WmaBJKqnuloZ-idFndvPNfvLnodHx1PfzBrD55ge3QMmnp6s2UDgZhpyDgpg5ZAEM7MGQ7Asbq5cWSvY6-dXFtDcuU1NI09k7iPpUIf2Gbt_6z_G39zvhYqgW3vsB6oSMH5aWt-a6JqJ1eK7fPkmxFZO-FJ7UFZMHMo_iVgrvrt0vwBWmYWToF0LPy2Y8cuDTIW3rCfaT1yv4UtSVMYc9g14Fp0fx8uJDk95xHKqxH7MVCfRF2OGYYCSU5doFaPZkbtL4B');"></div>
+<div class="flex-1 min-w-0 pr-2">
+<h4 class="text-sm font-semibold text-slate-900 dark:text-white truncate">Double Chocolate Cookies</h4>
+<p class="text-xs text-slate-500 dark:text-slate-400 truncate">Milka • Scanned 2m ago</p>
+</div>
+<div class="flex flex-col items-end gap-1">
+<div class="inline-flex items-center justify-center px-2 py-1 rounded-md bg-badge-green/10 text-badge-green border border-badge-green/20">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span class="ml-1 text-[10px] font-bold uppercase hidden sm:inline-block">Halal</span>
+</div>
+</div>
+</div>
+<div class="p-4 flex items-center gap-4 bg-orange-50/40 dark:bg-orange-900/5">
+<div class="size-14 rounded-lg bg-slate-100 dark:bg-slate-800 shrink-0 bg-cover bg-center" data-alt="Bag of gummy bears candy" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBMqVahMJB_cxBUyda_hirDm1F9r39ly0syzgzqXhS0WN9pcWObA9Zf4BBNDldJCJ9drVoGU3qM1LLZ768JxQZdP2BfmRLYzpLQDKuqmjx-sbG94CIOA34Q0UUrJoSPP7lpy4Lu9D7jR0QOHdS7yIz8jdDaxV5A9gSEtvSdxrI1Qd03TMd_ea63ElrRE8kuWPf3fICmoEN0VS720mW4nByUSfx0C098XZzoNueCFqyzDGWhsVxRJWmZogOmEMmgnKDtQ7jmoFlN3tqw');"></div>
+<div class="flex-1 min-w-0">
+<h4 class="text-sm font-semibold text-slate-900 dark:text-white truncate">Gummy Bears</h4>
+<p class="text-xs text-orange-700 dark:text-orange-400 font-medium truncate">Contains Gelatin</p>
+</div>
+<div class="shrink-0">
+<div class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-badge-orange text-white shadow-sm text-[10px] font-bold uppercase tracking-wide">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+<span>Douteuse</span>
+</div>
+</div>
+</div>
+<div class="p-4 flex items-center gap-4 bg-red-50/40 dark:bg-red-900/5">
+<div class="size-14 rounded-lg bg-slate-100 dark:bg-slate-800 shrink-0 bg-cover bg-center" data-alt="Can of beer on a table" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDDVCFT56yOL8Z0gCHqEhcLJlB1SDYisi-CjTOV_VhKTpBJ4j78nFF-tmKoGjF3lvy2h1HW-91VN0IvD6A2JOZkbA8ueXdPv34S9TD1wZe68RxZ5GleKc7esw75Px5BGhjNWnb4YM4s8bC3GLJNVJui75e4FlojXQ4i6f5-tQGSANT_tHD9hL5krXZJNL3DZ9tJAiaALggx0b9JV3eGwNvJSYUtBRdmk2KExQKIp3JzTajEJmfIt79Mh9si_zi8ahA0OiUE5WvWuBCs');"></div>
+<div class="flex-1 min-w-0">
+<h4 class="text-sm font-semibold text-slate-900 dark:text-white truncate">Lager Beer</h4>
+<p class="text-xs text-red-700 dark:text-red-400 font-medium truncate">Alcohol Content</p>
+</div>
+<div class="shrink-0">
+<div class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-badge-red text-white shadow-sm text-[10px] font-bold uppercase tracking-wide">
+<span class="material-symbols-outlined text-[14px]">dangerous</span>
+<span>Non Halal</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="space-y-4">
+<h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 ml-1">Context: Scanner Result</h2>
+<div class="relative w-full rounded-2xl bg-white dark:bg-slate-900 shadow-xl border border-slate-100 dark:border-slate-800 p-6 flex flex-col items-center text-center">
+<div class="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-primary/10 to-transparent rounded-t-2xl"></div>
+<div class="relative mb-6 mt-2">
+<div class="size-28 rounded-full border-[3px] border-white dark:border-slate-800 shadow-xl bg-cover bg-center" data-alt="Bowl of spicy ramen noodles" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBlQX1L_5qQGng_CTEt3yzXeDwsp73sLi6QNEMRVA8rMi6IY_yaD1rztmRvmgWWHgwRh60szt333GYP1NdAdGwaHGtAf8SyNYmuMi53jv1hAh6H4l63HZ7GsM8u23F3D3nPfQoiYkP5xQKVVlcAG4K6BBhnWWoisdH7gGw7r9acwLPLPqg7-QzRNfXa4r1yh7KmfP9W6i81cn5oKIvtUHcrRBwgPWiKXjxDaJsskObfP-XBJLHY9lYXXv21GrjdHi7l6MfaywFCZ-w5');"></div>
+<div class="absolute -bottom-4 left-1/2 -translate-x-1/2 w-max">
+<div class="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-badge-green text-white shadow-lg border-2 border-white dark:border-slate-800 ring-2 ring-accent-gold/20">
+<span class="material-symbols-outlined text-[20px] text-accent-gold">verified</span>
+<span class="text-sm font-bold uppercase tracking-wider">Excellent</span>
+</div>
+</div>
+</div>
+<div class="mt-4">
+<h3 class="text-xl font-bold text-slate-900 dark:text-white">Spicy Beef Ramen</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Nissin Foods • 75g</p>
+</div>
+<div class="grid grid-cols-2 gap-3 w-full">
+<div class="flex flex-col items-center justify-center p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/20">
+<span class="text-[10px] uppercase text-emerald-600/70 dark:text-emerald-400/70 font-bold mb-1 tracking-wide">Certification</span>
+<div class="flex items-center gap-1.5 text-badge-green">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+<span class="text-sm font-bold">Halal</span>
+</div>
+</div>
+<div class="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+<span class="text-[10px] uppercase text-slate-400 font-bold mb-1 tracking-wide">Additives</span>
+<div class="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-[18px]">do_not_disturb_on</span>
+<span class="text-sm font-semibold">Clean</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+
+</body></html>

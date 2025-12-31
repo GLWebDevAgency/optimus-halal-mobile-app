@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ethical Alerts Feed</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2bee6c",
+                        "primary-dark": "#1fae4e", 
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "slate-dark": "#1e293b",
+                        "gold": "#eab308",
+                        "danger": "#ef4444",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "0.75rem", "xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .timeline-line::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 27px; /* Adjust based on icon size and padding */
+            width: 2px;
+            background: #e2e8f0;
+            z-index: 0;
+        }
+        .dark .timeline-line::before {
+            background: #334155;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-dark dark:text-gray-100 min-h-screen flex flex-col antialiased">
+<!-- Top Navigation -->
+<header class="sticky top-0 z-50 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm border-b border-gray-100 dark:border-gray-800">
+<div class="flex items-center justify-between px-4 py-3">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-slate-900 shadow-md shadow-primary/30">
+<span class="material-symbols-outlined text-xl">security</span>
+</div>
+<h1 class="text-slate-900 dark:text-white text-xl font-bold tracking-tight">Ethical Alerts</h1>
+</div>
+<button class="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+<span class="material-symbols-outlined text-slate-600 dark:text-gray-300">notifications</span>
+<span class="absolute top-2 right-2 w-2.5 h-2.5 bg-danger rounded-full border-2 border-background-light dark:border-background-dark"></span>
+</button>
+</div>
+<!-- Filter Chips -->
+<div class="flex gap-2 px-4 pb-3 overflow-x-auto hide-scrollbar snap-x">
+<button class="snap-start shrink-0 h-9 px-5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-semibold shadow-sm transition-transform active:scale-95">All</button>
+<button class="snap-start shrink-0 h-9 px-5 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-slate-600 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Boycotts</button>
+<button class="snap-start shrink-0 h-9 px-5 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-slate-600 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Certifications</button>
+<button class="snap-start shrink-0 h-9 px-5 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-slate-600 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Health</button>
+<button class="snap-start shrink-0 h-9 px-5 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-slate-600 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Policy</button>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 w-full max-w-lg mx-auto p-4 space-y-6 relative timeline-line">
+<!-- Timeline Item 1: Urgent Boycott -->
+<div class="relative z-10 grid grid-cols-[56px_1fr] gap-0">
+<!-- Timeline Icon -->
+<div class="flex flex-col items-center pt-1">
+<div class="w-14 h-14 rounded-full bg-danger/10 border-4 border-background-light dark:border-background-dark flex items-center justify-center text-danger z-10 shadow-sm">
+<span class="material-symbols-outlined text-2xl">block</span>
+</div>
+</div>
+<!-- Card Content -->
+<div class="pl-3 pb-8">
+<div class="flex justify-between items-start mb-2">
+<span class="text-xs font-bold uppercase tracking-wider text-danger bg-danger/10 px-2 py-0.5 rounded">Active Boycott</span>
+<span class="text-xs text-slate-400 dark:text-gray-500 font-medium">2h ago</span>
+</div>
+<div class="group bg-white dark:bg-gray-800 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-none border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+<!-- Card Image -->
+<div class="h-40 w-full bg-gray-100 relative overflow-hidden" data-alt="Close up of red soda cans stacked in a supermarket aisle">
+<img alt="Red soda cans" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMRROkfqx720sGkDhwQlWfuoWVtzSLb57m1wc53338BQi5KiJ9_-c3gHDK9X3XrYdQvzSYU2erwYtdnEOidE0lqKq3nAb1VnnPVGbTAlJmx-5q0beIptz3F0YAmyZtdJgu1PymnTMP7fOqG-koWQs04f52ItKnJthwfhoR94XwUyMsvWOo1creNW-FmWfaVSW2RFjDz04vHXDnw5ntjg86ItpcvHbUBjVOSOENjmC7f-m70mChgA7pkEEW4_0YSFur9Og-DkL1UBXA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+<h3 class="absolute bottom-3 left-4 text-white text-lg font-bold leading-tight drop-shadow-md">Boycott: Brand X Soda</h3>
+</div>
+<div class="p-4 space-y-3">
+<p class="text-slate-600 dark:text-gray-300 text-sm leading-relaxed">
+                            Parent company investment identified in prohibited regions. Major violations of ethical sourcing guidelines reported.
+                        </p>
+<div class="pt-2 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
+<span class="material-symbols-outlined text-[14px] text-slate-500">public</span>
+</div>
+<span class="text-xs font-semibold text-slate-500 dark:text-gray-400">Global Ethical Watch</span>
+</div>
+<button class="flex items-center gap-1 text-xs font-bold text-danger hover:text-red-600 transition-colors">
+                                View Source <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Timeline Item 2: New Certification -->
+<div class="relative z-10 grid grid-cols-[56px_1fr] gap-0">
+<!-- Timeline Icon -->
+<div class="flex flex-col items-center pt-1">
+<div class="w-14 h-14 rounded-full bg-primary/20 border-4 border-background-light dark:border-background-dark flex items-center justify-center text-primary-dark dark:text-primary z-10 shadow-sm">
+<span class="material-symbols-outlined text-2xl">verified_user</span>
+</div>
+</div>
+<!-- Card Content -->
+<div class="pl-3 pb-8">
+<div class="flex justify-between items-start mb-2">
+<span class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">stars</span> Certified Halal
+                    </span>
+<span class="text-xs text-slate-400 dark:text-gray-500 font-medium">5h ago</span>
+</div>
+<div class="group bg-white dark:bg-gray-800 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-none border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-shadow">
+<div class="flex p-4 gap-4">
+<div class="flex-1 flex flex-col justify-between">
+<div>
+<h3 class="text-slate-900 dark:text-white font-bold text-lg leading-tight mb-2">New: Organic Poultry Co.</h3>
+<p class="text-slate-600 dark:text-gray-300 text-sm leading-relaxed mb-3">
+                                    Fully verified by Global Halal Authority. Farm-to-table transparency confirmed.
+                                </p>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-gold text-lg">workspace_premium</span>
+<span class="text-xs font-medium text-slate-500 dark:text-gray-400">Gold Standard Audit</span>
+</div>
+</div>
+<div class="w-24 h-24 shrink-0 rounded-lg bg-gray-100 overflow-hidden" data-alt="Fresh raw chicken packaging with organic label">
+<img alt="Organic Poultry" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXg59aHTtSgDTpWFbZCE_KAc_HZsmdVZDpiJrgbwwy4MyHd-VGP7AOA9D09G4X3q_o0iHUNawNZAwN1WNPOpFICWr6xSSVTwW24Ajm76n_Dz9_RnINCfxiFD6I5ZA2yTO88LmTptthAdTR4MdcIjy-H5dXmz0uosRpDWGJHDahxDk_3MdzBnAu171ecXlhn5JfIJ8oHmfdYztw9o3mUsGluX1d88k3UH9K80C2yUJLQWLL6Lz2OvEQnBKEb7CWUZCKm67ue_LZWIlW"/>
+</div>
+</div>
+<button class="w-full bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold text-slate-700 dark:text-gray-200 border-t border-gray-100 dark:border-gray-700 transition-colors">
+                        Read Full Report
+                    </button>
+</div>
+</div>
+</div>
+<!-- Timeline Item 3: Health Alert -->
+<div class="relative z-10 grid grid-cols-[56px_1fr] gap-0">
+<!-- Timeline Icon -->
+<div class="flex flex-col items-center pt-1">
+<div class="w-14 h-14 rounded-full bg-gold/20 border-4 border-background-light dark:border-background-dark flex items-center justify-center text-yellow-700 dark:text-yellow-400 z-10 shadow-sm">
+<span class="material-symbols-outlined text-2xl">medical_services</span>
+</div>
+</div>
+<!-- Card Content -->
+<div class="pl-3 pb-8">
+<div class="flex justify-between items-start mb-2">
+<span class="text-xs font-bold uppercase tracking-wider text-yellow-700 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30 px-2 py-0.5 rounded">Health Recall</span>
+<span class="text-xs text-slate-400 dark:text-gray-500 font-medium">1d ago</span>
+</div>
+<div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-none border border-gray-100 dark:border-gray-700">
+<div class="flex items-start gap-3 mb-3">
+<div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-gray-700 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-slate-500 dark:text-gray-400">inventory_2</span>
+</div>
+<div>
+<h3 class="text-slate-900 dark:text-white font-bold text-base">Recall: Batch #4928 Spices</h3>
+<p class="text-slate-500 dark:text-gray-400 text-xs">Health Safety Board</p>
+</div>
+</div>
+<p class="text-slate-600 dark:text-gray-300 text-sm mb-4 leading-relaxed">
+                        Trace contamination found in "Supreme Chili Powder". Please return batch #4928 immediately to point of purchase.
+                    </p>
+<div class="flex gap-2">
+<button class="flex-1 bg-primary text-slate-900 h-9 rounded-lg text-sm font-bold shadow-sm hover:bg-green-400 transition-colors">Check My Batch</button>
+<button class="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-600 text-slate-500 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+<span class="material-symbols-outlined text-lg">share</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Timeline Item 4: Policy Update (Compact) -->
+<div class="relative z-10 grid grid-cols-[56px_1fr] gap-0">
+<!-- Timeline Icon -->
+<div class="flex flex-col items-center pt-1">
+<div class="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-700 border-4 border-background-light dark:border-background-dark flex items-center justify-center text-slate-600 dark:text-slate-300 z-10 shadow-sm">
+<span class="material-symbols-outlined text-2xl">policy</span>
+</div>
+</div>
+<!-- Card Content -->
+<div class="pl-3 pb-8">
+<div class="flex justify-between items-start mb-2">
+<span class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">Policy Update</span>
+<span class="text-xs text-slate-400 dark:text-gray-500 font-medium">2d ago</span>
+</div>
+<div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-none border border-gray-100 dark:border-gray-700 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+<div>
+<h3 class="text-slate-900 dark:text-white font-semibold text-sm">Updated Gelatin Guidelines</h3>
+<p class="text-slate-500 dark:text-gray-400 text-xs mt-0.5">Global Standards Council</p>
+</div>
+<span class="material-symbols-outlined text-slate-400">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- End of Timeline Indicator -->
+<div class="flex justify-center pt-4">
+<div class="flex flex-col items-center gap-2 opacity-50">
+<div class="w-2 h-2 rounded-full bg-slate-300 dark:bg-gray-600"></div>
+<div class="w-2 h-2 rounded-full bg-slate-300 dark:bg-gray-600"></div>
+<div class="w-2 h-2 rounded-full bg-slate-300 dark:bg-gray-600"></div>
+<span class="text-xs font-medium text-slate-400 dark:text-gray-500 mt-2">You're all caught up</span>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar (Optional but fits App context) -->
+<nav class="sticky bottom-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 px-6 py-3 flex justify-between items-center z-50 pb-safe">
+<button class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined filled">home</span>
+<span class="text-[10px] font-medium">Home</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-300">
+<span class="material-symbols-outlined">search</span>
+<span class="text-[10px] font-medium">Scan</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-300">
+<span class="material-symbols-outlined">bookmark</span>
+<span class="text-[10px] font-medium">Saved</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-300">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] font-medium">Profile</span>
+</button>
+</nav>
+<!-- Floating Action Button for reporting -->
+<button class="fixed bottom-20 right-4 w-14 h-14 bg-slate-900 dark:bg-primary text-white dark:text-slate-900 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center z-40 group">
+<span class="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform duration-300">add</span>
+</button>
+</body></html>

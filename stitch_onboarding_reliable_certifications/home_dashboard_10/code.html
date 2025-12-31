@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Edit Profile</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec6a",
+                        "primary-dark": "#0ea64b",
+                        "background-light": "#f6f8f7",
+                        "background-dark": "#102217",
+                        "card-light": "#ffffff",
+                        "card-dark": "#1a2e22",
+                        "text-main": "#0d1b13",
+                        "text-main-dark": "#e8f5e9",
+                        "text-secondary": "#4b5563",
+                        "text-secondary-dark": "#9ca3af"
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display bg-background-light dark:bg-background-dark text-text-main dark:text-text-main-dark transition-colors duration-200">
+<div class="relative flex min-h-screen w-full flex-col overflow-hidden pb-24 mx-auto max-w-md bg-background-light dark:bg-background-dark shadow-2xl">
+<header class="flex items-center justify-between px-5 pt-8 pb-4 bg-background-light dark:bg-background-dark sticky top-0 z-10">
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-card-dark shadow-sm ring-1 ring-black/5 dark:ring-white/10 transition active:scale-95">
+<span class="material-symbols-outlined text-text-main dark:text-text-main-dark">arrow_back</span>
+</button>
+<h1 class="text-lg font-bold text-text-main dark:text-text-main-dark">Modifier le profil</h1>
+<div class="w-10"></div>
+</header>
+<main class="flex-1 px-5 pt-2">
+<section class="flex flex-col items-center mb-8">
+<div class="relative">
+<div class="h-28 w-28 overflow-hidden rounded-full border-4 border-white shadow-lg dark:border-card-dark">
+<div class="h-full w-full bg-cover bg-center" data-alt="Portrait of a young man smiling nicely" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCtFwpxQncaHqNfBOzZQNPJ0zSLS-N3mJN84HUGfQybJ5IRlxdf0mb8ads3eBFL1TPQW2uwan01MAFHQ5wqgkOh64ahJoT5WLj8bKD-__0K9es8vUkclsKkRAlkuXT7Rcs_ruUxGT7tYV1A0Y2E3LYazNACI4d4G5kTLo4AglWPZ-0fomguLtKUuCHJdSHGLU5h46Q7EHy8IA6I-OFugvkYt5ur1JHr8DWkTM3pnY6dbBVd_85sP6BQpN-XvVu6hjAj-AaINQbC0jEM");'></div>
+</div>
+<button class="absolute bottom-0 right-0 flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white shadow-md ring-2 ring-white transition active:scale-95 dark:ring-background-dark hover:bg-primary-dark">
+<span class="material-symbols-outlined text-[18px]">photo_camera</span>
+</button>
+</div>
+<p class="mt-3 text-sm font-medium text-text-secondary dark:text-text-secondary-dark">Changer la photo</p>
+</section>
+<form class="flex flex-col gap-5">
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-semibold text-text-main dark:text-text-main-dark" for="name">Nom complet</label>
+<div class="relative">
+<input class="w-full rounded-xl border-none bg-white py-3.5 pl-11 pr-4 text-text-main shadow-sm ring-1 ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-primary dark:bg-card-dark dark:text-text-main-dark dark:ring-white/10 dark:placeholder:text-gray-500" id="name" placeholder="Votre nom" type="text" value="Yassine Benali"/>
+<span class="material-symbols-outlined absolute left-3.5 top-3.5 text-text-secondary dark:text-text-secondary-dark">person</span>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-semibold text-text-main dark:text-text-main-dark" for="username">Nom d'utilisateur</label>
+<div class="relative">
+<input class="w-full rounded-xl border-none bg-white py-3.5 pl-11 pr-4 text-text-main shadow-sm ring-1 ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-primary dark:bg-card-dark dark:text-text-main-dark dark:ring-white/10 dark:placeholder:text-gray-500" id="username" placeholder="@username" type="text" value="@yassine_b"/>
+<span class="material-symbols-outlined absolute left-3.5 top-3.5 text-text-secondary dark:text-text-secondary-dark">alternate_email</span>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-semibold text-text-main dark:text-text-main-dark" for="email">Adresse email</label>
+<div class="relative">
+<input class="w-full rounded-xl border-none bg-white py-3.5 pl-11 pr-4 text-text-main shadow-sm ring-1 ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-primary dark:bg-card-dark dark:text-text-main-dark dark:ring-white/10 dark:placeholder:text-gray-500" id="email" placeholder="email@exemple.com" type="email" value="yassine.b@email.com"/>
+<span class="material-symbols-outlined absolute left-3.5 top-3.5 text-text-secondary dark:text-text-secondary-dark">mail</span>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between">
+<label class="text-sm font-semibold text-text-main dark:text-text-main-dark" for="location">Localisation</label>
+<span class="text-xs font-normal text-text-secondary dark:text-text-secondary-dark">Optionnel</span>
+</div>
+<div class="relative">
+<input class="w-full rounded-xl border-none bg-white py-3.5 pl-11 pr-4 text-text-main shadow-sm ring-1 ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-primary dark:bg-card-dark dark:text-text-main-dark dark:ring-white/10 dark:placeholder:text-gray-500" id="location" placeholder="Ville, Pays" type="text" value="Paris, France"/>
+<span class="material-symbols-outlined absolute left-3.5 top-3.5 text-text-secondary dark:text-text-secondary-dark">location_on</span>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-semibold text-text-main dark:text-text-main-dark" for="bio">Bio</label>
+<textarea class="w-full rounded-xl border-none bg-white py-3 px-4 text-text-main shadow-sm ring-1 ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-primary dark:bg-card-dark dark:text-text-main-dark dark:ring-white/10 dark:placeholder:text-gray-500 min-h-[100px]" id="bio" placeholder="Dites quelque chose sur vous...">Consommateur conscient à la recherche de produits sains et éthiques.</textarea>
+</div>
+<div class="mt-2">
+<h3 class="text-sm font-semibold text-text-main dark:text-text-main-dark mb-3">Préférences</h3>
+<div class="flex flex-wrap gap-2">
+<button class="rounded-full bg-primary px-4 py-2 text-xs font-bold text-white shadow-sm" type="button">Halal Certifié</button>
+<button class="rounded-full bg-white px-4 py-2 text-xs font-bold text-text-secondary ring-1 ring-gray-200 dark:bg-card-dark dark:text-text-secondary-dark dark:ring-white/10" type="button">Bio</button>
+<button class="rounded-full bg-white px-4 py-2 text-xs font-bold text-text-secondary ring-1 ring-gray-200 dark:bg-card-dark dark:text-text-secondary-dark dark:ring-white/10" type="button">Sans Gluten</button>
+<button class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-text-secondary dark:bg-white/5 dark:text-text-secondary-dark" type="button">
+<span class="material-symbols-outlined text-sm">add</span>
+</button>
+</div>
+</div>
+</form>
+</main>
+<div class="sticky bottom-0 left-0 right-0 p-5 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm border-t border-gray-100 dark:border-white/5">
+<button class="w-full rounded-2xl bg-primary py-4 text-base font-bold text-text-main shadow-lg ring-1 ring-black/5 transition active:scale-[0.98] hover:bg-primary-dark">
+            Enregistrer les modifications
+        </button>
+</div>
+<nav class="fixed bottom-0 left-0 right-0 z-50 mx-auto hidden max-w-md border-t border-gray-200 bg-white/90 px-2 pb-5 pt-2 backdrop-blur-lg dark:border-white/10 dark:bg-background-dark/90">
+</nav>
+</div>
+
+</body></html>

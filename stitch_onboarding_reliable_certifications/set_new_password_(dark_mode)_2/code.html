@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Set New Password - Optimus Halal</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            // Removed darkMode: "class" as we are enforcing light mode
+            theme: {
+            extend: {
+                colors: {
+                "primary": "#13ec6a",
+                "background-light": "#f6f8f7",
+                "background-dark": "#102217", // Kept for reference, though not actively used in light mode
+                "surface-dark": "#193324", // Kept for reference
+                "border-dark": "#326747", // Kept for reference
+                "text-muted": "#92c9a8", // Kept for reference
+                "surface-light": "#ffffff", // Custom light surface color
+                "border-light": "#e2e8f0", // Custom light border color (similar to gray-300)
+                "text-light-muted": "#6b7280", // Custom light muted text color (similar to gray-500/600)
+                },
+                fontFamily: {
+                "display": ["Inter", "sans-serif"]
+                },
+                borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light font-display text-gray-900 min-h-screen flex flex-col antialiased selection:bg-primary selection:text-background-dark">
+<header class="flex items-center justify-between p-4 pb-2 sticky top-0 z-20 bg-background-light/95 backdrop-blur-md">
+<button aria-label="Go back" class="flex size-10 items-center justify-center rounded-full text-gray-900 hover:bg-black/5 transition-colors">
+<span class="material-symbols-outlined text-2xl">arrow_back_ios_new</span>
+</button>
+<h1 class="text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-10">Set New Password</h1>
+</header>
+<main class="flex-1 w-full max-w-md mx-auto px-4 py-2 flex flex-col">
+<div class="mt-2 mb-6">
+<p class="text-gray-600 text-base font-normal leading-normal">
+                Your new password must be different from previously used passwords.
+            </p>
+</div>
+<form class="flex flex-col gap-5" onsubmit="event.preventDefault()">
+<div class="group">
+<label class="block text-base font-medium mb-2 text-gray-800" for="new-password">
+                    New Password
+                </label>
+<div class="relative flex items-center">
+<input class="form-input block w-full rounded-lg border-gray-300 bg-white text-gray-900 h-14 px-4 pr-12 text-base shadow-sm focus:border-primary focus:ring-1 focus:ring-primary placeholder:text-gray-400 transition-colors" id="new-password" placeholder="Enter your new password" type="password"/>
+<button aria-label="Toggle password visibility" class="absolute right-0 top-0 bottom-0 px-4 flex items-center justify-center text-gray-400 hover:text-primary transition-colors focus:outline-none" type="button">
+<span class="material-symbols-outlined text-2xl">visibility_off</span>
+</button>
+</div>
+<div class="mt-3">
+<div class="flex gap-1.5 h-1.5 w-full">
+<div class="flex-1 rounded-full bg-primary h-full transition-all duration-300"></div>
+<div class="flex-1 rounded-full bg-primary h-full transition-all duration-300"></div>
+<div class="flex-1 rounded-full bg-gray-200 h-full transition-all duration-300"></div>
+<div class="flex-1 rounded-full bg-gray-200 h-full transition-all duration-300"></div>
+</div>
+<div class="flex justify-between items-center mt-2">
+<span class="text-xs font-medium text-primary uppercase tracking-wide">Medium strength</span>
+</div>
+</div>
+</div>
+<div>
+<label class="block text-base font-medium mb-2 text-gray-800" for="confirm-password">
+                    Confirm Password
+                </label>
+<div class="relative flex items-center">
+<input class="form-input block w-full rounded-lg border-gray-300 bg-white text-gray-900 h-14 px-4 pr-12 text-base shadow-sm focus:border-primary focus:ring-1 focus:ring-primary placeholder:text-gray-400 transition-colors" id="confirm-password" placeholder="Re-enter your new password" type="password"/>
+<button aria-label="Toggle password visibility" class="absolute right-0 top-0 bottom-0 px-4 flex items-center justify-center text-gray-400 hover:text-primary transition-colors focus:outline-none" type="button">
+<span class="material-symbols-outlined text-2xl">visibility_off</span>
+</button>
+</div>
+</div>
+<div class="bg-primary/5 rounded-lg p-3 flex items-start gap-3 border border-primary/10">
+<span class="material-symbols-outlined text-primary text-xl shrink-0 mt-0.5">info</span>
+<p class="text-sm text-gray-600 leading-tight">
+                    At least 8 characters, containing a letter and a number.
+                </p>
+</div>
+<div class="flex-1 min-h-[2rem]"></div>
+<button class="w-full bg-primary hover:bg-[#0fd660] active:bg-[#0cb852] text-background-dark font-bold text-lg h-14 rounded-lg shadow-lg shadow-primary/20 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 mb-6">
+                Save New Password
+            </button>
+</form>
+</main>
+</body></html>

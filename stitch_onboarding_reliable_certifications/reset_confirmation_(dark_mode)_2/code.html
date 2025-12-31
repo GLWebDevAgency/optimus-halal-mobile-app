@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Reset Confirmation</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec6a",
+                        "background-light": "#f6f8f7",
+                        // "background-dark": "#102217", // Not needed for light mode
+                        "surface-light": "#ffffff", // Equivalent to surface-dark for light theme
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light font-display antialiased">
+<div class="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden">
+<div class="flex items-center p-4 justify-between">
+<button class="text-gray-900 flex size-12 shrink-0 items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h2 class="text-gray-900 text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">Reset Password</h2>
+</div>
+<div class="flex-1 flex flex-col items-center justify-center px-6 -mt-10">
+<div class="relative mb-8 group">
+<div class="absolute inset-0 bg-primary/20 rounded-full blur-xl transform scale-110"></div>
+<div class="relative flex items-center justify-center size-24 rounded-full bg-surface-light border border-gray-200 shadow-xl">
+<span class="material-symbols-outlined text-primary text-5xl" style="font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 48;">mark_email_read</span>
+</div>
+<div class="absolute top-0 right-0 size-6 bg-primary rounded-full border-4 border-white flex items-center justify-center">
+<span class="material-symbols-outlined text-background-light text-[10px] font-bold">check</span>
+</div>
+</div>
+<h1 class="text-gray-900 text-[32px] font-bold leading-tight text-center mb-3">
+                Check your mail
+            </h1>
+<p class="text-gray-600 text-base font-normal leading-relaxed text-center max-w-xs">
+                We have sent a password recover instruction to your email <span class="text-gray-900 font-medium">ali***@gmail.com</span>. Please check your inbox.
+            </p>
+<div class="h-12"></div>
+<div class="w-full max-w-sm flex flex-col gap-4">
+<button class="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 bg-primary text-[#102217] text-base font-bold leading-normal tracking-[0.015em] hover:brightness-110 active:scale-[0.98] transition-all">
+<span class="truncate">Back to Login</span>
+</button>
+<button class="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 bg-transparent border border-gray-300 text-gray-900 text-base font-semibold leading-normal hover:bg-gray-100 active:scale-[0.98] transition-all">
+<span class="truncate">Open Email App</span>
+</button>
+</div>
+<div class="mt-8 text-center">
+<p class="text-gray-500 text-sm">
+                    Did not receive the email? <br class="hidden sm:block"/>
+<button class="text-primary font-bold hover:underline mt-1 sm:mt-0 ml-1">Resend Link</button>
+</p>
+</div>
+</div>
+<div class="p-6 text-center">
+<button class="flex items-center justify-center gap-2 mx-auto text-gray-600 text-sm font-medium hover:text-gray-900 transition-colors">
+<span class="material-symbols-outlined text-[18px]">help</span>
+<span>Contact Support</span>
+</button>
+</div>
+</div>
+
+</body></html>

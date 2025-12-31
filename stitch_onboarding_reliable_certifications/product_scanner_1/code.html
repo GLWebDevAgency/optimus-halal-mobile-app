@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Product Scanner</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2bee6c",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display overflow-hidden selection:bg-primary selection:text-black">
+<div class="relative h-screen w-full flex flex-col bg-black group/design-root">
+<!-- 1. Camera Feed Simulator -->
+<!-- Background image representing the camera view -->
+<div class="absolute inset-0 z-0">
+<img alt="Camera Feed" class="h-full w-full object-cover opacity-90" data-alt="Blurred view of grocery store shelves with various products" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcJEqrykMHts6ZVkMMNkKZw-qlR3iriF2I1r_W-lCNokDgLYQcxMVQCd9NURCcPTqL8EC2PGaTnku7qz7DIHJAUShDOrcqG0a0IitjFH4lOrgj8mVmKH7t6Ln-KR1kA9mjhlu3yv4hIFp0lNoqmQjy1HSLxrn3WZ8dNfVfS5XAP3NEbCWjhD9fLULR7FmLWfhNxEllrOUypKYdoprmke6BLTgi8a0NuCPvtxLbXDJwc7HrFAwA7_8atAxa2SBj9o4DiwEgzGllQvLq"/>
+</div>
+<!-- 2. Dark Overlay Mask with Cutout -->
+<!-- We use a flexbox layout to create a transparent 'hole' in the center for scanning -->
+<div class="absolute inset-0 z-10 flex flex-col">
+<!-- Top Dark Area -->
+<div class="flex-1 bg-[#1E293B]/60 backdrop-blur-[2px]"></div>
+<!-- Middle Area with Cutout -->
+<div class="flex h-72 shrink-0">
+<div class="flex-1 bg-[#1E293B]/60 backdrop-blur-[2px]"></div>
+<!-- The Cutout Window -->
+<div class="relative w-80 shrink-0 bg-transparent rounded-3xl overflow-hidden box-border shadow-[0_0_0_1px_rgba(255,255,255,0.1)]">
+<!-- This area remains clear to show the product -->
+</div>
+<div class="flex-1 bg-[#1E293B]/60 backdrop-blur-[2px]"></div>
+</div>
+<!-- Bottom Dark Area -->
+<div class="flex-1 bg-[#1E293B]/60 backdrop-blur-[2px]"></div>
+</div>
+<!-- 3. Interface Overlay (Controls & Guides) -->
+<div class="absolute inset-0 z-20 flex flex-col justify-between">
+<!-- Header Bar -->
+<div class="flex items-start justify-between p-6 pt-12 bg-gradient-to-b from-black/80 to-transparent">
+<!-- Close Button -->
+<button class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-800/40 border border-white/10 backdrop-blur-md text-white hover:bg-slate-700/60 transition-colors">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+<!-- App Title Badge -->
+<div class="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/80 border border-slate-700/50 backdrop-blur-md shadow-lg">
+<span class="text-white text-sm font-semibold tracking-wide flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg">verified_user</span>
+                        Scanner Halal
+                    </span>
+</div>
+<!-- Flashlight Toggle -->
+<button class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-800/40 border border-white/10 backdrop-blur-md text-white hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">flash_on</span>
+</button>
+</div>
+<!-- Scanner Reticle & Instructions -->
+<!-- This section aligns perfectly with the transparent cutout defined in layer 2 -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-72 pointer-events-none flex flex-col items-center justify-center">
+<!-- Corner Brackets (Visual Guide) -->
+<div class="absolute inset-0 w-full h-full">
+<!-- Top Left -->
+<div class="absolute top-0 left-0 w-12 h-12 border-t-[4px] border-l-[4px] border-primary rounded-tl-2xl shadow-[0_0_15px_rgba(43,238,108,0.3)]"></div>
+<!-- Top Right -->
+<div class="absolute top-0 right-0 w-12 h-12 border-t-[4px] border-r-[4px] border-primary rounded-tr-2xl shadow-[0_0_15px_rgba(43,238,108,0.3)]"></div>
+<!-- Bottom Left -->
+<div class="absolute bottom-0 left-0 w-12 h-12 border-b-[4px] border-l-[4px] border-primary rounded-bl-2xl shadow-[0_0_15px_rgba(43,238,108,0.3)]"></div>
+<!-- Bottom Right -->
+<div class="absolute bottom-0 right-0 w-12 h-12 border-b-[4px] border-r-[4px] border-primary rounded-br-2xl shadow-[0_0_15px_rgba(43,238,108,0.3)]"></div>
+</div>
+<!-- Laser Scan Line (Visual Feedback) -->
+<!-- A thin gradient line to simulate scanning activity -->
+<div class="w-[90%] h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent shadow-[0_0_15px_rgba(43,238,108,0.8)] opacity-90"></div>
+</div>
+<!-- Floating Instructions Below Frame -->
+<div class="absolute top-[calc(50%+10rem)] left-0 right-0 text-center pointer-events-none px-6">
+<p class="inline-flex items-center justify-center px-5 py-2.5 bg-black/60 backdrop-blur-md rounded-xl text-white font-medium text-sm tracking-wide border border-white/10 shadow-xl">
+                    Placez le code-barres dans le cadre
+                 </p>
+</div>
+<!-- Bottom Control Dock -->
+<!-- Using a gradient background to ensure text readability -->
+<div class="pb-10 pt-20 px-6 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
+<div class="flex items-center justify-between max-w-[360px] mx-auto">
+<!-- Galerie Button (Secondary Action) -->
+<div class="flex flex-col items-center gap-2 group cursor-pointer">
+<button class="flex items-center justify-center w-14 h-14 rounded-2xl bg-slate-800/60 border border-slate-600/50 backdrop-blur-lg text-white shadow-lg transition-transform active:scale-95 hover:bg-slate-700/80">
+<span class="material-symbols-outlined text-[26px]">photo_library</span>
+</button>
+<span class="text-[11px] font-bold text-slate-300 tracking-wide uppercase group-hover:text-white transition-colors">Galerie</span>
+</div>
+<!-- Main Scan/Capture Anchor (Primary Action) -->
+<div class="relative -mt-8">
+<!-- Outer Ring -->
+<div class="w-24 h-24 rounded-full border-[3px] border-white/10 flex items-center justify-center bg-white/5 backdrop-blur-sm">
+<!-- Inner Button -->
+<button class="w-18 h-18 rounded-full bg-primary shadow-[0_0_25px_rgba(43,238,108,0.5)] flex items-center justify-center text-slate-900 transition-transform active:scale-90 hover:scale-105">
+<span class="material-symbols-outlined text-[36px] font-bold">barcode_scanner</span>
+</button>
+</div>
+</div>
+<!-- Historique Button (Secondary Action with Gold Accent) -->
+<div class="flex flex-col items-center gap-2 group cursor-pointer">
+<button class="flex items-center justify-center w-14 h-14 rounded-2xl bg-slate-800/60 border border-slate-600/50 backdrop-blur-lg text-[#FFD700] shadow-lg transition-transform active:scale-95 hover:bg-slate-700/80">
+<span class="material-symbols-outlined text-[26px]">history</span>
+</button>
+<span class="text-[11px] font-bold text-slate-300 tracking-wide uppercase group-hover:text-white transition-colors">Historique</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body></html>

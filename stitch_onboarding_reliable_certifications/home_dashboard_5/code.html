@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Favorites - Light Mode</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec6a",
+                        "primary-dark": "#0ea64b",
+                        "background-light": "#f6f8f7",
+                        "background-dark": "#102217",
+                        "card-light": "#ffffff",
+                        "card-dark": "#1a2e22",
+                        "text-main": "#0d1b13",
+                        "text-main-dark": "#e8f5e9",
+                        "text-secondary": "#4b5563",
+                        "text-secondary-dark": "#9ca3af"
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        body {
+            min-height: max(884px, 100dvh);
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display bg-background-light text-text-main transition-colors duration-200">
+<div class="relative flex min-h-screen w-full flex-col overflow-hidden mx-auto max-w-md bg-background-light shadow-2xl">
+<header class="sticky top-0 z-30 flex items-center justify-between bg-background-light/95 px-5 pt-10 pb-4 backdrop-blur-md">
+<div>
+<h1 class="text-2xl font-bold tracking-tight text-text-main">Mes Favoris</h1>
+<p class="text-xs text-text-secondary mt-0.5">4 produits enregistrés</p>
+</div>
+<div class="flex gap-2">
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-card-light text-text-main shadow-sm ring-1 ring-gray-200 transition active:scale-95 hover:bg-gray-50">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-card-light text-text-main shadow-sm ring-1 ring-gray-200 transition active:scale-95 hover:bg-gray-50">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+</header>
+<div class="sticky top-[96px] z-20 flex w-full gap-3 overflow-x-auto bg-background-light/95 px-5 pb-4 pt-1 no-scrollbar backdrop-blur-md">
+<button class="whitespace-nowrap rounded-full bg-primary px-4 py-1.5 text-xs font-bold text-background-dark transition shadow-lg shadow-primary/20">Tout</button>
+<button class="whitespace-nowrap rounded-full bg-card-light border border-gray-200 px-4 py-1.5 text-xs font-medium text-text-secondary transition hover:bg-gray-50 hover:text-text-main">Alimentaire</button>
+<button class="whitespace-nowrap rounded-full bg-card-light border border-gray-200 px-4 py-1.5 text-xs font-medium text-text-secondary transition hover:bg-gray-50 hover:text-text-main">Cosmétique</button>
+<button class="whitespace-nowrap rounded-full bg-card-light border border-gray-200 px-4 py-1.5 text-xs font-medium text-text-secondary transition hover:bg-gray-50 hover:text-text-main">Halal Certifié</button>
+</div>
+<main class="flex-1 overflow-y-auto px-5 pb-28 pt-2">
+<div class="grid grid-cols-2 gap-4">
+<div class="group relative flex flex-col overflow-hidden rounded-2xl bg-card-light ring-1 ring-gray-200 transition hover:ring-primary/50 shadow-sm">
+<div class="absolute right-2 top-2 z-10">
+<button class="flex h-8 w-8 items-center justify-center rounded-full bg-white/60 text-primary backdrop-blur-md transition active:scale-90 hover:bg-white/80">
+<span class="material-symbols-outlined text-[18px] filled">favorite</span>
+</button>
+</div>
+<div class="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
+<div class="h-full w-full bg-cover bg-center transition duration-500 group-hover:scale-110" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDtxMnAlTfjVJBFwD6YetTmUam4oYp6PkDhy16DDP4FTjQCKDqwshRDyh27jtCc09KbmA9s9C-FStSP9p5yaxvM3Dh7F8N-sMZRrK67395MgUmMTSZnoRA-kQJYOhZuv128AMCBI8LfbPoEqgIaWlnZkmMfJ-KI3QYiP7VvtcO7jgAcV8zhs5GbddiZIObB10oLHdUKRyl8hWxrsMS0sn2fr2sCp9YZGVj9ItdWRu48Hxw_5uyihW2GQBDymNlccfZHM-vwm36xOZeJ");'></div>
+</div>
+<div class="flex flex-1 flex-col p-3">
+<div class="mb-1.5 flex items-center gap-1.5">
+<span class="rounded bg-green-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-green-700">Excellent</span>
+</div>
+<h3 class="mb-0.5 text-sm font-bold text-text-main line-clamp-1">Miel d'Acacia Bio</h3>
+<p class="mb-3 text-xs text-text-secondary">Ruche d'Or</p>
+<div class="mt-auto flex gap-2">
+<button class="flex flex-1 items-center justify-center rounded-lg bg-gray-100 py-2 text-text-main transition hover:bg-gray-200 active:scale-95">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+<button class="flex flex-1 items-center justify-center rounded-lg bg-primary/10 py-2 text-primary transition hover:bg-primary/20 active:scale-95">
+<span class="material-symbols-outlined text-[18px]">barcode_scanner</span>
+</button>
+</div>
+</div>
+</div>
+<div class="group relative flex flex-col overflow-hidden rounded-2xl bg-card-light ring-1 ring-gray-200 transition hover:ring-primary/50 shadow-sm">
+<div class="absolute right-2 top-2 z-10">
+<button class="flex h-8 w-8 items-center justify-center rounded-full bg-white/60 text-primary backdrop-blur-md transition active:scale-90 hover:bg-white/80">
+<span class="material-symbols-outlined text-[18px] filled">favorite</span>
+</button>
+</div>
+<div class="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
+<div class="h-full w-full bg-cover bg-center transition duration-500 group-hover:scale-110" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCW0gWt8LFaevg92ySgKmzP00hy5qihmtG1gs7FQsbq4VE873Sj24JWnxCfYNakX6BsUgk8_TundOWUUH48-7ds1ggH8JIaLAI20u-3OovoFy66BYwbytWRQEjIqfyU057Eq6_KXRRjhYKPNulXdyUXDTeWC3-tu2ec8dCHbcSsZFIUpSkJd_C-s6GZUxn0GEYWrPSFY0eq4hGfSPbs7WoAlh56KzvZdXLPAq2kRg0GcivKacHjlHbumucjYRdJE9BePZn1K1UX1kyW");'></div>
+</div>
+<div class="flex flex-1 flex-col p-3">
+<div class="mb-1.5 flex items-center gap-1.5">
+<span class="rounded bg-primary/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-dark">Bon</span>
+</div>
+<h3 class="mb-0.5 text-sm font-bold text-text-main line-clamp-1">Blancs de Poulet</h3>
+<p class="mb-3 text-xs text-text-secondary">Volaille Française</p>
+<div class="mt-auto flex gap-2">
+<button class="flex flex-1 items-center justify-center rounded-lg bg-gray-100 py-2 text-text-main transition hover:bg-gray-200 active:scale-95">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+<button class="flex flex-1 items-center justify-center rounded-lg bg-primary/10 py-2 text-primary transition hover:bg-primary/20 active:scale-95">
+<span class="material-symbols-outlined text-[18px]">barcode_scanner</span>
+</button>
+</div>
+</div>
+</div>
+<div class="group relative flex flex-col overflow-hidden rounded-2xl bg-card-light ring-1 ring-gray-200 transition hover:ring-primary/50 shadow-sm">
+<div class="absolute right-2 top-2 z-10">
+<button class="flex h-8 w-8 items-center justify-center rounded-full bg-white/60 text-primary backdrop-blur-md transition active:scale-90 hover:bg-white/80">
+<span class="material-symbols-outlined text-[18px] filled">favorite</span>
+</button>
+</div>
+<div class="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
+<div class="h-full w-full bg-cover bg-center transition duration-500 group-hover:scale-110" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAJnrDBKWrspy7fdl5R7QyCwsom5KP71lD25JK3tzOrOdcjzSK2MRg7UIc6_5wvJGTwflPGI4DpktN9KvPUkQ5J5aB4p6yJ7iZ_Emz4LXJ-uVbDyyXonKrlx7R7MbeWC_DHGqzEE-alV2dLE7fNLlXE4mpSrijDWRyRuDMurX-ZYXyIKljubQ-vGzkIvAj7Pg59Qvc4pSCW1QiLKVlR63iqHTrhhGbSDWbq9tTdx-TLHdNPo1JLBwo5Wa3pSETiZK-oqoBwtFCJL-6j");'></div>
+</div>
+<div class="flex flex-1 flex-col p-3">
+<div class="mb-1.5 flex items-center gap-1.5">
+<span class="rounded bg-green-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-green-700">Excellent</span>
+</div>
+<h3 class="mb-0.5 text-sm font-bold text-text-main line-clamp-1">Huile d'Olive Vierge</h3>
+<p class="mb-3 text-xs text-text-secondary">Bio Provence</p>
+<div class="mt-auto flex gap-2">
+<button class="flex flex-1 items-center justify-center rounded-lg bg-gray-100 py-2 text-text-main transition hover:bg-gray-200 active:scale-95">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+<button class="flex flex-1 items-center justify-center rounded-lg bg-primary/10 py-2 text-primary transition hover:bg-primary/20 active:scale-95">
+<span class="material-symbols-outlined text-[18px]">barcode_scanner</span>
+</button>
+</div>
+</div>
+</div>
+<div class="group relative flex flex-col overflow-hidden rounded-2xl bg-card-light ring-1 ring-gray-200 transition hover:ring-primary/50 shadow-sm">
+<div class="absolute right-2 top-2 z-10">
+<button class="flex h-8 w-8 items-center justify-center rounded-full bg-white/60 text-primary backdrop-blur-md transition active:scale-90 hover:bg-white/80">
+<span class="material-symbols-outlined text-[18px] filled">favorite</span>
+</button>
+</div>
+<div class="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
+<div class="h-full w-full bg-cover bg-center transition duration-500 group-hover:scale-110" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB4m35jbV38n3NIkY8ZOHKsQAs_cnFj_jt55v4ZxSrpVIaY5ObsvVz0LcBa0CIoA-oUuB0T8VfU9HuP1T9ns7AdDd3fDXH4YynSEi3P6vmmbB8BE13265EV9Jk4jnZR4R0oHBvZXic6FRUnDcH2ZeRsdreMxemciz1VM8ImikGYMF5Q7FZ4SU9nXY1IteWJK5k8mi6wole88ZmjYnSp0F10GW9Z9HAfGqNHHNoomH2sU7o3O9RLZz3E6lEsZk1svGL1wcvuY6svibIW");'></div>
+</div>
+<div class="flex flex-1 flex-col p-3">
+<div class="mb-1.5 flex items-center gap-1.5">
+<span class="rounded bg-orange-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-700">Moyen</span>
+</div>
+<h3 class="mb-0.5 text-sm font-bold text-text-main line-clamp-1">Dattes Majhoul</h3>
+<p class="mb-3 text-xs text-text-secondary">Délice d'Orient</p>
+<div class="mt-auto flex gap-2">
+<button class="flex flex-1 items-center justify-center rounded-lg bg-gray-100 py-2 text-text-main transition hover:bg-gray-200 active:scale-95">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+<button class="flex flex-1 items-center justify-center rounded-lg bg-primary/10 py-2 text-primary transition hover:bg-primary/20 active:scale-95">
+<span class="material-symbols-outlined text-[18px]">barcode_scanner</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-6 rounded-2xl border border-dashed border-gray-200 bg-card-light p-6 text-center">
+<div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-text-secondary ring-1 ring-gray-200">
+<span class="material-symbols-outlined">add_a_photo</span>
+</div>
+<h4 class="text-sm font-bold text-text-main">Liste incomplète ?</h4>
+<p class="mt-1 text-xs text-text-secondary">Scannez de nouveaux produits pour les ajouter à vos favoris.</p>
+<button class="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-xs font-bold text-background-dark shadow-lg shadow-primary/20 transition hover:bg-primary-dark active:scale-95">
+<span class="material-symbols-outlined text-[18px]">qr_code_scanner</span>
+                    Scanner un produit
+                </button>
+</div>
+</main>
+<nav class="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-md border-t border-gray-200 bg-background-light/95 px-2 pb-5 pt-2 backdrop-blur-lg">
+<div class="flex items-center justify-between">
+<button class="flex flex-1 flex-col items-center gap-1 p-2 text-text-secondary hover:text-text-main transition">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[10px] font-medium">Accueil</span>
+</button>
+<button class="flex flex-1 flex-col items-center gap-1 p-2 text-text-secondary hover:text-text-main transition">
+<span class="material-symbols-outlined">search</span>
+<span class="text-[10px] font-medium">Recherche</span>
+</button>
+<div class="relative -top-6 flex flex-1 justify-center">
+<button class="flex h-14 w-14 items-center justify-center rounded-full bg-text-main text-white shadow-lg shadow-text-main/20 ring-4 ring-background-light transition active:scale-95 hover:bg-gray-800">
+<span class="material-symbols-outlined text-[28px]">qr_code_scanner</span>
+</button>
+</div>
+<button class="flex flex-1 flex-col items-center gap-1 p-2 text-primary transition">
+<span class="material-symbols-outlined filled">favorite</span>
+<span class="text-[10px] font-medium">Favoris</span>
+</button>
+<button class="flex flex-1 flex-col items-center gap-1 p-2 text-text-secondary hover:text-text-main transition">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] font-medium">Profil</span>
+</button>
+</div>
+</nav>
+</div>
+
+</body></html>

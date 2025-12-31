@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Marketplace Order Tracking</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2bee6c",
+                        "primary-dark": "#24c95a",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "surface-dark": "#1a2e22",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-gray-100 min-h-screen flex flex-col antialiased">
+<!-- Top App Bar -->
+<div class="sticky top-0 z-50 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 transition-colors">
+<div class="flex items-center p-4 justify-between max-w-md mx-auto w-full">
+<h2 class="text-xl font-bold leading-tight tracking-tight flex-1">My Orders</h2>
+<div class="flex items-center justify-end gap-2">
+<button class="flex items-center justify-center rounded-full w-10 h-10 hover:bg-gray-100 dark:hover:bg-white/10 text-slate-900 dark:text-white transition-colors">
+<span class="material-symbols-outlined text-2xl">search</span>
+</button>
+<button class="flex items-center justify-center rounded-full w-10 h-10 hover:bg-gray-100 dark:hover:bg-white/10 text-slate-900 dark:text-white transition-colors">
+<span class="material-symbols-outlined text-2xl">tune</span>
+</button>
+</div>
+</div>
+<!-- Filter Chips -->
+<div class="flex gap-3 px-4 pb-4 overflow-x-auto hide-scrollbar max-w-md mx-auto w-full">
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-primary px-5 shadow-sm transition-transform active:scale-95">
+<p class="text-background-dark text-sm font-semibold">Active</p>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 px-5 shadow-sm transition-transform active:scale-95">
+<p class="text-slate-600 dark:text-gray-300 text-sm font-medium">Past</p>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 px-5 shadow-sm transition-transform active:scale-95">
+<p class="text-slate-600 dark:text-gray-300 text-sm font-medium">Returns</p>
+</button>
+</div>
+</div>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto w-full max-w-md mx-auto px-4 py-4 space-y-6 pb-24">
+<!-- Active Order Card (Hero) -->
+<div class="flex flex-col gap-4">
+<div class="flex items-center justify-between px-1">
+<h3 class="text-lg font-bold">Current Order</h3>
+<span class="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full border border-primary/20">#ORD-2491</span>
+</div>
+<div class="bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+<!-- Status Header -->
+<div class="p-5 border-b border-gray-100 dark:border-gray-800">
+<h2 class="text-2xl font-bold leading-tight tracking-tight text-slate-900 dark:text-white mb-1">Arriving Today</h2>
+<p class="text-slate-500 dark:text-gray-400 text-sm font-medium">Estimated by 5:00 PM</p>
+</div>
+<!-- Map Visualization -->
+<div class="relative h-48 w-full bg-gray-100 dark:bg-gray-800">
+<div class="absolute inset-0 bg-cover bg-center opacity-80" data-alt="Map view of city streets with route line" data-location="Riyadh" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDxFVSV06Sk1zmUKAsORbQQlTKKj8pvfQdd1vMaxzmOeQMjpB1ajwFTHQUk6VnpSL8_v-WeMlOnv1fWxaLs7Zvl5mqeP_w33ItXc1sOVEajzl1BkNftQemRvMgVpjilcdk889z4Rx4KfLbb2cNHnREdEMo8b5psVkvd7KyNPM9NhLJ7dpaH_G62l1sgMhNaRL0AiHEqjR7yJj92C0QjHFZ7aLWmnQdQ-uHTvrxZnUkME_2xMon2IQhcWykhV5XT3j95p6Jl-hHHFJfg");'>
+</div>
+<!-- Driver Overlay -->
+<div class="absolute bottom-3 left-3 right-3 bg-white/90 dark:bg-surface-dark/90 backdrop-blur-sm p-3 rounded-lg flex items-center gap-3 shadow-lg border border-white/20">
+<div class="h-10 w-10 rounded-full bg-gray-200 bg-cover bg-center shrink-0" data-alt="Portrait of the delivery driver" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuATxNsAxtnFYMdkvTViEnugcP5WpDXa-riqxA44tC8mGITx3y3yvHwMeFNcB2GopWXeW4luu1CtnkQAKdO93cQfH5wgwAjjlPwU7eqHEzSSMQ--565cUgOdMXmvB8eEJD5ASu83ze9clFIdXp3Gc61OzWLsrvH0kQNa25iTlk2EhXe2i1qKit3na4TUYN6ST_1Pv8WapAuYk_hKH4N2cuTh1XiDS4s1UrxLCrbRmafSd7h1mCTS5NtJYvHWLJ8dD2F6lV45tbMzVbhm")'></div>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-bold text-slate-900 dark:text-white truncate">Ahmed Al-Sayed</p>
+<p class="text-xs text-slate-500 dark:text-gray-400 truncate">Courier • 4.9 ★</p>
+</div>
+<button class="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-background-dark shadow-sm">
+<span class="material-symbols-outlined text-lg">call</span>
+</button>
+</div>
+</div>
+<!-- Timeline Vertical -->
+<div class="p-5">
+<div class="grid grid-cols-[32px_1fr] gap-x-3">
+<!-- Step 1: Completed -->
+<div class="flex flex-col items-center">
+<div class="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-background-dark shrink-0 z-10">
+<span class="material-symbols-outlined text-lg">check</span>
+</div>
+<div class="w-0.5 bg-primary h-full min-h-[24px]"></div>
+</div>
+<div class="pb-6 pt-1">
+<p class="text-sm font-bold text-slate-900 dark:text-white">Order Placed</p>
+<p class="text-xs text-slate-500 dark:text-gray-400">Jan 12, 10:23 AM</p>
+</div>
+<!-- Step 2: Completed -->
+<div class="flex flex-col items-center">
+<div class="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-background-dark shrink-0 z-10">
+<span class="material-symbols-outlined text-lg">check</span>
+</div>
+<div class="w-0.5 bg-primary h-full min-h-[24px]"></div>
+</div>
+<div class="pb-6 pt-1">
+<p class="text-sm font-bold text-slate-900 dark:text-white">Packed &amp; Quality Checked</p>
+<p class="text-xs text-slate-500 dark:text-gray-400">Jan 12, 02:45 PM • <span class="text-primary font-medium">Halal Verified</span></p>
+</div>
+<!-- Step 3: Current -->
+<div class="flex flex-col items-center">
+<div class="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-background-dark shrink-0 z-10 ring-4 ring-primary/20 animate-pulse">
+<span class="material-symbols-outlined text-lg">local_shipping</span>
+</div>
+<div class="w-0.5 bg-gray-200 dark:bg-gray-700 h-full min-h-[24px]"></div>
+</div>
+<div class="pb-6 pt-1">
+<p class="text-sm font-bold text-slate-900 dark:text-white">Out for Delivery</p>
+<p class="text-xs text-slate-500 dark:text-gray-400">Today, 04:15 PM</p>
+</div>
+<!-- Step 4: Future -->
+<div class="flex flex-col items-center">
+<div class="h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-400 shrink-0 z-10">
+<span class="material-symbols-outlined text-lg">home_pin</span>
+</div>
+</div>
+<div class="pt-1">
+<p class="text-sm font-medium text-gray-400 dark:text-gray-500">Delivered</p>
+</div>
+</div>
+</div>
+<!-- Products in Order -->
+<div class="border-t border-gray-100 dark:border-gray-800 p-5 bg-gray-50 dark:bg-surface-dark/50">
+<p class="text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-3">Shipment Items</p>
+<div class="space-y-3">
+<div class="flex items-center gap-3">
+<div class="h-12 w-12 rounded-lg bg-white dark:bg-gray-800 p-1 border border-gray-200 dark:border-gray-700 shrink-0">
+<div class="w-full h-full bg-cover bg-center rounded-md" data-alt="Box of premium organic dates" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAKzg0JtfxDCdj8y2q3LU0n8jFHRrC4yBnvn5zxmXRx5qms5pVw7FOTKI6Njrz8pRjTtn2is9FTB-GYzZBAndqfQ6tUF_iRRNddU-5DUpsj5HCpL6BPsqLRvSMS5ZQlv-P0nRfUA27h5Nty-SUc_iOFSXb0UOM9SQULPLO6YTl8PaoPSUQ-g_h_UqCfuFbazZ-R9AeUQmlYjOg0EByNSkf_oMsM8tkh2OtwKnL3M7FkW4nQBi9-53Fg25Qtkpx251F-IPUUmiGXz5pq")'></div>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<p class="text-sm font-semibold text-slate-900 dark:text-white">Ajwa Organic Dates</p>
+<p class="text-sm font-medium text-slate-900 dark:text-white">$24.00</p>
+</div>
+<div class="flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-primary text-[14px]">verified</span>
+<p class="text-xs text-slate-500 dark:text-gray-400">Ethical Source • Medina</p>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="h-12 w-12 rounded-lg bg-white dark:bg-gray-800 p-1 border border-gray-200 dark:border-gray-700 shrink-0">
+<div class="w-full h-full bg-cover bg-center rounded-md" data-alt="Raw lamb chops on a wooden board" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuADQ9tfoxho2--LyEsJ8RK2pUNlci6667Tv308TgDPtJ-K-MxZeKNLnhp7H7tY3gAeDCrAVHHYfDVVEqz846eoYkg1NutstVME6Sj4F2O_VFkghfMYRZdqLE7WUkkalAovW33Irmc8VW9a2W5mxYO1pF3wNP8Eu9mOvPYinKZwRlYnt2p9aEe0OMwpBXVuEYlFZrrvvm8aPLODU-ErYnTy_EbKHT_YR6I_AHSrD7pdlk7jB8azjpNnEL9Z5_q4xoXOhe__Yc5j3jU_c")'></div>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<p class="text-sm font-semibold text-slate-900 dark:text-white">Grass-Fed Lamb</p>
+<p class="text-sm font-medium text-slate-900 dark:text-white">$45.50</p>
+</div>
+<div class="flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-primary text-[14px]">verified</span>
+<p class="text-xs text-slate-500 dark:text-gray-400">HMC Certified • NZ</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Actions -->
+<div class="p-4 flex gap-3">
+<button class="flex-1 bg-primary hover:bg-primary-dark text-background-dark font-bold h-12 rounded-lg flex items-center justify-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[20px]">near_me</span>
+                        Track Driver
+                    </button>
+<button class="w-12 h-12 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center text-slate-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined text-[20px]">support_agent</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Past Orders List -->
+<div class="space-y-4 pt-2">
+<h3 class="text-lg font-bold px-1 text-slate-900 dark:text-white">Past Orders</h3>
+<!-- Order Item 1 -->
+<div class="bg-white dark:bg-surface-dark p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 flex items-center gap-4">
+<div class="h-12 w-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-slate-400 shrink-0">
+<span class="material-symbols-outlined">inventory_2</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-1">
+<p class="text-sm font-bold text-slate-900 dark:text-white truncate">Order #2301-B</p>
+<p class="text-xs font-medium text-slate-500 dark:text-gray-400">Jan 02</p>
+</div>
+<div class="flex justify-between items-center">
+<p class="text-xs text-slate-500 dark:text-gray-400 truncate">4 Items • Delivered</p>
+<p class="text-sm font-bold text-slate-900 dark:text-white">$120.00</p>
+</div>
+</div>
+<button class="text-primary text-sm font-semibold px-2 py-1 hover:bg-primary/10 rounded transition-colors">
+                    Reorder
+                </button>
+</div>
+<!-- Order Item 2 -->
+<div class="bg-white dark:bg-surface-dark p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 flex items-center gap-4">
+<div class="h-12 w-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-slate-400 shrink-0">
+<span class="material-symbols-outlined">inventory_2</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-1">
+<p class="text-sm font-bold text-slate-900 dark:text-white truncate">Order #2188-A</p>
+<p class="text-xs font-medium text-slate-500 dark:text-gray-400">Dec 15</p>
+</div>
+<div class="flex justify-between items-center">
+<p class="text-xs text-slate-500 dark:text-gray-400 truncate">2 Items • Delivered</p>
+<p class="text-sm font-bold text-slate-900 dark:text-white">$55.20</p>
+</div>
+</div>
+<button class="text-primary text-sm font-semibold px-2 py-1 hover:bg-primary/10 rounded transition-colors">
+                    Reorder
+                </button>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-surface-dark/95 backdrop-blur-lg border-t border-gray-200 dark:border-gray-800 z-50 pb-safe">
+<div class="max-w-md mx-auto flex items-center justify-around h-16 px-2">
+<button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-slate-400 dark:text-gray-500 hover:text-primary dark:hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[24px]">home</span>
+<span class="text-[10px] font-medium">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-slate-400 dark:text-gray-500 hover:text-primary dark:hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[24px]">qr_code_scanner</span>
+<span class="text-[10px] font-medium">Scan</span>
+</button>
+<button class="relative flex flex-col items-center justify-center w-16 h-full gap-1 text-primary transition-colors">
+<div class="absolute -top-1 right-3 w-2 h-2 bg-red-500 rounded-full"></div>
+<span class="material-symbols-outlined text-[24px] fill-current">local_mall</span>
+<span class="text-[10px] font-bold">Orders</span>
+</button>
+<button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-slate-400 dark:text-gray-500 hover:text-primary dark:hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[24px]">person</span>
+<span class="text-[10px] font-medium">Profile</span>
+</button>
+</div>
+<!-- Safe Area Padding for iOS -->
+<div class="h-5 w-full"></div>
+</nav>
+</body></html>

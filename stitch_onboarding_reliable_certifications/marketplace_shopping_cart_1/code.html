@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Marketplace Shopping Cart</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2bee6c",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white antialiased transition-colors duration-200">
+<div class="relative flex min-h-screen w-full flex-col pb-32 max-w-md mx-auto shadow-2xl bg-background-light dark:bg-background-dark">
+<header class="sticky top-0 z-50 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-slate-200/50 dark:border-white/5 px-4 py-3">
+<div class="flex items-center justify-between">
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-slate-800 dark:text-white" style="font-size: 24px;">arrow_back</span>
+</button>
+<h2 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Cart (3 items)</h2>
+<div class="w-10"></div> 
+</div>
+</header>
+<main class="flex-1 px-4 py-6 flex flex-col gap-5">
+<div class="group relative flex flex-col sm:flex-row gap-4 bg-white dark:bg-[#1A2C22] p-3 rounded-xl shadow-sm border border-slate-100 dark:border-white/5">
+<div class="relative shrink-0 overflow-hidden rounded-lg w-full sm:w-28 h-32 sm:h-28">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="Raw organic chicken breast meat on a cutting board" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDv_qYlm1qebmdmMo-fx-URwIae5kwSZn0OjPbSFz6Ga5dDcR8uaotx8-ZYqdQeNPVPh-fU3F6smmY6uVenIK989hFs1Cxl7Neo-Y5-e5RkE5mMdEcL576bE2FqKQ1JdSDc8NugUmJoNXdgRWdd0ZIrXxrZoExKHQTZMxzK75VpFjaNJT4BRQ0QxBitfTDHQrXAVZbkl3wa3jxcS0cMn15pXQ7GUrDeJt-Z1OemTHCztX6fhWBf0VGedPWdw7QkL5eoNKj5JI0rOK7X');">
+</div>
+</div>
+<div class="flex flex-1 flex-col justify-between">
+<div>
+<div class="flex justify-between items-start gap-2">
+<div>
+<h3 class="font-bold text-slate-900 dark:text-white leading-tight">Organic Halal Chicken Breast</h3>
+<div class="flex items-center gap-1 mt-1 text-sm text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-[14px]">storefront</span>
+<span>Green Valley Farms</span>
+</div>
+</div>
+<button class="text-slate-400 hover:text-red-500 transition-colors p-1">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+<div class="flex flex-wrap gap-2 mt-2">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-primary/20 text-green-800 dark:text-primary">
+<span class="material-symbols-outlined text-[12px] filled">verified</span> Halal
+                            </span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+<span class="material-symbols-outlined text-[12px]">eco</span> Organic
+                            </span>
+</div>
+</div>
+<div class="flex justify-between items-end mt-4">
+<div class="flex flex-col">
+<span class="text-lg font-bold text-slate-900 dark:text-white">$12.50</span>
+<span class="text-[10px] text-slate-400 font-medium">per lb</span>
+</div>
+<div class="flex items-center gap-3 bg-slate-50 dark:bg-white/5 rounded-lg p-1 border border-slate-100 dark:border-white/5">
+<button class="w-7 h-7 flex items-center justify-center rounded-md bg-white dark:bg-white/10 text-slate-600 dark:text-white shadow-sm hover:bg-slate-50 dark:hover:bg-white/20 transition-colors">
+<span class="material-symbols-outlined text-[16px]">remove</span>
+</button>
+<span class="w-4 text-center text-sm font-semibold text-slate-900 dark:text-white">1</span>
+<button class="w-7 h-7 flex items-center justify-center rounded-md bg-primary text-black shadow-sm hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined text-[16px]">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="group relative flex flex-col sm:flex-row gap-4 bg-white dark:bg-[#1A2C22] p-3 rounded-xl shadow-sm border border-slate-100 dark:border-white/5">
+<div class="relative shrink-0 overflow-hidden rounded-lg w-full sm:w-28 h-32 sm:h-28">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="Golden honey jar with wooden dipper" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDDxUW3kDM3a3JXDLldn5xFcWZ55VKUqmPVld2BiJ_KtEvi0kh4Ded9goSyP53QGHV9jhfksIVhf_Yxahm4yrWsLJFrKA8QRXPw8vZRviC5nSUp95qtKDobJge7DjQ9nom1sy106mD34MmOxI_SuyJNTjZf1wSoJSHzSwFrXmgd8XMVxUOQ_ouFkuwRa6ZAQD55bAfgn38vbcmZY_rORWZmWF4aWmQ6SutN8Rlvwu1lEaYFLPVSnhwrjYe34BBSQG8W84Vt5lB8xVCn');">
+</div>
+</div>
+<div class="flex flex-1 flex-col justify-between">
+<div>
+<div class="flex justify-between items-start gap-2">
+<div>
+<h3 class="font-bold text-slate-900 dark:text-white leading-tight">Ethical Honey Jar</h3>
+<div class="flex items-center gap-1 mt-1 text-sm text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-[14px]">storefront</span>
+<span>Pure Hive Co.</span>
+</div>
+</div>
+<button class="text-slate-400 hover:text-red-500 transition-colors p-1">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+<div class="flex flex-wrap gap-2 mt-2">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300">
+<span class="material-symbols-outlined text-[12px]">hive</span> Raw
+                            </span>
+</div>
+</div>
+<div class="flex justify-between items-end mt-4">
+<div class="flex flex-col">
+<span class="text-lg font-bold text-slate-900 dark:text-white">$36.00</span>
+<span class="text-[10px] text-slate-400 font-medium">$18.00 / unit</span>
+</div>
+<div class="flex items-center gap-3 bg-slate-50 dark:bg-white/5 rounded-lg p-1 border border-slate-100 dark:border-white/5">
+<button class="w-7 h-7 flex items-center justify-center rounded-md bg-white dark:bg-white/10 text-slate-600 dark:text-white shadow-sm hover:bg-slate-50 dark:hover:bg-white/20 transition-colors">
+<span class="material-symbols-outlined text-[16px]">remove</span>
+</button>
+<span class="w-4 text-center text-sm font-semibold text-slate-900 dark:text-white">2</span>
+<button class="w-7 h-7 flex items-center justify-center rounded-md bg-primary text-black shadow-sm hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined text-[16px]">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="group relative flex flex-col sm:flex-row gap-4 bg-white dark:bg-[#1A2C22] p-3 rounded-xl shadow-sm border border-slate-100 dark:border-white/5">
+<div class="relative shrink-0 overflow-hidden rounded-lg w-full sm:w-28 h-32 sm:h-28">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="Dried dates in a wooden bowl" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDICH2vXI49C6bUBh0jxYqL2PpcsMDwUfjRrCxStExeX_QQ5R9jfUJSv71psffRQYwtsXE0oUMBd14kXUCdmLaP03PQkbU5HsqvA_3zomlvigzUArJcUexdbJM5jNNFaOiSK48G47ogKRL0106wMEvuZoFDYcipK34rNIBLB0jMTiskdy46YyZ3sO9XMu7R9UFQNj1S-S3CsRDnVlj0IMGlIxJhblkpipgSD1FZ4G-ghv8acCZ2p6Rn_TksUfrMLPYJfcO5tee4TV1w');">
+</div>
+</div>
+<div class="flex flex-1 flex-col justify-between">
+<div>
+<div class="flex justify-between items-start gap-2">
+<div>
+<h3 class="font-bold text-slate-900 dark:text-white leading-tight">Fair Trade Dates</h3>
+<div class="flex items-center gap-1 mt-1 text-sm text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-[14px]">storefront</span>
+<span>Desert Gold</span>
+</div>
+</div>
+<button class="text-slate-400 hover:text-red-500 transition-colors p-1">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+<div class="flex flex-wrap gap-2 mt-2">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
+<span class="material-symbols-outlined text-[12px]">handshake</span> Fair Trade
+                            </span>
+</div>
+</div>
+<div class="flex justify-between items-end mt-4">
+<div class="flex flex-col">
+<span class="text-lg font-bold text-slate-900 dark:text-white">$8.99</span>
+<span class="text-[10px] text-slate-400 font-medium">per box</span>
+</div>
+<div class="flex items-center gap-3 bg-slate-50 dark:bg-white/5 rounded-lg p-1 border border-slate-100 dark:border-white/5">
+<button class="w-7 h-7 flex items-center justify-center rounded-md bg-white dark:bg-white/10 text-slate-600 dark:text-white shadow-sm hover:bg-slate-50 dark:hover:bg-white/20 transition-colors">
+<span class="material-symbols-outlined text-[16px]">remove</span>
+</button>
+<span class="w-4 text-center text-sm font-semibold text-slate-900 dark:text-white">1</span>
+<button class="w-7 h-7 flex items-center justify-center rounded-md bg-primary text-black shadow-sm hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined text-[16px]">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-4 p-5 bg-white dark:bg-[#1A2C22] rounded-xl shadow-sm border border-slate-100 dark:border-white/5">
+<h3 class="text-sm font-semibold text-slate-900 dark:text-white mb-4 uppercase tracking-wider">Order Summary</h3>
+<div class="space-y-3">
+<div class="flex justify-between text-sm">
+<span class="text-slate-500 dark:text-slate-400">Subtotal</span>
+<span class="font-medium text-slate-900 dark:text-white">$57.49</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-slate-500 dark:text-slate-400">Estimated Tax</span>
+<span class="font-medium text-slate-900 dark:text-white">$3.50</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-slate-500 dark:text-slate-400">Shipping</span>
+<span class="font-medium text-primary">Free</span>
+</div>
+<div class="h-px bg-slate-100 dark:bg-white/10 my-2"></div>
+<div class="flex items-center justify-center gap-2 py-1">
+<span class="material-symbols-outlined text-slate-400 text-[16px]">lock</span>
+<span class="text-xs text-slate-400 font-medium">Secure Checkout Guaranteed</span>
+</div>
+</div>
+</div>
+</main>
+<div class="fixed bottom-0 left-0 right-0 z-40 bg-white/80 dark:bg-[#102216]/90 backdrop-blur-xl border-t border-slate-200 dark:border-white/5 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+<div class="max-w-md mx-auto p-4 safe-area-bottom">
+<div class="flex justify-between items-center mb-4 px-1">
+<div>
+<p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Amount</p>
+<p class="text-2xl font-bold text-slate-900 dark:text-white leading-none mt-1">$60.99</p>
+</div>
+</div>
+<button class="w-full bg-primary hover:bg-[#25d660] text-[#0d1b12] font-bold text-base py-4 rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 active:scale-[0.99] transition-all flex items-center justify-center gap-2 group">
+<span>Proceed to Checkout</span>
+<span class="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</body></html>
