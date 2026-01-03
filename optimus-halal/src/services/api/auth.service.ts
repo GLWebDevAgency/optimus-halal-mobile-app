@@ -46,6 +46,7 @@ export const authService = {
     if (response.success && response.tokens) {
       await setTokens(response.tokens.accessToken, response.tokens.refreshToken);
     }
+    console.log('Login response:', response);
 
     return response;
   },

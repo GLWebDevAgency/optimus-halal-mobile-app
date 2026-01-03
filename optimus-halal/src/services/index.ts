@@ -3,10 +3,20 @@
  * 
  * Central export for all services
  * Netflix/Stripe/Shopify/Airbnb/Spotify standards
+ * 
+ * Architecture:
+ * - gRPC: Direct communication with Mobile-Service (Rust BFF) - RECOMMENDED
+ * - API: Legacy tRPC via API Gateway (deprecated for new features)
  */
 
 // ============================================
-// API SERVICES
+// GRPC SERVICES (NEW - Direct to Mobile-Service)
+// ============================================
+
+export * from './grpc';
+
+// ============================================
+// API SERVICES (Legacy - via API Gateway)
 // ============================================
 
 export * from './api';

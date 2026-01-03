@@ -1,0 +1,107 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "🔌 Attach to Hermes Inspector",
+            "type": "node",
+            "request": "attach",
+            "address": "127.0.0.1",
+            "port": 8081,
+            "localRoot": "${workspaceFolder}/optimus-halal",
+            "remoteRoot": "${workspaceFolder}/optimus-halal",
+            "sourceMaps": true,
+            "trace": true,
+            "skipFiles": [
+                "<node_internals>/**",
+                "**/node_modules/**"
+            ]
+        },
+        {
+            "name": "📱 Debug Expo (Chrome DevTools)",
+            "type": "chrome",
+            "request": "attach",
+            "port": 9222,
+            "webRoot": "${workspaceFolder}/optimus-halal",
+            "sourceMaps": true,
+            "skipFiles": [
+                "<node_internals>/**",
+                "**/node_modules/**"
+            ]
+        },
+        {
+            "name": "🌐 Debug Expo Web",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:8081",
+            "webRoot": "${workspaceFolder}/optimus-halal",
+            "sourceMaps": true,
+            "sourceMapPathOverrides": {
+                "webpack:///./~/*": "${workspaceFolder}/optimus-halal/node_modules/*",
+                "webpack:///./*": "${workspaceFolder}/optimus-halal/*"
+            },
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        },
+        {
+            "name": "🚀 Launch & Debug iOS",
+            "type": "reactnative",
+            "request": "launch",
+            "platform": "ios",
+            "cwd": "${workspaceFolder}/optimus-halal",
+            "enableDebug": true,
+            "target": "DF8B3B11-0B6E-4E62-8722-F0BAFC2666A9",
+            "runArguments": [
+                "--ios"
+            ],
+            "env": {
+                "EXPO_DEBUG": "true",
+                "RCT_METRO_PORT": "8081"
+            },
+            "sourceMaps": true,
+            "sourceMapPathOverrides": {
+                "webpack:///./~/*": "${workspaceFolder}/optimus-halal/node_modules/*",
+                "webpack:///./*": "${workspaceFolder}/optimus-halal/*",
+                "webpack:///*": "*"
+            }
+        },
+        {
+            "name": "🤖 Launch & Debug Android",
+            "type": "reactnative",
+            "request": "launch",
+            "platform": "android",
+            "cwd": "${workspaceFolder}/optimus-halal",
+            "enableDebug": true,
+            "runArguments": [
+                "--android"
+            ],
+            "env": {
+                "EXPO_DEBUG": "true",
+                "RCT_METRO_PORT": "8081"
+            },
+            "sourceMaps": true,
+            "sourceMapPathOverrides": {
+                "webpack:///./~/*": "${workspaceFolder}/optimus-halal/node_modules/*",
+                "webpack:///./*": "${workspaceFolder}/optimus-halal/*",
+                "webpack:///*": "*"
+            }
+        },
+        {
+            "name": "🧪 Debug Jest Tests",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "npx",
+            "runtimeArgs": [
+                "jest",
+                "--runInBand",
+                "--watchAll=false"
+            ],
+            "cwd": "${workspaceFolder}/optimus-halal",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        }
+    ]
+}

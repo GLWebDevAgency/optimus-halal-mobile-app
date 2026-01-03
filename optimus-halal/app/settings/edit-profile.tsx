@@ -1,9 +1,10 @@
 /**
  * Edit Profile Screen
- * Faithful reproduction of the HTML template design
+ * Connected to real API via apiStores
+ * Enterprise-grade implementation
  */
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -16,25 +17,59 @@ import {
   StatusBar,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown, SlideInDown } from "react-native-reanimated";
 import * as ImagePicker from "expo-image-picker";
-import { useAuthStore } from "@/store";
+import { useAuthStore } from "@/store/apiStores";
 import { useTheme } from "@/hooks/useTheme";
 
 export default function EditProfileScreen() {
-  const { user, setUser } = useAuthStore();
+  const { profile, isLoading, error, updateProfile, fetchProfile, clearError } = useAuthStore();
   const { colors, isDark } = useTheme();
 
-  // Form state
-  const [fullName, setFullName] = useState(user?.fullName || "Yassine Benali");
-  const [username, setUsername] = useState("@yassine_b");
-  const [email, setEmail] = useState(user?.email || "yassine.b@email.com");
-  const [location, setLocation] = useState("Paris, France");
-  const [bio, setBio] = useState("Consommateur conscient à la recherche de produits sains et éthiques.");
-  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || "");
+  // Form state - initialized from profile
+  const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [bio, setBio] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  
+  // UI state
+  const [isSaving, setIsSaving] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Initialize form with profile data
+  useEffect(() => {
+    if (profile && !isInitialized) {
+      setDisplayName(profile.displayName || "");
+      setEmail(profile.email || "");
+      setPhoneNumber(profile.phoneNumber || "");
+      setBio(profile.bio || "");
+      setAvatarUrl(profile.avatarUrl || "");
+      setIsInitialized(true);
+    }
+  }, [profile, isInitialized]);
+
+  // Fetch profile on mount if not loaded
+  useEffect(() => {
+    if (!profile) {
+      fetchProfile();
+    }
+  }, [profile, fetchProfile]);
+
+  // Check if form has changes
+  const hasChanges = useMemo(() => {
+    if (!profile) return false;
+    return (
+      displayName !== (profile.displayName || "") ||
+      phoneNumber !== (profile.phoneNumber || "") ||
+      bio !== (profile.bio || "") ||
+      avatarUrl !== (profile.avatarUrl || "")
+    );
+  }, [profile, displayName, phoneNumber, bio, avatarUrl]);
 
   // Theme-aware colors
   const themeColors = {
@@ -71,20 +106,37 @@ export default function EditProfileScreen() {
     }
   }, []);
 
-  // Handle save
-  const handleSave = useCallback(() => {
-    if (user) {
-      setUser({
-        ...user,
-        fullName,
-        email,
-        avatarUrl,
-      });
+  // Handle save - calls real API
+  const handleSave = useCallback(async () => {
+    if (!hasChanges) {
+      router.back();
+      return;
     }
-    Alert.alert("Succès", "Vos modifications ont été enregistrées.", [
-      { text: "OK", onPress: () => router.back() }
-    ]);
-  }, [user, fullName, email, avatarUrl, setUser]);
+
+    setIsSaving(true);
+    clearError();
+
+    try {
+      const success = await updateProfile({
+        displayName: displayName || undefined,
+        phoneNumber: phoneNumber || undefined,
+        bio: bio || undefined,
+        avatarUrl: avatarUrl || undefined,
+      });
+
+      if (success) {
+        Alert.alert("Succès", "Vos modifications ont été enregistrées.", [
+          { text: "OK", onPress: () => router.back() }
+        ]);
+      } else {
+        Alert.alert("Erreur", error || "Impossible de sauvegarder les modifications.");
+      }
+    } catch (err) {
+      Alert.alert("Erreur", "Une erreur est survenue lors de la sauvegarde.");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [hasChanges, displayName, phoneNumber, bio, avatarUrl, updateProfile, error, clearError]);
 
   // Render input field
   const renderInputField = (
@@ -97,8 +149,10 @@ export default function EditProfileScreen() {
       optional?: boolean;
       keyboardType?: "default" | "email-address" | "phone-pad";
       autoCapitalize?: "none" | "sentences" | "words" | "characters";
+      editable?: boolean;
     }
   ) => {
+    const isEditable = options?.editable !== false;
     return (
       <View style={{ marginBottom: 20 }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 6 }}>
@@ -130,15 +184,16 @@ export default function EditProfileScreen() {
             placeholderTextColor={themeColors.placeholderText}
             keyboardType={options?.keyboardType || "default"}
             autoCapitalize={options?.autoCapitalize || "sentences"}
+            editable={isEditable}
             style={{
               width: "100%",
               borderRadius: 12,
-              backgroundColor: themeColors.card,
+              backgroundColor: isEditable ? themeColors.card : (isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)"),
               paddingVertical: 14,
               paddingLeft: 44,
               paddingRight: 16,
               fontSize: 15,
-              color: themeColors.textPrimary,
+              color: isEditable ? themeColors.textPrimary : themeColors.textSecondary,
               borderWidth: 1,
               borderColor: themeColors.inputRing,
             }}
@@ -157,6 +212,17 @@ export default function EditProfileScreen() {
       </View>
     );
   };
+
+  // Show loading skeleton while fetching profile
+  if (isLoading && !profile) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background, alignItems: "center", justifyContent: "center" }}>
+        <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
+        <ActivityIndicator size="large" color={themeColors.primary} />
+        <Text style={{ marginTop: 16, color: themeColors.textSecondary }}>Chargement du profil...</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background }}>
@@ -271,7 +337,7 @@ export default function EditProfileScreen() {
                         color: themeColors.primary,
                       }}
                     >
-                      {fullName.charAt(0).toUpperCase() || "U"}
+                      {displayName.charAt(0).toUpperCase() || "U"}
                     </Text>
                   </View>
                 )}
@@ -322,8 +388,8 @@ export default function EditProfileScreen() {
           <Animated.View entering={FadeInDown.delay(150).duration(400)}>
             {renderInputField(
               "Nom complet",
-              fullName,
-              setFullName,
+              displayName,
+              setDisplayName,
               "person",
               "Votre nom"
             )}
@@ -331,49 +397,47 @@ export default function EditProfileScreen() {
 
           <Animated.View entering={FadeInDown.delay(200).duration(400)}>
             {renderInputField(
-              "Nom d'utilisateur",
-              username,
-              setUsername,
-              "alternate-email",
-              "@username",
-              { autoCapitalize: "none" }
+              "Adresse email",
+              email,
+              () => {}, // Email is read-only
+              "mail",
+              "email@exemple.com",
+              { keyboardType: "email-address", autoCapitalize: "none", editable: false }
             )}
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(250).duration(400)}>
             {renderInputField(
-              "Adresse email",
-              email,
-              setEmail,
-              "mail",
-              "email@exemple.com",
-              { keyboardType: "email-address", autoCapitalize: "none" }
-            )}
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(300).duration(400)}>
-            {renderInputField(
-              "Localisation",
-              location,
-              setLocation,
-              "location-on",
-              "Ville, Pays",
-              { optional: true }
+              "Téléphone",
+              phoneNumber,
+              setPhoneNumber,
+              "phone",
+              "+33 6 12 34 56 78",
+              { keyboardType: "phone-pad", optional: true }
             )}
           </Animated.View>
 
           {/* Bio Field */}
-          <Animated.View entering={FadeInDown.delay(350).duration(400)} style={{ marginBottom: 20 }}>
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: "600",
-                color: themeColors.textPrimary,
-                marginBottom: 6,
-              }}
-            >
-              Bio
-            </Text>
+          <Animated.View entering={FadeInDown.delay(300).duration(400)} style={{ marginBottom: 20 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 6 }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "600",
+                  color: themeColors.textPrimary,
+                }}
+              >
+                Bio
+              </Text>
+              <Text
+                style={{
+                  fontSize: 12,
+                  color: themeColors.textSecondary,
+                }}
+              >
+                Optionnel
+              </Text>
+            </View>
             <TextInput
               value={bio}
               onChangeText={setBio}
@@ -417,30 +481,47 @@ export default function EditProfileScreen() {
           <TouchableOpacity
             onPress={handleSave}
             activeOpacity={0.9}
+            disabled={isSaving || !hasChanges}
             style={{
-              backgroundColor: themeColors.primary,
+              backgroundColor: hasChanges ? themeColors.primary : (isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"),
               borderRadius: 16,
               paddingVertical: 16,
               alignItems: "center",
               justifyContent: "center",
-              shadowColor: "#000",
+              flexDirection: "row",
+              shadowColor: hasChanges ? "#000" : "transparent",
               shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.15,
+              shadowOpacity: hasChanges ? 0.15 : 0,
               shadowRadius: 8,
-              elevation: 4,
+              elevation: hasChanges ? 4 : 0,
               borderWidth: 1,
               borderColor: "rgba(0,0,0,0.05)",
             }}
           >
-            <Text
-              style={{
-                fontSize: 16,
-                fontWeight: "700",
-                color: "#0d1b13",
-              }}
-            >
-              Enregistrer les modifications
-            </Text>
+            {isSaving ? (
+              <>
+                <ActivityIndicator size="small" color="#0d1b13" style={{ marginRight: 8 }} />
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: "700",
+                    color: "#0d1b13",
+                  }}
+                >
+                  Enregistrement...
+                </Text>
+              </>
+            ) : (
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "700",
+                  color: hasChanges ? "#0d1b13" : themeColors.textSecondary,
+                }}
+              >
+                {hasChanges ? "Enregistrer les modifications" : "Aucune modification"}
+              </Text>
+            )}
           </TouchableOpacity>
         </Animated.View>
       </KeyboardAvoidingView>
