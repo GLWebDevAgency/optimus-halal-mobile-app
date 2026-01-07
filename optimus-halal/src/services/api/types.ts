@@ -36,10 +36,10 @@ export interface LoginInput {
 }
 
 export interface RegisterInput {
-  email: string;
+  email?: string;
   password: string;
   displayName: string;
-  phoneNumber?: string;
+  phoneNumber: string;
   preferredLanguage?: 'fr' | 'en' | 'ar';
 }
 
@@ -86,6 +86,7 @@ export interface UserProfile {
   phoneNumber: string | null;
   avatarUrl: string | null;
   bio?: string | null;
+  city?: string | null;
   preferredLanguage: Language;
   halalStrictness: HalalStrictness;
   dietaryRestrictions?: string[];
@@ -106,6 +107,7 @@ export interface UpdateProfileInput {
   phoneNumber?: string;
   avatarUrl?: string;
   bio?: string;
+  city?: string;
   preferredLanguage?: Language;
   halalStrictness?: HalalStrictness;
   dietaryRestrictions?: string[];

@@ -1,7 +1,12 @@
 /**
  * Sign Up Screen
  * 
- * Écran d'inscription avec formulaire complet
+ * Écran d'inscription avec:
+ * - Numéro de téléphone (identifiant principal)
+ * - Nom complet
+ * - Email (optionnel)
+ * - Localisation (ville française avec géolocalisation)
+ * - Mot de passe
  */
 
 import React, { useState, useCallback } from "react";
@@ -21,19 +26,23 @@ import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
-import { Button, Input, IconButton } from "@/components/ui";
+import { Button, Input, IconButton, PhoneInput, LocationPicker, validateFrenchPhone } from "@/components/ui";
 import { useAuthStore } from "@/store";
 import { authService } from "@/services/api/auth.service";
+import { City } from "@/constants/locations";
 
 export default function SignUpScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
+  // Form state
   const [fullName, setFullName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [fullPhoneNumber, setFullPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [location, setLocation] = useState("");
+  const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -46,9 +55,14 @@ export default function SignUpScreen() {
       newErrors.fullName = "Le nom est requis";
     }
 
-    if (!email) {
-      newErrors.email = "L'email est requis";
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
+    if (!phoneNumber) {
+      newErrors.phoneNumber = "Le numéro de téléphone est requis";
+    } else if (!validateFrenchPhone(phoneNumber)) {
+      newErrors.phoneNumber = "Numéro de téléphone invalide";
+    }
+
+    // Email optionnel mais validé si renseigné
+    if (email && !/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = "Email invalide";
     }
 
@@ -60,7 +74,16 @@ export default function SignUpScreen() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [fullName, email, password]);
+  }, [fullName, phoneNumber, email, password]);
+
+  const handlePhoneChange = useCallback((formatted: string, full: string) => {
+    setPhoneNumber(formatted);
+    setFullPhoneNumber(full);
+  }, []);
+
+  const handleCitySelect = useCallback((city: City) => {
+    setSelectedCity(city);
+  }, []);
 
   const handleSignUp = useCallback(async () => {
     if (!validateForm()) return;
@@ -71,10 +94,10 @@ export default function SignUpScreen() {
     try {
       // Real API call to Railway backend
       const response = await authService.register({
-        email,
+        email: email || undefined,
         password,
         displayName: fullName,
-        phoneNumber: undefined,
+        phoneNumber: fullPhoneNumber,
         preferredLanguage: "fr",
       });
 
@@ -82,9 +105,11 @@ export default function SignUpScreen() {
         // Set authenticated user
         setUser({
           id: response.user.id,
-          email: response.user.email,
+          email: response.user.email || email,
           fullName: response.user.displayName || fullName,
-          location: location ? { city: location, country: "France" } : undefined,
+          location: selectedCity 
+            ? { city: selectedCity.name, country: "France" } 
+            : undefined,
           preferences: {
             preferredCertifications: [],
             dietaryExclusions: [],
@@ -96,6 +121,7 @@ export default function SignUpScreen() {
           updatedAt: new Date().toISOString(),
         });
 
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         router.replace("/(tabs)");
       } else {
         Alert.alert("Erreur", response.message || "Échec de l'inscription");
@@ -109,7 +135,7 @@ export default function SignUpScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [fullName, email, password, location, validateForm, setUser]);
+  }, [fullName, phoneNumber, fullPhoneNumber, email, password, selectedCity, validateForm, setUser]);
 
   const handleSocialAuth = useCallback(async (provider: "google" | "apple") => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -166,6 +192,17 @@ export default function SignUpScreen() {
             entering={FadeInUp.delay(300).duration(600)}
             className="gap-5"
           >
+            {/* Phone Number - Primary Identifier */}
+            <PhoneInput
+              label="Numéro de téléphone"
+              value={phoneNumber}
+              onChangeText={handlePhoneChange}
+              error={errors.phoneNumber}
+              hint="Nous vous enverrons un code de vérification"
+              defaultCountryCode="FR"
+            />
+
+            {/* Full Name */}
             <Input
               label="Nom complet"
               placeholder="Entrez votre nom complet"
@@ -175,17 +212,30 @@ export default function SignUpScreen() {
               error={errors.fullName}
             />
 
+            {/* Email - Optional */}
             <Input
               label="Adresse email"
-              placeholder="nom@exemple.com"
+              placeholder="nom@exemple.com (optionnel)"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
               error={errors.email}
+              hint="Pour recevoir les alertes et confirmations"
             />
 
+            {/* Location - City Picker */}
+            <LocationPicker
+              label="Votre ville"
+              value={selectedCity?.name}
+              onSelect={handleCitySelect}
+              placeholder="Sélectionner une ville"
+              hint="Pour trouver les commerces halal près de chez vous"
+              showGeolocation={true}
+            />
+
+            {/* Password */}
             <Input
               label="Mot de passe"
               placeholder="Créer un mot de passe"
@@ -194,14 +244,6 @@ export default function SignUpScreen() {
               secureTextEntry
               error={errors.password}
               hint="Minimum 8 caractères"
-            />
-
-            <Input
-              label="Localisation"
-              placeholder="Ville, Pays"
-              value={location}
-              onChangeText={setLocation}
-              leftIcon="location-on"
             />
 
             {/* Submit Button */}

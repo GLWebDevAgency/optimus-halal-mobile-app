@@ -25,6 +25,8 @@ import Animated, { FadeIn, FadeInDown, SlideInDown } from "react-native-reanimat
 import * as ImagePicker from "expo-image-picker";
 import { useAuthStore } from "@/store/apiStores";
 import { useTheme } from "@/hooks/useTheme";
+import { PhoneInput, LocationPicker, validateFrenchPhone } from "@/components/ui";
+import { City, FRENCH_CITIES, findNearestCity } from "@/constants/locations";
 
 export default function EditProfileScreen() {
   const { profile, isLoading, error, updateProfile, fetchProfile, clearError } = useAuthStore();
@@ -34,8 +36,10 @@ export default function EditProfileScreen() {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [fullPhoneNumber, setFullPhoneNumber] = useState("");
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [selectedCity, setSelectedCity] = useState<City | null>(null);
   
   // UI state
   const [isSaving, setIsSaving] = useState(false);
@@ -47,8 +51,14 @@ export default function EditProfileScreen() {
       setDisplayName(profile.displayName || "");
       setEmail(profile.email || "");
       setPhoneNumber(profile.phoneNumber || "");
+      setFullPhoneNumber(profile.phoneNumber || "");
       setBio(profile.bio || "");
       setAvatarUrl(profile.avatarUrl || "");
+      // Trouver la ville si elle existe dans le profil
+      if (profile.city) {
+        const city = FRENCH_CITIES.find(c => c.name === profile.city);
+        if (city) setSelectedCity(city);
+      }
       setIsInitialized(true);
     }
   }, [profile, isInitialized]);
@@ -65,11 +75,22 @@ export default function EditProfileScreen() {
     if (!profile) return false;
     return (
       displayName !== (profile.displayName || "") ||
-      phoneNumber !== (profile.phoneNumber || "") ||
+      fullPhoneNumber !== (profile.phoneNumber || "") ||
       bio !== (profile.bio || "") ||
-      avatarUrl !== (profile.avatarUrl || "")
+      avatarUrl !== (profile.avatarUrl || "") ||
+      (selectedCity?.name || "") !== (profile.city || "")
     );
-  }, [profile, displayName, phoneNumber, bio, avatarUrl]);
+  }, [profile, displayName, fullPhoneNumber, bio, avatarUrl, selectedCity]);
+
+  // Handlers for phone and city
+  const handlePhoneChange = useCallback((formatted: string, full: string) => {
+    setPhoneNumber(formatted);
+    setFullPhoneNumber(full);
+  }, []);
+
+  const handleCitySelect = useCallback((city: City) => {
+    setSelectedCity(city);
+  }, []);
 
   // Theme-aware colors
   const themeColors = {
@@ -119,9 +140,10 @@ export default function EditProfileScreen() {
     try {
       const success = await updateProfile({
         displayName: displayName || undefined,
-        phoneNumber: phoneNumber || undefined,
+        phoneNumber: fullPhoneNumber || undefined,
         bio: bio || undefined,
         avatarUrl: avatarUrl || undefined,
+        city: selectedCity?.name || undefined,
       });
 
       if (success) {
@@ -406,15 +428,27 @@ export default function EditProfileScreen() {
             )}
           </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(250).duration(400)}>
-            {renderInputField(
-              "Téléphone",
-              phoneNumber,
-              setPhoneNumber,
-              "phone",
-              "+33 6 12 34 56 78",
-              { keyboardType: "phone-pad", optional: true }
-            )}
+          {/* Phone Number with PhoneInput */}
+          <Animated.View entering={FadeInDown.delay(250).duration(400)} style={{ marginBottom: 20 }}>
+            <PhoneInput
+              label="Téléphone"
+              value={phoneNumber}
+              onChangeText={handlePhoneChange}
+              hint="Pour les notifications et la vérification"
+              defaultCountryCode="FR"
+            />
+          </Animated.View>
+
+          {/* Location with LocationPicker */}
+          <Animated.View entering={FadeInDown.delay(275).duration(400)} style={{ marginBottom: 20 }}>
+            <LocationPicker
+              label="Votre ville"
+              value={selectedCity?.name}
+              onSelect={handleCitySelect}
+              placeholder="Sélectionner une ville"
+              hint="Pour trouver les commerces halal près de chez vous"
+              showGeolocation={true}
+            />
           </Animated.View>
 
           {/* Bio Field */}
