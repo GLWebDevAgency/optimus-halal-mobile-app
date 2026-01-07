@@ -22,6 +22,9 @@ import type {
   CurrentUser,
   ValidateTokenRequest,
   ValidateTokenResponse,
+  MagicLinkRequest,
+  MagicLinkResponse,
+  VerifyMagicLinkRequest,
 } from './types';
 import { TIMEOUTS } from './config';
 
@@ -271,6 +274,56 @@ class AuthService {
       request,
       { timeout: TIMEOUTS.auth, retryEnabled: false }
     );
+  }
+
+  // ============================================
+  // MAGIC LINK (Passwordless V2)
+  // ============================================
+
+  /**
+   * Request a magic link for passwordless authentication
+   * 
+   * Usage:
+   * ```typescript
+   * const result = await authService.requestMagicLink({
+   *   email: 'user@example.com',
+   *   redirectUrl: 'optimus-halal://auth/verify',
+   * });
+   * console.log(result.message); // "Un lien de connexion a été envoyé..."
+   * ```
+   */
+  async requestMagicLink(request: MagicLinkRequest): Promise<MagicLinkResponse> {
+    return grpcClient.unary<MagicLinkRequest, MagicLinkResponse>(
+      this.service,
+      'RequestMagicLink',
+      request,
+      { timeout: TIMEOUTS.auth, retryEnabled: false }
+    );
+  }
+
+  /**
+   * Verify a magic link token and authenticate user
+   * 
+   * Usage:
+   * ```typescript
+   * const auth = await authService.verifyMagicLink({
+   *   token: 'jwt-token-from-email-link',
+   * });
+   * console.log(auth.user?.displayName);
+   * ```
+   */
+  async verifyMagicLink(request: VerifyMagicLinkRequest): Promise<AuthResponse> {
+    const response = await grpcClient.unary<VerifyMagicLinkRequest, AuthResponse>(
+      this.service,
+      'VerifyMagicLink',
+      request,
+      { timeout: TIMEOUTS.auth, retryEnabled: false }
+    );
+
+    // Store tokens on successful verification
+    await tokenManager.setTokens(response.accessToken, response.refreshToken);
+
+    return response;
   }
 
   /**

@@ -121,6 +121,26 @@ export interface ResendVerificationRequest {
   email: string;
 }
 
+// Magic Link (Passwordless V2)
+export interface MagicLinkRequest {
+  email: string;
+  displayName?: string;
+  redirectUrl: string;
+  deviceId?: string;
+}
+
+export interface MagicLinkResponse {
+  success: boolean;
+  message: string;
+  expiresIn: number;
+}
+
+export interface VerifyMagicLinkRequest {
+  token: string;
+  deviceId?: string;
+  pushToken?: string;
+}
+
 export interface CurrentUser {
   userId: string;
   email: string;
