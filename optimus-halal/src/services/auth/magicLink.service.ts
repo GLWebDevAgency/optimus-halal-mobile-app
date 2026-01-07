@@ -9,7 +9,8 @@
 
 import * as Linking from 'expo-linking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { authService } from '@/services/grpc';
+// Import directly to avoid circular dependency
+import { authService } from '@/services/grpc/auth.service';
 
 const STORAGE_KEYS = {
   ACCESS_TOKEN: '@auth:access_token',

@@ -6,7 +6,8 @@
  */
 
 import { grpcClient } from './client';
-import { SERVICES, TIMEOUTS } from './config';
+import { TIMEOUTS } from './config';
+import { SERVICES } from './types';
 import type {
   ScanProductRequest,
   ScanResult,
