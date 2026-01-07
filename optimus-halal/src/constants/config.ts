@@ -4,6 +4,25 @@
  * Système de feature flags pour activer/désactiver des fonctionnalités
  */
 
+/**
+ * Authentication Mode Configuration
+ * 
+ * V1 = Classic (email/password) only
+ * V2 = Magic Link only (passwordless) - DEFAULT
+ * HYBRID = Both options available
+ */
+export type AuthMode = "v1" | "v2" | "hybrid";
+
+export const AUTH_CONFIG = {
+  /**
+   * Mode d'authentification actif
+   * - "v1": Authentification classique (email/password)
+   * - "v2": Magic Link uniquement (sans mot de passe) - RECOMMANDÉ
+   * - "hybrid": Les deux options disponibles
+   */
+  mode: "v2" as AuthMode,
+} as const;
+
 export interface FeatureFlags {
   // Marketplace (Phase 2 - désactivé par défaut)
   marketplaceEnabled: boolean;

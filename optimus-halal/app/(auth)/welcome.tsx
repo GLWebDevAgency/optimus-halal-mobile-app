@@ -1,10 +1,13 @@
 /**
  * Authentication Welcome Screen
  * 
- * Entry point for authentication with Magic Link primary option
+ * Entry point for authentication with configurable mode:
+ * - V1: Classic login only (email/password)
+ * - V2: Magic Link only (passwordless) - DEFAULT
+ * - Hybrid: Both options available
  */
 
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -18,12 +21,21 @@ import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
-import { Button } from "@/components/ui";
+import { AUTH_CONFIG } from "@/constants/config";
 
 export default function AuthWelcomeScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  
+  const authMode = AUTH_CONFIG.mode;
+
+  // Si mode V1 uniquement, rediriger directement vers login
+  useEffect(() => {
+    if (authMode === "v1") {
+      router.replace("/(auth)/login");
+    }
+  }, [authMode]);
 
   const handleMagicLink = useCallback(async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -34,6 +46,11 @@ export default function AuthWelcomeScreen() {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push("/(auth)/login");
   }, []);
+
+  // Si mode V1, ne rien afficher (redirection en cours)
+  if (authMode === "v1") {
+    return null;
+  }
 
   return (
     <View className="flex-1 bg-white dark:bg-background-dark">
@@ -71,11 +88,14 @@ export default function AuthWelcomeScreen() {
             Bienvenue !
           </Text>
           <Text className="text-slate-500 dark:text-slate-400 text-base">
-            Connectez-vous pour accéder à toutes les fonctionnalités
+            {authMode === "v2" 
+              ? "Connectez-vous en un clic avec votre email"
+              : "Connectez-vous pour accéder à toutes les fonctionnalités"
+            }
           </Text>
         </Animated.View>
 
-        {/* Magic Link - Primary */}
+        {/* Magic Link - Primary (V2 et Hybrid) */}
         <Animated.View
           entering={FadeInUp.delay(300).duration(600)}
           className="mb-6"
@@ -101,11 +121,13 @@ export default function AuthWelcomeScreen() {
                   Connexion par email
                 </Text>
               </View>
-              <View className="bg-white/20 px-2 py-1 rounded-full">
-                <Text className="text-white text-xs font-semibold">
-                  Recommandé
-                </Text>
-              </View>
+              {authMode === "hybrid" && (
+                <View className="bg-white/20 px-2 py-1 rounded-full">
+                  <Text className="text-white text-xs font-semibold">
+                    Recommandé
+                  </Text>
+                </View>
+              )}
             </View>
             <Text className="text-white/90 text-sm leading-relaxed">
               Recevez un lien de connexion instantané. Simple, rapide et sécurisé.
@@ -119,54 +141,57 @@ export default function AuthWelcomeScreen() {
           </TouchableOpacity>
         </Animated.View>
 
-        {/* Divider */}
-        <Animated.View
-          entering={FadeIn.delay(400).duration(400)}
-          className="relative py-4"
-        >
-          <View className="absolute inset-x-0 top-1/2 h-px bg-slate-200 dark:bg-slate-800" />
-          <View className="items-center">
-            <Text className="bg-white dark:bg-background-dark px-4 text-sm text-slate-500">
-              ou
-            </Text>
-          </View>
-        </Animated.View>
+        {/* Divider + Traditional Login - Only in Hybrid mode */}
+        {authMode === "hybrid" && (
+          <>
+            <Animated.View
+              entering={FadeIn.delay(400).duration(400)}
+              className="relative py-4"
+            >
+              <View className="absolute inset-x-0 top-1/2 h-px bg-slate-200 dark:bg-slate-800" />
+              <View className="items-center">
+                <Text className="bg-white dark:bg-background-dark px-4 text-sm text-slate-500">
+                  ou
+                </Text>
+              </View>
+            </Animated.View>
 
-        {/* Traditional Login - Secondary */}
-        <Animated.View entering={FadeInUp.delay(500).duration(600)}>
-          <TouchableOpacity
-            onPress={handleTraditionalLogin}
-            activeOpacity={0.7}
-            className="bg-white dark:bg-surface-dark rounded-2xl p-5 border border-slate-200 dark:border-slate-700"
-          >
-            <View className="flex-row items-center">
-              <View className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 items-center justify-center mr-3">
-                <MaterialIcons
-                  name="lock-outline"
-                  size={24}
-                  color={isDark ? "#94a3b8" : "#64748b"}
-                />
-              </View>
-              <View className="flex-1">
-                <Text className="text-slate-900 dark:text-white font-semibold">
-                  Connexion classique
-                </Text>
-                <Text className="text-slate-500 dark:text-slate-400 text-sm">
-                  Email et mot de passe
-                </Text>
-              </View>
-              <MaterialIcons
-                name="chevron-right"
-                size={24}
-                color={isDark ? "#64748b" : "#94a3b8"}
-              />
-            </View>
-          </TouchableOpacity>
-        </Animated.View>
+            <Animated.View entering={FadeInUp.delay(500).duration(600)}>
+              <TouchableOpacity
+                onPress={handleTraditionalLogin}
+                activeOpacity={0.7}
+                className="bg-white dark:bg-surface-dark rounded-2xl p-5 border border-slate-200 dark:border-slate-700"
+              >
+                <View className="flex-row items-center">
+                  <View className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 items-center justify-center mr-3">
+                    <MaterialIcons
+                      name="lock-outline"
+                      size={24}
+                      color={isDark ? "#94a3b8" : "#64748b"}
+                    />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-slate-900 dark:text-white font-semibold">
+                      Connexion classique
+                    </Text>
+                    <Text className="text-slate-500 dark:text-slate-400 text-sm">
+                      Email et mot de passe
+                    </Text>
+                  </View>
+                  <MaterialIcons
+                    name="chevron-right"
+                    size={24}
+                    color={isDark ? "#64748b" : "#94a3b8"}
+                  />
+                </View>
+              </TouchableOpacity>
+            </Animated.View>
+          </>
+        )}
 
         {/* Benefits */}
         <Animated.View
-          entering={FadeIn.delay(600).duration(400)}
+          entering={FadeIn.delay(authMode === "hybrid" ? 600 : 400).duration(400)}
           className="mt-12 bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6"
         >
           <Text className="text-slate-900 dark:text-white font-semibold mb-4">
@@ -199,7 +224,7 @@ export default function AuthWelcomeScreen() {
 
         {/* Footer */}
         <Animated.View
-          entering={FadeIn.delay(700).duration(400)}
+          entering={FadeIn.delay(authMode === "hybrid" ? 700 : 500).duration(400)}
           className="items-center mt-8"
         >
           <Text className="text-xs text-slate-500 dark:text-slate-400 text-center">

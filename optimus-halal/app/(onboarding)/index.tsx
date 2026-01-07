@@ -67,14 +67,14 @@ export default function OnboardingScreen() {
     } else {
       // Complete onboarding
       setOnboardingComplete(true);
-      router.replace("/(auth)/login");
+      router.replace("/(auth)/welcome");
     }
   }, [currentIndex, setOnboardingComplete]);
 
   const handleSkip = useCallback(async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setOnboardingComplete(true);
-    router.replace("/(auth)/login");
+    router.replace("/(auth)/welcome");
   }, [setOnboardingComplete]);
 
   const isLastSlide = currentIndex === onboardingSlides.length - 1;
