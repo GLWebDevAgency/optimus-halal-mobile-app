@@ -9,7 +9,6 @@
  */
 
 import * as Linking from 'expo-linking';
-import * as Crypto from 'expo-crypto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
 
@@ -244,11 +243,13 @@ export async function getPendingEmail(): Promise<string | null> {
 /**
  * Generate a secure state parameter for OAuth-like flow
  */
-export async function generateState(): Promise<string> {
-  const randomBytes = await Crypto.getRandomBytesAsync(32);
-  return Array.from(randomBytes)
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join('');
+export function generateState(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < 32; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
 }
 
 /**
