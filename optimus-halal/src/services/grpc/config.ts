@@ -5,12 +5,15 @@
  * Architecture: React Native → gRPC-Web → Mobile-Service (Rust BFF)
  */
 
+// Mobile-Service URL (Railway production)
+const MOBILE_SERVICE_URL = 'https://mobile-service-production.up.railway.app';
+
 // Environment-specific endpoints
 export const GRPC_CONFIG = {
-  // Development - Local mobile-service
+  // Development - Use Railway production (Expo Go can't access localhost)
   development: {
-    host: 'http://localhost:8091',
-    useTls: false,
+    host: MOBILE_SERVICE_URL,
+    useTls: true,
   },
   // Staging - Railway staging environment
   staging: {
@@ -19,7 +22,7 @@ export const GRPC_CONFIG = {
   },
   // Production - Railway production (gRPC-Web over HTTPS)
   production: {
-    host: 'https://mobile-service-production.up.railway.app',
+    host: MOBILE_SERVICE_URL,
     useTls: true,
   },
 } as const;
