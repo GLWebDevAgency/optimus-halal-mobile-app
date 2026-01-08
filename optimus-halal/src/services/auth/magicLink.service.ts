@@ -1,16 +1,17 @@
 /**
  * Magic Link Authentication Service
  * 
- * Enterprise-grade passwordless authentication using gRPC-Web
- * - Email-based magic links
+ * Uses REST API via API Gateway for passwordless authentication
+ * - Email-based magic links via Brevo
  * - JWT tokens (secure, short-lived)
  * - Deep linking support
  */
 
 import * as Linking from 'expo-linking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// Import directly to avoid circular dependency
-import { authService } from '@/services/grpc/auth.service';
+
+// Use API Gateway for REST endpoints
+const API_URL = 'https://api-gateway-production-fce7.up.railway.app';
 
 const STORAGE_KEYS = {
   ACCESS_TOKEN: '@auth:access_token',
@@ -42,119 +43,120 @@ export interface VerifyTokenResponse {
 }
 
 /**
- * Request a magic link to be sent to email (via gRPC)
+ * Request a magic link to be sent to email (via API Gateway)
  */
 export async function requestMagicLink(
   email: string,
   displayName?: string
 ): Promise<MagicLinkResponse> {
   try {
-    // Store email for deep link handling
     await AsyncStorage.setItem(STORAGE_KEYS.PENDING_EMAIL, email);
 
-    const response = await authService.requestMagicLink({
-      email: email.toLowerCase().trim(),
-      displayName,
-      redirectUrl: Linking.createURL('auth/verify'),
+    const response = await fetch(`${API_URL}/api/v1/auth/magic-link`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: email.toLowerCase().trim(),
+        displayName,
+        redirectUrl: Linking.createURL('auth/verify'),
+      }),
     });
 
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.message || 'Failed to send magic link',
+      };
+    }
+
     return {
-      success: response.success,
-      message: response.message || 'Magic link sent to your email',
-      expiresIn: response.expiresIn || 900, // 15 minutes default
+      success: data.success,
+      message: data.message || 'Magic link sent to your email',
+      expiresIn: data.expiresIn || 900,
     };
   } catch (error: any) {
     console.error('[MagicLink] Request error:', error);
     return {
       success: false,
-      message: error.message || 'Failed to send magic link',
+      message: error.message || 'Network error. Please try again.',
     };
   }
 }
 
 /**
- * Verify magic link token and authenticate user (via gRPC)
+ * Verify magic link token
  */
 export async function verifyMagicLinkToken(token: string): Promise<VerifyTokenResponse> {
   try {
-    const response = await authService.verifyMagicLink({ token });
+    const response = await fetch(`${API_URL}/api/v1/auth/magic-link/verify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token }),
+    });
 
-    // Clear pending email
+    const data = await response.json();
     await AsyncStorage.removeItem(STORAGE_KEYS.PENDING_EMAIL);
 
-    // Store user data
-    if (response.user) {
-      await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify({
-        id: response.user.userId,
-        email: response.user.displayName ? undefined : undefined,
-        displayName: response.user.displayName,
-        avatarUrl: response.user.avatarUrl,
-      }));
+    if (!response.ok || !data.success) {
+      return {
+        success: false,
+        message: data.message || 'Invalid or expired link',
+      };
+    }
+
+    if (data.accessToken) {
+      await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, data.accessToken);
+    }
+    if (data.refreshToken) {
+      await AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, data.refreshToken);
+    }
+    if (data.user) {
+      await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
     }
 
     return {
       success: true,
-      user: response.user ? {
-        id: response.user.userId,
-        email: response.user.displayName || '',
-        displayName: response.user.displayName,
-        avatarUrl: response.user.avatarUrl,
-        verified: response.user.isVerified,
-      } : undefined,
-      accessToken: response.accessToken,
-      refreshToken: response.refreshToken,
+      user: data.user,
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
     };
   } catch (error: any) {
     console.error('[MagicLink] Verify error:', error);
     return {
       success: false,
-      message: error.message || 'Invalid or expired link',
+      message: error.message || 'Verification failed',
     };
   }
 }
 
-/**
- * Get pending email (for UI state restoration)
- */
 export async function getPendingEmail(): Promise<string | null> {
   return AsyncStorage.getItem(STORAGE_KEYS.PENDING_EMAIL);
 }
 
-/**
- * Clear pending email
- */
 export async function clearPendingEmail(): Promise<void> {
   await AsyncStorage.removeItem(STORAGE_KEYS.PENDING_EMAIL);
 }
 
-/**
- * Validate email format
- */
 export function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email.trim());
 }
 
-/**
- * Check if email is from a disposable email provider
- */
 export function isDisposableEmail(email: string): boolean {
   const disposableDomains = [
-    'tempmail.com',
-    'guerrillamail.com',
-    '10minutemail.com',
-    'mailinator.com',
-    'throwaway.email',
-    'temp-mail.org',
+    'tempmail.com', 'guerrillamail.com', '10minutemail.com',
+    'mailinator.com', 'throwaway.email', 'temp-mail.org',
   ];
-  
   const domain = email.split('@')[1]?.toLowerCase();
   return disposableDomains.includes(domain);
 }
 
-/**
- * Generate a state parameter for OAuth-like flow
- */
 export function generateState(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
