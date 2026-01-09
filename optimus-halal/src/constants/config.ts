@@ -16,11 +16,11 @@ export type AuthMode = "v1" | "v2" | "hybrid";
 export const AUTH_CONFIG = {
   /**
    * Mode d'authentification actif
-   * - "v1": Authentification classique (email/password)
-   * - "v2": Magic Link uniquement (sans mot de passe) - RECOMMANDÉ
+   * - "v1": Authentification classique (email/password) - ACTIF pour V1
+   * - "v2": Magic Link uniquement (sans mot de passe)
    * - "hybrid": Les deux options disponibles
    */
-  mode: "v2" as AuthMode,
+  mode: "v1" as AuthMode,
 } as const;
 
 export interface FeatureFlags {
