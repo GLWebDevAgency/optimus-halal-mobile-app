@@ -10,8 +10,8 @@
 import * as Linking from 'expo-linking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Use API Gateway for REST endpoints
-const API_URL = 'https://api-gateway-production-fce7.up.railway.app';
+// Use API Gateway Mobile routes (B2C)
+const API_URL = 'https://api-gateway-production-fce7.up.railway.app/api/mobile';
 
 const STORAGE_KEYS = {
   ACCESS_TOKEN: '@auth:access_token',
@@ -52,7 +52,7 @@ export async function requestMagicLink(
   try {
     await AsyncStorage.setItem(STORAGE_KEYS.PENDING_EMAIL, email);
 
-    const response = await fetch(`${API_URL}/api/v1/auth/magic-link`, {
+    const response = await fetch(`${API_URL}/auth/magic-link`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -92,7 +92,7 @@ export async function requestMagicLink(
  */
 export async function verifyMagicLinkToken(token: string): Promise<VerifyTokenResponse> {
   try {
-    const response = await fetch(`${API_URL}/api/v1/auth/magic-link/verify`, {
+    const response = await fetch(`${API_URL}/auth/magic-link/verify`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
