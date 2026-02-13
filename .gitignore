@@ -1,0 +1,24 @@
+# Environment files (secrets)
+.env
+.env.*
+!.env.example
+
+# Expo local state
+.expo/
+
+# Debug logs
+firebase-debug.log
+
+# OS
+.DS_Store
+
+# Screenshots / temp images
+*.png
+*.jpg
+*.jpeg
+
+# Node
+node_modules/
+
+# IDE
+.vscode/
