@@ -8,12 +8,14 @@ import React from "react";
 import { Stack } from "expo-router";
 import { useColorScheme } from "react-native";
 import { colors } from "@/constants/theme";
+import { QueryErrorBoundary } from "@/components/QueryErrorBoundary";
 
 export default function MarketplaceLayout() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
   return (
+    <QueryErrorBoundary>
     <Stack
       screenOptions={{
         headerShown: false,
@@ -36,5 +38,6 @@ export default function MarketplaceLayout() {
       <Stack.Screen name="checkout" />
       <Stack.Screen name="order-tracking" />
     </Stack>
+    </QueryErrorBoundary>
   );
 }

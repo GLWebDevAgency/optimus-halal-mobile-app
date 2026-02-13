@@ -20,9 +20,11 @@ import React from "react";
 import { Tabs } from "expo-router";
 
 import { PremiumTabBar } from "@/components/navigation/PremiumTabBar";
+import { QueryErrorBoundary } from "@/components/QueryErrorBoundary";
 
 export default function TabsLayout() {
   return (
+    <QueryErrorBoundary>
     <Tabs
       screenOptions={{
         headerShown: false,
@@ -66,5 +68,6 @@ export default function TabsLayout() {
         }}
       />
     </Tabs>
+    </QueryErrorBoundary>
   );
 }
