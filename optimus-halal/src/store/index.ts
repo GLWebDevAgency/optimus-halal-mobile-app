@@ -5,24 +5,10 @@
  */
 
 import { create } from "zustand";
-import { persist, createJSONStorage, StateStorage } from "zustand/middleware";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { persist, createJSONStorage } from "zustand/middleware";
 import type { User, ScanRecord, Store, EthicalAlert, Product } from "@/types";
 import { defaultFeatureFlags, type FeatureFlags } from "@constants/config";
-
-// Custom storage adapter for Zustand using AsyncStorage
-const zustandStorage: StateStorage = {
-  getItem: async (name: string) => {
-    const value = await AsyncStorage.getItem(name);
-    return value ?? null;
-  },
-  setItem: async (name: string, value: string) => {
-    await AsyncStorage.setItem(name, value);
-  },
-  removeItem: async (name: string) => {
-    await AsyncStorage.removeItem(name);
-  },
-};
+import { mmkvStorage } from "@/lib/storage";
 
 /**
  * Auth State
@@ -58,7 +44,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "auth-storage",
-      storage: createJSONStorage(() => zustandStorage),
+      storage: createJSONStorage(() => mmkvStorage),
       onRehydrateStorage: () => (state, error) => {
         // Set isLoading to false after rehydration using the store's setState
         useAuthStore.setState({ isLoading: false });
@@ -83,7 +69,7 @@ export const useOnboardingStore = create<OnboardingState>()(
     }),
     {
       name: "onboarding-storage",
-      storage: createJSONStorage(() => zustandStorage),
+      storage: createJSONStorage(() => mmkvStorage),
     }
   )
 );
@@ -105,7 +91,7 @@ export const useThemeStore = create<ThemeState>()(
     }),
     {
       name: "theme-storage",
-      storage: createJSONStorage(() => zustandStorage),
+      storage: createJSONStorage(() => mmkvStorage),
     }
   )
 );
@@ -160,7 +146,7 @@ export const useScanHistoryStore = create<ScanHistoryState>()(
     }),
     {
       name: "scan-history-storage",
-      storage: createJSONStorage(() => zustandStorage),
+      storage: createJSONStorage(() => mmkvStorage),
     }
   )
 );
@@ -284,7 +270,7 @@ export const useCartStore = create<CartState>()(
     }),
     {
       name: "cart-storage",
-      storage: createJSONStorage(() => zustandStorage),
+      storage: createJSONStorage(() => mmkvStorage),
     }
   )
 );
@@ -307,7 +293,7 @@ export const useLanguageStore = create<LanguageState>()(
     }),
     {
       name: "language-storage",
-      storage: createJSONStorage(() => zustandStorage),
+      storage: createJSONStorage(() => mmkvStorage),
     }
   )
 );
@@ -373,7 +359,7 @@ export const usePreferencesStore = create<UserPreferencesState>()(
     }),
     {
       name: "preferences-storage",
-      storage: createJSONStorage(() => zustandStorage),
+      storage: createJSONStorage(() => mmkvStorage),
     }
   )
 );
@@ -486,7 +472,7 @@ export const useFavoritesStore = create<FavoritesState>()(
     }),
     {
       name: "favorites-storage",
-      storage: createJSONStorage(() => zustandStorage),
+      storage: createJSONStorage(() => mmkvStorage),
     }
   )
 );
