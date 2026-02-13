@@ -12,7 +12,7 @@ export default function MarketplaceIndex() {
   const { flags } = useFeatureFlagsStore();
 
   // Si le marketplace n'est pas activé, afficher la page coming soon
-  if (!flags.enableMarketplace) {
+  if (!flags.marketplaceEnabled) {
     return <Redirect href="/(marketplace)/coming-soon" />;
   }
 

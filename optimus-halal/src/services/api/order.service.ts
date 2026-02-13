@@ -1,44 +1,40 @@
 /**
- * Order Service - Enterprise-grade Mobile App
- * 
- * Order management and tracking service
- * Netflix/Stripe/Shopify/Airbnb/Spotify standards
+ * Order Service — Stub (no BFF order router yet)
+ *
+ * Order/e-commerce features are planned for a future release.
+ * All methods return graceful fallbacks so the app doesn't crash.
  */
 
-import { apiClient } from './client';
 import type * as Types from './types';
 
-// ============================================
-// ORDER SERVICE
-// ============================================
+const NOT_IMPLEMENTED = 'Order feature coming soon';
 
 export const orderService = {
-  /**
-   * Create a new order from cart
-   */
-  async createOrder(input: Types.CreateOrderInput): Promise<{
+  async createOrder(
+    _input: Types.CreateOrderInput
+  ): Promise<{
     id: string;
     orderNumber: string;
     status: Types.OrderStatus;
     total: number;
     message: string;
   }> {
-    return apiClient.mobile.createOrder.mutate(input);
+    throw new Error(NOT_IMPLEMENTED);
   },
 
-  /**
-   * Get order details
-   */
-  async getOrder(orderId: string): Promise<Types.OrderWithDetails> {
-    return apiClient.mobile.getOrder.query({ orderId });
+  async getOrder(_orderId: string): Promise<Types.OrderWithDetails> {
+    return {
+      order: null,
+      items: [],
+      events: [],
+      canCancel: false,
+      canTrack: false,
+    };
   },
 
-  /**
-   * Get orders with pagination and filters
-   */
   async getOrders(
     pagination?: Types.PaginationInput,
-    filters?: {
+    _filters?: {
       status?: Types.OrderStatus;
       startDate?: string;
       endDate?: string;
@@ -47,35 +43,32 @@ export const orderService = {
     orders: Types.Order[];
     pagination: Types.PaginationOutput;
   }> {
-    return apiClient.mobile.getOrders.query({
-      page: pagination?.page ?? 1,
-      limit: pagination?.limit ?? 20,
-      ...filters,
-    });
+    return {
+      orders: [],
+      pagination: {
+        page: pagination?.page ?? 1,
+        limit: pagination?.limit ?? 20,
+        totalItems: 0,
+        totalPages: 0,
+      },
+    };
   },
 
-  /**
-   * Cancel an order
-   */
-  async cancelOrder(orderId: string, reason?: string): Promise<Types.SuccessResponse> {
-    return apiClient.mobile.cancelOrder.mutate({ orderId, reason });
+  async cancelOrder(
+    _orderId: string,
+    _reason?: string
+  ): Promise<Types.SuccessResponse> {
+    throw new Error(NOT_IMPLEMENTED);
   },
 
-  /**
-   * Reorder (add previous order items to cart)
-   */
-  async reorder(orderId: string): Promise<{
-    success: boolean;
-    message: string;
-  }> {
-    return apiClient.mobile.reorder.mutate({ orderId });
+  async reorder(
+    _orderId: string
+  ): Promise<{ success: boolean; message: string }> {
+    throw new Error(NOT_IMPLEMENTED);
   },
 
-  /**
-   * Get order tracking details
-   */
-  async getOrderTracking(orderId: string): Promise<Types.OrderTracking> {
-    return apiClient.mobile.getOrderTracking.query({ orderId });
+  async getOrderTracking(_orderId: string): Promise<Types.OrderTracking> {
+    throw new Error(NOT_IMPLEMENTED);
   },
 };
 

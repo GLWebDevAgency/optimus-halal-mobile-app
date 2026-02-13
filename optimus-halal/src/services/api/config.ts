@@ -16,14 +16,14 @@ const isProduction = !__DEV__;
 // API ENDPOINTS
 // ============================================
 
-/** Development API base URL - Railway API Gateway */
-const DEV_API_URL = 'https://api-gateway-production-fce7.up.railway.app';
+/** Development API base URL - Mobile BFF on Railway */
+const DEV_API_URL = 'https://mobile-bff-production-aefc.up.railway.app';
 
 /** Staging API base URL */
 const STAGING_API_URL = 'https://api-staging.optimus-halal.com';
 
-/** Production API base URL */
-const PROD_API_URL = 'https://api.optimus-halal.com';
+/** Production API base URL (same BFF for now) */
+const PROD_API_URL = 'https://mobile-bff-production-aefc.up.railway.app';
 
 // ============================================
 // CONFIGURATION
@@ -59,7 +59,7 @@ export function getApiConfig(): ApiConfig {
 
   return {
     baseUrl,
-    trpcPath: '/api/trpc',
+    trpcPath: '/trpc',
     timeout: 30000, // 30 seconds
     enableLogging: isDevelopment,
     retry: {

@@ -1,21 +1,19 @@
 /**
- * tRPC Client - Enterprise-grade Mobile App
- * 
- * Type-safe API client using tRPC vanilla client
- * Netflix/Stripe/Shopify/Airbnb/Spotify standards
+ * tRPC Client — Optimus Halal Mobile App
+ *
+ * Type-safe API client connected to the dedicated Mobile BFF
+ * (Hono + tRPC v11 + Drizzle + superjson)
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createTRPCClient, httpBatchLink } from '@trpc/client';
-import { API_CONFIG, STORAGE_KEYS, HTTP_STATUS, ERROR_CODES } from './config';
+import * as SecureStore from "expo-secure-store";
+import * as Crypto from "expo-crypto";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createTRPCClient, httpBatchLink } from "@trpc/client";
+import superjson from "superjson";
+import { API_CONFIG, STORAGE_KEYS, HTTP_STATUS, ERROR_CODES } from "./config";
 
-// ============================================
-// TYPE IMPORTS (from API Gateway)
-// ============================================
-
-// In a real setup, these would be imported from the API Gateway package
-// For now, we define the router type locally
-import type * as Types from './types';
+import type * as Types from "./types";
+import type { Language } from "@/i18n";
 
 // ============================================
 // ERROR HANDLING
@@ -32,37 +30,66 @@ export class OptimusApiError extends Error {
   details?: Record<string, unknown>;
   statusCode?: number;
 
-  constructor(code: string, message: string, details?: Record<string, unknown>, statusCode?: number) {
+  constructor(
+    code: string,
+    message: string,
+    details?: Record<string, unknown>,
+    statusCode?: number
+  ) {
     super(message);
-    this.name = 'OptimusApiError';
+    this.name = "OptimusApiError";
     this.code = code;
     this.details = details;
     this.statusCode = statusCode;
   }
 
   static fromTRPCError(error: unknown): OptimusApiError {
-    if (error && typeof error === 'object' && 'code' in error) {
-      const trpcError = error as { code: string; message: string; data?: unknown };
-      return new OptimusApiError(
-        trpcError.code,
-        trpcError.message,
-        trpcError.data as Record<string, unknown>
-      );
+    if (error && typeof error === "object") {
+      if ("shape" in error) {
+        const shape = (error as any).shape;
+        return new OptimusApiError(
+          shape?.code || ERROR_CODES.UNKNOWN_ERROR,
+          shape?.message || "An unexpected error occurred",
+          shape?.data
+        );
+      }
+
+      if ("code" in error && "message" in error) {
+        const trpcError = error as {
+          code: string;
+          message: string;
+          data?: unknown;
+        };
+        return new OptimusApiError(
+          trpcError.code,
+          trpcError.message,
+          trpcError.data as Record<string, unknown>
+        );
+      }
+
+      if (error instanceof Error) {
+        return new OptimusApiError(ERROR_CODES.UNKNOWN_ERROR, error.message, {
+          stack: error.stack,
+        });
+      }
     }
-    return new OptimusApiError(ERROR_CODES.UNKNOWN_ERROR, 'An unexpected error occurred');
+    return new OptimusApiError(
+      ERROR_CODES.UNKNOWN_ERROR,
+      "An unexpected error occurred"
+    );
   }
 
   static networkError(): OptimusApiError {
     return new OptimusApiError(
       ERROR_CODES.NETWORK_ERROR,
-      'Unable to connect to the server. Please check your internet connection.'
+      "Unable to connect to the server. Please check your internet connection."
     );
   }
 
   static timeoutError(): OptimusApiError {
     return new OptimusApiError(
       ERROR_CODES.TIMEOUT_ERROR,
-      'Request timed out. Please try again.'
+      "Request timed out. Please try again."
     );
   }
 }
@@ -76,56 +103,44 @@ let refreshToken: string | null = null;
 let isRefreshing = false;
 let refreshPromise: Promise<void> | null = null;
 
-/**
- * Initialize tokens from storage
- */
 export async function initializeTokens(): Promise<void> {
   try {
     const [storedAccess, storedRefresh] = await Promise.all([
-      AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN),
-      AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN),
+      SecureStore.getItemAsync(STORAGE_KEYS.ACCESS_TOKEN),
+      SecureStore.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN),
     ]);
     accessToken = storedAccess;
     refreshToken = storedRefresh;
   } catch (error) {
-    console.error('Failed to initialize tokens:', error);
+    if (__DEV__) console.warn("Failed to initialize tokens:", error);
   }
 }
 
-/**
- * Store tokens
- */
-export async function setTokens(access: string, refresh: string): Promise<void> {
+export async function setTokens(
+  access: string,
+  refresh: string
+): Promise<void> {
   accessToken = access;
   refreshToken = refresh;
   await Promise.all([
-    AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, access),
-    AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refresh),
+    SecureStore.setItemAsync(STORAGE_KEYS.ACCESS_TOKEN, access),
+    SecureStore.setItemAsync(STORAGE_KEYS.REFRESH_TOKEN, refresh),
   ]);
 }
 
-/**
- * Clear tokens (logout)
- */
 export async function clearTokens(): Promise<void> {
   accessToken = null;
   refreshToken = null;
   await Promise.all([
-    AsyncStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN),
-    AsyncStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN),
+    SecureStore.deleteItemAsync(STORAGE_KEYS.ACCESS_TOKEN),
+    SecureStore.deleteItemAsync(STORAGE_KEYS.REFRESH_TOKEN),
   ]);
 }
 
-/**
- * Get current access token
- */
 export function getAccessToken(): string | null {
   return accessToken;
 }
 
-/**
- * Check if user is authenticated
- */
 export function isAuthenticated(): boolean {
   return !!accessToken;
 }
@@ -134,57 +149,47 @@ export function isAuthenticated(): boolean {
 // DEVICE ID MANAGEMENT
 // ============================================
 
-/**
- * Get or generate device ID
- */
 export async function getDeviceId(): Promise<string> {
   try {
     let deviceId = await AsyncStorage.getItem(STORAGE_KEYS.DEVICE_ID);
     if (!deviceId) {
-      deviceId = generateUUID();
+      deviceId = Crypto.randomUUID();
       await AsyncStorage.setItem(STORAGE_KEYS.DEVICE_ID, deviceId);
     }
     return deviceId;
   } catch {
-    return generateUUID();
+    return Crypto.randomUUID();
   }
-}
-
-function generateUUID(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
 }
 
 // ============================================
 // LANGUAGE HEADER
 // ============================================
 
-let currentLanguage: 'fr' | 'en' | 'ar' = 'fr';
+let currentLanguage: Language = "fr";
 
-export function setApiLanguage(lang: 'fr' | 'en' | 'ar'): void {
+export function setApiLanguage(lang: Language): void {
   currentLanguage = lang;
 }
 
 // ============================================
-// TRPC CLIENT CREATION
+// TRPC CLIENT — Connected to Mobile BFF
 // ============================================
 
-/**
- * Create the tRPC client with all configurations
- */
 function createApiClient() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const client = createTRPCClient<any>({
     links: [
       httpBatchLink({
         url: `${API_CONFIG.baseUrl}${API_CONFIG.trpcPath}`,
-        
-        // Custom fetch with timeout and retries
+        transformer: superjson,
+
         fetch: async (url, options) => {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.timeout);
+          const timeoutId = setTimeout(
+            () => controller.abort(),
+            API_CONFIG.timeout
+          );
 
           try {
             const response = await fetch(url, {
@@ -193,15 +198,17 @@ function createApiClient() {
             });
             clearTimeout(timeoutId);
 
-            // Handle token refresh on 401
-            if (response.status === HTTP_STATUS.UNAUTHORIZED && refreshToken && !isRefreshing) {
+            if (
+              response.status === HTTP_STATUS.UNAUTHORIZED &&
+              refreshToken &&
+              !isRefreshing
+            ) {
               await performTokenRefresh();
-              // Retry original request
               return fetch(url, {
                 ...options,
                 headers: {
                   ...options?.headers,
-                  Authorization: accessToken ? `Bearer ${accessToken}` : '',
+                  Authorization: accessToken ? `Bearer ${accessToken}` : "",
                 },
               });
             }
@@ -209,30 +216,29 @@ function createApiClient() {
             return response;
           } catch (error) {
             clearTimeout(timeoutId);
-            
-            if (error instanceof Error && error.name === 'AbortError') {
+
+            if (error instanceof Error && error.name === "AbortError") {
               throw OptimusApiError.timeoutError();
             }
-            
+
             throw OptimusApiError.networkError();
           }
         },
 
-        // Add headers
         headers: async () => {
           const headers: Record<string, string> = {
-            'Content-Type': 'application/json',
-            'Accept-Language': currentLanguage,
-            'X-App-Version': '1.0.0',
-            'X-Platform': 'mobile',
+            "Content-Type": "application/json",
+            "Accept-Language": currentLanguage,
+            "X-App-Version": "1.0.0",
+            "X-Platform": "mobile",
           };
 
           if (accessToken) {
-            headers['Authorization'] = `Bearer ${accessToken}`;
+            headers["Authorization"] = `Bearer ${accessToken}`;
           }
 
           const deviceId = await getDeviceId();
-          headers['X-Device-Id'] = deviceId;
+          headers["X-Device-Id"] = deviceId;
 
           return headers;
         },
@@ -244,7 +250,8 @@ function createApiClient() {
 }
 
 /**
- * Perform token refresh
+ * Token refresh via BFF auth.refresh procedure.
+ * Uses apiClient directly — isRefreshing flag prevents recursive 401 handling.
  */
 async function performTokenRefresh(): Promise<void> {
   if (isRefreshing && refreshPromise) {
@@ -256,32 +263,17 @@ async function performTokenRefresh(): Promise<void> {
   refreshPromise = (async () => {
     try {
       if (!refreshToken) {
-        throw new Error('No refresh token');
+        throw new Error("No refresh token");
       }
 
-      const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.trpcPath}/mobile.refreshToken`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          refreshToken,
-        }),
-      });
+      const result = await apiClient.auth.refresh.mutate({ refreshToken });
 
-      if (!response.ok) {
-        throw new Error('Token refresh failed');
-      }
-
-      const data = await response.json();
-      
-      if (data.result?.data?.accessToken) {
-        await setTokens(data.result.data.accessToken, data.result.data.refreshToken);
+      if (result?.accessToken && result?.refreshToken) {
+        await setTokens(result.accessToken, result.refreshToken);
       } else {
-        throw new Error('Invalid refresh response');
+        throw new Error("Invalid refresh response");
       }
     } catch (error) {
-      // Clear tokens on refresh failure
       await clearTokens();
       throw error;
     } finally {
@@ -297,32 +289,36 @@ async function performTokenRefresh(): Promise<void> {
 // API CLIENT INSTANCE
 // ============================================
 
-export const apiClient = createApiClient();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const apiClient: any = createApiClient();
 
 // ============================================
 // CONVENIENCE METHODS
 // ============================================
 
-/**
- * Wrapper for safe API calls with error handling
- */
 export async function safeApiCall<T>(
   apiCall: () => Promise<T>,
   options?: {
     showError?: boolean;
     onError?: (error: OptimusApiError) => void;
+    suppressLog?: boolean;
   }
 ): Promise<{ data: T | null; error: OptimusApiError | null }> {
   try {
     const data = await apiCall();
     return { data, error: null };
   } catch (error) {
-    const apiError = error instanceof OptimusApiError 
-      ? error 
-      : OptimusApiError.fromTRPCError(error);
+    const apiError =
+      error instanceof OptimusApiError
+        ? error
+        : OptimusApiError.fromTRPCError(error);
 
-    if (API_CONFIG.enableLogging) {
-      console.error('API Error:', apiError);
+    if (API_CONFIG.enableLogging && !options?.suppressLog) {
+      if (apiError.code === "UNAUTHORIZED") {
+        console.warn("API Unauthorized:", apiError.message);
+      } else {
+        console.error("API Error:", apiError);
+      }
     }
 
     if (options?.onError) {
@@ -333,16 +329,11 @@ export async function safeApiCall<T>(
   }
 }
 
-/**
- * Check API health
- */
 export async function checkApiHealth(): Promise<boolean> {
   try {
     const response = await fetch(`${API_CONFIG.baseUrl}/health`, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-      },
+      method: "GET",
+      headers: { Accept: "application/json" },
     });
     return response.ok;
   } catch {

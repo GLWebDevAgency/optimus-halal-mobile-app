@@ -800,3 +800,15 @@ export interface RedeemRewardResponse {
   rewardCode: string;
   newBalance: number;
 }
+
+// ============================================
+// APP ROUTER TYPE (placeholder until shared from backend)
+// ============================================
+
+/**
+ * Placeholder for the tRPC AppRouter type.
+ * TODO: Replace with the real shared AppRouter from the backend package
+ * when @optimus-halal/shared-types is published.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AppRouter = any;

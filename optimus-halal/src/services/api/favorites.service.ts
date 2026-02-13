@@ -1,21 +1,16 @@
 /**
- * Favorites Service - Enterprise-grade Mobile App
- * 
- * Favorites and folders management service
- * Netflix/Stripe/Shopify/Airbnb/Spotify standards
+ * Favorites Service — Mobile BFF adapter
+ *
+ * BFF routes: favorites.list, favorites.add, favorites.remove,
+ *             favorites.moveToFolder, favorites.listFolders,
+ *             favorites.createFolder, favorites.updateFolder,
+ *             favorites.deleteFolder
  */
 
 import { apiClient } from './client';
 import type * as Types from './types';
 
-// ============================================
-// FAVORITES SERVICE
-// ============================================
-
 export const favoritesService = {
-  /**
-   * Get favorites with pagination
-   */
   async getFavorites(
     pagination?: Types.PaginationInput,
     folderId?: string
@@ -23,63 +18,71 @@ export const favoritesService = {
     favorites: Types.Favorite[];
     pagination: Types.PaginationOutput;
   }> {
-    return apiClient.mobile.getFavorites.query({
-      page: pagination?.page ?? 1,
+    const result = await apiClient.favorites.list.query({
       limit: pagination?.limit ?? 20,
+      cursor: undefined,
       folderId,
     });
+
+    return {
+      favorites: (result.favorites ?? []) as Types.Favorite[],
+      pagination: {
+        page: pagination?.page ?? 1,
+        limit: pagination?.limit ?? 20,
+        totalItems: result.favorites?.length ?? 0,
+        totalPages: 1,
+        hasNext: !!result.nextCursor,
+      },
+    };
   },
 
-  /**
-   * Add product to favorites
-   */
   async addFavorite(input: Types.AddFavoriteInput): Promise<Types.Favorite> {
-    return apiClient.mobile.addFavorite.mutate(input);
+    return apiClient.favorites.add.mutate(input) as Promise<Types.Favorite>;
   },
 
-  /**
-   * Remove from favorites
-   */
   async removeFavorite(favoriteId: string): Promise<Types.SuccessResponse> {
-    return apiClient.mobile.removeFavorite.mutate({ favoriteId });
+    // BFF remove takes productId — use favoriteId as productId fallback
+    await apiClient.favorites.remove.mutate({ productId: favoriteId });
+    return { success: true };
   },
 
-  /**
-   * Check if product is favorite
-   */
   async isFavorite(productId: string): Promise<{ isFavorite: boolean }> {
-    return apiClient.mobile.isFavorite.query({ productId });
+    // Not a dedicated BFF endpoint — check via list
+    try {
+      const result = await apiClient.favorites.list.query({ limit: 100 });
+      const found = (result.favorites ?? []).some(
+        (f: any) => f.productId === productId
+      );
+      return { isFavorite: found };
+    } catch {
+      return { isFavorite: false };
+    }
   },
 
-  /**
-   * Get all folders
-   */
   async getFolders(): Promise<{ folders: Types.FavoriteFolder[] }> {
-    return apiClient.mobile.getFolders.query();
+    const folders = await apiClient.favorites.listFolders.query();
+    return { folders: folders as Types.FavoriteFolder[] };
   },
 
-  /**
-   * Create a new folder
-   */
-  async createFolder(input: Types.CreateFolderInput): Promise<Types.FavoriteFolder> {
-    return apiClient.mobile.createFolder.mutate(input);
+  async createFolder(
+    input: Types.CreateFolderInput
+  ): Promise<Types.FavoriteFolder> {
+    return apiClient.favorites.createFolder.mutate(
+      input
+    ) as Promise<Types.FavoriteFolder>;
   },
 
-  /**
-   * Update folder
-   */
   async updateFolder(
     folderId: string,
     input: Partial<Types.CreateFolderInput>
   ): Promise<Types.SuccessResponse> {
-    return apiClient.mobile.updateFolder.mutate({ folderId, ...input });
+    await apiClient.favorites.updateFolder.mutate({ id: folderId, ...input });
+    return { success: true };
   },
 
-  /**
-   * Delete folder
-   */
   async deleteFolder(folderId: string): Promise<Types.SuccessResponse> {
-    return apiClient.mobile.deleteFolder.mutate({ folderId });
+    await apiClient.favorites.deleteFolder.mutate({ id: folderId });
+    return { success: true };
   },
 };
 

@@ -1,110 +1,107 @@
 /**
- * Auth Service - Enterprise-grade Mobile App
- * 
- * Authentication service for login, register, password reset
- * Netflix/Stripe/Shopify/Airbnb/Spotify standards
+ * Auth Service — Mobile BFF adapter
+ *
+ * BFF routes: auth.register, auth.login, auth.logout, auth.refresh,
+ *             auth.requestPasswordReset, auth.resetPassword, auth.me
  */
 
-import { apiClient, setTokens, clearTokens, getDeviceId, safeApiCall, OptimusApiError } from './client';
-import type * as Types from './types';
-
-// ============================================
-// AUTH SERVICE
-// ============================================
+import {
+  apiClient,
+  setTokens,
+  clearTokens,
+  getDeviceId,
+} from "./client";
+import type * as Types from "./types";
 
 export const authService = {
-  /**
-   * Register a new user
-   */
   async register(input: Types.RegisterInput): Promise<Types.AuthResponse> {
-    const deviceId = await getDeviceId();
-    const response = await apiClient.mobile.register.mutate({
-      ...input,
-      deviceId,
-      deviceName: 'Mobile App',
+    const result = await apiClient.auth.register.mutate({
+      email: input.email,
+      password: input.password,
+      displayName: input.displayName,
+      phoneNumber: input.phoneNumber,
     });
 
-    if (response.success && response.tokens) {
-      await setTokens(response.tokens.accessToken, response.tokens.refreshToken);
+    if (result.accessToken) {
+      await setTokens(result.accessToken, result.refreshToken);
     }
 
-    return response;
+    return {
+      success: true,
+      user: result.user,
+      tokens: {
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+        expiresIn: 900,
+      },
+    };
   },
 
-  /**
-   * Login user
-   */
   async login(email: string, password: string): Promise<Types.AuthResponse> {
     const deviceId = await getDeviceId();
-    const response = await apiClient.mobile.login.mutate({
+    const result = await apiClient.auth.login.mutate({
       email,
       password,
       deviceId,
-      deviceName: 'Mobile App',
+      deviceName: "Mobile App",
     });
 
-    if (response.success && response.tokens) {
-      await setTokens(response.tokens.accessToken, response.tokens.refreshToken);
+    if (result.accessToken) {
+      await setTokens(result.accessToken, result.refreshToken);
     }
-    console.log('Login response:', response);
 
-    return response;
+    return {
+      success: true,
+      user: {
+        id: result.user.id,
+        email: result.user.email,
+        displayName: result.user.displayName,
+      },
+      tokens: {
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+        expiresIn: 900,
+      },
+    };
   },
 
-  /**
-   * Get full user profile after login
-   */
   async getProfile(): Promise<Types.UserProfile> {
-    return apiClient.mobile.getProfile.query();
+    const profile = await apiClient.profile.getProfile.query();
+    return { ...profile, badges: profile.badges ?? [] };
   },
 
-  /**
-   * Request password reset
-   */
   async requestPasswordReset(email: string): Promise<Types.SuccessResponse> {
-    return apiClient.mobile.requestPasswordReset.mutate({ email });
+    return apiClient.auth.requestPasswordReset.mutate({ email });
   },
 
-  /**
-   * Confirm password reset with code
-   */
   async confirmPasswordReset(
     email: string,
     code: string,
     newPassword: string
   ): Promise<Types.SuccessResponse> {
-    return apiClient.mobile.confirmPasswordReset.mutate({
-      email,
-      code,
-      newPassword,
-    });
+    return apiClient.auth.resetPassword.mutate({ email, code, newPassword });
   },
 
-  /**
-   * Logout user
-   */
   async logout(): Promise<void> {
     try {
-      await apiClient.mobile.logout.mutate();
+      await apiClient.auth.logout.mutate();
     } catch (error) {
-      // Ignore errors on logout
-      console.warn('Logout API call failed:', error);
+      console.warn("Logout API call failed:", error);
     } finally {
       await clearTokens();
     }
   },
 
-  /**
-   * Refresh access token
-   */
   async refreshToken(currentRefreshToken: string): Promise<Types.AuthTokens> {
-    const response = await apiClient.mobile.refreshToken.mutate({
+    const result = await apiClient.auth.refresh.mutate({
       refreshToken: currentRefreshToken,
     });
-
-    await setTokens(response.accessToken, response.refreshToken);
-
-    return response;
+    await setTokens(result.accessToken, result.refreshToken);
+    return {
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+      expiresIn: 900,
+    };
   },
 };
 

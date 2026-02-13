@@ -1,72 +1,72 @@
 /**
- * Profile Service - Enterprise-grade Mobile App
- * 
- * User profile, addresses, and gamification service
- * Netflix/Stripe/Shopify/Airbnb/Spotify standards
+ * Profile Service — Mobile BFF adapter
+ *
+ * BFF routes: profile.getProfile, profile.updateProfile,
+ *             profile.getAddresses, profile.addAddress,
+ *             profile.updateAddress, profile.deleteAddress,
+ *             profile.getGamification
  */
 
 import { apiClient } from './client';
 import type * as Types from './types';
 
-// ============================================
-// PROFILE SERVICE
-// ============================================
-
 export const profileService = {
-  /**
-   * Get user profile
-   */
   async getProfile(): Promise<Types.UserProfile> {
-    return apiClient.mobile.getProfile.query();
+    const profile = await apiClient.profile.getProfile.query();
+    return { ...profile, badges: profile.badges ?? [] };
   },
 
-  /**
-   * Update user profile
-   */
-  async updateProfile(input: Types.UpdateProfileInput): Promise<Types.SuccessResponse & { profile: Partial<Types.UserProfile> }> {
-    return apiClient.mobile.updateProfile.mutate(input);
+  async updateProfile(
+    input: Types.UpdateProfileInput
+  ): Promise<Types.SuccessResponse & { profile: Partial<Types.UserProfile> }> {
+    const result = await apiClient.profile.updateProfile.mutate(input);
+    return { success: true, profile: result as Partial<Types.UserProfile> };
   },
 
-  /**
-   * Get user addresses
-   */
   async getAddresses(): Promise<{ addresses: Types.Address[] }> {
-    return apiClient.mobile.getAddresses.query();
+    const addresses = await apiClient.profile.getAddresses.query();
+    return { addresses: addresses as Types.Address[] };
   },
 
-  /**
-   * Add new address
-   */
   async addAddress(input: Types.CreateAddressInput): Promise<Types.Address> {
-    return apiClient.mobile.addAddress.mutate(input);
+    return apiClient.profile.addAddress.mutate(input) as Promise<Types.Address>;
   },
 
-  /**
-   * Update address
-   */
-  async updateAddress(addressId: string, input: Partial<Types.CreateAddressInput>): Promise<Types.SuccessResponse> {
-    return apiClient.mobile.updateAddress.mutate({ addressId, ...input });
+  async updateAddress(
+    addressId: string,
+    input: Partial<Types.CreateAddressInput>
+  ): Promise<Types.SuccessResponse> {
+    await apiClient.profile.updateAddress.mutate({ id: addressId, ...input });
+    return { success: true };
   },
 
-  /**
-   * Delete address
-   */
   async deleteAddress(addressId: string): Promise<Types.SuccessResponse> {
-    return apiClient.mobile.deleteAddress.mutate({ addressId });
+    await apiClient.profile.deleteAddress.mutate({ id: addressId });
+    return { success: true };
   },
 
-  /**
-   * Set default address
-   */
   async setDefaultAddress(addressId: string): Promise<Types.SuccessResponse> {
-    return apiClient.mobile.setDefaultAddress.mutate({ addressId });
+    await apiClient.profile.updateAddress.mutate({
+      id: addressId,
+      isDefault: true,
+    });
+    return { success: true };
   },
 
-  /**
-   * Get gamification stats
-   */
   async getGamificationStats(): Promise<Types.GamificationStats> {
-    return apiClient.mobile.getGamificationStats.query();
+    const data = await apiClient.profile.getGamification.query();
+    return {
+      level: data.level ?? 1,
+      experiencePoints: data.experiencePoints ?? 0,
+      xpForNextLevel: data.xpForNextLevel ?? 100,
+      xpProgress: data.xpProgress ?? 0,
+      currentStreak: data.currentStreak ?? 0,
+      longestStreak: data.longestStreak ?? 0,
+      badges: data.badges ?? [],
+      totalScans: data.totalScans ?? 0,
+      loyaltyPoints: data.loyaltyPoints ?? 0,
+      loyaltyLevel: data.loyaltyLevel ?? 'bronze',
+    };
   },
 };
 

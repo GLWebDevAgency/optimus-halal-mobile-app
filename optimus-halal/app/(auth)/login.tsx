@@ -24,9 +24,7 @@ import * as Haptics from "expo-haptics";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
 import { Button, Input } from "@/components/ui";
-import { useAuthStore } from "@/store";
-import { authService } from "@/services/api/auth.service";
-
+import { useAuthStore } from "@/store/apiStores";
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
@@ -34,10 +32,14 @@ export default function LoginScreen() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-  const { setUser } = useAuthStore();
+  // Use the API-connected Auth Store instead of the local one
+  const { login, isLoading: isAuthLoading, error: authError } = useAuthStore();
+  
+  // Local loading state for UI feedback
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isLoading = isSubmitting || isAuthLoading;
 
   const validateForm = useCallback(() => {
     const newErrors: { email?: string; password?: string } = {};
@@ -61,53 +63,30 @@ export default function LoginScreen() {
   const handleLogin = useCallback(async () => {
     if (!validateForm()) return;
 
-    setIsLoading(true);
+    setIsSubmitting(true);
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     try {
-      // Real API call to Railway backend
-      const response = await authService.login(email, password);
+      // Use the store action which handles API call, tokens, profile fetch, and state update
+      const success = await login(email, password);
 
-      if (response.success && response.user) {
-        // Fetch full profile from backend
-        let profile;
-        try {
-          profile = await authService.getProfile();
-        } catch (profileError) {
-          console.warn("[Login] Could not fetch profile, using basic info:", profileError);
-        }
-
-        // Set authenticated user with full profile or basic info
-        setUser({
-          id: response.user.id,
-          email: response.user.email,
-          fullName: profile?.displayName || response.user.displayName || email.split('@')[0],
-          avatarUrl: profile?.avatarUrl || undefined,
-          preferences: {
-            preferredCertifications: ["AVS", "Achahada"],
-            dietaryExclusions: profile?.dietaryRestrictions || [],
-            pushNotificationsEnabled: profile?.notificationEnabled ?? true,
-            darkModeEnabled: "system",
-            language: profile?.preferredLanguage || "fr",
-          },
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        });
-
+      if (success) {
         router.replace("/(tabs)");
       } else {
-        Alert.alert("Erreur", "Identifiants incorrects");
+        // Error is handled by store but we can show alert if needed, 
+        // though the UI might display authError
+        Alert.alert("Erreur", authError || "Identifiants incorrects");
       }
-    } catch (error: any) {
-      console.error("[Login] Error:", error);
-      Alert.alert(
-        "Erreur", 
-        error.message || "Une erreur est survenue lors de la connexion. Vérifiez votre connexion internet."
-      );
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Une erreur est survenue lors de la connexion.";
+      Alert.alert("Erreur", message);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
-  }, [email, password, validateForm, setUser]);
+  }, [email, password, validateForm, login, authError]);
 
   const handleBiometricLogin = useCallback(async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -130,24 +109,16 @@ export default function LoginScreen() {
     });
 
     if (result.success) {
-      // Mock biometric login
-      setUser({
-        id: "1",
-        email: "user@example.com",
-        fullName: "Yassine",
-        preferences: {
-          preferredCertifications: ["AVS"],
-          dietaryExclusions: [],
-          pushNotificationsEnabled: true,
-          darkModeEnabled: "system",
-          language: "fr",
-        },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
+      // TODO: Implement proper biometric login with secure storage of tokens
+      Alert.alert("Info", "L'authentification biométrique sera bientôt disponible avec le nouveau système de sécurité.");
+      
+      /* 
+      // Previous Mock Implementation - Disabled because setUser doesn't exist on API store
+      setUser({ ... });
       router.replace("/(tabs)");
+      */
     }
-  }, [setUser]);
+  }, []);
 
   return (
     <View className="flex-1 bg-background-light dark:bg-background-dark">

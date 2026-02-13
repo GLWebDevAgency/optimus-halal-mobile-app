@@ -1,28 +1,19 @@
 /**
- * Store Service - Enterprise-grade Mobile App
- * 
- * Store search, nearby, and management service
- * Netflix/Stripe/Shopify/Airbnb/Spotify standards
+ * Store Service — Mobile BFF adapter
+ *
+ * BFF routes: store.search, store.nearby, store.getById,
+ *             store.subscribe, store.unsubscribe, store.getSubscriptions
  */
 
 import { apiClient } from './client';
 import type * as Types from './types';
 
-// ============================================
-// STORE SERVICE
-// ============================================
-
 export const storeService = {
-  /**
-   * Get store details
-   */
   async getStore(storeId: string): Promise<Types.StoreWithDetails> {
-    return apiClient.mobile.getStore.query({ storeId });
+    const result = await apiClient.store.getById.query({ id: storeId });
+    return result as Types.StoreWithDetails;
   },
 
-  /**
-   * Search stores
-   */
   async searchStores(
     query: string,
     pagination?: Types.PaginationInput,
@@ -35,42 +26,44 @@ export const storeService = {
     stores: Types.Store[];
     pagination: Types.PaginationOutput;
   }> {
-    return apiClient.mobile.searchStores.query({
+    const result = await apiClient.store.search.query({
       query,
-      page: pagination?.page ?? 1,
       limit: pagination?.limit ?? 20,
       ...filters,
     });
+
+    return {
+      stores: (result.stores ?? []) as Types.Store[],
+      pagination: {
+        page: pagination?.page ?? 1,
+        limit: pagination?.limit ?? 20,
+        totalItems: result.stores?.length ?? 0,
+        totalPages: 1,
+        hasNext: (result.stores?.length ?? 0) >= (pagination?.limit ?? 20),
+      },
+    };
   },
 
-  /**
-   * Get nearby stores
-   */
-  async getNearbyStores(input: Types.NearbyStoresInput): Promise<{
-    stores: (Types.Store & { distance: number })[];
-  }> {
-    return apiClient.mobile.getNearbyStores.query(input);
+  async getNearbyStores(
+    input: Types.NearbyStoresInput
+  ): Promise<{ stores: (Types.Store & { distance: number })[] }> {
+    const result = await apiClient.store.nearby.query(input);
+    return { stores: (result as any).stores ?? result ?? [] };
   },
 
-  /**
-   * Subscribe to store updates
-   */
   async subscribeToStore(storeId: string): Promise<Types.SuccessResponse> {
-    return apiClient.mobile.subscribeToStore.mutate({ storeId });
+    await apiClient.store.subscribe.mutate({ storeId });
+    return { success: true };
   },
 
-  /**
-   * Unsubscribe from store
-   */
   async unsubscribeFromStore(storeId: string): Promise<Types.SuccessResponse> {
-    return apiClient.mobile.unsubscribeFromStore.mutate({ storeId });
+    await apiClient.store.unsubscribe.mutate({ storeId });
+    return { success: true };
   },
 
-  /**
-   * Get subscribed stores
-   */
   async getSubscribedStores(): Promise<{ stores: Types.Store[] }> {
-    return apiClient.mobile.getSubscribedStores.query();
+    const stores = await apiClient.store.getSubscriptions.query();
+    return { stores: stores as Types.Store[] };
   },
 };
 

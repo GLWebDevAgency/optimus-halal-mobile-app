@@ -1,21 +1,16 @@
 /**
- * Notification Service - Enterprise-grade Mobile App
- * 
- * Push notifications and settings management
- * Netflix/Stripe/Shopify/Airbnb/Spotify standards
+ * Notification Service — Mobile BFF adapter
+ *
+ * BFF routes: notification.list, notification.getUnreadCount,
+ *             notification.markAsRead, notification.markAllAsRead,
+ *             notification.registerPushToken, notification.unregisterPushToken,
+ *             notification.getSettings, notification.updateSettings
  */
 
 import { apiClient, getDeviceId } from './client';
 import type * as Types from './types';
 
-// ============================================
-// NOTIFICATION SERVICE
-// ============================================
-
 export const notificationService = {
-  /**
-   * Register push notification token
-   */
   async registerPushToken(
     token: string,
     platform: Types.Platform,
@@ -26,7 +21,7 @@ export const notificationService = {
     }
   ): Promise<Types.SuccessResponse> {
     const deviceId = await getDeviceId();
-    return apiClient.mobile.registerPushToken.mutate({
+    await apiClient.notification.registerPushToken.mutate({
       token,
       platform,
       deviceId,
@@ -34,77 +29,74 @@ export const notificationService = {
       appVersion: options?.appVersion,
       osVersion: options?.osVersion,
     });
+    return { success: true };
   },
 
-  /**
-   * Deactivate push token
-   */
   async deactivatePushToken(token: string): Promise<Types.SuccessResponse> {
-    return apiClient.mobile.deactivatePushToken.mutate({ token });
+    await apiClient.notification.unregisterPushToken.mutate({ token });
+    return { success: true };
   },
 
-  /**
-   * Get notifications with pagination
-   */
   async getNotifications(
     pagination?: Types.PaginationInput,
-    filters?: {
-      type?: string;
-      isRead?: boolean;
-    }
+    filters?: { type?: string; isRead?: boolean }
   ): Promise<{
     notifications: Types.Notification[];
     unreadCount: number;
     pagination: Types.PaginationOutput;
   }> {
-    return apiClient.mobile.getNotifications.query({
-      page: pagination?.page ?? 1,
+    const result = await apiClient.notification.list.query({
       limit: pagination?.limit ?? 20,
-      ...filters,
+      cursor: undefined,
     });
+
+    return {
+      notifications: (result.notifications ?? []) as Types.Notification[],
+      unreadCount: result.unreadCount ?? 0,
+      pagination: {
+        page: pagination?.page ?? 1,
+        limit: pagination?.limit ?? 20,
+        totalItems: result.notifications?.length ?? 0,
+        totalPages: 1,
+        hasNext: !!result.nextCursor,
+      },
+    };
   },
 
-  /**
-   * Mark notifications as read
-   */
-  async markNotificationsRead(notificationIds: string[]): Promise<{
-    success: boolean;
-    count: number;
-  }> {
-    return apiClient.mobile.markNotificationsRead.mutate({ notificationIds });
+  async markNotificationsRead(
+    notificationIds: string[]
+  ): Promise<{ success: boolean; count: number }> {
+    // BFF markAsRead takes a single id — loop
+    let count = 0;
+    for (const id of notificationIds) {
+      await apiClient.notification.markAsRead.mutate({ id });
+      count++;
+    }
+    return { success: true, count };
   },
 
-  /**
-   * Mark all notifications as read
-   */
   async markAllNotificationsRead(): Promise<{
     success: boolean;
     count: number;
   }> {
-    return apiClient.mobile.markAllNotificationsRead.mutate();
+    const result = await apiClient.notification.markAllAsRead.mutate();
+    return { success: true, count: (result as any).count ?? 0 };
   },
 
-  /**
-   * Get notification settings
-   */
   async getNotificationSettings(): Promise<Types.NotificationSettings> {
-    return apiClient.mobile.getNotificationSettings.query();
+    return apiClient.notification.getSettings.query() as Promise<Types.NotificationSettings>;
   },
 
-  /**
-   * Update notification settings
-   */
   async updateNotificationSettings(
     input: Types.UpdateNotificationSettingsInput
   ): Promise<Types.SuccessResponse> {
-    return apiClient.mobile.updateNotificationSettings.mutate(input);
+    await apiClient.notification.updateSettings.mutate(input);
+    return { success: true };
   },
 
-  /**
-   * Get unread notification count
-   */
   async getUnreadCount(): Promise<Types.CountResponse> {
-    return apiClient.mobile.getUnreadNotificationCount.query();
+    const result = await apiClient.notification.getUnreadCount.query();
+    return { count: (result as any).count ?? 0 };
   },
 };
 

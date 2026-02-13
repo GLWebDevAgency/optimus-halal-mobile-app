@@ -1,22 +1,9 @@
 /**
- * Services Index - Enterprise-grade Mobile App
- * 
- * Central export for all services
- * Netflix/Stripe/Shopify/Airbnb/Spotify standards
- * 
- * Architecture:
- * - gRPC: Direct communication with Mobile-Service (Rust BFF) - RECOMMENDED
- * - API: Legacy tRPC via API Gateway (deprecated for new features)
+ * Services Index
+ *
+ * Central export for all API services.
+ * gRPC services exist in ./grpc but are not yet active — import directly
+ * from '@/services/grpc' when the Rust BFF is production-ready.
  */
-
-// ============================================
-// GRPC SERVICES (NEW - Direct to Mobile-Service)
-// ============================================
-
-export * from './grpc';
-
-// ============================================
-// API SERVICES (Legacy - via API Gateway)
-// ============================================
 
 export * from './api';

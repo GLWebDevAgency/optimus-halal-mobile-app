@@ -246,6 +246,53 @@ export default function EditProfileScreen() {
     );
   }
 
+  // Show error state if profile failed to load
+  if (error && !profile) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background, alignItems: "center", justifyContent: "center", padding: 20 }}>
+        <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
+        <MaterialIcons name="error-outline" size={48} color="#ef4444" style={{ marginBottom: 16 }} />
+        <Text style={{ 
+          fontSize: 18, 
+          fontWeight: "700", 
+          color: themeColors.textPrimary,
+          textAlign: "center",
+          marginBottom: 8 
+        }}>
+          Une erreur est survenue
+        </Text>
+        <Text style={{ 
+          fontSize: 14, 
+          color: themeColors.textSecondary,
+          textAlign: "center",
+          marginBottom: 24
+        }}>
+          {error}
+        </Text>
+        <TouchableOpacity
+          onPress={() => fetchProfile()}
+          style={{
+            backgroundColor: themeColors.primary,
+            paddingHorizontal: 24,
+            paddingVertical: 12,
+            borderRadius: 12,
+          }}
+        >
+          <Text style={{ color: "#0d1b13", fontWeight: "600" }}>Réessayer</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{
+            marginTop: 16,
+            padding: 12,
+          }}
+        >
+          <Text style={{ color: themeColors.textSecondary }}>Retour</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background }}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />

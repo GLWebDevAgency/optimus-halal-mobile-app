@@ -4,7 +4,7 @@
  * Composant input réutilisable avec support dark mode
  */
 
-import React, { forwardRef, useState } from "react";
+import React, { useState } from "react";
 import {
   TextInput,
   TextInputProps,
@@ -22,24 +22,22 @@ export interface InputProps extends TextInputProps {
   rightIcon?: keyof typeof MaterialIcons.glyphMap;
   onRightIconPress?: () => void;
   containerClassName?: string;
+  ref?: React.Ref<TextInput>;
 }
 
-export const Input = forwardRef<TextInput, InputProps>(
-  (
-    {
-      label,
-      error,
-      hint,
-      leftIcon,
-      rightIcon,
-      onRightIconPress,
-      containerClassName = "",
-      className = "",
-      secureTextEntry,
-      ...props
-    },
-    ref
-  ) => {
+export function Input({
+  label,
+  error,
+  hint,
+  leftIcon,
+  rightIcon,
+  onRightIconPress,
+  containerClassName = "",
+  className = "",
+  secureTextEntry,
+  ref,
+  ...props
+}: InputProps) {
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const isPassword = secureTextEntry !== undefined;
 
@@ -118,9 +116,6 @@ export const Input = forwardRef<TextInput, InputProps>(
         )}
       </View>
     );
-  }
-);
-
-Input.displayName = "Input";
+}
 
 export default Input;

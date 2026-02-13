@@ -1,13 +1,12 @@
 /**
- * API-Connected Stores - Enterprise-grade Mobile App
- * 
- * Zustand stores integrated with tRPC API services
- * Netflix/Stripe/Shopify/Airbnb/Spotify standards
+ * API-Connected Stores — Optimus Halal Mobile App
+ *
+ * Zustand stores integrated with tRPC API services.
+ * These are the CANONICAL stores — prefer these over store/index.ts.
  */
 
 import { create } from "zustand";
-import { persist, createJSONStorage, StateStorage } from "zustand/middleware";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Alert } from "react-native";
 import {
   api,
   initializeTokens,
@@ -20,23 +19,6 @@ import {
 import type * as ApiTypes from "@/services/api/types";
 
 // ============================================
-// STORAGE ADAPTER
-// ============================================
-
-const zustandStorage: StateStorage = {
-  getItem: async (name: string) => {
-    const value = await AsyncStorage.getItem(name);
-    return value ?? null;
-  },
-  setItem: async (name: string, value: string) => {
-    await AsyncStorage.setItem(name, value);
-  },
-  removeItem: async (name: string) => {
-    await AsyncStorage.removeItem(name);
-  },
-};
-
-// ============================================
 // AUTH STORE
 // ============================================
 
@@ -46,14 +28,18 @@ interface AuthStoreState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  
+
   // Actions
   initialize: () => Promise<void>;
   login: (email: string, password: string) => Promise<boolean>;
   register: (input: ApiTypes.RegisterInput) => Promise<boolean>;
   logout: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<boolean>;
-  confirmPasswordReset: (email: string, code: string, newPassword: string) => Promise<boolean>;
+  confirmPasswordReset: (
+    email: string,
+    code: string,
+    newPassword: string
+  ) => Promise<boolean>;
   fetchProfile: () => Promise<void>;
   updateProfile: (input: ApiTypes.UpdateProfileInput) => Promise<boolean>;
   clearError: () => void;
@@ -69,7 +55,7 @@ export const useAuthStore = create<AuthStoreState>()((set, get) => ({
   initialize: async () => {
     set({ isLoading: true });
     await initializeTokens();
-    
+
     if (isAuthenticated()) {
       try {
         const profile = await api.profile.getProfile();
@@ -86,7 +72,12 @@ export const useAuthStore = create<AuthStoreState>()((set, get) => ({
       } catch {
         // Token invalid, clear
         await clearTokens();
-        set({ isAuthenticated: false, user: null, profile: null, isLoading: false });
+        set({
+          isAuthenticated: false,
+          user: null,
+          profile: null,
+          isLoading: false,
+        });
       }
     } else {
       set({ isLoading: false });
@@ -95,24 +86,26 @@ export const useAuthStore = create<AuthStoreState>()((set, get) => ({
 
   login: async (email, password) => {
     set({ isLoading: true, error: null });
-    const { data, error } = await safeApiCall(() => api.auth.login(email, password));
-    
+    const { data, error } = await safeApiCall(() =>
+      api.auth.login(email, password)
+    );
+
     if (error) {
       set({ isLoading: false, error: error.message });
       return false;
     }
-    
+
     if (data?.success && data.user) {
       set({
         user: data.user,
         isAuthenticated: true,
         isLoading: false,
       });
-      // Fetch full profile
-      get().fetchProfile();
+      // Fetch full profile - MUST await to ensure token is fully propagated
+      await get().fetchProfile();
       return true;
     }
-    
+
     set({ isLoading: false, error: "Login failed" });
     return false;
   },
@@ -120,12 +113,12 @@ export const useAuthStore = create<AuthStoreState>()((set, get) => ({
   register: async (input) => {
     set({ isLoading: true, error: null });
     const { data, error } = await safeApiCall(() => api.auth.register(input));
-    
+
     if (error) {
       set({ isLoading: false, error: error.message });
       return false;
     }
-    
+
     if (data?.success && data.user) {
       set({
         user: data.user,
@@ -135,7 +128,7 @@ export const useAuthStore = create<AuthStoreState>()((set, get) => ({
       get().fetchProfile();
       return true;
     }
-    
+
     set({ isLoading: false, error: "Registration failed" });
     return false;
   },
@@ -153,48 +146,79 @@ export const useAuthStore = create<AuthStoreState>()((set, get) => ({
 
   requestPasswordReset: async (email) => {
     set({ isLoading: true, error: null });
-    const { data, error } = await safeApiCall(() => api.auth.requestPasswordReset(email));
-    
+    const { data, error } = await safeApiCall(() =>
+      api.auth.requestPasswordReset(email)
+    );
+
     if (error) {
       set({ isLoading: false, error: error.message });
       return false;
     }
-    
+
     set({ isLoading: false });
     return data?.success ?? false;
   },
 
   confirmPasswordReset: async (email, code, newPassword) => {
     set({ isLoading: true, error: null });
-    const { data, error } = await safeApiCall(() => 
+    const { data, error } = await safeApiCall(() =>
       api.auth.confirmPasswordReset(email, code, newPassword)
     );
-    
+
     if (error) {
       set({ isLoading: false, error: error.message });
       return false;
     }
-    
+
     set({ isLoading: false });
     return data?.success ?? false;
   },
 
   fetchProfile: async () => {
-    const { data } = await safeApiCall(() => api.profile.getProfile());
+    set({ isLoading: true, error: null });
+    const { data, error } = await safeApiCall(() => api.profile.getProfile(), {
+      suppressLog: true, // Suppress console.error for profile fetch to avoid noise, we handle it
+    });
+
     if (data) {
-      set({ profile: data });
+      set({ profile: data, isLoading: false, error: null });
+    } else if (error) {
+      // Handle Unauthorized specifically
+      if (error.code === "UNAUTHORIZED") {
+        Alert.alert(
+          "Session expirée",
+          "Votre session a expiré. Veuillez vous reconnecter.",
+          [
+            {
+              text: "OK",
+              onPress: async () => {
+                await get().logout();
+              },
+            },
+          ]
+        );
+      } else {
+        set({
+          isLoading: false,
+          error: error.message || "Failed to load profile",
+        });
+      }
+    } else {
+      set({ isLoading: false });
     }
   },
 
   updateProfile: async (input) => {
     set({ isLoading: true, error: null });
-    const { data, error } = await safeApiCall(() => api.profile.updateProfile(input));
-    
+    const { data, error } = await safeApiCall(() =>
+      api.profile.updateProfile(input)
+    );
+
     if (error) {
       set({ isLoading: false, error: error.message });
       return false;
     }
-    
+
     if (data?.success) {
       // Update local profile
       set((state) => ({
@@ -203,7 +227,7 @@ export const useAuthStore = create<AuthStoreState>()((set, get) => ({
       }));
       return true;
     }
-    
+
     set({ isLoading: false });
     return false;
   },
@@ -221,13 +245,18 @@ interface ScanStoreState {
   scanStats: ApiTypes.ScanStats | null;
   isLoading: boolean;
   error: string | null;
-  
+
   // Actions
-  scanBarcode: (barcode: string, location?: { latitude: number; longitude: number }) => Promise<ApiTypes.ScanResult | null>;
+  scanBarcode: (
+    barcode: string,
+    location?: { latitude: number; longitude: number }
+  ) => Promise<ApiTypes.ScanResult | null>;
   fetchScanHistory: (pagination?: ApiTypes.PaginationInput) => Promise<void>;
   fetchScanStats: () => Promise<void>;
   clearScanHistory: () => Promise<boolean>;
-  submitAnalysisRequest: (input: ApiTypes.AnalysisRequestInput) => Promise<boolean>;
+  submitAnalysisRequest: (
+    input: ApiTypes.AnalysisRequestInput
+  ) => Promise<boolean>;
   clearCurrentScan: () => void;
 }
 
@@ -240,28 +269,30 @@ export const useScanStore = create<ScanStoreState>()((set, get) => ({
 
   scanBarcode: async (barcode, location) => {
     set({ isLoading: true, error: null });
-    const { data, error } = await safeApiCall(() => 
+    const { data, error } = await safeApiCall(() =>
       api.scan.scanBarcode({ barcode, ...location })
     );
-    
+
     if (error) {
       set({ isLoading: false, error: error.message });
       return null;
     }
-    
+
     if (data) {
       set({ currentScan: data, isLoading: false });
       // Refresh history
       get().fetchScanHistory();
       return data;
     }
-    
+
     set({ isLoading: false });
     return null;
   },
 
   fetchScanHistory: async (pagination) => {
-    const { data } = await safeApiCall(() => api.scan.getScanHistory(pagination));
+    const { data } = await safeApiCall(() =>
+      api.scan.getScanHistory(pagination)
+    );
     if (data) {
       set({ scanHistory: data.scans });
     }
@@ -285,14 +316,16 @@ export const useScanStore = create<ScanStoreState>()((set, get) => ({
 
   submitAnalysisRequest: async (input) => {
     set({ isLoading: true });
-    const { data, error } = await safeApiCall(() => api.scan.submitAnalysisRequest(input));
+    const { data, error } = await safeApiCall(() =>
+      api.scan.submitAnalysisRequest(input)
+    );
     set({ isLoading: false });
-    
+
     if (error) {
       set({ error: error.message });
       return false;
     }
-    
+
     return data?.status === "pending";
   },
 
@@ -307,7 +340,7 @@ interface FavoritesStoreState {
   favorites: ApiTypes.Favorite[];
   folders: ApiTypes.FavoriteFolder[];
   isLoading: boolean;
-  
+
   // Actions
   fetchFavorites: (folderId?: string) => Promise<void>;
   addFavorite: (productId: string, folderId?: string) => Promise<boolean>;
@@ -325,7 +358,9 @@ export const useFavoritesStore = create<FavoritesStoreState>()((set, get) => ({
 
   fetchFavorites: async (folderId) => {
     set({ isLoading: true });
-    const { data } = await safeApiCall(() => api.favorites.getFavorites(undefined, folderId));
+    const { data } = await safeApiCall(() =>
+      api.favorites.getFavorites(undefined, folderId)
+    );
     if (data) {
       set({ favorites: data.favorites });
     }
@@ -333,7 +368,9 @@ export const useFavoritesStore = create<FavoritesStoreState>()((set, get) => ({
   },
 
   addFavorite: async (productId, folderId) => {
-    const { data } = await safeApiCall(() => api.favorites.addFavorite({ productId, folderId }));
+    const { data } = await safeApiCall(() =>
+      api.favorites.addFavorite({ productId, folderId })
+    );
     if (data) {
       set((state) => ({ favorites: [data, ...state.favorites] }));
       return true;
@@ -342,7 +379,9 @@ export const useFavoritesStore = create<FavoritesStoreState>()((set, get) => ({
   },
 
   removeFavorite: async (favoriteId) => {
-    const { data } = await safeApiCall(() => api.favorites.removeFavorite(favoriteId));
+    const { data } = await safeApiCall(() =>
+      api.favorites.removeFavorite(favoriteId)
+    );
     if (data?.success) {
       set((state) => ({
         favorites: state.favorites.filter((f) => f.id !== favoriteId),
@@ -353,7 +392,9 @@ export const useFavoritesStore = create<FavoritesStoreState>()((set, get) => ({
   },
 
   isFavorite: async (productId) => {
-    const { data } = await safeApiCall(() => api.favorites.isFavorite(productId));
+    const { data } = await safeApiCall(() =>
+      api.favorites.isFavorite(productId)
+    );
     return data?.isFavorite ?? false;
   },
 
@@ -365,7 +406,9 @@ export const useFavoritesStore = create<FavoritesStoreState>()((set, get) => ({
   },
 
   createFolder: async (name, color) => {
-    const { data } = await safeApiCall(() => api.favorites.createFolder({ name, color }));
+    const { data } = await safeApiCall(() =>
+      api.favorites.createFolder({ name, color })
+    );
     if (data) {
       set((state) => ({ folders: [...state.folders, data] }));
       return true;
@@ -374,7 +417,9 @@ export const useFavoritesStore = create<FavoritesStoreState>()((set, get) => ({
   },
 
   deleteFolder: async (folderId) => {
-    const { data } = await safeApiCall(() => api.favorites.deleteFolder(folderId));
+    const { data } = await safeApiCall(() =>
+      api.favorites.deleteFolder(folderId)
+    );
     if (data?.success) {
       set((state) => ({
         folders: state.folders.filter((f) => f.id !== folderId),
@@ -393,14 +438,16 @@ interface CartStoreState {
   cart: ApiTypes.Cart | null;
   savedForLater: ApiTypes.SavedForLaterItem[];
   isLoading: boolean;
-  
+
   // Actions
   fetchCart: () => Promise<void>;
   addToCart: (productId: string, quantity?: number) => Promise<boolean>;
   updateQuantity: (itemId: string, quantity: number) => Promise<boolean>;
   removeFromCart: (itemId: string) => Promise<boolean>;
   clearCart: () => Promise<boolean>;
-  applyCoupon: (code: string) => Promise<{ success: boolean; message?: string }>;
+  applyCoupon: (
+    code: string
+  ) => Promise<{ success: boolean; message?: string }>;
   removeCoupon: (couponId: string) => Promise<boolean>;
   saveForLater: (itemId: string) => Promise<boolean>;
   fetchSavedForLater: () => Promise<void>;
@@ -422,7 +469,9 @@ export const useCartStore = create<CartStoreState>()((set, get) => ({
   },
 
   addToCart: async (productId, quantity = 1) => {
-    const { data } = await safeApiCall(() => api.cart.addToCart({ productId, quantity }));
+    const { data } = await safeApiCall(() =>
+      api.cart.addToCart({ productId, quantity })
+    );
     if (data) {
       get().fetchCart(); // Refresh cart
       return true;
@@ -431,7 +480,9 @@ export const useCartStore = create<CartStoreState>()((set, get) => ({
   },
 
   updateQuantity: async (itemId, quantity) => {
-    const { data } = await safeApiCall(() => api.cart.updateCartItem({ itemId, quantity }));
+    const { data } = await safeApiCall(() =>
+      api.cart.updateCartItem({ itemId, quantity })
+    );
     if (data?.success) {
       get().fetchCart();
       return true;
@@ -444,7 +495,10 @@ export const useCartStore = create<CartStoreState>()((set, get) => ({
     if (data?.success) {
       set((state) => ({
         cart: state.cart
-          ? { ...state.cart, items: state.cart.items.filter((i) => i.id !== itemId) }
+          ? {
+              ...state.cart,
+              items: state.cart.items.filter((i) => i.id !== itemId),
+            }
           : null,
       }));
       get().fetchCart(); // Refresh for totals
@@ -520,11 +574,16 @@ interface OrdersStoreState {
   currentOrder: ApiTypes.OrderWithDetails | null;
   orderTracking: ApiTypes.OrderTracking | null;
   isLoading: boolean;
-  
+
   // Actions
-  fetchOrders: (pagination?: ApiTypes.PaginationInput, status?: ApiTypes.OrderStatus) => Promise<void>;
+  fetchOrders: (
+    pagination?: ApiTypes.PaginationInput,
+    status?: ApiTypes.OrderStatus
+  ) => Promise<void>;
   fetchOrder: (orderId: string) => Promise<void>;
-  createOrder: (input: ApiTypes.CreateOrderInput) => Promise<{ success: boolean; orderId?: string; message?: string }>;
+  createOrder: (
+    input: ApiTypes.CreateOrderInput
+  ) => Promise<{ success: boolean; orderId?: string; message?: string }>;
   cancelOrder: (orderId: string, reason?: string) => Promise<boolean>;
   reorder: (orderId: string) => Promise<boolean>;
   fetchOrderTracking: (orderId: string) => Promise<void>;
@@ -538,7 +597,9 @@ export const useOrdersStore = create<OrdersStoreState>()((set, get) => ({
 
   fetchOrders: async (pagination, status) => {
     set({ isLoading: true });
-    const { data } = await safeApiCall(() => api.order.getOrders(pagination, { status }));
+    const { data } = await safeApiCall(() =>
+      api.order.getOrders(pagination, { status })
+    );
     if (data) {
       set({ orders: data.orders });
     }
@@ -556,23 +617,27 @@ export const useOrdersStore = create<OrdersStoreState>()((set, get) => ({
 
   createOrder: async (input) => {
     set({ isLoading: true });
-    const { data, error } = await safeApiCall(() => api.order.createOrder(input));
+    const { data, error } = await safeApiCall(() =>
+      api.order.createOrder(input)
+    );
     set({ isLoading: false });
-    
+
     if (error) {
       return { success: false, message: error.message };
     }
-    
+
     if (data) {
       get().fetchOrders();
       return { success: true, orderId: data.id, message: data.message };
     }
-    
+
     return { success: false };
   },
 
   cancelOrder: async (orderId, reason) => {
-    const { data } = await safeApiCall(() => api.order.cancelOrder(orderId, reason));
+    const { data } = await safeApiCall(() =>
+      api.order.cancelOrder(orderId, reason)
+    );
     if (data?.success) {
       get().fetchOrders();
       return true;
@@ -586,7 +651,9 @@ export const useOrdersStore = create<OrdersStoreState>()((set, get) => ({
   },
 
   fetchOrderTracking: async (orderId) => {
-    const { data } = await safeApiCall(() => api.order.getOrderTracking(orderId));
+    const { data } = await safeApiCall(() =>
+      api.order.getOrderTracking(orderId)
+    );
     if (data) {
       set({ orderTracking: data });
     }
@@ -602,80 +669,100 @@ interface NotificationsStoreState {
   unreadCount: number;
   settings: ApiTypes.NotificationSettings | null;
   isLoading: boolean;
-  
+
   // Actions
   fetchNotifications: (pagination?: ApiTypes.PaginationInput) => Promise<void>;
   markAsRead: (notificationIds: string[]) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   fetchSettings: () => Promise<void>;
-  updateSettings: (input: ApiTypes.UpdateNotificationSettingsInput) => Promise<boolean>;
+  updateSettings: (
+    input: ApiTypes.UpdateNotificationSettingsInput
+  ) => Promise<boolean>;
   fetchUnreadCount: () => Promise<void>;
-  registerPushToken: (token: string, platform: ApiTypes.Platform) => Promise<boolean>;
+  registerPushToken: (
+    token: string,
+    platform: ApiTypes.Platform
+  ) => Promise<boolean>;
 }
 
-export const useNotificationsStore = create<NotificationsStoreState>()((set, get) => ({
-  notifications: [],
-  unreadCount: 0,
-  settings: null,
-  isLoading: false,
+export const useNotificationsStore = create<NotificationsStoreState>()(
+  (set, get) => ({
+    notifications: [],
+    unreadCount: 0,
+    settings: null,
+    isLoading: false,
 
-  fetchNotifications: async (pagination) => {
-    set({ isLoading: true });
-    const { data } = await safeApiCall(() => api.notification.getNotifications(pagination));
-    if (data) {
-      set({ notifications: data.notifications, unreadCount: data.unreadCount });
-    }
-    set({ isLoading: false });
-  },
+    fetchNotifications: async (pagination) => {
+      set({ isLoading: true });
+      const { data } = await safeApiCall(() =>
+        api.notification.getNotifications(pagination)
+      );
+      if (data) {
+        set({
+          notifications: data.notifications,
+          unreadCount: data.unreadCount,
+        });
+      }
+      set({ isLoading: false });
+    },
 
-  markAsRead: async (notificationIds) => {
-    await api.notification.markNotificationsRead(notificationIds);
-    set((state) => ({
-      notifications: state.notifications.map((n) =>
-        notificationIds.includes(n.id) ? { ...n, isRead: true } : n
-      ),
-      unreadCount: Math.max(0, state.unreadCount - notificationIds.length),
-    }));
-  },
-
-  markAllAsRead: async () => {
-    await api.notification.markAllNotificationsRead();
-    set((state) => ({
-      notifications: state.notifications.map((n) => ({ ...n, isRead: true })),
-      unreadCount: 0,
-    }));
-  },
-
-  fetchSettings: async () => {
-    const { data } = await safeApiCall(() => api.notification.getNotificationSettings());
-    if (data) {
-      set({ settings: data });
-    }
-  },
-
-  updateSettings: async (input) => {
-    const { data } = await safeApiCall(() => api.notification.updateNotificationSettings(input));
-    if (data?.success) {
+    markAsRead: async (notificationIds) => {
+      await api.notification.markNotificationsRead(notificationIds);
       set((state) => ({
-        settings: state.settings ? { ...state.settings, ...input } : null,
+        notifications: state.notifications.map((n) =>
+          notificationIds.includes(n.id) ? { ...n, isRead: true } : n
+        ),
+        unreadCount: Math.max(0, state.unreadCount - notificationIds.length),
       }));
-      return true;
-    }
-    return false;
-  },
+    },
 
-  fetchUnreadCount: async () => {
-    const { data } = await safeApiCall(() => api.notification.getUnreadCount());
-    if (data) {
-      set({ unreadCount: data.count });
-    }
-  },
+    markAllAsRead: async () => {
+      await api.notification.markAllNotificationsRead();
+      set((state) => ({
+        notifications: state.notifications.map((n) => ({ ...n, isRead: true })),
+        unreadCount: 0,
+      }));
+    },
 
-  registerPushToken: async (token, platform) => {
-    const { data } = await safeApiCall(() => api.notification.registerPushToken(token, platform));
-    return data?.success ?? false;
-  },
-}));
+    fetchSettings: async () => {
+      const { data } = await safeApiCall(() =>
+        api.notification.getNotificationSettings()
+      );
+      if (data) {
+        set({ settings: data });
+      }
+    },
+
+    updateSettings: async (input) => {
+      const { data } = await safeApiCall(() =>
+        api.notification.updateNotificationSettings(input)
+      );
+      if (data?.success) {
+        set((state) => ({
+          settings: state.settings ? { ...state.settings, ...input } : null,
+        }));
+        return true;
+      }
+      return false;
+    },
+
+    fetchUnreadCount: async () => {
+      const { data } = await safeApiCall(() =>
+        api.notification.getUnreadCount()
+      );
+      if (data) {
+        set({ unreadCount: data.count });
+      }
+    },
+
+    registerPushToken: async (token, platform) => {
+      const { data } = await safeApiCall(() =>
+        api.notification.registerPushToken(token, platform)
+      );
+      return data?.success ?? false;
+    },
+  })
+);
 
 // ============================================
 // LOYALTY STORE
@@ -687,12 +774,14 @@ interface LoyaltyStoreState {
   rewards: ApiTypes.LoyaltyReward[];
   leaderboard: ApiTypes.LeaderboardEntry[];
   isLoading: boolean;
-  
+
   // Actions
   fetchAccount: () => Promise<void>;
   fetchTransactions: (pagination?: ApiTypes.PaginationInput) => Promise<void>;
   fetchRewards: () => Promise<void>;
-  redeemReward: (rewardId: string) => Promise<{ success: boolean; code?: string }>;
+  redeemReward: (
+    rewardId: string
+  ) => Promise<{ success: boolean; code?: string }>;
   fetchLeaderboard: (limit?: number) => Promise<void>;
 }
 
@@ -713,7 +802,9 @@ export const useLoyaltyStore = create<LoyaltyStoreState>()((set, get) => ({
   },
 
   fetchTransactions: async (pagination) => {
-    const { data } = await safeApiCall(() => api.loyalty.getLoyaltyTransactions(pagination));
+    const { data } = await safeApiCall(() =>
+      api.loyalty.getLoyaltyTransactions(pagination)
+    );
     if (data) {
       set({ transactions: data.transactions });
     }
@@ -728,18 +819,20 @@ export const useLoyaltyStore = create<LoyaltyStoreState>()((set, get) => ({
 
   redeemReward: async (rewardId) => {
     set({ isLoading: true });
-    const { data, error } = await safeApiCall(() => api.loyalty.redeemReward(rewardId));
+    const { data, error } = await safeApiCall(() =>
+      api.loyalty.redeemReward(rewardId)
+    );
     set({ isLoading: false });
-    
+
     if (error) {
       return { success: false };
     }
-    
+
     if (data?.success) {
       get().fetchAccount(); // Refresh balance
       return { success: true, code: data.rewardCode };
     }
-    
+
     return { success: false };
   },
 
@@ -760,9 +853,12 @@ interface AlertsStoreState {
   summary: ApiTypes.AlertSummary | null;
   categories: ApiTypes.AlertCategory[];
   isLoading: boolean;
-  
+
   // Actions
-  fetchAlerts: (pagination?: ApiTypes.PaginationInput, filters?: { categoryId?: string; severity?: ApiTypes.AlertSeverity }) => Promise<void>;
+  fetchAlerts: (
+    pagination?: ApiTypes.PaginationInput,
+    filters?: { categoryId?: string; severity?: ApiTypes.AlertSeverity }
+  ) => Promise<void>;
   markAsRead: (alertId: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   dismissAlert: (alertId: string) => Promise<void>;
@@ -778,7 +874,9 @@ export const useAlertsStore = create<AlertsStoreState>()((set, get) => ({
 
   fetchAlerts: async (pagination, filters) => {
     set({ isLoading: true });
-    const { data } = await safeApiCall(() => api.alert.getAlerts(pagination, filters));
+    const { data } = await safeApiCall(() =>
+      api.alert.getAlerts(pagination, filters)
+    );
     if (data) {
       set({ alerts: data.alerts });
     }
@@ -837,9 +935,12 @@ interface StoresStoreState {
   subscribedStores: ApiTypes.Store[];
   currentStore: ApiTypes.StoreWithDetails | null;
   isLoading: boolean;
-  
+
   // Actions
-  searchStores: (query: string, filters?: { storeType?: ApiTypes.StoreType; halalCertifiedOnly?: boolean }) => Promise<void>;
+  searchStores: (
+    query: string,
+    filters?: { storeType?: ApiTypes.StoreType; halalCertifiedOnly?: boolean }
+  ) => Promise<void>;
   fetchNearbyStores: (input: ApiTypes.NearbyStoresInput) => Promise<void>;
   fetchStore: (storeId: string) => Promise<void>;
   subscribeToStore: (storeId: string) => Promise<boolean>;
@@ -856,7 +957,9 @@ export const useStoresStore = create<StoresStoreState>()((set, get) => ({
 
   searchStores: async (query, filters) => {
     set({ isLoading: true });
-    const { data } = await safeApiCall(() => api.store.searchStores(query, undefined, filters));
+    const { data } = await safeApiCall(() =>
+      api.store.searchStores(query, undefined, filters)
+    );
     if (data) {
       set({ stores: data.stores });
     }
@@ -882,7 +985,9 @@ export const useStoresStore = create<StoresStoreState>()((set, get) => ({
   },
 
   subscribeToStore: async (storeId) => {
-    const { data } = await safeApiCall(() => api.store.subscribeToStore(storeId));
+    const { data } = await safeApiCall(() =>
+      api.store.subscribeToStore(storeId)
+    );
     if (data?.success) {
       get().fetchSubscribedStores();
       return true;
@@ -891,10 +996,14 @@ export const useStoresStore = create<StoresStoreState>()((set, get) => ({
   },
 
   unsubscribeFromStore: async (storeId) => {
-    const { data } = await safeApiCall(() => api.store.unsubscribeFromStore(storeId));
+    const { data } = await safeApiCall(() =>
+      api.store.unsubscribeFromStore(storeId)
+    );
     if (data?.success) {
       set((state) => ({
-        subscribedStores: state.subscribedStores.filter((s) => s.id !== storeId),
+        subscribedStores: state.subscribedStores.filter(
+          (s) => s.id !== storeId
+        ),
       }));
       return true;
     }
@@ -916,7 +1025,7 @@ export const useStoresStore = create<StoresStoreState>()((set, get) => ({
 interface GlobalStatsStoreState {
   stats: ApiTypes.GlobalStats | null;
   isLoading: boolean;
-  
+
   fetchStats: () => Promise<void>;
 }
 

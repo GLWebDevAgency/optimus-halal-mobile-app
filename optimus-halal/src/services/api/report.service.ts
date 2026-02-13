@@ -1,32 +1,26 @@
 /**
- * Report Service - Enterprise-grade Mobile App
- * 
- * Reports and reviews management service
- * Netflix/Stripe/Shopify/Airbnb/Spotify standards
+ * Report Service — Mobile BFF adapter
+ *
+ * BFF routes: report.createReport, report.getMyReports,
+ *             report.createReview, report.getProductReviews,
+ *             report.getStoreReviews, report.markHelpful
  */
 
 import { apiClient } from './client';
 import type * as Types from './types';
 
-// ============================================
-// REPORT SERVICE
-// ============================================
-
 export const reportService = {
-  /**
-   * Create a report
-   */
-  async createReport(input: Types.CreateReportInput): Promise<{
-    id: string;
-    status: string;
-    message: string;
-  }> {
-    return apiClient.mobile.createReport.mutate(input);
+  async createReport(
+    input: Types.CreateReportInput
+  ): Promise<{ id: string; status: string; message: string }> {
+    const result = await apiClient.report.createReport.mutate(input);
+    return {
+      id: (result as any).id ?? '',
+      status: 'pending',
+      message: 'Report submitted successfully',
+    };
   },
 
-  /**
-   * Get my reports
-   */
   async getMyReports(
     pagination?: Types.PaginationInput,
     status?: Types.ReportStatus
@@ -34,44 +28,74 @@ export const reportService = {
     reports: Types.Report[];
     pagination: Types.PaginationOutput;
   }> {
-    return apiClient.mobile.getMyReports.query({
-      page: pagination?.page ?? 1,
+    const result = await apiClient.report.getMyReports.query({
       limit: pagination?.limit ?? 20,
-      status,
+      cursor: undefined,
     });
+
+    return {
+      reports: (result.reports ?? []) as Types.Report[],
+      pagination: {
+        page: pagination?.page ?? 1,
+        limit: pagination?.limit ?? 20,
+        totalItems: result.reports?.length ?? 0,
+        totalPages: 1,
+        hasNext: !!result.nextCursor,
+      },
+    };
   },
 
-  /**
-   * Create a review
-   */
-  async createReview(input: Types.CreateReviewInput): Promise<{
-    id: string;
-    message: string;
-  }> {
-    return apiClient.mobile.createReview.mutate(input);
+  async createReview(
+    input: Types.CreateReviewInput
+  ): Promise<{ id: string; message: string }> {
+    const result = await apiClient.report.createReview.mutate(input);
+    return {
+      id: (result as any).id ?? '',
+      message: 'Review submitted successfully',
+    };
   },
 
-  /**
-   * Get reviews for a target (product or store)
-   */
   async getReviews(
     targetType: Types.TargetType,
     targetId: string,
     pagination?: Types.PaginationInput
   ): Promise<Types.ReviewsResponse> {
-    return apiClient.mobile.getReviews.query({
-      targetType,
-      targetId,
-      page: pagination?.page ?? 1,
+    // BFF splits reviews by target type
+    const query =
+      targetType === 'product'
+        ? apiClient.report.getProductReviews
+        : apiClient.report.getStoreReviews;
+
+    const result = await query.query({
+      id: targetId,
       limit: pagination?.limit ?? 20,
+      cursor: undefined,
     });
+
+    return {
+      reviews: (result.reviews ?? []) as Types.Review[],
+      averageRating: (result as any).averageRating ?? 0,
+      totalReviews: (result as any).totalReviews ?? result.reviews?.length ?? 0,
+      ratingDistribution: (result as any).ratingDistribution ?? {
+        fiveStar: 0,
+        fourStar: 0,
+        threeStar: 0,
+        twoStar: 0,
+        oneStar: 0,
+      },
+      pagination: {
+        page: pagination?.page ?? 1,
+        limit: pagination?.limit ?? 20,
+        totalItems: result.reviews?.length ?? 0,
+        totalPages: 1,
+        hasNext: !!result.nextCursor,
+      },
+    };
   },
 
-  /**
-   * Mark review as helpful
-   */
   async markReviewHelpful(reviewId: string): Promise<Types.SuccessResponse> {
-    return apiClient.mobile.markReviewHelpful.mutate({ reviewId });
+    await apiClient.report.markHelpful.mutate({ reviewId });
+    return { success: true };
   },
 };
 

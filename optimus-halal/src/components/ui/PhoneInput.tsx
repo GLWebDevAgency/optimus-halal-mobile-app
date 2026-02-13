@@ -7,7 +7,7 @@
  * - Validation du format français
  */
 
-import React, { forwardRef, useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   TextInput,
   TextInputProps,
@@ -53,6 +53,7 @@ export interface PhoneInputProps extends Omit<TextInputProps, "value" | "onChang
   hint?: string;
   defaultCountryCode?: string;
   containerClassName?: string;
+  ref?: React.Ref<TextInput>;
 }
 
 /**
@@ -65,15 +66,24 @@ function formatPhoneNumber(value: string, countryCode: string): string {
   
   if (countryCode === "FR") {
     // Format français: 06 12 34 56 78
-    // Retirer le 0 initial si présent
+    // On garde le 0 initial s'il est tapé par l'utilisateur
+    const hasLeadingZero = value.startsWith("0");
     const digits = cleaned.startsWith("0") ? cleaned.slice(1) : cleaned;
     
-    if (digits.length === 0) return "";
-    if (digits.length <= 1) return digits;
-    if (digits.length <= 3) return `${digits.slice(0, 1)} ${digits.slice(1)}`;
-    if (digits.length <= 5) return `${digits.slice(0, 1)} ${digits.slice(1, 3)} ${digits.slice(3)}`;
-    if (digits.length <= 7) return `${digits.slice(0, 1)} ${digits.slice(1, 3)} ${digits.slice(3, 5)} ${digits.slice(5)}`;
-    return `${digits.slice(0, 1)} ${digits.slice(1, 3)} ${digits.slice(3, 5)} ${digits.slice(5, 7)} ${digits.slice(7, 9)}`;
+    if (digits.length === 0) return hasLeadingZero ? "0" : "";
+
+    let formatted = "";
+    // Si on a un 0 au début, on l'ajoute
+    if (hasLeadingZero) formatted += "0";
+
+    // Formatage par paires: X XX XX XX XX
+    if (digits.length <= 1) formatted += digits;
+    else if (digits.length <= 3) formatted += `${digits.slice(0, 1)} ${digits.slice(1)}`;
+    else if (digits.length <= 5) formatted += `${digits.slice(0, 1)} ${digits.slice(1, 3)} ${digits.slice(3)}`;
+    else if (digits.length <= 7) formatted += `${digits.slice(0, 1)} ${digits.slice(1, 3)} ${digits.slice(3, 5)} ${digits.slice(5)}`;
+    else formatted += `${digits.slice(0, 1)} ${digits.slice(1, 3)} ${digits.slice(3, 5)} ${digits.slice(5, 7)} ${digits.slice(7, 9)}`;
+
+    return formatted;
   }
   
   // Format générique: groupes de 2-3 chiffres
@@ -107,20 +117,17 @@ export function getFullPhoneNumber(
   return `${dialCode}${digits}`;
 }
 
-export const PhoneInput = forwardRef<TextInput, PhoneInputProps>(
-  (
-    {
-      label,
-      value = "",
-      onChangeText,
-      error,
-      hint,
-      defaultCountryCode = "FR",
-      containerClassName = "",
-      ...props
-    },
-    ref
-  ) => {
+export function PhoneInput({
+  label,
+  value = "",
+  onChangeText,
+  error,
+  hint,
+  defaultCountryCode = "FR",
+  containerClassName = "",
+  ref,
+  ...props
+}: PhoneInputProps) {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === "dark";
     
@@ -217,7 +224,7 @@ export const PhoneInput = forwardRef<TextInput, PhoneInputProps>(
             keyboardType="phone-pad"
             value={localValue}
             onChangeText={handleChangeText}
-            maxLength={14} // "6 12 34 56 78"
+            maxLength={15} // "06 12 34 56 78"
             {...props}
           />
         </View>
@@ -296,9 +303,6 @@ export const PhoneInput = forwardRef<TextInput, PhoneInputProps>(
         </Modal>
       </View>
     );
-  }
-);
-
-PhoneInput.displayName = "PhoneInput";
+}
 
 export default PhoneInput;

@@ -7,7 +7,7 @@
  * - Géolocalisation automatique
  */
 
-import React, { forwardRef, useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -36,22 +36,20 @@ export interface LocationPickerProps {
   placeholder?: string;
   containerClassName?: string;
   showGeolocation?: boolean;
+  ref?: React.Ref<View>;
 }
 
-export const LocationPicker = forwardRef<View, LocationPickerProps>(
-  (
-    {
-      label,
-      value,
-      onSelect,
-      error,
-      hint,
-      placeholder = "Sélectionner une ville",
-      containerClassName = "",
-      showGeolocation = true,
-    },
-    ref
-  ) => {
+export function LocationPicker({
+  label,
+  value,
+  onSelect,
+  error,
+  hint,
+  placeholder = "Sélectionner une ville",
+  containerClassName = "",
+  showGeolocation = true,
+  ref,
+}: LocationPickerProps) {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === "dark";
 
@@ -386,9 +384,6 @@ export const LocationPicker = forwardRef<View, LocationPickerProps>(
         </Modal>
       </View>
     );
-  }
-);
-
-LocationPicker.displayName = "LocationPicker";
+}
 
 export default LocationPicker;

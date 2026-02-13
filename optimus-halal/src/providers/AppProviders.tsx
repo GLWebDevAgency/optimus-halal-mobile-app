@@ -1,14 +1,11 @@
 /**
- * App Providers - Enterprise-grade Mobile App
- * 
- * Central provider wrapper for the application
- * Netflix/Stripe/Shopify/Airbnb/Spotify standards
+ * App Providers — Optimus Halal Mobile App
  */
 
 import React, { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/apiStores';
-import { initializeTokens, setApiLanguage } from '@/services/api';
+import { setApiLanguage } from '@/services/api';
 import { useLanguageStore } from '@/store';
 
 // ============================================

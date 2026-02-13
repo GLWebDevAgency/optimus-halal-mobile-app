@@ -1,89 +1,65 @@
 /**
- * Cart Service - Enterprise-grade Mobile App
- * 
- * Shopping cart management service
- * Netflix/Stripe/Shopify/Airbnb/Spotify standards
+ * Cart Service — Stub (no BFF cart router yet)
+ *
+ * Cart/e-commerce features are planned for a future release.
+ * All methods return graceful fallbacks so the app doesn't crash.
  */
 
-import { apiClient } from './client';
 import type * as Types from './types';
 
-// ============================================
-// CART SERVICE
-// ============================================
+const NOT_IMPLEMENTED = 'Cart feature coming soon';
 
 export const cartService = {
-  /**
-   * Get current cart
-   */
   async getCart(): Promise<Types.Cart> {
-    return apiClient.mobile.getCart.query();
+    return {
+      id: '',
+      items: [],
+      coupons: [],
+      subtotal: 0,
+      discount: 0,
+      total: 0,
+      itemCount: 0,
+    };
   },
 
-  /**
-   * Add item to cart
-   */
-  async addToCart(input: Types.AddToCartInput): Promise<Types.CartItem> {
-    return apiClient.mobile.addToCart.mutate(input);
+  async addToCart(_input: Types.AddToCartInput): Promise<Types.CartItem> {
+    throw new Error(NOT_IMPLEMENTED);
   },
 
-  /**
-   * Update cart item quantity
-   */
-  async updateCartItem(input: Types.UpdateCartItemInput): Promise<Types.SuccessResponse> {
-    return apiClient.mobile.updateCartItem.mutate(input);
+  async updateCartItem(
+    _input: Types.UpdateCartItemInput
+  ): Promise<Types.SuccessResponse> {
+    throw new Error(NOT_IMPLEMENTED);
   },
 
-  /**
-   * Remove item from cart
-   */
-  async removeFromCart(itemId: string): Promise<Types.SuccessResponse> {
-    return apiClient.mobile.removeFromCart.mutate({ itemId });
+  async removeFromCart(_itemId: string): Promise<Types.SuccessResponse> {
+    throw new Error(NOT_IMPLEMENTED);
   },
 
-  /**
-   * Clear all items from cart
-   */
   async clearCart(): Promise<Types.SuccessResponse> {
-    return apiClient.mobile.clearCart.mutate();
+    return { success: true };
   },
 
-  /**
-   * Apply coupon code
-   */
-  async applyCoupon(code: string): Promise<{
-    success: boolean;
-    coupon: Types.CartCoupon;
-  }> {
-    return apiClient.mobile.applyCoupon.mutate({ code });
+  async applyCoupon(
+    _code: string
+  ): Promise<{ success: boolean; coupon: Types.CartCoupon }> {
+    throw new Error(NOT_IMPLEMENTED);
   },
 
-  /**
-   * Remove coupon
-   */
-  async removeCoupon(couponId: string): Promise<Types.SuccessResponse> {
-    return apiClient.mobile.removeCoupon.mutate({ couponId });
+  async removeCoupon(_couponId: string): Promise<Types.SuccessResponse> {
+    throw new Error(NOT_IMPLEMENTED);
   },
 
-  /**
-   * Save item for later
-   */
-  async saveForLater(itemId: string): Promise<Types.SuccessResponse> {
-    return apiClient.mobile.saveForLater.mutate({ itemId });
+  async saveForLater(_itemId: string): Promise<Types.SuccessResponse> {
+    throw new Error(NOT_IMPLEMENTED);
   },
 
-  /**
-   * Get saved for later items
-   */
   async getSavedForLater(): Promise<{ items: Types.SavedForLaterItem[] }> {
-    return apiClient.mobile.getSavedForLater.query();
+    return { items: [] };
   },
 
-  /**
-   * Move saved item back to cart
-   */
-  async moveToCart(savedId: string): Promise<Types.SuccessResponse> {
-    return apiClient.mobile.moveToCart.mutate({ savedId });
+  async moveToCart(_savedId: string): Promise<Types.SuccessResponse> {
+    throw new Error(NOT_IMPLEMENTED);
   },
 };
 
