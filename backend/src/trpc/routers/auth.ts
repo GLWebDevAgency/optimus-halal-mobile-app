@@ -35,51 +35,55 @@ export const authRouter = router({
     .mutation(async ({ ctx, input }) => {
       const passwordHash = await hashPassword(input.password);
 
-      let user;
-      try {
-        [user] = await ctx.db
-          .insert(users)
-          .values({
-            email: input.email.toLowerCase(),
-            passwordHash,
-            displayName: input.displayName,
-            phoneNumber: input.phoneNumber,
-          })
-          .returning({
-            id: users.id,
-            email: users.email,
-            displayName: users.displayName,
-          });
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        if (msg.includes("unique") || msg.includes("duplicate") || msg.includes("23505")) {
-          throw conflict("Un compte avec cet email existe déjà");
+      const result = await ctx.db.transaction(async (tx) => {
+        let user;
+        try {
+          [user] = await tx
+            .insert(users)
+            .values({
+              email: input.email.toLowerCase(),
+              passwordHash,
+              displayName: input.displayName,
+              phoneNumber: input.phoneNumber,
+            })
+            .returning({
+              id: users.id,
+              email: users.email,
+              displayName: users.displayName,
+            });
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          if (msg.includes("unique") || msg.includes("duplicate") || msg.includes("23505")) {
+            throw conflict("Un compte avec cet email existe deja");
+          }
+          throw err;
         }
-        throw err;
-      }
 
-      const accessToken = await signAccessToken(user.id);
-      const tokenId = crypto.randomUUID();
-      const refreshToken = await signRefreshToken(user.id, tokenId);
+        const accessToken = await signAccessToken(user.id);
+        const tokenId = crypto.randomUUID();
+        const refreshToken = await signRefreshToken(user.id, tokenId);
 
-      await ctx.db.insert(refreshTokens).values({
-        userId: user.id,
-        tokenHash: await hashToken(refreshToken),
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        await tx.insert(refreshTokens).values({
+          userId: user.id,
+          tokenHash: await hashToken(refreshToken),
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        });
+
+        return { user, accessToken, refreshToken };
       });
 
-      // Fire-and-forget welcome email (logged on failure)
-      sendWelcomeEmail(user.email, user.displayName).catch((err) => {
+      // Fire-and-forget welcome email (outside transaction)
+      sendWelcomeEmail(result.user.email, result.user.displayName).catch((err) => {
         console.error("[auth:register] Failed to send welcome email:", {
-          email: user.email,
+          email: result.user.email,
           error: err instanceof Error ? err.message : String(err),
         });
       });
 
       return {
-        user: { id: user.id, email: user.email, displayName: user.displayName },
-        accessToken,
-        refreshToken,
+        user: { id: result.user.id, email: result.user.email, displayName: result.user.displayName },
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
       };
     }),
 
@@ -93,6 +97,7 @@ export const authRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      // User lookup + password verification OUTSIDE transaction
       const user = await ctx.db.query.users.findFirst({
         where: eq(users.email, input.email.toLowerCase()),
       });
@@ -110,27 +115,29 @@ export const authRouter = router({
       const tokenId = crypto.randomUUID();
       const refreshToken = await signRefreshToken(user.id, tokenId);
 
-      // Cap refresh tokens per user (max 10 devices)
-      const existingTokens = await ctx.db
-        .select({ id: refreshTokens.id })
-        .from(refreshTokens)
-        .where(eq(refreshTokens.userId, user.id))
-        .orderBy(refreshTokens.createdAt)
-        .limit(100);
+      // Token management in transaction
+      await ctx.db.transaction(async (tx) => {
+        const existingTokens = await tx
+          .select({ id: refreshTokens.id })
+          .from(refreshTokens)
+          .where(eq(refreshTokens.userId, user.id))
+          .orderBy(refreshTokens.createdAt)
+          .limit(100);
 
-      if (existingTokens.length >= 10) {
-        const toDelete = existingTokens.slice(0, existingTokens.length - 9);
-        for (const t of toDelete) {
-          await ctx.db.delete(refreshTokens).where(eq(refreshTokens.id, t.id));
+        if (existingTokens.length >= 10) {
+          const toDelete = existingTokens.slice(0, existingTokens.length - 9);
+          for (const t of toDelete) {
+            await tx.delete(refreshTokens).where(eq(refreshTokens.id, t.id));
+          }
         }
-      }
 
-      await ctx.db.insert(refreshTokens).values({
-        userId: user.id,
-        tokenHash: await hashToken(refreshToken),
-        deviceId: input.deviceId,
-        deviceName: input.deviceName,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        await tx.insert(refreshTokens).values({
+          userId: user.id,
+          tokenHash: await hashToken(refreshToken),
+          deviceId: input.deviceId,
+          deviceName: input.deviceName,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        });
       });
 
       return {
