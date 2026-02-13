@@ -8,6 +8,8 @@ export const redis = new Redis(env.REDIS_URL, {
     return Math.min(times * 200, 2000);
   },
   lazyConnect: true,
+  enableReadyCheck: true,
+  keepAlive: 30000,
 });
 
 redis.on("error", (err) => {

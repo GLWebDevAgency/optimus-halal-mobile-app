@@ -12,14 +12,10 @@ const app = new Hono();
 
 // ── Global Middleware ──────────────────────────────────────
 
-const allowedOrigins = env.NODE_ENV === "production"
-  ? ["https://optimus-halal.com", "https://app.optimus-halal.com"]
-  : ["*"];
-
 app.use("*", cors({
-  origin: allowedOrigins,
+  origin: "*",
   allowMethods: ["GET", "POST", "OPTIONS"],
-  allowHeaders: ["Content-Type", "Authorization"],
+  allowHeaders: ["Content-Type", "Authorization", "X-App-Version", "X-Platform", "X-Device-Id"],
   maxAge: 86400,
 }));
 
