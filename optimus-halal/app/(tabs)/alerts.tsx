@@ -13,10 +13,10 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Image,
   RefreshControl,
   useColorScheme,
 } from "react-native";
+import { Image } from "expo-image";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -196,7 +196,8 @@ function AlertCard({ alert, index }: AlertCardProps) {
               <Image
                 source={{ uri: alert.image }}
                 className="w-full h-full"
-                resizeMode="cover"
+                contentFit="cover"
+                transition={200}
               />
               <View className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               <Text className="absolute bottom-3 left-4 text-white text-lg font-bold">
@@ -222,7 +223,8 @@ function AlertCard({ alert, index }: AlertCardProps) {
                     <Image
                       source={{ uri: alert.image }}
                       className="w-full h-full"
-                      resizeMode="cover"
+                      contentFit="cover"
+                      transition={200}
                     />
                   </View>
                 )}

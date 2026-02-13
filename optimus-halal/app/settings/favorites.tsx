@@ -10,9 +10,9 @@ import {
   TouchableOpacity,
   ScrollView,
   SafeAreaView,
-  Image,
   Dimensions,
 } from "react-native";
+import { Image } from "expo-image";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -129,7 +129,8 @@ function ProductCard({ product, index, onRemove, onView, onScan, isDark, colors 
           <Image
             source={{ uri: product.image }}
             style={{ width: "100%", height: "100%" }}
-            resizeMode="cover"
+            contentFit="cover"
+            transition={200}
           />
         ) : (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>

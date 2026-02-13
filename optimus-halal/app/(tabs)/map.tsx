@@ -15,11 +15,11 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Image,
   Dimensions,
   useColorScheme,
   Platform,
 } from "react-native";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -125,7 +125,8 @@ function StoreCard({ store, onPress }: StoreCardProps) {
           <Image
             source={{ uri: store.image }}
             className="w-full h-full"
-            resizeMode="cover"
+            contentFit="cover"
+            transition={200}
           />
         </View>
 
@@ -243,7 +244,8 @@ export default function MapScreen() {
             uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuBYIKA5a0FeZU9C9EfDX-8wvGXljSyovGnPZrYXKcMzyiy2RxkFKrXfAo2M1M0_etwk27ZD2QkAeDysIKRGwCITJkwkZIjkulQ_j0GawjhXMkoW9WmQFFhNkOfAOPSj2rY6R2zTIzGwu98nyYuJvCVSY6S2ot88mj0gyXcidEFYxiPT10UpH2E6Om3yUHjkZ6HQwB9apITnYGqV4dm8AgWT9xIVtl4niS_DydRv5jmgTFv6j7M4QB0276EHezcSrTy7y3Y0lO7KMjkV",
           }}
           className="w-full h-full"
-          resizeMode="cover"
+          contentFit="cover"
+          transition={200}
           style={{ opacity: 0.7 }}
         />
         <View className="absolute inset-0 bg-slate-900/40" />

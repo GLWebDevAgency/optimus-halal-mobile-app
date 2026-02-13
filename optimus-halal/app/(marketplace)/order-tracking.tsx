@@ -15,9 +15,9 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  Image,
   useColorScheme,
 } from "react-native";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -258,7 +258,8 @@ export default function OrderTrackingScreen() {
                   uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuDxFVSV06Sk1zmUKAsORbQQlTKKj8pvfQdd1vMaxzmOeQMjpB1ajwFTHQUk6VnpSL8_v-WeMlOnv1fWxaLs7Zvl5mqeP_w33ItXc1sOVEajzl1BkNftQemRvMgVpjilcdk889z4Rx4KfLbb2cNHnREdEMo8b5psVkvd7KyNPM9NhLJ7dpaH_G62l1sgMhNaRL0AiHEqjR7yJj92C0QjHFZ7aLWmnQdQ-uHTvrxZnUkME_2xMon2IQhcWykhV5XT3j95p6Jl-hHHFJfg",
                 }}
                 className="absolute inset-0 w-full h-full opacity-80"
-                resizeMode="cover"
+                contentFit="cover"
+                transition={200}
               />
 
               {/* Driver Overlay */}
@@ -268,6 +269,7 @@ export default function OrderTrackingScreen() {
                     uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuATxNsAxtnFYMdkvTViEnugcP5WpDXa-riqxA44tC8mGITx3y3yvHwMeFNcB2GopWXeW4luu1CtnkQAKdO93cQfH5wgwAjjlPwU7eqHEzSSMQ--565cUgOdMXmvB8eEJD5ASu83ze9clFIdXp3Gc61OzWLsrvH0kQNa25iTlk2EhXe2i1qKit3na4TUYN6ST_1Pv8WapAuYk_hKH4N2cuTh1XiDS4s1UrxLCrbRmafSd7h1mCTS5NtJYvHWLJ8dD2F6lV45tbMzVbhm",
                   }}
                   className="h-10 w-10 rounded-full bg-gray-200"
+                  transition={200}
                 />
                 <View className="flex-1">
                   <Text className="text-sm font-bold text-slate-900 dark:text-white" numberOfLines={1}>
@@ -372,7 +374,8 @@ export default function OrderTrackingScreen() {
                         uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuAKzg0JtfxDCdj8y2q3LU0n8jFHRrC4yBnvn5zxmXRx5qms5pVw7FOTKI6Njrz8pRjTtn2is9FTB-GYzZBAndqfQ6tUF_iRRNddU-5DUpsj5HCpL6BPsqLRvSMS5ZQlv-P0nRfUA27h5Nty-SUc_iOFSXb0UOM9SQULPLO6YTl8PaoPSUQ-g_h_UqCfuFbazZ-R9AeUQmlYjOg0EByNSkf_oMsM8tkh2OtwKnL3M7FkW4nQBi9-53Fg25Qtkpx251F-IPUUmiGXz5pq",
                       }}
                       className="w-full h-full rounded-md"
-                      resizeMode="cover"
+                      contentFit="cover"
+                      transition={200}
                     />
                   </View>
                   <View className="flex-1">
@@ -401,7 +404,8 @@ export default function OrderTrackingScreen() {
                         uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuADQ9tfoxho2--LyEsJ8RK2pUNlci6667Tv308TgDPtJ-K-MxZeKNLnhp7H7tY3gAeDCrAVHHYfDVVEqz846eoYkg1NutstVME6Sj4F2O_VFkghfMYRZdqLE7WUkkalAovW33Irmc8VW9a2W5mxYO1pF3wNP8Eu9mOvPYinKZwRlYnt2p9aEe0OMwpBXVuEYlFZrrvvm8aPLODU-ErYnTy_EbKHT_YR6I_AHSrD7pdlk7jB8azjpNnEL9Z5_q4xoXOhe__Yc5j3jU_c",
                       }}
                       className="w-full h-full rounded-md"
-                      resizeMode="cover"
+                      contentFit="cover"
+                      transition={200}
                     />
                   </View>
                   <View className="flex-1">

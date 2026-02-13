@@ -16,9 +16,9 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Image,
   useColorScheme,
 } from "react-native";
+import { Image } from "expo-image";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -149,7 +149,8 @@ function ProductCard({ product, onPress, onAddToCart, onToggleFavorite }: Produc
         <Image
           source={{ uri: product.image }}
           className="w-full h-full"
-          resizeMode="cover"
+          contentFit="cover"
+          transition={200}
         />
 
         {/* Certification Badge */}
@@ -274,7 +275,8 @@ export default function MarketplaceCatalogScreen() {
                   uri: user?.avatarUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuC21UIb5DPLKk9hCMsQFts76mIFDU9E59eHURz_1sJY7VCuIdFDM3dF4uWvbol6S4YsiI_I8V_Uxb75wJIsSMhoN44b87aYjZPtRRDKA7meEVYi_tUecDyCISlPFaoE-A414mdoDdW3CsHQzmyTBMR3VuPE_VFY6FnRAVBTF29U0N6JyZ8-AD7tTXjSV98_LL5rCswxiaIMnbGsRi2KtWUm2lJKaccwbssUxibPATHQzjbQ30J49KwYw7lOKC5nWJfI6SKUlxINJvsT",
                 }}
                 className="w-full h-full"
-                resizeMode="cover"
+                contentFit="cover"
+                transition={200}
               />
             </View>
             <Text className="text-xl font-bold text-slate-800 dark:text-white">
@@ -376,7 +378,8 @@ export default function MarketplaceCatalogScreen() {
                 <Image
                   source={{ uri: FEATURED_PRODUCTS[0].image }}
                   className="w-full h-full"
-                  resizeMode="cover"
+                  contentFit="cover"
+                  transition={200}
                 />
                 <LinearGradient
                   colors={["rgba(15,23,42,0.8)", "rgba(15,23,42,0.4)", "transparent"]}

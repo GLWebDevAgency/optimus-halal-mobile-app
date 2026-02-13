@@ -17,10 +17,10 @@ import {
   ScrollView,
   TouchableOpacity,
   useColorScheme,
-  Image,
   Dimensions,
   Pressable,
 } from "react-native";
+import { Image } from "expo-image";
 import { router, Link } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -32,6 +32,8 @@ import Animated, {
   FadeInUp,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
+
+import { FlashList } from "@shopify/flash-list";
 
 import { Card, Avatar, Badge, IconButton } from "@/components/ui";
 import { useLocalAuthStore, useScanHistoryStore, useLocalAlertsStore, useLocalFavoritesStore } from "@/store";
@@ -351,53 +353,56 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20, gap: 16 }}
-            snapToInterval={CARD_WIDTH + 16}
-            decelerationRate="fast"
-          >
-            {FEATURED_CONTENT.map((item, index) => (
-              <Animated.View
-                key={item.id}
-                entering={FadeInRight.delay(450 + index * 100).duration(500)}
-              >
-                <TouchableOpacity
-                  activeOpacity={0.9}
-                  className="relative h-40 overflow-hidden rounded-2xl"
-                  style={{ width: 280 }}
+          <View style={{ height: 160, paddingHorizontal: 20 }}>
+            <FlashList
+              data={FEATURED_CONTENT}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(item) => item.id}
+              snapToInterval={CARD_WIDTH + 16}
+              decelerationRate="fast"
+              ItemSeparatorComponent={() => <View style={{ width: 16 }} />}
+              renderItem={({ item, index }) => (
+                <Animated.View
+                  entering={FadeInRight.delay(450 + index * 100).duration(500)}
                 >
-                  <Image
-                    source={{ uri: item.image }}
-                    className="absolute inset-0 w-full h-full"
-                    resizeMode="cover"
-                  />
-                  <LinearGradient
-                    colors={["transparent", "rgba(0,0,0,0.7)", "rgba(0,0,0,0.9)"]}
-                    className="absolute inset-0"
-                  />
-                  <View className="absolute bottom-0 left-0 right-0 p-4">
-                    <View
-                      className={`self-start mb-1 px-2 py-0.5 rounded ${
-                        item.type === "new"
-                          ? "bg-primary"
-                          : "bg-white/20"
-                      }`}
-                    >
-                      <Text className="text-[10px] font-bold uppercase tracking-wider text-white">
-                        {item.type === "new" ? "Nouveau" : "Blog"}
+                  <TouchableOpacity
+                    activeOpacity={0.9}
+                    className="relative h-40 overflow-hidden rounded-2xl"
+                    style={{ width: 280 }}
+                  >
+                    <Image
+                      source={{ uri: item.image }}
+                      className="absolute inset-0 w-full h-full"
+                      contentFit="cover"
+                      transition={200}
+                    />
+                    <LinearGradient
+                      colors={["transparent", "rgba(0,0,0,0.7)", "rgba(0,0,0,0.9)"]}
+                      className="absolute inset-0"
+                    />
+                    <View className="absolute bottom-0 left-0 right-0 p-4">
+                      <View
+                        className={`self-start mb-1 px-2 py-0.5 rounded ${
+                          item.type === "new"
+                            ? "bg-primary"
+                            : "bg-white/20"
+                        }`}
+                      >
+                        <Text className="text-[10px] font-bold uppercase tracking-wider text-white">
+                          {item.type === "new" ? "Nouveau" : "Blog"}
+                        </Text>
+                      </View>
+                      <Text className="text-base font-bold text-white">
+                        {item.title}
                       </Text>
+                      <Text className="text-xs text-gray-300">{item.subtitle}</Text>
                     </View>
-                    <Text className="text-base font-bold text-white">
-                      {item.title}
-                    </Text>
-                    <Text className="text-xs text-gray-300">{item.subtitle}</Text>
-                  </View>
-                </TouchableOpacity>
-              </Animated.View>
-            ))}
-          </ScrollView>
+                  </TouchableOpacity>
+                </Animated.View>
+              )}
+            />
+          </View>
         </Animated.View>
 
         {/* Favorites */}
@@ -460,7 +465,8 @@ export default function HomeScreen() {
                       <Image
                         source={{ uri: item.image }}
                         className="h-full w-full rounded-full"
-                        resizeMode="cover"
+                        contentFit="cover"
+                        transition={200}
                       />
                     </View>
                     <Text
@@ -518,7 +524,8 @@ export default function HomeScreen() {
                     uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuD4F14mV-L4SAwLHOLN7PJcF4ljhLyqeV2RO3b3ZGXNzMNCJ9kN9Q-OAdBtvtEOQkbJhC_3GSwDiW8E4hYOW26kclMdNkQZMHuWu9kYB-RRNaRGaj2xG8uywwnguBuS1x8f5HpIL1Y7H3seQwXvJHQP-b0dkR1O0zyBePWjE1Qddy9UeQjgUo685jygywd0AWcu2fJLtsRYJVaBTDYhONpdbewh3tlTGEm1XT2iA8FoamJSN4n3S7YIDvpYAB-aAlcFDZj09In-gJ4Q",
                   }}
                   className="absolute inset-0 w-full h-full opacity-80 dark:opacity-60"
-                  resizeMode="cover"
+                  contentFit="cover"
+                  transition={200}
                 />
                 <View className="absolute bottom-2 right-2 flex-row items-center gap-1 rounded-lg bg-white/90 dark:bg-background-dark/90 px-2 py-1 border border-slate-200/50 dark:border-slate-700/50">
                   <MaterialIcons name="near-me" size={14} color="#1de560" />
