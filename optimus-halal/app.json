@@ -63,11 +63,11 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/24b45db8-0006-44f0-8f45-e93e04a49e9b"
+      "url": "https://u.expo.dev/74c0f55e-ea1c-4786-93a7-de4b27280104"
     },
     "extra": {
       "eas": {
-        "projectId": "24b45db8-0006-44f0-8f45-e93e04a49e9b"
+        "projectId": "74c0f55e-ea1c-4786-93a7-de4b27280104"
       },
       "router": {}
     },
@@ -75,6 +75,6 @@
       "typedRoutes": true,
       "reactCompiler": true
     },
-    "owner": "gl_dev"
+    "owner": "gl.dev"
   }
 }
