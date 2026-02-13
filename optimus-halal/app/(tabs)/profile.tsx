@@ -30,7 +30,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { Card, Avatar, Badge, IconButton } from "@/components/ui";
-import { useAuthStore, useScanHistoryStore, useThemeStore, useAlertsStore, useLanguageStore, usePreferencesStore } from "@/store";
+import { useLocalAuthStore, useScanHistoryStore, useThemeStore, useLocalAlertsStore, useLanguageStore, usePreferencesStore } from "@/store";
 import { colors } from "@/constants/theme";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -147,7 +147,7 @@ export default function ProfileScreen() {
   const isDark = colorScheme === "dark";
   const { t, language } = useTranslation();
 
-  const { user, logout } = useAuthStore();
+  const { user, logout } = useLocalAuthStore();
   const { history, favorites } = useScanHistoryStore();
   const { theme, setTheme } = useThemeStore();
   const { certifications } = usePreferencesStore();

@@ -34,7 +34,7 @@ import Animated, {
 import { LinearGradient } from "expo-linear-gradient";
 
 import { Card, Avatar, Badge, IconButton } from "@/components/ui";
-import { useAuthStore, useScanHistoryStore, useAlertsStore, useFavoritesStore } from "@/store";
+import { useLocalAuthStore, useScanHistoryStore, useLocalAlertsStore, useLocalFavoritesStore } from "@/store";
 import { colors } from "@/constants/theme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -143,10 +143,10 @@ export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const { user } = useAuthStore();
+  const { user } = useLocalAuthStore();
   const { history } = useScanHistoryStore();
-  const { unreadCount } = useAlertsStore();
-  const { favorites: favoriteProducts } = useFavoritesStore();
+  const { unreadCount } = useLocalAlertsStore();
+  const { favorites: favoriteProducts } = useLocalFavoritesStore();
 
   const userName = useMemo(() => {
     if (user?.fullName) {

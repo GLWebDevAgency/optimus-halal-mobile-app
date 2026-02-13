@@ -33,7 +33,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { Input, IconButton, Button } from "@/components/ui";
-import { useAuthStore } from "@/store";
+import { useLocalAuthStore } from "@/store";
 import {
   requestMagicLink,
   verifyMagicLinkToken,
@@ -58,7 +58,7 @@ export default function MagicLinkLoginScreen() {
   const [expiresIn, setExpiresIn] = useState(900); // 15 minutes
   const [isNewUser, setIsNewUser] = useState(false);
 
-  const { setUser } = useAuthStore();
+  const { setUser } = useLocalAuthStore();
 
   // Load pending email on mount (if returning to screen)
   useEffect(() => {

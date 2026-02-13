@@ -22,7 +22,7 @@ interface AuthState {
   _setLoading: (loading: boolean) => void;
 }
 
-export const useAuthStore = create<AuthState>()(
+export const useLocalAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
@@ -47,7 +47,7 @@ export const useAuthStore = create<AuthState>()(
       storage: createJSONStorage(() => mmkvStorage),
       onRehydrateStorage: () => (state, error) => {
         // Set isLoading to false after rehydration using the store's setState
-        useAuthStore.setState({ isLoading: false });
+        useLocalAuthStore.setState({ isLoading: false });
       },
     }
   )
@@ -162,7 +162,7 @@ interface AlertsState {
   markAllAsRead: () => void;
 }
 
-export const useAlertsStore = create<AlertsState>()((set) => ({
+export const useLocalAlertsStore = create<AlertsState>()((set) => ({
   alerts: [],
   unreadCount: 0,
   setAlerts: (alerts) =>
@@ -215,7 +215,7 @@ interface CartState {
   clearCart: () => void;
 }
 
-export const useCartStore = create<CartState>()(
+export const useLocalCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
@@ -428,7 +428,7 @@ const DEFAULT_FAVORITES: FavoriteProduct[] = [
   },
 ];
 
-export const useFavoritesStore = create<FavoritesState>()(
+export const useLocalFavoritesStore = create<FavoritesState>()(
   persist(
     (set, get) => ({
       favorites: DEFAULT_FAVORITES,

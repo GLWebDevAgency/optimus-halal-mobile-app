@@ -7,11 +7,11 @@
 import React, { useEffect } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { Redirect } from "expo-router";
-import { useOnboardingStore, useAuthStore } from "@/store";
+import { useOnboardingStore, useLocalAuthStore } from "@/store";
 
 export default function Index() {
   const { hasCompletedOnboarding } = useOnboardingStore();
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated, isLoading } = useLocalAuthStore();
 
   // Loading state
   if (isLoading) {

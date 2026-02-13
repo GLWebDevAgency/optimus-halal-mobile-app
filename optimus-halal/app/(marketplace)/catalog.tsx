@@ -33,7 +33,7 @@ import Animated, {
 import { LinearGradient } from "expo-linear-gradient";
 
 import { colors } from "@/constants/theme";
-import { useAuthStore, useCartStore } from "@/store";
+import { useLocalAuthStore, useLocalCartStore } from "@/store";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -225,8 +225,8 @@ export default function MarketplaceCatalogScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const { user } = useAuthStore();
-  const { itemCount } = useCartStore();
+  const { user } = useLocalAuthStore();
+  const { itemCount } = useLocalCartStore();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
