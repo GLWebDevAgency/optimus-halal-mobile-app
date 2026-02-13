@@ -17,6 +17,7 @@ import { useThemeStore, useLanguageStore } from "@/store";
 import { useAuthStore } from "@/store/apiStores";
 import { setApiLanguage } from "@/services/api";
 import { trpc, createTRPCClientForProvider } from "@/lib/trpc";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Create a client with enterprise-grade configuration
 const queryClient = new QueryClient({
@@ -85,42 +86,44 @@ export default function RootLayout() {
   const isDark = effectiveColorScheme === "dark";
 
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <SafeAreaProvider>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <AppInitializer>
-              <StatusBar style={isDark ? "light" : "dark"} />
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  animation: "slide_from_right",
-                }}
-              >
-                <Stack.Screen name="index" />
-                <Stack.Screen name="(onboarding)" />
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="(marketplace)" />
-                <Stack.Screen
-                  name="scan-result"
-                  options={{
-                    presentation: "card",
-                    animation: "slide_from_bottom",
+    <ErrorBoundary>
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <SafeAreaProvider>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <AppInitializer>
+                <StatusBar style={isDark ? "light" : "dark"} />
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    animation: "slide_from_right",
                   }}
-                />
-                <Stack.Screen
-                  name="report"
-                  options={{
-                    presentation: "modal",
-                    animation: "slide_from_bottom",
-                  }}
-                />
-              </Stack>
-            </AppInitializer>
-          </GestureHandlerRootView>
-        </SafeAreaProvider>
-      </QueryClientProvider>
-    </trpc.Provider>
+                >
+                  <Stack.Screen name="index" />
+                  <Stack.Screen name="(onboarding)" />
+                  <Stack.Screen name="(auth)" />
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="(marketplace)" />
+                  <Stack.Screen
+                    name="scan-result"
+                    options={{
+                      presentation: "card",
+                      animation: "slide_from_bottom",
+                    }}
+                  />
+                  <Stack.Screen
+                    name="report"
+                    options={{
+                      presentation: "modal",
+                      animation: "slide_from_bottom",
+                    }}
+                  />
+                </Stack>
+              </AppInitializer>
+            </GestureHandlerRootView>
+          </SafeAreaProvider>
+        </QueryClientProvider>
+      </trpc.Provider>
+    </ErrorBoundary>
   );
 }
