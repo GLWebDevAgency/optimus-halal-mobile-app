@@ -30,3 +30,40 @@ export { useTheme } from './useTheme';
 // ============================================
 
 export { useTranslation, useLanguage } from './useTranslation';
+
+// ============================================
+// AUTH HOOKS (tRPC)
+// ============================================
+
+export {
+  useMe,
+  useLogin,
+  useRegister,
+  useLogout,
+  useRequestPasswordReset,
+  useResetPassword,
+} from './useAuth';
+
+// ============================================
+// SCAN HOOKS (tRPC)
+// ============================================
+
+export {
+  useScanBarcode,
+  useScanHistory,
+  useScanStats,
+  useRequestAnalysis,
+} from './useScan';
+
+// ============================================
+// FAVORITES HOOKS (tRPC)
+// ============================================
+
+export {
+  useFavoritesList,
+  useAddFavorite,
+  useRemoveFavorite,
+  useFavoriteFolders,
+  useCreateFavoriteFolder,
+  useMoveFavoriteToFolder,
+} from './useFavorites';
