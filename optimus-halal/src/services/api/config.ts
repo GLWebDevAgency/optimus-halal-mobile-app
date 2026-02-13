@@ -80,10 +80,10 @@ export function getApiConfig(): ApiConfig {
 
 /** Storage keys for auth tokens */
 export const STORAGE_KEYS = {
-  ACCESS_TOKEN: '@optimus/access_token',
-  REFRESH_TOKEN: '@optimus/refresh_token',
-  DEVICE_ID: '@optimus/device_id',
-  USER_DATA: '@optimus/user_data',
+  ACCESS_TOKEN: 'optimus.access_token',
+  REFRESH_TOKEN: 'optimus.refresh_token',
+  DEVICE_ID: 'optimus.device_id',
+  USER_DATA: 'optimus.user_data',
 } as const;
 
 /** HTTP status codes */

@@ -61,9 +61,9 @@ export const RETRY_CONFIG = {
 
 // Storage keys for tokens
 export const STORAGE_KEYS = {
-  ACCESS_TOKEN: '@optimus/access_token',
-  REFRESH_TOKEN: '@optimus/refresh_token',
-  USER_ID: '@optimus/user_id',
+  ACCESS_TOKEN: 'optimus.access_token',
+  REFRESH_TOKEN: 'optimus.refresh_token',
+  USER_ID: 'optimus.user_id',
 } as const;
 
 // gRPC status codes

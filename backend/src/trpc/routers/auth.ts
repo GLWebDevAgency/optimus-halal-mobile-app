@@ -51,7 +51,8 @@ export const authRouter = router({
             displayName: users.displayName,
           });
       } catch (err: unknown) {
-        if (err instanceof Error && err.message.includes("unique")) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.includes("unique") || msg.includes("duplicate") || msg.includes("23505")) {
           throw conflict("Un compte avec cet email existe déjà");
         }
         throw err;
