@@ -12,24 +12,20 @@ export function rateLimit(options: RateLimitOptions) {
   const windowSec = Math.ceil(windowMs / 1000);
 
   return createMiddleware(async (c, next) => {
-    // Use the last IP in X-Forwarded-For (closest proxy), fall back to "unknown"
+    // Use the first IP in X-Forwarded-For (original client), fall back to "unknown"
     const forwardedFor = c.req.header("x-forwarded-for");
-    const ip = forwardedFor?.split(",").pop()?.trim() || "unknown";
+    const ip = forwardedFor?.split(",")[0]?.trim() || "unknown";
     const key = `${keyPrefix}:${ip}:${c.req.path}`;
 
     try {
-      const current = await redis.incr(key);
+      // Atomic pipeline: INCR + EXPIRE(NX) in a single round trip
+      // NX = only set TTL if none exists (prevents resetting the window)
+      const pipe = redis.pipeline();
+      pipe.incr(key);
+      pipe.expire(key, windowSec, "NX");
+      const results = await pipe.exec();
 
-      if (current === 1) {
-        // First request in this window — set TTL
-        await redis.expire(key, windowSec);
-      } else {
-        // Self-heal: if TTL was lost (e.g. crash between INCR and EXPIRE), re-set it
-        const ttl = await redis.ttl(key);
-        if (ttl === -1) {
-          await redis.expire(key, windowSec);
-        }
-      }
+      const current = (results?.[0]?.[1] as number) ?? 0;
 
       c.header("X-RateLimit-Limit", String(max));
       c.header("X-RateLimit-Remaining", String(Math.max(0, max - current)));
