@@ -119,12 +119,18 @@ export const Button: React.FC<ButtonProps> = ({
     ${className}
   `;
 
+  const a11yProps = {
+    accessibilityRole: "button" as const,
+    accessibilityState: { disabled: disabled || loading, busy: loading },
+  };
+
   if (variantStyle.gradient && !disabled) {
     return (
       <TouchableOpacity
         onPress={handlePress}
         disabled={disabled || loading}
         className={containerClassName}
+        {...a11yProps}
         {...props}
       >
         <LinearGradient
@@ -143,6 +149,7 @@ export const Button: React.FC<ButtonProps> = ({
       onPress={handlePress}
       disabled={disabled || loading}
       className={`${containerClassName} ${variantStyle.container}`}
+      {...a11yProps}
       {...props}
     >
       {content}

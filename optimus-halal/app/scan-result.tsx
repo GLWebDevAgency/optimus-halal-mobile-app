@@ -223,6 +223,7 @@ export default function ScanResultScreen() {
           variant="outline"
           onPress={handleGoBack}
           color={isDark ? "#ffffff" : "#1e293b"}
+          accessibilityLabel="Retour"
         />
         <Text className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
           Résultat du Scan
@@ -232,6 +233,7 @@ export default function ScanResultScreen() {
           variant="outline"
           onPress={handleShare}
           color={isDark ? "#ffffff" : "#1e293b"}
+          accessibilityLabel="Partager"
         />
       </Animated.View>
 

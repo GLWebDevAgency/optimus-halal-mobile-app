@@ -168,6 +168,7 @@ export default function SignUpScreen() {
               variant="default"
               onPress={() => router.back()}
               color={isDark ? "#ffffff" : "#1e293b"}
+              accessibilityLabel="Retour"
             />
             <Text className="text-sm font-medium text-slate-400 dark:text-slate-500">
               Étape 1 sur 3

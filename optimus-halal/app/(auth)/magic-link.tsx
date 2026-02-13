@@ -445,6 +445,7 @@ export default function MagicLinkLoginScreen() {
                 variant="default"
                 onPress={() => router.back()}
                 color={isDark ? "#ffffff" : "#1e293b"}
+                accessibilityLabel="Retour"
               />
             </Animated.View>
           )}
