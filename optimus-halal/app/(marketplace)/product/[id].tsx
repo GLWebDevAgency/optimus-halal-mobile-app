@@ -18,10 +18,10 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  Image,
   useColorScheme,
   Dimensions,
 } from "react-native";
+import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -248,7 +248,8 @@ export default function ProductDetailScreen() {
             <Image
               source={{ uri: product.images[currentImageIndex] }}
               className="w-full h-full"
-              resizeMode="cover"
+              contentFit="cover"
+              transition={200}
             />
             {/* Pagination Dots */}
             <View className="absolute bottom-4 left-0 right-0 flex-row justify-center gap-2">
@@ -464,7 +465,8 @@ export default function ProductDetailScreen() {
                   <Image
                     source={{ uri: relatedProduct.image }}
                     className="w-full h-full"
-                    resizeMode="cover"
+                    contentFit="cover"
+                    transition={200}
                   />
                   <View className="absolute top-2 right-2 bg-white/90 dark:bg-black/60 rounded-full p-1">
                     <MaterialIcons name="eco" size={16} color="#1de560" />

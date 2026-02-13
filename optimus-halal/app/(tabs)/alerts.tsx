@@ -13,10 +13,11 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Image,
   RefreshControl,
   useColorScheme,
 } from "react-native";
+import { Image } from "expo-image";
+import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -195,7 +196,8 @@ function AlertCard({ alert, index }: AlertCardProps) {
               <Image
                 source={{ uri: alert.image }}
                 className="w-full h-full"
-                resizeMode="cover"
+                contentFit="cover"
+                transition={200}
               />
               <View className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               <Text className="absolute bottom-3 left-4 text-white text-lg font-bold">
@@ -221,7 +223,8 @@ function AlertCard({ alert, index }: AlertCardProps) {
                     <Image
                       source={{ uri: alert.image }}
                       className="w-full h-full"
-                      resizeMode="cover"
+                      contentFit="cover"
+                      transition={200}
                     />
                   </View>
                 )}
@@ -409,7 +412,12 @@ export default function AlertsScreen() {
       </Animated.View>
 
       {/* Content */}
-      <ScrollView
+      <FlashList
+        data={filteredAlerts}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item, index }) => (
+          <AlertCard alert={item} index={index} />
+        )}
         contentContainerStyle={{
           padding: 16,
           paddingBottom: 100,
@@ -422,14 +430,7 @@ export default function AlertsScreen() {
             tintColor={isDark ? "#1de560" : "#059669"}
           />
         }
-      >
-        {/* Timeline line background */}
-        <View className="relative">
-          {filteredAlerts.map((alert, index) => (
-            <AlertCard key={alert.id} alert={alert} index={index} />
-          ))}
-        </View>
-      </ScrollView>
+      />
     </View>
   );
 }

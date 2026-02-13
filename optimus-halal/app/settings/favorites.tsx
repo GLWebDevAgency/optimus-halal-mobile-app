@@ -10,9 +10,10 @@ import {
   TouchableOpacity,
   ScrollView,
   SafeAreaView,
-  Image,
   Dimensions,
 } from "react-native";
+import { Image } from "expo-image";
+import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
@@ -128,7 +129,8 @@ function ProductCard({ product, index, onRemove, onView, onScan, isDark, colors 
           <Image
             source={{ uri: product.image }}
             style={{ width: "100%", height: "100%" }}
-            resizeMode="cover"
+            contentFit="cover"
+            transition={200}
           />
         ) : (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -324,63 +326,59 @@ export default function FavoritesScreen() {
       </Animated.View>
 
       {/* Products Grid */}
-      <ScrollView
-        style={{ flex: 1, paddingHorizontal: 20 }}
-        contentContainerStyle={{ paddingBottom: 100 }}
-        showsVerticalScrollIndicator={false}
-      >
-        {filteredFavorites.length === 0 ? (
-          <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 80 }}>
-            <MaterialIcons name="favorite-border" size={64} color={colors.textMuted} />
-            <Text style={{ color: colors.textSecondary, fontSize: 18, marginTop: 16 }}>
-              Aucun favori
+      {filteredFavorites.length === 0 ? (
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 80 }}>
+          <MaterialIcons name="favorite-border" size={64} color={colors.textMuted} />
+          <Text style={{ color: colors.textSecondary, fontSize: 18, marginTop: 16 }}>
+            Aucun favori
+          </Text>
+          <Text style={{ color: colors.textMuted, fontSize: 14, marginTop: 8, textAlign: "center", paddingHorizontal: 32 }}>
+            Ajoutez des produits à vos favoris pour les retrouver facilement.
+          </Text>
+          <TouchableOpacity
+            onPress={() => router.push("/(tabs)/scanner")}
+            style={{
+              marginTop: 24,
+              backgroundColor: colors.primary,
+              paddingHorizontal: 24,
+              paddingVertical: 12,
+              borderRadius: 12,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              shadowColor: colors.primary,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+            }}
+          >
+            <MaterialIcons name="qr-code-scanner" size={18} color={isDark ? "#102217" : "#0d1b13"} />
+            <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
+              Scanner un produit
             </Text>
-            <Text style={{ color: colors.textMuted, fontSize: 14, marginTop: 8, textAlign: "center", paddingHorizontal: 32 }}>
-              Ajoutez des produits à vos favoris pour les retrouver facilement.
-            </Text>
-            <TouchableOpacity
-              onPress={() => router.push("/(tabs)/scanner")}
-              style={{
-                marginTop: 24,
-                backgroundColor: colors.primary,
-                paddingHorizontal: 24,
-                paddingVertical: 12,
-                borderRadius: 12,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-                shadowColor: colors.primary,
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
-                shadowRadius: 8,
-              }}
-            >
-              <MaterialIcons name="qr-code-scanner" size={18} color={isDark ? "#102217" : "#0d1b13"} />
-              <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
-                Scanner un produit
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <>
-            {/* Grid 2 columns */}
-            <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" }}>
-              {filteredFavorites.map((product, index) => (
-                <View key={product.id} style={{ marginBottom: 16 }}>
-                  <ProductCard
-                    product={product}
-                    index={index}
-                    onRemove={() => removeFavorite(product.id)}
-                    onView={() => router.push(`/scan-result?barcode=${product.id}`)}
-                    onScan={() => router.push("/(tabs)/scanner")}
-                    isDark={isDark}
-                    colors={colors}
-                  />
-                </View>
-              ))}
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <FlashList
+          data={filteredFavorites}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          renderItem={({ item, index }) => (
+            <View style={{ flex: 1, paddingHorizontal: 4, marginBottom: 16 }}>
+              <ProductCard
+                product={item}
+                index={index}
+                onRemove={() => removeFavorite(item.id)}
+                onView={() => router.push(`/scan-result?barcode=${item.id}`)}
+                onScan={() => router.push("/(tabs)/scanner")}
+                isDark={isDark}
+                colors={colors}
+              />
             </View>
-
-            {/* CTA Section */}
+          )}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+          showsVerticalScrollIndicator={false}
+          ListFooterComponent={
             <Animated.View
               entering={FadeInDown.delay(500).duration(400)}
               style={{
@@ -394,13 +392,13 @@ export default function FavoritesScreen() {
                 alignItems: "center",
               }}
             >
-              <View style={{ 
-                marginBottom: 12, 
-                height: 48, 
-                width: 48, 
-                alignItems: "center", 
-                justifyContent: "center", 
-                borderRadius: 24, 
+              <View style={{
+                marginBottom: 12,
+                height: 48,
+                width: 48,
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 24,
                 backgroundColor: colors.buttonSecondary,
                 borderColor: colors.borderLight,
                 borderWidth: 1,
@@ -436,9 +434,9 @@ export default function FavoritesScreen() {
                 </Text>
               </TouchableOpacity>
             </Animated.View>
-          </>
-        )}
-      </ScrollView>
+          }
+        />
+      )}
     </SafeAreaView>
   );
 }

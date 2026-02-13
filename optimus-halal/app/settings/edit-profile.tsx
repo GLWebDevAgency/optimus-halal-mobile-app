@@ -12,13 +12,13 @@ import {
   ScrollView,
   SafeAreaView,
   TextInput,
-  Image,
   Alert,
   StatusBar,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
 } from "react-native";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown, SlideInDown } from "react-native-reanimated";
@@ -387,7 +387,8 @@ export default function EditProfileScreen() {
                   <Image
                     source={{ uri: avatarUrl }}
                     style={{ width: "100%", height: "100%" }}
-                    resizeMode="cover"
+                    contentFit="cover"
+                    transition={200}
                   />
                 ) : (
                   <View

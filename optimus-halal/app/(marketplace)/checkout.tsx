@@ -18,10 +18,10 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  Image,
   TextInput,
   useColorScheme,
 } from "react-native";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -337,7 +337,8 @@ export default function CheckoutScreen() {
                   <Image
                     source={{ uri: item.image }}
                     className="w-full h-full"
-                    resizeMode="cover"
+                    contentFit="cover"
+                    transition={200}
                   />
                   <View className="absolute top-1 left-1 bg-white/90 dark:bg-black/80 rounded-full p-0.5">
                     <MaterialIcons name="verified" size={12} color="#16a34a" />

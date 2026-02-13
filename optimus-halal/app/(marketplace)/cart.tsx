@@ -14,9 +14,9 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  Image,
   useColorScheme,
 } from "react-native";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -137,7 +137,8 @@ function CartItem({
         <Image
           source={{ uri: product.image }}
           className="w-full h-full"
-          resizeMode="cover"
+          contentFit="cover"
+          transition={200}
         />
       </View>
 

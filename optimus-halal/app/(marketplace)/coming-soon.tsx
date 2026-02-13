@@ -14,12 +14,12 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Image,
   useColorScheme,
   Alert,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -144,7 +144,8 @@ export default function MarketplaceComingSoonScreen() {
                   uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuB-zk3K5A99Er3WNEbx4SxaPom-9DdbJj0G-kV6nyGVVBRr_0rxOr5JrFEPqnElHJlQgEFbgcEthfz0AEZNpU7rfVE_naDRaiwqsq3kl_0hlNkm9T1KsgJ0Df0-E3YU7c3bpBiWj5AYVCfug5KI9QHdAqChHavZ-dVjMwOs9sT36_Yr4Zo1Fisw0B02JdXSXFMIy2n7A0X2RCr6r2ETHvu1LBvOw9dm882-gQ6wf2-tLzpwozz-yMHb1v-e3f_hR8DrJyhQUl_kwf-k",
                 }}
                 className="w-full h-full"
-                resizeMode="cover"
+                contentFit="cover"
+                transition={200}
               />
 
               {/* Overlay gradient */}
@@ -260,7 +261,8 @@ export default function MarketplaceComingSoonScreen() {
                   <Image
                     source={{ uri }}
                     className="w-full h-full"
-                    resizeMode="cover"
+                    contentFit="cover"
+                    transition={200}
                   />
                 </View>
               ))}

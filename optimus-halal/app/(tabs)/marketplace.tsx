@@ -11,10 +11,10 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Image,
   RefreshControl,
   useColorScheme,
 } from "react-native";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -127,7 +127,8 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
           <Image
             source={{ uri: product.image }}
             className="w-full h-32"
-            resizeMode="cover"
+            contentFit="cover"
+            transition={200}
           />
           {product.isNew && (
             <View className="absolute top-2 left-2">

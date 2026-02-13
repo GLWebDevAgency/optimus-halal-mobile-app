@@ -16,11 +16,10 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Image,
-  FlatList,
   useColorScheme,
-  Dimensions,
 } from "react-native";
+import { Image } from "expo-image";
+import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -32,10 +31,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { colors } from "@/constants/theme";
 import { useLocalAuthStore, useLocalCartStore } from "@/store";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const CATEGORIES = [
   { id: "all", label: "Tous" },
@@ -153,7 +149,8 @@ function ProductCard({ product, onPress, onAddToCart, onToggleFavorite }: Produc
         <Image
           source={{ uri: product.image }}
           className="w-full h-full"
-          resizeMode="cover"
+          contentFit="cover"
+          transition={200}
         />
 
         {/* Certification Badge */}
@@ -242,7 +239,7 @@ export default function MarketplaceCatalogScreen() {
     router.navigate({ pathname: "/(marketplace)/product/[id]", params: { id: productId } } as any);
   }, []);
 
-  const handleAddToCart = useCallback(async (productId: string) => {
+  const handleAddToCart = useCallback(async (_productId: string) => {
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     // Add to cart logic
   }, []);
@@ -278,7 +275,8 @@ export default function MarketplaceCatalogScreen() {
                   uri: user?.avatarUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuC21UIb5DPLKk9hCMsQFts76mIFDU9E59eHURz_1sJY7VCuIdFDM3dF4uWvbol6S4YsiI_I8V_Uxb75wJIsSMhoN44b87aYjZPtRRDKA7meEVYi_tUecDyCISlPFaoE-A414mdoDdW3CsHQzmyTBMR3VuPE_VFY6FnRAVBTF29U0N6JyZ8-AD7tTXjSV98_LL5rCswxiaIMnbGsRi2KtWUm2lJKaccwbssUxibPATHQzjbQ30J49KwYw7lOKC5nWJfI6SKUlxINJvsT",
                 }}
                 className="w-full h-full"
-                resizeMode="cover"
+                contentFit="cover"
+                transition={200}
               />
             </View>
             <Text className="text-xl font-bold text-slate-800 dark:text-white">
@@ -321,129 +319,119 @@ export default function MarketplaceCatalogScreen() {
         </View>
       </Animated.View>
 
-      <ScrollView
-        className="flex-1"
+      <FlashList
+        data={products}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        renderItem={({ item }) => (
+          <View style={{ flex: 1, paddingHorizontal: 8, marginBottom: 16 }}>
+            <ProductCard
+              product={item}
+              onPress={() => handleProductPress(item.id)}
+              onAddToCart={() => handleAddToCart(item.id)}
+              onToggleFavorite={() => handleToggleFavorite(item.id)}
+            />
+          </View>
+        )}
         contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
         showsVerticalScrollIndicator={false}
-      >
-        {/* Category Chips */}
-        <Animated.View entering={FadeInRight.delay(200).duration(400)} className="py-2">
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
-          >
-            {CATEGORIES.map((category) => (
-              <TouchableOpacity
-                key={category.id}
-                onPress={() => handleCategoryPress(category.id)}
-                className={`px-5 py-2 rounded-full ${
-                  selectedCategory === category.id
-                    ? "bg-primary"
-                    : "bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700"
-                }`}
-                activeOpacity={0.8}
+        ListHeaderComponent={
+          <>
+            {/* Category Chips */}
+            <Animated.View entering={FadeInRight.delay(200).duration(400)} className="py-2">
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
               >
-                <Text
-                  className={`text-sm font-semibold ${
-                    selectedCategory === category.id
-                      ? "text-slate-900"
-                      : "text-slate-800 dark:text-slate-300"
-                  }`}
-                >
-                  {category.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </Animated.View>
+                {CATEGORIES.map((category) => (
+                  <TouchableOpacity
+                    key={category.id}
+                    onPress={() => handleCategoryPress(category.id)}
+                    className={`px-5 py-2 rounded-full ${
+                      selectedCategory === category.id
+                        ? "bg-primary"
+                        : "bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700"
+                    }`}
+                    activeOpacity={0.8}
+                  >
+                    <Text
+                      className={`text-sm font-semibold ${
+                        selectedCategory === category.id
+                          ? "text-slate-900"
+                          : "text-slate-800 dark:text-slate-300"
+                      }`}
+                    >
+                      {category.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </Animated.View>
 
-        {/* Featured Carousel */}
-        <Animated.View
-          entering={FadeInDown.delay(300).duration(500)}
-          className="mt-2 px-4"
-        >
-          <View className="relative w-full aspect-[2/1] rounded-2xl overflow-hidden">
-            <Image
-              source={{ uri: FEATURED_PRODUCTS[0].image }}
-              className="w-full h-full"
-              resizeMode="cover"
-            />
-            <LinearGradient
-              colors={["rgba(15,23,42,0.8)", "rgba(15,23,42,0.4)", "transparent"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              className="absolute inset-0"
-            />
-            <View className="absolute inset-0 justify-center pl-6 pr-12">
-              <View className="bg-amber-500/90 px-2 py-1 rounded self-start mb-2">
-                <Text className="text-[10px] font-bold text-slate-900 uppercase tracking-wider">
-                  Featured
-                </Text>
-              </View>
-              <Text className="text-white text-xl font-bold leading-tight mb-1">
-                {FEATURED_PRODUCTS[0].title}
-              </Text>
-              <Text className="text-slate-200 text-xs font-medium mb-4 max-w-[200px]">
-                {FEATURED_PRODUCTS[0].subtitle}
-              </Text>
-              <TouchableOpacity
-                className="bg-primary px-4 py-2.5 rounded-lg self-start"
-                activeOpacity={0.9}
-                style={{
-                  shadowColor: "#1de560",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 8,
-                }}
-              >
-                <Text className="text-slate-900 text-xs font-bold">
-                  Voir la Collection
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Animated.View>
-
-        {/* Section Header */}
-        <Animated.View
-          entering={FadeIn.delay(400).duration(400)}
-          className="flex-row items-center justify-between px-4 pt-6 pb-3"
-        >
-          <Text className="text-lg font-bold text-slate-800 dark:text-white">
-            Sélection Populaire
-          </Text>
-          <TouchableOpacity activeOpacity={0.7}>
-            <Text className="text-sm font-medium text-primary">Voir tout</Text>
-          </TouchableOpacity>
-        </Animated.View>
-
-        {/* Product Grid */}
-        <Animated.View
-          entering={FadeInDown.delay(500).duration(500)}
-          className="px-4"
-        >
-          <View className="flex-row flex-wrap" style={{ marginHorizontal: -8 }}>
-            {products.map((product, index) => (
-              <View
-                key={product.id}
-                style={{
-                  width: (SCREEN_WIDTH - 48) / 2,
-                  paddingHorizontal: 8,
-                  marginBottom: 16,
-                }}
-              >
-                <ProductCard
-                  product={product}
-                  onPress={() => handleProductPress(product.id)}
-                  onAddToCart={() => handleAddToCart(product.id)}
-                  onToggleFavorite={() => handleToggleFavorite(product.id)}
+            {/* Featured Carousel */}
+            <Animated.View
+              entering={FadeInDown.delay(300).duration(500)}
+              className="mt-2 px-4"
+            >
+              <View className="relative w-full aspect-[2/1] rounded-2xl overflow-hidden">
+                <Image
+                  source={{ uri: FEATURED_PRODUCTS[0].image }}
+                  className="w-full h-full"
+                  contentFit="cover"
+                  transition={200}
                 />
+                <LinearGradient
+                  colors={["rgba(15,23,42,0.8)", "rgba(15,23,42,0.4)", "transparent"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  className="absolute inset-0"
+                />
+                <View className="absolute inset-0 justify-center pl-6 pr-12">
+                  <View className="bg-amber-500/90 px-2 py-1 rounded self-start mb-2">
+                    <Text className="text-[10px] font-bold text-slate-900 uppercase tracking-wider">
+                      Featured
+                    </Text>
+                  </View>
+                  <Text className="text-white text-xl font-bold leading-tight mb-1">
+                    {FEATURED_PRODUCTS[0].title}
+                  </Text>
+                  <Text className="text-slate-200 text-xs font-medium mb-4 max-w-[200px]">
+                    {FEATURED_PRODUCTS[0].subtitle}
+                  </Text>
+                  <TouchableOpacity
+                    className="bg-primary px-4 py-2.5 rounded-lg self-start"
+                    activeOpacity={0.9}
+                    style={{
+                      shadowColor: "#1de560",
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 8,
+                    }}
+                  >
+                    <Text className="text-slate-900 text-xs font-bold">
+                      Voir la Collection
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            ))}
-          </View>
-        </Animated.View>
-      </ScrollView>
+            </Animated.View>
+
+            {/* Section Header */}
+            <Animated.View
+              entering={FadeIn.delay(400).duration(400)}
+              className="flex-row items-center justify-between px-4 pt-6 pb-3"
+            >
+              <Text className="text-lg font-bold text-slate-800 dark:text-white">
+                Sélection Populaire
+              </Text>
+              <TouchableOpacity activeOpacity={0.7}>
+                <Text className="text-sm font-medium text-primary">Voir tout</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </>
+        }
+      />
     </View>
   );
 }

@@ -19,10 +19,10 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
-  Image,
   Switch,
   useColorScheme,
 } from "react-native";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -349,7 +349,8 @@ export default function ReportingFormScreen() {
                   <Image
                     source={{ uri: photo }}
                     className="w-full h-full"
-                    resizeMode="cover"
+                    contentFit="cover"
+                    transition={200}
                   />
                   <View className="absolute inset-0 bg-black/30 items-center justify-center">
                     <MaterialIcons name="delete" size={20} color="#ffffff" />

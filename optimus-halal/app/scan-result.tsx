@@ -16,11 +16,11 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Image,
   useColorScheme,
   Dimensions,
   Share,
 } from "react-native";
+import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -248,7 +248,8 @@ export default function ScanResultScreen() {
           <Image
             source={{ uri: product.image }}
             className="absolute inset-0 w-full h-full opacity-90 dark:opacity-75"
-            resizeMode="cover"
+            contentFit="cover"
+            transition={200}
           />
           <LinearGradient
             colors={["transparent", isDark ? "rgba(17,33,22,0.9)" : "rgba(0,0,0,0.6)"]}
