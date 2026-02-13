@@ -13,7 +13,8 @@ import type * as Types from './types';
 export const profileService = {
   async getProfile(): Promise<Types.UserProfile> {
     const profile = await apiClient.profile.getProfile.query();
-    return { ...profile, badges: profile.badges ?? [] };
+    // Backend doesn't return badges — provide default
+    return { ...profile, badges: [] } as unknown as Types.UserProfile;
   },
 
   async updateProfile(
@@ -54,18 +55,20 @@ export const profileService = {
   },
 
   async getGamificationStats(): Promise<Types.GamificationStats> {
+    // Backend returns: { level, experiencePoints, totalScans, currentStreak, longestStreak, lastScanDate }
+    // Missing: xpForNextLevel, xpProgress, badges, loyaltyPoints, loyaltyLevel
     const data = await apiClient.profile.getGamification.query();
     return {
       level: data.level ?? 1,
       experiencePoints: data.experiencePoints ?? 0,
-      xpForNextLevel: data.xpForNextLevel ?? 100,
-      xpProgress: data.xpProgress ?? 0,
+      xpForNextLevel: 100,
+      xpProgress: 0,
       currentStreak: data.currentStreak ?? 0,
       longestStreak: data.longestStreak ?? 0,
-      badges: data.badges ?? [],
+      badges: [],
       totalScans: data.totalScans ?? 0,
-      loyaltyPoints: data.loyaltyPoints ?? 0,
-      loyaltyLevel: data.loyaltyLevel ?? 'bronze',
+      loyaltyPoints: 0,
+      loyaltyLevel: 'bronze',
     };
   },
 };

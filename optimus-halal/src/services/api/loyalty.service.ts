@@ -11,7 +11,18 @@ import type * as Types from './types';
 
 export const loyaltyService = {
   async getLoyaltyAccount(): Promise<Types.LoyaltyAccount> {
-    return apiClient.loyalty.getBalance.query() as Promise<Types.LoyaltyAccount>;
+    // Backend returns { points, level, experiencePoints }
+    // Map to LoyaltyAccount shape
+    const result = await apiClient.loyalty.getBalance.query();
+    return {
+      currentPoints: result.points ?? 0,
+      lifetimePoints: result.points ?? 0,
+      currentLevel: 'bronze' as Types.LoyaltyLevel,
+      rank: 0,
+      levelProgress: 0,
+      pointsToNextLevel: 0,
+      benefits: [],
+    };
   },
 
   async getLoyaltyTransactions(
@@ -21,19 +32,20 @@ export const loyaltyService = {
     transactions: Types.LoyaltyTransaction[];
     pagination: Types.PaginationOutput;
   }> {
+    // Backend uses offset (not cursor) and returns array directly
     const result = await apiClient.loyalty.getHistory.query({
       limit: pagination?.limit ?? 20,
-      cursor: undefined,
+      offset: 0,
     });
 
     return {
-      transactions: (result.transactions ?? []) as Types.LoyaltyTransaction[],
+      transactions: (result ?? []) as unknown as Types.LoyaltyTransaction[],
       pagination: {
         page: pagination?.page ?? 1,
         limit: pagination?.limit ?? 20,
-        totalItems: result.transactions?.length ?? 0,
+        totalItems: result?.length ?? 0,
         totalPages: 1,
-        hasNext: !!result.nextCursor,
+        hasNext: (result?.length ?? 0) >= (pagination?.limit ?? 20),
       },
     };
   },
@@ -41,16 +53,17 @@ export const loyaltyService = {
   async getAvailableRewards(): Promise<{
     rewards: Types.LoyaltyReward[];
   }> {
-    const rewards = await apiClient.loyalty.getRewards.query();
-    return { rewards: rewards as Types.LoyaltyReward[] };
+    // Backend getRewards requires input with optional category/limit
+    const rewards = await apiClient.loyalty.getRewards.query({});
+    return { rewards: rewards as unknown as Types.LoyaltyReward[] };
   },
 
   async redeemReward(rewardId: string): Promise<Types.RedeemRewardResponse> {
     const result = await apiClient.loyalty.claimReward.mutate({ rewardId });
     return {
       success: true,
-      rewardCode: (result as any).rewardCode ?? '',
-      newBalance: (result as any).newBalance ?? 0,
+      rewardCode: (result as any).redemptionCode ?? '',
+      newBalance: 0,
     };
   },
 

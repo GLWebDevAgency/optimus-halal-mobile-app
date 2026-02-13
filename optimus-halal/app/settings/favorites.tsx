@@ -16,7 +16,7 @@ import {
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
-import { useFavoritesStore, type FavoriteProduct } from "@/store";
+import { useLocalFavoritesStore, type FavoriteProduct } from "@/store";
 import { useTheme } from "@/hooks/useTheme";
 
 const { width } = Dimensions.get("window");
@@ -206,7 +206,7 @@ function ProductCard({ product, index, onRemove, onView, onScan, isDark, colors 
 
 export default function FavoritesScreen() {
   const { isDark, colors } = useTheme();
-  const { favorites, removeFavorite } = useFavoritesStore();
+  const { favorites, removeFavorite } = useLocalFavoritesStore();
   const [selectedCategory, setSelectedCategory] = useState("all");
 
   const filteredFavorites =

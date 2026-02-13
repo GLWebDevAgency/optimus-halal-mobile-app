@@ -21,13 +21,11 @@ export const notificationService = {
     }
   ): Promise<Types.SuccessResponse> {
     const deviceId = await getDeviceId();
+    // Backend only accepts "ios" | "android", not "web"
     await apiClient.notification.registerPushToken.mutate({
       token,
-      platform,
+      platform: platform as 'ios' | 'android',
       deviceId,
-      deviceName: options?.deviceName,
-      appVersion: options?.appVersion,
-      osVersion: options?.osVersion,
     });
     return { success: true };
   },
@@ -45,20 +43,21 @@ export const notificationService = {
     unreadCount: number;
     pagination: Types.PaginationOutput;
   }> {
+    // Backend uses offset (not cursor) and returns array directly (no .notifications wrapper)
     const result = await apiClient.notification.list.query({
       limit: pagination?.limit ?? 20,
-      cursor: undefined,
+      offset: 0,
     });
 
     return {
-      notifications: (result.notifications ?? []) as Types.Notification[],
-      unreadCount: result.unreadCount ?? 0,
+      notifications: (result ?? []) as unknown as Types.Notification[],
+      unreadCount: 0,
       pagination: {
         page: pagination?.page ?? 1,
         limit: pagination?.limit ?? 20,
-        totalItems: result.notifications?.length ?? 0,
+        totalItems: result?.length ?? 0,
         totalPages: 1,
-        hasNext: !!result.nextCursor,
+        hasNext: (result?.length ?? 0) >= (pagination?.limit ?? 20),
       },
     };
   },
@@ -84,19 +83,39 @@ export const notificationService = {
   },
 
   async getNotificationSettings(): Promise<Types.NotificationSettings> {
-    return apiClient.notification.getSettings.query() as Promise<Types.NotificationSettings>;
+    // Backend returns different shape — map to frontend type
+    const settings = await apiClient.notification.getSettings.query();
+    return {
+      pushEnabled: settings.alertsEnabled ?? true,
+      emailEnabled: false,
+      alertsPush: settings.alertsEnabled ?? true,
+      alertsEmail: false,
+      ordersPush: false,
+      ordersEmail: false,
+      promotionsPush: settings.promotionsEnabled ?? true,
+      loyaltyPush: settings.rewardsEnabled ?? true,
+      quietHoursEnabled: !!(settings.quietHoursStart && settings.quietHoursEnd),
+      quietHoursStart: settings.quietHoursStart ?? undefined,
+      quietHoursEnd: settings.quietHoursEnd ?? undefined,
+    };
   },
 
   async updateNotificationSettings(
     input: Types.UpdateNotificationSettingsInput
   ): Promise<Types.SuccessResponse> {
-    await apiClient.notification.updateSettings.mutate(input);
+    await apiClient.notification.updateSettings.mutate({
+      alertsEnabled: input.alertsPush,
+      promotionsEnabled: input.promotionsPush,
+      rewardsEnabled: input.loyaltyPush,
+      quietHoursStart: input.quietHoursStart,
+      quietHoursEnd: input.quietHoursEnd,
+    });
     return { success: true };
   },
 
   async getUnreadCount(): Promise<Types.CountResponse> {
     const result = await apiClient.notification.getUnreadCount.query();
-    return { count: (result as any).count ?? 0 };
+    return { count: result.count ?? 0 };
   },
 };
 

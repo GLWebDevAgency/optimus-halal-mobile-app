@@ -36,7 +36,7 @@ import Animated, {
 import { LinearGradient } from "expo-linear-gradient";
 
 import { Card, Avatar, Chip, IconButton, Button } from "@/components/ui";
-import { useLocationStore, useAlertsStore } from "@/store";
+import { useLocationStore, useLocalAlertsStore } from "@/store";
 import { colors } from "@/constants/theme";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");

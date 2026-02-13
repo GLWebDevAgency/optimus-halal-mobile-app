@@ -27,7 +27,7 @@ import * as Haptics from "expo-haptics";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
 import { Button, Input, IconButton, PhoneInput, LocationPicker, validateFrenchPhone } from "@/components/ui";
-import { useAuthStore } from "@/store";
+import { useLocalAuthStore } from "@/store";
 import { authService } from "@/services/api/auth.service";
 import { City } from "@/constants/locations";
 
@@ -46,7 +46,7 @@ export default function SignUpScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { setUser } = useAuthStore();
+  const { setUser } = useLocalAuthStore();
 
   const validateForm = useCallback(() => {
     const newErrors: Record<string, string> = {};

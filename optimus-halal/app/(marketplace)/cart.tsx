@@ -27,7 +27,7 @@ import Animated, {
   FadeInUp,
 } from "react-native-reanimated";
 
-import { useCartStore } from "@/store";
+import { useLocalCartStore } from "@/store";
 
 // Extended cart items with full product info (in real app, fetch from products DB)
 const CART_PRODUCTS = {
@@ -226,7 +226,7 @@ export default function CartScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const { items, itemCount, total, removeItem, updateQuantity } = useCartStore();
+  const { items, itemCount, total, removeItem, updateQuantity } = useLocalCartStore();
 
   const handleBack = useCallback(async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

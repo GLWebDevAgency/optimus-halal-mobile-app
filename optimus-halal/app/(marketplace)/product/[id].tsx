@@ -34,7 +34,7 @@ import Animated, {
 import Svg, { Path } from "react-native-svg";
 
 import { colors } from "@/constants/theme";
-import { useCartStore } from "@/store";
+import { useLocalCartStore } from "@/store";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -118,7 +118,7 @@ export default function ProductDetailScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const { addItem, itemCount } = useCartStore();
+  const { addItem, itemCount } = useLocalCartStore();
 
   const [quantity, setQuantity] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);

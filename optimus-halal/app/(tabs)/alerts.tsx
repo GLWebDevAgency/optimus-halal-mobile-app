@@ -29,7 +29,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { Card, Badge, IconButton, Chip, ChipGroup } from "@/components/ui";
-import { useAlertsStore } from "@/store";
+import { useLocalAlertsStore } from "@/store";
 import { colors } from "@/constants/theme";
 
 // Alert types
@@ -321,7 +321,7 @@ export default function AlertsScreen() {
   const [activeFilter, setActiveFilter] = useState("all");
   const [refreshing, setRefreshing] = useState(false);
 
-  const { alerts, unreadCount, markAllAsRead } = useAlertsStore();
+  const { alerts, unreadCount, markAllAsRead } = useLocalAlertsStore();
 
   const filteredAlerts = useMemo(() => {
     if (activeFilter === "all") return MOCK_ALERTS;

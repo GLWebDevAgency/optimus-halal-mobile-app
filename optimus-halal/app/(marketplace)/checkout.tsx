@@ -33,14 +33,14 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { useCartStore } from "@/store";
+import { useLocalCartStore } from "@/store";
 
 export default function CheckoutScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const { items, total, clearCart } = useCartStore();
+  const { items, total, clearCart } = useLocalCartStore();
 
   const [selectedShipping, setSelectedShipping] = useState<"standard" | "express">("standard");
   const [paymentTab, setPaymentTab] = useState<"card" | "apple">("card");

@@ -42,17 +42,18 @@ export const scanService = {
     scans: Types.ScanHistoryItem[];
     pagination: Types.PaginationOutput;
   }> {
+    // Backend returns { items, nextCursor }, not { scans, nextCursor }
     const result = await apiClient.scan.getHistory.query({
       limit: pagination?.limit ?? 20,
       cursor: undefined,
     });
 
     return {
-      scans: (result.scans ?? []) as Types.ScanHistoryItem[],
+      scans: (result.items ?? []) as unknown as Types.ScanHistoryItem[],
       pagination: {
         page: pagination?.page ?? 1,
         limit: pagination?.limit ?? 20,
-        totalItems: result.scans?.length ?? 0,
+        totalItems: result.items?.length ?? 0,
         totalPages: 1,
         hasNext: !!result.nextCursor,
       },
@@ -62,12 +63,23 @@ export const scanService = {
   async getRecentScans(
     limit: number = 10
   ): Promise<{ scans: Types.ScanHistoryItem[] }> {
+    // Backend returns { items, nextCursor }, not { scans }
     const result = await apiClient.scan.getHistory.query({ limit });
-    return { scans: (result.scans ?? []) as Types.ScanHistoryItem[] };
+    return { scans: (result.items ?? []) as unknown as Types.ScanHistoryItem[] };
   },
 
   async getScanStats(): Promise<Types.ScanStats> {
-    return apiClient.scan.getStats.query() as Promise<Types.ScanStats>;
+    // Backend returns { totalScansVerified, level, experiencePoints, totalScans, currentStreak, longestStreak }
+    // Map to ScanStats shape
+    const result = await apiClient.scan.getStats.query();
+    return {
+      totalScans: result.totalScans ?? 0,
+      halalCount: 0,
+      haramCount: 0,
+      doubtfulCount: 0,
+      unknownCount: 0,
+      uniqueProducts: 0,
+    };
   },
 
   async submitAnalysisRequest(

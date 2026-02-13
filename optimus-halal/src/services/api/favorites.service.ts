@@ -18,26 +18,28 @@ export const favoritesService = {
     favorites: Types.Favorite[];
     pagination: Types.PaginationOutput;
   }> {
+    // Backend uses offset (not cursor) and returns array directly
     const result = await apiClient.favorites.list.query({
       limit: pagination?.limit ?? 20,
-      cursor: undefined,
+      offset: 0,
       folderId,
     });
 
     return {
-      favorites: (result.favorites ?? []) as Types.Favorite[],
+      favorites: (result ?? []) as unknown as Types.Favorite[],
       pagination: {
         page: pagination?.page ?? 1,
         limit: pagination?.limit ?? 20,
-        totalItems: result.favorites?.length ?? 0,
+        totalItems: result?.length ?? 0,
         totalPages: 1,
-        hasNext: !!result.nextCursor,
+        hasNext: (result?.length ?? 0) >= (pagination?.limit ?? 20),
       },
     };
   },
 
   async addFavorite(input: Types.AddFavoriteInput): Promise<Types.Favorite> {
-    return apiClient.favorites.add.mutate(input) as Promise<Types.Favorite>;
+    const result = await apiClient.favorites.add.mutate(input);
+    return result as unknown as Types.Favorite;
   },
 
   async removeFavorite(favoriteId: string): Promise<Types.SuccessResponse> {
@@ -50,8 +52,8 @@ export const favoritesService = {
     // Not a dedicated BFF endpoint — check via list
     try {
       const result = await apiClient.favorites.list.query({ limit: 100 });
-      const found = (result.favorites ?? []).some(
-        (f: any) => f.productId === productId
+      const found = (result ?? []).some(
+        (f: { productId: string }) => f.productId === productId
       );
       return { isFavorite: found };
     } catch {
@@ -61,15 +63,14 @@ export const favoritesService = {
 
   async getFolders(): Promise<{ folders: Types.FavoriteFolder[] }> {
     const folders = await apiClient.favorites.listFolders.query();
-    return { folders: folders as Types.FavoriteFolder[] };
+    return { folders: folders as unknown as Types.FavoriteFolder[] };
   },
 
   async createFolder(
     input: Types.CreateFolderInput
   ): Promise<Types.FavoriteFolder> {
-    return apiClient.favorites.createFolder.mutate(
-      input
-    ) as Promise<Types.FavoriteFolder>;
+    const result = await apiClient.favorites.createFolder.mutate(input);
+    return result as unknown as Types.FavoriteFolder;
   },
 
   async updateFolder(

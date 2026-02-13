@@ -16,7 +16,7 @@ import type * as Types from "./types";
 export const authService = {
   async register(input: Types.RegisterInput): Promise<Types.AuthResponse> {
     const result = await apiClient.auth.register.mutate({
-      email: input.email,
+      email: input.email ?? '',
       password: input.password,
       displayName: input.displayName,
       phoneNumber: input.phoneNumber,
@@ -67,7 +67,8 @@ export const authService = {
 
   async getProfile(): Promise<Types.UserProfile> {
     const profile = await apiClient.profile.getProfile.query();
-    return { ...profile, badges: profile.badges ?? [] };
+    // Backend doesn't return badges — provide default
+    return { ...profile, badges: [] } as unknown as Types.UserProfile;
   },
 
   async requestPasswordReset(email: string): Promise<Types.SuccessResponse> {

@@ -12,6 +12,7 @@ import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import superjson from "superjson";
 import { API_CONFIG, STORAGE_KEYS, HTTP_STATUS, ERROR_CODES } from "./config";
 
+import type { AppRouter } from "@backend/trpc/router";
 import type * as Types from "./types";
 import type { Language } from "@/i18n";
 
@@ -177,8 +178,7 @@ export function setApiLanguage(lang: Language): void {
 // ============================================
 
 function createApiClient() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const client = createTRPCClient<any>({
+  const client = createTRPCClient<AppRouter>({
     links: [
       httpBatchLink({
         url: `${API_CONFIG.baseUrl}${API_CONFIG.trpcPath}`,
@@ -289,8 +289,7 @@ async function performTokenRefresh(): Promise<void> {
 // API CLIENT INSTANCE
 // ============================================
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const apiClient: any = createApiClient();
+export const apiClient = createApiClient();
 
 // ============================================
 // CONVENIENCE METHODS

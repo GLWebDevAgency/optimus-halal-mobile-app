@@ -28,7 +28,7 @@ import Animated, {
 import { LinearGradient } from "expo-linear-gradient";
 
 import { Card, Badge } from "@/components/ui";
-import { useFeatureFlagsStore, useCartStore, useAlertsStore } from "@/store";
+import { useFeatureFlagsStore, useLocalCartStore, useLocalAlertsStore } from "@/store";
 import { colors } from "@/constants/theme";
 
 interface Product {
@@ -89,7 +89,7 @@ const CATEGORIES = [
 function ProductCard({ product, index }: { product: Product; index: number }) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const { addItem } = useCartStore();
+  const { addItem } = useLocalCartStore();
 
   const handlePress = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -201,8 +201,8 @@ export default function MarketplaceTab() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const { flags } = useFeatureFlagsStore();
-  const { unreadCount } = useAlertsStore();
-  const { itemCount } = useCartStore();
+  const { unreadCount } = useLocalAlertsStore();
+  const { itemCount } = useLocalCartStore();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("all");
 
