@@ -48,6 +48,7 @@ export const productService = {
     products: Types.Product[];
     pagination: Types.PaginationOutput;
   }> {
+    // Backend returns { items, total }, not { products, total }
     const result = await apiClient.product.search.query({
       query,
       limit: pagination?.limit ?? 20,
@@ -55,16 +56,16 @@ export const productService = {
     });
 
     return {
-      products: (result.products ?? []) as Types.Product[],
+      products: (result.items ?? []) as Types.Product[],
       pagination: {
         page: pagination?.page ?? 1,
         limit: pagination?.limit ?? 20,
-        totalItems: result.total ?? result.products?.length ?? 0,
+        totalItems: result.total ?? result.items?.length ?? 0,
         totalPages: Math.ceil(
-          (result.total ?? result.products?.length ?? 0) /
+          (result.total ?? result.items?.length ?? 0) /
             (pagination?.limit ?? 20)
         ),
-        hasNext: (result.products?.length ?? 0) >= (pagination?.limit ?? 20),
+        hasNext: (result.items?.length ?? 0) >= (pagination?.limit ?? 20),
       },
     };
   },
@@ -80,8 +81,9 @@ export const productService = {
     productId: string,
     limit: number = 5
   ): Promise<{ alternatives: Types.ProductAlternative[] }> {
+    // Backend expects { productId }, not { id }
     const result = await apiClient.product.getAlternatives.query({
-      id: productId,
+      productId,
       limit,
     });
     return {

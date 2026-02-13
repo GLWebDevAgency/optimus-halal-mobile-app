@@ -10,8 +10,9 @@ import type * as Types from './types';
 
 export const storeService = {
   async getStore(storeId: string): Promise<Types.StoreWithDetails> {
+    // Backend returns { ...store, hours } (flat), not { store, hours, isOpen, ... }
     const result = await apiClient.store.getById.query({ id: storeId });
-    return result as Types.StoreWithDetails;
+    return result as unknown as Types.StoreWithDetails;
   },
 
   async searchStores(
@@ -26,6 +27,7 @@ export const storeService = {
     stores: Types.Store[];
     pagination: Types.PaginationOutput;
   }> {
+    // Backend returns { items, total }, not { stores, total }
     const result = await apiClient.store.search.query({
       query,
       limit: pagination?.limit ?? 20,
@@ -33,13 +35,13 @@ export const storeService = {
     });
 
     return {
-      stores: (result.stores ?? []) as Types.Store[],
+      stores: (result.items ?? []) as Types.Store[],
       pagination: {
         page: pagination?.page ?? 1,
         limit: pagination?.limit ?? 20,
-        totalItems: result.stores?.length ?? 0,
+        totalItems: result.items?.length ?? 0,
         totalPages: 1,
-        hasNext: (result.stores?.length ?? 0) >= (pagination?.limit ?? 20),
+        hasNext: (result.items?.length ?? 0) >= (pagination?.limit ?? 20),
       },
     };
   },

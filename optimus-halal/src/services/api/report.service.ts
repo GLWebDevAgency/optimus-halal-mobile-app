@@ -13,9 +13,17 @@ export const reportService = {
   async createReport(
     input: Types.CreateReportInput
   ): Promise<{ id: string; status: string; message: string }> {
-    const result = await apiClient.report.createReport.mutate(input);
+    // Backend expects `type` + `photoUrls`, frontend type uses `reportType` + `evidenceUrls`
+    const result = await apiClient.report.createReport.mutate({
+      type: input.reportType as "incorrect_halal_status" | "wrong_ingredients" | "missing_product" | "store_issue" | "other",
+      title: input.title,
+      description: input.description,
+      productId: input.productId,
+      storeId: input.storeId,
+      photoUrls: input.evidenceUrls,
+    });
     return {
-      id: (result as any).id ?? '',
+      id: result.id ?? '',
       status: 'pending',
       message: 'Report submitted successfully',
     };
@@ -28,19 +36,20 @@ export const reportService = {
     reports: Types.Report[];
     pagination: Types.PaginationOutput;
   }> {
+    // Backend uses offset, not cursor; returns array directly
     const result = await apiClient.report.getMyReports.query({
       limit: pagination?.limit ?? 20,
-      cursor: undefined,
+      offset: 0,
     });
 
     return {
-      reports: (result.reports ?? []) as Types.Report[],
+      reports: (result ?? []) as unknown as Types.Report[],
       pagination: {
         page: pagination?.page ?? 1,
         limit: pagination?.limit ?? 20,
-        totalItems: result.reports?.length ?? 0,
+        totalItems: result?.length ?? 0,
         totalPages: 1,
-        hasNext: !!result.nextCursor,
+        hasNext: (result?.length ?? 0) >= (pagination?.limit ?? 20),
       },
     };
   },
@@ -48,9 +57,15 @@ export const reportService = {
   async createReview(
     input: Types.CreateReviewInput
   ): Promise<{ id: string; message: string }> {
-    const result = await apiClient.report.createReview.mutate(input);
+    const result = await apiClient.report.createReview.mutate({
+      productId: input.targetType === 'product' ? input.targetId : undefined,
+      storeId: input.targetType === 'store' ? input.targetId : undefined,
+      rating: input.rating,
+      comment: input.content,
+      photoUrls: input.photoUrls,
+    });
     return {
-      id: (result as any).id ?? '',
+      id: result.id ?? '',
       message: 'Review submitted successfully',
     };
   },
@@ -60,23 +75,26 @@ export const reportService = {
     targetId: string,
     pagination?: Types.PaginationInput
   ): Promise<Types.ReviewsResponse> {
-    // BFF splits reviews by target type
-    const query =
-      targetType === 'product'
-        ? apiClient.report.getProductReviews
-        : apiClient.report.getStoreReviews;
+    // Backend uses productId/storeId (not `id`), offset (not cursor), returns array
+    const result = targetType === 'product'
+      ? await apiClient.report.getProductReviews.query({
+          productId: targetId,
+          limit: pagination?.limit ?? 20,
+          offset: 0,
+        })
+      : await apiClient.report.getStoreReviews.query({
+          storeId: targetId,
+          limit: pagination?.limit ?? 20,
+          offset: 0,
+        });
 
-    const result = await query.query({
-      id: targetId,
-      limit: pagination?.limit ?? 20,
-      cursor: undefined,
-    });
+    const items = result ?? [];
 
     return {
-      reviews: (result.reviews ?? []) as Types.Review[],
-      averageRating: (result as any).averageRating ?? 0,
-      totalReviews: (result as any).totalReviews ?? result.reviews?.length ?? 0,
-      ratingDistribution: (result as any).ratingDistribution ?? {
+      reviews: items as unknown as Types.Review[],
+      averageRating: 0,
+      totalReviews: items.length,
+      ratingDistribution: {
         fiveStar: 0,
         fourStar: 0,
         threeStar: 0,
@@ -86,9 +104,9 @@ export const reportService = {
       pagination: {
         page: pagination?.page ?? 1,
         limit: pagination?.limit ?? 20,
-        totalItems: result.reviews?.length ?? 0,
+        totalItems: items.length,
         totalPages: 1,
-        hasNext: !!result.nextCursor,
+        hasNext: items.length >= (pagination?.limit ?? 20),
       },
     };
   },

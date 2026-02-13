@@ -22,20 +22,22 @@ export const alertService = {
     criticalCount: number;
     pagination: Types.PaginationOutput;
   }> {
+    // Backend returns { items, nextCursor }, not { alerts, unreadCount, criticalCount }
     const result = await apiClient.alert.list.query({
       limit: pagination?.limit ?? 20,
       cursor: undefined,
-      ...filters,
+      severity: filters?.severity,
+      category: filters?.categoryId,
     });
 
     return {
-      alerts: (result.alerts ?? []) as Types.AlertWithStatus[],
-      unreadCount: result.unreadCount ?? 0,
-      criticalCount: result.criticalCount ?? 0,
+      alerts: (result.items ?? []) as unknown as Types.AlertWithStatus[],
+      unreadCount: 0,
+      criticalCount: 0,
       pagination: {
         page: pagination?.page ?? 1,
         limit: pagination?.limit ?? 20,
-        totalItems: result.alerts?.length ?? 0,
+        totalItems: result.items?.length ?? 0,
         totalPages: 1,
         hasNext: !!result.nextCursor,
       },
@@ -49,14 +51,15 @@ export const alertService = {
   }> {
     const result = await apiClient.alert.getById.query({ id: alertId });
     return {
-      alert: result as Types.Alert | null,
+      alert: result as unknown as Types.Alert | null,
       userStatus: null,
       relatedAlerts: [],
     };
   },
 
   async markAlertRead(alertId: string): Promise<Types.SuccessResponse> {
-    await apiClient.alert.markAsRead.mutate({ id: alertId });
+    // Backend expects { alertId }, not { id }
+    await apiClient.alert.markAsRead.mutate({ alertId });
     return { success: true };
   },
 
@@ -66,7 +69,8 @@ export const alertService = {
   },
 
   async dismissAlert(alertId: string): Promise<Types.SuccessResponse> {
-    await apiClient.alert.dismiss.mutate({ id: alertId });
+    // Backend expects { alertId }, not { id }
+    await apiClient.alert.dismiss.mutate({ alertId });
     return { success: true };
   },
 
@@ -81,7 +85,7 @@ export const alertService = {
     // Compute from unreadCount endpoint
     const result = await apiClient.alert.getUnreadCount.query();
     return {
-      totalUnread: (result as any).count ?? 0,
+      totalUnread: result.count ?? 0,
       criticalUnread: 0,
       highUnread: 0,
       latestAlert: null,
