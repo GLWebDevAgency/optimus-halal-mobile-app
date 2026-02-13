@@ -304,6 +304,7 @@ export const useLanguageStore = create<LanguageState>()(
 interface UserPreferencesState {
   certifications: string[];
   exclusions: string[];
+  hapticsEnabled: boolean;
   notifications: {
     boycotts: boolean;
     recalls: boolean;
@@ -320,6 +321,7 @@ interface UserPreferencesState {
   setExclusions: (excl: string[]) => void;
   toggleExclusion: (excl: string) => void;
   setNotificationPref: (key: string, value: boolean) => void;
+  setHapticsEnabled: (enabled: boolean) => void;
 }
 
 export const usePreferencesStore = create<UserPreferencesState>()(
@@ -327,6 +329,7 @@ export const usePreferencesStore = create<UserPreferencesState>()(
     (set) => ({
       certifications: ["avs", "mci"],
       exclusions: ["porkFree", "alcoholFree"],
+      hapticsEnabled: true,
       notifications: {
         boycotts: true,
         recalls: true,
@@ -356,6 +359,7 @@ export const usePreferencesStore = create<UserPreferencesState>()(
         set((state) => ({
           notifications: { ...state.notifications, [key]: value },
         })),
+      setHapticsEnabled: (enabled) => set({ hapticsEnabled: enabled }),
     }),
     {
       name: "preferences-storage",
