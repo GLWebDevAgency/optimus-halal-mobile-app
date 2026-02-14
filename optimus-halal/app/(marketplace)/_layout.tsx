@@ -19,24 +19,35 @@ export default function MarketplaceLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        animation: "slide_from_right",
+        animation: "fade_from_bottom",
+        animationDuration: 300,
+        gestureEnabled: true,
+        gestureDirection: "horizontal",
         contentStyle: {
           backgroundColor: isDark ? colors.dark.background : colors.light.background,
         },
       }}
     >
-      <Stack.Screen name="index" />
-      <Stack.Screen name="coming-soon" />
+      <Stack.Screen name="index" options={{ animation: "fade" }} />
+      <Stack.Screen name="coming-soon" options={{ animation: "fade" }} />
       <Stack.Screen name="catalog" />
-      <Stack.Screen 
-        name="product/[id]" 
+      <Stack.Screen
+        name="product/[id]"
         options={{
           presentation: "card",
+          animation: "slide_from_bottom",
+          animationDuration: 350,
         }}
       />
-      <Stack.Screen name="cart" />
+      <Stack.Screen name="cart" options={{ animation: "slide_from_bottom", animationDuration: 300 }} />
       <Stack.Screen name="checkout" />
-      <Stack.Screen name="order-tracking" />
+      <Stack.Screen
+        name="order-tracking"
+        options={{
+          animation: "fade",
+          animationDuration: 250,
+        }}
+      />
     </Stack>
     </QueryErrorBoundary>
   );

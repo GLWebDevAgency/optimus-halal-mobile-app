@@ -1,6 +1,6 @@
 /**
  * Auth Layout
- * 
+ *
  * Gère toutes les routes d'authentification:
  * - welcome: Point d'entrée avec choix Magic Link / Classique
  * - magic-link: Connexion passwordless par email
@@ -18,19 +18,29 @@ export default function AuthLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        animation: "slide_from_right",
+        animation: "fade_from_bottom",
+        animationDuration: 300,
+        gestureEnabled: true,
+        gestureDirection: "horizontal",
       }}
     >
-      <Stack.Screen name="welcome" />
+      <Stack.Screen name="welcome" options={{ animation: "fade" }} />
       <Stack.Screen name="magic-link" />
       <Stack.Screen name="login" />
       <Stack.Screen name="signup" />
       <Stack.Screen name="forgot-password" />
-      <Stack.Screen name="reset-confirmation" />
-      <Stack.Screen 
-        name="set-new-password" 
+      <Stack.Screen
+        name="reset-confirmation"
         options={{
           animation: "fade",
+          animationDuration: 250,
+        }}
+      />
+      <Stack.Screen
+        name="set-new-password"
+        options={{
+          animation: "fade",
+          animationDuration: 250,
         }}
       />
     </Stack>

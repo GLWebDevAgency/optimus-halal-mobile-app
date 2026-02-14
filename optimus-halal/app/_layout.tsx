@@ -44,11 +44,12 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
   const initialize = useAuthStore((state) => state.initialize);
   const isLoading = useAuthStore((state) => state.isLoading);
   const language = useLanguageStore((state) => state.language);
+  const colorScheme = useColorScheme();
 
   useEffect(() => {
     // Initialize auth tokens on app start
     initialize();
-    
+
     // Sync language with API client
     setApiLanguage(language);
   }, []);
@@ -61,7 +62,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
   // Show loading spinner while initializing
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colorScheme === 'dark' ? '#0f1a13' : '#ffffff' }}>
         <ActivityIndicator size="large" color="#16a34a" />
       </View>
     );
@@ -90,25 +91,55 @@ export default function RootLayout() {
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
           <SafeAreaProvider>
-            <GestureHandlerRootView style={{ flex: 1 }}>
+            <GestureHandlerRootView style={{ flex: 1, backgroundColor: isDark ? '#0f1a13' : '#ffffff' }}>
               <AppInitializer>
                 <StatusBar style={isDark ? "light" : "dark"} />
                 <Stack
                   screenOptions={{
                     headerShown: false,
-                    animation: "slide_from_right",
+                    animation: "fade",
+                    animationDuration: 300,
+                    gestureEnabled: true,
                   }}
                 >
-                  <Stack.Screen name="index" />
-                  <Stack.Screen name="(onboarding)" />
-                  <Stack.Screen name="(auth)" />
-                  <Stack.Screen name="(tabs)" />
-                  <Stack.Screen name="(marketplace)" />
+                  <Stack.Screen
+                    name="index"
+                    options={{ animation: "fade", animationDuration: 200 }}
+                  />
+                  <Stack.Screen
+                    name="(onboarding)"
+                    options={{ animation: "fade", animationDuration: 400 }}
+                  />
+                  <Stack.Screen
+                    name="(auth)"
+                    options={{ animation: "fade", animationDuration: 350 }}
+                  />
+                  <Stack.Screen
+                    name="(tabs)"
+                    options={{ animation: "fade", animationDuration: 300 }}
+                  />
+                  <Stack.Screen
+                    name="(marketplace)"
+                    options={{
+                      animation: "fade_from_bottom",
+                      animationDuration: 350,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="settings"
+                    options={{
+                      animation: "fade_from_bottom",
+                      animationDuration: 300,
+                    }}
+                  />
                   <Stack.Screen
                     name="scan-result"
                     options={{
                       presentation: "card",
                       animation: "slide_from_bottom",
+                      animationDuration: 350,
+                      gestureEnabled: true,
+                      gestureDirection: "vertical",
                     }}
                   />
                   <Stack.Screen
@@ -116,6 +147,9 @@ export default function RootLayout() {
                     options={{
                       presentation: "modal",
                       animation: "slide_from_bottom",
+                      animationDuration: 350,
+                      gestureEnabled: true,
+                      gestureDirection: "vertical",
                     }}
                   />
                 </Stack>
