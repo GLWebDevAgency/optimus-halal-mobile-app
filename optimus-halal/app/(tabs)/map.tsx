@@ -23,7 +23,7 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
+import { useHaptics } from "@/hooks";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -99,7 +99,7 @@ interface StoreCardProps {
   onPress: () => void;
 }
 
-function StoreCard({ store, onPress }: StoreCardProps) {
+const StoreCard = React.memo(function StoreCard({ store, onPress }: StoreCardProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const { t } = useTranslation();
@@ -210,11 +210,12 @@ function StoreCard({ store, onPress }: StoreCardProps) {
       </TouchableOpacity>
     </TouchableOpacity>
   );
-}
+});
 
 export default function MapScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { impact } = useHaptics();
   const isDark = colorScheme === "dark";
   const { t } = useTranslation();
 
@@ -223,7 +224,7 @@ export default function MapScreen() {
 
   const toggleFilter = useCallback(
     async (filterId: string) => {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      impact();
       setActiveFilters((prev) =>
         prev.includes(filterId)
           ? prev.filter((id) => id !== filterId)
@@ -234,12 +235,12 @@ export default function MapScreen() {
   );
 
   const handleMyLocation = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     // Center map on user location
   }, []);
 
   const handleStorePress = useCallback((storeId: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     // Navigate to store details
   }, []);
 

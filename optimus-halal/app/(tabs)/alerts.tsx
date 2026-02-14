@@ -21,7 +21,6 @@ import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -31,7 +30,7 @@ import Animated, {
 
 import { Card, Badge, IconButton, Chip, ChipGroup } from "@/components/ui";
 import { useLocalAlertsStore } from "@/store";
-import { useTranslation } from "@/hooks";
+import { useTranslation, useHaptics } from "@/hooks";
 import { colors } from "@/constants/theme";
 
 // Alert types
@@ -103,6 +102,8 @@ const MOCK_ALERTS: Alert[] = [
   },
 ];
 
+const alertKeyExtractor = (item: Alert) => item.id;
+
 const alertTypeConfig: Record<
   AlertType,
   { icon: keyof typeof MaterialIcons.glyphMap; color: string; bgColor: string }
@@ -118,7 +119,7 @@ interface AlertCardProps {
   index: number;
 }
 
-function AlertCard({ alert, index }: AlertCardProps) {
+const AlertCard = React.memo(function AlertCard({ alert, index }: AlertCardProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const { t } = useTranslation();
@@ -315,11 +316,12 @@ function AlertCard({ alert, index }: AlertCardProps) {
       </View>
     </Animated.View>
   );
-}
+});
 
 export default function AlertsScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { impact } = useHaptics();
   const isDark = colorScheme === "dark";
   const { t } = useTranslation();
 
@@ -342,7 +344,7 @@ export default function AlertsScreen() {
   }, [activeFilter]);
 
   const handleFilterChange = useCallback(async (filterId: string) => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     setActiveFilter(filterId);
   }, []);
 
@@ -430,7 +432,7 @@ export default function AlertsScreen() {
       {/* Content */}
       <FlashList
         data={filteredAlerts}
-        keyExtractor={(item) => item.id}
+        keyExtractor={alertKeyExtractor}
         renderItem={({ item, index }) => (
           <AlertCard alert={item} index={index} />
         )}
