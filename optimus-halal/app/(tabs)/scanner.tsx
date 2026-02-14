@@ -47,6 +47,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 
 import { Button } from "@/components/ui";
+import { useTranslation } from "@/hooks/useTranslation";
 import { colors } from "@/constants/theme";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -60,6 +61,7 @@ export default function ScannerScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
   const cameraRef = useRef<CameraView>(null);
 
   const [permission, requestPermission] = useCameraPermissions();
@@ -220,7 +222,7 @@ export default function ScannerScreen() {
     return (
       <View style={styles.loadingContainer}>
         <StatusBar barStyle="light-content" />
-        <Text style={styles.loadingText}>Chargement...</Text>
+        <Text style={styles.loadingText}>{t.scanner.scanning}</Text>
       </View>
     );
   }
@@ -238,7 +240,7 @@ export default function ScannerScreen() {
             <MaterialIcons name="camera-alt" size={48} color={PRIMARY_COLOR} />
           </View>
           <View style={styles.permissionTextContainer}>
-            <Text style={styles.permissionTitle}>Accès à la caméra requis</Text>
+            <Text style={styles.permissionTitle}>{t.scanner.noPermission}</Text>
             <Text style={styles.permissionDescription}>
               Pour scanner les produits, nous avons besoin d'accéder à votre caméra.
             </Text>
@@ -247,11 +249,13 @@ export default function ScannerScreen() {
             onPress={requestPermission}
             style={styles.permissionButton}
             activeOpacity={0.9}
+            accessibilityRole="button"
+            accessibilityLabel="Autoriser l'accès à la caméra"
           >
-            <Text style={styles.permissionButtonText}>Autoriser l'accès</Text>
+            <Text style={styles.permissionButtonText}>{t.scanner.enableCamera}</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleClose} style={styles.cancelButton}>
-            <Text style={styles.cancelButtonText}>Annuler</Text>
+          <TouchableOpacity onPress={handleClose} style={styles.cancelButton} accessibilityRole="button" accessibilityLabel="Annuler">
+            <Text style={styles.cancelButtonText}>{t.common.cancel}</Text>
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -332,6 +336,8 @@ export default function ScannerScreen() {
               onPress={handleClose}
               style={styles.headerButton}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Fermer le scanner"
             >
               <MaterialIcons name="close" size={20} color="#ffffff" />
             </TouchableOpacity>
@@ -349,6 +355,8 @@ export default function ScannerScreen() {
               onPress={handleToggleFlash}
               style={[styles.headerButton, isFlashOn && styles.headerButtonActive]}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={isFlashOn ? "Désactiver le flash" : "Activer le flash"}
             >
               <MaterialIcons
                 name={isFlashOn ? "flash-on" : "flash-off"}
@@ -366,7 +374,7 @@ export default function ScannerScreen() {
           pointerEvents="none"
         >
           <BlurView intensity={40} tint="dark" style={styles.instructionBlur}>
-            <Text style={styles.instructionText}>Placez le code-barres dans le cadre</Text>
+            <Text style={styles.instructionText}>{t.scanner.instruction}</Text>
           </BlurView>
         </Animated.View>
 
@@ -382,10 +390,13 @@ export default function ScannerScreen() {
                 onPress={handleOpenGallery}
                 style={styles.sideButton}
                 activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="Galerie"
+                accessibilityHint="Choisir une image depuis la galerie"
               >
                 <MaterialIcons name="photo-library" size={26} color="#ffffff" />
               </TouchableOpacity>
-              <Text style={styles.sideButtonLabel}>GALERIE</Text>
+              <Text style={styles.sideButtonLabel}>{t.scanner.gallery.toUpperCase()}</Text>
             </Animated.View>
 
             {/* Main Capture Button */}
@@ -406,6 +417,9 @@ export default function ScannerScreen() {
                     onPress={handleCapture}
                     style={styles.captureButton}
                     activeOpacity={0.9}
+                    accessibilityRole="button"
+                    accessibilityLabel="Scanner"
+                    accessibilityHint="Ouvrir le scanner de code-barres"
                   >
                     <MaterialIcons name="qr-code-scanner" size={36} color="#0d1b13" />
                   </TouchableOpacity>
@@ -419,10 +433,13 @@ export default function ScannerScreen() {
                 onPress={handleOpenHistory}
                 style={styles.sideButton}
                 activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="Historique"
+                accessibilityHint="Voir l'historique des scans"
               >
                 <MaterialIcons name="history" size={26} color="#FFD700" />
               </TouchableOpacity>
-              <Text style={styles.sideButtonLabel}>HISTORIQUE</Text>
+              <Text style={styles.sideButtonLabel}>{t.scanner.history.toUpperCase()}</Text>
             </Animated.View>
           </View>
         </LinearGradient>

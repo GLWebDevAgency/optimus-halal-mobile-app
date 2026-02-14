@@ -18,6 +18,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { usePreferencesStore } from "@/store";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/hooks";
 
 // Frequency options
 type FrequencyOption = "daily" | "weekly" | "realtime";
@@ -105,6 +106,7 @@ const FREQUENCY_OPTIONS = [
 export default function NotificationsScreen() {
   const { notifications, setNotificationPref } = usePreferencesStore();
   const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
 
   // Local state for notification preferences
   const [pushEnabled, setPushEnabled] = useState(true);
@@ -225,6 +227,10 @@ export default function NotificationsScreen() {
           trackColor={{ false: themeColors.toggleOff, true: themeColors.primary }}
           thumbColor="#ffffff"
           ios_backgroundColor={themeColors.toggleOff}
+          accessibilityRole="switch"
+          accessibilityLabel={setting.name}
+          accessibilityHint={setting.description}
+          accessibilityState={{ checked: isEnabled }}
         />
       </View>
     );
@@ -290,6 +296,10 @@ export default function NotificationsScreen() {
           trackColor={{ false: themeColors.toggleOff, true: themeColors.primary }}
           thumbColor="#ffffff"
           ios_backgroundColor={themeColors.toggleOff}
+          accessibilityRole="switch"
+          accessibilityLabel={category.name}
+          accessibilityHint={category.description}
+          accessibilityState={{ checked: isEnabled }}
         />
       </View>
     );
@@ -315,6 +325,9 @@ export default function NotificationsScreen() {
           borderBottomWidth: isLast ? 0 : 1,
           borderBottomColor: themeColors.cardBorder,
         }}
+        accessibilityRole="radio"
+        accessibilityLabel={option.name}
+        accessibilityState={{ selected: isSelected }}
       >
         <Text
           style={{
@@ -361,6 +374,9 @@ export default function NotificationsScreen() {
             alignItems: "center",
             justifyContent: "center",
           }}
+          accessibilityRole="button"
+          accessibilityLabel="Retour"
+          accessibilityHint="Revenir à l'écran précédent"
         >
           <MaterialIcons name="arrow-back" size={22} color={themeColors.textPrimary} />
         </TouchableOpacity>
@@ -373,8 +389,9 @@ export default function NotificationsScreen() {
               fontWeight: "700",
               color: themeColors.textPrimary,
             }}
+            accessibilityRole="header"
           >
-            Notifications
+            {t.notifications.title}
           </Text>
           <Text
             style={{
@@ -384,7 +401,7 @@ export default function NotificationsScreen() {
               marginTop: 2,
             }}
           >
-            Gérez vos préférences
+            {t.notifications.subtitle}
           </Text>
         </View>
 
@@ -399,6 +416,9 @@ export default function NotificationsScreen() {
             alignItems: "center",
             justifyContent: "center",
           }}
+          accessibilityRole="button"
+          accessibilityLabel="Plus d'options"
+          accessibilityHint="Afficher les options supplémentaires"
         >
           <MaterialIcons name="more-vert" size={22} color={themeColors.textSecondary} />
         </TouchableOpacity>
@@ -424,6 +444,7 @@ export default function NotificationsScreen() {
               marginBottom: 16,
               paddingLeft: 4,
             }}
+            accessibilityRole="header"
           >
             Général
           </Text>
@@ -457,6 +478,7 @@ export default function NotificationsScreen() {
               marginBottom: 16,
               paddingLeft: 4,
             }}
+            accessibilityRole="header"
           >
             Catégories
           </Text>
@@ -490,6 +512,7 @@ export default function NotificationsScreen() {
               marginBottom: 16,
               paddingLeft: 4,
             }}
+            accessibilityRole="header"
           >
             Fréquence
           </Text>
@@ -501,6 +524,8 @@ export default function NotificationsScreen() {
               borderWidth: 1,
               borderColor: themeColors.cardBorder,
             }}
+            accessibilityRole="radiogroup"
+            accessibilityLabel="Fréquence des notifications"
           >
             {FREQUENCY_OPTIONS.map((option, index) =>
               renderFrequencyOption(option, index === FREQUENCY_OPTIONS.length - 1)

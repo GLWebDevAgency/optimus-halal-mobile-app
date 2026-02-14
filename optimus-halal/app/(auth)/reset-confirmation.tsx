@@ -135,22 +135,26 @@ export default function ResetConfirmationScreen() {
           onPress={handleGoBack}
           style={styles.backButton}
           activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Retour"
+          accessibilityHint="Double-tapez pour revenir à l'écran précédent"
         >
-          <MaterialIcons 
-            name="arrow-back" 
-            size={24} 
-            color={isDark ? "#ffffff" : "#1f2937"} 
+          <MaterialIcons
+            name="arrow-back"
+            size={24}
+            color={isDark ? "#ffffff" : "#1f2937"}
           />
         </TouchableOpacity>
         
-        <Text 
+        <Text
           style={[
             styles.headerTitle,
-            { 
+            {
               color: isDark ? "#ffffff" : "#1f2937",
               textAlign: isRTL ? "right" : "center",
             }
           ]}
+          accessibilityRole="header"
         >
           {t.auth.resetConfirmation.title}
         </Text>
@@ -164,6 +168,7 @@ export default function ResetConfirmationScreen() {
         <Animated.View
           entering={FadeInDown.delay(200).duration(600)}
           style={styles.illustrationContainer}
+          accessible={false}
         >
           {/* Outer glow effect */}
           <Animated.View style={[styles.glowEffect, animatedGlowStyle]}>
@@ -208,11 +213,12 @@ export default function ResetConfirmationScreen() {
           entering={FadeInDown.delay(300).duration(500)}
           style={[
             styles.headline,
-            { 
+            {
               color: isDark ? "#ffffff" : "#1f2937",
               textAlign: isRTL ? "right" : "center",
             }
           ]}
+          accessibilityRole="header"
         >
           {t.auth.resetConfirmation.headline}
         </Animated.Text>
@@ -248,6 +254,9 @@ export default function ResetConfirmationScreen() {
             onPress={handleBackToLogin}
             activeOpacity={0.9}
             style={styles.primaryButton}
+            accessibilityRole="button"
+            accessibilityLabel="Retour à la connexion"
+            accessibilityHint="Double-tapez pour revenir à la page de connexion"
           >
             <LinearGradient
               colors={[colors.light.primary, "#10d65f"]}
@@ -265,6 +274,9 @@ export default function ResetConfirmationScreen() {
           <TouchableOpacity
             onPress={handleOpenEmailApp}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Ouvrir l'application email"
+            accessibilityHint="Double-tapez pour ouvrir votre application email"
             style={[
               styles.secondaryButton,
               {
@@ -296,7 +308,12 @@ export default function ResetConfirmationScreen() {
           >
             {t.auth.resetConfirmation.noEmail}
           </Text>
-          <TouchableOpacity onPress={handleResendLink}>
+          <TouchableOpacity
+            onPress={handleResendLink}
+            accessibilityRole="button"
+            accessibilityLabel="Renvoyer le lien"
+            accessibilityHint="Double-tapez pour renvoyer l'email de réinitialisation"
+          >
             <Text style={styles.resendLink}>
               {t.auth.resetConfirmation.resendLink}
             </Text>
@@ -312,6 +329,9 @@ export default function ResetConfirmationScreen() {
         <TouchableOpacity
           onPress={handleContactSupport}
           style={[styles.supportButton, { flexDirection: isRTL ? "row-reverse" : "row" }]}
+          accessibilityRole="link"
+          accessibilityLabel="Contacter le support"
+          accessibilityHint="Double-tapez pour envoyer un email au support"
         >
           <MaterialIcons 
             name="help" 

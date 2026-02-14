@@ -15,6 +15,8 @@ export interface IconButtonProps extends TouchableOpacityProps {
   variant?: "default" | "filled" | "outline";
   color?: string;
   badge?: number;
+  /** Required for screen readers since icon-only buttons have no visible text */
+  accessibilityLabel: string;
 }
 
 const sizeConfig = {
@@ -49,6 +51,7 @@ export const IconButton: React.FC<IconButtonProps> = ({
   return (
     <TouchableOpacity
       onPress={handlePress}
+      accessibilityRole="button"
       className={`
         items-center justify-center rounded-full
         ${variantStyles[variant]}

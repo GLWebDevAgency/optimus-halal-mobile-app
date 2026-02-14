@@ -19,6 +19,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useLocalFavoritesStore, type FavoriteProduct } from "@/store";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/hooks";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 48) / 2;
@@ -119,18 +120,25 @@ function ProductCard({ product, index, onRemove, onView, onScan, isDark, colors 
           borderRadius: 16,
           backgroundColor: isDark ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.9)",
         }}
+        accessibilityRole="button"
+        accessibilityLabel={`Retirer ${product.name} des favoris`}
       >
         <MaterialIcons name="favorite" size={18} color="#13ec6a" />
       </TouchableOpacity>
 
       {/* Product Image */}
-      <View style={{ aspectRatio: 4/3, width: "100%", backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#f3f4f6" }}>
+      <View
+        style={{ aspectRatio: 4/3, width: "100%", backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#f3f4f6" }}
+        accessible={false}
+        accessibilityElementsHidden={true}
+      >
         {product.image ? (
           <Image
             source={{ uri: product.image }}
             style={{ width: "100%", height: "100%" }}
             contentFit="cover"
             transition={200}
+            accessible={false}
           />
         ) : (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -176,27 +184,33 @@ function ProductCard({ product, index, onRemove, onView, onScan, isDark, colors 
         <View style={{ flexDirection: "row", gap: 8 }}>
           <TouchableOpacity
             onPress={onView}
-            style={{ 
-              flex: 1, 
-              alignItems: "center", 
-              justifyContent: "center", 
-              borderRadius: 8, 
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 8,
               backgroundColor: colors.buttonSecondary,
-              paddingVertical: 8 
+              paddingVertical: 8
             }}
+            accessibilityRole="button"
+            accessibilityLabel={`Voir ${product.name}`}
+            accessibilityHint="Afficher les détails du produit"
           >
             <MaterialIcons name="visibility" size={18} color={colors.textPrimary} />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={onScan}
-            style={{ 
-              flex: 1, 
-              alignItems: "center", 
-              justifyContent: "center", 
-              borderRadius: 8, 
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 8,
               backgroundColor: colors.primaryLight,
-              paddingVertical: 8 
+              paddingVertical: 8
             }}
+            accessibilityRole="button"
+            accessibilityLabel={`Re-scanner ${product.name}`}
+            accessibilityHint="Ouvrir le scanner"
           >
             <MaterialIcons name="qr-code-scanner" size={18} color={colors.primary} />
           </TouchableOpacity>
@@ -208,6 +222,7 @@ function ProductCard({ product, index, onRemove, onView, onScan, isDark, colors 
 
 export default function FavoritesScreen() {
   const { isDark, colors } = useTheme();
+  const { t } = useTranslation();
   const { favorites, removeFavorite } = useLocalFavoritesStore();
   const [selectedCategory, setSelectedCategory] = useState("all");
 
@@ -238,12 +253,18 @@ export default function FavoritesScreen() {
                 borderColor: colors.borderLight,
                 borderWidth: 1,
               }}
+              accessibilityRole="button"
+              accessibilityLabel="Retour"
+              accessibilityHint="Revenir à l'écran précédent"
             >
               <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
             </TouchableOpacity>
             <View>
-              <Text style={{ fontSize: 24, fontWeight: "700", letterSpacing: -0.5, color: colors.textPrimary }}>
-                Mes Favoris
+              <Text
+                style={{ fontSize: 24, fontWeight: "700", letterSpacing: -0.5, color: colors.textPrimary }}
+                accessibilityRole="header"
+              >
+                {t.favorites.title}
               </Text>
               <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
                 {favorites.length} produit{favorites.length > 1 ? "s" : ""} enregistré{favorites.length > 1 ? "s" : ""}
@@ -251,7 +272,7 @@ export default function FavoritesScreen() {
             </View>
           </View>
           <View style={{ flexDirection: "row", gap: 8 }}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={{
                 height: 40,
                 width: 40,
@@ -262,10 +283,13 @@ export default function FavoritesScreen() {
                 borderColor: colors.borderLight,
                 borderWidth: 1,
               }}
+              accessibilityRole="button"
+              accessibilityLabel="Rechercher"
+              accessibilityHint="Rechercher dans les favoris"
             >
               <MaterialIcons name="search" size={22} color={colors.textPrimary} />
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={{
                 height: 40,
                 width: 40,
@@ -276,6 +300,9 @@ export default function FavoritesScreen() {
                 borderColor: colors.borderLight,
                 borderWidth: 1,
               }}
+              accessibilityRole="button"
+              accessibilityLabel="Filtrer"
+              accessibilityHint="Filtrer les favoris"
             >
               <MaterialIcons name="filter-list" size={22} color={colors.textPrimary} />
             </TouchableOpacity>
@@ -309,6 +336,9 @@ export default function FavoritesScreen() {
                   shadowOpacity: isSelected ? 0.3 : 0,
                   shadowRadius: 8,
                 }}
+                accessibilityRole="button"
+                accessibilityLabel={`Filtre ${cat.label}`}
+                accessibilityState={{ selected: isSelected }}
               >
                 <Text
                   style={{
@@ -330,7 +360,7 @@ export default function FavoritesScreen() {
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 80 }}>
           <MaterialIcons name="favorite-border" size={64} color={colors.textMuted} />
           <Text style={{ color: colors.textSecondary, fontSize: 18, marginTop: 16 }}>
-            Aucun favori
+            {t.favorites.empty}
           </Text>
           <Text style={{ color: colors.textMuted, fontSize: 14, marginTop: 8, textAlign: "center", paddingHorizontal: 32 }}>
             Ajoutez des produits à vos favoris pour les retrouver facilement.
@@ -351,6 +381,9 @@ export default function FavoritesScreen() {
               shadowOpacity: 0.3,
               shadowRadius: 8,
             }}
+            accessibilityRole="button"
+            accessibilityLabel="Scanner un produit"
+            accessibilityHint="Ouvrir le scanner de code-barres"
           >
             <MaterialIcons name="qr-code-scanner" size={18} color={isDark ? "#102217" : "#0d1b13"} />
             <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
@@ -427,6 +460,9 @@ export default function FavoritesScreen() {
                   shadowOpacity: 0.3,
                   shadowRadius: 8,
                 }}
+                accessibilityRole="button"
+                accessibilityLabel="Scanner un produit"
+                accessibilityHint="Ouvrir le scanner de code-barres"
               >
                 <MaterialIcons name="qr-code-scanner" size={18} color={isDark ? "#102217" : "#0d1b13"} />
                 <Text style={{ fontSize: 12, fontWeight: "700", color: isDark ? "#102217" : "#0d1b13" }}>

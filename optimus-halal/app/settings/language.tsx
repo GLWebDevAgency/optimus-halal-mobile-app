@@ -46,10 +46,19 @@ export default function LanguageScreen() {
           borderBottomColor: colors.borderLight,
         }}
       >
-        <TouchableOpacity onPress={() => router.back()} style={{ padding: 8, marginLeft: -8 }}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{ padding: 8, marginLeft: -8 }}
+          accessibilityRole="button"
+          accessibilityLabel="Retour"
+          accessibilityHint="Revenir à l'écran précédent"
+        >
           <MaterialIcons name="arrow-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={{ fontSize: 20, fontWeight: "700", color: colors.textPrimary, marginLeft: 8 }}>
+        <Text
+          style={{ fontSize: 20, fontWeight: "700", color: colors.textPrimary, marginLeft: 8 }}
+          accessibilityRole="header"
+        >
           {t.language.title}
         </Text>
       </Animated.View>
@@ -65,15 +74,17 @@ export default function LanguageScreen() {
           {t.language.subtitle}
         </Animated.Text>
 
-        <Animated.View 
+        <Animated.View
           entering={FadeInDown.delay(200).duration(400)}
-          style={{ 
-            backgroundColor: colors.card, 
-            borderRadius: 16, 
+          style={{
+            backgroundColor: colors.card,
+            borderRadius: 16,
             overflow: "hidden",
             borderWidth: 1,
             borderColor: colors.borderLight,
           }}
+          accessibilityRole="radiogroup"
+          accessibilityLabel="Sélection de la langue"
         >
           {LANGUAGES.map((lang, index) => (
             <TouchableOpacity
@@ -88,9 +99,13 @@ export default function LanguageScreen() {
                 borderBottomWidth: index !== LANGUAGES.length - 1 ? 1 : 0,
                 borderBottomColor: colors.borderLight,
               }}
+              accessibilityRole="radio"
+              accessibilityLabel={lang.native}
+              accessibilityState={{ selected: language === lang.code }}
+              accessibilityHint={`Sélectionner ${lang.native} comme langue`}
             >
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Text style={{ fontSize: 24, marginRight: 12 }}>{lang.flag}</Text>
+                <Text style={{ fontSize: 24, marginRight: 12 }} accessible={false}>{lang.flag}</Text>
                 <Text style={{ color: colors.textPrimary, fontSize: 16 }}>{lang.native}</Text>
               </View>
               {language === lang.code && (

@@ -31,6 +31,7 @@ import Animated, {
 
 import { Card, Badge, IconButton, Chip, ChipGroup } from "@/components/ui";
 import { useLocalAlertsStore } from "@/store";
+import { useTranslation } from "@/hooks";
 import { colors } from "@/constants/theme";
 
 // Alert types
@@ -51,14 +52,6 @@ interface Alert {
     variant: "primary" | "secondary";
   };
 }
-
-const FILTERS = [
-  { id: "all", label: "Tous" },
-  { id: "boycott", label: "Boycotts" },
-  { id: "certification", label: "Certifications" },
-  { id: "health", label: "Santé" },
-  { id: "policy", label: "Politique" },
-];
 
 const MOCK_ALERTS: Alert[] = [
   {
@@ -128,6 +121,7 @@ interface AlertCardProps {
 function AlertCard({ alert, index }: AlertCardProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
   const config = alertTypeConfig[alert.type];
 
   return (
@@ -198,6 +192,7 @@ function AlertCard({ alert, index }: AlertCardProps) {
                 className="w-full h-full"
                 contentFit="cover"
                 transition={200}
+                accessibilityLabel={`Image de l'alerte : ${alert.title}`}
               />
               <View className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               <Text className="absolute bottom-3 left-4 text-white text-lg font-bold">
@@ -225,6 +220,7 @@ function AlertCard({ alert, index }: AlertCardProps) {
                       className="w-full h-full"
                       contentFit="cover"
                       transition={200}
+                      accessibilityLabel={`Image de certification : ${alert.title}`}
                     />
                   </View>
                 )}
@@ -267,9 +263,9 @@ function AlertCard({ alert, index }: AlertCardProps) {
                     {alert.source}
                   </Text>
                 </View>
-                <TouchableOpacity className="flex-row items-center gap-1">
+                <TouchableOpacity className="flex-row items-center gap-1" accessibilityRole="link" accessibilityLabel={`Voir la source de ${alert.title}`}>
                   <Text className="text-xs font-bold text-danger-500">
-                    Voir la source
+                    {t.alerts.source}
                   </Text>
                   <MaterialIcons name="arrow-forward" size={14} color="#ef4444" />
                 </TouchableOpacity>
@@ -286,6 +282,8 @@ function AlertCard({ alert, index }: AlertCardProps) {
                       : "bg-slate-50 dark:bg-slate-700/50"
                   }`}
                   activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel={alert.action.label}
                 >
                   <Text
                     className={`text-sm font-bold ${
@@ -300,6 +298,9 @@ function AlertCard({ alert, index }: AlertCardProps) {
                 <TouchableOpacity
                   className="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-600 items-center justify-center"
                   activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel="Partager"
+                  accessibilityHint={`Partager l'alerte ${alert.title}`}
                 >
                   <MaterialIcons
                     name="share"
@@ -320,11 +321,20 @@ export default function AlertsScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
 
   const [activeFilter, setActiveFilter] = useState("all");
   const [refreshing, setRefreshing] = useState(false);
 
   const { alerts, unreadCount, markAllAsRead } = useLocalAlertsStore();
+
+  const FILTERS = [
+    { id: "all", label: t.alerts.filters.all },
+    { id: "boycott", label: t.alerts.filters.boycotts },
+    { id: "certification", label: t.alerts.filters.certifications },
+    { id: "health", label: t.alerts.filters.health },
+    { id: "policy", label: t.alerts.filters.policy },
+  ];
 
   const filteredAlerts = useMemo(() => {
     if (activeFilter === "all") return MOCK_ALERTS;
@@ -363,14 +373,17 @@ export default function AlertsScreen() {
             >
               <MaterialIcons name="security" size={20} color="#0d1b13" />
             </View>
-            <Text className="text-slate-900 dark:text-white text-xl font-bold tracking-tight">
-              Alertes Éthiques
+            <Text accessibilityRole="header" className="text-slate-900 dark:text-white text-xl font-bold tracking-tight">
+              {t.alerts.title}
             </Text>
           </View>
           <TouchableOpacity
             onPress={() => router.push("/settings/notifications")}
             className="relative p-2 rounded-full"
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Paramètres des notifications"
+            accessibilityHint="Configurer les alertes"
           >
             <MaterialIcons
               name="settings"
@@ -396,6 +409,9 @@ export default function AlertsScreen() {
                   : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
               }`}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={`${filter.label}${activeFilter === filter.id ? ", sélectionné" : ""}`}
+              accessibilityHint={`Filtrer par ${filter.label}`}
             >
               <Text
                 className={`text-sm ${

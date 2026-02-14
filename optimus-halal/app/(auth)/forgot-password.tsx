@@ -169,22 +169,25 @@ export default function ForgotPasswordScreen() {
               onPress={handleGoBack}
               style={styles.backButton}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Retour"
+              accessibilityHint="Double-tapez pour revenir à l'écran précédent"
             >
-              <MaterialIcons 
-                name="arrow-back-ios-new" 
-                size={24} 
-                color={colors.light.primary} 
+              <MaterialIcons
+                name="arrow-back-ios-new"
+                size={24}
+                color={colors.light.primary}
               />
             </TouchableOpacity>
             
             <View style={styles.headerSpacer} />
             
             {/* Subtle brand icon */}
-            <View style={styles.headerIcon}>
-              <MaterialIcons 
-                name="lock-reset" 
-                size={28} 
-                color={isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"} 
+            <View style={styles.headerIcon} accessible={false}>
+              <MaterialIcons
+                name="lock-reset"
+                size={28}
+                color={isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"}
               />
             </View>
           </Animated.View>
@@ -196,14 +199,15 @@ export default function ForgotPasswordScreen() {
               entering={FadeInDown.delay(200).duration(500)}
               style={styles.headlineContainer}
             >
-              <Text 
+              <Text
                 style={[
-                  styles.headline, 
-                  { 
+                  styles.headline,
+                  {
                     color: isDark ? "#ffffff" : "#1f2937",
                     textAlign: isRTL ? "right" : "left",
                   }
                 ]}
+                accessibilityRole="header"
               >
                 {t.auth.forgotPassword.title}
               </Text>
@@ -270,7 +274,7 @@ export default function ForgotPasswordScreen() {
                   <TextInput
                     style={[
                       styles.input,
-                      { 
+                      {
                         color: isDark ? "#ffffff" : "#1f2937",
                         textAlign: isRTL ? "right" : "left",
                       }
@@ -288,6 +292,8 @@ export default function ForgotPasswordScreen() {
                     autoCapitalize="none"
                     autoCorrect={false}
                     autoComplete="email"
+                    accessibilityLabel="Adresse email"
+                    accessibilityHint="Entrez l'adresse email associée à votre compte"
                   />
                 </View>
 
@@ -305,6 +311,10 @@ export default function ForgotPasswordScreen() {
                   onPress={handleSubmit}
                   disabled={isLoading}
                   activeOpacity={0.9}
+                  accessibilityRole="button"
+                  accessibilityLabel="Envoyer le lien de réinitialisation"
+                  accessibilityHint="Double-tapez pour envoyer un email de réinitialisation"
+                  accessibilityState={{ disabled: isLoading }}
                   style={[
                     styles.submitButton,
                     isLoading && styles.submitButtonDisabled
@@ -340,6 +350,9 @@ export default function ForgotPasswordScreen() {
               <TouchableOpacity
                 onPress={() => router.push("/(auth)/login")}
                 style={[styles.footerLinkContainer, { flexDirection: isRTL ? "row-reverse" : "row" }]}
+                accessibilityRole="link"
+                accessibilityLabel="Retour à la connexion"
+                accessibilityHint="Double-tapez pour revenir à la page de connexion"
               >
                 <Text 
                   style={[

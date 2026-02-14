@@ -3,10 +3,12 @@
  */
 
 import React, { useEffect } from 'react';
+import { I18nManager } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/apiStores';
 import { setApiLanguage } from '@/services/api';
 import { useLanguageStore } from '@/store';
+import { isRTL } from '@/i18n';
 
 // ============================================
 // QUERY CLIENT
@@ -59,8 +61,12 @@ function AppInitializer({ children }: AppInitializerProps) {
   }, []);
 
   useEffect(() => {
-    // Update API language when it changes
+    // Update API language and RTL layout when language changes
     setApiLanguage(language);
+    const rtl = isRTL(language);
+    if (I18nManager.isRTL !== rtl) {
+      I18nManager.forceRTL(rtl);
+    }
   }, [language]);
 
   return <>{children}</>;

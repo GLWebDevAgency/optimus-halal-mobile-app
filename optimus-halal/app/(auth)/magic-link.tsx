@@ -34,6 +34,7 @@ import Animated, {
 
 import { Input, IconButton, Button } from "@/components/ui";
 import { useLocalAuthStore } from "@/store";
+import { useTranslation } from "@/hooks";
 import {
   requestMagicLink,
   verifyMagicLinkToken,
@@ -48,6 +49,7 @@ export default function MagicLinkLoginScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
   const params = useLocalSearchParams();
 
   const [email, setEmail] = useState("");
@@ -97,12 +99,12 @@ export default function MagicLinkLoginScreen() {
     setError("");
 
     if (!email.trim()) {
-      setError("L'email est requis");
+      setError(t.auth.login.errors.emailRequired);
       return false;
     }
 
     if (!isValidEmail(email)) {
-      setError("Email invalide");
+      setError(t.auth.login.errors.emailInvalid);
       return false;
     }
 
@@ -143,12 +145,12 @@ export default function MagicLinkLoginScreen() {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
     } catch (err: any) {
-      setError(err.message || "Une erreur est survenue");
+      setError(err.message || t.errors.generic);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setIsLoading(false);
     }
-  }, [email, displayName, isNewUser, validateForm]);
+  }, [email, displayName, isNewUser, validateForm, t]);
 
   const handleVerifyToken = useCallback(
     async (token: string) => {
@@ -219,8 +221,8 @@ export default function MagicLinkLoginScreen() {
         entering={FadeInDown.delay(200).duration(600)}
         className="mb-6"
       >
-        <Text className="text-slate-900 dark:text-white tracking-tight text-[32px] font-bold leading-tight mb-2">
-          {isNewUser ? "Créer votre compte" : "Connexion rapide"}
+        <Text className="text-slate-900 dark:text-white tracking-tight text-[32px] font-bold leading-tight mb-2" accessibilityRole="header">
+          {isNewUser ? t.auth.signup.title : "Connexion rapide"}
         </Text>
         <Text className="text-slate-500 dark:text-slate-400 text-base font-normal leading-normal">
           {isNewUser
@@ -235,18 +237,20 @@ export default function MagicLinkLoginScreen() {
       >
         {isNewUser && (
           <Input
-            label="Nom complet"
-            placeholder="Votre nom"
+            label={t.auth.signup.fullName}
+            placeholder={t.auth.signup.fullNamePlaceholder}
             value={displayName}
             onChangeText={setDisplayName}
             autoCapitalize="words"
             leftIcon="person"
+            accessibilityLabel="Nom complet"
+            accessibilityHint="Entrez votre nom complet"
           />
         )}
 
         <Input
-          label="Adresse email"
-          placeholder="nom@exemple.com"
+          label={t.auth.login.email}
+          placeholder={t.auth.login.emailPlaceholder}
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
@@ -254,6 +258,8 @@ export default function MagicLinkLoginScreen() {
           autoCorrect={false}
           error={error}
           leftIcon="mail"
+          accessibilityLabel="Adresse email"
+          accessibilityHint="Entrez votre adresse email pour recevoir un lien de connexion"
         />
 
         <Button
@@ -263,26 +269,33 @@ export default function MagicLinkLoginScreen() {
           loading={isLoading}
           onPress={handleSendMagicLink}
           className="mt-4"
+          accessibilityRole="button"
+          accessibilityLabel={isNewUser ? "Créer un compte" : "Recevoir le lien de connexion"}
+          accessibilityHint="Double-tapez pour envoyer le lien de connexion par email"
+          accessibilityState={{ disabled: isLoading }}
         >
-          {isNewUser ? "Créer un compte" : "Recevoir le lien"}
+          {isNewUser ? t.auth.signup.submit : "Recevoir le lien"}
         </Button>
 
         <TouchableOpacity
           onPress={() => setIsNewUser(!isNewUser)}
           className="items-center py-2"
+          accessibilityRole="button"
+          accessibilityLabel={isNewUser ? "Se connecter" : "S'inscrire"}
+          accessibilityHint={isNewUser ? "Double-tapez pour passer à la connexion" : "Double-tapez pour créer un nouveau compte"}
         >
           <Text className="text-sm text-slate-600 dark:text-slate-400">
             {isNewUser ? (
               <>
-                Vous avez déjà un compte ?{" "}
+                {t.auth.signup.hasAccount}{" "}
                 <Text className="font-bold text-primary-600">
-                  Se connecter
+                  {t.auth.signup.loginLink}
                 </Text>
               </>
             ) : (
               <>
-                Pas encore de compte ?{" "}
-                <Text className="font-bold text-primary-600">S'inscrire</Text>
+                {t.auth.login.noAccount}{" "}
+                <Text className="font-bold text-primary-600">{t.auth.signup.submit}</Text>
               </>
             )}
           </Text>
@@ -301,6 +314,7 @@ export default function MagicLinkLoginScreen() {
       <Animated.View
         entering={FadeInDown.delay(100).duration(500)}
         className="w-24 h-24 rounded-full bg-primary-50 dark:bg-primary-900/30 items-center justify-center mb-6"
+        accessible={false}
       >
         <MaterialIcons name="mail-outline" size={48} color="#13ec6a" />
       </Animated.View>
@@ -310,7 +324,7 @@ export default function MagicLinkLoginScreen() {
         entering={FadeInDown.delay(200).duration(500)}
         className="mb-4"
       >
-        <Text className="text-slate-900 dark:text-white text-2xl font-bold text-center mb-2">
+        <Text className="text-slate-900 dark:text-white text-2xl font-bold text-center mb-2" accessibilityRole="header">
           Vérifiez vos emails
         </Text>
         <Text className="text-slate-500 dark:text-slate-400 text-base text-center px-8">
@@ -357,6 +371,10 @@ export default function MagicLinkLoginScreen() {
       <TouchableOpacity
         onPress={handleResend}
         disabled={expiresIn > 840} // Can resend after 1 minute
+        accessibilityRole="button"
+        accessibilityLabel="Renvoyer le lien de connexion"
+        accessibilityHint="Double-tapez pour renvoyer le lien par email"
+        accessibilityState={{ disabled: expiresIn > 840 }}
         className={`py-3 px-6 rounded-xl ${
           expiresIn > 840
             ? "bg-slate-100 dark:bg-slate-800"
@@ -380,6 +398,9 @@ export default function MagicLinkLoginScreen() {
       <TouchableOpacity
         onPress={() => setAuthState("input")}
         className="mt-6"
+        accessibilityRole="button"
+        accessibilityLabel="Modifier l'adresse email"
+        accessibilityHint="Double-tapez pour modifier votre adresse email"
       >
         <Text className="text-slate-600 dark:text-slate-400 text-sm">
           Mauvais email ?{" "}
@@ -406,10 +427,10 @@ export default function MagicLinkLoginScreen() {
       entering={FadeIn.duration(400)}
       className="items-center py-12"
     >
-      <View className="w-24 h-24 rounded-full bg-primary-50 dark:bg-primary-900/30 items-center justify-center mb-4">
+      <View className="w-24 h-24 rounded-full bg-primary-50 dark:bg-primary-900/30 items-center justify-center mb-4" accessible={false}>
         <MaterialIcons name="check-circle" size={48} color="#13ec6a" />
       </View>
-      <Text className="text-slate-900 dark:text-white text-2xl font-bold">
+      <Text className="text-slate-900 dark:text-white text-2xl font-bold" accessibilityRole="header">
         Connexion réussie !
       </Text>
       <Text className="text-slate-500 dark:text-slate-400 mt-2">
@@ -445,6 +466,7 @@ export default function MagicLinkLoginScreen() {
                 variant="default"
                 onPress={() => router.back()}
                 color={isDark ? "#ffffff" : "#1e293b"}
+                accessibilityLabel="Retour"
               />
             </Animated.View>
           )}

@@ -62,6 +62,9 @@ function MenuItem({
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityHint={subtitle ? subtitle : undefined}
       className={`flex-row items-center justify-between p-4 ${
         !isLast ? "border-b border-slate-100 dark:border-white/5" : ""
       }`}
@@ -116,6 +119,8 @@ function StatsCard({
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.9}
+      accessibilityRole="button"
+      accessibilityLabel={`${title}, ${subtitle}`}
       className="flex-1 p-4 rounded-2xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-white/5"
       style={{
         shadowColor: "#000",
@@ -218,9 +223,12 @@ export default function ProfileScreen() {
         style={{ paddingTop: insets.top }}
       >
         <View className="flex-row items-center justify-between p-4">
-          <TouchableOpacity 
-            onPress={() => router.push("/(tabs)/alerts" as any)} 
+          <TouchableOpacity
+            onPress={() => router.push("/(tabs)/alerts" as any)}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Notifications"
+            accessibilityHint="Voir les alertes"
             className="w-10 h-10 items-center justify-center"
           >
             <MaterialIcons
@@ -229,10 +237,10 @@ export default function ProfileScreen() {
               color={isDark ? "#94a3b8" : "#64748b"}
             />
           </TouchableOpacity>
-          <Text className="text-slate-900 dark:text-white text-lg font-bold tracking-tight">
+          <Text accessibilityRole="header" className="text-slate-900 dark:text-white text-lg font-bold tracking-tight">
             {t.profile.title}
           </Text>
-          <TouchableOpacity onPress={handleSettings} activeOpacity={0.7}>
+          <TouchableOpacity onPress={handleSettings} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="Paramètres" accessibilityHint="Ouvrir les paramètres">
             <MaterialIcons
               name="settings"
               size={24}
@@ -255,6 +263,9 @@ export default function ProfileScreen() {
           <TouchableOpacity
             onPress={handleEditProfile}
             activeOpacity={0.9}
+            accessibilityRole="button"
+            accessibilityLabel="Photo de profil"
+            accessibilityHint="Modifier le profil"
             className="relative mb-5"
           >
             <View
@@ -294,6 +305,8 @@ export default function ProfileScreen() {
           <TouchableOpacity
             onPress={handleEditProfile}
             activeOpacity={0.9}
+            accessibilityRole="button"
+            accessibilityLabel={t.profile.editProfile}
             className="h-11 px-8 rounded-full bg-slate-900 dark:bg-surface-dark dark:border dark:border-white/10 items-center justify-center w-full max-w-[200px]"
             style={{
               shadowColor: "#000",
@@ -337,7 +350,7 @@ export default function ProfileScreen() {
           entering={FadeInUp.delay(300).duration(500)}
           className="px-4 mb-6"
         >
-          <Text className="text-slate-900 dark:text-slate-200 text-base font-bold px-2 mb-3">
+          <Text accessibilityRole="header" className="text-slate-900 dark:text-slate-200 text-base font-bold px-2 mb-3">
             {t.profile.preferences}
           </Text>
           <Card variant="elevated" className="overflow-hidden p-0">
@@ -372,7 +385,7 @@ export default function ProfileScreen() {
           entering={FadeInUp.delay(400).duration(500)}
           className="px-4 mb-8"
         >
-          <Text className="text-slate-900 dark:text-slate-200 text-base font-bold px-2 mb-3">
+          <Text accessibilityRole="header" className="text-slate-900 dark:text-slate-200 text-base font-bold px-2 mb-3">
             {t.profile.account}
           </Text>
           <Card variant="elevated" className="overflow-hidden p-0">
@@ -418,6 +431,8 @@ export default function ProfileScreen() {
           <TouchableOpacity
             onPress={handleLogout}
             activeOpacity={0.9}
+            accessibilityRole="button"
+            accessibilityLabel={t.profile.logout}
             className="w-full bg-white dark:bg-surface-dark border border-red-100 dark:border-red-900/30 rounded-xl p-3.5 flex-row items-center justify-center gap-2"
             style={{
               shadowColor: "#000",

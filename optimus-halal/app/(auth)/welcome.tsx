@@ -22,12 +22,14 @@ import * as Haptics from "expo-haptics";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
 import { AUTH_CONFIG } from "@/constants/config";
+import { useTranslation } from "@/hooks";
 
 export default function AuthWelcomeScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  
+  const { t } = useTranslation();
+
   const authMode = AUTH_CONFIG.mode;
 
   // Si mode V1 uniquement, rediriger directement vers login
@@ -68,10 +70,10 @@ export default function AuthWelcomeScreen() {
           entering={FadeIn.delay(100).duration(600)}
           className="items-center mb-8"
         >
-          <View className="w-24 h-24 rounded-3xl bg-primary-500 items-center justify-center mb-4">
+          <View className="w-24 h-24 rounded-3xl bg-primary-500 items-center justify-center mb-4" accessible={false}>
             <MaterialIcons name="verified" size={48} color="white" />
           </View>
-          <Text className="text-slate-900 dark:text-white text-3xl font-bold">
+          <Text className="text-slate-900 dark:text-white text-3xl font-bold" accessibilityRole="header">
             Optimus Halal
           </Text>
           <Text className="text-slate-500 dark:text-slate-400 mt-2 text-center">
@@ -84,7 +86,7 @@ export default function AuthWelcomeScreen() {
           entering={FadeInDown.delay(200).duration(600)}
           className="mb-8"
         >
-          <Text className="text-slate-900 dark:text-white text-2xl font-bold mb-2">
+          <Text className="text-slate-900 dark:text-white text-2xl font-bold mb-2" accessibilityRole="header">
             Bienvenue !
           </Text>
           <Text className="text-slate-500 dark:text-slate-400 text-base">
@@ -103,6 +105,9 @@ export default function AuthWelcomeScreen() {
           <TouchableOpacity
             onPress={handleMagicLink}
             activeOpacity={0.9}
+            accessibilityRole="button"
+            accessibilityLabel="Connexion par email"
+            accessibilityHint="Double-tapez pour vous connecter avec un lien magique par email"
             className="bg-primary-500 rounded-2xl p-6 border-2 border-primary-600"
             style={{
               shadowColor: "#13ec6a",
@@ -160,6 +165,9 @@ export default function AuthWelcomeScreen() {
               <TouchableOpacity
                 onPress={handleTraditionalLogin}
                 activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="Connexion classique"
+                accessibilityHint="Double-tapez pour vous connecter avec email et mot de passe"
                 className="bg-white dark:bg-surface-dark rounded-2xl p-5 border border-slate-200 dark:border-slate-700"
               >
                 <View className="flex-row items-center">
@@ -194,7 +202,7 @@ export default function AuthWelcomeScreen() {
           entering={FadeIn.delay(authMode === "hybrid" ? 600 : 400).duration(400)}
           className="mt-12 bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6"
         >
-          <Text className="text-slate-900 dark:text-white font-semibold mb-4">
+          <Text className="text-slate-900 dark:text-white font-semibold mb-4" accessibilityRole="header">
             Pourquoi s'inscrire ?
           </Text>
           
@@ -229,8 +237,8 @@ export default function AuthWelcomeScreen() {
         >
           <Text className="text-xs text-slate-500 dark:text-slate-400 text-center">
             En continuant, vous acceptez nos{"\n"}
-            <Text className="underline">Conditions d'utilisation</Text> et notre{" "}
-            <Text className="underline">Politique de confidentialité</Text>
+            <Text className="underline">{t.auth.signup.termsLink}</Text> et notre{" "}
+            <Text className="underline">{t.auth.signup.privacyLink}</Text>
           </Text>
         </Animated.View>
       </ScrollView>
