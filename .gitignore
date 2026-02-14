@@ -12,10 +12,8 @@ firebase-debug.log
 # OS
 .DS_Store
 
-# Screenshots / temp images
-*.png
-*.jpg
-*.jpeg
+# Temp screenshots (app icons are committed and must NOT be excluded)
+/screenshots/
 
 # Node
 node_modules/
