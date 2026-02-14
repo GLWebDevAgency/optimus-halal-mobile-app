@@ -32,7 +32,8 @@ import Animated, {
 
 import { Card, Avatar, Badge, IconButton } from "@/components/ui";
 import { ProfileSkeleton } from "@/components/skeletons";
-import { useLocalAuthStore, useScanHistoryStore, useThemeStore, useLocalAlertsStore, useLanguageStore, usePreferencesStore } from "@/store";
+import { useAuthStore, useFavoritesStore } from "@/store/apiStores";
+import { useThemeStore, usePreferencesStore } from "@/store";
 import { colors } from "@/constants/theme";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -155,22 +156,22 @@ export default function ProfileScreen() {
   const isDark = colorScheme === "dark";
   const { t, language } = useTranslation();
 
-  const { user, logout } = useLocalAuthStore();
-  const { history, favorites } = useScanHistoryStore();
+  const { profile, logout } = useAuthStore();
+  const { favorites } = useFavoritesStore();
   const { theme, setTheme } = useThemeStore();
   const { certifications } = usePreferencesStore();
 
   const [pushNotificationsEnabled, setPushNotificationsEnabled] = useState(true);
 
-  const userName = useMemo(() => user?.fullName || "Utilisateur", [user]);
-  const userEmail = useMemo(() => user?.email || "", [user]);
+  const userName = useMemo(() => profile?.displayName || "Utilisateur", [profile]);
+  const userEmail = useMemo(() => profile?.email || "", [profile]);
 
   const stats = useMemo(
     () => ({
-      scanned: history.length || 128,
-      favorites: favorites.length || 24,
+      scanned: profile?.totalScans ?? 0,
+      favorites: favorites.length,
     }),
-    [history, favorites]
+    [profile, favorites]
   );
 
   const handleSettings = useCallback(async () => {
@@ -198,8 +199,8 @@ export default function ProfileScreen() {
     setPushNotificationsEnabled(value);
   }, []);
 
-  // Skeleton while user data loads (placed after all hooks to respect Rules of Hooks)
-  if (!user) return <ProfileSkeleton />;
+  // Skeleton while profile data loads (placed after all hooks to respect Rules of Hooks)
+  if (!profile) return <ProfileSkeleton />;
 
   const handleLogout = useCallback(async () => {
     impact(ImpactFeedbackStyle.Medium);
@@ -285,7 +286,7 @@ export default function ProfileScreen() {
             >
               <Avatar
                 size="2xl"
-                source={user?.avatarUrl}
+                source={profile?.avatarUrl ?? undefined}
                 fallback={userName}
               />
             </View>

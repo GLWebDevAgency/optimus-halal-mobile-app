@@ -7,3 +7,4 @@ export * from "./alerts.js";
 export * from "./notifications.js";
 export * from "./loyalty.js";
 export * from "./orders.js";
+export * from "./boycott.js";
