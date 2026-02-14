@@ -31,6 +31,7 @@ import Animated, {
 
 import { Card, Badge, IconButton, Chip, ChipGroup } from "@/components/ui";
 import { useLocalAlertsStore } from "@/store";
+import { useTranslation } from "@/hooks";
 import { colors } from "@/constants/theme";
 
 // Alert types
@@ -51,14 +52,6 @@ interface Alert {
     variant: "primary" | "secondary";
   };
 }
-
-const FILTERS = [
-  { id: "all", label: "Tous" },
-  { id: "boycott", label: "Boycotts" },
-  { id: "certification", label: "Certifications" },
-  { id: "health", label: "Santé" },
-  { id: "policy", label: "Politique" },
-];
 
 const MOCK_ALERTS: Alert[] = [
   {
@@ -128,6 +121,7 @@ interface AlertCardProps {
 function AlertCard({ alert, index }: AlertCardProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
   const config = alertTypeConfig[alert.type];
 
   return (
@@ -271,7 +265,7 @@ function AlertCard({ alert, index }: AlertCardProps) {
                 </View>
                 <TouchableOpacity className="flex-row items-center gap-1" accessibilityRole="link" accessibilityLabel={`Voir la source de ${alert.title}`}>
                   <Text className="text-xs font-bold text-danger-500">
-                    Voir la source
+                    {t.alerts.source}
                   </Text>
                   <MaterialIcons name="arrow-forward" size={14} color="#ef4444" />
                 </TouchableOpacity>
@@ -327,11 +321,20 @@ export default function AlertsScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
 
   const [activeFilter, setActiveFilter] = useState("all");
   const [refreshing, setRefreshing] = useState(false);
 
   const { alerts, unreadCount, markAllAsRead } = useLocalAlertsStore();
+
+  const FILTERS = [
+    { id: "all", label: t.alerts.filters.all },
+    { id: "boycott", label: t.alerts.filters.boycotts },
+    { id: "certification", label: t.alerts.filters.certifications },
+    { id: "health", label: t.alerts.filters.health },
+    { id: "policy", label: t.alerts.filters.policy },
+  ];
 
   const filteredAlerts = useMemo(() => {
     if (activeFilter === "all") return MOCK_ALERTS;
@@ -371,7 +374,7 @@ export default function AlertsScreen() {
               <MaterialIcons name="security" size={20} color="#0d1b13" />
             </View>
             <Text accessibilityRole="header" className="text-slate-900 dark:text-white text-xl font-bold tracking-tight">
-              Alertes Éthiques
+              {t.alerts.title}
             </Text>
           </View>
           <TouchableOpacity
