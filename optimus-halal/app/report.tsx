@@ -1,15 +1,15 @@
 /**
  * Reporting Form Screen
- * 
+ *
  * Formulaire de signalement avec:
  * - Header avec titre et cancel
- * - Progress indicator (étape 1 sur 2)
+ * - Title input (required by API)
  * - Section recherche produit avec barcode scanner
- * - Grid types de violation (4 options)
+ * - Grid types de violation (4 options → backend enum)
  * - Textarea détails supplémentaires
  * - Upload photo evidence
  * - Toggle contact follow-up
- * - Bouton submit fixé en bas
+ * - Bouton submit → trpc.report.createReport
  */
 
 import React, { useState, useCallback } from "react";
@@ -21,8 +21,8 @@ import {
   TextInput,
   Switch,
   useColorScheme,
-  KeyboardAvoidingView,
-  Platform,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -36,10 +36,13 @@ import Animated, {
   FadeInDown,
   FadeInUp,
 } from "react-native-reanimated";
+import { trpc } from "@/lib/trpc";
 
+// Map UI violation types → backend report type enum
 const VIOLATION_TYPES = [
   {
     id: "fake-cert",
+    backendType: "incorrect_halal_status" as const,
     icon: "verified" as const,
     iconColor: "#fbbf24",
     title: "Fausse Certification",
@@ -47,6 +50,7 @@ const VIOLATION_TYPES = [
   },
   {
     id: "unethical-labor",
+    backendType: "store_issue" as const,
     icon: "factory" as const,
     iconColor: "#64748b",
     title: "Travail Non-Éthique",
@@ -54,6 +58,7 @@ const VIOLATION_TYPES = [
   },
   {
     id: "contamination",
+    backendType: "wrong_ingredients" as const,
     icon: "science" as const,
     iconColor: "#64748b",
     title: "Contamination",
@@ -61,6 +66,7 @@ const VIOLATION_TYPES = [
   },
   {
     id: "other",
+    backendType: "other" as const,
     icon: "warning" as const,
     iconColor: "#64748b",
     title: "Autre Problème",
@@ -74,25 +80,46 @@ export default function ReportingFormScreen() {
   const { impact, notification } = useHaptics();
   const isDark = colorScheme === "dark";
 
+  const [title, setTitle] = useState("");
   const [productSearch, setProductSearch] = useState("");
-  const [selectedViolation, setSelectedViolation] = useState<string | null>("fake-cert");
+  const [selectedViolation, setSelectedViolation] = useState<string>("fake-cert");
   const [details, setDetails] = useState("");
-  const [photos, setPhotos] = useState<string[]>([
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuCCx9lb0taOzbpsH0OWVuECLkNYPAEhF7xBxbDeKI8eViZc0qS4bNIWD8F_txoJf4Wu3CkYhKklC_hUntCTqKjutnAKV6la3VW-qm47yPFEnl3Q1ABfmJkTEhFUICREVUXhORJtuAjm8YuTvlavxVgj-8kvyxTvFDbRTziKT9USBDtq85be_b8whteol8XB2SOod9fMfNNuBlZJXGhR2cuG9DJZW9K5E1NEOneoBURJgy7N-zH17fNiQGTdvCgkEQhvWwW7scxyV8AB",
-  ]);
+  const [photos, setPhotos] = useState<string[]>([]);
   const [allowContact, setAllowContact] = useState(true);
 
-  const handleBack = useCallback(async () => {
+  const createReport = trpc.report.createReport.useMutation({
+    onSuccess: () => {
+      notification();
+      Alert.alert(
+        "Signalement envoyé",
+        "Merci pour votre contribution à la transparence halal. Nous traiterons votre signalement rapidement.",
+        [{ text: "OK", onPress: () => router.back() }],
+      );
+    },
+    onError: (error) => {
+      Alert.alert(
+        "Erreur",
+        error.message || "Impossible d'envoyer le signalement. Réessayez.",
+      );
+    },
+  });
+
+  const isFormValid =
+    title.trim().length >= 5 &&
+    details.trim().length >= 10 &&
+    selectedViolation !== null;
+
+  const handleBack = useCallback(() => {
     impact();
     router.back();
   }, []);
 
-  const handleCancel = useCallback(async () => {
+  const handleCancel = useCallback(() => {
     impact();
     router.back();
   }, []);
 
-  const handleSelectViolation = useCallback(async (id: string) => {
+  const handleSelectViolation = useCallback((id: string) => {
     impact();
     setSelectedViolation(id);
   }, []);
@@ -111,21 +138,39 @@ export default function ReportingFormScreen() {
     }
   }, []);
 
-  const handleRemovePhoto = useCallback(async (index: number) => {
+  const handleRemovePhoto = useCallback((index: number) => {
     impact(ImpactFeedbackStyle.Medium);
     setPhotos((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
-  const handleSubmit = useCallback(async () => {
-    notification();
-    // In real app, submit report
-    router.back();
-  }, []);
+  const handleSubmit = useCallback(() => {
+    if (!isFormValid || createReport.isPending) return;
 
-  const handleScanBarcode = useCallback(async () => {
+    const violationType = VIOLATION_TYPES.find((v) => v.id === selectedViolation);
+    if (!violationType) return;
+
+    createReport.mutate({
+      type: violationType.backendType,
+      title: title.trim(),
+      description: details.trim(),
+      // Photos are local URIs — in production, upload to S3/Cloudflare first
+      // For now, filter out local file:// URIs and only send real URLs
+      photoUrls: photos.filter((p) => p.startsWith("http")),
+    });
+  }, [isFormValid, selectedViolation, title, details, photos, createReport]);
+
+  const handleScanBarcode = useCallback(() => {
     impact();
     router.push("/(tabs)/scanner");
   }, []);
+
+  // Progress: title filled = 33%, violation selected = 66%, details filled = 100%
+  const progress = [
+    title.trim().length >= 5,
+    selectedViolation !== null,
+    details.trim().length >= 10,
+  ].filter(Boolean).length;
+  const progressPercent = Math.round((progress / 3) * 100);
 
   return (
     <View className="flex-1 bg-background-light dark:bg-background-dark">
@@ -169,16 +214,16 @@ export default function ReportingFormScreen() {
         >
           <View className="flex-row justify-between items-end">
             <Text className="text-sm font-semibold tracking-wide uppercase text-emerald-500">
-              Étape 1 sur 2
+              {progressPercent < 100 ? `${progress}/3 champs` : "Prêt à envoyer"}
             </Text>
             <Text className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              50% Complété
+              {progressPercent}% Complété
             </Text>
           </View>
           <View className="rounded-full bg-gray-200 dark:bg-white/10 h-1.5 w-full overflow-hidden">
-            <View
+            <Animated.View
               className="h-full rounded-full bg-emerald-500"
-              style={{ width: "50%" }}
+              style={{ width: `${progressPercent}%` }}
             />
           </View>
         </Animated.View>
@@ -200,13 +245,34 @@ export default function ReportingFormScreen() {
         {/* Divider */}
         <View className="h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-white/10 to-transparent mx-5 my-4" />
 
-        {/* Section 1: Identify Product */}
+        {/* Section 1: Report Title */}
         <Animated.View
           entering={FadeInDown.delay(200).duration(400)}
           className="px-5 gap-3"
         >
           <Text className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
-            1. Identifier le Produit
+            1. Titre du signalement *
+          </Text>
+          <TextInput
+            className="w-full px-4 py-4 bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-white/10 rounded-xl text-sm font-medium text-slate-900 dark:text-white shadow-sm"
+            placeholder="Ex: Faux label halal sur produit X..."
+            placeholderTextColor="#9ca3af"
+            value={title}
+            onChangeText={setTitle}
+            maxLength={255}
+          />
+          {title.length > 0 && title.length < 5 && (
+            <Text className="text-xs text-red-400">Minimum 5 caractères</Text>
+          )}
+        </Animated.View>
+
+        {/* Section 2: Identify Product */}
+        <Animated.View
+          entering={FadeInDown.delay(250).duration(400)}
+          className="px-5 pt-8 gap-3"
+        >
+          <Text className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
+            2. Identifier le Produit (optionnel)
           </Text>
           <View className="relative">
             <View className="absolute left-3.5 top-1/2 -translate-y-1/2 z-10">
@@ -228,16 +294,16 @@ export default function ReportingFormScreen() {
           </View>
         </Animated.View>
 
-        {/* Section 2: Type of Violation */}
+        {/* Section 3: Type of Violation */}
         <Animated.View
-          entering={FadeInDown.delay(250).duration(400)}
+          entering={FadeInDown.delay(300).duration(400)}
           className="px-5 pt-8 gap-3"
         >
           <Text className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
-            2. Type de Violation
+            3. Type de Violation *
           </Text>
           <View className="flex-row flex-wrap gap-3">
-            {VIOLATION_TYPES.map((type, index) => {
+            {VIOLATION_TYPES.map((type) => {
               const isSelected = selectedViolation === type.id;
               return (
                 <TouchableOpacity
@@ -280,13 +346,13 @@ export default function ReportingFormScreen() {
           </View>
         </Animated.View>
 
-        {/* Section 3: Additional Details */}
+        {/* Section 4: Additional Details */}
         <Animated.View
-          entering={FadeInDown.delay(300).duration(400)}
+          entering={FadeInDown.delay(350).duration(400)}
           className="px-5 pt-8 gap-3"
         >
           <Text className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
-            3. Détails Supplémentaires
+            4. Détails Supplémentaires *
           </Text>
           <TextInput
             className="w-full p-4 bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-white/10 rounded-xl text-sm font-medium text-slate-900 dark:text-white shadow-sm"
@@ -298,17 +364,21 @@ export default function ReportingFormScreen() {
             numberOfLines={3}
             textAlignVertical="top"
             style={{ minHeight: 100 }}
+            maxLength={2000}
           />
+          {details.length > 0 && details.length < 10 && (
+            <Text className="text-xs text-red-400">Minimum 10 caractères</Text>
+          )}
         </Animated.View>
 
-        {/* Section 4: Photo Evidence */}
+        {/* Section 5: Photo Evidence */}
         <Animated.View
-          entering={FadeInDown.delay(350).duration(400)}
+          entering={FadeInDown.delay(400).duration(400)}
           className="px-5 pt-8 gap-3"
         >
           <View className="flex-row justify-between items-end">
             <Text className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
-              4. Preuves Photo
+              5. Preuves Photo
             </Text>
             <View className="bg-emerald-500/10 px-2 py-0.5 rounded-full">
               <Text className="text-xs font-semibold text-emerald-500">
@@ -374,7 +444,7 @@ export default function ReportingFormScreen() {
 
         {/* Allow Contact Toggle */}
         <Animated.View
-          entering={FadeInDown.delay(400).duration(400)}
+          entering={FadeInDown.delay(450).duration(400)}
           className="px-5 pt-4 pb-4"
         >
           <View className="flex-row items-center justify-between p-4 bg-white dark:bg-[#1e293b] rounded-xl border border-gray-100 dark:border-white/5 shadow-sm">
@@ -404,19 +474,34 @@ export default function ReportingFormScreen() {
       >
         <TouchableOpacity
           onPress={handleSubmit}
-          className="w-full bg-emerald-500 py-4 rounded-xl flex-row items-center justify-center gap-2"
+          disabled={!isFormValid || createReport.isPending}
+          className={`w-full py-4 rounded-xl flex-row items-center justify-center gap-2 ${
+            isFormValid && !createReport.isPending
+              ? "bg-emerald-500"
+              : "bg-gray-300 dark:bg-gray-700"
+          }`}
           activeOpacity={0.9}
-          style={{
-            shadowColor: "#10b981",
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.4,
-            shadowRadius: 20,
-          }}
+          style={
+            isFormValid && !createReport.isPending
+              ? {
+                  shadowColor: "#10b981",
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: 0.4,
+                  shadowRadius: 20,
+                }
+              : {}
+          }
         >
-          <Text className="font-bold text-base text-white">
-            Envoyer le Signalement
-          </Text>
-          <MaterialIcons name="send" size={20} color="#ffffff" />
+          {createReport.isPending ? (
+            <ActivityIndicator size="small" color="#ffffff" />
+          ) : (
+            <>
+              <Text className="font-bold text-base text-white">
+                Envoyer le Signalement
+              </Text>
+              <MaterialIcons name="send" size={20} color="#ffffff" />
+            </>
+          )}
         </TouchableOpacity>
 
         <View className="flex-row items-center justify-center gap-1.5 mt-4 opacity-70">
