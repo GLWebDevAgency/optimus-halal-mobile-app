@@ -54,7 +54,12 @@ export const useAuthStore = create<AuthStoreState>()((set, get) => ({
 
   initialize: async () => {
     set({ isLoading: true });
-    await initializeTokens();
+
+    try {
+      await initializeTokens();
+    } catch {
+      // Token init failed — proceed as unauthenticated
+    }
 
     if (isAuthenticated()) {
       try {

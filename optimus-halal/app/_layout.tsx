@@ -48,10 +48,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
   const colorScheme = useColorScheme();
 
   useEffect(() => {
-    // Initialize auth tokens on app start
     initialize();
-
-    // Sync language with API client
     setApiLanguage(language);
   }, []);
 
