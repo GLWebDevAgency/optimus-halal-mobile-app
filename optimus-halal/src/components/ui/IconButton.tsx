@@ -27,7 +27,7 @@ const sizeConfig = {
 
 const variantStyles = {
   default: "bg-transparent",
-  filled: "bg-white dark:bg-surface-dark shadow-soft border border-slate-100 dark:border-slate-700",
+  filled: "bg-white dark:bg-surface-dark shadow-soft dark:shadow-soft-dark border border-slate-100 dark:border-slate-700",
   outline: "bg-transparent border border-slate-200 dark:border-slate-700",
 };
 
