@@ -1,18 +1,52 @@
-import { createMMKV } from "react-native-mmkv";
-import type { MMKV } from "react-native-mmkv";
 import type { StateStorage } from "zustand/middleware";
+import { logger } from "./logger";
 
-export const mmkv: MMKV = createMMKV({ id: "optimus-halal" });
+let mmkvInstance: any = null;
+
+try {
+  const { createMMKV } = require("react-native-mmkv");
+  mmkvInstance = createMMKV({ id: "optimus-halal" });
+  logger.info("Storage", "MMKV initialized OK");
+} catch (e) {
+  logger.warn("Storage", "MMKV failed, falling back to in-memory", String(e));
+}
+
+/**
+ * In-memory fallback if MMKV fails (Expo Go, broken JSI, etc.)
+ */
+const memoryStore = new Map<string, string>();
 
 export const mmkvStorage: StateStorage = {
   getItem(name: string) {
-    const value = mmkv.getString(name);
-    return value ?? null;
+    if (mmkvInstance) {
+      try {
+        return mmkvInstance.getString(name) ?? null;
+      } catch {
+        return memoryStore.get(name) ?? null;
+      }
+    }
+    return memoryStore.get(name) ?? null;
   },
   setItem(name: string, value: string) {
-    mmkv.set(name, value);
+    if (mmkvInstance) {
+      try {
+        mmkvInstance.set(name, value);
+        return;
+      } catch {
+        // fallthrough to memory
+      }
+    }
+    memoryStore.set(name, value);
   },
   removeItem(name: string) {
-    mmkv.remove(name);
+    if (mmkvInstance) {
+      try {
+        mmkvInstance.remove(name);
+        return;
+      } catch {
+        // fallthrough to memory
+      }
+    }
+    memoryStore.delete(name);
   },
 };

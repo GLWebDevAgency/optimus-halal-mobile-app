@@ -58,45 +58,48 @@ export const useAuthStore = create<AuthStoreState>()((set, get) => ({
     set({ isLoading: true });
 
     try {
-      await initializeTokens();
-      logger.info("AppInit", "initializeTokens: resolved");
-    } catch (e) {
-      logger.warn("AppInit", "initializeTokens: failed", String(e));
-    }
-
-    const authed = isAuthenticated();
-    logger.info("AppInit", `isAuthenticated: ${authed}`);
-
-    if (authed) {
       try {
-        logger.info("AppInit", "Fetching profile...");
-        const profile = await api.profile.getProfile();
-        logger.info("AppInit", "Profile fetched OK");
-        set({
-          isAuthenticated: true,
-          profile,
-          user: {
-            id: profile.id,
-            email: profile.email,
-            displayName: profile.displayName,
-          },
-          isLoading: false,
-        });
+        await initializeTokens();
+        logger.info("AppInit", "initializeTokens: resolved");
       } catch (e) {
-        logger.warn("AppInit", "Profile fetch failed, clearing tokens", String(e));
-        await clearTokens();
-        set({
-          isAuthenticated: false,
-          user: null,
-          profile: null,
-          isLoading: false,
-        });
+        logger.warn("AppInit", "initializeTokens: failed", String(e));
       }
-    } else {
-      logger.info("AppInit", "Not authenticated → isLoading: false");
+
+      const authed = isAuthenticated();
+      logger.info("AppInit", `isAuthenticated: ${authed}`);
+
+      if (authed) {
+        try {
+          logger.info("AppInit", "Fetching profile...");
+          const profile = await api.profile.getProfile();
+          logger.info("AppInit", "Profile fetched OK");
+          set({
+            isAuthenticated: true,
+            profile,
+            user: {
+              id: profile.id,
+              email: profile.email,
+              displayName: profile.displayName,
+            },
+          });
+        } catch (e) {
+          logger.warn("AppInit", "Profile fetch failed, clearing tokens", String(e));
+          await clearTokens().catch(() => {});
+          set({
+            isAuthenticated: false,
+            user: null,
+            profile: null,
+          });
+        }
+      } else {
+        logger.info("AppInit", "Not authenticated");
+      }
+    } catch (e) {
+      logger.error("AppInit", "Unexpected error in initialize", String(e));
+    } finally {
       set({ isLoading: false });
+      logger.info("AppInit", "initialize: complete, isLoading → false");
     }
-    logger.info("AppInit", "initialize: complete");
   },
 
   login: async (email, password) => {

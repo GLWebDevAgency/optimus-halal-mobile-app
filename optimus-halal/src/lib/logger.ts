@@ -73,9 +73,9 @@ export const logger = {
   },
 
   /** Subscribe to new log entries */
-  subscribe: (fn: () => void) => {
+  subscribe: (fn: () => void): (() => void) => {
     listeners.add(fn);
-    return () => listeners.delete(fn);
+    return () => { listeners.delete(fn); };
   },
 
   /** Clear all entries */

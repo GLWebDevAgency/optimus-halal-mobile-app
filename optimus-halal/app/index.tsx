@@ -1,26 +1,21 @@
 /**
  * Entry Point - Router Redirect
- * 
- * Redirige vers l'écran approprié selon l'état de l'application
+ *
+ * Redirige vers l'écran approprié selon l'état de l'application.
+ * NOTE: AppInitializer (in _layout.tsx) already handles the global loading
+ * state, so this screen is only rendered AFTER initialization is complete.
+ * We use useAuthStore (the canonical API store) for auth state — NOT
+ * useLocalAuthStore which depends on MMKV rehydration.
  */
 
-import React, { useEffect } from "react";
-import { View, ActivityIndicator } from "react-native";
+import React from "react";
 import { Redirect } from "expo-router";
-import { useOnboardingStore, useLocalAuthStore } from "@/store";
+import { useOnboardingStore } from "@/store";
+import { useAuthStore } from "@/store/apiStores";
 
 export default function Index() {
   const { hasCompletedOnboarding } = useOnboardingStore();
-  const { isAuthenticated, isLoading } = useLocalAuthStore();
-
-  // Loading state
-  if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background-light dark:bg-background-dark">
-        <ActivityIndicator size="large" color="#1de560" />
-      </View>
-    );
-  }
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   // Redirect logic
   if (!hasCompletedOnboarding) {
