@@ -86,9 +86,14 @@ export const scanRouter = router({
           const diffDays = Math.floor(
             (now.getTime() - lastScan.getTime()) / (1000 * 60 * 60 * 24)
           );
-          if (diffDays <= 1) {
+          if (diffDays === 0) {
+            // Same day: keep current streak unchanged
+            newStreak = user.currentStreak ?? 1;
+          } else if (diffDays === 1) {
+            // Consecutive day: increment streak
             newStreak = (user.currentStreak ?? 0) + 1;
           }
+          // diffDays > 1: streak resets to 1 (default)
         }
 
         await tx
