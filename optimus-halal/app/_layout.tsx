@@ -18,6 +18,7 @@ import { useAuthStore } from "@/store/apiStores";
 import { setApiLanguage } from "@/services/api";
 import { trpc, createTRPCClientForProvider } from "@/lib/trpc";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { OfflineBanner } from "@/components/ui";
 
 // Create a client with enterprise-grade configuration
 const queryClient = new QueryClient({
@@ -94,6 +95,7 @@ export default function RootLayout() {
             <GestureHandlerRootView style={{ flex: 1, backgroundColor: isDark ? '#0f1a13' : '#ffffff' }}>
               <AppInitializer>
                 <StatusBar style={isDark ? "light" : "dark"} />
+                <OfflineBanner />
                 <Stack
                   screenOptions={{
                     headerShown: false,
