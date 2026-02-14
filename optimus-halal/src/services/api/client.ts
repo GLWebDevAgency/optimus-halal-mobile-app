@@ -11,6 +11,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import superjson from "superjson";
 import { API_CONFIG, STORAGE_KEYS, HTTP_STATUS, ERROR_CODES } from "./config";
+import { logger } from "@/lib/logger";
 
 import type { AppRouter } from "@backend/trpc/router";
 import type * as Types from "./types";
@@ -105,6 +106,7 @@ let isRefreshing = false;
 let refreshPromise: Promise<void> | null = null;
 
 export async function initializeTokens(): Promise<void> {
+  logger.info("Auth", "initializeTokens: start");
   try {
     const [storedAccess, storedRefresh] = await Promise.all([
       SecureStore.getItemAsync(STORAGE_KEYS.ACCESS_TOKEN),
@@ -112,8 +114,12 @@ export async function initializeTokens(): Promise<void> {
     ]);
     accessToken = storedAccess;
     refreshToken = storedRefresh;
+    logger.info("Auth", "initializeTokens: done", {
+      hasAccess: !!storedAccess,
+      hasRefresh: !!storedRefresh,
+    });
   } catch (error) {
-    if (__DEV__) console.warn("Failed to initialize tokens:", error);
+    logger.error("Auth", "initializeTokens: failed", String(error));
   }
 }
 

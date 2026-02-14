@@ -6,19 +6,28 @@
  */
 
 import "../global.css";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useColorScheme, View, ActivityIndicator } from "react-native";
+import {
+  useColorScheme,
+  View,
+  ActivityIndicator,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Pressable,
+} from "react-native";
 import { useThemeStore, useLanguageStore } from "@/store";
 import { useAuthStore } from "@/store/apiStores";
 import { setApiLanguage } from "@/services/api";
 import { trpc, createTRPCClientForProvider } from "@/lib/trpc";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/ui";
+import { logger } from "@/lib/logger";
 
 // Create a client with enterprise-grade configuration
 const queryClient = new QueryClient({
@@ -41,27 +50,119 @@ const queryClient = new QueryClient({
 // APP INITIALIZER
 // ============================================
 
+/** Debug log overlay — shown when init hangs or on long press */
+function DebugOverlay({ onClose }: { onClose: () => void }) {
+  const [logs, setLogs] = useState(logger.getFormattedLogs());
+
+  useEffect(() => {
+    const unsub = logger.subscribe(() => setLogs(logger.getFormattedLogs()));
+    return unsub;
+  }, []);
+
+  return (
+    <View style={{ flex: 1, backgroundColor: "#000000ee", padding: 16, paddingTop: 60 }}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
+        <Text style={{ color: "#16a34a", fontSize: 16, fontWeight: "bold" }}>
+          Debug Logs
+        </Text>
+        <TouchableOpacity onPress={onClose}>
+          <Text style={{ color: "#fff", fontSize: 16 }}>Fermer</Text>
+        </TouchableOpacity>
+      </View>
+      <ScrollView style={{ flex: 1 }}>
+        <Text style={{ color: "#e0e0e0", fontSize: 11, fontFamily: "monospace" }}>
+          {logs || "Aucun log collecté"}
+        </Text>
+      </ScrollView>
+    </View>
+  );
+}
+
+const INIT_TIMEOUT_MS = 8000;
+
 function AppInitializer({ children }: { children: React.ReactNode }) {
   const initialize = useAuthStore((state) => state.initialize);
   const isLoading = useAuthStore((state) => state.isLoading);
   const language = useLanguageStore((state) => state.language);
   const colorScheme = useColorScheme();
+  const [showDebug, setShowDebug] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
+  const initCalled = useRef(false);
 
   useEffect(() => {
-    initialize();
+    if (initCalled.current) return;
+    initCalled.current = true;
+
+    logger.info("AppInit", "useEffect: calling initialize()");
+    initialize().catch((e) =>
+      logger.error("AppInit", "initialize() threw", String(e))
+    );
     setApiLanguage(language);
+
+    // Safety timeout — force past loading if init hangs
+    const timeout = setTimeout(() => {
+      logger.warn("AppInit", `Timeout after ${INIT_TIMEOUT_MS}ms — forcing past loading`);
+      setTimedOut(true);
+    }, INIT_TIMEOUT_MS);
+
+    return () => clearTimeout(timeout);
   }, []);
 
   useEffect(() => {
-    // Update API language when it changes
     setApiLanguage(language);
   }, [language]);
 
-  // Show loading spinner while initializing
-  if (isLoading) {
+  const handleLongPress = useCallback(() => setShowDebug(true), []);
+
+  if (showDebug) {
+    return <DebugOverlay onClose={() => setShowDebug(false)} />;
+  }
+
+  // Show loading spinner while initializing (with timeout escape)
+  if (isLoading && !timedOut) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colorScheme === 'dark' ? '#0f1a13' : '#ffffff' }}>
+      <Pressable
+        onLongPress={handleLongPress}
+        delayLongPress={3000}
+        style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colorScheme === "dark" ? "#0f1a13" : "#ffffff" }}
+      >
         <ActivityIndicator size="large" color="#16a34a" />
+        <Text style={{ color: "#888", fontSize: 12, marginTop: 16 }}>
+          Chargement... (appui long = logs)
+        </Text>
+      </Pressable>
+    );
+  }
+
+  // If timed out, show debug info + option to continue
+  if (timedOut && isLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colorScheme === "dark" ? "#0f1a13" : "#ffffff", padding: 24, paddingTop: 60 }}>
+        <Text style={{ color: "#ef4444", fontSize: 18, fontWeight: "bold", marginBottom: 12 }}>
+          Initialisation trop longue
+        </Text>
+        <Text style={{ color: "#888", fontSize: 14, marginBottom: 16 }}>
+          L'app n'a pas pu s'initialiser en {INIT_TIMEOUT_MS / 1000}s.
+        </Text>
+        <TouchableOpacity
+          onPress={() => setShowDebug(true)}
+          style={{ backgroundColor: "#16a34a", padding: 12, borderRadius: 8, marginBottom: 12 }}
+        >
+          <Text style={{ color: "#fff", textAlign: "center", fontWeight: "bold" }}>
+            Voir les logs
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            useAuthStore.setState({ isLoading: false });
+            setTimedOut(false);
+          }}
+          style={{ backgroundColor: "#333", padding: 12, borderRadius: 8 }}
+        >
+          <Text style={{ color: "#fff", textAlign: "center" }}>
+            Continuer quand même
+          </Text>
+        </TouchableOpacity>
       </View>
     );
   }

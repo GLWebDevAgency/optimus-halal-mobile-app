@@ -16,6 +16,7 @@ import {
   safeApiCall,
   OptimusApiError,
 } from "@/services/api";
+import { logger } from "@/lib/logger";
 import type * as ApiTypes from "@/services/api/types";
 
 // ============================================
@@ -53,17 +54,24 @@ export const useAuthStore = create<AuthStoreState>()((set, get) => ({
   error: null,
 
   initialize: async () => {
+    logger.info("AppInit", "initialize: start");
     set({ isLoading: true });
 
     try {
       await initializeTokens();
-    } catch {
-      // Token init failed — proceed as unauthenticated
+      logger.info("AppInit", "initializeTokens: resolved");
+    } catch (e) {
+      logger.warn("AppInit", "initializeTokens: failed", String(e));
     }
 
-    if (isAuthenticated()) {
+    const authed = isAuthenticated();
+    logger.info("AppInit", `isAuthenticated: ${authed}`);
+
+    if (authed) {
       try {
+        logger.info("AppInit", "Fetching profile...");
         const profile = await api.profile.getProfile();
+        logger.info("AppInit", "Profile fetched OK");
         set({
           isAuthenticated: true,
           profile,
@@ -74,8 +82,8 @@ export const useAuthStore = create<AuthStoreState>()((set, get) => ({
           },
           isLoading: false,
         });
-      } catch {
-        // Token invalid, clear
+      } catch (e) {
+        logger.warn("AppInit", "Profile fetch failed, clearing tokens", String(e));
         await clearTokens();
         set({
           isAuthenticated: false,
@@ -85,8 +93,10 @@ export const useAuthStore = create<AuthStoreState>()((set, get) => ({
         });
       }
     } else {
+      logger.info("AppInit", "Not authenticated → isLoading: false");
       set({ isLoading: false });
     }
+    logger.info("AppInit", "initialize: complete");
   },
 
   login: async (email, password) => {
