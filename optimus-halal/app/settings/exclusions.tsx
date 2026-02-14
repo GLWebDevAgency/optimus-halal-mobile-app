@@ -13,6 +13,8 @@ import {
   TextInput,
   StatusBar,
   Dimensions,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -486,6 +488,10 @@ export default function ExclusionsScreen() {
         </TouchableOpacity>
       </Animated.View>
 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 120 }}
@@ -798,6 +804,7 @@ export default function ExclusionsScreen() {
           </TouchableOpacity>
         </Animated.View>
       </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Fixed Bottom Save Button */}
       <Animated.View

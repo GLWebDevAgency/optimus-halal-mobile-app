@@ -21,6 +21,8 @@ import {
   TextInput,
   Switch,
   useColorScheme,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
