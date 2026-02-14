@@ -128,5 +128,7 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Build Production (Android + iOS)
-        run: eas build --platform all --profile production --non-interactive --no-wait
+      # Android only — iOS needs Apple Distribution Certificate configured in EAS
+      # To enable iOS: eas credentials --platform ios (interactive), then change to --platform all
+      - name: Build Production (Android)
+        run: eas build --platform android --profile production --non-interactive --no-wait
