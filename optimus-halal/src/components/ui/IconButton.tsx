@@ -7,7 +7,7 @@
 import React from "react";
 import { TouchableOpacity, TouchableOpacityProps, View } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
+import { useHaptics } from "@/hooks";
 
 export interface IconButtonProps extends TouchableOpacityProps {
   icon: keyof typeof MaterialIcons.glyphMap;
@@ -41,10 +41,11 @@ export const IconButton: React.FC<IconButtonProps> = ({
   className = "",
   ...props
 }) => {
+  const { impact } = useHaptics();
   const sizeStyles = sizeConfig[size];
 
   const handlePress = async (e: any) => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     onPress?.(e);
   };
 

@@ -25,7 +25,7 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
+import { useHaptics } from "@/hooks";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -38,6 +38,7 @@ import { useLocalCartStore } from "@/store";
 export default function CheckoutScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { impact, notification } = useHaptics();
   const isDark = colorScheme === "dark";
 
   const { items, total, clearCart } = useLocalCartStore();
@@ -49,12 +50,12 @@ export default function CheckoutScreen() {
   const [cardCvc, setCardCvc] = useState("");
 
   const handleBack = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.back();
   }, []);
 
   const handlePlaceOrder = useCallback(async () => {
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    notification();
     clearCart();
     router.replace("/(marketplace)/order-tracking" as any);
   }, [clearCart]);

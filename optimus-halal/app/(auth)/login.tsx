@@ -20,15 +20,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as LocalAuthentication from "expo-local-authentication";
-import * as Haptics from "expo-haptics";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
 import { Button, Input } from "@/components/ui";
 import { useAuthStore } from "@/store/apiStores";
-import { useTranslation } from "@/hooks";
+import { useTranslation, useHaptics } from "@/hooks";
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { impact } = useHaptics();
   const isDark = colorScheme === "dark";
   const { t } = useTranslation();
 
@@ -66,7 +66,7 @@ export default function LoginScreen() {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
 
     try {
       // Use the store action which handles API call, tokens, profile fetch, and state update
@@ -91,7 +91,7 @@ export default function LoginScreen() {
   }, [email, password, validateForm, login, authError]);
 
   const handleBiometricLogin = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
 
     const hasHardware = await LocalAuthentication.hasHardwareAsync();
     if (!hasHardware) {

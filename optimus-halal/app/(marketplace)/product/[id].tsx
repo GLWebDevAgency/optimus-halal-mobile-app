@@ -25,7 +25,7 @@ import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
+import { useHaptics } from "@/hooks";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -116,6 +116,7 @@ export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { impact, notification } = useHaptics();
   const isDark = colorScheme === "dark";
 
   const { addItem, itemCount } = useLocalCartStore();
@@ -127,22 +128,22 @@ export default function ProductDetailScreen() {
   const product = PRODUCT_DATA; // In real app, fetch based on id
 
   const handleBack = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.back();
   }, []);
 
   const handleCartPress = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.navigate("/(marketplace)/cart" as any);
   }, []);
 
   const handleQuantityChange = useCallback(async (delta: number) => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     setQuantity((prev) => Math.max(1, prev + delta));
   }, []);
 
   const handleAddToCart = useCallback(async () => {
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    notification();
     for (let i = 0; i < quantity; i++) {
       addItem({
         productId: product.id,

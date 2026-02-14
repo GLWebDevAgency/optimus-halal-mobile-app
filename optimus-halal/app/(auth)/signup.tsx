@@ -23,18 +23,18 @@ import {
 import { router, Link } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
 import { Button, Input, IconButton, PhoneInput, LocationPicker, validateFrenchPhone } from "@/components/ui";
 import { useLocalAuthStore } from "@/store";
 import { authService } from "@/services/api/auth.service";
 import { City } from "@/constants/locations";
-import { useTranslation } from "@/hooks";
+import { useTranslation, useHaptics } from "@/hooks";
 
 export default function SignUpScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { impact, notification } = useHaptics();
   const isDark = colorScheme === "dark";
   const { t } = useTranslation();
 
@@ -91,7 +91,7 @@ export default function SignUpScreen() {
     if (!validateForm()) return;
 
     setIsLoading(true);
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
 
     try {
       // Real API call to Railway backend
@@ -123,7 +123,7 @@ export default function SignUpScreen() {
           updatedAt: new Date().toISOString(),
         });
 
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        notification();
         router.replace("/(tabs)");
       } else {
         Alert.alert(t.common.error, response.message || "Échec de l'inscription");
@@ -140,7 +140,7 @@ export default function SignUpScreen() {
   }, [fullName, phoneNumber, fullPhoneNumber, email, password, selectedCity, validateForm, setUser]);
 
   const handleSocialAuth = useCallback(async (provider: "google" | "apple") => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     Alert.alert(t.common.comingSoon, `L'inscription avec ${provider === "google" ? "Google" : "Apple"} sera bientôt disponible.`);
   }, []);
 

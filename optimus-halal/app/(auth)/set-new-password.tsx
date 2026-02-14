@@ -23,7 +23,8 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
+import { useHaptics } from "@/hooks";
+import { ImpactFeedbackStyle, NotificationFeedbackType } from "expo-haptics";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -50,6 +51,7 @@ interface PasswordStrengthResult {
 export default function SetNewPasswordScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { impact, notification } = useHaptics();
   const isDark = colorScheme === "dark";
   const { token } = useLocalSearchParams<{ token: string }>();
   const { t, isRTL } = useTranslation();
@@ -101,13 +103,13 @@ export default function SetNewPasswordScreen() {
   }, [newPassword, confirmPassword]);
 
   const handleGoBack = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.back();
   }, []);
 
   const handleSubmit = useCallback(async () => {
     if (!isFormValid) {
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      notification(NotificationFeedbackType.Error);
       return;
     }
 
@@ -116,13 +118,13 @@ export default function SetNewPasswordScreen() {
       withSpring(0.95, { damping: 10, stiffness: 400 }),
       withSpring(1, { damping: 10, stiffness: 200 })
     );
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    impact(ImpactFeedbackStyle.Medium);
 
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      notification();
       
       // Show success and navigate to login
       Alert.alert(

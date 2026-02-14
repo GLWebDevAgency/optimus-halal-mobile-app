@@ -7,7 +7,7 @@
 import React from "react";
 import { TouchableOpacity, Text, View, TouchableOpacityProps } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
+import { useHaptics } from "@/hooks";
 
 export interface ChipProps extends TouchableOpacityProps {
   label: string;
@@ -27,8 +27,9 @@ export const Chip: React.FC<ChipProps> = ({
   className = "",
   ...props
 }) => {
+  const { impact } = useHaptics();
   const handlePress = async (e: any) => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     onPress?.(e);
   };
 

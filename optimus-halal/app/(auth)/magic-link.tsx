@@ -23,7 +23,7 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
+import { NotificationFeedbackType } from "expo-haptics";
 import * as Linking from "expo-linking";
 import Animated, {
   FadeIn,
@@ -34,7 +34,7 @@ import Animated, {
 
 import { Input, IconButton, Button } from "@/components/ui";
 import { useLocalAuthStore } from "@/store";
-import { useTranslation } from "@/hooks";
+import { useTranslation, useHaptics } from "@/hooks";
 import {
   requestMagicLink,
   verifyMagicLinkToken,
@@ -48,6 +48,7 @@ type AuthState = "input" | "sent" | "verifying" | "success";
 export default function MagicLinkLoginScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { impact, notification } = useHaptics();
   const isDark = colorScheme === "dark";
   const { t } = useTranslation();
   const params = useLocalSearchParams();
@@ -126,7 +127,7 @@ export default function MagicLinkLoginScreen() {
 
     setIsLoading(true);
     setError("");
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
 
     try {
       const response = await requestMagicLink(
@@ -137,16 +138,14 @@ export default function MagicLinkLoginScreen() {
       if (response.success) {
         setAuthState("sent");
         setExpiresIn(response.expiresIn || 900);
-        await Haptics.notificationAsync(
-          Haptics.NotificationFeedbackType.Success
-        );
+        notification();
       } else {
         setError(response.message);
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        notification(NotificationFeedbackType.Error);
       }
     } catch (err: any) {
       setError(err.message || t.errors.generic);
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      notification(NotificationFeedbackType.Error);
     } finally {
       setIsLoading(false);
     }
@@ -162,9 +161,7 @@ export default function MagicLinkLoginScreen() {
 
         if (response.success && response.user) {
           setAuthState("success");
-          await Haptics.notificationAsync(
-            Haptics.NotificationFeedbackType.Success
-          );
+          notification();
 
           // Set user in store
           setUser({
@@ -190,14 +187,12 @@ export default function MagicLinkLoginScreen() {
         } else {
           setError(response.message || "Lien invalide ou expiré");
           setAuthState("input");
-          await Haptics.notificationAsync(
-            Haptics.NotificationFeedbackType.Error
-          );
+          notification(NotificationFeedbackType.Error);
         }
       } catch (err: any) {
         setError(err.message || "Échec de la vérification");
         setAuthState("input");
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        notification(NotificationFeedbackType.Error);
       }
     },
     [email, setUser]
