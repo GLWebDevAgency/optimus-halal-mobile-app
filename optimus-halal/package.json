@@ -74,5 +74,8 @@
   "overrides": {
     "lightningcss": "1.31.1"
   },
+  "optionalDependencies": {
+    "lightningcss-linux-x64-gnu": "1.31.1"
+  },
   "private": true
 }
