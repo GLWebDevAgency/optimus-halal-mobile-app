@@ -15,7 +15,7 @@ import {
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
+import { useHaptics } from "@/hooks";
 
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -45,8 +45,9 @@ export default function AppearanceScreen() {
   const { t } = useTranslation();
   const { theme, setTheme, effectiveTheme, colors, isDark } = useTheme();
 
+  const { impact } = useHaptics();
   const handleSelectTheme = async (themeOption: ThemeMode) => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     setTheme(themeOption);
   };
 

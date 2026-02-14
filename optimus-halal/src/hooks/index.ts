@@ -67,3 +67,9 @@ export {
   useCreateFavoriteFolder,
   useMoveFavoriteToFolder,
 } from './useFavorites';
+
+// ============================================
+// HAPTICS HOOK
+// ============================================
+
+export { useHaptics } from './useHaptics';

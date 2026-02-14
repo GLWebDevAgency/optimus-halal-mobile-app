@@ -20,7 +20,8 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
+import { useHaptics } from "@/hooks";
+import { ImpactFeedbackStyle } from "expo-haptics";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -225,22 +226,23 @@ function CartItem({
 export default function CartScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { impact, notification } = useHaptics();
   const isDark = colorScheme === "dark";
 
   const { items, itemCount, total, removeItem, updateQuantity } = useLocalCartStore();
 
   const handleBack = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.back();
   }, []);
 
   const handleRemoveItem = useCallback(async (productId: string) => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    impact(ImpactFeedbackStyle.Medium);
     removeItem(productId);
   }, [removeItem]);
 
   const handleUpdateQuantity = useCallback(async (productId: string, delta: number) => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     const item = items.find((i) => i.productId === productId);
     if (item) {
       const newQuantity = item.quantity + delta;
@@ -253,7 +255,7 @@ export default function CartScreen() {
   }, [items, removeItem, updateQuantity]);
 
   const handleCheckout = useCallback(async () => {
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    notification();
     router.navigate("/(marketplace)/checkout" as any);
   }, []);
 

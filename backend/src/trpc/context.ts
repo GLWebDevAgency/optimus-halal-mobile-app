@@ -2,6 +2,7 @@ import type { Context as HonoContext } from "hono";
 import { db } from "../db/index.js";
 import { redis } from "../lib/redis.js";
 import { verifyAccessToken } from "../services/auth.service.js";
+import { logger } from "../lib/logger.js";
 
 export interface Context {
   db: typeof db;
@@ -23,7 +24,7 @@ export async function createContext(c: HonoContext): Promise<Context> {
     } catch (err) {
       // Distinguish expired/invalid tokens (expected) from infrastructure errors (unexpected)
       if (err instanceof Error && err.name !== "JWTExpired" && err.name !== "JWTClaimValidationFailed" && err.name !== "JWSSignatureVerificationFailed" && err.name !== "JWTInvalid") {
-        console.error("[context] Unexpected token verification error:", err.message);
+        logger.error("Erreur inattendue de verification du token", { error: err.message });
       }
     }
   }

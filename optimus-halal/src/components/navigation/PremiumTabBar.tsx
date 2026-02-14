@@ -23,7 +23,7 @@ import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
-import * as Haptics from "expo-haptics";
+import { useHaptics } from "@/hooks";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -89,6 +89,7 @@ interface TabItemProps {
 
 function TabItem({ tab, isActive, onPress, badge, index }: TabItemProps) {
   const colorScheme = useColorScheme();
+  const { impact } = useHaptics();
   const isDark = colorScheme === "dark";
   
   // Animation values
@@ -125,7 +126,7 @@ function TabItem({ tab, isActive, onPress, badge, index }: TabItemProps) {
   }, []);
 
   const handlePress = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     triggerRipple();
     scale.value = withSequence(
       withSpring(0.9, { damping: 10, stiffness: 400 }),
@@ -217,6 +218,7 @@ interface CenterButtonProps {
 
 function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
   const colorScheme = useColorScheme();
+  const { notification } = useHaptics();
   const isDark = colorScheme === "dark";
   
   const scale = useSharedValue(1);
@@ -256,7 +258,7 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
   }, [isActive]);
 
   const handlePress = useCallback(async () => {
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    notification();
     scale.value = withSequence(
       withSpring(0.85, { damping: 8, stiffness: 400 }),
       withSpring(1.1, { damping: 8, stiffness: 300 }),

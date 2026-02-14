@@ -1,5 +1,6 @@
 import { env } from "../lib/env.js";
 import { redis } from "../lib/redis.js";
+import { logger } from "../lib/logger.js";
 
 interface OpenFoodFactsProduct {
   code: string;
@@ -77,7 +78,7 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeResult> {
     await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(result));
     return result;
   } catch (error) {
-    console.error("[barcode] OpenFoodFacts lookup failed:", error);
+    logger.error("Echec recherche OpenFoodFacts", { barcode, error: error instanceof Error ? error.message : String(error) });
     return { found: false };
   }
 }

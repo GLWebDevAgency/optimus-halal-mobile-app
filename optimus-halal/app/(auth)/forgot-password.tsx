@@ -24,7 +24,8 @@ import {
 import { router, Link } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
+import { useHaptics } from "@/hooks";
+import { ImpactFeedbackStyle, NotificationFeedbackType } from "expo-haptics";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -45,6 +46,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 export default function ForgotPasswordScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { impact, notification } = useHaptics();
   const isDark = colorScheme === "dark";
   const { t, isRTL } = useTranslation();
 
@@ -62,13 +64,13 @@ export default function ForgotPasswordScreen() {
   const handleSubmit = useCallback(async () => {
     if (!email) {
       setError(t.auth.forgotPassword.errors.emailRequired);
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      notification(NotificationFeedbackType.Error);
       return;
     }
 
     if (!validateEmail(email)) {
       setError(t.auth.forgotPassword.errors.emailInvalid);
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      notification(NotificationFeedbackType.Error);
       return;
     }
 
@@ -80,7 +82,7 @@ export default function ForgotPasswordScreen() {
       withSpring(1, { damping: 10, stiffness: 200 })
     );
     
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    impact(ImpactFeedbackStyle.Medium);
 
     try {
       // Simulate API call
@@ -107,7 +109,7 @@ export default function ForgotPasswordScreen() {
   };
 
   const handleGoBack = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.back();
   }, []);
 

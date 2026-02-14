@@ -18,7 +18,7 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
+import { useHaptics } from "@/hooks";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -87,18 +87,19 @@ const CATEGORIES = [
   { id: "supplements" as const, icon: "medication" as const },
 ];
 
-function ProductCard({ product, index }: { product: Product; index: number }) {
+const ProductCard = React.memo(function ProductCard({ product, index }: { product: Product; index: number }) {
   const colorScheme = useColorScheme();
+  const { impact, notification } = useHaptics();
   const isDark = colorScheme === "dark";
   const { addItem } = useLocalCartStore();
 
   const handlePress = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.push(`/(marketplace)/product/${product.id}` as any);
   }, [product.id]);
 
   const handleAddToCart = useCallback(() => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    notification();
     addItem({
       productId: product.id,
       name: product.name,
@@ -201,11 +202,12 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
       </TouchableOpacity>
     </Animated.View>
   );
-}
+});
 
 export default function MarketplaceTab() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { impact } = useHaptics();
   const isDark = colorScheme === "dark";
   const { t } = useTranslation();
   const { flags } = useFeatureFlagsStore();
@@ -221,22 +223,22 @@ export default function MarketplaceTab() {
   }, []);
 
   const handleCategoryPress = useCallback((categoryId: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     setSelectedCategory(categoryId);
   }, []);
 
   const handleViewAllPress = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.push("/(marketplace)/catalog" as any);
   }, []);
 
   const handleCartPress = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.push("/(marketplace)/cart" as any);
   }, []);
 
   const handleAlertsPress = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.push("/(tabs)/alerts" as any);
   }, []);
 

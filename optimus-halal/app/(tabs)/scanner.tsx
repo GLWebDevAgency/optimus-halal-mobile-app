@@ -25,7 +25,8 @@ import {
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
+import { useHaptics } from "@/hooks";
+import { ImpactFeedbackStyle } from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import Animated, {
   useSharedValue,
@@ -60,6 +61,7 @@ const PRIMARY_COLOR = "#2bee6c";
 export default function ScannerScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { impact, notification } = useHaptics();
   const isDark = colorScheme === "dark";
   const { t } = useTranslation();
   const cameraRef = useRef<CameraView>(null);
@@ -141,17 +143,17 @@ export default function ScannerScreen() {
   }));
 
   const handleToggleFlash = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     setIsFlashOn((prev) => !prev);
   }, []);
 
   const handleClose = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.back();
   }, []);
 
   const handleOpenGallery = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
@@ -171,7 +173,7 @@ export default function ScannerScreen() {
   }, []);
 
   const handleOpenHistory = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.push("/scan-result" as any);
   }, []);
 
@@ -181,7 +183,7 @@ export default function ScannerScreen() {
 
       setScanned(true);
       setIsScanning(false);
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      notification();
 
       // Navigate to scan result with barcode
       router.push({
@@ -212,7 +214,7 @@ export default function ScannerScreen() {
       withSpring(1.05, { damping: 10, stiffness: 300 }),
       withSpring(1, { damping: 12, stiffness: 200 })
     );
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    impact(ImpactFeedbackStyle.Heavy);
     // Simulate scanning a product
     simulateScan("3760020507350");
   }, [simulateScan]);

@@ -9,7 +9,7 @@
  * - Grille de produits
  */
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -23,7 +23,7 @@ import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
+import { useHaptics } from "@/hooks";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -120,6 +120,8 @@ const PRODUCTS = [
   },
 ];
 
+const catalogKeyExtractor = (item: (typeof PRODUCTS)[0]) => item.id;
+
 interface ProductCardProps {
   product: typeof PRODUCTS[0];
   onPress: () => void;
@@ -127,7 +129,7 @@ interface ProductCardProps {
   onToggleFavorite: () => void;
 }
 
-function ProductCard({ product, onPress, onAddToCart, onToggleFavorite }: ProductCardProps) {
+const ProductCard = React.memo(function ProductCard({ product, onPress, onAddToCart, onToggleFavorite }: ProductCardProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -215,11 +217,12 @@ function ProductCard({ product, onPress, onAddToCart, onToggleFavorite }: Produc
       </View>
     </TouchableOpacity>
   );
-}
+});
 
 export default function MarketplaceCatalogScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { impact, notification } = useHaptics();
   const isDark = colorScheme === "dark";
 
   const { user } = useLocalAuthStore();
@@ -229,23 +232,34 @@ export default function MarketplaceCatalogScreen() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [products, setProducts] = useState(PRODUCTS);
 
+  const filteredProducts = useMemo(() => {
+    let result = products;
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        (p) => p.name.toLowerCase().includes(query) || p.brand.toLowerCase().includes(query)
+      );
+    }
+    return result;
+  }, [products, searchQuery]);
+
   const handleCategoryPress = useCallback(async (categoryId: string) => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     setSelectedCategory(categoryId);
   }, []);
 
   const handleProductPress = useCallback(async (productId: string) => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.navigate({ pathname: "/(marketplace)/product/[id]", params: { id: productId } } as any);
   }, []);
 
   const handleAddToCart = useCallback(async (_productId: string) => {
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    notification();
     // Add to cart logic
   }, []);
 
   const handleToggleFavorite = useCallback(async (productId: string) => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     setProducts((prev) =>
       prev.map((p) =>
         p.id === productId ? { ...p, isFavorite: !p.isFavorite } : p
@@ -254,7 +268,7 @@ export default function MarketplaceCatalogScreen() {
   }, []);
 
   const handleCartPress = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.navigate("/(marketplace)/cart" as any);
   }, []);
 
@@ -320,8 +334,8 @@ export default function MarketplaceCatalogScreen() {
       </Animated.View>
 
       <FlashList
-        data={products}
-        keyExtractor={(item) => item.id}
+        data={filteredProducts}
+        keyExtractor={catalogKeyExtractor}
         numColumns={2}
         renderItem={({ item }) => (
           <View style={{ flex: 1, paddingHorizontal: 8, marginBottom: 16 }}>

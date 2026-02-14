@@ -1,4 +1,5 @@
 import { env } from "../lib/env.js";
+import { logger } from "../lib/logger.js";
 
 interface ExpoPushMessage {
   to: string | string[];
@@ -33,14 +34,14 @@ export async function sendPushNotification(
     });
 
     if (!response.ok) {
-      console.error("[push] Expo push error:", response.status);
+      logger.error("Erreur Expo push", { status: response.status });
       return [];
     }
 
     const result = (await response.json()) as { data?: ExpoPushTicket[] };
     return result.data ?? [];
   } catch (err) {
-    console.error("[push] Network error:", err instanceof Error ? err.message : err);
+    logger.error("Erreur réseau push", { error: err instanceof Error ? err.message : String(err) });
     return [];
   }
 }
@@ -72,10 +73,10 @@ export async function sendBulkPushNotifications(
         const result = (await response.json()) as { data?: ExpoPushTicket[] };
         allTickets.push(...(result.data ?? []));
       } else {
-        console.error(`[push] Bulk chunk ${i + 1}/${chunks.length} failed:`, response.status);
+        logger.error("Echec envoi push en lot", { chunk: `${i + 1}/${chunks.length}`, status: response.status });
       }
     } catch (err) {
-      console.error(`[push] Bulk chunk ${i + 1}/${chunks.length} network error:`, err instanceof Error ? err.message : err);
+      logger.error("Erreur réseau push en lot", { chunk: `${i + 1}/${chunks.length}`, error: err instanceof Error ? err.message : String(err) });
     }
   }
 

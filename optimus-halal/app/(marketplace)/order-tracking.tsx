@@ -21,7 +21,8 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
+import { useHaptics } from "@/hooks";
+import { ImpactFeedbackStyle } from "expo-haptics";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -150,17 +151,18 @@ function PastOrderItem({
 export default function OrderTrackingScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { impact } = useHaptics();
   const isDark = colorScheme === "dark";
 
   const [activeFilter, setActiveFilter] = useState<"active" | "past" | "returns">("active");
 
   const handleBackToHome = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.replace("/(tabs)");
   }, []);
 
   const handleCallDriver = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    impact(ImpactFeedbackStyle.Medium);
     // In real app, trigger phone call
   }, []);
 

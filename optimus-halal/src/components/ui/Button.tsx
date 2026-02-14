@@ -13,7 +13,7 @@ import {
   TouchableOpacityProps,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import * as Haptics from "expo-haptics";
+import { useHaptics } from "@/hooks";
 
 export interface ButtonProps extends TouchableOpacityProps {
   variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
@@ -84,12 +84,13 @@ export const Button: React.FC<ButtonProps> = ({
   className = "",
   ...props
 }) => {
+  const { impact } = useHaptics();
   const variantStyle = variantStyles[variant];
   const sizeStyle = sizeStyles[size];
 
   const handlePress = async (e: any) => {
     if (haptic) {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      impact();
     }
     onPress?.(e);
   };

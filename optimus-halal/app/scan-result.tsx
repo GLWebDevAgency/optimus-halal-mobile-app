@@ -24,7 +24,7 @@ import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
+import { ImpactFeedbackStyle } from "expo-haptics";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -35,7 +35,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { Card, Badge, IconButton, Button } from "@/components/ui";
 import { useScanHistoryStore } from "@/store";
-import { useTranslation } from "@/hooks";
+import { useTranslation, useHaptics } from "@/hooks";
 import { colors } from "@/constants/theme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -159,6 +159,7 @@ function IngredientItem({
 export default function ScanResultScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { impact } = useHaptics();
   const isDark = colorScheme === "dark";
   const { t } = useTranslation();
   const { barcode } = useLocalSearchParams<{ barcode: string }>();
@@ -172,12 +173,12 @@ export default function ScanResultScreen() {
   const productIsFavorite = checkIsFavorite(product.barcode);
 
   const handleGoBack = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.back();
   }, []);
 
   const handleShare = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     try {
       await Share.share({
         message: `${product.name} par ${product.brand} - Score éthique: ${product.ethicalScore.overall}/5. Vérifié avec Optimus Halal.`,
@@ -188,17 +189,17 @@ export default function ScanResultScreen() {
   }, [product]);
 
   const handleToggleFavorite = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    impact(ImpactFeedbackStyle.Medium);
     toggleFavorite(product.barcode);
   }, [product.barcode, toggleFavorite]);
 
   const handleFindStores = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.push("/(tabs)/map");
   }, []);
 
   const handleReport = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.push({
       pathname: "/report",
       params: { productId: product.id, productName: product.name },
@@ -206,7 +207,7 @@ export default function ScanResultScreen() {
   }, [product]);
 
   const handleViewCertificate = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     // Navigate to certificate details
   }, []);
 

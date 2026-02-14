@@ -22,7 +22,7 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Location from "expo-location";
-import * as Haptics from "expo-haptics";
+import { useHaptics } from "@/hooks";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 
 import { City, FRENCH_CITIES, searchCities, findNearestCity } from "@/constants/locations";
@@ -50,6 +50,7 @@ export function LocationPicker({
   showGeolocation = true,
   ref,
 }: LocationPickerProps) {
+  const { impact, notification } = useHaptics();
     const colorScheme = useColorScheme();
     const isDark = colorScheme === "dark";
 
@@ -71,7 +72,7 @@ export function LocationPicker({
     // Géolocalisation
     const handleGeolocation = useCallback(async () => {
       setIsLocating(true);
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      impact();
 
       try {
         // Demander la permission
@@ -99,7 +100,7 @@ export function LocationPicker({
         );
 
         if (nearestCity) {
-          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          notification();
           onSelect?.(nearestCity);
           setIsPickerVisible(false);
         } else {
@@ -122,7 +123,7 @@ export function LocationPicker({
     // Sélection d'une ville
     const handleCitySelect = useCallback(
       async (city: City) => {
-        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        impact();
         onSelect?.(city);
         setIsPickerVisible(false);
         setSearchQuery("");
@@ -132,7 +133,7 @@ export function LocationPicker({
 
     // Ouvrir le picker
     const handleOpen = useCallback(async () => {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      impact();
       setFilteredCities(FRENCH_CITIES.slice(0, 20));
       setIsPickerVisible(true);
     }, []);

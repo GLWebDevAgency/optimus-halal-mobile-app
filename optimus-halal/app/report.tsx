@@ -21,12 +21,15 @@ import {
   TextInput,
   Switch,
   useColorScheme,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
+import { useHaptics } from "@/hooks";
+import { ImpactFeedbackStyle } from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import Animated, {
   FadeIn,
@@ -68,6 +71,7 @@ const VIOLATION_TYPES = [
 export default function ReportingFormScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { impact, notification } = useHaptics();
   const isDark = colorScheme === "dark";
 
   const [productSearch, setProductSearch] = useState("");
@@ -79,22 +83,22 @@ export default function ReportingFormScreen() {
   const [allowContact, setAllowContact] = useState(true);
 
   const handleBack = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.back();
   }, []);
 
   const handleCancel = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.back();
   }, []);
 
   const handleSelectViolation = useCallback(async (id: string) => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     setSelectedViolation(id);
   }, []);
 
   const handleAddPhoto = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -108,18 +112,18 @@ export default function ReportingFormScreen() {
   }, []);
 
   const handleRemovePhoto = useCallback(async (index: number) => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    impact(ImpactFeedbackStyle.Medium);
     setPhotos((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
   const handleSubmit = useCallback(async () => {
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    notification();
     // In real app, submit report
     router.back();
   }, []);
 
   const handleScanBarcode = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.push("/(tabs)/scanner");
   }, []);
 

@@ -23,7 +23,7 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
+import { useHaptics } from "@/hooks";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -42,13 +42,14 @@ const WAITLIST_AVATARS = [
 export default function MarketplaceComingSoonScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { impact, notification } = useHaptics();
   const isDark = colorScheme === "dark";
 
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleBack = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.back();
   }, []);
 
@@ -65,7 +66,7 @@ export default function MarketplaceComingSoonScreen() {
       return;
     }
 
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    notification();
     setIsSubmitting(true);
 
     // Simulate API call

@@ -16,6 +16,7 @@ import {
   sendWelcomeEmail,
 } from "../../services/email.service.js";
 import { unauthorized, conflict, notFound, badRequest } from "../../lib/errors.js";
+import { logger } from "../../lib/logger.js";
 
 function safeCompare(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
@@ -74,7 +75,7 @@ export const authRouter = router({
 
       // Fire-and-forget welcome email (outside transaction)
       sendWelcomeEmail(result.user.email, result.user.displayName).catch((err) => {
-        console.error("[auth:register] Failed to send welcome email:", {
+        logger.error("Echec envoi email de bienvenue", {
           email: result.user.email,
           error: err instanceof Error ? err.message : String(err),
         });
@@ -165,7 +166,7 @@ export const authRouter = router({
 
       const userId = payload.sub;
       if (!userId) {
-        console.error("[auth:refresh] Refresh token missing sub claim");
+        logger.error("Token de rafraîchissement sans claim sub");
         throw unauthorized("Token de rafraîchissement invalide");
       }
 
@@ -192,7 +193,7 @@ export const authRouter = router({
         await ctx.db
           .delete(refreshTokens)
           .where(eq(refreshTokens.userId, userId));
-        console.warn("[auth:refresh] Possible token replay detected for user:", userId);
+        logger.warn("Possible replay de token detecté", { userId });
         throw unauthorized("Token de rafraîchissement invalide ou déjà utilisé");
       }
 
@@ -247,7 +248,7 @@ export const authRouter = router({
 
       const emailSent = await sendPasswordResetEmail(input.email, resetCode);
       if (!emailSent) {
-        console.error("[auth:requestPasswordReset] Failed to send reset email:", emailKey);
+        logger.error("Echec envoi email de réinitialisation", { email: emailKey });
       }
 
       return { success: true };

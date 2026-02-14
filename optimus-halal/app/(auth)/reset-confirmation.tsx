@@ -20,7 +20,8 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
+import { useHaptics } from "@/hooks";
+import { ImpactFeedbackStyle } from "expo-haptics";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -42,6 +43,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 export default function ResetConfirmationScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { impact, notification } = useHaptics();
   const isDark = colorScheme === "dark";
   const { email } = useLocalSearchParams<{ email: string }>();
   const { t, isRTL } = useTranslation();
@@ -90,17 +92,17 @@ export default function ResetConfirmationScreen() {
   }));
 
   const handleGoBack = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.back();
   }, []);
 
   const handleBackToLogin = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    impact(ImpactFeedbackStyle.Medium);
     router.replace("/(auth)/login");
   }, []);
 
   const handleOpenEmailApp = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     
     if (Platform.OS === "ios") {
       Linking.openURL("message://");
@@ -110,12 +112,12 @@ export default function ResetConfirmationScreen() {
   }, []);
 
   const handleResendLink = useCallback(async () => {
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    notification();
     // Simulate resend - in real app, call API
   }, []);
 
   const handleContactSupport = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     Linking.openURL("mailto:support@optimushalal.com");
   }, []);
 

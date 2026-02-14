@@ -24,7 +24,7 @@ import { Image } from "expo-image";
 import { router, Link } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
+import { useHaptics } from "@/hooks";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -43,6 +43,8 @@ import { colors } from "@/constants/theme";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = SCREEN_WIDTH - 40 - 16; // padding + gap
 const FAVORITE_CIRCLE_SIZE = 72;
+
+const featuredKeyExtractor = (item: (typeof FEATURED_CONTENT)[0]) => item.id;
 
 // Mock data
 const FEATURED_CONTENT = [
@@ -71,7 +73,7 @@ interface QuickActionProps {
   iconColor?: string;
 }
 
-function QuickAction({
+const QuickAction = React.memo(function QuickAction({
   icon,
   title,
   subtitle,
@@ -81,13 +83,16 @@ function QuickAction({
 }: QuickActionProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { impact } = useHaptics();
+
+  const handlePress = useCallback(() => {
+    impact();
+    onPress();
+  }, [impact, onPress]);
 
   return (
     <TouchableOpacity
-      onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        onPress();
-      }}
+      onPress={handlePress}
       activeOpacity={0.9}
       accessibilityRole="button"
       accessibilityLabel={title}
@@ -142,11 +147,12 @@ function QuickAction({
       </View>
     </TouchableOpacity>
   );
-}
+});
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { impact } = useHaptics();
   const isDark = colorScheme === "dark";
   const { t } = useTranslation();
 
@@ -174,7 +180,7 @@ export default function HomeScreen() {
   }, [history]);
 
   const handleNavigate = useCallback((route: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     if (route === "scanner") {
       router.push("/(tabs)/scanner");
     } else if (route === "map") {
@@ -366,7 +372,7 @@ export default function HomeScreen() {
               data={FEATURED_CONTENT}
               horizontal
               showsHorizontalScrollIndicator={false}
-              keyExtractor={(item) => item.id}
+              keyExtractor={featuredKeyExtractor}
               snapToInterval={CARD_WIDTH + 16}
               decelerationRate="fast"
               ItemSeparatorComponent={() => <View style={{ width: 16 }} />}

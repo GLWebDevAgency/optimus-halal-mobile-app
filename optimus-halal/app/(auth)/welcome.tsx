@@ -18,15 +18,15 @@ import {
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
 import { AUTH_CONFIG } from "@/constants/config";
-import { useTranslation } from "@/hooks";
+import { useTranslation, useHaptics } from "@/hooks";
 
 export default function AuthWelcomeScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { impact } = useHaptics();
   const isDark = colorScheme === "dark";
   const { t } = useTranslation();
 
@@ -40,12 +40,12 @@ export default function AuthWelcomeScreen() {
   }, [authMode]);
 
   const handleMagicLink = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.push("/(auth)/magic-link");
   }, []);
 
   const handleTraditionalLogin = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.push("/(auth)/login");
   }, []);
 

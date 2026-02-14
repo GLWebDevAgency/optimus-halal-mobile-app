@@ -24,7 +24,7 @@ import Animated, {
   withSpring,
   FadeIn,
 } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
+import { useHaptics } from "@/hooks";
 
 import { OnboardingSlide } from "@/components/onboarding";
 import { PageIndicator, Button } from "@/components/ui";
@@ -36,6 +36,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { impact } = useHaptics();
   const isDark = colorScheme === "dark";
   
   const flatListRef = useRef<FlatList>(null);
@@ -57,7 +58,7 @@ export default function OnboardingScreen() {
   );
 
   const handleNext = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     
     if (currentIndex < onboardingSlides.length - 1) {
       flatListRef.current?.scrollToIndex({
@@ -72,7 +73,7 @@ export default function OnboardingScreen() {
   }, [currentIndex, setOnboardingComplete]);
 
   const handleSkip = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     setOnboardingComplete(true);
     router.replace("/(auth)/welcome");
   }, [setOnboardingComplete]);

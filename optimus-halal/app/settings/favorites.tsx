@@ -3,7 +3,7 @@
  * Design basé sur le template HTML fourni (Light Mode par défaut)
  */
 
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -85,7 +85,9 @@ interface ProductCardProps {
   colors: ReturnType<typeof useTheme>["colors"];
 }
 
-function ProductCard({ product, index, onRemove, onView, onScan, isDark, colors }: ProductCardProps) {
+const favoriteKeyExtractor = (item: FavoriteProduct) => item.id;
+
+const ProductCard = React.memo(function ProductCard({ product, index, onRemove, onView, onScan, isDark, colors }: ProductCardProps) {
   const statusConfig = getStatusConfig(product.status, isDark);
 
   return (
@@ -218,7 +220,7 @@ function ProductCard({ product, index, onRemove, onView, onScan, isDark, colors 
       </View>
     </Animated.View>
   );
-}
+});
 
 export default function FavoritesScreen() {
   const { isDark, colors } = useTheme();
@@ -226,10 +228,12 @@ export default function FavoritesScreen() {
   const { favorites, removeFavorite } = useLocalFavoritesStore();
   const [selectedCategory, setSelectedCategory] = useState("all");
 
-  const filteredFavorites =
+  const filteredFavorites = useMemo(() =>
     selectedCategory === "all"
       ? favorites
-      : favorites.filter((p) => p.category === selectedCategory);
+      : favorites.filter((p) => p.category === selectedCategory),
+    [selectedCategory, favorites]
+  );
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -394,7 +398,7 @@ export default function FavoritesScreen() {
       ) : (
         <FlashList
           data={filteredFavorites}
-          keyExtractor={(item) => item.id}
+          keyExtractor={favoriteKeyExtractor}
           numColumns={2}
           renderItem={({ item, index }) => (
             <View style={{ flex: 1, paddingHorizontal: 4, marginBottom: 16 }}>

@@ -22,7 +22,8 @@ import {
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
+import { useHaptics } from "@/hooks";
+import { ImpactFeedbackStyle } from "expo-haptics";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -45,7 +46,7 @@ interface MenuItemProps {
   isLast?: boolean;
 }
 
-function MenuItem({
+const MenuItem = React.memo(function MenuItem({
   icon,
   iconBgColor,
   iconColor,
@@ -96,7 +97,7 @@ function MenuItem({
       )}
     </TouchableOpacity>
   );
-}
+});
 
 interface StatsCardProps {
   icon: keyof typeof MaterialIcons.glyphMap;
@@ -107,7 +108,7 @@ interface StatsCardProps {
   onPress: () => void;
 }
 
-function StatsCard({
+const StatsCard = React.memo(function StatsCard({
   icon,
   iconBgColor,
   iconColor,
@@ -144,11 +145,12 @@ function StatsCard({
       </Text>
     </TouchableOpacity>
   );
-}
+});
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { impact } = useHaptics();
   const isDark = colorScheme === "dark";
   const { t, language } = useTranslation();
 
@@ -171,32 +173,32 @@ export default function ProfileScreen() {
   );
 
   const handleSettings = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     Alert.alert("Paramètres", "Cette fonctionnalité sera disponible prochainement.");
   }, []);
 
   const handleEditProfile = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.push("/settings/edit-profile" as any);
   }, []);
 
   const handleScanHistory = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.push("/scan-result" as any);
   }, []);
 
   const handleFavorites = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     router.push("/settings/favorites" as any);
   }, []);
 
   const handleToggleNotifications = useCallback(async (value: boolean) => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impact();
     setPushNotificationsEnabled(value);
   }, []);
 
   const handleLogout = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    impact(ImpactFeedbackStyle.Medium);
     Alert.alert(
       t.profile.logout,
       t.profile.logoutConfirm,
