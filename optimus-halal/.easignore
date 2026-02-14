@@ -1,0 +1,34 @@
+# EAS Build ignore — controls what gets uploaded to EAS servers
+# Note: DO NOT exclude *.png — app icons and splash screens are needed!
+
+# Dependencies (reinstalled on server)
+node_modules/
+
+# Expo local state
+.expo/
+
+# Build artifacts
+dist/
+web-build/
+ios/
+android/
+
+# OS
+.DS_Store
+
+# Debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# IDE
+.vscode/
+.idea/
+
+# Tests
+__tests__/
+__mocks__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
