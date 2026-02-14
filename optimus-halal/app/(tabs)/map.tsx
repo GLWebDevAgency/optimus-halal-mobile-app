@@ -1,14 +1,14 @@
 /**
  * Points of Sale Map Screen
- * 
+ *
  * Carte interactive avec:
  * - Vue carte en fond
  * - Barre de recherche et filtres
- * - Bottom sheet avec liste des magasins
+ * - Bottom sheet avec liste des magasins (from trpc.store.search)
  * - Marqueurs sur la carte
  */
 
-import React, { useState, useCallback, useRef, useMemo } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -17,7 +17,7 @@ import {
   ScrollView,
   Dimensions,
   useColorScheme,
-  Platform,
+  ActivityIndicator,
 } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -29,110 +29,101 @@ import Animated, {
   FadeInDown,
   FadeInRight,
   SlideInUp,
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { Card, Avatar, Chip, IconButton, Button } from "@/components/ui";
-import { useLocationStore, useLocalAlertsStore } from "@/store";
+import { Card } from "@/components/ui";
 import { useTranslation } from "@/hooks/useTranslation";
-import { colors } from "@/constants/theme";
+import { trpc } from "@/lib/trpc";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const CARD_WIDTH = 280;
 
-// Mock data
+// Filter → storeType mapping (backend enum values)
 const FILTER_IDS = [
-  { id: "butchers", filterKey: "butchers" as const, active: true },
-  { id: "restaurants", filterKey: "restaurants" as const, active: false },
-  { id: "grocery", filterKey: "grocery" as const, active: false },
-  { id: "avs", filterKey: "certified" as const, hasDropdown: true, active: false },
-  { id: "rating", filterKey: "rating" as const, active: false },
+  { id: "butcher", filterKey: "butchers" as const, storeType: "butcher" as const },
+  { id: "restaurant", filterKey: "restaurants" as const, storeType: "restaurant" as const },
+  { id: "supermarket", filterKey: "grocery" as const, storeType: "supermarket" as const },
+  { id: "certified", filterKey: "certified" as const, halalOnly: true },
+  { id: "abattoir", filterKey: "rating" as const, storeType: "abattoir" as const },
 ];
 
-const STORES = [
-  {
-    id: "1",
-    name: "Al-Baraka Boucherie",
-    type: "Ethical & Organic Meat",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDaJTiM5FZsVGCC4NwciZBljJsRhP6Nvqc2lH9lFjXYCzwYwfsOP9OtZB2BF_QGvp1fqlXtvth5oQhnm4KYneWmKC8zyxUDFgc5KlWCLssjHSHbljUUL_8ZL4GTWnzi1ijVam7NCyjr4hfIjnFiPHaNauW6HYrkMVolqGLpwpsQzLxFn5IW2oPpb421-CypZn65orcjpwW2nomeTOHxtLxoRe5hr0K8-N62sWP1RFrNk-vZpcAcSyN1b_k1ad4hh3a5iQ1EHrqASPYx",
-    rating: 4.8,
-    reviews: 124,
-    distance: "0.8 km",
-    isOpen: true,
-    certification: "AVS",
-    isFeatured: true,
-  },
-  {
-    id: "2",
-    name: "La Table du Sultan",
-    type: "Authentic Turkish Cuisine",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBSe1YI3Als-HS7uVbYrGvXup-uMxRjH_rVwfAxVpw-STD_oeQXSXaIEMGg5h8uVfsRVTNV8Qb24ncJOFQGCSzPsvrpexPMWNOQyGk2mMJKZxSQpcKg45pD72eDi9i4ZtKeXbR_0HULAlhdRhGWsmNn4Bak92D4wUmHj18k5TPS34NyCwVvzQGCCeiOleglw8S8jLS-QpaKpr3ZYQ8M4iLuc1KrVJeIObg_MkXaCSSBICluuR74mCXvDKuYllriW_V3gLpp6Xno7AXn",
-    rating: 4.5,
-    reviews: 89,
-    distance: "1.2 km",
-    isOpen: false,
-    certification: "HMS",
-    isFeatured: false,
-  },
-  {
-    id: "3",
-    name: "Medina Market",
-    type: "Grocery & Spices",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCCFlUgl8XN7yNCmbG5kcQZBDSDDJPODyXGxiVZ-jqhUZBhRbZz-9FZNqlHY2LaWqsC3hWCrGmgygtcWs8zZANTg4qMsK73SrthCBaS6XajuZAdTRFCrrYlvZbxRC9-tDZjr6OU68ipZd8sxyTDCWp60Zb8h41qRliosGcoS2bJwPuvIFZCVvh9JH67h69EA18i0AhHA5FDAnQZR-wbqCLic7d92uE2kA4gxM6i6hrb6N7YnWMd_qXRvLJQ6XN8-vTVnW3QUwzMSoMF",
-    rating: 4.2,
-    reviews: 56,
-    distance: "2.4 km",
-    isOpen: true,
-    certification: null,
-    isFeatured: false,
-  },
-];
+// ── Store type icons ────────────────────────────────────────
+const STORE_TYPE_ICON: Record<string, keyof typeof MaterialIcons.glyphMap> = {
+  butcher: "restaurant",
+  restaurant: "restaurant-menu",
+  supermarket: "shopping-cart",
+  bakery: "bakery-dining",
+  abattoir: "agriculture",
+  wholesaler: "local-shipping",
+  online: "language",
+  other: "store",
+};
 
-interface StoreCardProps {
-  store: (typeof STORES)[0];
-  onPress: () => void;
+// ── Store Card (adapted to real DB shape) ───────────────────
+interface StoreItem {
+  id: string;
+  name: string;
+  storeType: string;
+  imageUrl: string | null;
+  address: string;
+  city: string;
+  certifier: string;
+  halalCertified: boolean;
+  averageRating: number;
+  reviewCount: number;
 }
 
-const StoreCard = React.memo(function StoreCard({ store, onPress }: StoreCardProps) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+const StoreCard = React.memo(function StoreCard({
+  store,
+  index,
+  onPress,
+}: {
+  store: StoreItem;
+  index: number;
+  onPress: () => void;
+}) {
   const { t } = useTranslation();
+  const isFeatured = index === 0;
+  const certLabel = store.certifier !== "none" ? store.certifier.toUpperCase() : null;
 
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.9}
       accessibilityRole="button"
-      accessibilityLabel={`${store.name}, ${store.type}, note ${store.rating}, ${store.distance}, ${store.isOpen ? "ouvert" : "fermé"}`}
+      accessibilityLabel={`${store.name}, ${store.city}, note ${store.averageRating}`}
       className={`w-[280px] rounded-xl p-3 ${
-        store.isFeatured
+        isFeatured
           ? "bg-slate-800 border border-primary/40"
           : "bg-slate-800 border border-slate-700 opacity-90"
       }`}
       style={{
-        shadowColor: store.isFeatured ? "#1de560" : "#000",
+        shadowColor: isFeatured ? "#1de560" : "#000",
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: store.isFeatured ? 0.3 : 0.2,
+        shadowOpacity: isFeatured ? 0.3 : 0.2,
         shadowRadius: 8,
         elevation: 4,
       }}
     >
       <View className="flex-row gap-3">
         {/* Image */}
-        <View className="w-20 h-20 rounded-lg bg-slate-700 overflow-hidden">
-          <Image
-            source={{ uri: store.image }}
-            className="w-full h-full"
-            contentFit="cover"
-            transition={200}
-            accessibilityLabel={`Photo de ${store.name}`}
-          />
+        <View className="w-20 h-20 rounded-lg bg-slate-700 overflow-hidden items-center justify-center">
+          {store.imageUrl ? (
+            <Image
+              source={{ uri: store.imageUrl }}
+              className="w-full h-full"
+              contentFit="cover"
+              transition={200}
+              accessibilityLabel={`Photo de ${store.name}`}
+            />
+          ) : (
+            <MaterialIcons
+              name={STORE_TYPE_ICON[store.storeType] ?? "store"}
+              size={28}
+              color="#94a3b8"
+            />
+          )}
         </View>
 
         {/* Info */}
@@ -141,45 +132,39 @@ const StoreCard = React.memo(function StoreCard({ store, onPress }: StoreCardPro
             <Text className="font-bold text-white flex-1 pr-2" numberOfLines={1}>
               {store.name}
             </Text>
-            {store.certification && (
+            {certLabel && (
               <View
                 className={`px-1.5 py-0.5 rounded ${
-                  store.certification === "AVS"
+                  certLabel === "AVS" || certLabel === "ACHAHADA"
                     ? "bg-primary/20"
                     : "bg-slate-700"
                 }`}
               >
                 <Text
                   className={`text-[10px] font-bold ${
-                    store.certification === "AVS"
+                    certLabel === "AVS" || certLabel === "ACHAHADA"
                       ? "text-primary"
                       : "text-slate-300"
                   }`}
                 >
-                  {store.certification}
+                  {certLabel}
                 </Text>
               </View>
             )}
           </View>
           <Text className="text-xs text-slate-400 mb-1" numberOfLines={1}>
-            {store.type}
+            {store.city}
           </Text>
-          <View className="flex-row items-center gap-1 mb-1">
-            <MaterialIcons name="star" size={14} color="#fbbf24" />
-            <Text className="text-xs font-bold text-white">{store.rating}</Text>
-            <Text className="text-xs text-slate-400">({store.reviews})</Text>
-          </View>
+          {store.averageRating > 0 && (
+            <View className="flex-row items-center gap-1 mb-1">
+              <MaterialIcons name="star" size={14} color="#fbbf24" />
+              <Text className="text-xs font-bold text-white">{store.averageRating.toFixed(1)}</Text>
+              <Text className="text-xs text-slate-400">({store.reviewCount})</Text>
+            </View>
+          )}
           <View className="flex-row items-center gap-1">
             <MaterialIcons name="near-me" size={12} color="#94a3b8" />
-            <Text className="text-xs text-slate-400">{store.distance}</Text>
-            <Text className="text-slate-500 mx-1">•</Text>
-            <Text
-              className={`text-xs font-medium ${
-                store.isOpen ? "text-emerald-400" : "text-red-400"
-              }`}
-            >
-              {store.isOpen ? t.map.open : t.map.closed}
-            </Text>
+            <Text className="text-xs text-slate-400" numberOfLines={1}>{store.address}</Text>
           </View>
         </View>
       </View>
@@ -187,25 +172,25 @@ const StoreCard = React.memo(function StoreCard({ store, onPress }: StoreCardPro
       {/* Action Button */}
       <TouchableOpacity
         className={`mt-3 w-full py-2 rounded-lg flex-row items-center justify-center gap-2 ${
-          store.isFeatured
+          isFeatured
             ? "bg-primary/20 border border-primary/20"
             : "bg-slate-700"
         }`}
         activeOpacity={0.7}
         accessibilityRole="button"
-        accessibilityLabel={store.isFeatured ? `Itinéraire vers ${store.name}` : `Voir détails de ${store.name}`}
+        accessibilityLabel={isFeatured ? `Itinéraire vers ${store.name}` : `Voir détails de ${store.name}`}
       >
         <MaterialIcons
-          name={store.isFeatured ? "directions" : "visibility"}
+          name={isFeatured ? "directions" : "visibility"}
           size={18}
-          color={store.isFeatured ? "#1de560" : "#ffffff"}
+          color={isFeatured ? "#1de560" : "#ffffff"}
         />
         <Text
           className={`text-sm font-semibold ${
-            store.isFeatured ? "text-primary" : "text-white"
+            isFeatured ? "text-primary" : "text-white"
           }`}
         >
-          {store.isFeatured ? t.map.directions : "Voir détails"}
+          {isFeatured ? t.map.directions : "Voir détails"}
         </Text>
       </TouchableOpacity>
     </TouchableOpacity>
@@ -220,10 +205,43 @@ export default function MapScreen() {
   const { t } = useTranslation();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilters, setActiveFilters] = useState<string[]>(["butchers"]);
+  const [activeFilters, setActiveFilters] = useState<string[]>(["butcher"]);
+
+  // Build query params from active filters
+  const queryParams = useMemo(() => {
+    const params: {
+      query?: string;
+      storeType?: "supermarket" | "butcher" | "restaurant" | "bakery" | "abattoir" | "wholesaler" | "online" | "other";
+      halalCertifiedOnly: boolean;
+      limit: number;
+    } = { halalCertifiedOnly: false, limit: 20 };
+
+    if (searchQuery.trim()) params.query = searchQuery.trim();
+
+    // Apply storeType from first matching type filter
+    for (const f of FILTER_IDS) {
+      if (activeFilters.includes(f.id) && "storeType" in f) {
+        params.storeType = f.storeType;
+        break;
+      }
+    }
+
+    if (activeFilters.includes("certified")) {
+      params.halalCertifiedOnly = true;
+    }
+
+    return params;
+  }, [searchQuery, activeFilters]);
+
+  const storesQuery = trpc.store.search.useQuery(queryParams, {
+    staleTime: 60_000,
+    placeholderData: (prev) => prev,
+  });
+
+  const stores = storesQuery.data?.items ?? [];
 
   const toggleFilter = useCallback(
-    async (filterId: string) => {
+    (filterId: string) => {
       impact();
       setActiveFilters((prev) =>
         prev.includes(filterId)
@@ -234,14 +252,12 @@ export default function MapScreen() {
     []
   );
 
-  const handleMyLocation = useCallback(async () => {
+  const handleMyLocation = useCallback(() => {
     impact();
-    // Center map on user location
   }, []);
 
   const handleStorePress = useCallback((storeId: string) => {
     impact();
-    // Navigate to store details
   }, []);
 
   return (
@@ -272,18 +288,6 @@ export default function MapScreen() {
               shadowRadius: 15,
             }}
           />
-        </View>
-
-        {/* Store markers */}
-        <View className="absolute" style={{ top: "40%", left: "30%" }}>
-          <View className="bg-surface-dark border border-slate-700 px-3 py-1 rounded-lg mb-1 flex-row items-center gap-1">
-            <Text className="text-primary font-bold text-xs">$$</Text>
-            <Text className="text-slate-400 text-xs">•</Text>
-            <Text className="text-gold-500 text-xs">4.8★</Text>
-          </View>
-          <View className="w-10 h-10 rounded-full bg-surface-dark border-2 border-primary items-center justify-center">
-            <MaterialIcons name="restaurant" size={20} color="#1de560" />
-          </View>
         </View>
 
         {/* Map Controls */}
@@ -332,6 +336,7 @@ export default function MapScreen() {
               placeholderTextColor="#94a3b8"
               className="flex-1 ml-3 text-white text-base"
               style={{ fontFamily: "Inter" }}
+              returnKeyType="search"
             />
           </View>
           <TouchableOpacity
@@ -390,27 +395,20 @@ export default function MapScreen() {
                 {isActive && (
                   <MaterialIcons name="close" size={18} color="#ffffff" />
                 )}
-                {filter.hasDropdown && !isActive && (
-                  <MaterialIcons name="expand-more" size={18} color="#94a3b8" />
-                )}
               </TouchableOpacity>
             );
           })}
         </Animated.ScrollView>
       </LinearGradient>
 
-      {/* List View Toggle */}
+      {/* Results count badge */}
       <Animated.View
         entering={FadeIn.delay(400).duration(400)}
         className="absolute right-4"
         style={{ bottom: 280 + insets.bottom }}
       >
-        <TouchableOpacity
+        <View
           className="flex-row items-center gap-2 bg-surface-dark border border-slate-600 h-12 px-5 rounded-full"
-          activeOpacity={0.8}
-          accessibilityRole="button"
-          accessibilityLabel="Vue Liste"
-          accessibilityHint="Afficher les magasins en liste"
           style={{
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 4 },
@@ -420,8 +418,10 @@ export default function MapScreen() {
           }}
         >
           <MaterialIcons name="format-list-bulleted" size={20} color="#1de560" />
-          <Text className="font-semibold text-sm text-white">Vue Liste</Text>
-        </TouchableOpacity>
+          <Text className="font-semibold text-sm text-white">
+            {storesQuery.data?.total ?? "..."} résultats
+          </Text>
+        </View>
       </Animated.View>
 
       {/* Bottom Sheet */}
@@ -447,31 +447,45 @@ export default function MapScreen() {
           {/* Header */}
           <View className="flex-row items-center justify-between px-5 mb-3">
             <Text accessibilityRole="header" className="text-lg font-bold text-white">{t.map.nearYou}</Text>
-            <TouchableOpacity activeOpacity={0.7} accessibilityRole="link" accessibilityLabel="Voir tous les lieux à proximité">
-              <Text className="text-primary text-sm font-semibold">{t.home.viewAll}</Text>
-            </TouchableOpacity>
+            <Text className="text-primary text-sm font-semibold">
+              {storesQuery.data?.total ?? 0} magasin{(storesQuery.data?.total ?? 0) > 1 ? "s" : ""}
+            </Text>
           </View>
 
           {/* Store Cards */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20, gap: 16 }}
-            snapToInterval={CARD_WIDTH + 16}
-            decelerationRate="fast"
-          >
-            {STORES.map((store, index) => (
-              <Animated.View
-                key={store.id}
-                entering={FadeInRight.delay(400 + index * 100).duration(400)}
-              >
-                <StoreCard
-                  store={store}
-                  onPress={() => handleStorePress(store.id)}
-                />
-              </Animated.View>
-            ))}
-          </ScrollView>
+          {storesQuery.isPending ? (
+            <View className="flex-1 items-center justify-center">
+              <ActivityIndicator size="small" color="#1de560" />
+            </View>
+          ) : stores.length === 0 ? (
+            <View className="flex-1 items-center justify-center px-8">
+              <MaterialIcons name="search-off" size={32} color="#64748b" />
+              <Text className="text-sm text-slate-400 mt-2 text-center">
+                Aucun magasin trouvé pour ces filtres
+              </Text>
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 20, gap: 16 }}
+              snapToInterval={CARD_WIDTH + 16}
+              decelerationRate="fast"
+            >
+              {stores.map((store: any, index: number) => (
+                <Animated.View
+                  key={store.id}
+                  entering={FadeInRight.delay(400 + index * 100).duration(400)}
+                >
+                  <StoreCard
+                    store={store}
+                    index={index}
+                    onPress={() => handleStorePress(store.id)}
+                  />
+                </Animated.View>
+              ))}
+            </ScrollView>
+          )}
         </View>
       </Animated.View>
     </View>

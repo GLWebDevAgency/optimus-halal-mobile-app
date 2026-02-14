@@ -129,10 +129,19 @@ export default function EditProfileScreen() {
     }
   }, []);
 
+  // Safe back navigation — prevents GO_BACK crash when no screen to return to
+  const safeGoBack = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/profile" as any);
+    }
+  }, []);
+
   // Handle save - calls real API
   const handleSave = useCallback(async () => {
     if (!hasChanges) {
-      router.back();
+      safeGoBack();
       return;
     }
 
@@ -150,7 +159,7 @@ export default function EditProfileScreen() {
 
       if (success) {
         Alert.alert(t.common.success, t.editProfile.saved, [
-          { text: "OK", onPress: () => router.back() }
+          { text: "OK", onPress: safeGoBack }
         ]);
       } else {
         Alert.alert(t.common.error, error || "Impossible de sauvegarder les modifications.");
@@ -160,7 +169,7 @@ export default function EditProfileScreen() {
     } finally {
       setIsSaving(false);
     }
-  }, [hasChanges, displayName, phoneNumber, bio, avatarUrl, updateProfile, error, clearError]);
+  }, [hasChanges, displayName, fullPhoneNumber, bio, avatarUrl, selectedCity, updateProfile, error, clearError, t, safeGoBack]);
 
   // Render input field
   const renderInputField = (
@@ -288,7 +297,7 @@ export default function EditProfileScreen() {
           <Text style={{ color: "#0d1b13", fontWeight: "600" }}>{t.common.retry}</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={safeGoBack}
           style={{
             marginTop: 16,
             padding: 12,
@@ -325,7 +334,7 @@ export default function EditProfileScreen() {
         >
           {/* Back Button */}
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={safeGoBack}
             activeOpacity={0.7}
             style={{
               width: 40,

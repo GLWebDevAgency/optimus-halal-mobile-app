@@ -61,7 +61,7 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Lint
-        run: npx eslint . --ext .ts,.tsx
+        run: npx eslint .
         continue-on-error: true
 
   # ── EAS Build Preview (Recette) ──────────────────

@@ -6,12 +6,51 @@ import {
   products,
   users,
   analysisRequests,
+  boycottTargets,
 } from "../../db/schema/index.js";
 import {
   lookupBarcode,
   analyzeHalalStatus,
+  type HalalAnalysis,
 } from "../../services/barcode.service.js";
 import { notFound } from "../../lib/errors.js";
+
+// ── Boycott check helper ────────────────────────────────────
+
+async function checkBoycott(db: any, brand: string | null | undefined) {
+  if (!brand) return { isBoycotted: false, targets: [] as any[] };
+
+  const brandLower = brand.toLowerCase();
+  const matches = await db
+    .select()
+    .from(boycottTargets)
+    .where(
+      and(
+        eq(boycottTargets.isActive, true),
+        sql`EXISTS (
+          SELECT 1 FROM unnest(${boycottTargets.brands}) AS b
+          WHERE lower(b) = ${brandLower}
+          OR ${brandLower} LIKE '%' || lower(b) || '%'
+          OR lower(b) LIKE '%' || ${brandLower} || '%'
+        )`
+      )
+    );
+
+  if (matches.length === 0) return { isBoycotted: false, targets: [] as any[] };
+
+  return {
+    isBoycotted: true,
+    targets: matches.map((t: any) => ({
+      id: t.id,
+      companyName: t.companyName,
+      boycottLevel: t.boycottLevel,
+      severity: t.severity,
+      reasonSummary: t.reasonSummary,
+      sourceUrl: t.sourceUrl,
+      sourceName: t.sourceName,
+    })),
+  };
+}
 
 export const scanRouter = router({
   scanBarcode: protectedProcedure
@@ -28,13 +67,24 @@ export const scanRouter = router({
         where: eq(products.barcode, input.barcode),
       });
 
-      // 2. If not, fetch from OpenFoodFacts (outside transaction — external API call)
+      let halalAnalysis: HalalAnalysis | null = null;
+      let offData: Record<string, unknown> | null = null;
+
+      // 2. If not, fetch from OpenFoodFacts
       if (!product) {
         const offResult = await lookupBarcode(input.barcode);
 
         if (offResult.found && offResult.product) {
           const off = offResult.product;
-          const analysis = analyzeHalalStatus(off.ingredients_text);
+          offData = off as unknown as Record<string, unknown>;
+
+          // v2 analysis: uses additives_tags, labels_tags, ingredients_analysis_tags
+          halalAnalysis = analyzeHalalStatus(
+            off.ingredients_text,
+            off.additives_tags,
+            off.labels_tags,
+            off.ingredients_analysis_tags,
+          );
 
           const [newProduct] = await ctx.db
             .insert(products)
@@ -46,8 +96,9 @@ export const scanRouter = router({
               ingredients: off.ingredients_text
                 ? off.ingredients_text.split(",").map((i) => i.trim())
                 : [],
-              halalStatus: analysis.status,
-              confidenceScore: analysis.confidence,
+              halalStatus: halalAnalysis.status,
+              confidenceScore: halalAnalysis.confidence,
+              certifierName: halalAnalysis.certifierName,
               imageUrl: off.image_front_url ?? off.image_url,
               nutritionFacts: off.nutriments ?? null,
               offData: off,
@@ -57,9 +108,23 @@ export const scanRouter = router({
 
           product = newProduct;
         }
+      } else {
+        // Product exists — re-run analysis from stored OFF data for detailed reasons
+        const storedOff = product.offData as Record<string, unknown> | null;
+        if (storedOff) {
+          halalAnalysis = analyzeHalalStatus(
+            storedOff.ingredients_text as string | undefined,
+            storedOff.additives_tags as string[] | undefined,
+            storedOff.labels_tags as string[] | undefined,
+            storedOff.ingredients_analysis_tags as string[] | undefined,
+          );
+        }
       }
 
-      // 3+4. Record scan + update user stats in a single transaction
+      // 3. Check boycott status
+      const boycottResult = await checkBoycott(ctx.db, product?.brand);
+
+      // 4. Record scan + update user stats
       const result = await ctx.db.transaction(async (tx) => {
         const [scan] = await tx
           .insert(scans)
@@ -87,13 +152,10 @@ export const scanRouter = router({
             (now.getTime() - lastScan.getTime()) / (1000 * 60 * 60 * 24)
           );
           if (diffDays === 0) {
-            // Same day: keep current streak unchanged
             newStreak = user.currentStreak ?? 1;
           } else if (diffDays === 1) {
-            // Consecutive day: increment streak
             newStreak = (user.currentStreak ?? 0) + 1;
           }
-          // diffDays > 1: streak resets to 1 (default)
         }
 
         await tx
@@ -111,10 +173,28 @@ export const scanRouter = router({
         return scan;
       });
 
+      // 5. Build enriched OFF extras for the mobile app
+      const storedOff = (product?.offData ?? offData) as Record<string, unknown> | null;
+      const offExtras = storedOff ? {
+        nutriscoreGrade: (storedOff.nutriscore_grade as string) ?? null,
+        novaGroup: (storedOff.nova_group as number) ?? null,
+        ecoscoreGrade: (storedOff.ecoscore_grade as string) ?? null,
+        allergensTags: (storedOff.allergens_tags as string[]) ?? [],
+        tracesTags: (storedOff.traces_tags as string[]) ?? [],
+        additivesTags: (storedOff.additives_tags as string[]) ?? [],
+        labelsTags: (storedOff.labels_tags as string[]) ?? [],
+        ingredientsAnalysisTags: (storedOff.ingredients_analysis_tags as string[]) ?? [],
+        manufacturingPlaces: (storedOff.manufacturing_places as string) ?? null,
+        origins: (storedOff.origins as string) ?? null,
+      } : null;
+
       return {
         scan: result,
         product: product ?? null,
         isNewProduct: !product,
+        halalAnalysis,
+        boycott: boycottResult,
+        offExtras,
       };
     }),
 
@@ -130,9 +210,7 @@ export const scanRouter = router({
         where: eq(scans.userId, ctx.userId),
         orderBy: desc(scans.scannedAt),
         limit: input.limit + 1,
-        with: {
-          // Will need relations setup — fallback to manual join if needed
-        },
+        with: {},
       });
 
       let nextCursor: string | undefined;

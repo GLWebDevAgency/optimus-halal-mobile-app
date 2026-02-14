@@ -37,9 +37,10 @@ import { FlashList } from "@shopify/flash-list";
 
 import { Card, Avatar, Badge, IconButton, EmptyState } from "@/components/ui";
 import { HomeSkeleton } from "@/components/skeletons";
-import { useLocalAuthStore, useScanHistoryStore, useLocalAlertsStore, useLocalFavoritesStore } from "@/store";
+import { useLocalFavoritesStore } from "@/store";
 import { useAuthStore } from "@/store/apiStores";
 import { useTranslation } from "@/hooks/useTranslation";
+import { trpc } from "@/lib/trpc";
 import { colors } from "@/constants/theme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -158,29 +159,35 @@ export default function HomeScreen() {
   const isDark = colorScheme === "dark";
   const { t } = useTranslation();
 
-  const isInitializing = useAuthStore((s) => s.isLoading);
-  const { user } = useLocalAuthStore();
-  const { history } = useScanHistoryStore();
-  const { unreadCount } = useLocalAlertsStore();
+  const isInitializing = useAuthStore((s) => s.isInitializing);
+  const profile = useAuthStore((s) => s.profile);
   const { favorites: favoriteProducts } = useLocalFavoritesStore();
 
+  // Real API queries
+  const dashboardQuery = trpc.stats.userDashboard.useQuery(undefined, {
+    enabled: !isInitializing,
+    staleTime: 60_000,
+  });
+  const unreadQuery = trpc.notification.getUnreadCount.useQuery(undefined, {
+    enabled: !isInitializing,
+    staleTime: 30_000,
+  });
+  const nearbyStoreQuery = trpc.store.search.useQuery(
+    { halalCertifiedOnly: true, limit: 1 },
+    { enabled: !isInitializing, staleTime: 120_000 },
+  );
+
+  const unreadCount = unreadQuery.data?.count ?? 0;
+  const nearbyStore = nearbyStoreQuery.data?.items?.[0] ?? null;
+
   const userName = useMemo(() => {
-    if (user?.fullName) {
-      return user.fullName.split(" ")[0];
+    if (profile?.displayName) {
+      return profile.displayName.split(" ")[0];
     }
     return "Utilisateur";
-  }, [user]);
+  }, [profile]);
 
-  const todayStats = useMemo(() => {
-    const today = new Date().toDateString();
-    const todayScans = history.filter(
-      (scan) => new Date(scan.scannedAt).toDateString() === today
-    );
-    return {
-      productsScanned: todayScans.length || 7,
-      additivesAvoided: 3,
-    };
-  }, [history]);
+  const totalScans = dashboardQuery.data?.totalScans ?? 0;
 
   const handleNavigate = useCallback((route: string) => {
     impact();
@@ -218,7 +225,7 @@ export default function HomeScreen() {
             <View className="relative">
               <Avatar
                 size="lg"
-                source={user?.avatarUrl}
+                source={profile?.avatarUrl ?? undefined}
                 fallback={userName}
                 borderColor="primary"
               />
@@ -295,18 +302,14 @@ export default function HomeScreen() {
                 </Text>
                 <View className="flex-row items-baseline gap-2">
                   <Text className="text-3xl font-bold text-slate-900 dark:text-gold-500">
-                    {todayStats.productsScanned}
+                    {totalScans}
                   </Text>
                   <Text className="text-sm font-medium text-primary-dark dark:text-primary">
                     {t.home.healthyProducts}
                   </Text>
                 </View>
                 <Text className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  Vous avez évité{" "}
-                  <Text className="font-semibold text-slate-900 dark:text-white">
-                    {todayStats.additivesAvoided} additifs
-                  </Text>{" "}
-                  douteux aujourd'hui.
+                  {dashboardQuery.data?.totalReports ?? 0} signalement{(dashboardQuery.data?.totalReports ?? 0) > 1 ? "s" : ""} · Niveau {profile?.level ?? 1}
                 </Text>
               </View>
 
@@ -558,21 +561,27 @@ export default function HomeScreen() {
               onPress={() => router.push("/(tabs)/map")}
             >
               <View className="relative h-32 w-full overflow-hidden rounded-t-xl bg-slate-200 dark:bg-slate-800">
-                <Image
-                  source={{
-                    uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuD4F14mV-L4SAwLHOLN7PJcF4ljhLyqeV2RO3b3ZGXNzMNCJ9kN9Q-OAdBtvtEOQkbJhC_3GSwDiW8E4hYOW26kclMdNkQZMHuWu9kYB-RRNaRGaj2xG8uywwnguBuS1x8f5HpIL1Y7H3seQwXvJHQP-b0dkR1O0zyBePWjE1Qddy9UeQjgUo685jygywd0AWcu2fJLtsRYJVaBTDYhONpdbewh3tlTGEm1XT2iA8FoamJSN4n3S7YIDvpYAB-aAlcFDZj09In-gJ4Q",
-                  }}
-                  className="absolute inset-0 w-full h-full opacity-80 dark:opacity-60"
-                  contentFit="cover"
-                  transition={200}
-                  accessible={false}
-                />
-                <View className="absolute bottom-2 right-2 flex-row items-center gap-1 rounded-lg bg-white/90 dark:bg-background-dark/90 px-2 py-1 border border-slate-200/50 dark:border-slate-700/50">
-                  <MaterialIcons name="near-me" size={14} color="#1de560" />
-                  <Text className="text-xs font-bold text-slate-900 dark:text-white">
-                    1.2 km
-                  </Text>
-                </View>
+                {nearbyStore?.imageUrl ? (
+                  <Image
+                    source={{ uri: nearbyStore.imageUrl }}
+                    className="absolute inset-0 w-full h-full opacity-80 dark:opacity-60"
+                    contentFit="cover"
+                    transition={200}
+                    accessible={false}
+                  />
+                ) : (
+                  <View className="absolute inset-0 items-center justify-center">
+                    <MaterialIcons name="storefront" size={48} color={isDark ? "#334155" : "#cbd5e1"} />
+                  </View>
+                )}
+                {nearbyStore?.halalCertified && (
+                  <View className="absolute top-2 left-2 flex-row items-center gap-1 rounded-lg bg-primary/90 px-2 py-1">
+                    <MaterialIcons name="verified" size={12} color="#ffffff" />
+                    <Text className="text-[10px] font-bold text-white uppercase">
+                      {nearbyStore.certifier !== "none" ? nearbyStore.certifier.toUpperCase() : "Halal"}
+                    </Text>
+                  </View>
+                )}
               </View>
             </TouchableOpacity>
 
@@ -586,19 +595,20 @@ export default function HomeScreen() {
                 />
               </View>
               <View className="flex-1">
-                <Text className="text-sm font-bold text-slate-900 dark:text-white">
-                  Bio Market Halal
+                <Text className="text-sm font-bold text-slate-900 dark:text-white" numberOfLines={1}>
+                  {nearbyStore?.name ?? "Recherche en cours..."}
                 </Text>
-                <Text className="text-xs text-slate-500 dark:text-slate-400">
-                  12 Rue de la Paix, Paris
+                <Text className="text-xs text-slate-500 dark:text-slate-400" numberOfLines={1}>
+                  {nearbyStore ? `${nearbyStore.address}, ${nearbyStore.city}` : "Chargement..."}
                 </Text>
               </View>
               <TouchableOpacity
                 activeOpacity={0.7}
                 accessibilityRole="button"
-                accessibilityLabel="Itinéraire"
-                accessibilityHint="Ouvrir l'itinéraire vers Bio Market Halal"
+                accessibilityLabel="Voir la carte"
+                accessibilityHint="Ouvrir la carte des magasins"
                 className="rounded-full p-2 bg-slate-100 dark:bg-white/5"
+                onPress={() => router.push("/(tabs)/map")}
               >
                 <MaterialIcons
                   name="directions"

@@ -1,16 +1,17 @@
 /**
  * Scan Result Screen
- * 
+ *
  * Affiche les résultats du scan avec:
  * - Image produit en header
- * - Badge de certification
- * - Score éthique
- * - Alertes allergènes
+ * - Badge statut halal (halal/haram/douteux/inconnu)
+ * - Score de confiance
  * - Liste des ingrédients
  * - Actions (favoris, où acheter, signaler)
+ *
+ * Connecté au backend via tRPC scan.scanBarcode mutation.
  */
 
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -19,6 +20,7 @@ import {
   useColorScheme,
   Dimensions,
   Share,
+  ActivityIndicator,
 } from "react-native";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
@@ -33,128 +35,66 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { Card, Badge, IconButton, Button } from "@/components/ui";
+import { Card, IconButton } from "@/components/ui";
+import { useScanBarcode } from "@/hooks/useScan";
 import { useScanHistoryStore } from "@/store";
 import { useTranslation, useHaptics } from "@/hooks";
-import { colors } from "@/constants/theme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-// Mock product data
-const MOCK_PRODUCT = {
-  id: "1",
-  barcode: "3760020507350",
-  name: "Poulet Rôti aux Herbes",
-  brand: "Isla Délice",
-  image:
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuD-4dM8fo9TyTrJmd30soKHdEwPFLfvGXqxbeuObwLL66Em5f3bjHUlaXaBU9NX2NnsKCcxFI2Msne0StX-PT_vjojKETsr1M881nFzUTypDcG-H53j7YATGLdf2Y7qXplsuX0eC29J0Yi49JEWZ9EBDHB9sKqZQK9YnyJEf1d6Za6cFSY1JxnE33bFcD7gF0VAibllTV2Uuz8zeCLL11F3r3TqN9Epwz8SYXoiO00K-kWOWHMHhr81Ci0E4hMpIxtB2Y39ow-9Knhp",
-  halalStatus: "halal",
-  ethicalScore: {
-    overall: 4.2,
-    environmental: 4.0,
-    social: 4.5,
-    animalWelfare: 4.1,
+// ── Halal Status → UI Config ──────────────────────────────
+
+const HALAL_STATUS_CONFIG = {
+  halal: {
+    label: "Certifié Halal",
+    icon: "verified" as keyof typeof MaterialIcons.glyphMap,
+    color: "#1de560",
+    bg: { light: "rgba(29,229,96,0.08)", dark: "rgba(29,229,96,0.15)" },
+    border: { light: "#d1fae5", dark: "#065f46" },
   },
-  certifications: [
-    {
-      id: "1",
-      name: "AVS",
-      authority: "Association de Vérification de la Conformité Halal",
-      isReliable: true,
-    },
-  ],
-  badges: [
-    { label: "Bio", icon: "eco", color: "emerald" },
-    { label: "Équitable", icon: "handshake", color: "blue" },
-  ],
-  allergenAlerts: [
-    {
-      type: "warning",
-      message: "Traces possibles de gluten et de soja. Vérifiez l'emballage si vous êtes sensible.",
-    },
-  ],
-  ingredients: [
-    { name: "Filet de poulet (85%)", status: "good", origin: "France" },
-    { name: "Eau", status: "good" },
-    { name: "Dextrose", status: "moderate", note: "Sucre ajouté" },
-    { name: "Sel", status: "good" },
-    { name: "E451 (Triphosphates)", status: "warning", hasDetails: true },
-    { name: "Arômes naturels", status: "good" },
-  ],
-};
+  haram: {
+    label: "Haram Détecté",
+    icon: "dangerous" as keyof typeof MaterialIcons.glyphMap,
+    color: "#ef4444",
+    bg: { light: "rgba(239,68,68,0.08)", dark: "rgba(239,68,68,0.15)" },
+    border: { light: "#fecaca", dark: "#7f1d1d" },
+  },
+  doubtful: {
+    label: "Statut Douteux",
+    icon: "help" as keyof typeof MaterialIcons.glyphMap,
+    color: "#f97316",
+    bg: { light: "rgba(249,115,22,0.08)", dark: "rgba(249,115,22,0.15)" },
+    border: { light: "#fed7aa", dark: "#7c2d12" },
+  },
+  unknown: {
+    label: "Non Vérifié",
+    icon: "help-outline" as keyof typeof MaterialIcons.glyphMap,
+    color: "#94a3b8",
+    bg: { light: "rgba(148,163,184,0.08)", dark: "rgba(148,163,184,0.15)" },
+    border: { light: "#e2e8f0", dark: "#334155" },
+  },
+} as const;
 
-interface IngredientItemProps {
-  name: string;
-  status: "good" | "moderate" | "warning";
-  origin?: string;
-  note?: string;
-  hasDetails?: boolean;
-  isLast?: boolean;
-}
+type HalalStatusKey = keyof typeof HALAL_STATUS_CONFIG;
 
-function IngredientItem({
-  name,
-  status,
-  origin,
-  note,
-  hasDetails,
-  isLast,
-}: IngredientItemProps) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+// ── Ingredient Item ───────────────────────────────────────
 
-  const statusColors = {
-    good: "#1de560",
-    moderate: "#facc15",
-    warning: "#f97316",
-  };
-
+function IngredientItem({ name, isLast }: { name: string; isLast: boolean }) {
   return (
     <View
-      className={`flex-row items-center justify-between py-3 ${
+      className={`flex-row items-center py-3 ${
         !isLast ? "border-b border-slate-100 dark:border-slate-700/50" : ""
       }`}
     >
-      <View className="flex-row items-center gap-3 flex-1">
-        <View
-          className="h-2.5 w-2.5 rounded-full"
-          style={{
-            backgroundColor: statusColors[status],
-            shadowColor: statusColors[status],
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.4,
-            shadowRadius: 8,
-          }}
-        />
-        <Text className="text-sm font-medium text-slate-900 dark:text-gray-200 flex-1">
-          {name}
-        </Text>
-      </View>
-      {origin && (
-        <Text className="text-xs text-slate-400 dark:text-slate-500">
-          Origine: {origin}
-        </Text>
-      )}
-      {note && (
-        <Text className="text-xs text-yellow-600 dark:text-yellow-400 font-medium">
-          {note}
-        </Text>
-      )}
-      {hasDetails && (
-        <TouchableOpacity
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel={`Détails de ${name}`}
-          accessibilityHint="Afficher plus d'informations sur cet ingrédient"
-        >
-          <Text className="text-xs text-orange-600 dark:text-orange-400 font-bold">
-            Détails
-          </Text>
-        </TouchableOpacity>
-      )}
+      <View className="h-2 w-2 rounded-full bg-slate-300 dark:bg-slate-600 mr-3" />
+      <Text className="text-sm font-medium text-slate-900 dark:text-gray-200 flex-1">
+        {name}
+      </Text>
     </View>
   );
 }
+
+// ── Main Screen ───────────────────────────────────────────
 
 export default function ScanResultScreen() {
   const insets = useSafeAreaInsets();
@@ -166,54 +106,212 @@ export default function ScanResultScreen() {
 
   const [showAllIngredients, setShowAllIngredients] = useState(false);
 
-  const product = useMemo(() => MOCK_PRODUCT, [barcode]);
+  // ── tRPC Mutation ───────────────────────────
+  const scanMutation = useScanBarcode();
+  const hasFired = useRef(false);
 
-  const { toggleFavorite, isFavorite: checkIsFavorite, favorites } = useScanHistoryStore();
-  
-  const productIsFavorite = checkIsFavorite(product.barcode);
+  useEffect(() => {
+    if (barcode && !hasFired.current) {
+      hasFired.current = true;
+      scanMutation.mutate({ barcode });
+    }
+  }, [barcode]);
 
-  const handleGoBack = useCallback(async () => {
+  // ── Derived State (always computed, regardless of loading) ──
+  const product = scanMutation.data?.product ?? null;
+  const halalAnalysis = scanMutation.data?.halalAnalysis ?? null;
+  const boycott = scanMutation.data?.boycott ?? null;
+  const offExtras = scanMutation.data?.offExtras ?? null;
+
+  const halalStatus: HalalStatusKey =
+    (product?.halalStatus as HalalStatusKey) ?? "unknown";
+  const statusConfig = HALAL_STATUS_CONFIG[halalStatus];
+  const confidencePercent = Math.round(
+    (product?.confidenceScore ?? 0) * 100
+  );
+  const ingredients: string[] = (product?.ingredients as string[]) ?? [];
+  const displayedIngredients = showAllIngredients
+    ? ingredients
+    : ingredients.slice(0, 6);
+
+  // Extract reasons by type for sections
+  const haramReasons = halalAnalysis?.reasons.filter((r) => r.status === "haram") ?? [];
+  const doubtfulReasons = halalAnalysis?.reasons.filter((r) => r.status === "doubtful") ?? [];
+  const additiveReasons = halalAnalysis?.reasons.filter((r) => r.type === "additive") ?? [];
+  const allergensTags: string[] = offExtras?.allergensTags ?? [];
+
+  // ── Local Favorites (instant UX, synced later) ──
+  const { toggleFavorite, isFavorite: checkIsFavorite } =
+    useScanHistoryStore();
+  const productIsFavorite = product
+    ? checkIsFavorite(product.barcode)
+    : false;
+
+  // ── Callbacks ───────────────────────────────
+  const handleGoBack = useCallback(() => {
     impact();
     router.back();
   }, []);
 
   const handleShare = useCallback(async () => {
     impact();
+    if (!product) return;
     try {
       await Share.share({
-        message: `${product.name} par ${product.brand} - Score éthique: ${product.ethicalScore.overall}/5. Vérifié avec Optimus Halal.`,
+        message: `${product.name} par ${product.brand ?? "?"} — ${statusConfig.label}. Vérifié avec Optimus Halal.`,
       });
     } catch (error) {
       console.error(error);
     }
-  }, [product]);
+  }, [product, statusConfig]);
 
-  const handleToggleFavorite = useCallback(async () => {
+  const handleToggleFavorite = useCallback(() => {
     impact(ImpactFeedbackStyle.Medium);
-    toggleFavorite(product.barcode);
-  }, [product.barcode, toggleFavorite]);
+    const code = product?.barcode ?? barcode;
+    if (code) toggleFavorite(code);
+  }, [product, barcode, toggleFavorite]);
 
-  const handleFindStores = useCallback(async () => {
+  const handleFindStores = useCallback(() => {
     impact();
     router.push("/(tabs)/map");
   }, []);
 
-  const handleReport = useCallback(async () => {
+  const handleReport = useCallback(() => {
     impact();
     router.push({
       pathname: "/report",
-      params: { productId: product.id, productName: product.name },
+      params: { productId: product?.id, productName: product?.name },
     });
   }, [product]);
 
-  const handleViewCertificate = useCallback(async () => {
-    impact();
-    // Navigate to certificate details
-  }, []);
+  const handleRetry = useCallback(() => {
+    hasFired.current = false;
+    scanMutation.reset();
+    if (barcode) {
+      hasFired.current = true;
+      scanMutation.mutate({ barcode });
+    }
+  }, [barcode]);
 
-  const displayedIngredients = showAllIngredients
-    ? product.ingredients
-    : product.ingredients.slice(0, 6);
+  // ── Loading State ──────────────────────────────
+  if (scanMutation.isPending) {
+    return (
+      <View className="flex-1 bg-background-light dark:bg-background-dark items-center justify-center">
+        <Animated.View
+          entering={FadeIn.duration(300)}
+          className="items-center gap-4"
+        >
+          <ActivityIndicator size="large" color="#1de560" />
+          <Text className="text-base font-medium text-slate-500 dark:text-slate-400">
+            Analyse en cours...
+          </Text>
+          <Text className="text-sm text-slate-400 dark:text-slate-500">
+            {barcode}
+          </Text>
+        </Animated.View>
+      </View>
+    );
+  }
+
+  // ── Error State ────────────────────────────────
+  if (scanMutation.error) {
+    return (
+      <View className="flex-1 bg-background-light dark:bg-background-dark items-center justify-center px-8">
+        <Animated.View
+          entering={FadeIn.duration(300)}
+          className="items-center gap-4"
+        >
+          <View
+            className="w-20 h-20 rounded-full items-center justify-center"
+            style={{
+              backgroundColor: isDark
+                ? "rgba(239,68,68,0.1)"
+                : "rgba(239,68,68,0.08)",
+            }}
+          >
+            <MaterialIcons
+              name="error-outline"
+              size={36}
+              color={isDark ? "#f87171" : "#ef4444"}
+            />
+          </View>
+          <Text className="text-lg font-bold text-slate-900 dark:text-white text-center">
+            Erreur d'analyse
+          </Text>
+          <Text className="text-sm text-slate-500 dark:text-slate-400 text-center leading-relaxed">
+            Impossible d'analyser le code-barres. Vérifiez votre connexion
+            internet et réessayez.
+          </Text>
+          <View className="flex-row gap-3 mt-4">
+            <TouchableOpacity
+              onPress={handleGoBack}
+              className="px-6 py-3 rounded-xl bg-slate-100 dark:bg-slate-800"
+              accessibilityRole="button"
+              accessibilityLabel="Retour"
+            >
+              <Text className="font-bold text-sm text-slate-700 dark:text-slate-300">
+                Retour
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleRetry}
+              className="px-6 py-3 rounded-xl bg-primary"
+              accessibilityRole="button"
+              accessibilityLabel="Réessayer"
+            >
+              <Text className="font-bold text-sm text-white">Réessayer</Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      </View>
+    );
+  }
+
+  // ── Product Not Found ──────────────────────────
+  if (!product) {
+    return (
+      <View className="flex-1 bg-background-light dark:bg-background-dark items-center justify-center px-8">
+        <Animated.View
+          entering={FadeIn.duration(300)}
+          className="items-center gap-4"
+        >
+          <View
+            className="w-20 h-20 rounded-full items-center justify-center"
+            style={{
+              backgroundColor: isDark
+                ? "rgba(234,179,8,0.1)"
+                : "rgba(234,179,8,0.08)",
+            }}
+          >
+            <MaterialIcons
+              name="search-off"
+              size={36}
+              color={isDark ? "#fbbf24" : "#d97706"}
+            />
+          </View>
+          <Text className="text-lg font-bold text-slate-900 dark:text-white text-center">
+            Produit non trouvé
+          </Text>
+          <Text className="text-sm text-slate-500 dark:text-slate-400 text-center leading-relaxed">
+            Le code-barres {barcode} n'a pas été reconnu dans notre base de
+            données ni sur OpenFoodFacts.
+          </Text>
+          <TouchableOpacity
+            onPress={handleGoBack}
+            className="px-8 py-3 rounded-xl bg-primary mt-4"
+            accessibilityRole="button"
+            accessibilityLabel="Scanner un autre produit"
+          >
+            <Text className="font-bold text-sm text-white">
+              Scanner un autre produit
+            </Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
+    );
+  }
+
+  // ── Product Found — Full Display ───────────────
 
   return (
     <View className="flex-1 bg-background-light dark:bg-background-dark">
@@ -258,15 +356,28 @@ export default function ScanResultScreen() {
           className="relative w-full h-[360px] bg-slate-100 dark:bg-slate-800"
           style={{ marginTop: insets.top + 52 }}
         >
-          <Image
-            source={{ uri: product.image }}
-            className="absolute inset-0 w-full h-full opacity-90 dark:opacity-75"
-            contentFit="cover"
-            transition={200}
-            accessible={false}
-          />
+          {product.imageUrl ? (
+            <Image
+              source={{ uri: product.imageUrl }}
+              className="absolute inset-0 w-full h-full opacity-90 dark:opacity-75"
+              contentFit="cover"
+              transition={200}
+              accessible={false}
+            />
+          ) : (
+            <View className="absolute inset-0 items-center justify-center">
+              <MaterialIcons
+                name="image-not-supported"
+                size={64}
+                color={isDark ? "#334155" : "#cbd5e1"}
+              />
+            </View>
+          )}
           <LinearGradient
-            colors={["transparent", isDark ? "rgba(17,33,22,0.9)" : "rgba(0,0,0,0.6)"]}
+            colors={[
+              "transparent",
+              isDark ? "rgba(17,33,22,0.9)" : "rgba(0,0,0,0.6)",
+            ]}
             className="absolute inset-0"
           />
         </Animated.View>
@@ -277,185 +388,477 @@ export default function ScanResultScreen() {
           className="relative z-10 -mt-10 px-4"
         >
           <Card variant="elevated" className="p-5">
-            {/* Certification Badge */}
+            {/* Halal Status Badge */}
             <View className="flex-row items-center justify-between mb-4">
-              <View className="flex-row items-center gap-2 rounded-full bg-emerald-50 dark:bg-emerald-900/30 px-4 py-1.5 border border-emerald-100 dark:border-emerald-800">
-                <MaterialIcons name="verified" size={20} color="#1de560" />
-                <Text className="text-primary text-sm font-bold tracking-wide uppercase">
-                  Certifié Fiable
+              <View
+                className="flex-row items-center gap-2 rounded-full px-4 py-1.5 border"
+                style={{
+                  backgroundColor: isDark
+                    ? statusConfig.bg.dark
+                    : statusConfig.bg.light,
+                  borderColor: isDark
+                    ? statusConfig.border.dark
+                    : statusConfig.border.light,
+                }}
+              >
+                <MaterialIcons
+                  name={statusConfig.icon}
+                  size={20}
+                  color={statusConfig.color}
+                />
+                <Text
+                  className="text-sm font-bold tracking-wide uppercase"
+                  style={{ color: statusConfig.color }}
+                >
+                  {statusConfig.label}
                 </Text>
               </View>
-              <TouchableOpacity
-                onPress={handleViewCertificate}
-                className="flex-row items-center gap-1"
-                activeOpacity={0.7}
-                accessibilityRole="link"
-                accessibilityLabel="Voir le certificat"
-                accessibilityHint="Ouvrir les détails du certificat halal"
-              >
+              <View className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded border border-slate-200 dark:border-slate-700">
                 <Text className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                  Certificat
+                  {confidencePercent}% confiance
                 </Text>
-                <MaterialIcons
-                  name="open-in-new"
-                  size={14}
-                  color={isDark ? "#94a3b8" : "#64748b"}
-                />
-              </TouchableOpacity>
+              </View>
             </View>
 
             {/* Product Name */}
-            <View className="mb-6">
+            <View className="mb-4">
               <Text
                 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight mb-1"
                 accessibilityRole="header"
               >
                 {product.name}
               </Text>
-              <View className="flex-row items-center gap-1">
-                <Text className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                  Marque:
+              {product.brand && (
+                <View className="flex-row items-center gap-1">
+                  <Text className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                    Marque:
+                  </Text>
+                  <Text className="text-sm font-semibold text-slate-900 dark:text-gray-200">
+                    {product.brand}
+                  </Text>
+                </View>
+              )}
+              {product.category && (
+                <Text className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                  {product.category}
                 </Text>
-                <Text className="text-sm font-semibold text-slate-900 dark:text-gray-200">
-                  {product.brand}
-                </Text>
-              </View>
+              )}
             </View>
 
-            {/* Ethical Score */}
+            {/* Confidence Score Visual */}
             <View className="bg-background-light dark:bg-background-dark rounded-xl p-4 border border-transparent dark:border-slate-700">
-              <View className="flex-row items-center justify-between">
-                <View className="flex-row items-center gap-3">
-                  <View className="relative h-14 w-14 items-center justify-center rounded-full border-4 border-primary bg-white dark:bg-surface-dark">
-                    <Text className="text-lg font-bold text-slate-900 dark:text-white">
-                      {product.ethicalScore.overall}
-                    </Text>
-                  </View>
-                  <View>
-                    <Text className="text-sm font-bold text-slate-900 dark:text-gray-200 uppercase tracking-wider">
-                      Score Éthique
-                    </Text>
-                    <View className="flex-row mt-0.5">
-                      {[1, 2, 3, 4].map((star) => (
-                        <MaterialIcons
-                          key={star}
-                          name="star"
-                          size={14}
-                          color="#fbbf24"
-                        />
-                      ))}
-                      <MaterialIcons name="star-half" size={14} color="#fbbf24" />
-                    </View>
-                  </View>
+              <View className="flex-row items-center gap-3">
+                <View
+                  className="relative h-14 w-14 items-center justify-center rounded-full border-4 bg-white dark:bg-surface-dark"
+                  style={{ borderColor: statusConfig.color }}
+                >
+                  <Text className="text-lg font-bold text-slate-900 dark:text-white">
+                    {confidencePercent}
+                  </Text>
                 </View>
+                <View className="flex-1">
+                  <Text className="text-sm font-bold text-slate-900 dark:text-gray-200 uppercase tracking-wider">
+                    Score de Confiance
+                  </Text>
+                  <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Basé sur l'analyse des ingrédients et la base de données
+                  </Text>
+                </View>
+              </View>
 
-                <View className="flex-row flex-wrap gap-2">
-                  {product.badges.map((badge, index) => (
-                    <View
-                      key={index}
-                      className={`flex-row items-center gap-1 rounded-lg px-2.5 py-1 border ${
-                        badge.color === "emerald"
-                          ? "bg-emerald-100 dark:bg-emerald-900/40 border-emerald-200 dark:border-emerald-800"
-                          : "bg-blue-100 dark:bg-blue-900/40 border-blue-200 dark:border-blue-800"
-                      }`}
-                    >
-                      <MaterialIcons
-                        name={badge.icon as any}
-                        size={14}
-                        color={badge.color === "emerald" ? "#059669" : "#2563eb"}
-                      />
-                      <Text
-                        className={`text-xs font-medium ${
-                          badge.color === "emerald"
-                            ? "text-emerald-800 dark:text-emerald-300"
-                            : "text-blue-800 dark:text-blue-300"
-                        }`}
-                      >
-                        {badge.label}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
+              {/* Confidence Bar */}
+              <View className="mt-3 h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                <View
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${confidencePercent}%`,
+                    backgroundColor: statusConfig.color,
+                  }}
+                />
               </View>
             </View>
           </Card>
         </Animated.View>
 
-        {/* Allergen Alert */}
-        {product.allergenAlerts.length > 0 && (
+        {/* Boycott Alert */}
+        {boycott?.isBoycotted && (
           <Animated.View
-            entering={FadeInDown.delay(300).duration(500)}
+            entering={FadeInDown.delay(250).duration(500)}
             className="px-4 mt-6"
           >
-            <View className="rounded-xl bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800/50 p-4 flex-row gap-3">
-              <MaterialIcons name="warning" size={20} color="#ea580c" style={{ marginTop: 2 }} />
-              <View className="flex-1">
-                <Text className="text-sm font-bold text-orange-800 dark:text-orange-200">
-                  Alertes Allergènes
-                </Text>
-                <Text className="text-sm text-orange-700 dark:text-orange-300/80 mt-0.5 leading-relaxed">
-                  {product.allergenAlerts[0].message}
+            <View className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 p-4">
+              <View className="flex-row items-center gap-2 mb-2">
+                <MaterialIcons name="block" size={22} color="#ef4444" />
+                <Text className="text-base font-bold text-red-800 dark:text-red-200">
+                  Boycott Actif
                 </Text>
               </View>
+              {boycott.targets.map((target: any, idx: number) => (
+                <View
+                  key={target.id ?? idx}
+                  className={`py-2 ${idx > 0 ? "border-t border-red-100 dark:border-red-800/40" : ""}`}
+                >
+                  <Text className="text-sm font-semibold text-red-700 dark:text-red-300">
+                    {target.companyName}
+                    {target.boycottLevel === "official_bds" ? " — BDS Officiel" : ""}
+                  </Text>
+                  <Text className="text-xs text-red-600 dark:text-red-400 mt-0.5 leading-relaxed">
+                    {target.reasonSummary ?? target.companyName}
+                  </Text>
+                  {target.sourceUrl && (
+                    <Text className="text-xs text-red-500/70 dark:text-red-500/60 mt-1">
+                      Source: {target.sourceName ?? "BDS"}
+                    </Text>
+                  )}
+                </View>
+              ))}
+            </View>
+          </Animated.View>
+        )}
+
+        {/* Halal Analysis — Pourquoi ce statut */}
+        {halalAnalysis && (haramReasons.length > 0 || doubtfulReasons.length > 0) && (
+          <Animated.View
+            entering={FadeInUp.delay(300).duration(500)}
+            className="px-4 mt-6"
+          >
+            <Text
+              className="text-lg font-bold text-slate-900 dark:text-white mb-3"
+              accessibilityRole="header"
+            >
+              Pourquoi ce statut ?
+            </Text>
+            <Card variant="outlined" className="p-4">
+              {haramReasons.map((reason, idx) => (
+                <View
+                  key={`haram-${idx}`}
+                  className={`flex-row items-start gap-3 py-2.5 ${
+                    idx > 0 ? "border-t border-slate-100 dark:border-slate-700/50" : ""
+                  }`}
+                >
+                  <MaterialIcons name="dangerous" size={18} color="#ef4444" style={{ marginTop: 1 }} />
+                  <View className="flex-1">
+                    <Text className="text-sm font-semibold text-red-600 dark:text-red-400">
+                      {reason.name}
+                    </Text>
+                    <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                      {reason.explanation}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+              {doubtfulReasons.map((reason, idx) => (
+                <View
+                  key={`doubtful-${idx}`}
+                  className={`flex-row items-start gap-3 py-2.5 ${
+                    haramReasons.length > 0 || idx > 0 ? "border-t border-slate-100 dark:border-slate-700/50" : ""
+                  }`}
+                >
+                  <MaterialIcons name="help" size={18} color="#f97316" style={{ marginTop: 1 }} />
+                  <View className="flex-1">
+                    <Text className="text-sm font-semibold text-orange-600 dark:text-orange-400">
+                      {reason.name}
+                    </Text>
+                    <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                      {reason.explanation}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </Card>
+          </Animated.View>
+        )}
+
+        {/* Halal Analysis — Par qui / Source */}
+        {halalAnalysis && (
+          <Animated.View
+            entering={FadeInUp.delay(350).duration(500)}
+            className="px-4 mt-6"
+          >
+            <Text
+              className="text-lg font-bold text-slate-900 dark:text-white mb-3"
+              accessibilityRole="header"
+            >
+              Source de l'analyse
+            </Text>
+            <Card variant="outlined" className="p-4">
+              <View className="flex-row items-center gap-3">
+                <View
+                  className="h-10 w-10 rounded-full items-center justify-center"
+                  style={{
+                    backgroundColor: isDark ? "rgba(29,229,96,0.15)" : "rgba(29,229,96,0.08)",
+                  }}
+                >
+                  <MaterialIcons
+                    name={halalAnalysis.certifierName ? "verified" : "analytics"}
+                    size={20}
+                    color="#1de560"
+                  />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-sm font-bold text-slate-900 dark:text-gray-200">
+                    {halalAnalysis.certifierName ?? "Analyse algorithmique"}
+                  </Text>
+                  <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    {halalAnalysis.analysisSource}
+                  </Text>
+                </View>
+                <View
+                  className="px-2 py-1 rounded-md"
+                  style={{
+                    backgroundColor: isDark ? "rgba(148,163,184,0.15)" : "rgba(148,163,184,0.1)",
+                  }}
+                >
+                  <Text className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
+                    Tier {halalAnalysis.tier === "certified" ? "1" : halalAnalysis.tier === "analyzed_clean" ? "2" : halalAnalysis.tier === "doubtful" ? "3" : "4"}
+                  </Text>
+                </View>
+              </View>
+            </Card>
+          </Animated.View>
+        )}
+
+        {/* Additifs */}
+        {additiveReasons.length > 0 && (
+          <Animated.View
+            entering={FadeInUp.delay(400).duration(500)}
+            className="px-4 mt-6"
+          >
+            <View className="flex-row items-center justify-between mb-3">
+              <Text
+                className="text-lg font-bold text-slate-900 dark:text-white"
+                accessibilityRole="header"
+              >
+                Additifs détectés
+              </Text>
+              <View className="bg-slate-100 dark:bg-surface-dark border border-slate-200 dark:border-slate-700 px-2 py-1 rounded">
+                <Text className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                  {additiveReasons.length} additif{additiveReasons.length > 1 ? "s" : ""}
+                </Text>
+              </View>
+            </View>
+            <Card variant="outlined" className="p-4">
+              {additiveReasons.map((additive, idx) => (
+                <View
+                  key={`add-${idx}`}
+                  className={`flex-row items-center gap-3 py-2.5 ${
+                    idx > 0 ? "border-t border-slate-100 dark:border-slate-700/50" : ""
+                  }`}
+                >
+                  <View
+                    className="h-3 w-3 rounded-full"
+                    style={{
+                      backgroundColor:
+                        additive.status === "haram"
+                          ? "#ef4444"
+                          : additive.status === "doubtful"
+                            ? "#f97316"
+                            : "#1de560",
+                    }}
+                  />
+                  <View className="flex-1">
+                    <Text className="text-sm font-medium text-slate-900 dark:text-gray-200">
+                      {additive.name}
+                    </Text>
+                    <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      {additive.explanation}
+                    </Text>
+                  </View>
+                  <Text
+                    className="text-xs font-bold uppercase"
+                    style={{
+                      color:
+                        additive.status === "haram"
+                          ? "#ef4444"
+                          : additive.status === "doubtful"
+                            ? "#f97316"
+                            : "#1de560",
+                    }}
+                  >
+                    {additive.status === "haram" ? "Haram" : additive.status === "doubtful" ? "Douteux" : "Halal"}
+                  </Text>
+                </View>
+              ))}
+            </Card>
+          </Animated.View>
+        )}
+
+        {/* Allergènes */}
+        {allergensTags.length > 0 && (
+          <Animated.View
+            entering={FadeInUp.delay(420).duration(500)}
+            className="px-4 mt-6"
+          >
+            <Text
+              className="text-lg font-bold text-slate-900 dark:text-white mb-3"
+              accessibilityRole="header"
+            >
+              Allergènes
+            </Text>
+            <View className="flex-row flex-wrap gap-2">
+              {allergensTags.map((tag) => {
+                const label = tag.replace(/^(en|fr):/, "").replace(/-/g, " ");
+                return (
+                  <View
+                    key={tag}
+                    className="px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50"
+                  >
+                    <Text className="text-xs font-semibold text-amber-700 dark:text-amber-300 capitalize">
+                      {label}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          </Animated.View>
+        )}
+
+        {/* Nutrition Badges */}
+        {offExtras && (offExtras.nutriscoreGrade || offExtras.novaGroup) && (
+          <Animated.View
+            entering={FadeInUp.delay(440).duration(500)}
+            className="px-4 mt-6"
+          >
+            <Text
+              className="text-lg font-bold text-slate-900 dark:text-white mb-3"
+              accessibilityRole="header"
+            >
+              Nutrition
+            </Text>
+            <View className="flex-row gap-3">
+              {offExtras.nutriscoreGrade && (
+                <Card variant="outlined" className="flex-1 p-4 items-center">
+                  <Text className="text-2xl font-black uppercase" style={{
+                    color: offExtras.nutriscoreGrade === "a" ? "#1de560"
+                      : offExtras.nutriscoreGrade === "b" ? "#85d037"
+                      : offExtras.nutriscoreGrade === "c" ? "#f9a825"
+                      : offExtras.nutriscoreGrade === "d" ? "#f97316"
+                      : "#ef4444",
+                  }}>
+                    {offExtras.nutriscoreGrade}
+                  </Text>
+                  <Text className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
+                    Nutri-Score
+                  </Text>
+                </Card>
+              )}
+              {offExtras.novaGroup && (
+                <Card variant="outlined" className="flex-1 p-4 items-center">
+                  <Text className="text-2xl font-black" style={{
+                    color: offExtras.novaGroup === 1 ? "#1de560"
+                      : offExtras.novaGroup === 2 ? "#f9a825"
+                      : offExtras.novaGroup === 3 ? "#f97316"
+                      : "#ef4444",
+                  }}>
+                    {offExtras.novaGroup}
+                  </Text>
+                  <Text className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
+                    NOVA
+                  </Text>
+                </Card>
+              )}
+              {offExtras.ecoscoreGrade && (
+                <Card variant="outlined" className="flex-1 p-4 items-center">
+                  <Text className="text-2xl font-black uppercase" style={{
+                    color: offExtras.ecoscoreGrade === "a" ? "#1de560"
+                      : offExtras.ecoscoreGrade === "b" ? "#85d037"
+                      : offExtras.ecoscoreGrade === "c" ? "#f9a825"
+                      : "#f97316",
+                  }}>
+                    {offExtras.ecoscoreGrade}
+                  </Text>
+                  <Text className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
+                    Éco-Score
+                  </Text>
+                </Card>
+              )}
             </View>
           </Animated.View>
         )}
 
         {/* Ingredients */}
-        <Animated.View
-          entering={FadeInUp.delay(400).duration(500)}
-          className="px-4 mt-8"
-        >
-          <View className="flex-row items-center justify-between mb-4">
-            <Text
-              className="text-lg font-bold text-slate-900 dark:text-white"
-              accessibilityRole="header"
-            >
-              Composition
-            </Text>
-            <View className="bg-slate-100 dark:bg-surface-dark border border-slate-200 dark:border-slate-700 px-2 py-1 rounded">
-              <Text className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                {product.ingredients.length} {t.scanResult.ingredients}
+        {ingredients.length > 0 && (
+          <Animated.View
+            entering={FadeInUp.delay(400).duration(500)}
+            className="px-4 mt-8"
+          >
+            <View className="flex-row items-center justify-between mb-4">
+              <Text
+                className="text-lg font-bold text-slate-900 dark:text-white"
+                accessibilityRole="header"
+              >
+                Composition
               </Text>
+              <View className="bg-slate-100 dark:bg-surface-dark border border-slate-200 dark:border-slate-700 px-2 py-1 rounded">
+                <Text className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                  {ingredients.length} {t.scanResult.ingredients}
+                </Text>
+              </View>
             </View>
-          </View>
 
-          <Card variant="outlined" className="p-4">
-            {displayedIngredients.map((ingredient, index) => (
-              <IngredientItem
-                key={index}
-                name={ingredient.name}
-                status={ingredient.status as any}
-                origin={ingredient.origin}
-                note={ingredient.note}
-                hasDetails={ingredient.hasDetails}
-                isLast={index === displayedIngredients.length - 1}
-              />
-            ))}
-          </Card>
+            <Card variant="outlined" className="p-4">
+              {displayedIngredients.map((ingredient, index) => (
+                <IngredientItem
+                  key={index}
+                  name={ingredient}
+                  isLast={index === displayedIngredients.length - 1}
+                />
+              ))}
+            </Card>
 
-          {product.ingredients.length > 6 && (
-            <TouchableOpacity
-              onPress={() => setShowAllIngredients(!showAllIngredients)}
-              className="w-full mt-4 py-3 flex-row items-center justify-center gap-1 rounded-xl"
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel={showAllIngredients ? "Voir moins d'ingrédients" : "Voir tous les ingrédients"}
-              accessibilityState={{ expanded: showAllIngredients }}
-            >
-              <Text className="text-sm font-semibold text-slate-500 dark:text-slate-400">
-                {showAllIngredients
-                  ? "Voir moins"
-                  : "Voir tous les ingrédients"}
-              </Text>
+            {ingredients.length > 6 && (
+              <TouchableOpacity
+                onPress={() => setShowAllIngredients(!showAllIngredients)}
+                className="w-full mt-4 py-3 flex-row items-center justify-center gap-1 rounded-xl"
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  showAllIngredients
+                    ? "Voir moins d'ingrédients"
+                    : "Voir tous les ingrédients"
+                }
+                accessibilityState={{ expanded: showAllIngredients }}
+              >
+                <Text className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+                  {showAllIngredients
+                    ? "Voir moins"
+                    : `Voir les ${ingredients.length} ingrédients`}
+                </Text>
+                <MaterialIcons
+                  name={showAllIngredients ? "expand-less" : "expand-more"}
+                  size={18}
+                  color={isDark ? "#94a3b8" : "#64748b"}
+                />
+              </TouchableOpacity>
+            )}
+          </Animated.View>
+        )}
+
+        {/* New Product Banner */}
+        {scanMutation.data?.isNewProduct && (
+          <Animated.View
+            entering={FadeInDown.delay(500).duration(500)}
+            className="px-4 mt-6"
+          >
+            <View className="rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 p-4 flex-row gap-3">
               <MaterialIcons
-                name={showAllIngredients ? "expand-less" : "expand-more"}
-                size={18}
-                color={isDark ? "#94a3b8" : "#64748b"}
+                name="new-releases"
+                size={20}
+                color="#3b82f6"
+                style={{ marginTop: 2 }}
               />
-            </TouchableOpacity>
-          )}
-        </Animated.View>
+              <View className="flex-1">
+                <Text className="text-sm font-bold text-blue-800 dark:text-blue-200">
+                  Nouveau produit ajouté
+                </Text>
+                <Text className="text-sm text-blue-700 dark:text-blue-300/80 mt-0.5 leading-relaxed">
+                  Ce produit vient d'être ajouté à notre base de données grâce
+                  à votre scan.
+                </Text>
+              </View>
+            </View>
+          </Animated.View>
+        )}
       </ScrollView>
 
       {/* Bottom Actions */}
@@ -479,13 +882,23 @@ export default function ScanResultScreen() {
             className="h-12 w-12 items-center justify-center rounded-xl bg-slate-50 dark:bg-background-dark border border-slate-100 dark:border-slate-700"
             activeOpacity={0.7}
             accessibilityRole="button"
-            accessibilityLabel={productIsFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+            accessibilityLabel={
+              productIsFavorite
+                ? "Retirer des favoris"
+                : "Ajouter aux favoris"
+            }
             accessibilityState={{ selected: productIsFavorite }}
           >
             <MaterialIcons
               name={productIsFavorite ? "favorite" : "favorite-border"}
               size={24}
-              color={productIsFavorite ? "#ef4444" : isDark ? "#94a3b8" : "#64748b"}
+              color={
+                productIsFavorite
+                  ? "#ef4444"
+                  : isDark
+                    ? "#94a3b8"
+                    : "#64748b"
+              }
             />
           </TouchableOpacity>
 
