@@ -88,6 +88,9 @@ function QuickAction({
         onPress();
       }}
       activeOpacity={0.9}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityHint={subtitle}
       className={`flex-1 flex-col items-start gap-3 rounded-2xl p-4 ${
         primary
           ? "bg-primary dark:bg-emerald-600"
@@ -220,6 +223,9 @@ export default function HomeScreen() {
             onPress={() => router.push("/(tabs)/alerts")}
             className="relative h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-700/50"
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Notifications"
+            accessibilityHint="Voir les alertes"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 1 },
@@ -270,7 +276,7 @@ export default function HomeScreen() {
 
             <View className="flex-row items-start justify-between">
               <View className="gap-1">
-                <Text className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                <Text accessibilityRole="header" className="text-sm font-medium text-slate-500 dark:text-slate-400">
                   Impact Quotidien
                 </Text>
                 <View className="flex-row items-baseline gap-2">
@@ -343,10 +349,10 @@ export default function HomeScreen() {
         {/* Featured Content */}
         <Animated.View entering={FadeIn.delay(400).duration(500)}>
           <View className="flex-row items-center justify-between px-5 mb-3">
-            <Text className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+            <Text accessibilityRole="header" className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
               À la une
             </Text>
-            <TouchableOpacity activeOpacity={0.7}>
+            <TouchableOpacity activeOpacity={0.7} accessibilityRole="link" accessibilityLabel="Voir tout les articles à la une">
               <Text className="text-xs font-semibold text-primary-dark dark:text-primary">
                 Voir tout
               </Text>
@@ -368,6 +374,9 @@ export default function HomeScreen() {
                 >
                   <TouchableOpacity
                     activeOpacity={0.9}
+                    accessibilityRole="button"
+                    accessibilityLabel={item.title}
+                    accessibilityHint={item.subtitle}
                     className="relative h-40 overflow-hidden rounded-2xl"
                     style={{ width: 280 }}
                   >
@@ -376,6 +385,7 @@ export default function HomeScreen() {
                       className="absolute inset-0 w-full h-full"
                       contentFit="cover"
                       transition={200}
+                      accessible={false}
                     />
                     <LinearGradient
                       colors={["transparent", "rgba(0,0,0,0.7)", "rgba(0,0,0,0.9)"]}
@@ -411,13 +421,15 @@ export default function HomeScreen() {
           className="mt-6"
         >
           <View className="flex-row items-center justify-between px-5 mb-3">
-            <Text className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+            <Text accessibilityRole="header" className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
               Mes favoris
             </Text>
             {favoriteProducts.length > 0 && (
-              <TouchableOpacity 
+              <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => handleNavigate("favorites")}
+                accessibilityRole="link"
+                accessibilityLabel={`Voir tous les favoris, ${favoriteProducts.length} produits`}
               >
                 <Text className="text-xs font-semibold text-primary-dark dark:text-primary">
                   Voir tout ({favoriteProducts.length})
@@ -435,6 +447,9 @@ export default function HomeScreen() {
               <Animated.View entering={FadeInRight.delay(550).duration(400)}>
                 <TouchableOpacity
                   activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Ajouter un favori"
+                  accessibilityHint="Ouvrir le scanner pour ajouter un produit aux favoris"
                   className="items-center justify-center gap-2 rounded-2xl bg-slate-50 dark:bg-white/5 border border-dashed border-slate-200 dark:border-slate-700/50"
                   style={{ width: 200, height: 100, paddingHorizontal: 16 }}
                   onPress={() => router.push("/(tabs)/scanner")}
@@ -457,6 +472,9 @@ export default function HomeScreen() {
                 >
                   <TouchableOpacity
                     activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Favori ${item.name}`}
+                    accessibilityHint="Voir les favoris"
                     className="items-center gap-2"
                     style={{ width: FAVORITE_CIRCLE_SIZE }}
                     onPress={() => handleNavigate("favorites")}
@@ -467,6 +485,7 @@ export default function HomeScreen() {
                         className="h-full w-full rounded-full"
                         contentFit="cover"
                         transition={200}
+                        accessibilityLabel={`Photo de ${item.name}`}
                       />
                     </View>
                     <Text
@@ -484,6 +503,9 @@ export default function HomeScreen() {
             <Animated.View entering={FadeInRight.delay(700).duration(400)}>
               <TouchableOpacity
                 activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="Ajouter un favori"
+                accessibilityHint="Ouvrir le scanner pour ajouter un produit"
                 className="items-center gap-2"
                 style={{ width: FAVORITE_CIRCLE_SIZE }}
                 onPress={() => router.push("/(tabs)/scanner")}
@@ -508,7 +530,7 @@ export default function HomeScreen() {
           entering={FadeInUp.delay(600).duration(600)}
           className="mt-6 px-5"
         >
-          <Text className="text-lg font-bold tracking-tight text-slate-900 dark:text-white mb-3">
+          <Text accessibilityRole="header" className="text-lg font-bold tracking-tight text-slate-900 dark:text-white mb-3">
             Autour de vous
           </Text>
 
@@ -516,6 +538,9 @@ export default function HomeScreen() {
             {/* Map Preview */}
             <TouchableOpacity
               activeOpacity={0.9}
+              accessibilityRole="button"
+              accessibilityLabel="Aperçu de la carte"
+              accessibilityHint="Ouvrir la carte des magasins à proximité"
               onPress={() => router.push("/(tabs)/map")}
             >
               <View className="relative h-32 w-full overflow-hidden rounded-t-xl bg-slate-200 dark:bg-slate-800">
@@ -526,6 +551,7 @@ export default function HomeScreen() {
                   className="absolute inset-0 w-full h-full opacity-80 dark:opacity-60"
                   contentFit="cover"
                   transition={200}
+                  accessible={false}
                 />
                 <View className="absolute bottom-2 right-2 flex-row items-center gap-1 rounded-lg bg-white/90 dark:bg-background-dark/90 px-2 py-1 border border-slate-200/50 dark:border-slate-700/50">
                   <MaterialIcons name="near-me" size={14} color="#1de560" />
@@ -555,6 +581,9 @@ export default function HomeScreen() {
               </View>
               <TouchableOpacity
                 activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="Itinéraire"
+                accessibilityHint="Ouvrir l'itinéraire vers Bio Market Halal"
                 className="rounded-full p-2 bg-slate-100 dark:bg-white/5"
               >
                 <MaterialIcons

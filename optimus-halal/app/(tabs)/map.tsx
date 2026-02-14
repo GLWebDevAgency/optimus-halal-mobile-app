@@ -106,6 +106,8 @@ function StoreCard({ store, onPress }: StoreCardProps) {
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.9}
+      accessibilityRole="button"
+      accessibilityLabel={`${store.name}, ${store.type}, note ${store.rating}, ${store.distance}, ${store.isOpen ? "ouvert" : "fermé"}`}
       className={`w-[280px] rounded-xl p-3 ${
         store.isFeatured
           ? "bg-slate-800 border border-primary/40"
@@ -127,6 +129,7 @@ function StoreCard({ store, onPress }: StoreCardProps) {
             className="w-full h-full"
             contentFit="cover"
             transition={200}
+            accessibilityLabel={`Photo de ${store.name}`}
           />
         </View>
 
@@ -187,6 +190,8 @@ function StoreCard({ store, onPress }: StoreCardProps) {
             : "bg-slate-700"
         }`}
         activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel={store.isFeatured ? `Itinéraire vers ${store.name}` : `Voir détails de ${store.name}`}
       >
         <MaterialIcons
           name={store.isFeatured ? "directions" : "visibility"}
@@ -247,6 +252,7 @@ export default function MapScreen() {
           contentFit="cover"
           transition={200}
           style={{ opacity: 0.7 }}
+          accessible={false}
         />
         <View className="absolute inset-0 bg-slate-900/40" />
 
@@ -285,12 +291,18 @@ export default function MapScreen() {
             onPress={handleMyLocation}
             className="w-10 h-10 rounded-lg bg-surface-dark/90 border border-slate-700 items-center justify-center"
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Ma position"
+            accessibilityHint="Centrer la carte sur ma position"
           >
             <MaterialIcons name="my-location" size={20} color="#ffffff" />
           </TouchableOpacity>
           <TouchableOpacity
             className="w-10 h-10 rounded-lg bg-surface-dark/90 border border-slate-700 items-center justify-center"
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Couches de la carte"
+            accessibilityHint="Changer le style de la carte"
           >
             <MaterialIcons name="layers" size={20} color="#ffffff" />
           </TouchableOpacity>
@@ -322,6 +334,9 @@ export default function MapScreen() {
             onPress={() => router.push("/(tabs)/alerts" as any)}
             className="relative h-12 w-12 rounded-full bg-surface-dark/90 border border-slate-700 items-center justify-center"
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Notifications"
+            accessibilityHint="Voir les alertes"
           >
             <MaterialIcons name="notifications" size={22} color="#ffffff" />
           </TouchableOpacity>
@@ -346,6 +361,9 @@ export default function MapScreen() {
                     : "bg-surface-dark/80 border border-slate-700"
                 }`}
                 activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={`${filter.label}${isActive ? ", sélectionné" : ""}`}
+                accessibilityHint={isActive ? `Désactiver le filtre ${filter.label}` : `Filtrer par ${filter.label}`}
                 style={
                   isActive
                     ? {
@@ -385,6 +403,9 @@ export default function MapScreen() {
         <TouchableOpacity
           className="flex-row items-center gap-2 bg-surface-dark border border-slate-600 h-12 px-5 rounded-full"
           activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="Vue Liste"
+          accessibilityHint="Afficher les magasins en liste"
           style={{
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 4 },
@@ -420,8 +441,8 @@ export default function MapScreen() {
         <View className="flex-1 pb-6">
           {/* Header */}
           <View className="flex-row items-center justify-between px-5 mb-3">
-            <Text className="text-lg font-bold text-white">Lieux à proximité</Text>
-            <TouchableOpacity activeOpacity={0.7}>
+            <Text accessibilityRole="header" className="text-lg font-bold text-white">Lieux à proximité</Text>
+            <TouchableOpacity activeOpacity={0.7} accessibilityRole="link" accessibilityLabel="Voir tous les lieux à proximité">
               <Text className="text-primary text-sm font-semibold">Voir tout</Text>
             </TouchableOpacity>
           </View>

@@ -198,6 +198,7 @@ function AlertCard({ alert, index }: AlertCardProps) {
                 className="w-full h-full"
                 contentFit="cover"
                 transition={200}
+                accessibilityLabel={`Image de l'alerte : ${alert.title}`}
               />
               <View className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               <Text className="absolute bottom-3 left-4 text-white text-lg font-bold">
@@ -225,6 +226,7 @@ function AlertCard({ alert, index }: AlertCardProps) {
                       className="w-full h-full"
                       contentFit="cover"
                       transition={200}
+                      accessibilityLabel={`Image de certification : ${alert.title}`}
                     />
                   </View>
                 )}
@@ -267,7 +269,7 @@ function AlertCard({ alert, index }: AlertCardProps) {
                     {alert.source}
                   </Text>
                 </View>
-                <TouchableOpacity className="flex-row items-center gap-1">
+                <TouchableOpacity className="flex-row items-center gap-1" accessibilityRole="link" accessibilityLabel={`Voir la source de ${alert.title}`}>
                   <Text className="text-xs font-bold text-danger-500">
                     Voir la source
                   </Text>
@@ -286,6 +288,8 @@ function AlertCard({ alert, index }: AlertCardProps) {
                       : "bg-slate-50 dark:bg-slate-700/50"
                   }`}
                   activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel={alert.action.label}
                 >
                   <Text
                     className={`text-sm font-bold ${
@@ -300,6 +304,9 @@ function AlertCard({ alert, index }: AlertCardProps) {
                 <TouchableOpacity
                   className="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-600 items-center justify-center"
                   activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel="Partager"
+                  accessibilityHint={`Partager l'alerte ${alert.title}`}
                 >
                   <MaterialIcons
                     name="share"
@@ -363,7 +370,7 @@ export default function AlertsScreen() {
             >
               <MaterialIcons name="security" size={20} color="#0d1b13" />
             </View>
-            <Text className="text-slate-900 dark:text-white text-xl font-bold tracking-tight">
+            <Text accessibilityRole="header" className="text-slate-900 dark:text-white text-xl font-bold tracking-tight">
               Alertes Éthiques
             </Text>
           </View>
@@ -371,6 +378,9 @@ export default function AlertsScreen() {
             onPress={() => router.push("/settings/notifications")}
             className="relative p-2 rounded-full"
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Paramètres des notifications"
+            accessibilityHint="Configurer les alertes"
           >
             <MaterialIcons
               name="settings"
@@ -396,6 +406,9 @@ export default function AlertsScreen() {
                   : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
               }`}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={`${filter.label}${activeFilter === filter.id ? ", sélectionné" : ""}`}
+              accessibilityHint={`Filtrer par ${filter.label}`}
             >
               <Text
                 className={`text-sm ${

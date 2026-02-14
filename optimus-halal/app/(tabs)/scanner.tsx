@@ -247,10 +247,12 @@ export default function ScannerScreen() {
             onPress={requestPermission}
             style={styles.permissionButton}
             activeOpacity={0.9}
+            accessibilityRole="button"
+            accessibilityLabel="Autoriser l'accès à la caméra"
           >
             <Text style={styles.permissionButtonText}>Autoriser l'accès</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleClose} style={styles.cancelButton}>
+          <TouchableOpacity onPress={handleClose} style={styles.cancelButton} accessibilityRole="button" accessibilityLabel="Annuler">
             <Text style={styles.cancelButtonText}>Annuler</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -332,6 +334,8 @@ export default function ScannerScreen() {
               onPress={handleClose}
               style={styles.headerButton}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Fermer le scanner"
             >
               <MaterialIcons name="close" size={20} color="#ffffff" />
             </TouchableOpacity>
@@ -349,6 +353,8 @@ export default function ScannerScreen() {
               onPress={handleToggleFlash}
               style={[styles.headerButton, isFlashOn && styles.headerButtonActive]}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={isFlashOn ? "Désactiver le flash" : "Activer le flash"}
             >
               <MaterialIcons
                 name={isFlashOn ? "flash-on" : "flash-off"}
@@ -382,6 +388,9 @@ export default function ScannerScreen() {
                 onPress={handleOpenGallery}
                 style={styles.sideButton}
                 activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="Galerie"
+                accessibilityHint="Choisir une image depuis la galerie"
               >
                 <MaterialIcons name="photo-library" size={26} color="#ffffff" />
               </TouchableOpacity>
@@ -406,6 +415,9 @@ export default function ScannerScreen() {
                     onPress={handleCapture}
                     style={styles.captureButton}
                     activeOpacity={0.9}
+                    accessibilityRole="button"
+                    accessibilityLabel="Scanner"
+                    accessibilityHint="Ouvrir le scanner de code-barres"
                   >
                     <MaterialIcons name="qr-code-scanner" size={36} color="#0d1b13" />
                   </TouchableOpacity>
@@ -419,6 +431,9 @@ export default function ScannerScreen() {
                 onPress={handleOpenHistory}
                 style={styles.sideButton}
                 activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="Historique"
+                accessibilityHint="Voir l'historique des scans"
               >
                 <MaterialIcons name="history" size={26} color="#FFD700" />
               </TouchableOpacity>

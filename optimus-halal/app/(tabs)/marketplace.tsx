@@ -114,6 +114,8 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
       <TouchableOpacity
         onPress={handlePress}
         activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel={`${product.name}, ${product.brand}, ${product.price.toFixed(2)} euros, note ${product.rating}`}
         className="bg-white dark:bg-surface-dark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700/50"
         style={{
           shadowColor: "#000",
@@ -129,6 +131,7 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
             className="w-full h-32"
             contentFit="cover"
             transition={200}
+            accessibilityLabel={`Photo de ${product.name}`}
           />
           {product.isNew && (
             <View className="absolute top-2 left-2">
@@ -187,6 +190,8 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
               onPress={handleAddToCart}
               className="bg-primary/10 dark:bg-primary/20 p-2 rounded-full"
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={`Ajouter ${product.name} au panier`}
             >
               <MaterialIcons name="add-shopping-cart" size={16} color={colors.primary.DEFAULT} />
             </TouchableOpacity>
@@ -259,6 +264,9 @@ export default function MarketplaceTab() {
                 onPress={handleAlertsPress}
                 className="relative h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-700/50"
                 activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="Notifications"
+                accessibilityHint="Voir les alertes"
               >
                 <MaterialIcons
                   name="notifications"
@@ -300,6 +308,9 @@ export default function MarketplaceTab() {
                 onPress={() => router.push("/(marketplace)/coming-soon" as any)}
                 className="bg-primary px-6 py-3 rounded-xl flex-row items-center gap-2"
                 activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel="Rejoindre la liste d'attente"
+                accessibilityHint="S'inscrire pour être notifié du lancement du marketplace"
               >
                 <MaterialIcons name="notifications-active" size={20} color="#0d1b12" />
                 <Text className="font-bold text-slate-900">Rejoindre la liste d'attente</Text>
@@ -332,7 +343,7 @@ export default function MarketplaceTab() {
           className="flex-row items-center justify-between px-5 mb-4"
         >
           <View>
-            <Text className="text-2xl font-bold text-slate-900 dark:text-white">
+            <Text accessibilityRole="header" className="text-2xl font-bold text-slate-900 dark:text-white">
               Marketplace
             </Text>
             <Text className="text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -345,6 +356,9 @@ export default function MarketplaceTab() {
               onPress={handleAlertsPress}
               className="relative h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-700/50"
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Notifications"
+              accessibilityHint="Voir les alertes"
             >
               <MaterialIcons
                 name="notifications"
@@ -360,6 +374,9 @@ export default function MarketplaceTab() {
               onPress={handleCartPress}
               className="relative h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-700/50"
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Panier"
+              accessibilityHint="Voir le panier"
             >
               <MaterialIcons
                 name="shopping-cart"
@@ -396,6 +413,8 @@ export default function MarketplaceTab() {
                     : "bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700"
                 }`}
                 activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={`${category.name}${selectedCategory === category.id ? ", sélectionné" : ""}`}
               >
                 <MaterialIcons
                   name={category.icon}
@@ -421,10 +440,10 @@ export default function MarketplaceTab() {
           className="mb-6"
         >
           <View className="flex-row items-center justify-between px-5 mb-4">
-            <Text className="text-lg font-bold text-slate-900 dark:text-white">
+            <Text accessibilityRole="header" className="text-lg font-bold text-slate-900 dark:text-white">
               Produits vedettes
             </Text>
-            <TouchableOpacity onPress={handleViewAllPress} activeOpacity={0.7}>
+            <TouchableOpacity onPress={handleViewAllPress} activeOpacity={0.7} accessibilityRole="link" accessibilityLabel="Voir tous les produits">
               <Text className="text-sm font-medium text-primary">
                 Voir tout
               </Text>
@@ -470,6 +489,9 @@ export default function MarketplaceTab() {
                 onPress={handleViewAllPress}
                 className="flex-row items-center"
                 activeOpacity={0.7}
+                accessibilityRole="link"
+                accessibilityLabel="Découvrir les offres"
+                accessibilityHint="Voir toutes les offres avec livraison gratuite"
               >
                 <Text className="text-sm font-semibold text-gold-600 dark:text-gold-500">
                   Découvrir les offres
