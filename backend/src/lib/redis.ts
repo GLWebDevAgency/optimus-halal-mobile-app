@@ -1,5 +1,6 @@
 import Redis from "ioredis";
 import { env } from "./env.js";
+import { logger } from "./logger.js";
 
 export const redis = new Redis(env.REDIS_URL, {
   maxRetriesPerRequest: 3,
@@ -13,5 +14,5 @@ export const redis = new Redis(env.REDIS_URL, {
 });
 
 redis.on("error", (err) => {
-  console.error("[Redis] Connection error (non-fatal):", err.message);
+  logger.error("Erreur de connexion Redis (non-fatale)", { error: err.message });
 });

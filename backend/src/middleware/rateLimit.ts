@@ -1,5 +1,6 @@
 import { createMiddleware } from "hono/factory";
 import { redis } from "../lib/redis.js";
+import { logger } from "../lib/logger.js";
 
 interface RateLimitOptions {
   windowMs: number;
@@ -35,7 +36,7 @@ export function rateLimit(options: RateLimitOptions) {
       }
     } catch (err) {
       // Fail-open: if Redis is down, allow the request through
-      console.error("[rateLimit] Redis error, allowing request:", err instanceof Error ? err.message : err);
+      logger.error("Erreur Redis rate-limit, requête autorisée", { error: err instanceof Error ? err.message : String(err) });
     }
 
     await next();

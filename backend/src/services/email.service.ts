@@ -1,4 +1,5 @@
 import { env } from "../lib/env.js";
+import { logger } from "../lib/logger.js";
 
 interface SendEmailOptions {
   to: string;
@@ -9,7 +10,7 @@ interface SendEmailOptions {
 
 export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
   if (!env.BREVO_API_KEY) {
-    console.warn("[email] BREVO_API_KEY not set — email skipped");
+    logger.warn("BREVO_API_KEY non configurée — email ignoré");
     return false;
   }
 
@@ -30,13 +31,14 @@ export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
     });
 
     if (!response.ok) {
-      console.error("[email] Brevo API error:", response.status, await response.text());
+      const body = await response.text();
+      logger.error("Erreur API Brevo", { status: response.status, body });
       return false;
     }
 
     return true;
   } catch (err) {
-    console.error("[email] Network error:", err instanceof Error ? err.message : err);
+    logger.error("Erreur réseau email", { error: err instanceof Error ? err.message : String(err) });
     return false;
   }
 }

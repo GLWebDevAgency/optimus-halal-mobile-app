@@ -26,8 +26,13 @@ export type Env = z.infer<typeof envSchema>;
 function loadEnv(): Env {
   const result = envSchema.safeParse(process.env);
   if (!result.success) {
-    console.error("Invalid environment variables:");
-    console.error(result.error.flatten().fieldErrors);
+    // Logger not yet available at this point — use raw console for boot errors
+    console.error(JSON.stringify({
+      level: "error",
+      time: new Date().toISOString(),
+      msg: "Variables d'environnement invalides",
+      errors: result.error.flatten().fieldErrors,
+    }));
     process.exit(1);
   }
   return result.data;
