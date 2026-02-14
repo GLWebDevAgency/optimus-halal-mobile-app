@@ -19,6 +19,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 import { usePreferencesStore } from "@/store";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/hooks";
 
 // Types
 interface Certification {
@@ -157,6 +158,7 @@ const ETHICAL_CRITERIA: EthicalCriteria[] = [
 
 export default function CertificationsScreen() {
   const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
   const { certifications, toggleCertification } = usePreferencesStore();
   const [selectedCert, setSelectedCert] = useState<Certification | null>(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -205,7 +207,7 @@ export default function CertificationsScreen() {
             style={{ fontSize: 18, fontWeight: "700", color: colors.textPrimary, flex: 1, textAlign: "center" }}
             accessibilityRole="header"
           >
-            Certifications
+            {t.certifications.title}
           </Text>
           <TouchableOpacity
             style={{
@@ -242,7 +244,7 @@ export default function CertificationsScreen() {
             Vos Préférences
           </Text>
           <Text style={{ fontSize: 14, color: colors.textSecondary, lineHeight: 20 }}>
-            Sélectionnez les organismes de certification en lesquels vous avez confiance. L'application filtrera les produits selon vos choix éthiques.
+            {t.certifications.description}
           </Text>
         </Animated.View>
 

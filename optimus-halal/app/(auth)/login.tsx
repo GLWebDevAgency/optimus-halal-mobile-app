@@ -25,10 +25,12 @@ import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated"
 
 import { Button, Input } from "@/components/ui";
 import { useAuthStore } from "@/store/apiStores";
+import { useTranslation } from "@/hooks";
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,15 +47,15 @@ export default function LoginScreen() {
     const newErrors: { email?: string; password?: string } = {};
 
     if (!email) {
-      newErrors.email = "L'email est requis";
+      newErrors.email = t.auth.login.errors.emailRequired;
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = "Email invalide";
+      newErrors.email = t.auth.login.errors.emailInvalid;
     }
 
     if (!password) {
-      newErrors.password = "Le mot de passe est requis";
+      newErrors.password = t.auth.login.errors.passwordRequired;
     } else if (password.length < 8) {
-      newErrors.password = "Minimum 8 caractères";
+      newErrors.password = t.auth.login.errors.passwordTooShort;
     }
 
     setErrors(newErrors);
@@ -75,14 +77,14 @@ export default function LoginScreen() {
       } else {
         // Error is handled by store but we can show alert if needed, 
         // though the UI might display authError
-        Alert.alert("Erreur", authError || "Identifiants incorrects");
+        Alert.alert(t.common.error, authError || t.auth.login.errors.invalidCredentials);
       }
     } catch (error: unknown) {
       const message =
         error instanceof Error
           ? error.message
           : "Une erreur est survenue lors de la connexion.";
-      Alert.alert("Erreur", message);
+      Alert.alert(t.common.error, message);
     } finally {
       setIsSubmitting(false);
     }
@@ -93,19 +95,19 @@ export default function LoginScreen() {
 
     const hasHardware = await LocalAuthentication.hasHardwareAsync();
     if (!hasHardware) {
-      Alert.alert("Non disponible", "L'authentification biométrique n'est pas disponible sur cet appareil.");
+      Alert.alert(t.common.error, t.auth.biometric.notAvailable);
       return;
     }
 
     const isEnrolled = await LocalAuthentication.isEnrolledAsync();
     if (!isEnrolled) {
-      Alert.alert("Non configuré", "Veuillez configurer l'authentification biométrique dans les paramètres de votre appareil.");
+      Alert.alert(t.common.error, t.auth.biometric.notConfigured);
       return;
     }
 
     const result = await LocalAuthentication.authenticateAsync({
-      promptMessage: "Connectez-vous avec Face ID",
-      fallbackLabel: "Utiliser le mot de passe",
+      promptMessage: t.auth.biometric.prompt,
+      fallbackLabel: t.auth.biometric.fallback,
     });
 
     if (result.success) {
@@ -153,10 +155,10 @@ export default function LoginScreen() {
             </View>
 
             <Text className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white mb-2" accessibilityRole="header">
-              Bon retour !
+              {t.auth.login.title}
             </Text>
             <Text className="text-slate-500 dark:text-slate-400 text-base font-normal leading-relaxed text-center max-w-[280px]">
-              Connectez-vous pour accéder à vos choix halal transparents et éthiques.
+              {t.auth.login.subtitle}
             </Text>
           </Animated.View>
 
@@ -166,8 +168,8 @@ export default function LoginScreen() {
             className="gap-5"
           >
             <Input
-              label="Adresse email"
-              placeholder="nom@exemple.com"
+              label={t.auth.login.email}
+              placeholder={t.auth.login.emailPlaceholder}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -180,8 +182,8 @@ export default function LoginScreen() {
             />
 
             <Input
-              label="Mot de passe"
-              placeholder="••••••••"
+              label={t.auth.login.password}
+              placeholder={t.auth.login.passwordPlaceholder}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -199,7 +201,7 @@ export default function LoginScreen() {
                   accessibilityHint="Double-tapez pour réinitialiser votre mot de passe"
                 >
                   <Text className="text-sm font-medium text-gold-500">
-                    Mot de passe oublié ?
+                    {t.auth.login.forgotPassword}
                   </Text>
                 </TouchableOpacity>
               </Link>
@@ -225,7 +227,7 @@ export default function LoginScreen() {
                   />
                 }
               >
-                Se connecter
+                {t.auth.login.submit}
               </Button>
 
               <TouchableOpacity
@@ -242,7 +244,7 @@ export default function LoginScreen() {
                   color="#1de560"
                 />
                 <Text className="text-base font-medium text-slate-700 dark:text-slate-300">
-                  Connexion avec Face ID
+                  {t.auth.login.biometric}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -254,7 +256,7 @@ export default function LoginScreen() {
             className="items-center mt-10"
           >
             <Text className="text-sm text-slate-500 dark:text-slate-400">
-              Pas encore de compte ?{" "}
+              {t.auth.login.noAccount}{" "}
               <Link href="/(auth)/signup" asChild>
                 <Text
                   className="font-bold text-primary-500"
@@ -262,7 +264,7 @@ export default function LoginScreen() {
                   accessibilityLabel="Créer un compte"
                   accessibilityHint="Double-tapez pour créer un nouveau compte"
                 >
-                  Créer un compte
+                  {t.auth.login.createAccount}
                 </Text>
               </Link>
             </Text>

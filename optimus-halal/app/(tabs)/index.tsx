@@ -37,6 +37,7 @@ import { FlashList } from "@shopify/flash-list";
 
 import { Card, Avatar, Badge, IconButton } from "@/components/ui";
 import { useLocalAuthStore, useScanHistoryStore, useLocalAlertsStore, useLocalFavoritesStore } from "@/store";
+import { useTranslation } from "@/hooks/useTranslation";
 import { colors } from "@/constants/theme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -147,6 +148,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
 
   const { user } = useLocalAuthStore();
   const { history } = useScanHistoryStore();
@@ -211,7 +213,7 @@ export default function HomeScreen() {
             </View>
             <View>
               <Text className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                Bonjour,
+                {t.home.greeting}
               </Text>
               <Text className="text-xl font-bold text-slate-900 dark:text-white">
                 {userName}
@@ -277,14 +279,14 @@ export default function HomeScreen() {
             <View className="flex-row items-start justify-between">
               <View className="gap-1">
                 <Text accessibilityRole="header" className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                  Impact Quotidien
+                  {t.home.dailyImpact}
                 </Text>
                 <View className="flex-row items-baseline gap-2">
                   <Text className="text-3xl font-bold text-slate-900 dark:text-gold-500">
                     {todayStats.productsScanned}
                   </Text>
                   <Text className="text-sm font-medium text-primary-dark dark:text-primary">
-                    produits sains
+                    {t.home.healthyProducts}
                   </Text>
                 </View>
                 <Text className="mt-1 text-xs text-slate-500 dark:text-slate-400">
@@ -315,15 +317,15 @@ export default function HomeScreen() {
           <View className="flex-row gap-3 mb-3">
             <QuickAction
               icon="qr-code-scanner"
-              title="Scanner"
-              subtitle="Vérifier un produit"
+              title={t.home.quickActions.scanner}
+              subtitle={t.home.quickActions.scannerSub}
               primary
               onPress={() => handleNavigate("scanner")}
             />
             <QuickAction
               icon="location-on"
-              title="Magasins"
-              subtitle="Autour de moi"
+              title={t.home.quickActions.stores}
+              subtitle={t.home.quickActions.storesSub}
               iconColor={isDark ? "#1de560" : "#0d1b13"}
               onPress={() => handleNavigate("map")}
             />
@@ -331,15 +333,15 @@ export default function HomeScreen() {
           <View className="flex-row gap-3">
             <QuickAction
               icon="storefront"
-              title="Marketplace"
-              subtitle="Acheter éthique"
+              title={t.home.quickActions.marketplace}
+              subtitle={t.home.quickActions.marketplaceSub}
               iconColor={isDark ? "#D4AF37" : "#0d1b13"}
               onPress={() => handleNavigate("marketplace")}
             />
             <QuickAction
               icon="history"
-              title="Historique"
-              subtitle="Mes scans"
+              title={t.home.quickActions.history}
+              subtitle={t.home.quickActions.historySub}
               iconColor={isDark ? "#94a3b8" : "#0d1b13"}
               onPress={() => handleNavigate("history")}
             />
@@ -350,11 +352,11 @@ export default function HomeScreen() {
         <Animated.View entering={FadeIn.delay(400).duration(500)}>
           <View className="flex-row items-center justify-between px-5 mb-3">
             <Text accessibilityRole="header" className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-              À la une
+              {t.home.featured}
             </Text>
             <TouchableOpacity activeOpacity={0.7} accessibilityRole="link" accessibilityLabel="Voir tout les articles à la une">
               <Text className="text-xs font-semibold text-primary-dark dark:text-primary">
-                Voir tout
+                {t.home.viewAll}
               </Text>
             </TouchableOpacity>
           </View>
@@ -422,7 +424,7 @@ export default function HomeScreen() {
         >
           <View className="flex-row items-center justify-between px-5 mb-3">
             <Text accessibilityRole="header" className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-              Mes favoris
+              {t.home.favorites}
             </Text>
             {favoriteProducts.length > 0 && (
               <TouchableOpacity
@@ -432,7 +434,7 @@ export default function HomeScreen() {
                 accessibilityLabel={`Voir tous les favoris, ${favoriteProducts.length} produits`}
               >
                 <Text className="text-xs font-semibold text-primary-dark dark:text-primary">
-                  Voir tout ({favoriteProducts.length})
+                  {t.home.viewAll} ({favoriteProducts.length})
                 </Text>
               </TouchableOpacity>
             )}
@@ -518,7 +520,7 @@ export default function HomeScreen() {
                   />
                 </View>
                 <Text className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                  Ajouter
+                  {t.home.add}
                 </Text>
               </TouchableOpacity>
             </Animated.View>
@@ -531,7 +533,7 @@ export default function HomeScreen() {
           className="mt-6 px-5"
         >
           <Text accessibilityRole="header" className="text-lg font-bold tracking-tight text-slate-900 dark:text-white mb-3">
-            Autour de vous
+            {t.home.nearYou}
           </Text>
 
           <Card variant="outlined" className="overflow-hidden">

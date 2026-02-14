@@ -35,6 +35,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { Card, Badge, IconButton, Button } from "@/components/ui";
 import { useScanHistoryStore } from "@/store";
+import { useTranslation } from "@/hooks";
 import { colors } from "@/constants/theme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -159,6 +160,7 @@ export default function ScanResultScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
   const { barcode } = useLocalSearchParams<{ barcode: string }>();
 
   const [showAllIngredients, setShowAllIngredients] = useState(false);
@@ -234,7 +236,7 @@ export default function ScanResultScreen() {
           className="text-base font-bold text-slate-900 dark:text-white tracking-tight"
           accessibilityRole="header"
         >
-          Résultat du Scan
+          {t.scanResult.title}
         </Text>
         <IconButton
           icon="share"
@@ -412,7 +414,7 @@ export default function ScanResultScreen() {
             </Text>
             <View className="bg-slate-100 dark:bg-surface-dark border border-slate-200 dark:border-slate-700 px-2 py-1 rounded">
               <Text className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                {product.ingredients.length} Ingrédients
+                {product.ingredients.length} {t.scanResult.ingredients}
               </Text>
             </View>
           </View>

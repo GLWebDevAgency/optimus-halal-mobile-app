@@ -18,6 +18,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { usePreferencesStore } from "@/store";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/hooks";
 
 // Frequency options
 type FrequencyOption = "daily" | "weekly" | "realtime";
@@ -105,6 +106,7 @@ const FREQUENCY_OPTIONS = [
 export default function NotificationsScreen() {
   const { notifications, setNotificationPref } = usePreferencesStore();
   const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
 
   // Local state for notification preferences
   const [pushEnabled, setPushEnabled] = useState(true);
@@ -389,7 +391,7 @@ export default function NotificationsScreen() {
             }}
             accessibilityRole="header"
           >
-            Notifications
+            {t.notifications.title}
           </Text>
           <Text
             style={{
@@ -399,7 +401,7 @@ export default function NotificationsScreen() {
               marginTop: 2,
             }}
           >
-            Gérez vos préférences
+            {t.notifications.subtitle}
           </Text>
         </View>
 

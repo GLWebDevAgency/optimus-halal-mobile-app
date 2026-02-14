@@ -19,6 +19,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown, FadeInUp, SlideInDown } from "react-native-reanimated";
 import { usePreferencesStore } from "@/store";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/hooks";
 
 const { width } = Dimensions.get("window");
 
@@ -185,6 +186,7 @@ const SEARCH_SUGGESTIONS = [
 export default function ExclusionsScreen() {
   const { exclusions, toggleExclusion, setExclusions } = usePreferencesStore();
   const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
 
@@ -454,7 +456,7 @@ export default function ExclusionsScreen() {
           }}
           accessibilityRole="header"
         >
-          Exclusions
+          {t.exclusions.title}
         </Text>
 
         {/* Finish Button */}

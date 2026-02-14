@@ -29,6 +29,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { Card, Badge } from "@/components/ui";
 import { useFeatureFlagsStore, useLocalCartStore, useLocalAlertsStore } from "@/store";
+import { useTranslation } from "@/hooks/useTranslation";
 import { colors } from "@/constants/theme";
 
 interface Product {
@@ -80,10 +81,10 @@ const FEATURED_PRODUCTS: Product[] = [
 ];
 
 const CATEGORIES = [
-  { id: "all", name: "Tous", icon: "apps" as const },
-  { id: "food", name: "Alimentaire", icon: "restaurant" as const },
-  { id: "cosmetics", name: "Cosmétiques", icon: "spa" as const },
-  { id: "supplements", name: "Compléments", icon: "medication" as const },
+  { id: "all" as const, icon: "apps" as const },
+  { id: "food" as const, icon: "restaurant" as const },
+  { id: "cosmetics" as const, icon: "spa" as const },
+  { id: "supplements" as const, icon: "medication" as const },
 ];
 
 function ProductCard({ product, index }: { product: Product; index: number }) {
@@ -206,6 +207,7 @@ export default function MarketplaceTab() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
   const { flags } = useFeatureFlagsStore();
   const { unreadCount } = useLocalAlertsStore();
   const { itemCount } = useLocalCartStore();
@@ -403,35 +405,38 @@ export default function MarketplaceTab() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: 20 }}
           >
-            {CATEGORIES.map((category, index) => (
-              <TouchableOpacity
-                key={category.id}
-                onPress={() => handleCategoryPress(category.id)}
-                className={`flex-row items-center px-4 py-2 rounded-full mr-3 ${
-                  selectedCategory === category.id
-                    ? "bg-primary"
-                    : "bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700"
-                }`}
-                activeOpacity={0.7}
-                accessibilityRole="button"
-                accessibilityLabel={`${category.name}${selectedCategory === category.id ? ", sélectionné" : ""}`}
-              >
-                <MaterialIcons
-                  name={category.icon}
-                  size={18}
-                  color={selectedCategory === category.id ? "#fff" : (isDark ? "#94a3b8" : "#64748b")}
-                />
-                <Text
-                  className={`ml-2 text-sm font-medium ${
+            {CATEGORIES.map((category, index) => {
+              const categoryLabel = t.marketplace.categories[category.id];
+              return (
+                <TouchableOpacity
+                  key={category.id}
+                  onPress={() => handleCategoryPress(category.id)}
+                  className={`flex-row items-center px-4 py-2 rounded-full mr-3 ${
                     selectedCategory === category.id
-                      ? "text-white"
-                      : "text-slate-600 dark:text-slate-400"
+                      ? "bg-primary"
+                      : "bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700"
                   }`}
+                  activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${categoryLabel}${selectedCategory === category.id ? ", sélectionné" : ""}`}
                 >
-                  {category.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <MaterialIcons
+                    name={category.icon}
+                    size={18}
+                    color={selectedCategory === category.id ? "#fff" : (isDark ? "#94a3b8" : "#64748b")}
+                  />
+                  <Text
+                    className={`ml-2 text-sm font-medium ${
+                      selectedCategory === category.id
+                        ? "text-white"
+                        : "text-slate-600 dark:text-slate-400"
+                    }`}
+                  >
+                    {categoryLabel}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
         </Animated.View>
 

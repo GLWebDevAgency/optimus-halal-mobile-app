@@ -34,6 +34,7 @@ import Animated, {
 
 import { Input, IconButton, Button } from "@/components/ui";
 import { useLocalAuthStore } from "@/store";
+import { useTranslation } from "@/hooks";
 import {
   requestMagicLink,
   verifyMagicLinkToken,
@@ -48,6 +49,7 @@ export default function MagicLinkLoginScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
   const params = useLocalSearchParams();
 
   const [email, setEmail] = useState("");
@@ -97,12 +99,12 @@ export default function MagicLinkLoginScreen() {
     setError("");
 
     if (!email.trim()) {
-      setError("L'email est requis");
+      setError(t.auth.login.errors.emailRequired);
       return false;
     }
 
     if (!isValidEmail(email)) {
-      setError("Email invalide");
+      setError(t.auth.login.errors.emailInvalid);
       return false;
     }
 
@@ -143,12 +145,12 @@ export default function MagicLinkLoginScreen() {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
     } catch (err: any) {
-      setError(err.message || "Une erreur est survenue");
+      setError(err.message || t.errors.generic);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setIsLoading(false);
     }
-  }, [email, displayName, isNewUser, validateForm]);
+  }, [email, displayName, isNewUser, validateForm, t]);
 
   const handleVerifyToken = useCallback(
     async (token: string) => {
@@ -220,7 +222,7 @@ export default function MagicLinkLoginScreen() {
         className="mb-6"
       >
         <Text className="text-slate-900 dark:text-white tracking-tight text-[32px] font-bold leading-tight mb-2" accessibilityRole="header">
-          {isNewUser ? "Créer votre compte" : "Connexion rapide"}
+          {isNewUser ? t.auth.signup.title : "Connexion rapide"}
         </Text>
         <Text className="text-slate-500 dark:text-slate-400 text-base font-normal leading-normal">
           {isNewUser
@@ -235,8 +237,8 @@ export default function MagicLinkLoginScreen() {
       >
         {isNewUser && (
           <Input
-            label="Nom complet"
-            placeholder="Votre nom"
+            label={t.auth.signup.fullName}
+            placeholder={t.auth.signup.fullNamePlaceholder}
             value={displayName}
             onChangeText={setDisplayName}
             autoCapitalize="words"
@@ -247,8 +249,8 @@ export default function MagicLinkLoginScreen() {
         )}
 
         <Input
-          label="Adresse email"
-          placeholder="nom@exemple.com"
+          label={t.auth.login.email}
+          placeholder={t.auth.login.emailPlaceholder}
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
@@ -272,7 +274,7 @@ export default function MagicLinkLoginScreen() {
           accessibilityHint="Double-tapez pour envoyer le lien de connexion par email"
           accessibilityState={{ disabled: isLoading }}
         >
-          {isNewUser ? "Créer un compte" : "Recevoir le lien"}
+          {isNewUser ? t.auth.signup.submit : "Recevoir le lien"}
         </Button>
 
         <TouchableOpacity
@@ -285,15 +287,15 @@ export default function MagicLinkLoginScreen() {
           <Text className="text-sm text-slate-600 dark:text-slate-400">
             {isNewUser ? (
               <>
-                Vous avez déjà un compte ?{" "}
+                {t.auth.signup.hasAccount}{" "}
                 <Text className="font-bold text-primary-600">
-                  Se connecter
+                  {t.auth.signup.loginLink}
                 </Text>
               </>
             ) : (
               <>
-                Pas encore de compte ?{" "}
-                <Text className="font-bold text-primary-600">S'inscrire</Text>
+                {t.auth.login.noAccount}{" "}
+                <Text className="font-bold text-primary-600">{t.auth.signup.submit}</Text>
               </>
             )}
           </Text>

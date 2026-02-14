@@ -25,12 +25,14 @@ import Animated, { FadeIn, FadeInDown, SlideInDown } from "react-native-reanimat
 import * as ImagePicker from "expo-image-picker";
 import { useAuthStore } from "@/store/apiStores";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/hooks";
 import { PhoneInput, LocationPicker, validateFrenchPhone } from "@/components/ui";
 import { City, FRENCH_CITIES, findNearestCity } from "@/constants/locations";
 
 export default function EditProfileScreen() {
   const { profile, isLoading, error, updateProfile, fetchProfile, clearError } = useAuthStore();
   const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
 
   // Form state - initialized from profile
   const [displayName, setDisplayName] = useState("");
@@ -147,14 +149,14 @@ export default function EditProfileScreen() {
       });
 
       if (success) {
-        Alert.alert("Succès", "Vos modifications ont été enregistrées.", [
+        Alert.alert(t.common.success, t.editProfile.saved, [
           { text: "OK", onPress: () => router.back() }
         ]);
       } else {
-        Alert.alert("Erreur", error || "Impossible de sauvegarder les modifications.");
+        Alert.alert(t.common.error, error || "Impossible de sauvegarder les modifications.");
       }
     } catch (err) {
-      Alert.alert("Erreur", "Une erreur est survenue lors de la sauvegarde.");
+      Alert.alert(t.common.error, "Une erreur est survenue lors de la sauvegarde.");
     } finally {
       setIsSaving(false);
     }
@@ -261,7 +263,7 @@ export default function EditProfileScreen() {
           textAlign: "center",
           marginBottom: 8 
         }}>
-          Une erreur est survenue
+          {t.errors.generic}
         </Text>
         <Text style={{ 
           fontSize: 14, 
@@ -283,7 +285,7 @@ export default function EditProfileScreen() {
           accessibilityLabel="Réessayer"
           accessibilityHint="Recharger le profil"
         >
-          <Text style={{ color: "#0d1b13", fontWeight: "600" }}>Réessayer</Text>
+          <Text style={{ color: "#0d1b13", fontWeight: "600" }}>{t.common.retry}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -295,7 +297,7 @@ export default function EditProfileScreen() {
           accessibilityLabel="Retour"
           accessibilityHint="Revenir à l'écran précédent"
         >
-          <Text style={{ color: themeColors.textSecondary }}>Retour</Text>
+          <Text style={{ color: themeColors.textSecondary }}>{t.common.back}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -356,7 +358,7 @@ export default function EditProfileScreen() {
             }}
             accessibilityRole="header"
           >
-            Modifier le profil
+            {t.editProfile.title}
           </Text>
 
           {/* Spacer for alignment */}
@@ -469,7 +471,7 @@ export default function EditProfileScreen() {
                   color: themeColors.textSecondary,
                 }}
               >
-                Changer la photo
+                {t.editProfile.changePhoto}
               </Text>
             </TouchableOpacity>
           </Animated.View>
@@ -477,7 +479,7 @@ export default function EditProfileScreen() {
           {/* Form Fields */}
           <Animated.View entering={FadeInDown.delay(150).duration(400)}>
             {renderInputField(
-              "Nom complet",
+              t.editProfile.fullName,
               displayName,
               setDisplayName,
               "person",
@@ -487,7 +489,7 @@ export default function EditProfileScreen() {
 
           <Animated.View entering={FadeInDown.delay(200).duration(400)}>
             {renderInputField(
-              "Adresse email",
+              t.editProfile.email,
               email,
               () => {}, // Email is read-only
               "mail",
@@ -499,7 +501,7 @@ export default function EditProfileScreen() {
           {/* Phone Number with PhoneInput */}
           <Animated.View entering={FadeInDown.delay(250).duration(400)} style={{ marginBottom: 20 }}>
             <PhoneInput
-              label="Téléphone"
+              label={t.editProfile.phone}
               value={phoneNumber}
               onChangeText={handlePhoneChange}
               hint="Pour les notifications et la vérification"
@@ -529,7 +531,7 @@ export default function EditProfileScreen() {
                   color: themeColors.textPrimary,
                 }}
               >
-                Bio
+                {t.editProfile.bio}
               </Text>
               <Text
                 style={{

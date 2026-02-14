@@ -30,11 +30,13 @@ import { Button, Input, IconButton, PhoneInput, LocationPicker, validateFrenchPh
 import { useLocalAuthStore } from "@/store";
 import { authService } from "@/services/api/auth.service";
 import { City } from "@/constants/locations";
+import { useTranslation } from "@/hooks";
 
 export default function SignUpScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
 
   // Form state
   const [fullName, setFullName] = useState("");
@@ -52,7 +54,7 @@ export default function SignUpScreen() {
     const newErrors: Record<string, string> = {};
 
     if (!fullName.trim()) {
-      newErrors.fullName = "Le nom est requis";
+      newErrors.fullName = t.auth.signup.errors.fullNameRequired;
     }
 
     if (!phoneNumber) {
@@ -63,13 +65,13 @@ export default function SignUpScreen() {
 
     // Email optionnel mais validé si renseigné
     if (email && !/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = "Email invalide";
+      newErrors.email = t.auth.signup.errors.emailInvalid;
     }
 
     if (!password) {
-      newErrors.password = "Le mot de passe est requis";
+      newErrors.password = t.auth.signup.errors.passwordRequired;
     } else if (password.length < 8) {
-      newErrors.password = "Minimum 8 caractères";
+      newErrors.password = t.auth.signup.errors.passwordTooShort;
     }
 
     setErrors(newErrors);
@@ -124,12 +126,12 @@ export default function SignUpScreen() {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         router.replace("/(tabs)");
       } else {
-        Alert.alert("Erreur", response.message || "Échec de l'inscription");
+        Alert.alert(t.common.error, response.message || "Échec de l'inscription");
       }
     } catch (error: any) {
       console.error("[Signup] Error:", error);
       Alert.alert(
-        "Erreur", 
+        t.common.error,
         error.message || "Une erreur est survenue lors de l'inscription. Vérifiez votre connexion internet."
       );
     } finally {
@@ -139,7 +141,7 @@ export default function SignUpScreen() {
 
   const handleSocialAuth = useCallback(async (provider: "google" | "apple") => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    Alert.alert("Bientôt disponible", `L'inscription avec ${provider === "google" ? "Google" : "Apple"} sera bientôt disponible.`);
+    Alert.alert(t.common.comingSoon, `L'inscription avec ${provider === "google" ? "Google" : "Apple"} sera bientôt disponible.`);
   }, []);
 
   return (
@@ -181,10 +183,10 @@ export default function SignUpScreen() {
             className="mb-6"
           >
             <Text className="text-slate-900 dark:text-white tracking-tight text-[32px] font-bold leading-tight mb-2" accessibilityRole="header">
-              Créer votre compte
+              {t.auth.signup.title}
             </Text>
             <Text className="text-slate-500 dark:text-slate-400 text-base font-normal leading-normal">
-              Commencez votre parcours vers une consommation transparente et éthique.
+              {t.auth.signup.subtitle}
             </Text>
           </Animated.View>
 
@@ -205,8 +207,8 @@ export default function SignUpScreen() {
 
             {/* Full Name */}
             <Input
-              label="Nom complet"
-              placeholder="Entrez votre nom complet"
+              label={t.auth.signup.fullName}
+              placeholder={t.auth.signup.fullNamePlaceholder}
               value={fullName}
               onChangeText={setFullName}
               autoCapitalize="words"
@@ -217,7 +219,7 @@ export default function SignUpScreen() {
 
             {/* Email - Optional */}
             <Input
-              label="Adresse email"
+              label={t.auth.signup.email}
               placeholder="nom@exemple.com (optionnel)"
               value={email}
               onChangeText={setEmail}
@@ -242,8 +244,8 @@ export default function SignUpScreen() {
 
             {/* Password */}
             <Input
-              label="Mot de passe"
-              placeholder="Créer un mot de passe"
+              label={t.auth.signup.password}
+              placeholder={t.auth.signup.passwordPlaceholder}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -266,18 +268,18 @@ export default function SignUpScreen() {
               accessibilityHint="Double-tapez pour créer votre compte"
               accessibilityState={{ disabled: isLoading }}
             >
-              Créer un compte
+              {t.auth.signup.submit}
             </Button>
 
             {/* Terms */}
             <Text className="text-center text-xs text-slate-500 dark:text-slate-400 leading-relaxed px-4">
               En vous inscrivant, vous acceptez nos{" "}
               <Text className="text-slate-900 dark:text-white underline">
-                Conditions d'utilisation
+                {t.auth.signup.termsLink}
               </Text>{" "}
-              et notre{" "}
+              {t.auth.signup.and}{" "}
               <Text className="text-slate-900 dark:text-white underline">
-                Politique de confidentialité
+                {t.auth.signup.privacyLink}
               </Text>
               .
             </Text>
@@ -340,7 +342,7 @@ export default function SignUpScreen() {
             className="items-center mt-8"
           >
             <Text className="text-sm text-slate-500 dark:text-slate-400">
-              Vous avez déjà un compte ?{" "}
+              {t.auth.signup.hasAccount}{" "}
               <Link href="/(auth)/login" asChild>
                 <Text
                   className="font-bold text-gold-600"
@@ -348,7 +350,7 @@ export default function SignUpScreen() {
                   accessibilityLabel="Se connecter"
                   accessibilityHint="Double-tapez pour aller à la page de connexion"
                 >
-                  Se connecter
+                  {t.auth.signup.loginLink}
                 </Text>
               </Link>
             </Text>

@@ -22,12 +22,14 @@ import * as Haptics from "expo-haptics";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
 import { AUTH_CONFIG } from "@/constants/config";
+import { useTranslation } from "@/hooks";
 
 export default function AuthWelcomeScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  
+  const { t } = useTranslation();
+
   const authMode = AUTH_CONFIG.mode;
 
   // Si mode V1 uniquement, rediriger directement vers login
@@ -235,8 +237,8 @@ export default function AuthWelcomeScreen() {
         >
           <Text className="text-xs text-slate-500 dark:text-slate-400 text-center">
             En continuant, vous acceptez nos{"\n"}
-            <Text className="underline">Conditions d'utilisation</Text> et notre{" "}
-            <Text className="underline">Politique de confidentialité</Text>
+            <Text className="underline">{t.auth.signup.termsLink}</Text> et notre{" "}
+            <Text className="underline">{t.auth.signup.privacyLink}</Text>
           </Text>
         </Animated.View>
       </ScrollView>

@@ -19,6 +19,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useLocalFavoritesStore, type FavoriteProduct } from "@/store";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/hooks";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 48) / 2;
@@ -221,6 +222,7 @@ function ProductCard({ product, index, onRemove, onView, onScan, isDark, colors 
 
 export default function FavoritesScreen() {
   const { isDark, colors } = useTheme();
+  const { t } = useTranslation();
   const { favorites, removeFavorite } = useLocalFavoritesStore();
   const [selectedCategory, setSelectedCategory] = useState("all");
 
@@ -262,7 +264,7 @@ export default function FavoritesScreen() {
                 style={{ fontSize: 24, fontWeight: "700", letterSpacing: -0.5, color: colors.textPrimary }}
                 accessibilityRole="header"
               >
-                Mes Favoris
+                {t.favorites.title}
               </Text>
               <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
                 {favorites.length} produit{favorites.length > 1 ? "s" : ""} enregistré{favorites.length > 1 ? "s" : ""}
@@ -358,7 +360,7 @@ export default function FavoritesScreen() {
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 80 }}>
           <MaterialIcons name="favorite-border" size={64} color={colors.textMuted} />
           <Text style={{ color: colors.textSecondary, fontSize: 18, marginTop: 16 }}>
-            Aucun favori
+            {t.favorites.empty}
           </Text>
           <Text style={{ color: colors.textMuted, fontSize: 14, marginTop: 8, textAlign: "center", paddingHorizontal: 32 }}>
             Ajoutez des produits à vos favoris pour les retrouver facilement.

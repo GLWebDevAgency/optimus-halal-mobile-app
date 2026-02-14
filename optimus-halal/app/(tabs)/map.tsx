@@ -37,18 +37,19 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { Card, Avatar, Chip, IconButton, Button } from "@/components/ui";
 import { useLocationStore, useLocalAlertsStore } from "@/store";
+import { useTranslation } from "@/hooks/useTranslation";
 import { colors } from "@/constants/theme";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const CARD_WIDTH = 280;
 
 // Mock data
-const FILTERS = [
-  { id: "butchers", label: "Boucheries", active: true },
-  { id: "restaurants", label: "Restaurants", active: false },
-  { id: "grocery", label: "Épiceries", active: false },
-  { id: "avs", label: "Cert: AVS", hasDropdown: true, active: false },
-  { id: "rating", label: "Note 4.0+", active: false },
+const FILTER_IDS = [
+  { id: "butchers", filterKey: "butchers" as const, active: true },
+  { id: "restaurants", filterKey: "restaurants" as const, active: false },
+  { id: "grocery", filterKey: "grocery" as const, active: false },
+  { id: "avs", filterKey: "certified" as const, hasDropdown: true, active: false },
+  { id: "rating", filterKey: "rating" as const, active: false },
 ];
 
 const STORES = [
@@ -101,6 +102,7 @@ interface StoreCardProps {
 function StoreCard({ store, onPress }: StoreCardProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
 
   return (
     <TouchableOpacity
@@ -176,7 +178,7 @@ function StoreCard({ store, onPress }: StoreCardProps) {
                 store.isOpen ? "text-emerald-400" : "text-red-400"
               }`}
             >
-              {store.isOpen ? "Ouvert" : "Fermé"}
+              {store.isOpen ? t.map.open : t.map.closed}
             </Text>
           </View>
         </View>
@@ -203,7 +205,7 @@ function StoreCard({ store, onPress }: StoreCardProps) {
             store.isFeatured ? "text-primary" : "text-white"
           }`}
         >
-          {store.isFeatured ? "Itinéraire" : "Voir détails"}
+          {store.isFeatured ? t.map.directions : "Voir détails"}
         </Text>
       </TouchableOpacity>
     </TouchableOpacity>
@@ -214,6 +216,7 @@ export default function MapScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState<string[]>(["butchers"]);
@@ -324,7 +327,7 @@ export default function MapScreen() {
             <TextInput
               value={searchQuery}
               onChangeText={setSearchQuery}
-              placeholder="Rechercher kebab, wagyu..."
+              placeholder={t.map.searchPlaceholder}
               placeholderTextColor="#94a3b8"
               className="flex-1 ml-3 text-white text-base"
               style={{ fontFamily: "Inter" }}
@@ -349,8 +352,9 @@ export default function MapScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ gap: 8 }}
         >
-          {FILTERS.map((filter) => {
+          {FILTER_IDS.map((filter) => {
             const isActive = activeFilters.includes(filter.id);
+            const filterLabel = t.map.filters[filter.filterKey];
             return (
               <TouchableOpacity
                 key={filter.id}
@@ -362,8 +366,8 @@ export default function MapScreen() {
                 }`}
                 activeOpacity={0.7}
                 accessibilityRole="button"
-                accessibilityLabel={`${filter.label}${isActive ? ", sélectionné" : ""}`}
-                accessibilityHint={isActive ? `Désactiver le filtre ${filter.label}` : `Filtrer par ${filter.label}`}
+                accessibilityLabel={`${filterLabel}${isActive ? ", sélectionné" : ""}`}
+                accessibilityHint={isActive ? `Désactiver le filtre ${filterLabel}` : `Filtrer par ${filterLabel}`}
                 style={
                   isActive
                     ? {
@@ -380,7 +384,7 @@ export default function MapScreen() {
                     isActive ? "font-semibold text-white" : "font-medium text-gray-200"
                   }`}
                 >
-                  {filter.label}
+                  {filterLabel}
                 </Text>
                 {isActive && (
                   <MaterialIcons name="close" size={18} color="#ffffff" />
@@ -441,9 +445,9 @@ export default function MapScreen() {
         <View className="flex-1 pb-6">
           {/* Header */}
           <View className="flex-row items-center justify-between px-5 mb-3">
-            <Text accessibilityRole="header" className="text-lg font-bold text-white">Lieux à proximité</Text>
+            <Text accessibilityRole="header" className="text-lg font-bold text-white">{t.map.nearYou}</Text>
             <TouchableOpacity activeOpacity={0.7} accessibilityRole="link" accessibilityLabel="Voir tous les lieux à proximité">
-              <Text className="text-primary text-sm font-semibold">Voir tout</Text>
+              <Text className="text-primary text-sm font-semibold">{t.home.viewAll}</Text>
             </TouchableOpacity>
           </View>
 
