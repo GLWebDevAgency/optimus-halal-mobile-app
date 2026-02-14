@@ -27,6 +27,9 @@ interface AuthStoreState {
   user: ApiTypes.AuthUser | null;
   profile: ApiTypes.UserProfile | null;
   isAuthenticated: boolean;
+  /** True only during app startup initialization — gates the splash/loading screen */
+  isInitializing: boolean;
+  /** Per-operation loading flag for individual screens (login, register, etc.) */
   isLoading: boolean;
   error: string | null;
 
@@ -50,12 +53,13 @@ export const useAuthStore = create<AuthStoreState>()((set, get) => ({
   user: null,
   profile: null,
   isAuthenticated: false,
-  isLoading: true,
+  isInitializing: true,
+  isLoading: false,
   error: null,
 
   initialize: async () => {
     logger.info("AppInit", "initialize: start");
-    set({ isLoading: true });
+    set({ isInitializing: true });
 
     try {
       try {
@@ -97,8 +101,8 @@ export const useAuthStore = create<AuthStoreState>()((set, get) => ({
     } catch (e) {
       logger.error("AppInit", "Unexpected error in initialize", String(e));
     } finally {
-      set({ isLoading: false });
-      logger.info("AppInit", "initialize: complete, isLoading → false");
+      set({ isInitializing: false });
+      logger.info("AppInit", "initialize: complete, isInitializing → false");
     }
   },
 
@@ -195,14 +199,14 @@ export const useAuthStore = create<AuthStoreState>()((set, get) => ({
   fetchProfile: async () => {
     set({ isLoading: true, error: null });
     const { data, error } = await safeApiCall(() => api.profile.getProfile(), {
-      suppressLog: true, // Suppress console.error for profile fetch to avoid noise, we handle it
+      suppressLog: true,
     });
 
     if (data) {
       set({ profile: data, isLoading: false, error: null });
     } else if (error) {
-      // Handle Unauthorized specifically
       if (error.code === "UNAUTHORIZED") {
+        set({ isLoading: false });
         Alert.alert(
           "Session expirée",
           "Votre session a expiré. Veuillez vous reconnecter.",
@@ -227,26 +231,24 @@ export const useAuthStore = create<AuthStoreState>()((set, get) => ({
   },
 
   updateProfile: async (input) => {
-    set({ isLoading: true, error: null });
+    set({ error: null });
     const { data, error } = await safeApiCall(() =>
       api.profile.updateProfile(input)
     );
 
     if (error) {
-      set({ isLoading: false, error: error.message });
+      set({ error: error.message });
       return false;
     }
 
     if (data?.success) {
-      // Update local profile
+      // Update local profile optimistically
       set((state) => ({
         profile: state.profile ? { ...state.profile, ...input } : null,
-        isLoading: false,
       }));
       return true;
     }
 
-    set({ isLoading: false });
     return false;
   },
 

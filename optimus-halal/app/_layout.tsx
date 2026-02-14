@@ -82,7 +82,7 @@ const INIT_TIMEOUT_MS = 8000;
 
 function AppInitializer({ children }: { children: React.ReactNode }) {
   const initialize = useAuthStore((state) => state.initialize);
-  const isLoading = useAuthStore((state) => state.isLoading);
+  const isInitializing = useAuthStore((state) => state.isInitializing);
   const language = useLanguageStore((state) => state.language);
   const colorScheme = useColorScheme();
   const [showDebug, setShowDebug] = useState(false);
@@ -118,8 +118,8 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
     return <DebugOverlay onClose={() => setShowDebug(false)} />;
   }
 
-  // Show loading spinner while initializing (with timeout escape)
-  if (isLoading && !timedOut) {
+  // Show loading spinner only during app startup init (with timeout escape)
+  if (isInitializing && !timedOut) {
     return (
       <Pressable
         onLongPress={handleLongPress}
@@ -135,7 +135,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
   }
 
   // If timed out, show debug info + option to continue
-  if (timedOut && isLoading) {
+  if (timedOut && isInitializing) {
     return (
       <View style={{ flex: 1, backgroundColor: colorScheme === "dark" ? "#0f1a13" : "#ffffff", padding: 24, paddingTop: 60 }}>
         <Text style={{ color: "#ef4444", fontSize: 18, fontWeight: "bold", marginBottom: 12 }}>
@@ -154,7 +154,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => {
-            useAuthStore.setState({ isLoading: false });
+            useAuthStore.setState({ isInitializing: false });
             setTimedOut(false);
           }}
           style={{ backgroundColor: "#333", padding: 12, borderRadius: 8 }}

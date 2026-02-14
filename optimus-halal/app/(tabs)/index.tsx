@@ -159,7 +159,7 @@ export default function HomeScreen() {
   const isDark = colorScheme === "dark";
   const { t } = useTranslation();
 
-  const isInitializing = useAuthStore((s) => s.isLoading);
+  const isInitializing = useAuthStore((s) => s.isInitializing);
   const profile = useAuthStore((s) => s.profile);
   const { favorites: favoriteProducts } = useLocalFavoritesStore();
 

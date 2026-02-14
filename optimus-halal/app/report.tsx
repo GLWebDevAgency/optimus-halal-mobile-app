@@ -93,7 +93,7 @@ export default function ReportingFormScreen() {
       Alert.alert(
         "Signalement envoyé",
         "Merci pour votre contribution à la transparence halal. Nous traiterons votre signalement rapidement.",
-        [{ text: "OK", onPress: () => router.back() }],
+        [{ text: "OK", onPress: () => router.canGoBack() ? router.back() : router.replace("/(tabs)") }],
       );
     },
     onError: (error) => {
@@ -109,15 +109,23 @@ export default function ReportingFormScreen() {
     details.trim().length >= 10 &&
     selectedViolation !== null;
 
+  const safeGoBack = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)");
+    }
+  }, []);
+
   const handleBack = useCallback(() => {
     impact();
-    router.back();
-  }, []);
+    safeGoBack();
+  }, [safeGoBack]);
 
   const handleCancel = useCallback(() => {
     impact();
-    router.back();
-  }, []);
+    safeGoBack();
+  }, [safeGoBack]);
 
   const handleSelectViolation = useCallback((id: string) => {
     impact();
