@@ -21,36 +21,32 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # ── Lint & Typecheck ────────────────────────────
+  # ── Typecheck & Lint ─────────────────────────────
   check:
-    name: Lint & Typecheck
+    name: Typecheck & Lint
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
-          cache-dependency-path: optimus-halal/pnpm-lock.yaml
+          cache: npm
+          cache-dependency-path: optimus-halal/package-lock.json
 
-      - run: pnpm install --frozen-lockfile
+      - run: npm ci
 
       - name: Typecheck
-        run: pnpm run typecheck
+        run: npx tsc --noEmit
 
       - name: Lint
-        run: pnpm run lint
+        run: npx eslint . --ext .ts,.tsx
         continue-on-error: true
 
-  # ── EAS Update (OTA) ───────────────────────────
+  # ── EAS Update (OTA — JS-only changes) ──────────
   eas-update:
-    name: EAS Update
+    name: EAS Update (OTA)
     runs-on: ubuntu-latest
     needs: check
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -58,17 +54,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
-          cache-dependency-path: optimus-halal/pnpm-lock.yaml
+          cache: npm
+          cache-dependency-path: optimus-halal/package-lock.json
 
-      - run: pnpm install --frozen-lockfile
+      - run: npm ci
 
       - uses: expo/expo-github-action@v8
         with:
@@ -77,3 +69,55 @@ jobs:
 
       - name: Publish OTA Update
         run: eas update --auto --non-interactive
+
+  # ── EAS Build (Preview — on PR) ─────────────────
+  eas-build-preview:
+    name: EAS Build (Preview)
+    runs-on: ubuntu-latest
+    needs: check
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: optimus-halal/package-lock.json
+
+      - run: npm ci
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build Preview APK
+        run: eas build --platform android --profile preview --non-interactive --no-wait
+
+  # ── EAS Build (Production — on release tag) ─────
+  eas-build-production:
+    name: EAS Build (Production)
+    runs-on: ubuntu-latest
+    needs: check
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: optimus-halal/package-lock.json
+
+      - run: npm ci
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build Production (Android + iOS)
+        run: eas build --platform all --profile production --non-interactive --no-wait

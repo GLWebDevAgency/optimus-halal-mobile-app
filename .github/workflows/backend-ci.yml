@@ -89,3 +89,14 @@ jobs:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
         run: railway up --service "$RAILWAY_SERVICE_ID" --detach
+
+      - name: Verify deployment health
+        run: |
+          echo "Waiting 30s for deployment to stabilize..."
+          sleep 30
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://mobile-bff-production-aefc.up.railway.app/health || echo "000")
+          if [ "$STATUS" = "200" ]; then
+            echo "Health check passed (HTTP $STATUS)"
+          else
+            echo "Warning: Health check returned HTTP $STATUS (deployment may still be starting)"
+          fi
