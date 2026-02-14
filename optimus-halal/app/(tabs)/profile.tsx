@@ -31,6 +31,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { Card, Avatar, Badge, IconButton } from "@/components/ui";
+import { ProfileSkeleton } from "@/components/skeletons";
 import { useLocalAuthStore, useScanHistoryStore, useThemeStore, useLocalAlertsStore, useLanguageStore, usePreferencesStore } from "@/store";
 import { colors } from "@/constants/theme";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -196,6 +197,9 @@ export default function ProfileScreen() {
     impact();
     setPushNotificationsEnabled(value);
   }, []);
+
+  // Skeleton while user data loads (placed after all hooks to respect Rules of Hooks)
+  if (!user) return <ProfileSkeleton />;
 
   const handleLogout = useCallback(async () => {
     impact(ImpactFeedbackStyle.Medium);

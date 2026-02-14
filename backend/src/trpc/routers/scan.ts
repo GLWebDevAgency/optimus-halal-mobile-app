@@ -28,7 +28,7 @@ export const scanRouter = router({
         where: eq(products.barcode, input.barcode),
       });
 
-      // 2. If not, fetch from OpenFoodFacts
+      // 2. If not, fetch from OpenFoodFacts (outside transaction — external API call)
       if (!product) {
         const offResult = await lookupBarcode(input.barcode);
 
@@ -59,52 +59,55 @@ export const scanRouter = router({
         }
       }
 
-      // 3. Record the scan
-      const [scan] = await ctx.db
-        .insert(scans)
-        .values({
-          userId: ctx.userId,
-          productId: product?.id,
-          barcode: input.barcode,
-          halalStatus: product?.halalStatus ?? "unknown",
-          confidenceScore: product?.confidenceScore ?? 0,
-          latitude: input.latitude,
-          longitude: input.longitude,
-        })
-        .returning();
+      // 3+4. Record scan + update user stats in a single transaction
+      const result = await ctx.db.transaction(async (tx) => {
+        const [scan] = await tx
+          .insert(scans)
+          .values({
+            userId: ctx.userId,
+            productId: product?.id,
+            barcode: input.barcode,
+            halalStatus: product?.halalStatus ?? "unknown",
+            confidenceScore: product?.confidenceScore ?? 0,
+            latitude: input.latitude,
+            longitude: input.longitude,
+          })
+          .returning();
 
-      // 4. Update user stats
-      const now = new Date();
-      const user = await ctx.db.query.users.findFirst({
-        where: eq(users.id, ctx.userId),
-        columns: { lastScanDate: true, currentStreak: true, longestStreak: true },
+        const now = new Date();
+        const user = await tx.query.users.findFirst({
+          where: eq(users.id, ctx.userId),
+          columns: { lastScanDate: true, currentStreak: true, longestStreak: true },
+        });
+
+        let newStreak = 1;
+        if (user?.lastScanDate) {
+          const lastScan = new Date(user.lastScanDate);
+          const diffDays = Math.floor(
+            (now.getTime() - lastScan.getTime()) / (1000 * 60 * 60 * 24)
+          );
+          if (diffDays <= 1) {
+            newStreak = (user.currentStreak ?? 0) + 1;
+          }
+        }
+
+        await tx
+          .update(users)
+          .set({
+            totalScans: sql`${users.totalScans} + 1`,
+            experiencePoints: sql`${users.experiencePoints} + 10`,
+            currentStreak: newStreak,
+            longestStreak: sql`GREATEST(${users.longestStreak}, ${newStreak})`,
+            lastScanDate: now,
+            updatedAt: now,
+          })
+          .where(eq(users.id, ctx.userId));
+
+        return scan;
       });
 
-      let newStreak = 1;
-      if (user?.lastScanDate) {
-        const lastScan = new Date(user.lastScanDate);
-        const diffDays = Math.floor(
-          (now.getTime() - lastScan.getTime()) / (1000 * 60 * 60 * 24)
-        );
-        if (diffDays <= 1) {
-          newStreak = (user.currentStreak ?? 0) + 1;
-        }
-      }
-
-      await ctx.db
-        .update(users)
-        .set({
-          totalScans: sql`${users.totalScans} + 1`,
-          experiencePoints: sql`${users.experiencePoints} + 10`,
-          currentStreak: newStreak,
-          longestStreak: sql`GREATEST(${users.longestStreak}, ${newStreak})`,
-          lastScanDate: now,
-          updatedAt: now,
-        })
-        .where(eq(users.id, ctx.userId));
-
       return {
-        scan,
+        scan: result,
         product: product ?? null,
         isNewProduct: !product,
       };

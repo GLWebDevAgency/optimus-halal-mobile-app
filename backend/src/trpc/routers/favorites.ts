@@ -160,15 +160,17 @@ export const favoritesRouter = router({
       });
       if (!folder) throw notFound("Dossier introuvable");
 
-      // Move favorites out of folder before deleting
-      await ctx.db
-        .update(favorites)
-        .set({ folderId: null })
-        .where(eq(favorites.folderId, input.id));
+      // Transaction: move favorites out + delete folder
+      await ctx.db.transaction(async (tx) => {
+        await tx
+          .update(favorites)
+          .set({ folderId: null })
+          .where(eq(favorites.folderId, input.id));
 
-      await ctx.db
-        .delete(favoriteFolders)
-        .where(and(eq(favoriteFolders.id, input.id), eq(favoriteFolders.userId, ctx.userId)));
+        await tx
+          .delete(favoriteFolders)
+          .where(and(eq(favoriteFolders.id, input.id), eq(favoriteFolders.userId, ctx.userId)));
+      });
 
       return { success: true };
     }),

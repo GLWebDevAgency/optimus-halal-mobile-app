@@ -19,6 +19,10 @@ const envSchema = z.object({
     .string()
     .url()
     .default("https://world.openfoodfacts.org/api/v2"),
+  CORS_ORIGINS: z
+    .string()
+    .default("*")
+    .describe("Comma-separated allowed origins, or * for all"),
 });
 
 export type Env = z.infer<typeof envSchema>;

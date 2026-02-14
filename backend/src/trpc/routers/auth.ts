@@ -293,15 +293,17 @@ export const authRouter = router({
 
       const passwordHash = await hashPassword(input.newPassword);
 
-      await ctx.db
-        .update(users)
-        .set({ passwordHash, updatedAt: new Date() })
-        .where(eq(users.id, user.id));
+      // Transaction: update password + invalidate all refresh tokens
+      await ctx.db.transaction(async (tx) => {
+        await tx
+          .update(users)
+          .set({ passwordHash, updatedAt: new Date() })
+          .where(eq(users.id, user.id));
 
-      // Invalidate all refresh tokens
-      await ctx.db
-        .delete(refreshTokens)
-        .where(eq(refreshTokens.userId, user.id));
+        await tx
+          .delete(refreshTokens)
+          .where(eq(refreshTokens.userId, user.id));
+      });
 
       await ctx.redis.del(key);
       await ctx.redis.del(attemptsKey);

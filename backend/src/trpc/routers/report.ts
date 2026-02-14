@@ -62,34 +62,37 @@ export const reportRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const [review] = await ctx.db
-        .insert(reviews)
-        .values({ ...input, userId: ctx.userId })
-        .returning();
+      // Transaction: insert review + update store rating
+      return ctx.db.transaction(async (tx) => {
+        const [review] = await tx
+          .insert(reviews)
+          .values({ ...input, userId: ctx.userId })
+          .returning();
 
-      // Update store average rating if storeId provided
-      if (input.storeId) {
-        const [stats] = await ctx.db
-          .select({
-            avg: sql<number>`AVG(${reviews.rating})::float`,
-            count: sql<number>`count(*)::int`,
-          })
-          .from(reviews)
-          .where(eq(reviews.storeId, input.storeId));
-
-        if (stats) {
-          await ctx.db
-            .update(stores)
-            .set({
-              averageRating: stats.avg,
-              reviewCount: stats.count,
-              updatedAt: new Date(),
+        // Update store average rating if storeId provided
+        if (input.storeId) {
+          const [stats] = await tx
+            .select({
+              avg: sql<number>`AVG(${reviews.rating})::float`,
+              count: sql<number>`count(*)::int`,
             })
-            .where(eq(stores.id, input.storeId));
-        }
-      }
+            .from(reviews)
+            .where(eq(reviews.storeId, input.storeId));
 
-      return review;
+          if (stats) {
+            await tx
+              .update(stores)
+              .set({
+                averageRating: stats.avg,
+                reviewCount: stats.count,
+                updatedAt: new Date(),
+              })
+              .where(eq(stores.id, input.storeId));
+          }
+        }
+
+        return review;
+      });
     }),
 
   getProductReviews: publicProcedure

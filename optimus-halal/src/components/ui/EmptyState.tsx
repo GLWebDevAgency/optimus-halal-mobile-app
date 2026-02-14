@@ -1,75 +1,82 @@
 /**
  * EmptyState Component
  *
- * Composant affiche lorsque les listes de donnees sont vides.
- * Propose un titre, un message optionnel et un bouton d'action optionnel.
+ * World-class empty state with dark mode, animations, and icon support.
+ * Matches the app's NativeWind design system.
  */
 
 import React from "react";
-import { View, Text, Pressable, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
+import { View, Text, TouchableOpacity, useColorScheme } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
+import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
 
 export interface EmptyStateProps {
-  /** Titre affiches en gras */
+  /** MaterialIcons icon name */
+  icon?: keyof typeof MaterialIcons.glyphMap;
+  /** Title displayed in bold */
   title: string;
-  /** Message secondaire optionnel */
+  /** Optional secondary message */
   message?: string;
-  /** Libelle du bouton d'action */
+  /** Action button label */
   actionLabel?: string;
-  /** Callback du bouton d'action */
+  /** Action button callback */
   onAction?: () => void;
-  /** Style additionnel du conteneur */
-  style?: StyleProp<ViewStyle>;
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
+  icon,
   title,
   message,
   actionLabel,
   onAction,
-  style,
-}) => (
-  <View style={[styles.container, style]}>
-    <Text style={styles.title}>{title}</Text>
-    {message ? <Text style={styles.message}>{message}</Text> : null}
-    {actionLabel && onAction ? (
-      <Pressable style={styles.button} onPress={onAction}>
-        <Text style={styles.buttonText}>{actionLabel}</Text>
-      </Pressable>
-    ) : null}
-  </View>
-);
+}) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "700",
-    textAlign: "center",
-    marginBottom: 8,
-    color: "#111827",
-  },
-  message: {
-    fontSize: 14,
-    color: "#6b7280",
-    textAlign: "center",
-    marginBottom: 24,
-  },
-  button: {
-    backgroundColor: "#16a34a",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 16,
-  },
-});
+  return (
+    <Animated.View
+      entering={FadeIn.duration(400)}
+      className="flex-1 items-center justify-center px-8 py-12"
+    >
+      {icon && (
+        <Animated.View entering={FadeInUp.delay(100).duration(500)}>
+          <View
+            className="w-20 h-20 rounded-full items-center justify-center mb-6"
+            style={{
+              backgroundColor: isDark
+                ? "rgba(29,229,96,0.1)"
+                : "rgba(29,229,96,0.08)",
+            }}
+          >
+            <MaterialIcons
+              name={icon}
+              size={36}
+              color={isDark ? "#1de560" : "#059669"}
+            />
+          </View>
+        </Animated.View>
+      )}
+      <Text className="text-lg font-bold text-slate-900 dark:text-white text-center mb-2">
+        {title}
+      </Text>
+      {message ? (
+        <Text className="text-sm text-slate-500 dark:text-slate-400 text-center mb-6 leading-relaxed">
+          {message}
+        </Text>
+      ) : null}
+      {actionLabel && onAction ? (
+        <TouchableOpacity
+          onPress={onAction}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel={actionLabel}
+          className="bg-primary px-6 py-3 rounded-xl"
+        >
+          <Text className="font-bold text-sm text-white">{actionLabel}</Text>
+        </TouchableOpacity>
+      ) : null}
+    </Animated.View>
+  );
+};
 
 export default EmptyState;

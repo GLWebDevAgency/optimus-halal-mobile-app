@@ -35,8 +35,10 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { FlashList } from "@shopify/flash-list";
 
-import { Card, Avatar, Badge, IconButton } from "@/components/ui";
+import { Card, Avatar, Badge, IconButton, EmptyState } from "@/components/ui";
+import { HomeSkeleton } from "@/components/skeletons";
 import { useLocalAuthStore, useScanHistoryStore, useLocalAlertsStore, useLocalFavoritesStore } from "@/store";
+import { useAuthStore } from "@/store/apiStores";
 import { useTranslation } from "@/hooks/useTranslation";
 import { colors } from "@/constants/theme";
 
@@ -156,6 +158,7 @@ export default function HomeScreen() {
   const isDark = colorScheme === "dark";
   const { t } = useTranslation();
 
+  const isInitializing = useAuthStore((s) => s.isLoading);
   const { user } = useLocalAuthStore();
   const { history } = useScanHistoryStore();
   const { unreadCount } = useLocalAlertsStore();
@@ -193,6 +196,9 @@ export default function HomeScreen() {
       router.push("/settings/favorites" as any);
     }
   }, []);
+
+  // Skeleton while auth store initializes (placed after all hooks)
+  if (isInitializing) return <HomeSkeleton />;
 
   return (
     <View className="flex-1 bg-background-light dark:bg-background-dark">

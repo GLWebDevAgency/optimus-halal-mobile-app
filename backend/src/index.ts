@@ -20,7 +20,9 @@ const app = new Hono();
 app.use("*", compress());
 
 app.use("*", cors({
-  origin: "*",
+  origin: env.CORS_ORIGINS === "*"
+    ? "*"
+    : env.CORS_ORIGINS.split(",").map((o) => o.trim()),
   allowMethods: ["GET", "POST", "OPTIONS"],
   allowHeaders: ["Content-Type", "Authorization", "X-App-Version", "X-Platform", "X-Device-Id"],
   maxAge: 86400,

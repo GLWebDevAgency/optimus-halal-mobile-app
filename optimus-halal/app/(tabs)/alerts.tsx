@@ -28,7 +28,8 @@ import Animated, {
   FadeInRight,
 } from "react-native-reanimated";
 
-import { Card, Badge, IconButton, Chip, ChipGroup } from "@/components/ui";
+import { Card, Badge, IconButton, Chip, ChipGroup, EmptyState } from "@/components/ui";
+import { AlertsSkeleton } from "@/components/skeletons";
 import { useLocalAlertsStore } from "@/store";
 import { useTranslation, useHaptics } from "@/hooks";
 import { colors } from "@/constants/theme";
@@ -441,6 +442,13 @@ export default function AlertsScreen() {
           paddingBottom: 100,
         }}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <EmptyState
+            icon="notifications-off"
+            title="Aucune alerte"
+            message="Aucune alerte ne correspond à ce filtre."
+          />
+        }
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

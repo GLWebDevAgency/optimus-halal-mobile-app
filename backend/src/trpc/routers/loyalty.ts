@@ -93,47 +93,50 @@ export const loyaltyRouter = router({
         throw badRequest("Points insuffisants");
       }
 
-      // Atomically decrement quantity (prevents overselling via concurrent requests)
-      if (reward.remainingQuantity !== null) {
-        const [decremented] = await ctx.db
-          .update(rewards)
-          .set({ remainingQuantity: sql`${rewards.remainingQuantity} - 1` })
-          .where(
-            and(
-              eq(rewards.id, reward.id),
-              gt(rewards.remainingQuantity, 0)
+      // Transaction: decrement stock + deduct points + create user reward
+      return ctx.db.transaction(async (tx) => {
+        // Atomically decrement quantity (prevents overselling via concurrent requests)
+        if (reward.remainingQuantity !== null) {
+          const [decremented] = await tx
+            .update(rewards)
+            .set({ remainingQuantity: sql`${rewards.remainingQuantity} - 1` })
+            .where(
+              and(
+                eq(rewards.id, reward.id),
+                gt(rewards.remainingQuantity, 0)
+              )
             )
-          )
-          .returning({ remainingQuantity: rewards.remainingQuantity });
+            .returning({ remainingQuantity: rewards.remainingQuantity });
 
-        if (!decremented) {
-          throw badRequest("Cette récompense n'est plus disponible");
+          if (!decremented) {
+            throw badRequest("Cette récompense n'est plus disponible");
+          }
         }
-      }
 
-      // Deduct points
-      await ctx.db.insert(pointTransactions).values({
-        userId: ctx.userId,
-        action: "redemption",
-        points: -reward.pointsCost,
-        description: `Échange: ${reward.name}`,
-        referenceId: reward.id,
-        referenceType: "reward",
-      });
-
-      // Create user reward with crypto-safe code
-      const code = crypto.randomUUID().replace(/-/g, "").substring(0, 10).toUpperCase();
-      const [claimed] = await ctx.db
-        .insert(userRewards)
-        .values({
+        // Deduct points
+        await tx.insert(pointTransactions).values({
           userId: ctx.userId,
-          rewardId: reward.id,
-          redemptionCode: code,
-          expiresAt: reward.expiresAt,
-        })
-        .returning();
+          action: "redemption",
+          points: -reward.pointsCost,
+          description: `Échange: ${reward.name}`,
+          referenceId: reward.id,
+          referenceType: "reward",
+        });
 
-      return claimed;
+        // Create user reward with crypto-safe code
+        const code = crypto.randomUUID().replace(/-/g, "").substring(0, 10).toUpperCase();
+        const [claimed] = await tx
+          .insert(userRewards)
+          .values({
+            userId: ctx.userId,
+            rewardId: reward.id,
+            redemptionCode: code,
+            expiresAt: reward.expiresAt,
+          })
+          .returning();
+
+        return claimed;
+      });
     }),
 
   getMyRewards: protectedProcedure.query(async ({ ctx }) => {

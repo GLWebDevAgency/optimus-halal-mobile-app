@@ -72,19 +72,22 @@ export const profileRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (input.isDefault) {
-        await ctx.db
-          .update(addresses)
-          .set({ isDefault: false })
-          .where(eq(addresses.userId, ctx.userId));
-      }
+      // Transaction: reset default flag + insert new address
+      return ctx.db.transaction(async (tx) => {
+        if (input.isDefault) {
+          await tx
+            .update(addresses)
+            .set({ isDefault: false })
+            .where(eq(addresses.userId, ctx.userId));
+        }
 
-      const [address] = await ctx.db
-        .insert(addresses)
-        .values({ ...input, userId: ctx.userId })
-        .returning();
+        const [address] = await tx
+          .insert(addresses)
+          .values({ ...input, userId: ctx.userId })
+          .returning();
 
-      return address;
+        return address;
+      });
     }),
 
   updateAddress: protectedProcedure
@@ -109,21 +112,24 @@ export const profileRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
 
-      if (data.isDefault) {
-        await ctx.db
+      // Transaction: reset default flag + update address
+      return ctx.db.transaction(async (tx) => {
+        if (data.isDefault) {
+          await tx
+            .update(addresses)
+            .set({ isDefault: false })
+            .where(eq(addresses.userId, ctx.userId));
+        }
+
+        const [updated] = await tx
           .update(addresses)
-          .set({ isDefault: false })
-          .where(eq(addresses.userId, ctx.userId));
-      }
+          .set(data)
+          .where(and(eq(addresses.id, id), eq(addresses.userId, ctx.userId)))
+          .returning();
 
-      const [updated] = await ctx.db
-        .update(addresses)
-        .set(data)
-        .where(and(eq(addresses.id, id), eq(addresses.userId, ctx.userId)))
-        .returning();
-
-      if (!updated) throw notFound("Adresse introuvable");
-      return updated;
+        if (!updated) throw notFound("Adresse introuvable");
+        return updated;
+      });
     }),
 
   deleteAddress: protectedProcedure

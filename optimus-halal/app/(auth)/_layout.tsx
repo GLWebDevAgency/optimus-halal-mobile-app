@@ -12,37 +12,40 @@
  */
 
 import { Stack } from "expo-router";
+import { QueryErrorBoundary } from "@/components/QueryErrorBoundary";
 
 export default function AuthLayout() {
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        animation: "fade_from_bottom",
-        animationDuration: 300,
-        gestureEnabled: true,
-        gestureDirection: "horizontal",
-      }}
-    >
-      <Stack.Screen name="welcome" options={{ animation: "fade" }} />
-      <Stack.Screen name="magic-link" />
-      <Stack.Screen name="login" />
-      <Stack.Screen name="signup" />
-      <Stack.Screen name="forgot-password" />
-      <Stack.Screen
-        name="reset-confirmation"
-        options={{
-          animation: "fade",
-          animationDuration: 250,
+    <QueryErrorBoundary>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: "fade_from_bottom",
+          animationDuration: 300,
+          gestureEnabled: true,
+          gestureDirection: "horizontal",
         }}
-      />
-      <Stack.Screen
-        name="set-new-password"
-        options={{
-          animation: "fade",
-          animationDuration: 250,
-        }}
-      />
-    </Stack>
+      >
+        <Stack.Screen name="welcome" options={{ animation: "fade" }} />
+        <Stack.Screen name="magic-link" />
+        <Stack.Screen name="login" />
+        <Stack.Screen name="signup" />
+        <Stack.Screen name="forgot-password" />
+        <Stack.Screen
+          name="reset-confirmation"
+          options={{
+            animation: "fade",
+            animationDuration: 250,
+          }}
+        />
+        <Stack.Screen
+          name="set-new-password"
+          options={{
+            animation: "fade",
+            animationDuration: 250,
+          }}
+        />
+      </Stack>
+    </QueryErrorBoundary>
   );
 }
