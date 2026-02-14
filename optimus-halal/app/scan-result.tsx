@@ -140,7 +140,12 @@ function IngredientItem({
         </Text>
       )}
       {hasDetails && (
-        <TouchableOpacity activeOpacity={0.7}>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={`Détails de ${name}`}
+          accessibilityHint="Afficher plus d'informations sur cet ingrédient"
+        >
           <Text className="text-xs text-orange-600 dark:text-orange-400 font-bold">
             Détails
           </Text>
@@ -225,7 +230,10 @@ export default function ScanResultScreen() {
           color={isDark ? "#ffffff" : "#1e293b"}
           accessibilityLabel="Retour"
         />
-        <Text className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
+        <Text
+          className="text-base font-bold text-slate-900 dark:text-white tracking-tight"
+          accessibilityRole="header"
+        >
           Résultat du Scan
         </Text>
         <IconButton
@@ -252,6 +260,7 @@ export default function ScanResultScreen() {
             className="absolute inset-0 w-full h-full opacity-90 dark:opacity-75"
             contentFit="cover"
             transition={200}
+            accessible={false}
           />
           <LinearGradient
             colors={["transparent", isDark ? "rgba(17,33,22,0.9)" : "rgba(0,0,0,0.6)"]}
@@ -277,6 +286,9 @@ export default function ScanResultScreen() {
                 onPress={handleViewCertificate}
                 className="flex-row items-center gap-1"
                 activeOpacity={0.7}
+                accessibilityRole="link"
+                accessibilityLabel="Voir le certificat"
+                accessibilityHint="Ouvrir les détails du certificat halal"
               >
                 <Text className="text-xs font-medium text-slate-500 dark:text-slate-400">
                   Certificat
@@ -291,7 +303,10 @@ export default function ScanResultScreen() {
 
             {/* Product Name */}
             <View className="mb-6">
-              <Text className="text-2xl font-bold text-slate-900 dark:text-white leading-tight mb-1">
+              <Text
+                className="text-2xl font-bold text-slate-900 dark:text-white leading-tight mb-1"
+                accessibilityRole="header"
+              >
                 {product.name}
               </Text>
               <View className="flex-row items-center gap-1">
@@ -389,7 +404,10 @@ export default function ScanResultScreen() {
           className="px-4 mt-8"
         >
           <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-lg font-bold text-slate-900 dark:text-white">
+            <Text
+              className="text-lg font-bold text-slate-900 dark:text-white"
+              accessibilityRole="header"
+            >
               Composition
             </Text>
             <View className="bg-slate-100 dark:bg-surface-dark border border-slate-200 dark:border-slate-700 px-2 py-1 rounded">
@@ -418,6 +436,9 @@ export default function ScanResultScreen() {
               onPress={() => setShowAllIngredients(!showAllIngredients)}
               className="w-full mt-4 py-3 flex-row items-center justify-center gap-1 rounded-xl"
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={showAllIngredients ? "Voir moins d'ingrédients" : "Voir tous les ingrédients"}
+              accessibilityState={{ expanded: showAllIngredients }}
             >
               <Text className="text-sm font-semibold text-slate-500 dark:text-slate-400">
                 {showAllIngredients
@@ -454,6 +475,9 @@ export default function ScanResultScreen() {
             onPress={handleToggleFavorite}
             className="h-12 w-12 items-center justify-center rounded-xl bg-slate-50 dark:bg-background-dark border border-slate-100 dark:border-slate-700"
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={productIsFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+            accessibilityState={{ selected: productIsFavorite }}
           >
             <MaterialIcons
               name={productIsFavorite ? "favorite" : "favorite-border"}
@@ -474,6 +498,9 @@ export default function ScanResultScreen() {
               shadowRadius: 8,
               elevation: 4,
             }}
+            accessibilityRole="button"
+            accessibilityLabel="Où acheter ce produit"
+            accessibilityHint="Afficher les commerces à proximité"
           >
             <MaterialIcons name="location-on" size={22} color="#0d1b13" />
             <Text className="text-base font-bold text-slate-900">
@@ -486,6 +513,9 @@ export default function ScanResultScreen() {
             onPress={handleReport}
             className="h-12 w-12 items-center justify-center rounded-xl bg-slate-50 dark:bg-background-dark border border-slate-100 dark:border-slate-700"
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Signaler un problème"
+            accessibilityHint="Signaler une erreur sur ce produit"
           >
             <MaterialIcons
               name="flag"

@@ -195,10 +195,16 @@ export default function CertificationsScreen() {
               borderRadius: 20,
               backgroundColor: isDark ? "rgba(255,255,255,0.05)" : colors.card,
             }}
+            accessibilityRole="button"
+            accessibilityLabel="Retour"
+            accessibilityHint="Revenir à l'écran précédent"
           >
             <MaterialIcons name="arrow-back" size={22} color={colors.textPrimary} />
           </TouchableOpacity>
-          <Text style={{ fontSize: 18, fontWeight: "700", color: colors.textPrimary, flex: 1, textAlign: "center" }}>
+          <Text
+            style={{ fontSize: 18, fontWeight: "700", color: colors.textPrimary, flex: 1, textAlign: "center" }}
+            accessibilityRole="header"
+          >
             Certifications
           </Text>
           <TouchableOpacity
@@ -210,6 +216,9 @@ export default function CertificationsScreen() {
               borderRadius: 20,
               backgroundColor: isDark ? "rgba(255,255,255,0.05)" : colors.card,
             }}
+            accessibilityRole="button"
+            accessibilityLabel="Aide"
+            accessibilityHint="Afficher l'aide sur les certifications"
           >
             <MaterialIcons name="help-outline" size={22} color={colors.primary} />
           </TouchableOpacity>
@@ -226,7 +235,10 @@ export default function CertificationsScreen() {
           entering={FadeInDown.delay(100).duration(400)}
           style={{ paddingHorizontal: 20, marginTop: 8, marginBottom: 24 }}
         >
-          <Text style={{ fontSize: 24, fontWeight: "700", color: colors.textPrimary, marginBottom: 8 }}>
+          <Text
+            style={{ fontSize: 24, fontWeight: "700", color: colors.textPrimary, marginBottom: 8 }}
+            accessibilityRole="header"
+          >
             Vos Préférences
           </Text>
           <Text style={{ fontSize: 14, color: colors.textSecondary, lineHeight: 20 }}>
@@ -295,13 +307,16 @@ export default function CertificationsScreen() {
                       <Switch
                         value={isEnabled}
                         onValueChange={() => handleToggle(cert.id)}
-                        trackColor={{ 
-                          false: isDark ? "#374151" : "#d1d5db", 
-                          true: colors.primary 
+                        trackColor={{
+                          false: isDark ? "#374151" : "#d1d5db",
+                          true: colors.primary
                         }}
                         thumbColor="#ffffff"
                         ios_backgroundColor={isDark ? "#374151" : "#d1d5db"}
                         style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
+                        accessibilityRole="switch"
+                        accessibilityLabel={`Activer ${cert.name}`}
+                        accessibilityState={{ checked: isEnabled }}
                       />
                     </View>
 
@@ -352,6 +367,9 @@ export default function CertificationsScreen() {
                       <TouchableOpacity
                         onPress={() => openDetails(cert)}
                         style={{ flexDirection: "row", alignItems: "center", gap: 2 }}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Détails de ${cert.name}`}
+                        accessibilityHint="Afficher les détails de cette certification"
                       >
                         <Text
                           style={{
@@ -389,6 +407,7 @@ export default function CertificationsScreen() {
               marginBottom: 12,
               paddingHorizontal: 4,
             }}
+            accessibilityRole="header"
           >
             Critères Éthiques
           </Animated.Text>
@@ -452,6 +471,9 @@ export default function CertificationsScreen() {
                         thumbColor="#ffffff"
                         ios_backgroundColor={isDark ? "#374151" : "#d1d5db"}
                         style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
+                        accessibilityRole="switch"
+                        accessibilityLabel={`Activer ${criteria.name}`}
+                        accessibilityState={{ checked: isEnabled }}
                       />
                     </View>
                     <Text style={{ fontSize: 12, color: colors.textSecondary, lineHeight: 18 }}>
@@ -532,6 +554,8 @@ export default function CertificationsScreen() {
         <Pressable
           style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}
           onPress={() => setShowDetails(false)}
+          accessibilityRole="button"
+          accessibilityLabel="Fermer les détails"
         >
           <Pressable
             style={{
@@ -583,7 +607,10 @@ export default function CertificationsScreen() {
                     </Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 20, fontWeight: "700", color: colors.textPrimary }}>
+                    <Text
+                      style={{ fontSize: 20, fontWeight: "700", color: colors.textPrimary }}
+                      accessibilityRole="header"
+                    >
                       {selectedCert.name}
                     </Text>
                     {selectedCert.isRecommended && (
@@ -667,6 +694,8 @@ export default function CertificationsScreen() {
                     justifyContent: "center",
                     gap: 8,
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel={isCertEnabled(selectedCert.id) ? `Retirer ${selectedCert.name} des préférences` : `Ajouter ${selectedCert.name} aux préférences`}
                 >
                   <MaterialIcons
                     name={isCertEnabled(selectedCert.id) ? "remove-circle-outline" : "add-circle-outline"}

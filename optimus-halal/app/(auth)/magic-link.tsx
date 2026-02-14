@@ -219,7 +219,7 @@ export default function MagicLinkLoginScreen() {
         entering={FadeInDown.delay(200).duration(600)}
         className="mb-6"
       >
-        <Text className="text-slate-900 dark:text-white tracking-tight text-[32px] font-bold leading-tight mb-2">
+        <Text className="text-slate-900 dark:text-white tracking-tight text-[32px] font-bold leading-tight mb-2" accessibilityRole="header">
           {isNewUser ? "Créer votre compte" : "Connexion rapide"}
         </Text>
         <Text className="text-slate-500 dark:text-slate-400 text-base font-normal leading-normal">
@@ -241,6 +241,8 @@ export default function MagicLinkLoginScreen() {
             onChangeText={setDisplayName}
             autoCapitalize="words"
             leftIcon="person"
+            accessibilityLabel="Nom complet"
+            accessibilityHint="Entrez votre nom complet"
           />
         )}
 
@@ -254,6 +256,8 @@ export default function MagicLinkLoginScreen() {
           autoCorrect={false}
           error={error}
           leftIcon="mail"
+          accessibilityLabel="Adresse email"
+          accessibilityHint="Entrez votre adresse email pour recevoir un lien de connexion"
         />
 
         <Button
@@ -263,6 +267,10 @@ export default function MagicLinkLoginScreen() {
           loading={isLoading}
           onPress={handleSendMagicLink}
           className="mt-4"
+          accessibilityRole="button"
+          accessibilityLabel={isNewUser ? "Créer un compte" : "Recevoir le lien de connexion"}
+          accessibilityHint="Double-tapez pour envoyer le lien de connexion par email"
+          accessibilityState={{ disabled: isLoading }}
         >
           {isNewUser ? "Créer un compte" : "Recevoir le lien"}
         </Button>
@@ -270,6 +278,9 @@ export default function MagicLinkLoginScreen() {
         <TouchableOpacity
           onPress={() => setIsNewUser(!isNewUser)}
           className="items-center py-2"
+          accessibilityRole="button"
+          accessibilityLabel={isNewUser ? "Se connecter" : "S'inscrire"}
+          accessibilityHint={isNewUser ? "Double-tapez pour passer à la connexion" : "Double-tapez pour créer un nouveau compte"}
         >
           <Text className="text-sm text-slate-600 dark:text-slate-400">
             {isNewUser ? (
@@ -301,6 +312,7 @@ export default function MagicLinkLoginScreen() {
       <Animated.View
         entering={FadeInDown.delay(100).duration(500)}
         className="w-24 h-24 rounded-full bg-primary-50 dark:bg-primary-900/30 items-center justify-center mb-6"
+        accessible={false}
       >
         <MaterialIcons name="mail-outline" size={48} color="#13ec6a" />
       </Animated.View>
@@ -310,7 +322,7 @@ export default function MagicLinkLoginScreen() {
         entering={FadeInDown.delay(200).duration(500)}
         className="mb-4"
       >
-        <Text className="text-slate-900 dark:text-white text-2xl font-bold text-center mb-2">
+        <Text className="text-slate-900 dark:text-white text-2xl font-bold text-center mb-2" accessibilityRole="header">
           Vérifiez vos emails
         </Text>
         <Text className="text-slate-500 dark:text-slate-400 text-base text-center px-8">
@@ -357,6 +369,10 @@ export default function MagicLinkLoginScreen() {
       <TouchableOpacity
         onPress={handleResend}
         disabled={expiresIn > 840} // Can resend after 1 minute
+        accessibilityRole="button"
+        accessibilityLabel="Renvoyer le lien de connexion"
+        accessibilityHint="Double-tapez pour renvoyer le lien par email"
+        accessibilityState={{ disabled: expiresIn > 840 }}
         className={`py-3 px-6 rounded-xl ${
           expiresIn > 840
             ? "bg-slate-100 dark:bg-slate-800"
@@ -380,6 +396,9 @@ export default function MagicLinkLoginScreen() {
       <TouchableOpacity
         onPress={() => setAuthState("input")}
         className="mt-6"
+        accessibilityRole="button"
+        accessibilityLabel="Modifier l'adresse email"
+        accessibilityHint="Double-tapez pour modifier votre adresse email"
       >
         <Text className="text-slate-600 dark:text-slate-400 text-sm">
           Mauvais email ?{" "}
@@ -406,10 +425,10 @@ export default function MagicLinkLoginScreen() {
       entering={FadeIn.duration(400)}
       className="items-center py-12"
     >
-      <View className="w-24 h-24 rounded-full bg-primary-50 dark:bg-primary-900/30 items-center justify-center mb-4">
+      <View className="w-24 h-24 rounded-full bg-primary-50 dark:bg-primary-900/30 items-center justify-center mb-4" accessible={false}>
         <MaterialIcons name="check-circle" size={48} color="#13ec6a" />
       </View>
-      <Text className="text-slate-900 dark:text-white text-2xl font-bold">
+      <Text className="text-slate-900 dark:text-white text-2xl font-bold" accessibilityRole="header">
         Connexion réussie !
       </Text>
       <Text className="text-slate-500 dark:text-slate-400 mt-2">

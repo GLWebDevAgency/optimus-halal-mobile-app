@@ -123,8 +123,8 @@ export default function LoginScreen() {
   return (
     <View className="flex-1 bg-background-light dark:bg-background-dark">
       {/* Background Decorative Elements */}
-      <View className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary-500/10 rounded-full blur-[100px]" />
-      <View className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-gold-500/5 rounded-full blur-[100px]" />
+      <View className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary-500/10 rounded-full blur-[100px]" accessible={false} />
+      <View className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-gold-500/5 rounded-full blur-[100px]" accessible={false} />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -146,13 +146,13 @@ export default function LoginScreen() {
             className="items-center mb-10 mt-8"
           >
             {/* Logo */}
-            <View className="relative w-24 h-24 rounded-2xl shadow-2xl overflow-hidden mb-6 bg-primary-500/10">
+            <View className="relative w-24 h-24 rounded-2xl shadow-2xl overflow-hidden mb-6 bg-primary-500/10" accessible={false}>
               <View className="w-full h-full items-center justify-center">
                 <MaterialIcons name="verified-user" size={48} color="#1de560" />
               </View>
             </View>
 
-            <Text className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">
+            <Text className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white mb-2" accessibilityRole="header">
               Bon retour !
             </Text>
             <Text className="text-slate-500 dark:text-slate-400 text-base font-normal leading-relaxed text-center max-w-[280px]">
@@ -175,6 +175,8 @@ export default function LoginScreen() {
               autoCorrect={false}
               error={errors.email}
               leftIcon="mail"
+              accessibilityLabel="Adresse email"
+              accessibilityHint="Entrez votre adresse email"
             />
 
             <Input
@@ -184,12 +186,18 @@ export default function LoginScreen() {
               onChangeText={setPassword}
               secureTextEntry
               error={errors.password}
+              accessibilityLabel="Mot de passe"
+              accessibilityHint="Entrez votre mot de passe"
             />
 
             {/* Forgot Password */}
             <View className="items-end -mt-2">
               <Link href="/(auth)/forgot-password" asChild>
-                <TouchableOpacity>
+                <TouchableOpacity
+                  accessibilityRole="link"
+                  accessibilityLabel="Mot de passe oublié"
+                  accessibilityHint="Double-tapez pour réinitialiser votre mot de passe"
+                >
                   <Text className="text-sm font-medium text-gold-500">
                     Mot de passe oublié ?
                   </Text>
@@ -205,6 +213,10 @@ export default function LoginScreen() {
                 fullWidth
                 loading={isLoading}
                 onPress={handleLogin}
+                accessibilityRole="button"
+                accessibilityLabel="Se connecter"
+                accessibilityHint="Double-tapez pour vous connecter"
+                accessibilityState={{ disabled: isLoading }}
                 icon={
                   <MaterialIcons
                     name="arrow-forward"
@@ -220,6 +232,9 @@ export default function LoginScreen() {
                 onPress={handleBiometricLogin}
                 className="flex-row items-center justify-center gap-2 h-14 rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent"
                 activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="Connexion avec Face ID"
+                accessibilityHint="Double-tapez pour vous connecter avec la biométrie"
               >
                 <MaterialIcons
                   name="face"
@@ -241,7 +256,12 @@ export default function LoginScreen() {
             <Text className="text-sm text-slate-500 dark:text-slate-400">
               Pas encore de compte ?{" "}
               <Link href="/(auth)/signup" asChild>
-                <Text className="font-bold text-primary-500">
+                <Text
+                  className="font-bold text-primary-500"
+                  accessibilityRole="link"
+                  accessibilityLabel="Créer un compte"
+                  accessibilityHint="Double-tapez pour créer un nouveau compte"
+                >
                   Créer un compte
                 </Text>
               </Link>

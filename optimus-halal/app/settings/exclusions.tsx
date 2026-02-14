@@ -290,6 +290,10 @@ export default function ExclusionsScreen() {
           elevation: selected ? 4 : 1,
           position: "relative",
         }}
+        accessibilityRole="button"
+        accessibilityLabel={`${allergen.name} - ${allergen.description}`}
+        accessibilityState={{ selected }}
+        accessibilityHint={selected ? `Retirer ${allergen.name} des exclusions` : `Ajouter ${allergen.name} aux exclusions`}
       >
         {/* Selection indicator dot */}
         {selected && (
@@ -390,6 +394,9 @@ export default function ExclusionsScreen() {
             alignItems: "center",
             justifyContent: "center",
           }}
+          accessibilityRole="button"
+          accessibilityLabel={`Retirer ${item.name}`}
+          accessibilityHint="Supprimer cette exclusion de la liste"
         >
           <MaterialIcons
             name="close"
@@ -431,6 +438,9 @@ export default function ExclusionsScreen() {
             borderWidth: 1,
             borderColor: themeColors.cardBorder,
           }}
+          accessibilityRole="button"
+          accessibilityLabel="Retour"
+          accessibilityHint="Revenir à l'écran précédent"
         >
           <MaterialIcons name="arrow-back" size={22} color={themeColors.textPrimary} />
         </TouchableOpacity>
@@ -442,6 +452,7 @@ export default function ExclusionsScreen() {
             fontWeight: "700",
             color: themeColors.textPrimary,
           }}
+          accessibilityRole="header"
         >
           Exclusions
         </Text>
@@ -457,6 +468,9 @@ export default function ExclusionsScreen() {
             alignItems: "center",
             justifyContent: "center",
           }}
+          accessibilityRole="button"
+          accessibilityLabel="Terminer"
+          accessibilityHint="Enregistrer et revenir"
         >
           <Text
             style={{
@@ -563,12 +577,18 @@ export default function ExclusionsScreen() {
                 fontSize: 14,
                 color: themeColors.textPrimary,
               }}
+              accessibilityLabel="Rechercher un ingrédient ou additif"
+              accessibilityHint="Saisissez le nom d'un ingrédient ou additif à exclure"
             />
             {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => {
-                setSearchQuery("");
-                setShowSuggestions(false);
-              }}>
+              <TouchableOpacity
+                onPress={() => {
+                  setSearchQuery("");
+                  setShowSuggestions(false);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Effacer la recherche"
+              >
                 <MaterialIcons name="close" size={20} color={themeColors.textSecondary} />
               </TouchableOpacity>
             )}
@@ -607,6 +627,9 @@ export default function ExclusionsScreen() {
                     borderBottomWidth: index < filteredSuggestions.length - 1 ? 1 : 0,
                     borderBottomColor: themeColors.cardBorder,
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Ajouter ${suggestion.name}`}
+                  accessibilityHint={suggestion.description}
                 >
                   <MaterialIcons name="add" size={20} color={themeColors.primary} />
                   <View style={{ marginLeft: 12 }}>
@@ -635,6 +658,7 @@ export default function ExclusionsScreen() {
                 fontWeight: "700",
                 color: themeColors.textPrimary,
               }}
+              accessibilityRole="header"
             >
               Allergènes courants
             </Text>
@@ -681,6 +705,7 @@ export default function ExclusionsScreen() {
                 fontWeight: "700",
                 color: themeColors.textPrimary,
               }}
+              accessibilityRole="header"
             >
               Mes exclusions
             </Text>
@@ -753,6 +778,9 @@ export default function ExclusionsScreen() {
               alignItems: "center",
               justifyContent: "center",
             }}
+            accessibilityRole="button"
+            accessibilityLabel="Ajouter une autre exclusion"
+            accessibilityHint="Ouvrir les suggestions pour ajouter une exclusion"
           >
             <MaterialIcons name="add" size={18} color={themeColors.textSecondary} />
             <Text
@@ -800,6 +828,9 @@ export default function ExclusionsScreen() {
             shadowRadius: 8,
             elevation: 4,
           }}
+          accessibilityRole="button"
+          accessibilityLabel="Enregistrer les préférences"
+          accessibilityHint="Sauvegarder vos exclusions et revenir"
         >
           <Text
             style={{

@@ -180,7 +180,7 @@ export default function SignUpScreen() {
             entering={FadeInDown.delay(200).duration(600)}
             className="mb-6"
           >
-            <Text className="text-slate-900 dark:text-white tracking-tight text-[32px] font-bold leading-tight mb-2">
+            <Text className="text-slate-900 dark:text-white tracking-tight text-[32px] font-bold leading-tight mb-2" accessibilityRole="header">
               Créer votre compte
             </Text>
             <Text className="text-slate-500 dark:text-slate-400 text-base font-normal leading-normal">
@@ -211,6 +211,8 @@ export default function SignUpScreen() {
               onChangeText={setFullName}
               autoCapitalize="words"
               error={errors.fullName}
+              accessibilityLabel="Nom complet"
+              accessibilityHint="Entrez votre nom complet"
             />
 
             {/* Email - Optional */}
@@ -224,6 +226,8 @@ export default function SignUpScreen() {
               autoCorrect={false}
               error={errors.email}
               hint="Pour recevoir les alertes et confirmations"
+              accessibilityLabel="Adresse email, optionnel"
+              accessibilityHint="Entrez votre adresse email pour recevoir les alertes"
             />
 
             {/* Location - City Picker */}
@@ -245,6 +249,8 @@ export default function SignUpScreen() {
               secureTextEntry
               error={errors.password}
               hint="Minimum 8 caractères"
+              accessibilityLabel="Mot de passe"
+              accessibilityHint="Créez un mot de passe de minimum 8 caractères"
             />
 
             {/* Submit Button */}
@@ -255,6 +261,10 @@ export default function SignUpScreen() {
               loading={isLoading}
               onPress={handleSignUp}
               className="mt-4"
+              accessibilityRole="button"
+              accessibilityLabel="Créer un compte"
+              accessibilityHint="Double-tapez pour créer votre compte"
+              accessibilityState={{ disabled: isLoading }}
             >
               Créer un compte
             </Button>
@@ -295,6 +305,9 @@ export default function SignUpScreen() {
               onPress={() => handleSocialAuth("google")}
               className="flex-1 flex-row items-center justify-center gap-2 h-14 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark"
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="S'inscrire avec Google"
+              accessibilityHint="Double-tapez pour vous inscrire avec votre compte Google"
             >
               <MaterialIcons name="g-mobiledata" size={24} color="#4285F4" />
               <Text className="text-sm font-semibold text-slate-700 dark:text-white">
@@ -306,6 +319,9 @@ export default function SignUpScreen() {
               onPress={() => handleSocialAuth("apple")}
               className="flex-1 flex-row items-center justify-center gap-2 h-14 rounded-xl bg-slate-900 dark:bg-white"
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="S'inscrire avec Apple"
+              accessibilityHint="Double-tapez pour vous inscrire avec votre compte Apple"
             >
               <MaterialIcons
                 name="apple"
@@ -326,7 +342,12 @@ export default function SignUpScreen() {
             <Text className="text-sm text-slate-500 dark:text-slate-400">
               Vous avez déjà un compte ?{" "}
               <Link href="/(auth)/login" asChild>
-                <Text className="font-bold text-gold-600">
+                <Text
+                  className="font-bold text-gold-600"
+                  accessibilityRole="link"
+                  accessibilityLabel="Se connecter"
+                  accessibilityHint="Double-tapez pour aller à la page de connexion"
+                >
                   Se connecter
                 </Text>
               </Link>

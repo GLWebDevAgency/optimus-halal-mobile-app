@@ -206,22 +206,26 @@ export default function SetNewPasswordScreen() {
           onPress={handleGoBack}
           style={styles.backButton}
           activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Retour"
+          accessibilityHint="Double-tapez pour revenir à l'écran précédent"
         >
-          <MaterialIcons 
-            name="arrow-back-ios-new" 
-            size={24} 
-            color={isDark ? "#ffffff" : "#1f2937"} 
+          <MaterialIcons
+            name="arrow-back-ios-new"
+            size={24}
+            color={isDark ? "#ffffff" : "#1f2937"}
           />
         </TouchableOpacity>
         
-        <Text 
+        <Text
           style={[
             styles.headerTitle,
-            { 
+            {
               color: isDark ? "#ffffff" : "#1f2937",
               textAlign: isRTL ? "right" : "center",
             }
           ]}
+          accessibilityRole="header"
         >
           {t.auth.setNewPassword.title}
         </Text>
@@ -292,7 +296,7 @@ export default function SetNewPasswordScreen() {
                 <TextInput
                   style={[
                     styles.input,
-                    { 
+                    {
                       color: isDark ? "#ffffff" : "#1f2937",
                       textAlign: isRTL ? "right" : "left",
                     }
@@ -306,10 +310,14 @@ export default function SetNewPasswordScreen() {
                   secureTextEntry={!showNewPassword}
                   autoCapitalize="none"
                   autoCorrect={false}
+                  accessibilityLabel="Nouveau mot de passe"
+                  accessibilityHint="Entrez votre nouveau mot de passe"
                 />
                 <TouchableOpacity
                   onPress={() => setShowNewPassword(!showNewPassword)}
                   style={styles.toggleButton}
+                  accessibilityRole="button"
+                  accessibilityLabel={showNewPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                 >
                   <MaterialIcons
                     name={showNewPassword ? "visibility" : "visibility-off"}
@@ -372,7 +380,7 @@ export default function SetNewPasswordScreen() {
                 <TextInput
                   style={[
                     styles.input,
-                    { 
+                    {
                       color: isDark ? "#ffffff" : "#1f2937",
                       textAlign: isRTL ? "right" : "left",
                     }
@@ -386,10 +394,14 @@ export default function SetNewPasswordScreen() {
                   secureTextEntry={!showConfirmPassword}
                   autoCapitalize="none"
                   autoCorrect={false}
+                  accessibilityLabel="Confirmer le mot de passe"
+                  accessibilityHint="Entrez à nouveau votre nouveau mot de passe"
                 />
                 <TouchableOpacity
                   onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                   style={styles.toggleButton}
+                  accessibilityRole="button"
+                  accessibilityLabel={showConfirmPassword ? "Masquer la confirmation" : "Afficher la confirmation"}
                 >
                   <MaterialIcons
                     name={showConfirmPassword ? "visibility" : "visibility-off"}
@@ -462,6 +474,10 @@ export default function SetNewPasswordScreen() {
                 onPress={handleSubmit}
                 disabled={!isFormValid || isLoading}
                 activeOpacity={0.9}
+                accessibilityRole="button"
+                accessibilityLabel="Réinitialiser le mot de passe"
+                accessibilityHint="Double-tapez pour enregistrer votre nouveau mot de passe"
+                accessibilityState={{ disabled: !isFormValid || isLoading }}
                 style={[
                   styles.submitButton,
                   (!isFormValid || isLoading) && styles.submitButtonDisabled

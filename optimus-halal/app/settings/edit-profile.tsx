@@ -207,6 +207,8 @@ export default function EditProfileScreen() {
             keyboardType={options?.keyboardType || "default"}
             autoCapitalize={options?.autoCapitalize || "sentences"}
             editable={isEditable}
+            accessibilityLabel={label}
+            accessibilityState={{ disabled: !isEditable }}
             style={{
               width: "100%",
               borderRadius: 12,
@@ -277,6 +279,9 @@ export default function EditProfileScreen() {
             paddingVertical: 12,
             borderRadius: 12,
           }}
+          accessibilityRole="button"
+          accessibilityLabel="Réessayer"
+          accessibilityHint="Recharger le profil"
         >
           <Text style={{ color: "#0d1b13", fontWeight: "600" }}>Réessayer</Text>
         </TouchableOpacity>
@@ -286,6 +291,9 @@ export default function EditProfileScreen() {
             marginTop: 16,
             padding: 12,
           }}
+          accessibilityRole="button"
+          accessibilityLabel="Retour"
+          accessibilityHint="Revenir à l'écran précédent"
         >
           <Text style={{ color: themeColors.textSecondary }}>Retour</Text>
         </TouchableOpacity>
@@ -332,6 +340,9 @@ export default function EditProfileScreen() {
               shadowRadius: 2,
               elevation: 1,
             }}
+            accessibilityRole="button"
+            accessibilityLabel="Retour"
+            accessibilityHint="Revenir à l'écran précédent"
           >
             <MaterialIcons name="arrow-back" size={22} color={themeColors.textPrimary} />
           </TouchableOpacity>
@@ -343,6 +354,7 @@ export default function EditProfileScreen() {
               fontWeight: "700",
               color: themeColors.textPrimary,
             }}
+            accessibilityRole="header"
           >
             Modifier le profil
           </Text>
@@ -435,13 +447,21 @@ export default function EditProfileScreen() {
                   shadowRadius: 4,
                   elevation: 3,
                 }}
+                accessibilityRole="button"
+                accessibilityLabel="Changer la photo de profil"
+                accessibilityHint="Ouvrir la galerie pour choisir une nouvelle photo"
               >
                 <MaterialIcons name="photo-camera" size={18} color="#ffffff" />
               </TouchableOpacity>
             </View>
 
             {/* Change Photo Text */}
-            <TouchableOpacity onPress={handleChangePhoto} style={{ marginTop: 12 }}>
+            <TouchableOpacity
+              onPress={handleChangePhoto}
+              style={{ marginTop: 12 }}
+              accessibilityRole="button"
+              accessibilityLabel="Changer la photo"
+            >
               <Text
                 style={{
                   fontSize: 14,
@@ -528,6 +548,8 @@ export default function EditProfileScreen() {
               multiline
               numberOfLines={4}
               textAlignVertical="top"
+              accessibilityLabel="Bio"
+              accessibilityHint="Décrivez-vous en quelques mots"
               style={{
                 width: "100%",
                 borderRadius: 12,
@@ -579,6 +601,9 @@ export default function EditProfileScreen() {
               borderWidth: 1,
               borderColor: "rgba(0,0,0,0.05)",
             }}
+            accessibilityRole="button"
+            accessibilityLabel={isSaving ? "Enregistrement en cours" : hasChanges ? "Enregistrer les modifications" : "Aucune modification"}
+            accessibilityState={{ disabled: isSaving || !hasChanges, busy: isSaving }}
           >
             {isSaving ? (
               <>

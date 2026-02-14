@@ -62,10 +62,17 @@ export default function AppearanceScreen() {
             onPress={() => router.back()}
             className="h-10 w-10 items-center justify-center rounded-full"
             style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }}
+            accessibilityRole="button"
+            accessibilityLabel="Retour"
+            accessibilityHint="Revenir à l'écran précédent"
           >
             <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
-          <Text style={{ color: colors.textPrimary }} className="text-xl font-bold tracking-tight">
+          <Text
+            style={{ color: colors.textPrimary }}
+            className="text-xl font-bold tracking-tight"
+            accessibilityRole="header"
+          >
             Apparence
           </Text>
         </View>
@@ -82,17 +89,22 @@ export default function AppearanceScreen() {
           className="rounded-2xl p-6 mb-6 items-center"
           style={{ backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1 }}
         >
-          <View 
+          <View
             className="w-20 h-20 rounded-full items-center justify-center mb-4"
             style={{ backgroundColor: colors.primaryLight }}
+            accessible={false}
           >
-            <MaterialIcons 
-              name={effectiveTheme === "dark" ? "dark-mode" : "light-mode"} 
-              size={40} 
-              color={colors.primary} 
+            <MaterialIcons
+              name={effectiveTheme === "dark" ? "dark-mode" : "light-mode"}
+              size={40}
+              color={colors.primary}
             />
           </View>
-          <Text style={{ color: colors.textPrimary }} className="text-lg font-bold mb-1">
+          <Text
+            style={{ color: colors.textPrimary }}
+            className="text-lg font-bold mb-1"
+            accessibilityRole="header"
+          >
             {effectiveTheme === "dark" ? "Mode Sombre" : "Mode Clair"}
           </Text>
           <Text style={{ color: colors.textSecondary }} className="text-sm text-center">
@@ -105,6 +117,8 @@ export default function AppearanceScreen() {
           entering={FadeInDown.delay(200).duration(400)}
           className="rounded-2xl overflow-hidden"
           style={{ backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1 }}
+          accessibilityRole="radiogroup"
+          accessibilityLabel="Options de thème"
         >
           {THEME_OPTIONS.map((option, index) => {
             const isSelected = theme === option.id;
@@ -117,6 +131,10 @@ export default function AppearanceScreen() {
                 className={`flex-row items-center p-4 ${!isLast ? "border-b" : ""}`}
                 style={{ borderColor: colors.borderLight }}
                 activeOpacity={0.7}
+                accessibilityRole="radio"
+                accessibilityLabel={option.labelKey}
+                accessibilityHint={option.description}
+                accessibilityState={{ selected: isSelected }}
               >
                 {/* Icon */}
                 <View 
