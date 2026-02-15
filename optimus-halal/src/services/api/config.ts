@@ -15,8 +15,11 @@ const isDevelopment = __DEV__;
 // API ENDPOINTS
 // ============================================
 
-/** Development API base URL - Mobile BFF on Railway */
-const DEV_API_URL = 'https://mobile-bff-production-aefc.up.railway.app';
+/** Development API base URL - Local backend via LAN IP (for physical device) */
+const DEV_API_URL = `http://${
+  // Expo sets this env var when running; fallback to Railway if not available
+  process.env.EXPO_PUBLIC_API_HOST ?? '192.168.53.102'
+}:3000`;
 
 /** Production API base URL (same BFF for now) */
 const PROD_API_URL = 'https://mobile-bff-production-aefc.up.railway.app';
