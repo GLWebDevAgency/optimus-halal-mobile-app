@@ -1,12 +1,11 @@
 /**
  * User Profile Screen
- * 
- * Profil utilisateur avec:
- * - Avatar et informations
- * - Stats (scans, favoris)
- * - Préférences (certifications, exclusions, notifications)
- * - Compte (langue, aide, signalement)
- * - Déconnexion
+ *
+ * Wired to tRPC backend (Sprint 9):
+ * - auth.me for profile + gamification data
+ * - favorites.list for count
+ * - loyalty.getBalance for points
+ * - Gamification card: level, XP, streak, points
  */
 
 import React, { useCallback, useMemo } from "react";
@@ -21,7 +20,7 @@ import {
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useHaptics } from "@/hooks";
+import { useHaptics, useMe, useLogout, useFavoritesList, useLoyaltyBalance } from "@/hooks";
 import { ImpactFeedbackStyle } from "expo-haptics";
 import Animated, {
   FadeIn,
@@ -31,7 +30,6 @@ import Animated, {
 
 import { Card, Avatar } from "@/components/ui";
 import { ProfileSkeleton } from "@/components/skeletons";
-import { useAuthStore, useFavoritesStore } from "@/store/apiStores";
 import { useThemeStore, usePreferencesStore } from "@/store";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -147,6 +145,23 @@ const StatsCard = React.memo(function StatsCard({
   );
 });
 
+// ── XP Progress helpers ──────────────────────────
+
+/** XP needed for a given level (100 * level) */
+function xpForLevel(level: number): number {
+  return level * 100;
+}
+
+/** Progress fraction [0,1] within current level */
+function xpProgress(xp: number, level: number): number {
+  const needed = xpForLevel(level);
+  const prevTotal = Array.from({ length: level - 1 }, (_, i) => xpForLevel(i + 1)).reduce((a, b) => a + b, 0);
+  const currentLevelXp = xp - prevTotal;
+  return Math.min(1, Math.max(0, currentLevelXp / needed));
+}
+
+// ── Main Screen ──────────────────────────────────
+
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
@@ -154,42 +169,54 @@ export default function ProfileScreen() {
   const isDark = colorScheme === "dark";
   const { t, language } = useTranslation();
 
-  const { profile, logout } = useAuthStore();
-  const { favorites } = useFavoritesStore();
+  // tRPC data
+  const { data: profile, isLoading: profileLoading } = useMe();
+  const { data: favoritesData } = useFavoritesList({ limit: 1 });
+  const { data: loyalty } = useLoyaltyBalance();
+  const logoutMutation = useLogout();
+
   const { theme } = useThemeStore();
   const { certifications } = usePreferencesStore();
 
   const userName = useMemo(() => profile?.displayName || t.common.user, [profile, t]);
 
-  const stats = useMemo(
-    () => ({
-      scanned: profile?.totalScans ?? 0,
-      favorites: favorites.length,
-    }),
-    [profile, favorites]
+  const favoritesCount = favoritesData?.length ?? 0;
+
+  const gamification = useMemo(() => ({
+    level: profile?.level ?? loyalty?.level ?? 1,
+    xp: profile?.experiencePoints ?? loyalty?.experiencePoints ?? 0,
+    points: loyalty?.points ?? 0,
+    totalScans: profile?.totalScans ?? 0,
+    streak: profile?.currentStreak ?? 0,
+    longestStreak: profile?.longestStreak ?? 0,
+  }), [profile, loyalty]);
+
+  const progress = useMemo(
+    () => xpProgress(gamification.xp, gamification.level),
+    [gamification.xp, gamification.level]
   );
 
-  const handleSettings = useCallback(async () => {
+  const handleSettings = useCallback(() => {
     impact();
     Alert.alert(t.common.settings, t.common.settingsComingSoon);
-  }, [t]);
+  }, [t, impact]);
 
-  const handleEditProfile = useCallback(async () => {
+  const handleEditProfile = useCallback(() => {
     impact();
     router.push("/settings/edit-profile" as any);
-  }, []);
+  }, [impact]);
 
-  const handleScanHistory = useCallback(async () => {
+  const handleScanHistory = useCallback(() => {
     impact();
-    router.push("/scan-result" as any);
-  }, []);
+    router.push("/settings/scan-history" as any);
+  }, [impact]);
 
-  const handleFavorites = useCallback(async () => {
+  const handleFavorites = useCallback(() => {
     impact();
     router.push("/settings/favorites" as any);
-  }, []);
+  }, [impact]);
 
-  const handleLogout = useCallback(async () => {
+  const handleLogout = useCallback(() => {
     impact(ImpactFeedbackStyle.Medium);
     Alert.alert(
       t.profile.logout,
@@ -200,16 +227,17 @@ export default function ProfileScreen() {
           text: t.profile.logout,
           style: "destructive",
           onPress: () => {
-            logout();
-            router.replace("/(auth)/welcome");
+            logoutMutation.mutate(undefined, {
+              onSuccess: () => router.replace("/(auth)/welcome"),
+            });
           },
         },
       ]
     );
-  }, [logout, t]);
+  }, [logoutMutation, t, impact]);
 
-  // Skeleton while profile data loads (all hooks declared above)
-  if (!profile) return <ProfileSkeleton />;
+  // Skeleton while profile data loads
+  if (profileLoading || !profile) return <ProfileSkeleton />;
 
   return (
     <View className="flex-1 bg-background-light dark:bg-background-dark">
@@ -254,7 +282,7 @@ export default function ProfileScreen() {
         {/* Profile Header */}
         <Animated.View
           entering={FadeInDown.delay(100).duration(500)}
-          className="items-center pt-4 pb-8 px-6"
+          className="items-center pt-4 pb-6 px-6"
         >
           {/* Avatar */}
           <TouchableOpacity
@@ -290,11 +318,11 @@ export default function ProfileScreen() {
             {userName}
           </Text>
 
-          {/* Badge */}
+          {/* Level Badge */}
           <View className="flex-row items-center gap-1.5 mb-6 bg-primary/5 dark:bg-primary/10 px-3 py-1 rounded-full border border-primary/10 dark:border-primary/20">
             <MaterialIcons name="verified" size={16} color="#1de560" />
             <Text className="text-primary font-medium text-xs uppercase tracking-wide">
-              {t.profile.consciousConsumer}
+              Niveau {gamification.level} — {t.profile.consciousConsumer}
             </Text>
           </View>
 
@@ -319,6 +347,74 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </Animated.View>
 
+        {/* Gamification Card */}
+        <Animated.View
+          entering={FadeInUp.delay(150).duration(500)}
+          className="mx-4 mb-6 p-4 rounded-2xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-white/5"
+          style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.05,
+            shadowRadius: 8,
+            elevation: 2,
+          }}
+        >
+          {/* XP Progress */}
+          <View className="flex-row items-center justify-between mb-3">
+            <Text className="text-slate-500 dark:text-slate-400 text-xs font-medium">
+              XP Progression
+            </Text>
+            <Text className="text-slate-900 dark:text-white text-xs font-bold">
+              {gamification.xp} XP
+            </Text>
+          </View>
+          <View className="h-2 rounded-full bg-slate-100 dark:bg-white/5 mb-4 overflow-hidden">
+            <View
+              className="h-full rounded-full bg-primary"
+              style={{ width: `${Math.round(progress * 100)}%` }}
+            />
+          </View>
+
+          {/* Quick Stats Row */}
+          <View className="flex-row">
+            <View className="flex-1 items-center">
+              <View className="w-9 h-9 rounded-full bg-primary/10 items-center justify-center mb-1.5">
+                <MaterialIcons name="local-fire-department" size={18} color="#1de560" />
+              </View>
+              <Text className="text-slate-900 dark:text-white font-bold text-sm">
+                {gamification.streak}
+              </Text>
+              <Text className="text-slate-400 dark:text-slate-500 text-[10px]">
+                Streak
+              </Text>
+            </View>
+            <View className="flex-1 items-center">
+              <View className="w-9 h-9 rounded-full items-center justify-center mb-1.5"
+                style={{ backgroundColor: isDark ? "rgba(59,130,246,0.1)" : "#eff6ff" }}>
+                <MaterialIcons name="qr-code-scanner" size={18} color={isDark ? "#60a5fa" : "#2563eb"} />
+              </View>
+              <Text className="text-slate-900 dark:text-white font-bold text-sm">
+                {gamification.totalScans}
+              </Text>
+              <Text className="text-slate-400 dark:text-slate-500 text-[10px]">
+                Scans
+              </Text>
+            </View>
+            <View className="flex-1 items-center">
+              <View className="w-9 h-9 rounded-full items-center justify-center mb-1.5"
+                style={{ backgroundColor: isDark ? "rgba(234,179,8,0.1)" : "#fef3c7" }}>
+                <MaterialIcons name="stars" size={18} color="#eab308" />
+              </View>
+              <Text className="text-slate-900 dark:text-white font-bold text-sm">
+                {gamification.points}
+              </Text>
+              <Text className="text-slate-400 dark:text-slate-500 text-[10px]">
+                Points
+              </Text>
+            </View>
+          </View>
+        </Animated.View>
+
         {/* Stats Cards */}
         <Animated.View
           entering={FadeInUp.delay(200).duration(500)}
@@ -329,7 +425,7 @@ export default function ProfileScreen() {
             iconBgColor={isDark ? "rgba(59,130,246,0.1)" : "#eff6ff"}
             iconColor={isDark ? "#60a5fa" : "#2563eb"}
             title={t.profile.stats.scanHistory}
-            subtitle={`${stats.scanned} ${t.profile.stats.productsScanned}`}
+            subtitle={`${gamification.totalScans} ${t.profile.stats.productsScanned}`}
             onPress={handleScanHistory}
           />
           <StatsCard
@@ -337,7 +433,7 @@ export default function ProfileScreen() {
             iconBgColor={isDark ? "rgba(234,179,8,0.1)" : "#fef3c7"}
             iconColor="#eab308"
             title={t.profile.stats.favorites}
-            subtitle={`${stats.favorites} ${t.profile.stats.productsSaved}`}
+            subtitle={`${favoritesCount} ${t.profile.stats.productsSaved}`}
             onPress={handleFavorites}
           />
         </Animated.View>
@@ -356,7 +452,7 @@ export default function ProfileScreen() {
               iconBgColor={isDark ? "rgba(29,229,96,0.1)" : "#ecfdf5"}
               iconColor="#1de560"
               title={t.profile.preferredCertifications}
-              subtitle={certifications.slice(0, 2).join(", ").toUpperCase() || "—"}
+              subtitle={certifications.slice(0, 2).join(", ").toUpperCase() || "\u2014"}
               onPress={() => router.push("/settings/certifications" as any)}
             />
             <MenuItem
@@ -371,8 +467,22 @@ export default function ProfileScreen() {
               iconBgColor={isDark ? "rgba(168,85,247,0.1)" : "#faf5ff"}
               iconColor={isDark ? "#c084fc" : "#a855f7"}
               title={t.profile.pushNotifications}
-              isLast
               onPress={() => router.push("/settings/notifications" as any)}
+            />
+            <MenuItem
+              icon="gavel"
+              iconBgColor={isDark ? "rgba(239,68,68,0.1)" : "#fef2f2"}
+              iconColor={isDark ? "#f87171" : "#dc2626"}
+              title="Boycott & Éthique"
+              onPress={() => router.push("/settings/boycott-list" as any)}
+            />
+            <MenuItem
+              icon="workspace-premium"
+              iconBgColor={isDark ? "rgba(234,179,8,0.1)" : "#fefce8"}
+              iconColor={isDark ? "#fbbf24" : "#ca8a04"}
+              title="Classement Certificateurs"
+              isLast
+              onPress={() => router.push("/settings/certifier-ranking" as any)}
             />
           </Card>
         </Animated.View>

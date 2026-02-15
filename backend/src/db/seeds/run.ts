@@ -12,8 +12,10 @@ import pg from "pg";
 import { sql } from "drizzle-orm";
 import { loadCertifierSeedData } from "./certifiers.js";
 import { loadStoreSeedData } from "./stores-halal.js";
+import { BDS_SEED_DATA } from "./boycott-bds.js";
 import { certifiers } from "../schema/certifiers.js";
 import { stores } from "../schema/stores.js";
+import { boycottTargets } from "../schema/boycott.js";
 import * as schema from "../schema/index.js";
 
 async function main() {
@@ -109,13 +111,46 @@ async function main() {
 
   console.log(`  Upserted: ${inserted} stores`);
 
+  // ── Phase 3: Boycott Targets ──────────────────────────────
+  console.log("\n▶ Phase 3: Boycott Targets (BDS seed data)");
+  console.log(`  Loaded ${BDS_SEED_DATA.length} targets`);
+
+  let boycottInserted = 0;
+  for (const target of BDS_SEED_DATA) {
+    await db
+      .insert(boycottTargets)
+      .values(target)
+      .onConflictDoUpdate({
+        target: boycottTargets.id,
+        set: {
+          companyName: target.companyName,
+          brands: target.brands,
+          parentCompany: target.parentCompany,
+          sector: target.sector,
+          boycottLevel: target.boycottLevel,
+          severity: target.severity,
+          reason: target.reason,
+          reasonSummary: target.reasonSummary,
+          sourceUrl: target.sourceUrl,
+          sourceName: target.sourceName,
+          verifiedBy: target.verifiedBy,
+          isActive: target.isActive,
+          updatedAt: new Date(),
+        },
+      });
+    boycottInserted++;
+  }
+  console.log(`  Upserted: ${boycottInserted} boycott targets`);
+
   // ── Summary ─────────────────────────────────────────────
   const [certCount] = await db.select({ count: sql<number>`count(*)::int` }).from(certifiers);
   const [storeCount] = await db.select({ count: sql<number>`count(*)::int` }).from(stores);
+  const [boycottCount] = await db.select({ count: sql<number>`count(*)::int` }).from(boycottTargets);
 
   console.log("\n━━━ Seed Complete ━━━");
-  console.log(`  Total certifiers in DB: ${certCount.count}`);
-  console.log(`  Total stores in DB:     ${storeCount.count}`);
+  console.log(`  Total certifiers in DB:      ${certCount.count}`);
+  console.log(`  Total stores in DB:          ${storeCount.count}`);
+  console.log(`  Total boycott targets in DB: ${boycottCount.count}`);
 
   await client.end();
 }

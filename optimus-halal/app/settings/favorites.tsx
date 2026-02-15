@@ -1,15 +1,16 @@
 /**
  * Favorites Screen - Mes Favoris
- * Design basé sur le template HTML fourni (Light Mode par défaut)
+ * Wired to tRPC favorites.list backend (Sprint 9)
  */
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
@@ -17,7 +18,7 @@ import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
-import { useLocalFavoritesStore, type FavoriteProduct } from "@/store";
+import { useFavoritesList, useRemoveFavorite } from "@/hooks/useFavorites";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 
@@ -75,8 +76,60 @@ const getStatusConfig = (status: StatusType, isDark: boolean): StatusConfig => {
   }
 };
 
+// ── Data Mapping ──────────────────────────────────────
+
+/** Map backend halalStatus to UI display status */
+function mapHalalToStatus(halalStatus: string | null | undefined): StatusType {
+  switch (halalStatus) {
+    case "halal":
+      return "excellent";
+    case "doubtful":
+      return "moyen";
+    case "haram":
+      return "mauvais";
+    default:
+      return "bon"; // unknown = needs analysis, neutral display
+  }
+}
+
+/** Map product category string to filter category */
+function mapToFilterCategory(category: string | null | undefined): string {
+  if (!category) return "food";
+  const lower = category.toLowerCase();
+  if (
+    lower.includes("cosmétique") ||
+    lower.includes("cosmetic") ||
+    lower.includes("beauté") ||
+    lower.includes("hygiene") ||
+    lower.includes("soin")
+  )
+    return "cosmetic";
+  if (
+    lower.includes("halal certifié") ||
+    lower.includes("halal certified")
+  )
+    return "halal";
+  return "food";
+}
+
+// ── Types ─────────────────────────────────────────────
+
+interface MappedFavorite {
+  id: string;
+  productId: string;
+  barcode: string;
+  name: string;
+  brand: string;
+  image: string;
+  status: StatusType;
+  category: string;
+  addedAt: string;
+}
+
+// ── Product Card ──────────────────────────────────────
+
 interface ProductCardProps {
-  product: FavoriteProduct;
+  product: MappedFavorite;
   index: number;
   onRemove: () => void;
   onView: () => void;
@@ -85,7 +138,7 @@ interface ProductCardProps {
   colors: ReturnType<typeof useTheme>["colors"];
 }
 
-const favoriteKeyExtractor = (item: FavoriteProduct) => item.id;
+const favoriteKeyExtractor = (item: MappedFavorite) => item.id;
 
 const ProductCard = React.memo(function ProductCard({ product, index, onRemove, onView, onScan, isDark, colors }: ProductCardProps) {
   const statusConfig = getStatusConfig(product.status, isDark);
@@ -93,7 +146,7 @@ const ProductCard = React.memo(function ProductCard({ product, index, onRemove, 
   return (
     <Animated.View
       entering={FadeInDown.delay(index * 100).duration(400)}
-      style={{ 
+      style={{
         width: CARD_WIDTH,
         backgroundColor: colors.card,
         borderColor: colors.borderLight,
@@ -153,18 +206,18 @@ const ProductCard = React.memo(function ProductCard({ product, index, onRemove, 
       <View style={{ padding: 12 }}>
         {/* Status Badge */}
         <View style={{ marginBottom: 6, flexDirection: "row", alignItems: "center" }}>
-          <View style={{ 
-            backgroundColor: statusConfig.bgColor, 
-            borderRadius: 4, 
-            paddingHorizontal: 6, 
-            paddingVertical: 2 
+          <View style={{
+            backgroundColor: statusConfig.bgColor,
+            borderRadius: 4,
+            paddingHorizontal: 6,
+            paddingVertical: 2
           }}>
-            <Text style={{ 
-              fontSize: 10, 
-              fontWeight: "700", 
-              textTransform: "uppercase", 
+            <Text style={{
+              fontSize: 10,
+              fontWeight: "700",
+              textTransform: "uppercase",
               letterSpacing: 0.5,
-              color: statusConfig.textColor 
+              color: statusConfig.textColor
             }}>
               {statusConfig.label}
             </Text>
@@ -222,11 +275,34 @@ const ProductCard = React.memo(function ProductCard({ product, index, onRemove, 
   );
 });
 
+// ── Main Screen ───────────────────────────────────────
+
 export default function FavoritesScreen() {
   const { isDark, colors } = useTheme();
   const { t } = useTranslation();
-  const { favorites, removeFavorite } = useLocalFavoritesStore();
   const [selectedCategory, setSelectedCategory] = useState("all");
+
+  // tRPC: fetch favorites from backend
+  const { data: rawFavorites, isLoading, isError, refetch } = useFavoritesList();
+  const removeMutation = useRemoveFavorite();
+
+  // Map backend data → UI-ready shape
+  const favorites: MappedFavorite[] = useMemo(() => {
+    if (!rawFavorites) return [];
+    return rawFavorites
+      .filter((fav) => fav.product !== null)
+      .map((fav) => ({
+        id: fav.id,
+        productId: fav.productId,
+        barcode: fav.product!.barcode,
+        name: fav.product!.name,
+        brand: fav.product!.brand ?? "Marque inconnue",
+        image: fav.product!.imageUrl ?? "",
+        status: mapHalalToStatus(fav.product!.halalStatus),
+        category: mapToFilterCategory(fav.product!.category),
+        addedAt: String(fav.createdAt),
+      }));
+  }, [rawFavorites]);
 
   const filteredFavorites = useMemo(() =>
     selectedCategory === "all"
@@ -234,6 +310,103 @@ export default function FavoritesScreen() {
       : favorites.filter((p) => p.category === selectedCategory),
     [selectedCategory, favorites]
   );
+
+  const handleRemove = useCallback(
+    (productId: string) => {
+      removeMutation.mutate({ productId });
+    },
+    [removeMutation]
+  );
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <View style={{ paddingHorizontal: 20, paddingTop: 16, flexDirection: "row", alignItems: "center" }}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={{
+              marginRight: 12,
+              height: 40,
+              width: 40,
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 20,
+              backgroundColor: colors.card,
+              borderColor: colors.borderLight,
+              borderWidth: 1,
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Retour"
+          >
+            <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
+          </TouchableOpacity>
+          <Text style={{ fontSize: 24, fontWeight: "700", color: colors.textPrimary }}>
+            {t.favorites.title}
+          </Text>
+        </View>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={{ color: colors.textSecondary, marginTop: 12 }}>
+            Chargement des favoris...
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Error state
+  if (isError) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <View style={{ paddingHorizontal: 20, paddingTop: 16, flexDirection: "row", alignItems: "center" }}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={{
+              marginRight: 12,
+              height: 40,
+              width: 40,
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 20,
+              backgroundColor: colors.card,
+              borderColor: colors.borderLight,
+              borderWidth: 1,
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Retour"
+          >
+            <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
+          </TouchableOpacity>
+          <Text style={{ fontSize: 24, fontWeight: "700", color: colors.textPrimary }}>
+            {t.favorites.title}
+          </Text>
+        </View>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
+          <MaterialIcons name="cloud-off" size={64} color={colors.textMuted} />
+          <Text style={{ color: colors.textSecondary, fontSize: 16, marginTop: 16, textAlign: "center" }}>
+            Impossible de charger vos favoris
+          </Text>
+          <TouchableOpacity
+            onPress={() => refetch()}
+            style={{
+              marginTop: 20,
+              backgroundColor: colors.primary,
+              paddingHorizontal: 24,
+              paddingVertical: 12,
+              borderRadius: 12,
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Réessayer"
+          >
+            <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
+              Réessayer
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -405,8 +578,8 @@ export default function FavoritesScreen() {
               <ProductCard
                 product={item}
                 index={index}
-                onRemove={() => removeFavorite(item.id)}
-                onView={() => router.push(`/scan-result?barcode=${item.id}`)}
+                onRemove={() => handleRemove(item.productId)}
+                onView={() => router.push(`/scan-result?barcode=${item.barcode}`)}
                 onScan={() => router.push("/(tabs)/scanner")}
                 isDark={isDark}
                 colors={colors}
@@ -480,4 +653,3 @@ export default function FavoritesScreen() {
     </SafeAreaView>
   );
 }
-

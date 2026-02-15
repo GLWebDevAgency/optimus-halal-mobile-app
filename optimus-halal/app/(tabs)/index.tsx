@@ -34,8 +34,8 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { Card, Avatar } from "@/components/ui";
 import { HomeSkeleton } from "@/components/skeletons";
-import { useLocalFavoritesStore } from "@/store";
 import { useAuthStore } from "@/store/apiStores";
+import { useFavoritesList } from "@/hooks/useFavorites";
 import { useTranslation } from "@/hooks/useTranslation";
 import { trpc } from "@/lib/trpc";
 
@@ -226,7 +226,17 @@ export default function HomeScreen() {
 
   const isInitializing = useAuthStore((s) => s.isInitializing);
   const profile = useAuthStore((s) => s.profile);
-  const { favorites: favoriteProducts } = useLocalFavoritesStore();
+  const favoritesQuery = useFavoritesList({ limit: 6 });
+  const favoriteProducts = useMemo(() =>
+    (favoritesQuery.data ?? [])
+      .filter((f) => f.product !== null)
+      .map((f) => ({
+        id: f.id,
+        name: f.product!.name,
+        image: f.product!.imageUrl ?? "",
+      })),
+    [favoritesQuery.data]
+  );
 
   // Real API queries
   const dashboardQuery = trpc.stats.userDashboard.useQuery(undefined, {
