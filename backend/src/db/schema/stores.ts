@@ -65,6 +65,7 @@ export const stores = pgTable(
     t.index("stores_type_idx").on(table.storeType),
     t.index("stores_certifier_idx").on(table.certifier),
     t.index("stores_location_idx").on(table.latitude, table.longitude),
+    t.uniqueIndex("stores_source_id_idx").on(table.sourceId),
   ]
 );
 

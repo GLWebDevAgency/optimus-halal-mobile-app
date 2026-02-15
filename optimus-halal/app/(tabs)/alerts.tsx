@@ -1,10 +1,10 @@
 /**
  * Ethical Alerts Feed Screen
- * 
- * Flux d'alertes avec:
- * - Header avec icône et notifications
- * - Filtres (All, Boycotts, Certifications, Health, Policy)
- * - Timeline avec différents types d'alertes
+ *
+ * Flux d'alertes temps réel depuis l'API avec:
+ * - Filtres par sévérité (Tous, Critique, Avertissement, Info)
+ * - Timeline avec carte d'alerte stylée par sévérité
+ * - Pull-to-refresh + pagination cursor
  */
 
 import React, { useState, useCallback, useMemo } from "react";
@@ -14,6 +14,7 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  ActivityIndicator,
   useColorScheme,
 } from "react-native";
 import { Image } from "expo-image";
@@ -23,112 +24,94 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, {
   FadeIn,
-  FadeInDown,
   FadeInLeft,
-  FadeInRight,
 } from "react-native-reanimated";
 
-import { Card, Badge, IconButton, Chip, ChipGroup, EmptyState } from "@/components/ui";
+import { Card, EmptyState } from "@/components/ui";
 import { AlertsSkeleton } from "@/components/skeletons";
-import { useLocalAlertsStore } from "@/store";
 import { useTranslation, useHaptics } from "@/hooks";
-import { colors } from "@/constants/theme";
+import { trpc } from "@/lib/trpc";
 
-// Alert types
-type AlertType = "boycott" | "certification" | "health" | "policy";
+// ── Severity → Visual Config ────────────────────────────────
 
-interface Alert {
-  id: string;
-  type: AlertType;
-  title: string;
-  description: string;
-  image?: string;
-  source: string;
-  sourceIcon?: string;
-  time: string;
-  badge?: string;
-  action?: {
+type Severity = "critical" | "warning" | "info";
+
+const SEVERITY_CONFIG: Record<
+  Severity,
+  {
+    icon: keyof typeof MaterialIcons.glyphMap;
+    color: string;
+    bgColor: string;
     label: string;
-    variant: "primary" | "secondary";
-  };
-}
-
-const MOCK_ALERTS: Alert[] = [
-  {
-    id: "1",
-    type: "boycott",
-    title: "Boycott: Brand X Soda",
-    description:
-      "Investissement de la société mère identifié dans des régions interdites. Violations majeures des directives d'approvisionnement éthique signalées.",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDMRROkfqx720sGkDhwQlWfuoWVtzSLb57m1wc53338BQi5KiJ9_-c3gHDK9X3XrYdQvzSYU2erwYtdnEOidE0lqKq3nAb1VnnPVGbTAlJmx-5q0beIptz3F0YAmyZtdJgu1PymnTMP7fOqG-koWQs04f52ItKnJthwfhoR94XwUyMsvWOo1creNW-FmWfaVSW2RFjDz04vHXDnw5ntjg86ItpcvHbUBjVOSOENjmC7f-m70mChgA7pkEEW4_0YSFur9Og-DkL1UBXA",
-    source: "Global Ethical Watch",
-    time: "Il y a 2h",
-    badge: "Boycott Actif",
-  },
-  {
-    id: "2",
-    type: "certification",
-    title: "Nouveau: Organic Poultry Co.",
-    description:
-      "Entièrement vérifié par l'Autorité Halal Mondiale. Traçabilité de la ferme à la table confirmée.",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuAXg59aHTtSgDTpWFbZCE_KAc_HZsmdVZDpiJrgbwwy4MyHd-VGP7AOA9D09G4X3q_o0iHUNawNZAwN1WNPOpFICWr6xSSVTwW24Ajm76n_Dz9_RnINCfxiFD6I5ZA2yTO88LmTptthAdTR4MdcIjy-H5dXmz0uosRpDWGJHDahxDk_3MdzBnAu171ecXlhn5JfIJ8oHmfdYztw9o3mUsGluX1d88k3UH9K80C2yUJLQWLL6Lz2OvEQnBKEb7CWUZCKm67ue_LZWIlW",
-    source: "Audit Standard Or",
-    sourceIcon: "workspace-premium",
-    time: "Il y a 5h",
-    badge: "Certifié Halal",
-    action: { label: "Lire le rapport", variant: "secondary" },
-  },
-  {
-    id: "3",
-    type: "health",
-    title: "Rappel: Lot #4928 Épices",
-    description:
-      "Contamination détectée dans \"Supreme Chili Powder\". Veuillez retourner le lot #4928 immédiatement au point d'achat.",
-    source: "Conseil de Sécurité Sanitaire",
-    time: "Il y a 1j",
-    badge: "Rappel Santé",
-    action: { label: "Vérifier mon lot", variant: "primary" },
-  },
-  {
-    id: "4",
-    type: "policy",
-    title: "Nouvelle réglementation UE",
-    description:
-      "Nouvelles exigences d'étiquetage pour les produits halal en vigueur à partir du 1er janvier 2025.",
-    source: "Commission Européenne",
-    time: "Il y a 3j",
-    badge: "Politique",
-  },
-];
-
-const alertKeyExtractor = (item: Alert) => item.id;
-
-const alertTypeConfig: Record<
-  AlertType,
-  { icon: keyof typeof MaterialIcons.glyphMap; color: string; bgColor: string }
+  }
 > = {
-  boycott: { icon: "block", color: "#ef4444", bgColor: "rgba(239,68,68,0.1)" },
-  certification: { icon: "verified-user", color: "#1de560", bgColor: "rgba(29,229,96,0.2)" },
-  health: { icon: "medical-services", color: "#eab308", bgColor: "rgba(234,179,8,0.2)" },
-  policy: { icon: "gavel", color: "#6366f1", bgColor: "rgba(99,102,241,0.2)" },
+  critical: {
+    icon: "error",
+    color: "#ef4444",
+    bgColor: "rgba(239,68,68,0.1)",
+    label: "Critique",
+  },
+  warning: {
+    icon: "warning",
+    color: "#f59e0b",
+    bgColor: "rgba(245,158,11,0.15)",
+    label: "Avertissement",
+  },
+  info: {
+    icon: "info",
+    color: "#3b82f6",
+    bgColor: "rgba(59,130,246,0.1)",
+    label: "Information",
+  },
 };
 
+// ── Relative Time Helper ────────────────────────────────────
+
+function formatRelativeTime(date: string | Date): string {
+  const now = Date.now();
+  const then = new Date(date).getTime();
+  const diffMs = now - then;
+  const diffMin = Math.floor(diffMs / 60_000);
+  const diffHours = Math.floor(diffMs / 3_600_000);
+  const diffDays = Math.floor(diffMs / 86_400_000);
+
+  if (diffMin < 1) return "À l'instant";
+  if (diffMin < 60) return `Il y a ${diffMin}min`;
+  if (diffHours < 24) return `Il y a ${diffHours}h`;
+  if (diffDays < 7) return `Il y a ${diffDays}j`;
+  return new Date(date).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
+// ── Alert Card ──────────────────────────────────────────────
+
+interface AlertItem {
+  id: string;
+  title: string;
+  summary: string;
+  severity: string;
+  imageUrl: string | null;
+  publishedAt: string | Date;
+  sourceUrl: string | null;
+  categoryId: string | null;
+}
+
 interface AlertCardProps {
-  alert: Alert;
+  alert: AlertItem;
   index: number;
 }
 
 const AlertCard = React.memo(function AlertCard({ alert, index }: AlertCardProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const { t } = useTranslation();
-  const config = alertTypeConfig[alert.type];
+  const severity = (alert.severity as Severity) || "info";
+  const config = SEVERITY_CONFIG[severity] ?? SEVERITY_CONFIG.info;
 
   return (
     <Animated.View
-      entering={FadeInLeft.delay(200 + index * 100).duration(500)}
+      entering={FadeInLeft.delay(100 + index * 80).duration(400)}
       className="flex-row"
     >
       {/* Timeline Icon */}
@@ -155,42 +138,27 @@ const AlertCard = React.memo(function AlertCard({ alert, index }: AlertCardProps
         <View className="flex-row items-center justify-between mb-2">
           <View
             className="px-2 py-0.5 rounded"
-            style={{
-              backgroundColor:
-                alert.type === "boycott"
-                  ? "rgba(239,68,68,0.1)"
-                  : alert.type === "certification"
-                  ? isDark
-                    ? "rgba(16,185,129,0.3)"
-                    : "rgba(16,185,129,0.1)"
-                  : alert.type === "health"
-                  ? isDark
-                    ? "rgba(234,179,8,0.3)"
-                    : "rgba(234,179,8,0.1)"
-                  : isDark
-                  ? "rgba(99,102,241,0.3)"
-                  : "rgba(99,102,241,0.1)",
-            }}
+            style={{ backgroundColor: config.bgColor }}
           >
             <Text
               className="text-xs font-bold uppercase tracking-wider"
               style={{ color: config.color }}
             >
-              {alert.badge}
+              {config.label}
             </Text>
           </View>
           <Text className="text-xs text-slate-400 dark:text-slate-500 font-medium">
-            {alert.time}
+            {formatRelativeTime(alert.publishedAt)}
           </Text>
         </View>
 
         {/* Card */}
         <Card variant="outlined" className="overflow-hidden">
-          {/* Image for boycott alerts */}
-          {alert.type === "boycott" && alert.image && (
+          {/* Image for critical alerts */}
+          {severity === "critical" && alert.imageUrl && (
             <View className="h-40 w-full relative overflow-hidden">
               <Image
-                source={{ uri: alert.image }}
+                source={{ uri: alert.imageUrl }}
                 className="w-full h-full"
                 contentFit="cover"
                 transition={200}
@@ -204,111 +172,61 @@ const AlertCard = React.memo(function AlertCard({ alert, index }: AlertCardProps
           )}
 
           <View className="p-4">
-            {/* Title for non-boycott alerts */}
-            {alert.type !== "boycott" && (
+            {/* Title (non-critical, or critical without image) */}
+            {(severity !== "critical" || !alert.imageUrl) && (
               <View className="flex-row gap-4 mb-3">
                 <View className="flex-1">
                   <Text className="text-slate-900 dark:text-white font-bold text-lg leading-tight mb-2">
                     {alert.title}
                   </Text>
                   <Text className="text-slate-600 dark:text-gray-300 text-sm leading-relaxed">
-                    {alert.description}
+                    {alert.summary}
                   </Text>
                 </View>
-                {alert.type === "certification" && alert.image && (
+                {severity !== "critical" && alert.imageUrl && (
                   <View className="w-24 h-24 rounded-lg bg-slate-100 dark:bg-slate-700 overflow-hidden">
                     <Image
-                      source={{ uri: alert.image }}
+                      source={{ uri: alert.imageUrl }}
                       className="w-full h-full"
                       contentFit="cover"
                       transition={200}
-                      accessibilityLabel={`Image de certification : ${alert.title}`}
+                      accessibilityLabel={`Image : ${alert.title}`}
                     />
                   </View>
                 )}
               </View>
             )}
 
-            {/* Description for boycott */}
-            {alert.type === "boycott" && (
+            {/* Summary for critical with image */}
+            {severity === "critical" && alert.imageUrl && (
               <Text className="text-slate-600 dark:text-gray-300 text-sm leading-relaxed mb-3">
-                {alert.description}
+                {alert.summary}
               </Text>
             )}
 
-            {/* Source & Action for health/policy */}
-            {(alert.type === "health" || alert.type === "policy") && (
-              <View className="mb-3">
-                {alert.sourceIcon && (
-                  <View className="flex-row items-center gap-2 mb-2">
-                    <MaterialIcons
-                      name={alert.sourceIcon as any}
-                      size={18}
-                      color="#fbbf24"
-                    />
-                    <Text className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                      {alert.source}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            )}
-
-            {/* Footer */}
-            {alert.type === "boycott" && (
+            {/* Source link */}
+            {alert.sourceUrl && (
               <View className="pt-3 border-t border-slate-100 dark:border-slate-700 flex-row items-center justify-between">
                 <View className="flex-row items-center gap-2">
                   <View className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 items-center justify-center">
                     <MaterialIcons name="public" size={12} color="#64748b" />
                   </View>
                   <Text className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                    {alert.source}
+                    Source
                   </Text>
                 </View>
-                <TouchableOpacity className="flex-row items-center gap-1" accessibilityRole="link" accessibilityLabel={`Voir la source de ${alert.title}`}>
-                  <Text className="text-xs font-bold text-danger-500">
-                    {t.alerts.source}
-                  </Text>
-                  <MaterialIcons name="arrow-forward" size={14} color="#ef4444" />
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {/* Action buttons */}
-            {alert.action && (
-              <View className="flex-row gap-2 mt-2">
                 <TouchableOpacity
-                  className={`flex-1 h-9 rounded-lg items-center justify-center ${
-                    alert.action.variant === "primary"
-                      ? "bg-primary"
-                      : "bg-slate-50 dark:bg-slate-700/50"
-                  }`}
-                  activeOpacity={0.7}
-                  accessibilityRole="button"
-                  accessibilityLabel={alert.action.label}
+                  className="flex-row items-center gap-1"
+                  accessibilityRole="link"
+                  accessibilityLabel={`Voir la source de ${alert.title}`}
                 >
                   <Text
-                    className={`text-sm font-bold ${
-                      alert.action.variant === "primary"
-                        ? "text-slate-900"
-                        : "text-slate-700 dark:text-gray-200"
-                    }`}
+                    className="text-xs font-bold"
+                    style={{ color: config.color }}
                   >
-                    {alert.action.label}
+                    Voir la source
                   </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  className="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-600 items-center justify-center"
-                  activeOpacity={0.7}
-                  accessibilityRole="button"
-                  accessibilityLabel="Partager"
-                  accessibilityHint={`Partager l'alerte ${alert.title}`}
-                >
-                  <MaterialIcons
-                    name="share"
-                    size={18}
-                    color={isDark ? "#94a3b8" : "#64748b"}
-                  />
+                  <MaterialIcons name="arrow-forward" size={14} color={config.color} />
                 </TouchableOpacity>
               </View>
             )}
@@ -319,6 +237,22 @@ const AlertCard = React.memo(function AlertCard({ alert, index }: AlertCardProps
   );
 });
 
+// ── Main Screen ─────────────────────────────────────────────
+
+const FILTERS: { id: string; severity?: "critical" | "warning" | "info" }[] = [
+  { id: "all" },
+  { id: "critical", severity: "critical" },
+  { id: "warning", severity: "warning" },
+  { id: "info", severity: "info" },
+];
+
+const FILTER_LABELS: Record<string, string> = {
+  all: "Tous",
+  critical: "Critique",
+  warning: "Avertissement",
+  info: "Information",
+};
+
 export default function AlertsScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
@@ -327,33 +261,35 @@ export default function AlertsScreen() {
   const { t } = useTranslation();
 
   const [activeFilter, setActiveFilter] = useState("all");
-  const [refreshing, setRefreshing] = useState(false);
 
-  const { alerts, unreadCount, markAllAsRead } = useLocalAlertsStore();
+  const selectedSeverity = FILTERS.find((f) => f.id === activeFilter)?.severity;
 
-  const FILTERS = [
-    { id: "all", label: t.alerts.filters.all },
-    { id: "boycott", label: t.alerts.filters.boycotts },
-    { id: "certification", label: t.alerts.filters.certifications },
-    { id: "health", label: t.alerts.filters.health },
-    { id: "policy", label: t.alerts.filters.policy },
-  ];
+  const alertsQuery = trpc.alert.list.useQuery(
+    {
+      limit: 20,
+      ...(selectedSeverity ? { severity: selectedSeverity } : {}),
+    },
+    { staleTime: 60_000 }
+  );
 
-  const filteredAlerts = useMemo(() => {
-    if (activeFilter === "all") return MOCK_ALERTS;
-    return MOCK_ALERTS.filter((alert) => alert.type === activeFilter);
-  }, [activeFilter]);
+  const alertItems = (alertsQuery.data?.items ?? []) as AlertItem[];
 
-  const handleFilterChange = useCallback(async (filterId: string) => {
-    impact();
-    setActiveFilter(filterId);
-  }, []);
+  const handleFilterChange = useCallback(
+    (filterId: string) => {
+      impact();
+      setActiveFilter(filterId);
+    },
+    [impact]
+  );
 
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setRefreshing(false);
-  }, []);
+  const handleRefresh = useCallback(() => {
+    alertsQuery.refetch();
+  }, [alertsQuery]);
+
+  // Loading state
+  if (alertsQuery.isPending) {
+    return <AlertsSkeleton />;
+  }
 
   return (
     <View className="flex-1 bg-background-light dark:bg-background-dark">
@@ -376,7 +312,10 @@ export default function AlertsScreen() {
             >
               <MaterialIcons name="security" size={20} color="#0d1b13" />
             </View>
-            <Text accessibilityRole="header" className="text-slate-900 dark:text-white text-xl font-bold tracking-tight">
+            <Text
+              accessibilityRole="header"
+              className="text-slate-900 dark:text-white text-xl font-bold tracking-tight"
+            >
               {t.alerts.title}
             </Text>
           </View>
@@ -413,8 +352,10 @@ export default function AlertsScreen() {
               }`}
               activeOpacity={0.7}
               accessibilityRole="button"
-              accessibilityLabel={`${filter.label}${activeFilter === filter.id ? ", sélectionné" : ""}`}
-              accessibilityHint={`Filtrer par ${filter.label}`}
+              accessibilityLabel={`${FILTER_LABELS[filter.id]}${
+                activeFilter === filter.id ? ", sélectionné" : ""
+              }`}
+              accessibilityHint={`Filtrer par ${FILTER_LABELS[filter.id]}`}
             >
               <Text
                 className={`text-sm ${
@@ -423,40 +364,63 @@ export default function AlertsScreen() {
                     : "font-medium text-slate-600 dark:text-gray-300"
                 }`}
               >
-                {filter.label}
+                {FILTER_LABELS[filter.id]}
               </Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
       </Animated.View>
 
+      {/* Error State */}
+      {alertsQuery.isError && (
+        <View className="flex-1 items-center justify-center p-8">
+          <MaterialIcons
+            name="cloud-off"
+            size={48}
+            color={isDark ? "#475569" : "#94a3b8"}
+          />
+          <Text className="text-slate-500 dark:text-slate-400 text-base font-medium mt-4 text-center">
+            Impossible de charger les alertes
+          </Text>
+          <TouchableOpacity
+            onPress={() => alertsQuery.refetch()}
+            className="mt-4 bg-primary px-6 py-2.5 rounded-full"
+            activeOpacity={0.8}
+          >
+            <Text className="text-slate-900 font-bold text-sm">Réessayer</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Content */}
-      <FlashList
-        data={filteredAlerts}
-        keyExtractor={alertKeyExtractor}
-        renderItem={({ item, index }) => (
-          <AlertCard alert={item} index={index} />
-        )}
-        contentContainerStyle={{
-          padding: 16,
-          paddingBottom: 100,
-        }}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <EmptyState
-            icon="notifications-off"
-            title="Aucune alerte"
-            message="Aucune alerte ne correspond à ce filtre."
-          />
-        }
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor={isDark ? "#1de560" : "#059669"}
-          />
-        }
-      />
+      {!alertsQuery.isError && (
+        <FlashList
+          data={alertItems}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item, index }) => (
+            <AlertCard alert={item} index={index} />
+          )}
+          contentContainerStyle={{
+            padding: 16,
+            paddingBottom: 100,
+          }}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <EmptyState
+              icon="notifications-off"
+              title="Aucune alerte"
+              message="Aucune alerte ne correspond à ce filtre."
+            />
+          }
+          refreshControl={
+            <RefreshControl
+              refreshing={alertsQuery.isFetching && !alertsQuery.isPending}
+              onRefresh={handleRefresh}
+              tintColor={isDark ? "#1de560" : "#059669"}
+            />
+          }
+        />
+      )}
     </View>
   );
 }
