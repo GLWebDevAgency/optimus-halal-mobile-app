@@ -88,6 +88,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
   const [showDebug, setShowDebug] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
   const initCalled = useRef(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (initCalled.current) return;
@@ -100,13 +101,23 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
     setApiLanguage(language);
 
     // Safety timeout — force past loading if init hangs
-    const timeout = setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
       logger.warn("AppInit", `Timeout after ${INIT_TIMEOUT_MS}ms — forcing past loading`);
       setTimedOut(true);
     }, INIT_TIMEOUT_MS);
 
-    return () => clearTimeout(timeout);
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
   }, []);
+
+  // Clear timeout as soon as init completes
+  useEffect(() => {
+    if (!isInitializing && timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, [isInitializing]);
 
   useEffect(() => {
     setApiLanguage(language);

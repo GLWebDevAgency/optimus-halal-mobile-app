@@ -47,11 +47,9 @@ export const useLocalAuthStore = create<AuthState>()(
       name: "auth-storage",
       storage: createJSONStorage(() => mmkvStorage),
       onRehydrateStorage: () => (_state, error) => {
-        // Always set isLoading to false after rehydration (success OR error)
         if (error) {
           console.warn("[Store] useLocalAuthStore rehydration error:", error);
         }
-        useLocalAuthStore.setState({ isLoading: false });
       },
     }
   )
