@@ -206,12 +206,37 @@ export const scanRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      const items = await ctx.db.query.scans.findMany({
-        where: eq(scans.userId, ctx.userId),
-        orderBy: desc(scans.scannedAt),
-        limit: input.limit + 1,
-        with: {},
-      });
+      const conditions = [eq(scans.userId, ctx.userId)];
+      if (input.cursor) {
+        const cursorScan = await ctx.db.query.scans.findFirst({
+          where: eq(scans.id, input.cursor),
+          columns: { scannedAt: true },
+        });
+        if (cursorScan) {
+          conditions.push(sql`${scans.scannedAt} < ${cursorScan.scannedAt}`);
+        }
+      }
+
+      const items = await ctx.db
+        .select({
+          id: scans.id,
+          barcode: scans.barcode,
+          halalStatus: scans.halalStatus,
+          confidenceScore: scans.confidenceScore,
+          scannedAt: scans.scannedAt,
+          product: {
+            id: products.id,
+            name: products.name,
+            brand: products.brand,
+            imageUrl: products.imageUrl,
+            category: products.category,
+          },
+        })
+        .from(scans)
+        .leftJoin(products, eq(scans.productId, products.id))
+        .where(and(...conditions))
+        .orderBy(desc(scans.scannedAt))
+        .limit(input.limit + 1);
 
       let nextCursor: string | undefined;
       if (items.length > input.limit) {

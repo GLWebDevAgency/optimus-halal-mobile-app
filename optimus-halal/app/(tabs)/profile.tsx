@@ -208,7 +208,7 @@ export default function ProfileScreen() {
 
   const handleScanHistory = useCallback(() => {
     impact();
-    router.push("/scan-result" as any);
+    router.push("/settings/scan-history" as any);
   }, [impact]);
 
   const handleFavorites = useCallback(() => {
