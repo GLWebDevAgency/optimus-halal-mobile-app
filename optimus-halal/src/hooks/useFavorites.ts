@@ -1,5 +1,6 @@
 import { trpc } from "@/lib/trpc";
 import { useQueryClient } from "@tanstack/react-query";
+import { trackEvent } from "../lib/analytics";
 
 export function useFavoritesList(options?: {
   folderId?: string;
@@ -18,8 +19,9 @@ export function useAddFavorite() {
   const queryClient = useQueryClient();
 
   return trpc.favorites.add.useMutation({
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [["favorites"]] });
+      trackEvent("add_favorite", { productId: variables.productId });
     },
   });
 }

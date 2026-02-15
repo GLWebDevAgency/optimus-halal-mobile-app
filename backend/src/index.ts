@@ -12,6 +12,9 @@ import { logger } from "./lib/logger.js";
 import { db } from "./db/index.js";
 import { redis } from "./lib/redis.js";
 import { sql } from "drizzle-orm";
+import { initSentry, Sentry } from "./lib/sentry.js";
+
+initSentry();
 
 const app = new Hono();
 
@@ -84,6 +87,9 @@ app.notFound((c) =>
 // ── Error Handler ─────────────────────────────────────────
 
 app.onError((err, c) => {
+  Sentry.captureException(err, {
+    extra: { path: c.req.path, method: c.req.method },
+  });
   logger.error("Erreur interne du serveur", {
     error: err.message,
     path: c.req.path,

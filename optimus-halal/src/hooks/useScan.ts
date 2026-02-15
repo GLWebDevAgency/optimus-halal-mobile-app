@@ -1,7 +1,12 @@
 import { trpc } from "@/lib/trpc";
+import { trackEvent } from "../lib/analytics";
 
 export function useScanBarcode() {
-  return trpc.scan.scanBarcode.useMutation();
+  return trpc.scan.scanBarcode.useMutation({
+    onSuccess: (_data, variables) => {
+      trackEvent("scan_barcode", { barcode: variables.barcode });
+    },
+  });
 }
 
 export function useScanHistory(options?: { limit?: number }) {
