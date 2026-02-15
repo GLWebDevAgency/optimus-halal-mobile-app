@@ -34,7 +34,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { Card, Avatar } from "@/components/ui";
 import { HomeSkeleton } from "@/components/skeletons";
-import { useAuthStore } from "@/store/apiStores";
+import { useMe } from "@/hooks/useAuth";
 import { useFavoritesList } from "@/hooks/useFavorites";
 import { useTranslation } from "@/hooks/useTranslation";
 import { trpc } from "@/lib/trpc";
@@ -52,85 +52,6 @@ const SEVERITY_COLOR: Record<string, string> = {
   warning: "#d97706",
   info: "#2563eb",
 };
-
-// Dev placeholders — visibles quand le backend ne retourne pas de données
-// Basés sur des actus réelles Al-Kanz (février 2026)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const DEV_PLACEHOLDER_ALERTS: any[] = __DEV__
-  ? [
-      {
-        id: "dev-alert-1",
-        title: "Salmonelle : rappel poulets halal SFCVH",
-        summary:
-          "Poulets halal du producteur belge Plukon, certifiés SFCVH, rappelés pour contamination à la salmonelle.",
-        severity: "critical",
-      },
-      {
-        id: "dev-alert-2",
-        title: "Isla Délice : A&M Capital s'implante en Israël",
-        summary:
-          "Le fonds repreneur d'Isla Délice ouvre une filiale à Tel-Aviv. Appels au boycott BDS.",
-        severity: "warning",
-      },
-      {
-        id: "dev-alert-3",
-        title: "A&M Capital rachète Oumaty et Oummi",
-        summary:
-          "Consolidation du marché halal français : 3 marques sous contrôle du même fonds américain.",
-        severity: "info",
-      },
-    ]
-  : [];
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const DEV_PLACEHOLDER_ARTICLES: any[] = __DEV__
-  ? [
-      {
-        id: "dev-article-1",
-        title: "Quick : 188 restaurants 100 % halal, objectif 300",
-        excerpt:
-          "Quick a converti ses 188 restaurants au halal certifié ARGML et vise 300 en 2028.",
-        type: "partner_news",
-        coverImage:
-          "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&h=400&fit=crop",
-        readTimeMinutes: 4,
-        author: "Al-Kanz",
-      },
-      {
-        id: "dev-article-2",
-        title: "Calendrier ramadan 2026 : ce que vous devez savoir",
-        excerpt:
-          "Dates, observation du croissant lunaire, calcul astronomique : tout comprendre.",
-        type: "educational",
-        coverImage:
-          "https://images.unsplash.com/photo-1564121211835-e88c852648ab?w=600&h=400&fit=crop",
-        readTimeMinutes: 4,
-        author: "Optimus Team",
-      },
-      {
-        id: "dev-article-3",
-        title: "Guide : vérifier un certificat halal en 3 étapes",
-        excerpt:
-          "Ne vous fiez jamais à un simple autocollant. Voici les 3 vérifications essentielles.",
-        type: "educational",
-        coverImage:
-          "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=600&h=400&fit=crop",
-        readTimeMinutes: 4,
-        author: "Optimus Team",
-      },
-      {
-        id: "dev-article-4",
-        title: "Audit halal 2026 : 23 % d'incohérences en grande surface",
-        excerpt:
-          "Un audit indépendant sur 500 produits révèle des résultats préoccupants.",
-        type: "blog",
-        coverImage:
-          "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=600&h=400&fit=crop",
-        readTimeMinutes: 5,
-        author: "Optimus Team",
-      },
-    ]
-  : [];
 
 interface QuickActionProps {
   icon: keyof typeof MaterialIcons.glyphMap;
@@ -224,8 +145,9 @@ export default function HomeScreen() {
   const isDark = colorScheme === "dark";
   const { t } = useTranslation();
 
-  const isInitializing = useAuthStore((s) => s.isInitializing);
-  const profile = useAuthStore((s) => s.profile);
+  const meQuery = useMe();
+  const me = meQuery.data;
+  const isReady = !meQuery.isLoading;
   const favoritesQuery = useFavoritesList({ limit: 6 });
   const favoriteProducts = useMemo(() =>
     (favoritesQuery.data ?? [])
@@ -238,53 +160,50 @@ export default function HomeScreen() {
     [favoritesQuery.data]
   );
 
-  // Real API queries
+  // Real API queries — enabled once auth check completes
   const dashboardQuery = trpc.stats.userDashboard.useQuery(undefined, {
-    enabled: !isInitializing,
+    enabled: isReady,
     staleTime: 60_000,
   });
   const unreadQuery = trpc.notification.getUnreadCount.useQuery(undefined, {
-    enabled: !isInitializing,
+    enabled: isReady,
     staleTime: 30_000,
   });
   const nearbyStoreQuery = trpc.store.search.useQuery(
     { halalCertifiedOnly: true, limit: 1 },
-    { enabled: !isInitializing, staleTime: 120_000 },
+    { enabled: isReady, staleTime: 120_000 },
   );
   const alertsQuery = trpc.alert.list.useQuery(
     { limit: 5 },
-    { enabled: !isInitializing, staleTime: 60_000 },
+    { enabled: isReady, staleTime: 60_000 },
   );
   const articlesQuery = trpc.article.list.useQuery(
     { limit: 5 },
-    { enabled: !isInitializing, staleTime: 120_000 },
+    { enabled: isReady, staleTime: 120_000 },
   );
 
   const unreadCount = unreadQuery.data?.count ?? 0;
   const nearbyStore = nearbyStoreQuery.data?.items?.[0] ?? null;
 
-  // Derive items with proper error/loading distinction
-  const alertItems = useMemo(() => {
-    if (alertsQuery.data?.items?.length) return alertsQuery.data.items;
-    if (__DEV__ && !alertsQuery.isError) return DEV_PLACEHOLDER_ALERTS;
-    return [];
-  }, [alertsQuery.data?.items, alertsQuery.isError]);
+  const alertItems = useMemo(
+    () => alertsQuery.data?.items ?? [],
+    [alertsQuery.data?.items],
+  );
 
-  const articleItems = useMemo(() => {
-    if (articlesQuery.data?.items?.length) return articlesQuery.data.items;
-    if (__DEV__ && !articlesQuery.isError) return DEV_PLACEHOLDER_ARTICLES;
-    return [];
-  }, [articlesQuery.data?.items, articlesQuery.isError]);
+  const articleItems = useMemo(
+    () => articlesQuery.data?.items ?? [],
+    [articlesQuery.data?.items],
+  );
 
-  const hasApiError =
-    alertsQuery.isError || articlesQuery.isError || dashboardQuery.isError;
+  // Only show connection error when core data fails (not optional feeds)
+  const hasApiError = dashboardQuery.isError && meQuery.isError;
 
   const userName = useMemo(() => {
-    if (profile?.displayName) {
-      return profile.displayName.split(" ")[0];
+    if (me?.displayName) {
+      return me.displayName.split(" ")[0];
     }
     return t.common.user;
-  }, [profile, t]);
+  }, [me, t]);
 
   const totalScans = dashboardQuery.data?.totalScans ?? 0;
 
@@ -297,14 +216,14 @@ export default function HomeScreen() {
     } else if (route === "marketplace") {
       router.push("/(tabs)/marketplace" as any);
     } else if (route === "history") {
-      router.push("/scan-result" as any);
+      router.push("/settings/scan-history" as any);
     } else if (route === "favorites") {
       router.push("/settings/favorites" as any);
     }
   }, [impact]);
 
-  // Skeleton while auth store initializes (placed after all hooks)
-  if (isInitializing) return <HomeSkeleton />;
+  // Skeleton while auth check resolves (placed after all hooks)
+  if (!isReady) return <HomeSkeleton />;
 
   return (
     <View className="flex-1 bg-background-light dark:bg-background-dark">
@@ -324,7 +243,7 @@ export default function HomeScreen() {
             <View className="relative">
               <Avatar
                 size="lg"
-                source={profile?.avatarUrl ?? undefined}
+                source={me?.avatarUrl ?? undefined}
                 fallback={userName}
                 borderColor="primary"
               />
@@ -408,7 +327,7 @@ export default function HomeScreen() {
                   </Text>
                 </View>
                 <Text className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  {dashboardQuery.data?.totalReports ?? 0} {(dashboardQuery.data?.totalReports ?? 0) > 1 ? t.home.reportsPlural : t.home.reports} · Niveau {profile?.level ?? 1}
+                  {dashboardQuery.data?.totalReports ?? 0} {(dashboardQuery.data?.totalReports ?? 0) > 1 ? t.home.reportsPlural : t.home.reports} · Niveau {me?.level ?? 1}
                 </Text>
               </View>
 

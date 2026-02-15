@@ -36,7 +36,7 @@ export const stores = pgTable(
     city: t.varchar({ length: 100 }).notNull(),
     postalCode: t.varchar("postal_code", { length: 10 }),
     country: t.varchar({ length: 50 }).default("France").notNull(),
-    phone: t.varchar({ length: 20 }),
+    phone: t.varchar({ length: 100 }),
     email: t.varchar({ length: 255 }),
     website: t.text(),
     latitude: t.doublePrecision().notNull(),
