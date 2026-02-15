@@ -3,7 +3,7 @@
  * Faithful reproduction of the HTML template design
  */
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   ScrollView,
   Switch,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -18,6 +19,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
+import { trpc } from "@/lib/trpc";
 
 // Frequency options
 type FrequencyOption = "daily" | "weekly" | "realtime";
@@ -106,12 +108,26 @@ export default function NotificationsScreen() {
   const { isDark } = useTheme();
   const { t } = useTranslation();
 
-  // Local state for notification preferences
+  // ── tRPC: fetch + mutate notification settings ──
+  const utils = trpc.useUtils();
+  const { data: settings, isLoading } = trpc.notification.getSettings.useQuery(
+    undefined,
+    { staleTime: 1000 * 60 * 5 }
+  );
+  const updateMutation = trpc.notification.updateSettings.useMutation({
+    onSuccess: () => utils.notification.getSettings.invalidate(),
+  });
+
+  const updateSetting = useCallback(
+    (field: string, value: boolean) => {
+      updateMutation.mutate({ [field]: value });
+    },
+    [updateMutation]
+  );
+
+  // Local-only settings (push/sound are device-level, not stored in backend)
   const [pushEnabled, setPushEnabled] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [ethicalAlerts, setEthicalAlerts] = useState(true);
-  const [newProducts, setNewProducts] = useState(false);
-  const [offersPromos, setOffersPromos] = useState(true);
   const [frequency, setFrequency] = useState<FrequencyOption>("daily");
 
   // Theme-aware colors
@@ -126,6 +142,13 @@ export default function NotificationsScreen() {
     headerBorder: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.1)",
   };
 
+  // Map UI keys → backend fields
+  const BACKEND_KEY_MAP: Record<string, string> = {
+    ethicalAlerts: "alertsEnabled",
+    newProducts: "scanResultsEnabled",
+    offersPromos: "promotionsEnabled",
+  };
+
   // Get toggle value for a setting
   const getToggleValue = (key: string): boolean => {
     switch (key) {
@@ -134,11 +157,11 @@ export default function NotificationsScreen() {
       case "soundEnabled":
         return soundEnabled;
       case "ethicalAlerts":
-        return ethicalAlerts;
+        return settings?.alertsEnabled ?? true;
       case "newProducts":
-        return newProducts;
+        return settings?.scanResultsEnabled ?? true;
       case "offersPromos":
-        return offersPromos;
+        return settings?.promotionsEnabled ?? true;
       default:
         return false;
     }
@@ -146,21 +169,17 @@ export default function NotificationsScreen() {
 
   // Set toggle value for a setting
   const setToggleValue = (key: string, value: boolean) => {
+    const backendField = BACKEND_KEY_MAP[key];
+    if (backendField) {
+      updateSetting(backendField, value);
+      return;
+    }
     switch (key) {
       case "pushEnabled":
         setPushEnabled(value);
         break;
       case "soundEnabled":
         setSoundEnabled(value);
-        break;
-      case "ethicalAlerts":
-        setEthicalAlerts(value);
-        break;
-      case "newProducts":
-        setNewProducts(value);
-        break;
-      case "offersPromos":
-        setOffersPromos(value);
         break;
     }
   };
@@ -342,6 +361,14 @@ export default function NotificationsScreen() {
       </TouchableOpacity>
     );
   };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator size="large" color={themeColors.primary} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background }}>

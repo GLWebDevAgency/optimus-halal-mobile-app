@@ -467,8 +467,22 @@ export default function ProfileScreen() {
               iconBgColor={isDark ? "rgba(168,85,247,0.1)" : "#faf5ff"}
               iconColor={isDark ? "#c084fc" : "#a855f7"}
               title={t.profile.pushNotifications}
-              isLast
               onPress={() => router.push("/settings/notifications" as any)}
+            />
+            <MenuItem
+              icon="gavel"
+              iconBgColor={isDark ? "rgba(239,68,68,0.1)" : "#fef2f2"}
+              iconColor={isDark ? "#f87171" : "#dc2626"}
+              title="Boycott & Éthique"
+              onPress={() => router.push("/settings/boycott-list" as any)}
+            />
+            <MenuItem
+              icon="workspace-premium"
+              iconBgColor={isDark ? "rgba(234,179,8,0.1)" : "#fefce8"}
+              iconColor={isDark ? "#fbbf24" : "#ca8a04"}
+              title="Classement Certificateurs"
+              isLast
+              onPress={() => router.push("/settings/certifier-ranking" as any)}
             />
           </Card>
         </Animated.View>
