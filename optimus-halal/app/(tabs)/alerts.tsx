@@ -7,14 +7,13 @@
  * - Pull-to-refresh + pagination cursor
  */
 
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  ActivityIndicator,
   useColorScheme,
 } from "react-native";
 import { Image } from "expo-image";

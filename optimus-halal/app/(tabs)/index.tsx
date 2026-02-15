@@ -18,10 +18,9 @@ import {
   TouchableOpacity,
   useColorScheme,
   Dimensions,
-  Pressable,
 } from "react-native";
 import { Image } from "expo-image";
-import { router, Link } from "expo-router";
+import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useHaptics } from "@/hooks";
@@ -35,13 +34,12 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { FlashList } from "@shopify/flash-list";
 
-import { Card, Avatar, Badge, IconButton, EmptyState } from "@/components/ui";
+import { Card, Avatar } from "@/components/ui";
 import { HomeSkeleton } from "@/components/skeletons";
 import { useLocalFavoritesStore } from "@/store";
 import { useAuthStore } from "@/store/apiStores";
 import { useTranslation } from "@/hooks/useTranslation";
 import { trpc } from "@/lib/trpc";
-import { colors } from "@/constants/theme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = SCREEN_WIDTH - 40 - 16; // padding + gap
@@ -477,7 +475,7 @@ export default function HomeScreen() {
                     color={isDark ? "#94a3b8" : "#64748b"}
                   />
                   <Text className="text-xs text-center text-slate-500 dark:text-slate-400">
-                    Scannez un produit pour l'ajouter à vos favoris
+                    Scannez un produit pour l&apos;ajouter à vos favoris
                   </Text>
                 </TouchableOpacity>
               </Animated.View>

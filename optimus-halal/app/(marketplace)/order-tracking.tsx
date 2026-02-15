@@ -28,80 +28,6 @@ import Animated, {
   FadeInDown,
 } from "react-native-reanimated";
 
-// Timeline Step Component
-function TimelineStep({
-  icon,
-  title,
-  subtitle,
-  isCompleted,
-  isCurrent,
-  isLast,
-  isDark,
-}: {
-  icon: keyof typeof MaterialIcons.glyphMap;
-  title: string;
-  subtitle?: string;
-  isCompleted: boolean;
-  isCurrent: boolean;
-  isLast: boolean;
-  isDark: boolean;
-}) {
-  const getCircleStyle = () => {
-    if (isCompleted || isCurrent) {
-      return "bg-primary";
-    }
-    return "bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700";
-  };
-
-  const getIconColor = () => {
-    if (isCompleted || isCurrent) {
-      return "#102216";
-    }
-    return "#9ca3af";
-  };
-
-  return (
-    <>
-      <View className="flex-col items-center">
-        <View
-          className={`h-8 w-8 rounded-full flex items-center justify-center z-10 ${getCircleStyle()} ${
-            isCurrent ? "ring-4 ring-primary/20" : ""
-          }`}
-        >
-          <MaterialIcons
-            name={isCompleted && !isCurrent ? "check" : icon}
-            size={18}
-            color={getIconColor()}
-          />
-        </View>
-        {!isLast && (
-          <View
-            className={`w-0.5 min-h-[24px] h-full ${
-              isCompleted ? "bg-primary" : "bg-gray-200 dark:bg-gray-700"
-            }`}
-          />
-        )}
-      </View>
-      <View className={`pb-6 pt-1 ${isLast ? "" : ""}`}>
-        <Text
-          className={`text-sm font-bold ${
-            isCompleted || isCurrent
-              ? "text-slate-900 dark:text-white"
-              : "text-gray-400 dark:text-gray-500"
-          }`}
-        >
-          {title}
-        </Text>
-        {subtitle && (
-          <Text className="text-xs text-slate-500 dark:text-gray-400">
-            {subtitle}
-          </Text>
-        )}
-      </View>
-    </>
-  );
-}
-
 // Past Order Item Component
 function PastOrderItem({
   orderId,
@@ -246,7 +172,7 @@ export default function OrderTrackingScreen() {
             {/* Status Header */}
             <View className="p-5 border-b border-gray-100 dark:border-gray-800">
               <Text className="text-2xl font-bold leading-tight tracking-tight text-slate-900 dark:text-white mb-1">
-                Arrivée aujourd'hui
+                Arrivée aujourd&apos;hui
               </Text>
               <Text className="text-sm font-medium text-slate-500 dark:text-gray-400">
                 Estimation: 17h00
@@ -341,7 +267,7 @@ export default function OrderTrackingScreen() {
                         En cours de livraison
                       </Text>
                       <Text className="text-xs text-slate-500 dark:text-gray-400">
-                        Aujourd'hui, 16:15
+                        Aujourd&apos;hui, 16:15
                       </Text>
                     </View>
                   </View>
@@ -365,7 +291,7 @@ export default function OrderTrackingScreen() {
             {/* Shipment Items */}
             <View className="border-t border-gray-100 dark:border-gray-800 p-5 bg-gray-50 dark:bg-[#1a2e22]/50">
               <Text className="text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-3">
-                Articles de l'envoi
+                Articles de l&apos;envoi
               </Text>
               <View className="gap-3">
                 {/* Item 1 */}
@@ -413,7 +339,7 @@ export default function OrderTrackingScreen() {
                   <View className="flex-1">
                     <View className="flex-row justify-between items-start">
                       <Text className="text-sm font-semibold text-slate-900 dark:text-white">
-                        Agneau Élevé à l'Herbe
+                        Agneau Élevé à l&apos;Herbe
                       </Text>
                       <Text className="text-sm font-medium text-slate-900 dark:text-white">
                         €45.50
@@ -478,7 +404,7 @@ export default function OrderTrackingScreen() {
           className="mt-4 py-3 items-center"
         >
           <Text className="text-sm font-medium text-primary">
-            Retour à l'accueil
+            Retour à l&apos;accueil
           </Text>
         </TouchableOpacity>
       </ScrollView>

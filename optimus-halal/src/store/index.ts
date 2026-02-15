@@ -6,7 +6,8 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { User, ScanRecord, Store, EthicalAlert, Product } from "@/types";
+import type { User, ScanRecord, Store, EthicalAlert } from "@/types";
+import type { Language } from "@/i18n";
 import { defaultFeatureFlags, type FeatureFlags } from "@constants/config";
 import { mmkvStorage } from "@/lib/storage";
 
@@ -281,7 +282,6 @@ export const useLocalCartStore = create<CartState>()(
 /**
  * Language State for i18n
  */
-import type { Language } from "@/i18n";
 
 interface LanguageState {
   language: Language;

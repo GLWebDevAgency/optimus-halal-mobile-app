@@ -53,7 +53,7 @@ export default function SetNewPasswordScreen() {
   const colorScheme = useColorScheme();
   const { impact, notification } = useHaptics();
   const isDark = colorScheme === "dark";
-  const { token } = useLocalSearchParams<{ token: string }>();
+  useLocalSearchParams<{ token: string }>();
   const { t, isRTL } = useTranslation();
 
   const [newPassword, setNewPassword] = useState("");
@@ -137,7 +137,7 @@ export default function SetNewPasswordScreen() {
           },
         ]
       );
-    } catch (error) {
+    } catch (_error) {
       Alert.alert(t.errors.generic, t.auth.forgotPassword.errors.sendFailed);
     } finally {
       setIsLoading(false);

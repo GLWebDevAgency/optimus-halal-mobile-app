@@ -142,7 +142,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
           Initialisation trop longue
         </Text>
         <Text style={{ color: "#888", fontSize: 14, marginBottom: 16 }}>
-          L'app n'a pas pu s'initialiser en {INIT_TIMEOUT_MS / 1000}s.
+          L&apos;app n&apos;a pas pu s&apos;initialiser en {INIT_TIMEOUT_MS / 1000}s.
         </Text>
         <TouchableOpacity
           onPress={() => setShowDebug(true)}

@@ -9,7 +9,7 @@
  * - Instagram: Feedback visuel instantané
  */
 
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -17,7 +17,6 @@ import {
   StyleSheet,
   useColorScheme,
   Platform,
-  Dimensions,
 } from "react-native";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -32,20 +31,15 @@ import Animated, {
   withTiming,
   withDelay,
   interpolate,
-  interpolateColor,
   Easing,
   FadeIn,
-  FadeOut,
-  runOnJS,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
-import Svg, { Defs, RadialGradient, Stop, Circle, Rect } from "react-native-svg";
+import Svg, { Defs, RadialGradient, Stop, Circle } from "react-native-svg";
 
 import { colors } from "@/constants/theme";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
-const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
 interface TabConfig {
   name: string;

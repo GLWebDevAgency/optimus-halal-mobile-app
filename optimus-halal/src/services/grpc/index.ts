@@ -23,8 +23,8 @@
 // Configuration
 export * from './config';
 
-// Client & utilities
-export { grpcClient, tokenManager, GrpcApiError, GrpcStatus } from './client';
+// Client & utilities (GrpcStatus already exported from config)
+export { grpcClient, tokenManager, GrpcApiError } from './client';
 export type { GrpcError, GrpcMetadata, CallOptions } from './client';
 
 // Types (generated from proto)

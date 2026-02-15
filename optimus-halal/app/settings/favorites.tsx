@@ -3,7 +3,7 @@
  * Design basé sur le template HTML fourni (Light Mode par défaut)
  */
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,

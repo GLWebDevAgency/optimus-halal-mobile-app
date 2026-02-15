@@ -9,13 +9,12 @@
  * - Déconnexion
  */
 
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
-  Switch,
   Alert,
   useColorScheme,
 } from "react-native";
@@ -30,11 +29,10 @@ import Animated, {
   FadeInUp,
 } from "react-native-reanimated";
 
-import { Card, Avatar, Badge, IconButton } from "@/components/ui";
+import { Card, Avatar } from "@/components/ui";
 import { ProfileSkeleton } from "@/components/skeletons";
 import { useAuthStore, useFavoritesStore } from "@/store/apiStores";
 import { useThemeStore, usePreferencesStore } from "@/store";
-import { colors } from "@/constants/theme";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface MenuItemProps {
@@ -158,13 +156,10 @@ export default function ProfileScreen() {
 
   const { profile, logout } = useAuthStore();
   const { favorites } = useFavoritesStore();
-  const { theme, setTheme } = useThemeStore();
+  const { theme } = useThemeStore();
   const { certifications } = usePreferencesStore();
 
-  const [pushNotificationsEnabled, setPushNotificationsEnabled] = useState(true);
-
   const userName = useMemo(() => profile?.displayName || "Utilisateur", [profile]);
-  const userEmail = useMemo(() => profile?.email || "", [profile]);
 
   const stats = useMemo(
     () => ({
@@ -194,14 +189,6 @@ export default function ProfileScreen() {
     router.push("/settings/favorites" as any);
   }, []);
 
-  const handleToggleNotifications = useCallback(async (value: boolean) => {
-    impact();
-    setPushNotificationsEnabled(value);
-  }, []);
-
-  // Skeleton while profile data loads (placed after all hooks to respect Rules of Hooks)
-  if (!profile) return <ProfileSkeleton />;
-
   const handleLogout = useCallback(async () => {
     impact(ImpactFeedbackStyle.Medium);
     Alert.alert(
@@ -220,6 +207,9 @@ export default function ProfileScreen() {
       ]
     );
   }, [logout, t]);
+
+  // Skeleton while profile data loads (all hooks declared above)
+  if (!profile) return <ProfileSkeleton />;
 
   return (
     <View className="flex-1 bg-background-light dark:bg-background-dark">

@@ -95,12 +95,12 @@ export const productService = {
   },
 
   async getCategories(): Promise<{
-    categories: Array<{
+    categories: {
       id: string;
       name: string;
       parentId?: string | null;
       imageUrl?: string | null;
-    }>;
+    }[];
   }> {
     const categories = await apiClient.product.getCategories.query();
     return { categories: categories as any[] };

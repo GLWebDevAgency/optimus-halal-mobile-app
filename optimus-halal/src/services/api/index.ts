@@ -1,9 +1,23 @@
 /**
  * API Services Index - Enterprise-grade Mobile App
- * 
+ *
  * Central export for all API services
  * Netflix/Stripe/Shopify/Airbnb/Spotify standards
  */
+
+import { authService } from './auth.service';
+import { profileService } from './profile.service';
+import { scanService } from './scan.service';
+import { favoritesService } from './favorites.service';
+import { productService } from './product.service';
+import { cartService } from './cart.service';
+import { orderService } from './order.service';
+import { notificationService } from './notification.service';
+import { loyaltyService } from './loyalty.service';
+import { reportService } from './report.service';
+import { storeService } from './store.service';
+import { alertService } from './alert.service';
+import { globalStatsService } from './globalStats.service';
 
 // ============================================
 // CLIENT & CONFIGURATION
@@ -52,20 +66,6 @@ export type * from './types';
 // ============================================
 // CONVENIENCE OBJECT
 // ============================================
-
-import { authService } from './auth.service';
-import { profileService } from './profile.service';
-import { scanService } from './scan.service';
-import { favoritesService } from './favorites.service';
-import { productService } from './product.service';
-import { cartService } from './cart.service';
-import { orderService } from './order.service';
-import { notificationService } from './notification.service';
-import { loyaltyService } from './loyalty.service';
-import { reportService } from './report.service';
-import { storeService } from './store.service';
-import { alertService } from './alert.service';
-import { globalStatsService } from './globalStats.service';
 
 /**
  * All API services in a single object

@@ -5,7 +5,7 @@
  * Direct communication with Mobile-Service via gRPC-Web
  */
 
-import { grpcClient, GrpcApiError, GrpcStatus } from './client';
+import { grpcClient } from './client';
 import { SERVICES } from './types';
 import type {
   UserProfile,

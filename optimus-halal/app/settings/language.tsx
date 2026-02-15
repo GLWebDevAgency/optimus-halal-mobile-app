@@ -26,7 +26,7 @@ const LANGUAGES: { code: Language; native: string; flag: string }[] = [
 
 export default function LanguageScreen() {
   const { t, language, setLanguage } = useTranslation();
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
 
   const handleSelect = (lang: Language) => {
     setLanguage(lang);

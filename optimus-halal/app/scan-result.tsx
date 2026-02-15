@@ -40,8 +40,6 @@ import { useScanBarcode } from "@/hooks/useScan";
 import { useScanHistoryStore } from "@/store";
 import { useTranslation, useHaptics } from "@/hooks";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
 // ── Halal Status → UI Config ──────────────────────────────
 
 const HALAL_STATUS_CONFIG = {
@@ -236,10 +234,10 @@ export default function ScanResultScreen() {
             />
           </View>
           <Text className="text-lg font-bold text-slate-900 dark:text-white text-center">
-            Erreur d'analyse
+            Erreur d&apos;analyse
           </Text>
           <Text className="text-sm text-slate-500 dark:text-slate-400 text-center leading-relaxed">
-            Impossible d'analyser le code-barres. Vérifiez votre connexion
+            Impossible d&apos;analyser le code-barres. Vérifiez votre connexion
             internet et réessayez.
           </Text>
           <View className="flex-row gap-3 mt-4">
@@ -293,7 +291,7 @@ export default function ScanResultScreen() {
             Produit non trouvé
           </Text>
           <Text className="text-sm text-slate-500 dark:text-slate-400 text-center leading-relaxed">
-            Le code-barres {barcode} n'a pas été reconnu dans notre base de
+            Le code-barres {barcode} n&apos;a pas été reconnu dans notre base de
             données ni sur OpenFoodFacts.
           </Text>
           <TouchableOpacity
@@ -461,7 +459,7 @@ export default function ScanResultScreen() {
                     Score de Confiance
                   </Text>
                   <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Basé sur l'analyse des ingrédients et la base de données
+                    Basé sur l&apos;analyse des ingrédients et la base de données
                   </Text>
                 </View>
               </View>
@@ -579,7 +577,7 @@ export default function ScanResultScreen() {
               className="text-lg font-bold text-slate-900 dark:text-white mb-3"
               accessibilityRole="header"
             >
-              Source de l'analyse
+              Source de l&apos;analyse
             </Text>
             <Card variant="outlined" className="p-4">
               <View className="flex-row items-center gap-3">
@@ -852,7 +850,7 @@ export default function ScanResultScreen() {
                   Nouveau produit ajouté
                 </Text>
                 <Text className="text-sm text-blue-700 dark:text-blue-300/80 mt-0.5 leading-relaxed">
-                  Ce produit vient d'être ajouté à notre base de données grâce
+                  Ce produit vient d&apos;être ajouté à notre base de données grâce
                   à votre scan.
                 </Text>
               </View>

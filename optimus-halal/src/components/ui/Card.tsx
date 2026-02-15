@@ -5,7 +5,7 @@
  */
 
 import React from "react";
-import { View, ViewProps, TouchableOpacity, TouchableOpacityProps } from "react-native";
+import { View, ViewProps, TouchableOpacity } from "react-native";
 
 export interface CardProps extends Omit<ViewProps, 'onBlur' | 'onFocus'> {
   variant?: "elevated" | "outlined" | "filled";

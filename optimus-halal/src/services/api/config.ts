@@ -10,7 +10,6 @@
 // ============================================
 
 const isDevelopment = __DEV__;
-const isProduction = !__DEV__;
 
 // ============================================
 // API ENDPOINTS
@@ -18,9 +17,6 @@ const isProduction = !__DEV__;
 
 /** Development API base URL - Mobile BFF on Railway */
 const DEV_API_URL = 'https://mobile-bff-production-aefc.up.railway.app';
-
-/** Staging API base URL */
-const STAGING_API_URL = 'https://api-staging.optimus-halal.com';
 
 /** Production API base URL (same BFF for now) */
 const PROD_API_URL = 'https://mobile-bff-production-aefc.up.railway.app';

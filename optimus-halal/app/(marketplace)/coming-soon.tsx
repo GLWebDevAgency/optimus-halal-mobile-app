@@ -31,8 +31,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { colors } from "@/constants/theme";
-
 const WAITLIST_AVATARS = [
   "https://lh3.googleusercontent.com/aida-public/AB6AXuA4ovN9jYOXt22g2xyrUQerj1gvBMDUkGo-XFHAnonmyn_aDXxmVJoVnINp0eOLrzYsyJiOFxFHAm5DB3xxovgGbJ4r51BrbKest7aA5RSAWaf34JSbNPU2UD3HrKX0b2sscTejq3gY2z0A1xMikHMXEr389sXO6DD9_XQnRCgt7lEG0mYipI2pwdXjqhcIf8TO4JQQOj0w_c0GxyO8ezWjWcwZaKY84RCg0Q6NzSUfkdU4KmS_N4JMlFR8c-tri67J4nQwAizW_vix",
   "https://lh3.googleusercontent.com/aida-public/AB6AXuAG_GH3aBzJIXZIeNILJBWRe7Lt49NTDpcgByFLg-VDkn-PYPuAxGZjrs50m3P6NTywUw9YrGYOcvWo8PqxfFbCVLiasvNHvy-76HZ1KhL4rYl0oVf4qGVjbo2c4UhXs45DtuaPP5o78fugeErOopjPG8St_tcJhho4wzwBbPZ1rNA4iOkQExdauGvbB43G9i1UO9VU10-qFGpXXqMb5YU5H6QmmfVgBPeK7IiJJXLjZRi2fZz4uYaEwSOhwQdvKJXuf2Etil_VuEB-",

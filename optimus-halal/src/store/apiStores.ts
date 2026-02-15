@@ -12,9 +12,7 @@ import {
   initializeTokens,
   clearTokens,
   isAuthenticated,
-  setApiLanguage,
   safeApiCall,
-  OptimusApiError,
 } from "@/services/api";
 import { logger } from "@/lib/logger";
 import type * as ApiTypes from "@/services/api/types";

@@ -19,9 +19,8 @@ import {
   TextInput,
   StyleSheet,
   Dimensions,
-  I18nManager,
 } from "react-native";
-import { router, Link } from "expo-router";
+import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useHaptics } from "@/hooks";
@@ -36,12 +35,8 @@ import Animated, {
   withSequence,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
-import { BlurView } from "expo-blur";
-
 import { colors } from "@/constants/theme";
 import { useTranslation } from "@/hooks/useTranslation";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function ForgotPasswordScreen() {
   const insets = useSafeAreaInsets();
@@ -93,7 +88,7 @@ export default function ForgotPasswordScreen() {
         pathname: "/(auth)/reset-confirmation",
         params: { email: maskEmail(email) },
       });
-    } catch (error) {
+    } catch (_error) {
       setError(t.auth.forgotPassword.errors.sendFailed);
     } finally {
       setIsLoading(false);

@@ -33,10 +33,7 @@ import Animated, {
 } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 
-import { colors } from "@/constants/theme";
 import { useLocalCartStore } from "@/store";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 // Mock product data
 const PRODUCT_DATA = {
@@ -113,7 +110,7 @@ function CircularProgress({ score, grade }: { score: number; grade: string }) {
 }
 
 export default function ProductDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const { impact, notification } = useHaptics();
@@ -122,7 +119,7 @@ export default function ProductDetailScreen() {
   const { addItem, itemCount } = useLocalCartStore();
 
   const [quantity, setQuantity] = useState(1);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentImageIndex] = useState(0);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   const product = PRODUCT_DATA; // In real app, fetch based on id

@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import { safeApiCall, OptimusApiError } from '@/services/api';
 
 // ============================================
@@ -381,16 +382,13 @@ export function useInterval(callback: () => void, delay: number | null) {
 // USE REFRESH ON FOCUS HOOK
 // ============================================
 
-import { useEffect as useEffectRN } from 'react';
-import { AppState, AppStateStatus } from 'react-native';
-
 /**
  * Custom hook to refresh data when app comes to foreground
  */
 export function useRefreshOnFocus(refetch: () => void) {
   const hasFetched = useRef(false);
 
-  useEffectRN(() => {
+  useEffect(() => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active' && hasFetched.current) {
         refetch();

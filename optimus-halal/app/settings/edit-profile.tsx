@@ -26,12 +26,12 @@ import * as ImagePicker from "expo-image-picker";
 import { useAuthStore } from "@/store/apiStores";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
-import { PhoneInput, LocationPicker, validateFrenchPhone } from "@/components/ui";
-import { City, FRENCH_CITIES, findNearestCity } from "@/constants/locations";
+import { PhoneInput, LocationPicker } from "@/components/ui";
+import { City, FRENCH_CITIES } from "@/constants/locations";
 
 export default function EditProfileScreen() {
   const { profile, isLoading, error, updateProfile, fetchProfile, clearError } = useAuthStore();
-  const { colors, isDark } = useTheme();
+  const { isDark } = useTheme();
   const { t } = useTranslation();
 
   // Form state - initialized from profile
@@ -164,7 +164,7 @@ export default function EditProfileScreen() {
       } else {
         Alert.alert(t.common.error, error || "Impossible de sauvegarder les modifications.");
       }
-    } catch (err) {
+    } catch (_err) {
       Alert.alert(t.common.error, "Une erreur est survenue lors de la sauvegarde.");
     } finally {
       setIsSaving(false);

@@ -5,7 +5,7 @@
  * Redirige vers le catalog ou coming-soon selon le feature flag
  */
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -23,11 +23,9 @@ import Animated, {
   FadeIn,
   FadeInDown,
   FadeInRight,
-  SlideInRight,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { Card, Badge } from "@/components/ui";
 import { useFeatureFlagsStore, useLocalCartStore, useLocalAlertsStore } from "@/store";
 import { useTranslation } from "@/hooks/useTranslation";
 import { colors } from "@/constants/theme";
@@ -317,7 +315,7 @@ export default function MarketplaceTab() {
                 accessibilityHint="S'inscrire pour être notifié du lancement du marketplace"
               >
                 <MaterialIcons name="notifications-active" size={20} color="#0d1b12" />
-                <Text className="font-bold text-slate-900">Rejoindre la liste d'attente</Text>
+                <Text className="font-bold text-slate-900">Rejoindre la liste d&apos;attente</Text>
               </TouchableOpacity>
             </LinearGradient>
           </Animated.View>

@@ -390,7 +390,7 @@ export default function CheckoutScreen() {
                 Éthique & Halal Vérifié
               </Text>
               <Text className="text-xs text-[#4c9a66] dark:text-gray-400 mt-0.5">
-                Votre commande soutient des pratiques d'approvisionnement transparentes et éthiques.
+                Votre commande soutient des pratiques d&apos;approvisionnement transparentes et éthiques.
               </Text>
             </View>
           </LinearGradient>

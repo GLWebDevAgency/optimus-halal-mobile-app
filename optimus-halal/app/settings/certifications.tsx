@@ -538,7 +538,7 @@ export default function CertificationsScreen() {
                     lineHeight: 18,
                   }}
                 >
-                  Choisir vos certifications permet d'exclure automatiquement les produits qui ne correspondent pas à vos critères religieux ou éthiques lors du scan.
+                  Choisir vos certifications permet d&apos;exclure automatiquement les produits qui ne correspondent pas à vos critères religieux ou éthiques lors du scan.
                 </Text>
               </View>
             </View>

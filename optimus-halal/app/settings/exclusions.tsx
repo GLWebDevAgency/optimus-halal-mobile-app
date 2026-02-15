@@ -18,7 +18,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
-import Animated, { FadeIn, FadeInDown, FadeInUp, SlideInDown } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInDown, SlideInDown } from "react-native-reanimated";
 import { usePreferencesStore } from "@/store";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
@@ -186,8 +186,8 @@ const SEARCH_SUGGESTIONS = [
 ];
 
 export default function ExclusionsScreen() {
-  const { exclusions, toggleExclusion, setExclusions } = usePreferencesStore();
-  const { colors, isDark } = useTheme();
+  const { exclusions, toggleExclusion } = usePreferencesStore();
+  const { isDark } = useTheme();
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -271,7 +271,6 @@ export default function ExclusionsScreen() {
   // Render allergen grid item
   const renderAllergenGridItem = (allergen: Allergen) => {
     const selected = isSelected(allergen.id);
-    const iconColors = isDark ? allergen.iconColor.dark : allergen.iconColor.light;
     
     return (
       <TouchableOpacity
