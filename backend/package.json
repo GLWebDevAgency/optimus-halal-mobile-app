@@ -1,7 +1,7 @@
 {
   "name": "optimus-halal-backend",
   "version": "1.0.0",
-  "description": "Mobile BFF for Optimus Halal \u2014 Hono + tRPC + Drizzle",
+  "description": "Mobile BFF for Optimus Halal — Hono + tRPC + Drizzle",
   "type": "module",
   "scripts": {
     "dev": "tsx --env-file=.env watch src/index.ts",
@@ -12,7 +12,10 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "tsc && drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx --env-file=.env src/db/seeds/run.ts"
+    "db:seed": "tsx --env-file=.env src/db/seeds/run.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.0",
@@ -34,7 +37,8 @@
     "drizzle-kit": "^0.31.0",
     "tsc-alias": "^1.8.0",
     "tsx": "^4.19.0",
-    "typescript": "^5.9.0"
+    "typescript": "^5.9.0",
+    "vitest": "^4.0.18"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
