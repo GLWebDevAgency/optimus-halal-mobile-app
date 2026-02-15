@@ -393,45 +393,8 @@ interface FavoritesState {
   clearFavorites: () => void;
 }
 
-// Données initiales pour la démo (produits favoris par défaut)
-const DEFAULT_FAVORITES: FavoriteProduct[] = [
-  {
-    id: "1",
-    name: "Miel d'Acacia Bio",
-    brand: "Ruche d'Or",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDtxMnAlTfjVJBFwD6YetTmUam4oYp6PkDhy16DDP4FTjQCKDqwshRDyh27jtCc09KbmA9s9C-FStSP9p5yaxvM3Dh7F8N-sMZRrK67395MgUmMTSZnoRA-kQJYOhZuv128AMCBI8LfbPoEqgIaWlnZkmMfJ-KI3QYiP7VvtcO7jgAcV8zhs5GbddiZIObB10oLHdUKRyl8hWxrsMS0sn2fr2sCp9YZGVj9ItdWRu48Hxw_5uyihW2GQBDymNlccfZHM-vwm36xOZeJ",
-    status: "excellent",
-    category: "food",
-    addedAt: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    name: "Blancs de Poulet",
-    brand: "Volaille Française",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCW0gWt8LFaevg92ySgKmzP00hy5qihmtG1gs7FQsbq4VE873Sj24JWnxCfYNakX6BsUgk8_TundOWUUH48-7ds1ggH8JIaLAI20u-3OovoFy66BYwbytWRQEjIqfyU057Eq6_KXRRjhYKPNulXdyUXDTeWC3-tu2ec8dCHbcSsZFIUpSkJd_C-s6GZUxn0GEYWrPSFY0eq4hGfSPbs7WoAlh56KzvZdXLPAq2kRg0GcivKacHjlHbumucjYRdJE9BePZn1K1UX1kyW",
-    status: "bon",
-    category: "food",
-    addedAt: new Date().toISOString(),
-  },
-  {
-    id: "3",
-    name: "Huile d'Olive Vierge",
-    brand: "Bio Provence",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAJnrDBKWrspy7fdl5R7QyCwsom5KP71lD25JK3tzOrOdcjzSK2MRg7UIc6_5wvJGTwflPGI4DpktN9KvPUkQ5J5aB4p6yJ7iZ_Emz4LXJ-uVbDyyXonKrlx7R7MbeWC_DHGqzEE-alV2dLE7fNLlXE4mpSrijDWRyRuDMurX-ZYXyIKljubQ-vGzkIvAj7Pg59Qvc4pSCW1QiLKVlR63iqHTrhhGbSDWbq9tTdx-TLHdNPo1JLBwo5Wa3pSETiZK-oqoBwtFCJL-6j",
-    status: "excellent",
-    category: "food",
-    addedAt: new Date().toISOString(),
-  },
-  {
-    id: "4",
-    name: "Dattes Majhoul",
-    brand: "Délice d'Orient",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuB4m35jbV38n3NIkY8ZOHKsQAs_cnFj_jt55v4ZxSrpVIaY5ObsvVz0LcBa0CIoA-oUuB0T8VfU9HuP1T9ns7AdDd3fDXH4YynSEi3P6vmmbB8BE13265EV9Jk4jnZR4R0oHBvZXic6FRUnDcH2ZeRsdreMxemciz1VM8ImikGYMF5Q7FZ4SU9nXY1IteWJK5k8mi6wole88ZmjYnSp0F10GW9Z9HAfGqNHHNoomH2sU7o3O9RLZz3E6lEsZk1svGL1wcvuY6svibIW",
-    status: "moyen",
-    category: "food",
-    addedAt: new Date().toISOString(),
-  },
-];
+// Pas de données fictives — l'utilisateur construit sa liste en scannant
+const DEFAULT_FAVORITES: FavoriteProduct[] = [];
 
 export const useLocalFavoritesStore = create<FavoritesState>()(
   persist(

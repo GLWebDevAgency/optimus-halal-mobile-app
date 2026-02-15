@@ -156,12 +156,16 @@ export default function ScanResultScreen() {
     if (!product) return;
     try {
       await Share.share({
-        message: `${product.name} par ${product.brand ?? "?"} — ${t.scanResult[statusConfig.labelKey]}. Vérifié avec Optimus Halal.`,
+        message: `${product.name} — ${product.brand ?? "?"} — ${t.scanResult[statusConfig.labelKey]}. ${t.scanResult.verifiedWith ?? "Optimus Halal"}`,
       });
-    } catch (error) {
-      console.error(error);
+    } catch (error: unknown) {
+      // iOS rejects when user dismisses share sheet — not an error
+      if (error instanceof Error && error.message.includes("User did not share")) {
+        return;
+      }
+      console.error("[ScanResult] Share failed:", error);
     }
-  }, [product, statusConfig]);
+  }, [product, statusConfig, impact, t]);
 
   const handleToggleFavorite = useCallback(() => {
     impact(ImpactFeedbackStyle.Medium);
@@ -345,125 +349,43 @@ export default function ScanResultScreen() {
       <ScrollView
         contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
+        style={{ marginTop: insets.top + 52 }}
       >
-        {/* Product Image */}
+        {/* ══ HERO STATUS BANNER ══ Visible en 0.5s — Le verdict halal d'abord */}
         <Animated.View
-          entering={FadeIn.delay(100).duration(500)}
-          className="relative w-full h-[360px] bg-slate-100 dark:bg-slate-800"
-          style={{ marginTop: insets.top + 52 }}
+          entering={FadeIn.duration(400)}
+          className="px-4 pt-4 pb-3"
+          style={{
+            backgroundColor: isDark
+              ? statusConfig.bg.dark
+              : statusConfig.bg.light,
+          }}
+          accessibilityRole="summary"
+          accessibilityLabel={`${t.scanResult[statusConfig.labelKey]}, ${confidencePercent}% ${t.scanResult.confidence}`}
         >
-          {product.imageUrl ? (
-            <Image
-              source={{ uri: product.imageUrl }}
-              className="absolute inset-0 w-full h-full opacity-90 dark:opacity-75"
-              contentFit="cover"
-              transition={200}
-              accessible={false}
-            />
-          ) : (
-            <View className="absolute inset-0 items-center justify-center">
+          <View className="items-center gap-2">
+            <View
+              className="h-16 w-16 rounded-full items-center justify-center"
+              style={{
+                backgroundColor: `${statusConfig.color}20`,
+                borderWidth: 3,
+                borderColor: statusConfig.color,
+              }}
+            >
               <MaterialIcons
-                name="image-not-supported"
-                size={64}
-                color={isDark ? "#334155" : "#cbd5e1"}
+                name={statusConfig.icon}
+                size={32}
+                color={statusConfig.color}
               />
             </View>
-          )}
-          <LinearGradient
-            colors={[
-              "transparent",
-              isDark ? "rgba(17,33,22,0.9)" : "rgba(0,0,0,0.6)",
-            ]}
-            className="absolute inset-0"
-          />
-        </Animated.View>
-
-        {/* Main Info Card */}
-        <Animated.View
-          entering={SlideInUp.delay(200).duration(600)}
-          className="relative z-10 -mt-10 px-4"
-        >
-          <Card variant="elevated" className="p-5">
-            {/* Halal Status Badge */}
-            <View className="flex-row items-center justify-between mb-4">
-              <View
-                className="flex-row items-center gap-2 rounded-full px-4 py-1.5 border"
-                style={{
-                  backgroundColor: isDark
-                    ? statusConfig.bg.dark
-                    : statusConfig.bg.light,
-                  borderColor: isDark
-                    ? statusConfig.border.dark
-                    : statusConfig.border.light,
-                }}
-              >
-                <MaterialIcons
-                  name={statusConfig.icon}
-                  size={20}
-                  color={statusConfig.color}
-                />
-                <Text
-                  className="text-sm font-bold tracking-wide uppercase"
-                  style={{ color: statusConfig.color }}
-                >
-                  {t.scanResult[statusConfig.labelKey]}
-                </Text>
-              </View>
-              <View className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded border border-slate-200 dark:border-slate-700">
-                <Text className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                  {confidencePercent}% {t.scanResult.confidence}
-                </Text>
-              </View>
-            </View>
-
-            {/* Product Name */}
-            <View className="mb-4">
-              <Text
-                className="text-2xl font-bold text-slate-900 dark:text-white leading-tight mb-1"
-                accessibilityRole="header"
-              >
-                {product.name}
-              </Text>
-              {product.brand && (
-                <View className="flex-row items-center gap-1">
-                  <Text className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                    {t.scanResult.brand}:
-                  </Text>
-                  <Text className="text-sm font-semibold text-slate-900 dark:text-gray-200">
-                    {product.brand}
-                  </Text>
-                </View>
-              )}
-              {product.category && (
-                <Text className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                  {product.category}
-                </Text>
-              )}
-            </View>
-
-            {/* Confidence Score Visual */}
-            <View className="bg-background-light dark:bg-background-dark rounded-xl p-4 border border-transparent dark:border-slate-700">
-              <View className="flex-row items-center gap-3">
-                <View
-                  className="relative h-14 w-14 items-center justify-center rounded-full border-4 bg-white dark:bg-surface-dark"
-                  style={{ borderColor: statusConfig.color }}
-                >
-                  <Text className="text-lg font-bold text-slate-900 dark:text-white">
-                    {confidencePercent}
-                  </Text>
-                </View>
-                <View className="flex-1">
-                  <Text className="text-sm font-bold text-slate-900 dark:text-gray-200 uppercase tracking-wider">
-                    {t.scanResult.confidenceScore}
-                  </Text>
-                  <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    {t.scanResult.confidenceScoreDesc}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Confidence Bar */}
-              <View className="mt-3 h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+            <Text
+              className="text-xl font-black tracking-wider uppercase"
+              style={{ color: statusConfig.color }}
+            >
+              {t.scanResult[statusConfig.labelKey]}
+            </Text>
+            <View className="flex-row items-center gap-2">
+              <View className="h-1.5 w-20 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
                 <View
                   className="h-full rounded-full"
                   style={{
@@ -472,6 +394,99 @@ export default function ScanResultScreen() {
                   }}
                 />
               </View>
+              <Text className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                {confidencePercent}% {t.scanResult.confidence}
+              </Text>
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* ══ Product Info — Compact: image thumbnail + name + brand ══ */}
+        <Animated.View
+          entering={FadeInDown.delay(100).duration(500)}
+          className="px-4 pt-4"
+        >
+          <Card variant="elevated" className="p-4">
+            <View className="flex-row gap-4">
+              {/* Product Thumbnail */}
+              <View className="w-20 h-20 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                {product.imageUrl ? (
+                  <Image
+                    source={{ uri: product.imageUrl }}
+                    className="w-full h-full"
+                    contentFit="cover"
+                    transition={200}
+                    accessibilityLabel={product.name}
+                  />
+                ) : (
+                  <View className="w-full h-full items-center justify-center">
+                    <MaterialIcons
+                      name="image-not-supported"
+                      size={28}
+                      color={isDark ? "#334155" : "#cbd5e1"}
+                    />
+                  </View>
+                )}
+              </View>
+
+              {/* Product Details */}
+              <View className="flex-1 justify-center">
+                <Text
+                  className="text-lg font-bold text-slate-900 dark:text-white leading-tight"
+                  accessibilityRole="header"
+                  numberOfLines={2}
+                >
+                  {product.name}
+                </Text>
+                {product.brand && (
+                  <Text className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">
+                    {product.brand}
+                  </Text>
+                )}
+                {product.category && (
+                  <Text className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                    {product.category}
+                  </Text>
+                )}
+              </View>
+            </View>
+          </Card>
+        </Animated.View>
+
+        {/* ══ Confidence Score Detail ══ */}
+        <Animated.View
+          entering={FadeInDown.delay(200).duration(500)}
+          className="px-4 mt-4"
+        >
+          <Card variant="outlined" className="p-4">
+            <View className="flex-row items-center gap-3">
+              <View
+                className="relative h-14 w-14 items-center justify-center rounded-full border-4 bg-white dark:bg-surface-dark"
+                style={{ borderColor: statusConfig.color }}
+              >
+                <Text className="text-lg font-bold text-slate-900 dark:text-white">
+                  {confidencePercent}
+                </Text>
+              </View>
+              <View className="flex-1">
+                <Text className="text-sm font-bold text-slate-900 dark:text-gray-200 uppercase tracking-wider">
+                  {t.scanResult.confidenceScore}
+                </Text>
+                <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  {t.scanResult.confidenceScoreDesc}
+                </Text>
+              </View>
+            </View>
+
+            {/* Confidence Bar */}
+            <View className="mt-3 h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+              <View
+                className="h-full rounded-full"
+                style={{
+                  width: `${confidencePercent}%`,
+                  backgroundColor: statusConfig.color,
+                }}
+              />
             </View>
           </Card>
         </Animated.View>
@@ -734,7 +749,7 @@ export default function ScanResultScreen() {
                     {offExtras.nutriscoreGrade}
                   </Text>
                   <Text className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
-                    Nutri-Score
+                    {t.scanResult.nutriScore ?? "Nutri-Score"}
                   </Text>
                 </Card>
               )}
@@ -749,7 +764,7 @@ export default function ScanResultScreen() {
                     {offExtras.novaGroup}
                   </Text>
                   <Text className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
-                    NOVA
+                    {t.scanResult.novaGroup ?? "NOVA"}
                   </Text>
                 </Card>
               )}
@@ -764,7 +779,7 @@ export default function ScanResultScreen() {
                     {offExtras.ecoscoreGrade}
                   </Text>
                   <Text className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
-                    Éco-Score
+                    {t.scanResult.ecoScore ?? "Éco-Score"}
                   </Text>
                 </Card>
               )}

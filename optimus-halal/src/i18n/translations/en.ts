@@ -68,6 +68,15 @@ export const en: TranslationKeys = {
       history: "History",
       historySub: "My scans",
     },
+    alertsSection: "Alerts & Safety",
+    alertsSeeAll: "All alerts",
+    noAlerts: "No active alerts",
+    communityNews: "Community News",
+    readArticle: "Read",
+    readOnSource: "Read on source",
+    noArticles: "No articles yet",
+    partnerBadge: "Partner",
+    guideBadge: "Guide",
     featured: "Featured",
     viewAll: "View all",
     favorites: "My favorites",
@@ -327,6 +336,7 @@ export const en: TranslationKeys = {
     history: "History",
     flash: "Flash",
     switchCamera: "Switch camera",
+    galleryComingSoon: "Gallery barcode detection coming soon.",
   },
 
   // Scan Result
@@ -380,6 +390,10 @@ export const en: TranslationKeys = {
     newProductAdded: "New product added",
     newProductAddedDesc: "This product was recently added. Data will be enriched over time.",
     whereToBuy: "Where to buy?",
+    verifiedWith: "Verified with Optimus Halal",
+    nutriScore: "Nutri-Score",
+    novaGroup: "NOVA",
+    ecoScore: "Eco-Score",
   },
 
   // Map

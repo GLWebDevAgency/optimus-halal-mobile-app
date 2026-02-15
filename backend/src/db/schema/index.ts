@@ -9,3 +9,4 @@ export * from "./loyalty.js";
 export * from "./orders.js";
 export * from "./boycott.js";
 export * from "./certifiers.js";
+export * from "./articles.js";

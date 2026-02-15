@@ -43,7 +43,7 @@ export interface FeatureFlags {
 }
 
 export const defaultFeatureFlags: FeatureFlags = {
-  marketplaceEnabled: true, // Activé pour le développement
+  marketplaceEnabled: false, // Désactivé — pas de vrais produits, Coming Soon par défaut
   paymentsEnabled: false,
   offlineMode: true,
   pushNotifications: true,

@@ -51,7 +51,7 @@ const SCAN_FRAME_WIDTH = 320;
 const SCAN_FRAME_HEIGHT = 288;
 const CORNER_SIZE = 48;
 const CORNER_THICKNESS = 4;
-const PRIMARY_COLOR = "#2bee6c";
+const PRIMARY_COLOR = "#1de560";
 
 export default function ScannerScreen() {
   const insets = useSafeAreaInsets();
@@ -146,32 +146,7 @@ export default function ScannerScreen() {
     router.back();
   }, []);
 
-  const handleOpenGallery = useCallback(async () => {
-    impact();
-    
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) {
-      Alert.alert(t.scanner.noPermission, t.scanner.cameraPermissionDesc);
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 1,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      // Simulate barcode detection from image
-      simulateScan("3760020507350");
-    }
-  }, []);
-
-  const handleOpenHistory = useCallback(async () => {
-    impact();
-    router.push("/scan-result" as any);
-  }, []);
-
-  const simulateScan = useCallback(
+  const processScan = useCallback(
     async (barcode: string) => {
       if (scanned) return;
 
@@ -179,27 +154,57 @@ export default function ScannerScreen() {
       setIsScanning(false);
       notification();
 
-      // Navigate to scan result with barcode
       router.push({
         pathname: "/scan-result",
         params: { barcode },
       });
 
-      // Reset after navigation
       setTimeout(() => {
         setScanned(false);
         setIsScanning(true);
       }, 2000);
     },
-    [scanned]
+    [scanned, notification]
   );
+
+  const handleOpenGallery = useCallback(async () => {
+    impact();
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert(t.scanner.noPermission, t.scanner.cameraPermissionDesc);
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 1,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        if (__DEV__) {
+          processScan("3760020507350");
+          return;
+        }
+        Alert.alert(t.scanner.title, t.scanner.galleryComingSoon);
+      }
+    } catch (error) {
+      console.error("[Scanner] Gallery error:", error);
+      Alert.alert(t.scanner.noPermission, t.scanner.cameraPermissionDesc);
+    }
+  }, [processScan, impact, t]);
+
+  const handleOpenHistory = useCallback(async () => {
+    impact();
+    router.push("/scan-result" as any);
+  }, []);
 
   const handleBarcodeScanned = useCallback(
     ({ data, type }: { data: string; type: string }) => {
       if (scanned || !isScanning) return;
-      simulateScan(data);
+      processScan(data);
     },
-    [scanned, isScanning, simulateScan]
+    [scanned, isScanning, processScan]
   );
 
   const handleCapture = useCallback(async () => {
@@ -209,9 +214,14 @@ export default function ScannerScreen() {
       withSpring(1, { damping: 12, stiffness: 200 })
     );
     impact(ImpactFeedbackStyle.Heavy);
-    // Simulate scanning a product
-    simulateScan("3760020507350");
-  }, [simulateScan]);
+
+    if (__DEV__) {
+      processScan("3760020507350");
+      return;
+    }
+    // Production: auto-scan via onBarcodeScanned, bouton = feedback haptique
+    notification();
+  }, [processScan, notification, impact]);
 
   // Permission not loaded yet
   if (!permission) {
@@ -474,7 +484,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "rgba(43, 238, 108, 0.15)",
+    backgroundColor: "rgba(29, 229, 96, 0.15)",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -608,7 +618,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   headerButtonActive: {
-    backgroundColor: "rgba(43, 238, 108, 0.2)",
+    backgroundColor: "rgba(29, 229, 96, 0.2)",
   },
   titleBadge: {
     flexDirection: "row",
