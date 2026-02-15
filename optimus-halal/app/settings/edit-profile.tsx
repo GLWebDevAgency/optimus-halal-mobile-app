@@ -23,16 +23,22 @@ import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown, SlideInDown } from "react-native-reanimated";
 import * as ImagePicker from "expo-image-picker";
-import { useAuthStore } from "@/store/apiStores";
+import { useMe } from "@/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { PhoneInput, LocationPicker } from "@/components/ui";
 import { City, FRENCH_CITIES } from "@/constants/locations";
 
 export default function EditProfileScreen() {
-  const { profile, isLoading, error, updateProfile, fetchProfile, clearError } = useAuthStore();
   const { isDark } = useTheme();
   const { t } = useTranslation();
+  const utils = trpc.useUtils();
+  const meQuery = useMe();
+  const profile = meQuery.data ?? null;
+  const updateMutation = trpc.profile.updateProfile.useMutation({
+    onSuccess: () => utils.auth.me.invalidate(),
+  });
 
   // Form state - initialized from profile
   const [displayName, setDisplayName] = useState("");
@@ -65,12 +71,7 @@ export default function EditProfileScreen() {
     }
   }, [profile, isInitialized]);
 
-  // Fetch profile on mount if not loaded
-  useEffect(() => {
-    if (!profile) {
-      fetchProfile();
-    }
-  }, [profile, fetchProfile]);
+  // useMe() auto-fetches on mount — no manual fetch needed
 
   // Check if form has changes
   const hasChanges = useMemo(() => {
@@ -138,7 +139,7 @@ export default function EditProfileScreen() {
     }
   }, []);
 
-  // Handle save - calls real API
+  // Handle save - calls tRPC mutation
   const handleSave = useCallback(async () => {
     if (!hasChanges) {
       safeGoBack();
@@ -146,10 +147,9 @@ export default function EditProfileScreen() {
     }
 
     setIsSaving(true);
-    clearError();
 
     try {
-      const success = await updateProfile({
+      await updateMutation.mutateAsync({
         displayName: displayName || undefined,
         phoneNumber: fullPhoneNumber || undefined,
         bio: bio || undefined,
@@ -157,19 +157,15 @@ export default function EditProfileScreen() {
         city: selectedCity?.name || undefined,
       });
 
-      if (success) {
-        Alert.alert(t.common.success, t.editProfile.saved, [
-          { text: "OK", onPress: safeGoBack }
-        ]);
-      } else {
-        Alert.alert(t.common.error, error || t.editProfile.saveFailed);
-      }
-    } catch (_err) {
+      Alert.alert(t.common.success, t.editProfile.saved, [
+        { text: "OK", onPress: safeGoBack }
+      ]);
+    } catch {
       Alert.alert(t.common.error, t.editProfile.saveError);
     } finally {
       setIsSaving(false);
     }
-  }, [hasChanges, displayName, fullPhoneNumber, bio, avatarUrl, selectedCity, updateProfile, error, clearError, t, safeGoBack]);
+  }, [hasChanges, displayName, fullPhoneNumber, bio, avatarUrl, selectedCity, updateMutation, t, safeGoBack]);
 
   // Render input field
   const renderInputField = (
@@ -249,7 +245,7 @@ export default function EditProfileScreen() {
   };
 
   // Show loading skeleton while fetching profile
-  if (isLoading && !profile) {
+  if (meQuery.isLoading) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background, alignItems: "center", justifyContent: "center" }}>
         <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
@@ -260,30 +256,30 @@ export default function EditProfileScreen() {
   }
 
   // Show error state if profile failed to load
-  if (error && !profile) {
+  if (meQuery.isError && !profile) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background, alignItems: "center", justifyContent: "center", padding: 20 }}>
         <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
         <MaterialIcons name="error-outline" size={48} color="#ef4444" style={{ marginBottom: 16 }} />
-        <Text style={{ 
-          fontSize: 18, 
-          fontWeight: "700", 
+        <Text style={{
+          fontSize: 18,
+          fontWeight: "700",
           color: themeColors.textPrimary,
           textAlign: "center",
-          marginBottom: 8 
+          marginBottom: 8
         }}>
           {t.errors.generic}
         </Text>
-        <Text style={{ 
-          fontSize: 14, 
+        <Text style={{
+          fontSize: 14,
           color: themeColors.textSecondary,
           textAlign: "center",
           marginBottom: 24
         }}>
-          {error}
+          {meQuery.error?.message ?? t.editProfile.saveFailed}
         </Text>
         <TouchableOpacity
-          onPress={() => fetchProfile()}
+          onPress={() => meQuery.refetch()}
           style={{
             backgroundColor: themeColors.primary,
             paddingHorizontal: 24,

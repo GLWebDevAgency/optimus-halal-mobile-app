@@ -31,7 +31,7 @@ export const productRouter = router({
   search: publicProcedure
     .input(
       z.object({
-        query: z.string().min(1).max(200),
+        query: z.string().max(200).optional(),
         category: z.string().optional(),
         halalStatus: z.enum(["halal", "haram", "doubtful", "unknown"]).optional(),
         limit: z.number().min(1).max(100).default(20),
@@ -39,13 +39,17 @@ export const productRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      const q = escapeLike(input.query);
-      const conditions = [
-        or(
-          ilike(products.name, `%${q}%`),
-          ilike(products.brand, `%${q}%`)
-        ),
-      ];
+      const conditions = [];
+
+      if (input.query) {
+        const q = escapeLike(input.query);
+        conditions.push(
+          or(
+            ilike(products.name, `%${q}%`),
+            ilike(products.brand, `%${q}%`)
+          )
+        );
+      }
 
       if (input.halalStatus) {
         conditions.push(eq(products.halalStatus, input.halalStatus));
@@ -55,10 +59,14 @@ export const productRouter = router({
         conditions.push(eq(products.category, input.category));
       }
 
+      const where = conditions.length > 0
+        ? sql`${sql.join(conditions, sql` AND `)}`
+        : undefined;
+
       const items = await ctx.db
         .select()
         .from(products)
-        .where(sql`${sql.join(conditions, sql` AND `)}`)
+        .where(where)
         .orderBy(desc(products.updatedAt))
         .limit(input.limit)
         .offset(input.offset);
@@ -66,7 +74,7 @@ export const productRouter = router({
       const [{ count }] = await ctx.db
         .select({ count: sql<number>`count(*)::int` })
         .from(products)
-        .where(sql`${sql.join(conditions, sql` AND `)}`);
+        .where(where);
 
       return { items, total: count };
     }),

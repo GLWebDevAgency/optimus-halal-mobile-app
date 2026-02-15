@@ -5,7 +5,7 @@
  * Redirige vers le catalog ou coming-soon selon le feature flag
  */
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -26,57 +26,20 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { useFeatureFlagsStore, useLocalCartStore, useLocalAlertsStore } from "@/store";
+import { useFeatureFlagsStore, useLocalCartStore } from "@/store";
 import { useTranslation } from "@/hooks/useTranslation";
+import { trpc } from "@/lib/trpc";
 import { colors } from "@/constants/theme";
 
 interface Product {
   id: string;
   name: string;
-  brand: string;
-  price: number;
-  originalPrice?: number;
-  image: string;
-  rating: number;
-  reviewCount: number;
-  badges: string[];
-  isNew?: boolean;
+  brand: string | null;
+  price: number | null;
+  image: string | null;
+  halalStatus: string;
+  certifierName: string | null;
 }
-
-const FEATURED_PRODUCTS: Product[] = [
-  {
-    id: "1",
-    name: "Huile d'Olive Bio Extra Vierge",
-    brand: "Al-Baraka",
-    price: 12.99,
-    originalPrice: 15.99,
-    image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
-    rating: 4.8,
-    reviewCount: 234,
-    badges: ["Halal", "Bio", "Premium"],
-    isNew: true,
-  },
-  {
-    id: "2",
-    name: "Miel de Sidr du Yémen",
-    brand: "Hadhramout",
-    price: 45.00,
-    image: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400",
-    rating: 4.9,
-    reviewCount: 156,
-    badges: ["Halal", "Premium", "Authentique"],
-  },
-  {
-    id: "3",
-    name: "Dattes Medjool Premium",
-    brand: "Jordan Valley",
-    price: 18.50,
-    image: "https://images.unsplash.com/photo-1593085512500-5d55148d6f0d?w=400",
-    rating: 4.7,
-    reviewCount: 89,
-    badges: ["Halal", "Bio"],
-  },
-];
 
 const CATEGORIES = [
   { id: "all" as const, icon: "apps" as const },
@@ -84,6 +47,13 @@ const CATEGORIES = [
   { id: "cosmetics" as const, icon: "spa" as const },
   { id: "supplements" as const, icon: "medication" as const },
 ];
+
+const HALAL_STATUS_COLOR: Record<string, string> = {
+  halal: "#16a34a",
+  doubtful: "#d97706",
+  haram: "#dc2626",
+  unknown: "#6b7280",
+};
 
 const ProductCard = React.memo(function ProductCard({ product, index }: { product: Product; index: number }) {
   const colorScheme = useColorScheme();
@@ -95,17 +65,19 @@ const ProductCard = React.memo(function ProductCard({ product, index }: { produc
   const handlePress = useCallback(() => {
     impact();
     router.push(`/(marketplace)/product/${product.id}` as any);
-  }, [product.id]);
+  }, [product.id, impact]);
 
   const handleAddToCart = useCallback(() => {
     notification();
     addItem({
       productId: product.id,
       name: product.name,
-      price: product.price,
-      image: product.image,
+      price: product.price ?? 0,
+      image: product.image ?? "",
     });
-  }, [product, addItem]);
+  }, [product, addItem, notification]);
+
+  const statusColor = HALAL_STATUS_COLOR[product.halalStatus] ?? "#6b7280";
 
   return (
     <Animated.View
@@ -116,7 +88,7 @@ const ProductCard = React.memo(function ProductCard({ product, index }: { produc
         onPress={handlePress}
         activeOpacity={0.8}
         accessibilityRole="button"
-        accessibilityLabel={`${product.name}, ${product.brand}, ${product.price.toFixed(2)} euros, note ${product.rating}`}
+        accessibilityLabel={`${product.name}, ${product.brand ?? ""}, ${product.halalStatus}`}
         className="bg-white dark:bg-surface-dark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700/50"
         style={{
           shadowColor: "#000",
@@ -127,38 +99,36 @@ const ProductCard = React.memo(function ProductCard({ product, index }: { produc
         }}
       >
         <View className="relative">
-          <Image
-            source={{ uri: product.image }}
-            className="w-full h-32"
-            contentFit="cover"
-            transition={200}
-            accessibilityLabel={`Photo de ${product.name}`}
-          />
-          {product.isNew && (
-            <View className="absolute top-2 left-2">
-              <LinearGradient
-                colors={[colors.primary.DEFAULT, colors.primary[700]]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                className="px-2 py-1 rounded-full"
-              >
-                <Text className="text-[10px] font-bold text-white">{t.home.newBadge.toUpperCase()}</Text>
-              </LinearGradient>
+          {product.image ? (
+            <Image
+              source={{ uri: product.image }}
+              className="w-full h-32"
+              contentFit="cover"
+              transition={200}
+              accessibilityLabel={`Photo de ${product.name}`}
+            />
+          ) : (
+            <View className="w-full h-32 bg-slate-100 dark:bg-slate-800 items-center justify-center">
+              <MaterialIcons name="inventory-2" size={32} color={isDark ? "#475569" : "#94a3b8"} />
             </View>
           )}
-          {product.originalPrice && (
-            <View className="absolute top-2 right-2 bg-red-500 px-2 py-1 rounded-full">
-              <Text className="text-[10px] font-bold text-white">
-                -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
-              </Text>
-            </View>
-          )}
+          {/* Halal status badge */}
+          <View
+            className="absolute top-2 left-2 px-2 py-1 rounded-full"
+            style={{ backgroundColor: statusColor }}
+          >
+            <Text className="text-[10px] font-bold text-white uppercase">
+              {product.halalStatus}
+            </Text>
+          </View>
         </View>
 
         <View className="p-3">
-          <Text className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-            {product.brand}
-          </Text>
+          {product.brand && (
+            <Text className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+              {product.brand}
+            </Text>
+          )}
           <Text
             className="text-sm font-semibold text-slate-900 dark:text-white mb-2"
             numberOfLines={2}
@@ -166,27 +136,25 @@ const ProductCard = React.memo(function ProductCard({ product, index }: { produc
             {product.name}
           </Text>
 
-          <View className="flex-row items-center mb-2">
-            <MaterialIcons name="star" size={14} color={colors.gold.DEFAULT} />
-            <Text className="text-xs font-medium text-slate-700 dark:text-slate-300 ml-1">
-              {product.rating}
-            </Text>
-            <Text className="text-xs text-slate-400 dark:text-slate-500 ml-1">
-              ({product.reviewCount})
-            </Text>
-          </View>
+          {product.certifierName && (
+            <View className="flex-row items-center mb-2">
+              <MaterialIcons name="verified" size={14} color={colors.primary.DEFAULT} />
+              <Text className="text-xs text-slate-500 dark:text-slate-400 ml-1" numberOfLines={1}>
+                {product.certifierName}
+              </Text>
+            </View>
+          )}
 
           <View className="flex-row items-center justify-between">
-            <View className="flex-row items-baseline">
+            {product.price != null ? (
               <Text className="text-lg font-bold text-primary dark:text-primary">
                 {product.price.toFixed(2)}€
               </Text>
-              {product.originalPrice && (
-                <Text className="text-xs text-slate-400 line-through ml-1">
-                  {product.originalPrice.toFixed(2)}€
-                </Text>
-              )}
-            </View>
+            ) : (
+              <Text className="text-xs text-slate-400 dark:text-slate-500">
+                Prix N/A
+              </Text>
+            )}
             <TouchableOpacity
               onPress={handleAddToCart}
               className="bg-primary/10 dark:bg-primary/20 p-2 rounded-full"
@@ -210,16 +178,43 @@ export default function MarketplaceTab() {
   const isDark = colorScheme === "dark";
   const { t } = useTranslation();
   const { flags } = useFeatureFlagsStore();
-  const { unreadCount } = useLocalAlertsStore();
   const { itemCount } = useLocalCartStore();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("all");
 
+  const unreadQuery = trpc.notification.getUnreadCount.useQuery(undefined, {
+    staleTime: 30_000,
+  });
+  const unreadCount = unreadQuery.data?.count ?? 0;
+
+  const productsQuery = trpc.product.search.useQuery(
+    {
+      category: selectedCategory === "all" ? undefined : selectedCategory,
+      halalStatus: "halal" as const,
+      limit: 10,
+    },
+    { staleTime: 60_000 },
+  );
+
+  const products = useMemo<Product[]>(
+    () =>
+      (productsQuery.data?.items ?? []).map((p) => ({
+        id: p.id,
+        name: p.name,
+        brand: p.brand,
+        price: p.price,
+        image: p.imageUrl,
+        halalStatus: p.halalStatus,
+        certifierName: p.certifierName,
+      })),
+    [productsQuery.data?.items],
+  );
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await Promise.all([productsQuery.refetch(), unreadQuery.refetch()]);
     setRefreshing(false);
-  }, []);
+  }, [productsQuery, unreadQuery]);
 
   const handleCategoryPress = useCallback((categoryId: string) => {
     impact();
@@ -456,15 +451,28 @@ export default function MarketplaceTab() {
             </TouchableOpacity>
           </View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingLeft: 20, paddingRight: 8 }}
-          >
-            {FEATURED_PRODUCTS.map((product, index) => (
-              <ProductCard key={product.id} product={product} index={index} />
-            ))}
-          </ScrollView>
+          {productsQuery.isLoading ? (
+            <View className="items-center justify-center py-8">
+              <RefreshControl refreshing={true} tintColor={colors.primary.DEFAULT} />
+            </View>
+          ) : products.length === 0 ? (
+            <View className="items-center justify-center py-8 px-5">
+              <MaterialIcons name="inventory-2" size={40} color={isDark ? "#475569" : "#94a3b8"} />
+              <Text className="text-sm text-slate-500 dark:text-slate-400 mt-3 text-center">
+                Aucun produit trouvé
+              </Text>
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingLeft: 20, paddingRight: 8 }}
+            >
+              {products.map((product, index) => (
+                <ProductCard key={product.id} product={product} index={index} />
+              ))}
+            </ScrollView>
+          )}
         </Animated.View>
 
         <Animated.View
