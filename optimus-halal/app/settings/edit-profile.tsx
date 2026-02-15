@@ -113,7 +113,7 @@ export default function EditProfileScreen() {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (!permissionResult.granted) {
-      Alert.alert("Permission requise", "Veuillez autoriser l'accès à la galerie pour changer votre photo.");
+      Alert.alert(t.editProfile.permissionRequired, t.editProfile.galleryPermission);
       return;
     }
 
@@ -162,10 +162,10 @@ export default function EditProfileScreen() {
           { text: "OK", onPress: safeGoBack }
         ]);
       } else {
-        Alert.alert(t.common.error, error || "Impossible de sauvegarder les modifications.");
+        Alert.alert(t.common.error, error || t.editProfile.saveFailed);
       }
     } catch (_err) {
-      Alert.alert(t.common.error, "Une erreur est survenue lors de la sauvegarde.");
+      Alert.alert(t.common.error, t.editProfile.saveError);
     } finally {
       setIsSaving(false);
     }
@@ -205,7 +205,7 @@ export default function EditProfileScreen() {
                 color: themeColors.textSecondary,
               }}
             >
-              Optionnel
+              {t.editProfile.optional}
             </Text>
           )}
         </View>
@@ -254,7 +254,7 @@ export default function EditProfileScreen() {
       <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background, alignItems: "center", justifyContent: "center" }}>
         <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
         <ActivityIndicator size="large" color={themeColors.primary} />
-        <Text style={{ marginTop: 16, color: themeColors.textSecondary }}>Chargement du profil...</Text>
+        <Text style={{ marginTop: 16, color: themeColors.textSecondary }}>{t.editProfile.loadingProfile}</Text>
       </SafeAreaView>
     );
   }
@@ -291,8 +291,8 @@ export default function EditProfileScreen() {
             borderRadius: 12,
           }}
           accessibilityRole="button"
-          accessibilityLabel="Réessayer"
-          accessibilityHint="Recharger le profil"
+          accessibilityLabel={t.common.retry}
+          accessibilityHint={t.editProfile.retryHint}
         >
           <Text style={{ color: "#0d1b13", fontWeight: "600" }}>{t.common.retry}</Text>
         </TouchableOpacity>
@@ -303,8 +303,8 @@ export default function EditProfileScreen() {
             padding: 12,
           }}
           accessibilityRole="button"
-          accessibilityLabel="Retour"
-          accessibilityHint="Revenir à l'écran précédent"
+          accessibilityLabel={t.common.back}
+          accessibilityHint={t.editProfile.backHint}
         >
           <Text style={{ color: themeColors.textSecondary }}>{t.common.back}</Text>
         </TouchableOpacity>
@@ -352,8 +352,8 @@ export default function EditProfileScreen() {
               elevation: 1,
             }}
             accessibilityRole="button"
-            accessibilityLabel="Retour"
-            accessibilityHint="Revenir à l'écran précédent"
+            accessibilityLabel={t.common.back}
+            accessibilityHint={t.editProfile.backHint}
           >
             <MaterialIcons name="arrow-back" size={22} color={themeColors.textPrimary} />
           </TouchableOpacity>
@@ -459,8 +459,8 @@ export default function EditProfileScreen() {
                   elevation: 3,
                 }}
                 accessibilityRole="button"
-                accessibilityLabel="Changer la photo de profil"
-                accessibilityHint="Ouvrir la galerie pour choisir une nouvelle photo"
+                accessibilityLabel={t.editProfile.changePhotoLabel}
+                accessibilityHint={t.editProfile.changePhotoHint}
               >
                 <MaterialIcons name="photo-camera" size={18} color="#ffffff" />
               </TouchableOpacity>
@@ -471,7 +471,7 @@ export default function EditProfileScreen() {
               onPress={handleChangePhoto}
               style={{ marginTop: 12 }}
               accessibilityRole="button"
-              accessibilityLabel="Changer la photo"
+              accessibilityLabel={t.editProfile.changePhoto}
             >
               <Text
                 style={{
@@ -492,7 +492,7 @@ export default function EditProfileScreen() {
               displayName,
               setDisplayName,
               "person",
-              "Votre nom"
+              t.editProfile.yourName
             )}
           </Animated.View>
 
@@ -513,7 +513,7 @@ export default function EditProfileScreen() {
               label={t.editProfile.phone}
               value={phoneNumber}
               onChangeText={handlePhoneChange}
-              hint="Pour les notifications et la vérification"
+              hint={t.editProfile.phoneHint}
               defaultCountryCode="FR"
             />
           </Animated.View>
@@ -521,11 +521,11 @@ export default function EditProfileScreen() {
           {/* Location with LocationPicker */}
           <Animated.View entering={FadeInDown.delay(275).duration(400)} style={{ marginBottom: 20 }}>
             <LocationPicker
-              label="Votre ville"
+              label={t.editProfile.yourCity}
               value={selectedCity?.name}
               onSelect={handleCitySelect}
-              placeholder="Sélectionner une ville"
-              hint="Pour trouver les commerces halal près de chez vous"
+              placeholder={t.editProfile.selectCity}
+              hint={t.editProfile.cityHint}
               showGeolocation={true}
             />
           </Animated.View>
@@ -548,13 +548,13 @@ export default function EditProfileScreen() {
                   color: themeColors.textSecondary,
                 }}
               >
-                Optionnel
+                {t.editProfile.optional}
               </Text>
             </View>
             <TextInput
               value={bio}
               onChangeText={setBio}
-              placeholder="Dites quelque chose sur vous..."
+              placeholder={t.editProfile.bioHint}
               placeholderTextColor={themeColors.placeholderText}
               multiline
               numberOfLines={4}
@@ -613,7 +613,7 @@ export default function EditProfileScreen() {
               borderColor: "rgba(0,0,0,0.05)",
             }}
             accessibilityRole="button"
-            accessibilityLabel={isSaving ? "Enregistrement en cours" : hasChanges ? "Enregistrer les modifications" : "Aucune modification"}
+            accessibilityLabel={isSaving ? t.editProfile.saving : hasChanges ? t.common.saveChanges : t.common.noChanges}
             accessibilityState={{ disabled: isSaving || !hasChanges, busy: isSaving }}
           >
             {isSaving ? (
@@ -626,7 +626,7 @@ export default function EditProfileScreen() {
                     color: "#0d1b13",
                   }}
                 >
-                  Enregistrement...
+                  {t.editProfile.saving}
                 </Text>
               </>
             ) : (
@@ -637,7 +637,7 @@ export default function EditProfileScreen() {
                   color: hasChanges ? "#0d1b13" : themeColors.textSecondary,
                 }}
               >
-                {hasChanges ? "Enregistrer les modifications" : "Aucune modification"}
+                {hasChanges ? t.common.saveChanges : t.common.noChanges}
               </Text>
             )}
           </TouchableOpacity>

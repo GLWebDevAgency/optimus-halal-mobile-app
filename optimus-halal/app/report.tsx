@@ -28,7 +28,7 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useHaptics } from "@/hooks";
+import { useHaptics, useTranslation } from "@/hooks";
 import { ImpactFeedbackStyle } from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import Animated, {
@@ -79,6 +79,7 @@ export default function ReportingFormScreen() {
   const colorScheme = useColorScheme();
   const { impact, notification } = useHaptics();
   const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
 
   const [title, setTitle] = useState("");
   const [productSearch, setProductSearch] = useState("");
@@ -91,15 +92,15 @@ export default function ReportingFormScreen() {
     onSuccess: () => {
       notification();
       Alert.alert(
-        "Signalement envoyé",
-        "Merci pour votre contribution à la transparence halal. Nous traiterons votre signalement rapidement.",
+        t.report.title,
+        t.report.successMessage,
         [{ text: "OK", onPress: () => router.canGoBack() ? router.back() : router.replace("/(tabs)") }],
       );
     },
     onError: (error) => {
       Alert.alert(
-        "Erreur",
-        error.message || "Impossible d'envoyer le signalement. Réessayez.",
+        t.common.error,
+        error.message || t.report.errorMessage,
       );
     },
   });
@@ -200,12 +201,12 @@ export default function ReportingFormScreen() {
         </TouchableOpacity>
 
         <Text className="text-lg font-bold tracking-tight text-slate-900 dark:text-white flex-1 text-center">
-          Signaler un Problème
+          {t.report.title}
         </Text>
 
         <TouchableOpacity onPress={handleCancel}>
           <Text className="text-base font-medium text-slate-500 dark:text-slate-400">
-            Annuler
+            {t.common.cancel}
           </Text>
         </TouchableOpacity>
       </Animated.View>
@@ -242,11 +243,10 @@ export default function ReportingFormScreen() {
           className="px-5 pt-6 pb-2"
         >
           <Text className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
-            Signaler une Violation
+            {t.report.title}
           </Text>
           <Text className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed pt-2">
-            Aidez-nous à maintenir la transparence. Votre signalement sera traité{" "}
-            <Text className="font-semibold text-slate-800 dark:text-white">anonymement</Text>.
+            {t.report.helpText}
           </Text>
         </Animated.View>
 
@@ -259,7 +259,7 @@ export default function ReportingFormScreen() {
           className="px-5 gap-3"
         >
           <Text className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
-            1. Titre du signalement *
+            1. {t.report.titleLabel} *
           </Text>
           <TextInput
             className="w-full px-4 py-4 bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-white/10 rounded-xl text-sm font-medium text-slate-900 dark:text-white shadow-sm"
@@ -458,7 +458,7 @@ export default function ReportingFormScreen() {
           <View className="flex-row items-center justify-between p-4 bg-white dark:bg-[#1e293b] rounded-xl border border-gray-100 dark:border-white/5 shadow-sm">
             <View className="flex-1 gap-0.5">
               <Text className="text-sm font-bold text-slate-900 dark:text-white">
-                Autoriser un suivi
+                {t.report.allowFollowup}
               </Text>
               <Text className="text-xs text-gray-500 dark:text-gray-400">
                 Nous pourrions demander plus de détails.

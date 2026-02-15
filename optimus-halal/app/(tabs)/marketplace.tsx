@@ -89,6 +89,7 @@ const ProductCard = React.memo(function ProductCard({ product, index }: { produc
   const colorScheme = useColorScheme();
   const { impact, notification } = useHaptics();
   const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
   const { addItem } = useLocalCartStore();
 
   const handlePress = useCallback(() => {
@@ -141,7 +142,7 @@ const ProductCard = React.memo(function ProductCard({ product, index }: { produc
                 end={{ x: 1, y: 0 }}
                 className="px-2 py-1 rounded-full"
               >
-                <Text className="text-[10px] font-bold text-white">NOUVEAU</Text>
+                <Text className="text-[10px] font-bold text-white">{t.home.newBadge.toUpperCase()}</Text>
               </LinearGradient>
             </View>
           )}
@@ -191,7 +192,7 @@ const ProductCard = React.memo(function ProductCard({ product, index }: { produc
               className="bg-primary/10 dark:bg-primary/20 p-2 rounded-full"
               activeOpacity={0.7}
               accessibilityRole="button"
-              accessibilityLabel={`Ajouter ${product.name} au panier`}
+              accessibilityLabel={`${t.marketplace.addToCart} ${product.name}`}
             >
               <MaterialIcons name="add-shopping-cart" size={16} color={colors.primary.DEFAULT} />
             </TouchableOpacity>
@@ -256,10 +257,10 @@ export default function MarketplaceTab() {
             <View className="flex-row items-center justify-between">
               <View>
                 <Text className="text-2xl font-bold text-slate-900 dark:text-white">
-                  Marketplace
+                  {t.marketplace.title}
                 </Text>
                 <Text className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  Bientôt disponible
+                  {t.common.comingSoon}
                 </Text>
               </View>
               <TouchableOpacity
@@ -267,8 +268,8 @@ export default function MarketplaceTab() {
                 className="relative h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-700/50"
                 activeOpacity={0.7}
                 accessibilityRole="button"
-                accessibilityLabel="Notifications"
-                accessibilityHint="Voir les alertes"
+                accessibilityLabel={t.common.notifications}
+                accessibilityHint={t.common.viewAlerts}
               >
                 <MaterialIcons
                   name="notifications"
@@ -301,21 +302,21 @@ export default function MarketplaceTab() {
                 <MaterialIcons name="storefront" size={48} color={colors.primary.DEFAULT} />
               </View>
               <Text className="text-xl font-bold text-slate-900 dark:text-white text-center mb-2">
-                Le Marketplace arrive bientôt !
+                {t.marketplace.comingSoon}
               </Text>
               <Text className="text-sm text-slate-600 dark:text-slate-400 text-center mb-6">
-                Découvrez bientôt des produits halal certifiés, éthiques et de qualité premium.
+                {t.marketplace.comingSoonDesc}
               </Text>
               <TouchableOpacity
                 onPress={() => router.push("/(marketplace)/coming-soon" as any)}
                 className="bg-primary px-6 py-3 rounded-xl flex-row items-center gap-2"
                 activeOpacity={0.8}
                 accessibilityRole="button"
-                accessibilityLabel="Rejoindre la liste d'attente"
-                accessibilityHint="S'inscrire pour être notifié du lancement du marketplace"
+                accessibilityLabel={t.marketplace.joinWaitlist}
+                accessibilityHint={t.marketplace.joinWaitlist}
               >
                 <MaterialIcons name="notifications-active" size={20} color="#0d1b12" />
-                <Text className="font-bold text-slate-900">Rejoindre la liste d&apos;attente</Text>
+                <Text className="font-bold text-slate-900">{t.marketplace.joinWaitlist}</Text>
               </TouchableOpacity>
             </LinearGradient>
           </Animated.View>
@@ -346,10 +347,10 @@ export default function MarketplaceTab() {
         >
           <View>
             <Text accessibilityRole="header" className="text-2xl font-bold text-slate-900 dark:text-white">
-              Marketplace
+              {t.marketplace.title}
             </Text>
             <Text className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Produits halal certifiés
+              {t.marketplace.subtitle}
             </Text>
           </View>
 
@@ -359,8 +360,8 @@ export default function MarketplaceTab() {
               className="relative h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-700/50"
               activeOpacity={0.7}
               accessibilityRole="button"
-              accessibilityLabel="Notifications"
-              accessibilityHint="Voir les alertes"
+              accessibilityLabel={t.common.notifications}
+              accessibilityHint={t.common.viewAlerts}
             >
               <MaterialIcons
                 name="notifications"
@@ -377,8 +378,8 @@ export default function MarketplaceTab() {
               className="relative h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-700/50"
               activeOpacity={0.7}
               accessibilityRole="button"
-              accessibilityLabel="Panier"
-              accessibilityHint="Voir le panier"
+              accessibilityLabel={t.marketplace.viewCart}
+              accessibilityHint={t.marketplace.viewCart}
             >
               <MaterialIcons
                 name="shopping-cart"
@@ -418,7 +419,7 @@ export default function MarketplaceTab() {
                   }`}
                   activeOpacity={0.7}
                   accessibilityRole="button"
-                  accessibilityLabel={`${categoryLabel}${selectedCategory === category.id ? ", sélectionné" : ""}`}
+                  accessibilityLabel={`${categoryLabel}${selectedCategory === category.id ? `, ${t.common.selected}` : ""}`}
                 >
                   <MaterialIcons
                     name={category.icon}
@@ -446,11 +447,11 @@ export default function MarketplaceTab() {
         >
           <View className="flex-row items-center justify-between px-5 mb-4">
             <Text accessibilityRole="header" className="text-lg font-bold text-slate-900 dark:text-white">
-              Produits vedettes
+              {t.marketplace.featured}
             </Text>
-            <TouchableOpacity onPress={handleViewAllPress} activeOpacity={0.7} accessibilityRole="link" accessibilityLabel="Voir tous les produits">
+            <TouchableOpacity onPress={handleViewAllPress} activeOpacity={0.7} accessibilityRole="link" accessibilityLabel={`${t.home.viewAll} ${t.marketplace.featured}`}>
               <Text className="text-sm font-medium text-primary">
-                Voir tout
+                {t.home.viewAll}
               </Text>
             </TouchableOpacity>
           </View>
@@ -485,21 +486,21 @@ export default function MarketplaceTab() {
           >
             <View className="flex-1 mr-4">
               <Text className="text-lg font-bold text-slate-900 dark:text-white mb-1">
-                Livraison gratuite
+                {t.marketplace.freeShipping}
               </Text>
               <Text className="text-sm text-slate-600 dark:text-slate-400 mb-3">
-                Sur toutes les commandes de plus de 50€
+                {t.marketplace.freeShippingDesc}
               </Text>
               <TouchableOpacity
                 onPress={handleViewAllPress}
                 className="flex-row items-center"
                 activeOpacity={0.7}
                 accessibilityRole="link"
-                accessibilityLabel="Découvrir les offres"
-                accessibilityHint="Voir toutes les offres avec livraison gratuite"
+                accessibilityLabel={t.marketplace.discoverOffers}
+                accessibilityHint={t.marketplace.freeShipping}
               >
                 <Text className="text-sm font-semibold text-gold-600 dark:text-gold-500">
-                  Découvrir les offres
+                  {t.marketplace.discoverOffers}
                 </Text>
                 <MaterialIcons name="arrow-forward" size={16} color={colors.gold.DEFAULT} />
               </TouchableOpacity>

@@ -15,35 +15,39 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
-import { useHaptics } from "@/hooks";
+import { useHaptics, useTranslation } from "@/hooks";
 
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 
-const THEME_OPTIONS: { id: ThemeMode; labelKey: string; icon: keyof typeof MaterialIcons.glyphMap; description: string }[] = [
+const THEME_OPTIONS: { id: ThemeMode; labelKey: "automatic" | "light" | "dark"; icon: keyof typeof MaterialIcons.glyphMap }[] = [
   {
     id: "system",
-    labelKey: "Automatique",
+    labelKey: "automatic",
     icon: "brightness-auto",
-    description: "Suit les paramètres de votre appareil",
   },
   {
     id: "light",
-    labelKey: "Mode Clair",
+    labelKey: "light",
     icon: "light-mode",
-    description: "Thème lumineux pour la journée",
   },
   {
     id: "dark",
-    labelKey: "Mode Sombre",
+    labelKey: "dark",
     icon: "dark-mode",
-    description: "Thème sombre pour économiser la batterie",
   },
 ];
 
 export default function AppearanceScreen() {
   const { theme, setTheme, effectiveTheme, colors } = useTheme();
+  const { t } = useTranslation();
 
   const { impact } = useHaptics();
+
+  const themeLabels: Record<string, { label: string; desc: string }> = {
+    automatic: { label: t.appearance.automatic, desc: t.appearance.automaticDesc },
+    light: { label: t.appearance.light, desc: t.appearance.lightDesc },
+    dark: { label: t.appearance.dark, desc: t.appearance.darkDesc },
+  };
   const handleSelectTheme = async (themeOption: ThemeMode) => {
     impact();
     setTheme(themeOption);
@@ -62,8 +66,8 @@ export default function AppearanceScreen() {
             className="h-10 w-10 items-center justify-center rounded-full"
             style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }}
             accessibilityRole="button"
-            accessibilityLabel="Retour"
-            accessibilityHint="Revenir à l'écran précédent"
+            accessibilityLabel={t.common.back}
+            accessibilityHint={t.common.back}
           >
             <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
@@ -72,7 +76,7 @@ export default function AppearanceScreen() {
             className="text-xl font-bold tracking-tight"
             accessibilityRole="header"
           >
-            Apparence
+            {t.appearance.title}
           </Text>
         </View>
       </Animated.View>
@@ -104,10 +108,10 @@ export default function AppearanceScreen() {
             className="text-lg font-bold mb-1"
             accessibilityRole="header"
           >
-            {effectiveTheme === "dark" ? "Mode Sombre" : "Mode Clair"}
+            {effectiveTheme === "dark" ? t.appearance.darkMode : t.appearance.lightMode}
           </Text>
           <Text style={{ color: colors.textSecondary }} className="text-sm text-center">
-            {theme === "system" ? "Suit les paramètres système" : `Mode ${effectiveTheme === "dark" ? "sombre" : "clair"} activé`}
+            {theme === "system" ? t.appearance.automaticDesc : themeLabels[effectiveTheme === "dark" ? "dark" : "light"].desc}
           </Text>
         </Animated.View>
 
@@ -117,7 +121,7 @@ export default function AppearanceScreen() {
           className="rounded-2xl overflow-hidden"
           style={{ backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1 }}
           accessibilityRole="radiogroup"
-          accessibilityLabel="Options de thème"
+          accessibilityLabel={t.appearance.themeOptions}
         >
           {THEME_OPTIONS.map((option, index) => {
             const isSelected = theme === option.id;
@@ -131,8 +135,8 @@ export default function AppearanceScreen() {
                 style={{ borderColor: colors.borderLight }}
                 activeOpacity={0.7}
                 accessibilityRole="radio"
-                accessibilityLabel={option.labelKey}
-                accessibilityHint={option.description}
+                accessibilityLabel={themeLabels[option.labelKey].label}
+                accessibilityHint={themeLabels[option.labelKey].desc}
                 accessibilityState={{ selected: isSelected }}
               >
                 {/* Icon */}
@@ -151,17 +155,17 @@ export default function AppearanceScreen() {
 
                 {/* Text Content */}
                 <View className="flex-1">
-                  <Text 
+                  <Text
                     className="font-semibold text-base mb-0.5"
                     style={{ color: isSelected ? colors.primary : colors.textPrimary }}
                   >
-                    {option.labelKey}
+                    {themeLabels[option.labelKey].label}
                   </Text>
-                  <Text 
+                  <Text
                     className="text-xs"
                     style={{ color: colors.textSecondary }}
                   >
-                    {option.description}
+                    {themeLabels[option.labelKey].desc}
                   </Text>
                 </View>
 
@@ -192,11 +196,10 @@ export default function AppearanceScreen() {
             <MaterialIcons name="info-outline" size={20} color={colors.primary} />
             <View className="flex-1">
               <Text style={{ color: colors.primary }} className="text-sm font-medium mb-1">
-                Mode Automatique
+                {t.appearance.autoMode}
               </Text>
               <Text style={{ color: colors.textSecondary }} className="text-xs leading-5">
-                Le mode automatique utilise les paramètres de votre appareil pour 
-                basculer automatiquement entre le mode clair et sombre.
+                {t.appearance.autoModeDesc}
               </Text>
             </View>
           </View>

@@ -177,7 +177,7 @@ const StoreCard = React.memo(function StoreCard({
         }`}
         activeOpacity={0.7}
         accessibilityRole="button"
-        accessibilityLabel={isFeatured ? `Itinéraire vers ${store.name}` : `Voir détails de ${store.name}`}
+        accessibilityLabel={isFeatured ? `${t.map.directions} ${store.name}` : `${t.map.viewDetails} ${store.name}`}
       >
         <MaterialIcons
           name={isFeatured ? "directions" : "visibility"}
@@ -189,7 +189,7 @@ const StoreCard = React.memo(function StoreCard({
             isFeatured ? "text-primary" : "text-white"
           }`}
         >
-          {isFeatured ? t.map.directions : "Voir détails"}
+          {isFeatured ? t.map.directions : t.map.viewDetails}
         </Text>
       </TouchableOpacity>
     </TouchableOpacity>
@@ -342,8 +342,8 @@ export default function MapScreen() {
             className="relative h-12 w-12 rounded-full bg-surface-dark/90 border border-slate-700 items-center justify-center"
             activeOpacity={0.7}
             accessibilityRole="button"
-            accessibilityLabel="Notifications"
-            accessibilityHint="Voir les alertes"
+            accessibilityLabel={t.common.notifications}
+            accessibilityHint={t.common.viewAlerts}
           >
             <MaterialIcons name="notifications" size={22} color="#ffffff" />
           </TouchableOpacity>
@@ -370,8 +370,8 @@ export default function MapScreen() {
                 }`}
                 activeOpacity={0.7}
                 accessibilityRole="button"
-                accessibilityLabel={`${filterLabel}${isActive ? ", sélectionné" : ""}`}
-                accessibilityHint={isActive ? `Désactiver le filtre ${filterLabel}` : `Filtrer par ${filterLabel}`}
+                accessibilityLabel={`${filterLabel}${isActive ? `, ${t.common.selected}` : ""}`}
+                accessibilityHint={filterLabel}
                 style={
                   isActive
                     ? {
@@ -417,7 +417,7 @@ export default function MapScreen() {
         >
           <MaterialIcons name="format-list-bulleted" size={20} color="#1de560" />
           <Text className="font-semibold text-sm text-white">
-            {storesQuery.data?.total ?? "..."} résultats
+            {storesQuery.data?.total ?? "..."} {t.map.results}
           </Text>
         </View>
       </Animated.View>
@@ -446,7 +446,7 @@ export default function MapScreen() {
           <View className="flex-row items-center justify-between px-5 mb-3">
             <Text accessibilityRole="header" className="text-lg font-bold text-white">{t.map.nearYou}</Text>
             <Text className="text-primary text-sm font-semibold">
-              {storesQuery.data?.total ?? 0} magasin{(storesQuery.data?.total ?? 0) > 1 ? "s" : ""}
+              {storesQuery.data?.total ?? 0} {(storesQuery.data?.total ?? 0) > 1 ? t.map.stores : t.map.store}
             </Text>
           </View>
 
@@ -459,7 +459,7 @@ export default function MapScreen() {
             <View className="flex-1 items-center justify-center px-8">
               <MaterialIcons name="search-off" size={32} color="#64748b" />
               <Text className="text-sm text-slate-400 mt-2 text-center">
-                Aucun magasin trouvé pour ces filtres
+                {t.map.noStoresFound}
               </Text>
             </View>
           ) : (

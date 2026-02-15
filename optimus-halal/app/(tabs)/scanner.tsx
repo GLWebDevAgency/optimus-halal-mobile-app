@@ -51,7 +51,7 @@ const SCAN_FRAME_WIDTH = 320;
 const SCAN_FRAME_HEIGHT = 288;
 const CORNER_SIZE = 48;
 const CORNER_THICKNESS = 4;
-const PRIMARY_COLOR = "#2bee6c";
+const PRIMARY_COLOR = "#1de560";
 
 export default function ScannerScreen() {
   const insets = useSafeAreaInsets();
@@ -146,32 +146,7 @@ export default function ScannerScreen() {
     router.back();
   }, []);
 
-  const handleOpenGallery = useCallback(async () => {
-    impact();
-    
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) {
-      Alert.alert("Permission requise", "Veuillez autoriser l'accès à la galerie.");
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 1,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      // Simulate barcode detection from image
-      simulateScan("3760020507350");
-    }
-  }, []);
-
-  const handleOpenHistory = useCallback(async () => {
-    impact();
-    router.push("/scan-result" as any);
-  }, []);
-
-  const simulateScan = useCallback(
+  const processScan = useCallback(
     async (barcode: string) => {
       if (scanned) return;
 
@@ -179,27 +154,57 @@ export default function ScannerScreen() {
       setIsScanning(false);
       notification();
 
-      // Navigate to scan result with barcode
       router.push({
         pathname: "/scan-result",
         params: { barcode },
       });
 
-      // Reset after navigation
       setTimeout(() => {
         setScanned(false);
         setIsScanning(true);
       }, 2000);
     },
-    [scanned]
+    [scanned, notification]
   );
+
+  const handleOpenGallery = useCallback(async () => {
+    impact();
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert(t.scanner.noPermission, t.scanner.cameraPermissionDesc);
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 1,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        if (__DEV__) {
+          processScan("3760020507350");
+          return;
+        }
+        Alert.alert(t.scanner.title, t.scanner.galleryComingSoon);
+      }
+    } catch (error) {
+      console.error("[Scanner] Gallery error:", error);
+      Alert.alert(t.scanner.noPermission, t.scanner.cameraPermissionDesc);
+    }
+  }, [processScan, impact, t]);
+
+  const handleOpenHistory = useCallback(async () => {
+    impact();
+    router.push("/scan-result" as any);
+  }, []);
 
   const handleBarcodeScanned = useCallback(
     ({ data, type }: { data: string; type: string }) => {
       if (scanned || !isScanning) return;
-      simulateScan(data);
+      processScan(data);
     },
-    [scanned, isScanning, simulateScan]
+    [scanned, isScanning, processScan]
   );
 
   const handleCapture = useCallback(async () => {
@@ -209,9 +214,14 @@ export default function ScannerScreen() {
       withSpring(1, { damping: 12, stiffness: 200 })
     );
     impact(ImpactFeedbackStyle.Heavy);
-    // Simulate scanning a product
-    simulateScan("3760020507350");
-  }, [simulateScan]);
+
+    if (__DEV__) {
+      processScan("3760020507350");
+      return;
+    }
+    // Production: auto-scan via onBarcodeScanned, bouton = feedback haptique
+    notification();
+  }, [processScan, notification, impact]);
 
   // Permission not loaded yet
   if (!permission) {
@@ -238,7 +248,7 @@ export default function ScannerScreen() {
           <View style={styles.permissionTextContainer}>
             <Text style={styles.permissionTitle}>{t.scanner.noPermission}</Text>
             <Text style={styles.permissionDescription}>
-              Pour scanner les produits, nous avons besoin d&apos;accéder à votre caméra.
+              {t.scanner.cameraPermissionDesc}
             </Text>
           </View>
           <TouchableOpacity
@@ -246,11 +256,11 @@ export default function ScannerScreen() {
             style={styles.permissionButton}
             activeOpacity={0.9}
             accessibilityRole="button"
-            accessibilityLabel="Autoriser l'accès à la caméra"
+            accessibilityLabel={t.scanner.allowCamera}
           >
             <Text style={styles.permissionButtonText}>{t.scanner.enableCamera}</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleClose} style={styles.cancelButton} accessibilityRole="button" accessibilityLabel="Annuler">
+          <TouchableOpacity onPress={handleClose} style={styles.cancelButton} accessibilityRole="button" accessibilityLabel={t.common.cancel}>
             <Text style={styles.cancelButtonText}>{t.common.cancel}</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -333,7 +343,7 @@ export default function ScannerScreen() {
               style={styles.headerButton}
               activeOpacity={0.7}
               accessibilityRole="button"
-              accessibilityLabel="Fermer le scanner"
+              accessibilityLabel={t.common.close}
             >
               <MaterialIcons name="close" size={20} color="#ffffff" />
             </TouchableOpacity>
@@ -342,7 +352,7 @@ export default function ScannerScreen() {
           {/* App Title Badge */}
           <Animated.View entering={FadeIn.delay(300).duration(400)} style={styles.titleBadge}>
             <MaterialIcons name="verified-user" size={18} color={PRIMARY_COLOR} />
-            <Text style={styles.titleText}>Scanner Halal</Text>
+            <Text style={styles.titleText}>{t.scanner.halalScanner}</Text>
           </Animated.View>
 
           {/* Flash Toggle */}
@@ -352,7 +362,7 @@ export default function ScannerScreen() {
               style={[styles.headerButton, isFlashOn && styles.headerButtonActive]}
               activeOpacity={0.7}
               accessibilityRole="button"
-              accessibilityLabel={isFlashOn ? "Désactiver le flash" : "Activer le flash"}
+              accessibilityLabel={t.scanner.flash}
             >
               <MaterialIcons
                 name={isFlashOn ? "flash-on" : "flash-off"}
@@ -387,8 +397,8 @@ export default function ScannerScreen() {
                 style={styles.sideButton}
                 activeOpacity={0.7}
                 accessibilityRole="button"
-                accessibilityLabel="Galerie"
-                accessibilityHint="Choisir une image depuis la galerie"
+                accessibilityLabel={t.scanner.gallery}
+                accessibilityHint={t.scanner.gallery}
               >
                 <MaterialIcons name="photo-library" size={26} color="#ffffff" />
               </TouchableOpacity>
@@ -414,8 +424,8 @@ export default function ScannerScreen() {
                     style={styles.captureButton}
                     activeOpacity={0.9}
                     accessibilityRole="button"
-                    accessibilityLabel="Scanner"
-                    accessibilityHint="Ouvrir le scanner de code-barres"
+                    accessibilityLabel={t.scanner.title}
+                    accessibilityHint={t.scanner.instruction}
                   >
                     <MaterialIcons name="qr-code-scanner" size={36} color="#0d1b13" />
                   </TouchableOpacity>
@@ -430,8 +440,8 @@ export default function ScannerScreen() {
                 style={styles.sideButton}
                 activeOpacity={0.7}
                 accessibilityRole="button"
-                accessibilityLabel="Historique"
-                accessibilityHint="Voir l'historique des scans"
+                accessibilityLabel={t.scanner.history}
+                accessibilityHint={t.scanner.history}
               >
                 <MaterialIcons name="history" size={26} color="#FFD700" />
               </TouchableOpacity>
@@ -474,7 +484,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "rgba(43, 238, 108, 0.15)",
+    backgroundColor: "rgba(29, 229, 96, 0.15)",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -608,7 +618,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   headerButtonActive: {
-    backgroundColor: "rgba(43, 238, 108, 0.2)",
+    backgroundColor: "rgba(29, 229, 96, 0.2)",
   },
   titleBadge: {
     flexDirection: "row",

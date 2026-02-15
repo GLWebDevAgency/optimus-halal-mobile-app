@@ -1,11 +1,12 @@
 /**
  * Home Dashboard Screen
- * 
+ *
  * Écran principal avec:
  * - Header avec avatar et notifications
- * - Impact card
+ * - Impact card (scans, reports, niveau)
  * - Quick actions (Scanner, Magasins, Marketplace, Historique)
- * - Featured content carousel
+ * - Alertes & Vigilance (tRPC alert.list — rappels, fraudes, boycotts)
+ * - Actu de la Communauté (tRPC article.list — blog, guides, partenaires)
  * - Favorites section
  * - Nearby stores
  */
@@ -17,7 +18,6 @@ import {
   ScrollView,
   TouchableOpacity,
   useColorScheme,
-  Dimensions,
 } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -32,8 +32,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { FlashList } from "@shopify/flash-list";
-
 import { Card, Avatar } from "@/components/ui";
 import { HomeSkeleton } from "@/components/skeletons";
 import { useLocalFavoritesStore } from "@/store";
@@ -41,29 +39,98 @@ import { useAuthStore } from "@/store/apiStores";
 import { useTranslation } from "@/hooks/useTranslation";
 import { trpc } from "@/lib/trpc";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const CARD_WIDTH = SCREEN_WIDTH - 40 - 16; // padding + gap
 const FAVORITE_CIRCLE_SIZE = 72;
 
-const featuredKeyExtractor = (item: (typeof FEATURED_CONTENT)[0]) => item.id;
+const SEVERITY_ICON: Record<string, keyof typeof MaterialIcons.glyphMap> = {
+  critical: "error",
+  warning: "warning",
+  info: "info",
+};
 
-// Mock data
-const FEATURED_CONTENT = [
-  {
-    id: "1",
-    type: "new",
-    title: "Essentiels du Ramadan",
-    subtitle: "Découvrez notre sélection certifiée",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuB4m35jbV38n3NIkY8ZOHKsQAs_cnFj_jt55v4ZxSrpVIaY5ObsvVz0LcBa0CIoA-oUuB0T8VfU9HuP1T9ns7AdDd3fDXH4YynSEi3P6vmmbB8BE13265EV9Jk4jnZR4R0oHBvZXic6FRUnDcH2ZeRsdreMxemciz1VM8ImikGYMF5Q7FZ4SU9nXY1IteWJK5k8mi6wole88ZmjYnSp0F10GW9Z9HAfGqNHHNoomH2sU7o3O9RLZz3E6lEsZk1svGL1wcvuY6svibIW",
-  },
-  {
-    id: "2",
-    type: "blog",
-    title: "Comprendre les labels",
-    subtitle: "Guide de transparence 2024",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCgLGDyyFngcYlOwZcMBzQCFRSNPYZiiaiKx7vWGn0di4zYjUGmS9BbmFtR-Js_lJ_uFWqD7NbdEGOaQovwHxLfpu6ZpoTOCA35Ef-Yuh4C-2wJLCOK2UTxDG2VYAF1HcqMeRcSlebqQCJF1nagbwElTWOQfk4pMhRCCGwR2YLFc8hYYBDsBIQ8UL4-GUTVMjMA4uL2GiaP02-K3CJu1M_ve6C1B3--qB1mK01hoTck3h52eyzJ43Po7efke0B4nmxyR3f2cWveqeba",
-  },
-];
+const SEVERITY_COLOR: Record<string, string> = {
+  critical: "#dc2626",
+  warning: "#d97706",
+  info: "#2563eb",
+};
+
+// Dev placeholders — visibles quand le backend ne retourne pas de données
+// Basés sur des actus réelles Al-Kanz (février 2026)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const DEV_PLACEHOLDER_ALERTS: any[] = __DEV__
+  ? [
+      {
+        id: "dev-alert-1",
+        title: "Salmonelle : rappel poulets halal SFCVH",
+        summary:
+          "Poulets halal du producteur belge Plukon, certifiés SFCVH, rappelés pour contamination à la salmonelle.",
+        severity: "critical",
+      },
+      {
+        id: "dev-alert-2",
+        title: "Isla Délice : A&M Capital s'implante en Israël",
+        summary:
+          "Le fonds repreneur d'Isla Délice ouvre une filiale à Tel-Aviv. Appels au boycott BDS.",
+        severity: "warning",
+      },
+      {
+        id: "dev-alert-3",
+        title: "A&M Capital rachète Oumaty et Oummi",
+        summary:
+          "Consolidation du marché halal français : 3 marques sous contrôle du même fonds américain.",
+        severity: "info",
+      },
+    ]
+  : [];
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const DEV_PLACEHOLDER_ARTICLES: any[] = __DEV__
+  ? [
+      {
+        id: "dev-article-1",
+        title: "Quick : 188 restaurants 100 % halal, objectif 300",
+        excerpt:
+          "Quick a converti ses 188 restaurants au halal certifié ARGML et vise 300 en 2028.",
+        type: "partner_news",
+        coverImage:
+          "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&h=400&fit=crop",
+        readTimeMinutes: 4,
+        author: "Al-Kanz",
+      },
+      {
+        id: "dev-article-2",
+        title: "Calendrier ramadan 2026 : ce que vous devez savoir",
+        excerpt:
+          "Dates, observation du croissant lunaire, calcul astronomique : tout comprendre.",
+        type: "educational",
+        coverImage:
+          "https://images.unsplash.com/photo-1564121211835-e88c852648ab?w=600&h=400&fit=crop",
+        readTimeMinutes: 4,
+        author: "Optimus Team",
+      },
+      {
+        id: "dev-article-3",
+        title: "Guide : vérifier un certificat halal en 3 étapes",
+        excerpt:
+          "Ne vous fiez jamais à un simple autocollant. Voici les 3 vérifications essentielles.",
+        type: "educational",
+        coverImage:
+          "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=600&h=400&fit=crop",
+        readTimeMinutes: 4,
+        author: "Optimus Team",
+      },
+      {
+        id: "dev-article-4",
+        title: "Audit halal 2026 : 23 % d'incohérences en grande surface",
+        excerpt:
+          "Un audit indépendant sur 500 produits révèle des résultats préoccupants.",
+        type: "blog",
+        coverImage:
+          "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=600&h=400&fit=crop",
+        readTimeMinutes: 5,
+        author: "Optimus Team",
+      },
+    ]
+  : [];
 
 interface QuickActionProps {
   icon: keyof typeof MaterialIcons.glyphMap;
@@ -174,16 +241,40 @@ export default function HomeScreen() {
     { halalCertifiedOnly: true, limit: 1 },
     { enabled: !isInitializing, staleTime: 120_000 },
   );
+  const alertsQuery = trpc.alert.list.useQuery(
+    { limit: 5 },
+    { enabled: !isInitializing, staleTime: 60_000 },
+  );
+  const articlesQuery = trpc.article.list.useQuery(
+    { limit: 5 },
+    { enabled: !isInitializing, staleTime: 120_000 },
+  );
 
   const unreadCount = unreadQuery.data?.count ?? 0;
   const nearbyStore = nearbyStoreQuery.data?.items?.[0] ?? null;
+
+  // Derive items with proper error/loading distinction
+  const alertItems = useMemo(() => {
+    if (alertsQuery.data?.items?.length) return alertsQuery.data.items;
+    if (__DEV__ && !alertsQuery.isError) return DEV_PLACEHOLDER_ALERTS;
+    return [];
+  }, [alertsQuery.data?.items, alertsQuery.isError]);
+
+  const articleItems = useMemo(() => {
+    if (articlesQuery.data?.items?.length) return articlesQuery.data.items;
+    if (__DEV__ && !articlesQuery.isError) return DEV_PLACEHOLDER_ARTICLES;
+    return [];
+  }, [articlesQuery.data?.items, articlesQuery.isError]);
+
+  const hasApiError =
+    alertsQuery.isError || articlesQuery.isError || dashboardQuery.isError;
 
   const userName = useMemo(() => {
     if (profile?.displayName) {
       return profile.displayName.split(" ")[0];
     }
-    return "Utilisateur";
-  }, [profile]);
+    return t.common.user;
+  }, [profile, t]);
 
   const totalScans = dashboardQuery.data?.totalScans ?? 0;
 
@@ -200,7 +291,7 @@ export default function HomeScreen() {
     } else if (route === "favorites") {
       router.push("/settings/favorites" as any);
     }
-  }, []);
+  }, [impact]);
 
   // Skeleton while auth store initializes (placed after all hooks)
   if (isInitializing) return <HomeSkeleton />;
@@ -243,8 +334,8 @@ export default function HomeScreen() {
             className="relative h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-700/50"
             activeOpacity={0.7}
             accessibilityRole="button"
-            accessibilityLabel="Notifications"
-            accessibilityHint="Voir les alertes"
+            accessibilityLabel={t.common.notifications}
+            accessibilityHint={t.common.viewAlerts}
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 1 },
@@ -307,7 +398,7 @@ export default function HomeScreen() {
                   </Text>
                 </View>
                 <Text className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  {dashboardQuery.data?.totalReports ?? 0} signalement{(dashboardQuery.data?.totalReports ?? 0) > 1 ? "s" : ""} · Niveau {profile?.level ?? 1}
+                  {dashboardQuery.data?.totalReports ?? 0} {(dashboardQuery.data?.totalReports ?? 0) > 1 ? t.home.reportsPlural : t.home.reports} · Niveau {profile?.level ?? 1}
                 </Text>
               </View>
 
@@ -361,47 +452,121 @@ export default function HomeScreen() {
           </View>
         </Animated.View>
 
-        {/* Featured Content */}
-        <Animated.View entering={FadeIn.delay(400).duration(500)}>
-          <View className="flex-row items-center justify-between px-5 mb-3">
-            <Text accessibilityRole="header" className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-              {t.home.featured}
-            </Text>
-            <TouchableOpacity activeOpacity={0.7} accessibilityRole="link" accessibilityLabel="Voir tout les articles à la une">
-              <Text className="text-xs font-semibold text-primary-dark dark:text-primary">
-                {t.home.viewAll}
+        {/* API Error Banner */}
+        {hasApiError && (
+          <Animated.View entering={FadeIn.duration(300)} className="px-5 mb-2">
+            <View className="flex-row items-center gap-2 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/50 p-3">
+              <MaterialIcons name="cloud-off" size={16} color="#ef4444" />
+              <Text className="text-xs font-medium text-red-700 dark:text-red-300 flex-1">
+                {t.errors.network}
               </Text>
-            </TouchableOpacity>
-          </View>
+            </View>
+          </Animated.View>
+        )}
 
-          <View style={{ height: 160, paddingHorizontal: 20 }}>
-            <FlashList
-              data={FEATURED_CONTENT}
+        {/* Alertes & Vigilance */}
+        {alertItems.length > 0 && (
+          <Animated.View entering={FadeIn.delay(400).duration(500)} className="mb-2">
+            <View className="flex-row items-center justify-between px-5 mb-3">
+              <View className="flex-row items-center gap-2">
+                <MaterialIcons name="shield" size={18} color={isDark ? "#f59e0b" : "#d97706"} />
+                <Text accessibilityRole="header" className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+                  {t.home.alertsSection}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => router.push("/(tabs)/alerts")}
+                activeOpacity={0.7}
+                accessibilityRole="link"
+                accessibilityLabel={t.home.alertsSeeAll}
+              >
+                <Text className="text-xs font-semibold text-primary-dark dark:text-primary">
+                  {t.home.alertsSeeAll}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              keyExtractor={featuredKeyExtractor}
-              snapToInterval={CARD_WIDTH + 16}
-              decelerationRate="fast"
-              ItemSeparatorComponent={() => <View style={{ width: 16 }} />}
-              renderItem={({ item, index }) => (
-                <Animated.View
-                  entering={FadeInRight.delay(450 + index * 100).duration(500)}
-                >
+              contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
+            >
+              {alertItems.map((alert, index) => {
+                const icon = SEVERITY_ICON[alert.severity] ?? "info";
+                const color = SEVERITY_COLOR[alert.severity] ?? "#2563eb";
+                return (
+                  <Animated.View key={alert.id} entering={FadeInRight.delay(450 + index * 80).duration(400)}>
+                    <TouchableOpacity
+                      activeOpacity={0.9}
+                      accessibilityRole="button"
+                      accessibilityLabel={alert.title}
+                      accessibilityHint={alert.summary}
+                      className={`rounded-xl p-3 border ${
+                        alert.severity === "critical"
+                          ? "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800/50"
+                          : alert.severity === "warning"
+                            ? "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50"
+                            : "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800/50"
+                      }`}
+                      style={{ width: 260 }}
+                      onPress={() => router.push("/(tabs)/alerts")}
+                    >
+                      <View className="flex-row items-start gap-2">
+                        <MaterialIcons name={icon} size={16} color={color} />
+                        <View className="flex-1">
+                          <Text className="text-sm font-bold text-slate-900 dark:text-white" numberOfLines={1}>
+                            {alert.title}
+                          </Text>
+                          <Text className="text-xs text-slate-600 dark:text-slate-400 mt-1" numberOfLines={2}>
+                            {alert.summary}
+                          </Text>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  </Animated.View>
+                );
+              })}
+            </ScrollView>
+          </Animated.View>
+        )}
+
+        {/* Actu de la Communauté */}
+        {articleItems.length > 0 && (
+          <Animated.View entering={FadeIn.delay(450).duration(500)} className="mt-4">
+            <View className="flex-row items-center justify-between px-5 mb-3">
+              <Text accessibilityRole="header" className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+                {t.home.communityNews}
+              </Text>
+            </View>
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 20, gap: 16 }}
+            >
+              {articleItems.map((article, index) => (
+                <Animated.View key={article.id} entering={FadeInRight.delay(500 + index * 100).duration(500)}>
                   <TouchableOpacity
                     activeOpacity={0.9}
                     accessibilityRole="button"
-                    accessibilityLabel={item.title}
-                    accessibilityHint={item.subtitle}
+                    accessibilityLabel={article.title}
+                    accessibilityHint={article.excerpt ?? undefined}
                     className="relative h-40 overflow-hidden rounded-2xl"
                     style={{ width: 280 }}
                   >
-                    <Image
-                      source={{ uri: item.image }}
-                      className="absolute inset-0 w-full h-full"
-                      contentFit="cover"
-                      transition={200}
-                      accessible={false}
-                    />
+                    {article.coverImage ? (
+                      <Image
+                        source={{ uri: article.coverImage }}
+                        className="absolute inset-0 w-full h-full"
+                        contentFit="cover"
+                        transition={200}
+                        accessible={false}
+                      />
+                    ) : (
+                      <View className="absolute inset-0 bg-slate-200 dark:bg-slate-800 items-center justify-center">
+                        <MaterialIcons name="article" size={36} color={isDark ? "#475569" : "#94a3b8"} />
+                      </View>
+                    )}
                     <LinearGradient
                       colors={["transparent", "rgba(0,0,0,0.7)", "rgba(0,0,0,0.9)"]}
                       className="absolute inset-0"
@@ -409,26 +574,34 @@ export default function HomeScreen() {
                     <View className="absolute bottom-0 left-0 right-0 p-4">
                       <View
                         className={`self-start mb-1 px-2 py-0.5 rounded ${
-                          item.type === "new"
+                          article.type === "educational"
                             ? "bg-primary"
-                            : "bg-white/20"
+                            : article.type === "partner_news"
+                              ? "bg-gold-500/80"
+                              : "bg-white/20"
                         }`}
                       >
                         <Text className="text-[10px] font-bold uppercase tracking-wider text-white">
-                          {item.type === "new" ? "Nouveau" : "Blog"}
+                          {article.type === "partner_news"
+                            ? t.home.partnerBadge
+                            : article.type === "educational"
+                              ? t.home.guideBadge
+                              : t.home.blogBadge}
                         </Text>
                       </View>
-                      <Text className="text-base font-bold text-white">
-                        {item.title}
+                      <Text className="text-base font-bold text-white" numberOfLines={1}>
+                        {article.title}
                       </Text>
-                      <Text className="text-xs text-gray-300">{item.subtitle}</Text>
+                      <Text className="text-xs text-gray-300" numberOfLines={1}>
+                        {article.excerpt ?? `${article.readTimeMinutes ?? 3} min · ${article.author}`}
+                      </Text>
                     </View>
                   </TouchableOpacity>
                 </Animated.View>
-              )}
-            />
-          </View>
-        </Animated.View>
+              ))}
+            </ScrollView>
+          </Animated.View>
+        )}
 
         {/* Favorites */}
         <Animated.View
@@ -444,7 +617,7 @@ export default function HomeScreen() {
                 activeOpacity={0.7}
                 onPress={() => handleNavigate("favorites")}
                 accessibilityRole="link"
-                accessibilityLabel={`Voir tous les favoris, ${favoriteProducts.length} produits`}
+                accessibilityLabel={`${t.home.viewAll} ${t.home.favorites}, ${favoriteProducts.length}`}
               >
                 <Text className="text-xs font-semibold text-primary-dark dark:text-primary">
                   {t.home.viewAll} ({favoriteProducts.length})
@@ -463,8 +636,8 @@ export default function HomeScreen() {
                 <TouchableOpacity
                   activeOpacity={0.8}
                   accessibilityRole="button"
-                  accessibilityLabel="Ajouter un favori"
-                  accessibilityHint="Ouvrir le scanner pour ajouter un produit aux favoris"
+                  accessibilityLabel={t.home.addFavorite}
+                  accessibilityHint={t.home.emptyFavorites}
                   className="items-center justify-center gap-2 rounded-2xl bg-slate-50 dark:bg-white/5 border border-dashed border-slate-200 dark:border-slate-700/50"
                   style={{ width: 200, height: 100, paddingHorizontal: 16 }}
                   onPress={() => router.push("/(tabs)/scanner")}
@@ -475,7 +648,7 @@ export default function HomeScreen() {
                     color={isDark ? "#94a3b8" : "#64748b"}
                   />
                   <Text className="text-xs text-center text-slate-500 dark:text-slate-400">
-                    Scannez un produit pour l&apos;ajouter à vos favoris
+                    {t.home.emptyFavorites}
                   </Text>
                 </TouchableOpacity>
               </Animated.View>
@@ -488,8 +661,8 @@ export default function HomeScreen() {
                   <TouchableOpacity
                     activeOpacity={0.8}
                     accessibilityRole="button"
-                    accessibilityLabel={`Favori ${item.name}`}
-                    accessibilityHint="Voir les favoris"
+                    accessibilityLabel={`${t.home.favorites} ${item.name}`}
+                    accessibilityHint={t.home.favorites}
                     className="items-center gap-2"
                     style={{ width: FAVORITE_CIRCLE_SIZE }}
                     onPress={() => handleNavigate("favorites")}
@@ -519,8 +692,8 @@ export default function HomeScreen() {
               <TouchableOpacity
                 activeOpacity={0.7}
                 accessibilityRole="button"
-                accessibilityLabel="Ajouter un favori"
-                accessibilityHint="Ouvrir le scanner pour ajouter un produit"
+                accessibilityLabel={t.home.addFavorite}
+                accessibilityHint={t.home.emptyFavorites}
                 className="items-center gap-2"
                 style={{ width: FAVORITE_CIRCLE_SIZE }}
                 onPress={() => router.push("/(tabs)/scanner")}
@@ -554,8 +727,8 @@ export default function HomeScreen() {
             <TouchableOpacity
               activeOpacity={0.9}
               accessibilityRole="button"
-              accessibilityLabel="Aperçu de la carte"
-              accessibilityHint="Ouvrir la carte des magasins à proximité"
+              accessibilityLabel={t.map.title}
+              accessibilityHint={t.home.nearYou}
               onPress={() => router.push("/(tabs)/map")}
             >
               <View className="relative h-32 w-full overflow-hidden rounded-t-xl bg-slate-200 dark:bg-slate-800">
@@ -594,17 +767,17 @@ export default function HomeScreen() {
               </View>
               <View className="flex-1">
                 <Text className="text-sm font-bold text-slate-900 dark:text-white" numberOfLines={1}>
-                  {nearbyStore?.name ?? "Recherche en cours..."}
+                  {nearbyStore?.name ?? t.common.loading}
                 </Text>
                 <Text className="text-xs text-slate-500 dark:text-slate-400" numberOfLines={1}>
-                  {nearbyStore ? `${nearbyStore.address}, ${nearbyStore.city}` : "Chargement..."}
+                  {nearbyStore ? `${nearbyStore.address}, ${nearbyStore.city}` : t.common.loading}
                 </Text>
               </View>
               <TouchableOpacity
                 activeOpacity={0.7}
                 accessibilityRole="button"
-                accessibilityLabel="Voir la carte"
-                accessibilityHint="Ouvrir la carte des magasins"
+                accessibilityLabel={t.map.title}
+                accessibilityHint={t.home.nearYou}
                 className="rounded-full p-2 bg-slate-100 dark:bg-white/5"
                 onPress={() => router.push("/(tabs)/map")}
               >

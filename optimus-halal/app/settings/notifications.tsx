@@ -25,8 +25,8 @@ type FrequencyOption = "daily" | "weekly" | "realtime";
 // Notification settings interface
 interface NotificationCategory {
   id: string;
-  name: string;
-  description: string;
+  nameKey: string;
+  descKey: string;
   icon: keyof typeof MaterialIcons.glyphMap;
   iconColor: {
     light: { bg: string; text: string };
@@ -35,11 +35,11 @@ interface NotificationCategory {
   key: string;
 }
 
-const GENERAL_SETTINGS = [
+const GENERAL_SETTINGS_STATIC = [
   {
     id: "push",
-    name: "Push Notifications",
-    description: "Activer toutes les notifications",
+    nameKey: "pushNotifications" as const,
+    descKey: "enableAll" as const,
     icon: "notifications-active" as keyof typeof MaterialIcons.glyphMap,
     iconColor: {
       light: { bg: "rgba(19, 236, 106, 0.1)", text: "#13ec6a" },
@@ -49,8 +49,8 @@ const GENERAL_SETTINGS = [
   },
   {
     id: "sound",
-    name: "Sons & Vibreur",
-    description: "Alertes sonores",
+    nameKey: "soundVibrate" as const,
+    descKey: "soundAlerts" as const,
     icon: "volume-up" as keyof typeof MaterialIcons.glyphMap,
     iconColor: {
       light: { bg: "rgba(59, 130, 246, 0.1)", text: "#3b82f6" },
@@ -60,12 +60,12 @@ const GENERAL_SETTINGS = [
   },
 ];
 
-const CATEGORY_SETTINGS: NotificationCategory[] = [
+const CATEGORY_SETTINGS_STATIC = [
   {
     id: "ethical",
-    name: "Alertes Éthiques",
-    description: "Mises à jour sur les marques",
-    icon: "eco",
+    nameKey: "ethicalAlerts" as const,
+    descKey: "brandUpdates" as const,
+    icon: "eco" as keyof typeof MaterialIcons.glyphMap,
     iconColor: {
       light: { bg: "rgba(34, 197, 94, 0.1)", text: "#22c55e" },
       dark: { bg: "rgba(74, 222, 128, 0.1)", text: "#4ade80" },
@@ -74,9 +74,9 @@ const CATEGORY_SETTINGS: NotificationCategory[] = [
   },
   {
     id: "products",
-    name: "Nouveaux Produits",
-    description: "Sorties et disponibilités",
-    icon: "inventory-2",
+    nameKey: "newProducts" as const,
+    descKey: "availability" as const,
+    icon: "inventory-2" as keyof typeof MaterialIcons.glyphMap,
     iconColor: {
       light: { bg: "rgba(249, 115, 22, 0.1)", text: "#f97316" },
       dark: { bg: "rgba(251, 146, 60, 0.1)", text: "#fb923c" },
@@ -85,9 +85,9 @@ const CATEGORY_SETTINGS: NotificationCategory[] = [
   },
   {
     id: "offers",
-    name: "Offres & Promos",
-    description: "Bons plans partenaires",
-    icon: "local-offer",
+    nameKey: "offersPromos" as const,
+    descKey: "partnerDeals" as const,
+    icon: "local-offer" as keyof typeof MaterialIcons.glyphMap,
     iconColor: {
       light: { bg: "rgba(168, 85, 247, 0.1)", text: "#a855f7" },
       dark: { bg: "rgba(192, 132, 252, 0.1)", text: "#c084fc" },
@@ -96,10 +96,10 @@ const CATEGORY_SETTINGS: NotificationCategory[] = [
   },
 ];
 
-const FREQUENCY_OPTIONS = [
-  { id: "daily" as FrequencyOption, name: "Résumé quotidien" },
-  { id: "weekly" as FrequencyOption, name: "Résumé hebdomadaire" },
-  { id: "realtime" as FrequencyOption, name: "En temps réel" },
+const FREQUENCY_OPTIONS_STATIC = [
+  { id: "daily" as FrequencyOption, nameKey: "dailySummary" as const },
+  { id: "weekly" as FrequencyOption, nameKey: "weeklySummary" as const },
+  { id: "realtime" as FrequencyOption, nameKey: "realtime" as const },
 ];
 
 export default function NotificationsScreen() {
@@ -167,7 +167,7 @@ export default function NotificationsScreen() {
 
   // Render setting item with toggle
   const renderSettingItem = (
-    setting: typeof GENERAL_SETTINGS[0],
+    setting: typeof GENERAL_SETTINGS_STATIC[0],
     isLast: boolean
   ) => {
     const iconColors = isDark ? setting.iconColor.dark : setting.iconColor.light;
@@ -206,7 +206,7 @@ export default function NotificationsScreen() {
                 color: themeColors.textPrimary,
               }}
             >
-              {setting.name}
+              {(t.notifications as any)[setting.nameKey]}
             </Text>
             <Text
               style={{
@@ -215,7 +215,7 @@ export default function NotificationsScreen() {
                 marginTop: 2,
               }}
             >
-              {setting.description}
+              {(t.notifications as any)[setting.descKey]}
             </Text>
           </View>
         </View>
@@ -226,8 +226,8 @@ export default function NotificationsScreen() {
           thumbColor="#ffffff"
           ios_backgroundColor={themeColors.toggleOff}
           accessibilityRole="switch"
-          accessibilityLabel={setting.name}
-          accessibilityHint={setting.description}
+          accessibilityLabel={(t.notifications as any)[setting.nameKey]}
+          accessibilityHint={(t.notifications as any)[setting.descKey]}
           accessibilityState={{ checked: isEnabled }}
         />
       </View>
@@ -275,7 +275,7 @@ export default function NotificationsScreen() {
                 color: themeColors.textPrimary,
               }}
             >
-              {category.name}
+              {(t.notifications as any)[category.nameKey]}
             </Text>
             <Text
               style={{
@@ -284,7 +284,7 @@ export default function NotificationsScreen() {
                 marginTop: 2,
               }}
             >
-              {category.description}
+              {(t.notifications as any)[category.descKey]}
             </Text>
           </View>
         </View>
@@ -295,8 +295,8 @@ export default function NotificationsScreen() {
           thumbColor="#ffffff"
           ios_backgroundColor={themeColors.toggleOff}
           accessibilityRole="switch"
-          accessibilityLabel={category.name}
-          accessibilityHint={category.description}
+          accessibilityLabel={(t.notifications as any)[category.nameKey]}
+          accessibilityHint={(t.notifications as any)[category.descKey]}
           accessibilityState={{ checked: isEnabled }}
         />
       </View>
@@ -305,7 +305,7 @@ export default function NotificationsScreen() {
 
   // Render frequency option
   const renderFrequencyOption = (
-    option: typeof FREQUENCY_OPTIONS[0],
+    option: typeof FREQUENCY_OPTIONS_STATIC[0],
     isLast: boolean
   ) => {
     const isSelected = frequency === option.id;
@@ -324,7 +324,7 @@ export default function NotificationsScreen() {
           borderBottomColor: themeColors.cardBorder,
         }}
         accessibilityRole="radio"
-        accessibilityLabel={option.name}
+        accessibilityLabel={(t.notifications as any)[option.nameKey]}
         accessibilityState={{ selected: isSelected }}
       >
         <Text
@@ -334,7 +334,7 @@ export default function NotificationsScreen() {
             color: isSelected ? themeColors.textPrimary : themeColors.textSecondary,
           }}
         >
-          {option.name}
+          {(t.notifications as any)[option.nameKey]}
         </Text>
         {isSelected && (
           <MaterialIcons name="check" size={20} color={themeColors.primary} />
@@ -373,8 +373,8 @@ export default function NotificationsScreen() {
             justifyContent: "center",
           }}
           accessibilityRole="button"
-          accessibilityLabel="Retour"
-          accessibilityHint="Revenir à l'écran précédent"
+          accessibilityLabel={t.common.back}
+          accessibilityHint={t.editProfile.backHint}
         >
           <MaterialIcons name="arrow-back" size={22} color={themeColors.textPrimary} />
         </TouchableOpacity>
@@ -415,8 +415,8 @@ export default function NotificationsScreen() {
             justifyContent: "center",
           }}
           accessibilityRole="button"
-          accessibilityLabel="Plus d'options"
-          accessibilityHint="Afficher les options supplémentaires"
+          accessibilityLabel={t.notifications.moreOptions}
+          accessibilityHint={t.notifications.moreOptionsHint}
         >
           <MaterialIcons name="more-vert" size={22} color={themeColors.textSecondary} />
         </TouchableOpacity>
@@ -444,7 +444,7 @@ export default function NotificationsScreen() {
             }}
             accessibilityRole="header"
           >
-            Général
+            {t.notifications.general}
           </Text>
           <View
             style={{
@@ -455,8 +455,8 @@ export default function NotificationsScreen() {
               borderColor: themeColors.cardBorder,
             }}
           >
-            {GENERAL_SETTINGS.map((setting, index) =>
-              renderSettingItem(setting, index === GENERAL_SETTINGS.length - 1)
+            {GENERAL_SETTINGS_STATIC.map((setting, index) =>
+              renderSettingItem(setting, index === GENERAL_SETTINGS_STATIC.length - 1)
             )}
           </View>
         </Animated.View>
@@ -478,7 +478,7 @@ export default function NotificationsScreen() {
             }}
             accessibilityRole="header"
           >
-            Catégories
+            {t.notifications.categoriesSection}
           </Text>
           <View
             style={{
@@ -489,8 +489,8 @@ export default function NotificationsScreen() {
               borderColor: themeColors.cardBorder,
             }}
           >
-            {CATEGORY_SETTINGS.map((category, index) =>
-              renderCategoryItem(category, index === CATEGORY_SETTINGS.length - 1)
+            {CATEGORY_SETTINGS_STATIC.map((category, index) =>
+              renderCategoryItem(category, index === CATEGORY_SETTINGS_STATIC.length - 1)
             )}
           </View>
         </Animated.View>
@@ -512,7 +512,7 @@ export default function NotificationsScreen() {
             }}
             accessibilityRole="header"
           >
-            Fréquence
+            {t.notifications.frequency}
           </Text>
           <View
             style={{
@@ -523,10 +523,10 @@ export default function NotificationsScreen() {
               borderColor: themeColors.cardBorder,
             }}
             accessibilityRole="radiogroup"
-            accessibilityLabel="Fréquence des notifications"
+            accessibilityLabel={t.notifications.frequencyLabel}
           >
-            {FREQUENCY_OPTIONS.map((option, index) =>
-              renderFrequencyOption(option, index === FREQUENCY_OPTIONS.length - 1)
+            {FREQUENCY_OPTIONS_STATIC.map((option, index) =>
+              renderFrequencyOption(option, index === FREQUENCY_OPTIONS_STATIC.length - 1)
             )}
           </View>
         </Animated.View>

@@ -41,32 +41,28 @@ const SEVERITY_CONFIG: Record<
     icon: keyof typeof MaterialIcons.glyphMap;
     color: string;
     bgColor: string;
-    label: string;
   }
 > = {
   critical: {
     icon: "error",
     color: "#ef4444",
     bgColor: "rgba(239,68,68,0.1)",
-    label: "Critique",
   },
   warning: {
     icon: "warning",
     color: "#f59e0b",
     bgColor: "rgba(245,158,11,0.15)",
-    label: "Avertissement",
   },
   info: {
     icon: "info",
     color: "#3b82f6",
     bgColor: "rgba(59,130,246,0.1)",
-    label: "Information",
   },
 };
 
 // ── Relative Time Helper ────────────────────────────────────
 
-function formatRelativeTime(date: string | Date): string {
+function formatRelativeTime(date: string | Date, t: any): string {
   const now = Date.now();
   const then = new Date(date).getTime();
   const diffMs = now - then;
@@ -74,10 +70,10 @@ function formatRelativeTime(date: string | Date): string {
   const diffHours = Math.floor(diffMs / 3_600_000);
   const diffDays = Math.floor(diffMs / 86_400_000);
 
-  if (diffMin < 1) return "À l'instant";
-  if (diffMin < 60) return `Il y a ${diffMin}min`;
-  if (diffHours < 24) return `Il y a ${diffHours}h`;
-  if (diffDays < 7) return `Il y a ${diffDays}j`;
+  if (diffMin < 1) return t.alerts.timeAgoJustNow;
+  if (diffMin < 60) return t.alerts.timeAgoMinutes.replace("{{count}}", String(diffMin));
+  if (diffHours < 24) return t.alerts.timeAgoHours.replace("{{count}}", String(diffHours));
+  if (diffDays < 7) return t.alerts.timeAgoDays.replace("{{count}}", String(diffDays));
   return new Date(date).toLocaleDateString("fr-FR", {
     day: "numeric",
     month: "short",
@@ -105,8 +101,10 @@ interface AlertCardProps {
 const AlertCard = React.memo(function AlertCard({ alert, index }: AlertCardProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
   const severity = (alert.severity as Severity) || "info";
   const config = SEVERITY_CONFIG[severity] ?? SEVERITY_CONFIG.info;
+  const severityLabel = t.alerts.severity[severity] ?? t.alerts.severity.info;
 
   return (
     <Animated.View
@@ -143,11 +141,11 @@ const AlertCard = React.memo(function AlertCard({ alert, index }: AlertCardProps
               className="text-xs font-bold uppercase tracking-wider"
               style={{ color: config.color }}
             >
-              {config.label}
+              {severityLabel}
             </Text>
           </View>
           <Text className="text-xs text-slate-400 dark:text-slate-500 font-medium">
-            {formatRelativeTime(alert.publishedAt)}
+            {formatRelativeTime(alert.publishedAt, t)}
           </Text>
         </View>
 
@@ -161,7 +159,7 @@ const AlertCard = React.memo(function AlertCard({ alert, index }: AlertCardProps
                 className="w-full h-full"
                 contentFit="cover"
                 transition={200}
-                accessibilityLabel={`Image de l'alerte : ${alert.title}`}
+                accessibilityLabel={`${alert.title}`}
               />
               <View className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               <Text className="absolute bottom-3 left-4 text-white text-lg font-bold">
@@ -211,19 +209,19 @@ const AlertCard = React.memo(function AlertCard({ alert, index }: AlertCardProps
                     <MaterialIcons name="public" size={12} color="#64748b" />
                   </View>
                   <Text className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                    Source
+                    {t.alerts.source}
                   </Text>
                 </View>
                 <TouchableOpacity
                   className="flex-row items-center gap-1"
                   accessibilityRole="link"
-                  accessibilityLabel={`Voir la source de ${alert.title}`}
+                  accessibilityLabel={`${t.alerts.viewSource} - ${alert.title}`}
                 >
                   <Text
                     className="text-xs font-bold"
                     style={{ color: config.color }}
                   >
-                    Voir la source
+                    {t.alerts.viewSource}
                   </Text>
                   <MaterialIcons name="arrow-forward" size={14} color={config.color} />
                 </TouchableOpacity>
@@ -245,12 +243,7 @@ const FILTERS: { id: string; severity?: "critical" | "warning" | "info" }[] = [
   { id: "info", severity: "info" },
 ];
 
-const FILTER_LABELS: Record<string, string> = {
-  all: "Tous",
-  critical: "Critique",
-  warning: "Avertissement",
-  info: "Information",
-};
+// Filter labels are resolved from t.alerts.severity + t.common.all inside the component
 
 export default function AlertsScreen() {
   const insets = useSafeAreaInsets();
@@ -260,6 +253,13 @@ export default function AlertsScreen() {
   const { t } = useTranslation();
 
   const [activeFilter, setActiveFilter] = useState("all");
+
+  const filterLabels: Record<string, string> = {
+    all: t.common.all,
+    critical: t.alerts.severity.critical,
+    warning: t.alerts.severity.warning,
+    info: t.alerts.severity.info,
+  };
 
   const selectedSeverity = FILTERS.find((f) => f.id === activeFilter)?.severity;
 
@@ -323,8 +323,8 @@ export default function AlertsScreen() {
             className="relative p-2 rounded-full"
             activeOpacity={0.7}
             accessibilityRole="button"
-            accessibilityLabel="Paramètres des notifications"
-            accessibilityHint="Configurer les alertes"
+            accessibilityLabel={t.common.settings}
+            accessibilityHint={t.common.notifications}
           >
             <MaterialIcons
               name="settings"
@@ -351,10 +351,10 @@ export default function AlertsScreen() {
               }`}
               activeOpacity={0.7}
               accessibilityRole="button"
-              accessibilityLabel={`${FILTER_LABELS[filter.id]}${
-                activeFilter === filter.id ? ", sélectionné" : ""
+              accessibilityLabel={`${filterLabels[filter.id]}${
+                activeFilter === filter.id ? `, ${t.common.selected}` : ""
               }`}
-              accessibilityHint={`Filtrer par ${FILTER_LABELS[filter.id]}`}
+              accessibilityHint={filterLabels[filter.id]}
             >
               <Text
                 className={`text-sm ${
@@ -363,7 +363,7 @@ export default function AlertsScreen() {
                     : "font-medium text-slate-600 dark:text-gray-300"
                 }`}
               >
-                {FILTER_LABELS[filter.id]}
+                {filterLabels[filter.id]}
               </Text>
             </TouchableOpacity>
           ))}
@@ -379,14 +379,14 @@ export default function AlertsScreen() {
             color={isDark ? "#475569" : "#94a3b8"}
           />
           <Text className="text-slate-500 dark:text-slate-400 text-base font-medium mt-4 text-center">
-            Impossible de charger les alertes
+            {t.alerts.loadError}
           </Text>
           <TouchableOpacity
             onPress={() => alertsQuery.refetch()}
             className="mt-4 bg-primary px-6 py-2.5 rounded-full"
             activeOpacity={0.8}
           >
-            <Text className="text-slate-900 font-bold text-sm">Réessayer</Text>
+            <Text className="text-slate-900 font-bold text-sm">{t.common.retry}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -407,8 +407,8 @@ export default function AlertsScreen() {
           ListEmptyComponent={
             <EmptyState
               icon="notifications-off"
-              title="Aucune alerte"
-              message="Aucune alerte ne correspond à ce filtre."
+              title={t.common.noResults}
+              message={t.common.noResults}
             />
           }
           refreshControl={

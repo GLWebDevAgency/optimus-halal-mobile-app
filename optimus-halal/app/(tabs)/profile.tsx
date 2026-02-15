@@ -159,7 +159,7 @@ export default function ProfileScreen() {
   const { theme } = useThemeStore();
   const { certifications } = usePreferencesStore();
 
-  const userName = useMemo(() => profile?.displayName || "Utilisateur", [profile]);
+  const userName = useMemo(() => profile?.displayName || t.common.user, [profile, t]);
 
   const stats = useMemo(
     () => ({
@@ -171,8 +171,8 @@ export default function ProfileScreen() {
 
   const handleSettings = useCallback(async () => {
     impact();
-    Alert.alert("Paramètres", "Cette fonctionnalité sera disponible prochainement.");
-  }, []);
+    Alert.alert(t.common.settings, t.common.settingsComingSoon);
+  }, [t]);
 
   const handleEditProfile = useCallback(async () => {
     impact();
@@ -224,8 +224,8 @@ export default function ProfileScreen() {
             onPress={() => router.push("/(tabs)/alerts" as any)}
             activeOpacity={0.7}
             accessibilityRole="button"
-            accessibilityLabel="Notifications"
-            accessibilityHint="Voir les alertes"
+            accessibilityLabel={t.common.notifications}
+            accessibilityHint={t.common.viewAlerts}
             className="w-10 h-10 items-center justify-center"
           >
             <MaterialIcons
@@ -237,7 +237,7 @@ export default function ProfileScreen() {
           <Text accessibilityRole="header" className="text-slate-900 dark:text-white text-lg font-bold tracking-tight">
             {t.profile.title}
           </Text>
-          <TouchableOpacity onPress={handleSettings} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="Paramètres" accessibilityHint="Ouvrir les paramètres">
+          <TouchableOpacity onPress={handleSettings} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel={t.common.settings} accessibilityHint={t.common.openSettings}>
             <MaterialIcons
               name="settings"
               size={24}
@@ -261,8 +261,8 @@ export default function ProfileScreen() {
             onPress={handleEditProfile}
             activeOpacity={0.9}
             accessibilityRole="button"
-            accessibilityLabel="Photo de profil"
-            accessibilityHint="Modifier le profil"
+            accessibilityLabel={t.common.profilePhoto}
+            accessibilityHint={t.profile.editProfile}
             className="relative mb-5"
           >
             <View
@@ -328,16 +328,16 @@ export default function ProfileScreen() {
             icon="history"
             iconBgColor={isDark ? "rgba(59,130,246,0.1)" : "#eff6ff"}
             iconColor={isDark ? "#60a5fa" : "#2563eb"}
-            title="Historique Scans"
-            subtitle={`${stats.scanned} produits scannés`}
+            title={t.profile.stats.scanHistory}
+            subtitle={`${stats.scanned} ${t.profile.stats.productsScanned}`}
             onPress={handleScanHistory}
           />
           <StatsCard
             icon="favorite"
             iconBgColor={isDark ? "rgba(234,179,8,0.1)" : "#fef3c7"}
             iconColor="#eab308"
-            title="Favoris"
-            subtitle={`${stats.favorites} produits sauvegardés`}
+            title={t.profile.stats.favorites}
+            subtitle={`${stats.favorites} ${t.profile.stats.productsSaved}`}
             onPress={handleFavorites}
           />
         </Animated.View>
@@ -390,8 +390,8 @@ export default function ProfileScreen() {
               icon="palette"
               iconBgColor={isDark ? "rgba(168,85,247,0.1)" : "#faf5ff"}
               iconColor={isDark ? "#c084fc" : "#a855f7"}
-              title="Apparence"
-              subtitle={theme === "system" ? "Auto" : theme === "light" ? "Clair" : "Sombre"}
+              title={t.profile.appearance}
+              subtitle={theme === "system" ? t.profile.appearanceAuto : theme === "light" ? t.profile.appearanceLight : t.profile.appearanceDark}
               onPress={() => router.push("/settings/appearance" as any)}
             />
             <MenuItem
@@ -446,7 +446,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
 
           <Text className="text-center text-slate-400 dark:text-slate-600 text-xs mt-6">
-            Version 2.1.0
+            {t.common.version} 2.1.0
           </Text>
         </Animated.View>
       </ScrollView>
