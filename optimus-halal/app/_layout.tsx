@@ -28,6 +28,9 @@ import { trpc, createTRPCClientForProvider } from "@/lib/trpc";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/ui";
 import { logger } from "@/lib/logger";
+import { initSentry } from "../src/lib/sentry";
+
+initSentry();
 
 // Create a client with enterprise-grade configuration
 const queryClient = new QueryClient({

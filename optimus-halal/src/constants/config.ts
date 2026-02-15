@@ -1,8 +1,10 @@
 /**
  * Optimus Halal - Feature Flags Configuration
- * 
+ *
  * Système de feature flags pour activer/désactiver des fonctionnalités
  */
+
+export const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN ?? "";
 
 /**
  * Authentication Mode Configuration
