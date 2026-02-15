@@ -203,7 +203,7 @@ export default function AuthWelcomeScreen() {
           className="mt-12 bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6"
         >
           <Text className="text-slate-900 dark:text-white font-semibold mb-4" accessibilityRole="header">
-            Pourquoi s'inscrire ?
+            Pourquoi s&apos;inscrire ?
           </Text>
           
           <View className="space-y-3">

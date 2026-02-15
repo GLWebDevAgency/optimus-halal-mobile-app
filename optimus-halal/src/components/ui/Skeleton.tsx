@@ -5,7 +5,7 @@
  * Respecte le mode reduced motion du systeme.
  */
 
-import React from "react";
+import React, { useEffect } from "react";
 import { View, StyleSheet, type ViewStyle, type StyleProp } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -15,7 +15,6 @@ import Animated, {
   Easing,
   useReducedMotion,
 } from "react-native-reanimated";
-import { useEffect } from "react";
 
 // ---------------------------------------------------------------------------
 // Base Skeleton

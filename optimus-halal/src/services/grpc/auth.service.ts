@@ -5,7 +5,7 @@
  * Direct communication with Mobile-Service via gRPC-Web
  */
 
-import { grpcClient, tokenManager, GrpcApiError, GrpcStatus } from './client';
+import { grpcClient, tokenManager } from './client';
 import { SERVICES } from './types';
 import type {
   RegisterRequest,

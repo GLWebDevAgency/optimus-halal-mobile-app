@@ -3,7 +3,8 @@
  */
 
 import React from "react";
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
@@ -26,7 +27,7 @@ const LANGUAGES: { code: Language; native: string; flag: string }[] = [
 
 export default function LanguageScreen() {
   const { t, language, setLanguage } = useTranslation();
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
 
   const handleSelect = (lang: Language) => {
     setLanguage(lang);

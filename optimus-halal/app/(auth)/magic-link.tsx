@@ -16,7 +16,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
   useColorScheme,
   ActivityIndicator,
 } from "react-native";
@@ -24,7 +23,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { NotificationFeedbackType } from "expo-haptics";
-import * as Linking from "expo-linking";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -342,7 +340,7 @@ export default function MagicLinkLoginScreen() {
             </Text>
           </View>
           <Text className="text-slate-700 dark:text-slate-300 flex-1">
-            Ouvrez l'email que nous venons de vous envoyer
+            Ouvrez l&apos;email que nous venons de vous envoyer
           </Text>
         </View>
         <View className="flex-row items-start">

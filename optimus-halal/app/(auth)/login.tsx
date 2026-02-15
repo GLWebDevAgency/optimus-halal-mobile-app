@@ -17,7 +17,6 @@ import {
 } from "react-native";
 import { router, Link } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Image } from "expo-image";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as LocalAuthentication from "expo-local-authentication";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
@@ -29,7 +28,6 @@ export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const { impact } = useHaptics();
-  const isDark = colorScheme === "dark";
   const { t } = useTranslation();
 
   const [email, setEmail] = useState("");

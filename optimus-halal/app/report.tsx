@@ -409,7 +409,7 @@ export default function ReportingFormScreen() {
                 Touchez pour ajouter
               </Text>
               <Text className="text-[11px] text-gray-400 mt-0.5">
-                Supporte JPG, PNG jusqu'à 10MB
+                Supporte JPG, PNG jusqu&apos;à 10MB
               </Text>
             </View>
           </TouchableOpacity>

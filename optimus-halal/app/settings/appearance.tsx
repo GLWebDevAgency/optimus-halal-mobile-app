@@ -9,16 +9,15 @@ import {
   View,
   Text,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useHaptics } from "@/hooks";
 
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
-import { useTranslation } from "@/hooks/useTranslation";
 
 const THEME_OPTIONS: { id: ThemeMode; labelKey: string; icon: keyof typeof MaterialIcons.glyphMap; description: string }[] = [
   {
@@ -42,8 +41,7 @@ const THEME_OPTIONS: { id: ThemeMode; labelKey: string; icon: keyof typeof Mater
 ];
 
 export default function AppearanceScreen() {
-  const { t } = useTranslation();
-  const { theme, setTheme, effectiveTheme, colors, isDark } = useTheme();
+  const { theme, setTheme, effectiveTheme, colors } = useTheme();
 
   const { impact } = useHaptics();
   const handleSelectTheme = async (themeOption: ThemeMode) => {

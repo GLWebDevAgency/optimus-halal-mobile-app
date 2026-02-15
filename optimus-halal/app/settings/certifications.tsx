@@ -9,11 +9,11 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
   Switch,
   Modal,
   Pressable,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
@@ -538,7 +538,7 @@ export default function CertificationsScreen() {
                     lineHeight: 18,
                   }}
                 >
-                  Choisir vos certifications permet d'exclure automatiquement les produits qui ne correspondent pas à vos critères religieux ou éthiques lors du scan.
+                  Choisir vos certifications permet d&apos;exclure automatiquement les produits qui ne correspondent pas à vos critères religieux ou éthiques lors du scan.
                 </Text>
               </View>
             </View>

@@ -18,7 +18,6 @@ import {
   StyleSheet,
   Dimensions,
   Alert,
-  Platform,
   useColorScheme,
   StatusBar,
 } from "react-native";
@@ -35,23 +34,19 @@ import Animated, {
   withTiming,
   withSequence,
   withSpring,
-  withDelay,
   Easing,
   FadeIn,
   FadeInDown,
   FadeInUp,
   interpolate,
-  runOnJS,
 } from "react-native-reanimated";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 
-import { Button } from "@/components/ui";
 import { useTranslation } from "@/hooks/useTranslation";
-import { colors } from "@/constants/theme";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const SCAN_FRAME_WIDTH = 320;
 const SCAN_FRAME_HEIGHT = 288;
 const CORNER_SIZE = 48;
@@ -62,7 +57,6 @@ export default function ScannerScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const { impact, notification } = useHaptics();
-  const isDark = colorScheme === "dark";
   const { t } = useTranslation();
   const cameraRef = useRef<CameraView>(null);
 
@@ -244,7 +238,7 @@ export default function ScannerScreen() {
           <View style={styles.permissionTextContainer}>
             <Text style={styles.permissionTitle}>{t.scanner.noPermission}</Text>
             <Text style={styles.permissionDescription}>
-              Pour scanner les produits, nous avons besoin d'accéder à votre caméra.
+              Pour scanner les produits, nous avons besoin d&apos;accéder à votre caméra.
             </Text>
           </View>
           <TouchableOpacity

@@ -32,11 +32,10 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { Card } from "@/components/ui";
 import { useTranslation } from "@/hooks/useTranslation";
 import { trpc } from "@/lib/trpc";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const CARD_WIDTH = 280;
 
 // Filter → storeType mapping (backend enum values)
@@ -201,7 +200,6 @@ export default function MapScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const { impact } = useHaptics();
-  const isDark = colorScheme === "dark";
   const { t } = useTranslation();
 
   const [searchQuery, setSearchQuery] = useState("");

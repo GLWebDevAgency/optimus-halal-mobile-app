@@ -3,20 +3,19 @@
  * Faithful reproduction of the HTML template design
  */
 
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
   Switch,
   StatusBar,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
-import { usePreferencesStore } from "@/store";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 
@@ -104,8 +103,7 @@ const FREQUENCY_OPTIONS = [
 ];
 
 export default function NotificationsScreen() {
-  const { notifications, setNotificationPref } = usePreferencesStore();
-  const { colors, isDark } = useTheme();
+  const { isDark } = useTheme();
   const { t } = useTranslation();
 
   // Local state for notification preferences

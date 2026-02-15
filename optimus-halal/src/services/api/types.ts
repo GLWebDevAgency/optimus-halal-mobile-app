@@ -810,5 +810,4 @@ export interface RedeemRewardResponse {
  * TODO: Replace with the real shared AppRouter from the backend package
  * when @optimus-halal/shared-types is published.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AppRouter = any;

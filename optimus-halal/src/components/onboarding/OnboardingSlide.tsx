@@ -15,7 +15,7 @@ import Animated, {
 } from "react-native-reanimated";
 import type { OnboardingSlide as OnboardingSlideType } from "@constants/onboarding";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 interface OnboardingSlideProps {
   slide: OnboardingSlideType;
