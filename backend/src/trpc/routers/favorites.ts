@@ -33,6 +33,7 @@ export const favoritesRouter = router({
             barcode: products.barcode,
             imageUrl: products.imageUrl,
             halalStatus: products.halalStatus,
+            category: products.category,
           },
         })
         .from(favorites)
