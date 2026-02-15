@@ -44,28 +44,28 @@ import { useTranslation, useHaptics } from "@/hooks";
 
 const HALAL_STATUS_CONFIG = {
   halal: {
-    label: "Certifié Halal",
+    labelKey: "certifiedHalal" as const,
     icon: "verified" as keyof typeof MaterialIcons.glyphMap,
     color: "#1de560",
     bg: { light: "rgba(29,229,96,0.08)", dark: "rgba(29,229,96,0.15)" },
     border: { light: "#d1fae5", dark: "#065f46" },
   },
   haram: {
-    label: "Haram Détecté",
+    labelKey: "haramDetected" as const,
     icon: "dangerous" as keyof typeof MaterialIcons.glyphMap,
     color: "#ef4444",
     bg: { light: "rgba(239,68,68,0.08)", dark: "rgba(239,68,68,0.15)" },
     border: { light: "#fecaca", dark: "#7f1d1d" },
   },
   doubtful: {
-    label: "Statut Douteux",
+    labelKey: "doubtfulStatus" as const,
     icon: "help" as keyof typeof MaterialIcons.glyphMap,
     color: "#f97316",
     bg: { light: "rgba(249,115,22,0.08)", dark: "rgba(249,115,22,0.15)" },
     border: { light: "#fed7aa", dark: "#7c2d12" },
   },
   unknown: {
-    label: "Non Vérifié",
+    labelKey: "unverified" as const,
     icon: "help-outline" as keyof typeof MaterialIcons.glyphMap,
     color: "#94a3b8",
     bg: { light: "rgba(148,163,184,0.08)", dark: "rgba(148,163,184,0.15)" },
@@ -156,7 +156,7 @@ export default function ScanResultScreen() {
     if (!product) return;
     try {
       await Share.share({
-        message: `${product.name} par ${product.brand ?? "?"} — ${statusConfig.label}. Vérifié avec Optimus Halal.`,
+        message: `${product.name} par ${product.brand ?? "?"} — ${t.scanResult[statusConfig.labelKey]}. Vérifié avec Optimus Halal.`,
       });
     } catch (error) {
       console.error(error);
@@ -201,7 +201,7 @@ export default function ScanResultScreen() {
         >
           <ActivityIndicator size="large" color="#1de560" />
           <Text className="text-base font-medium text-slate-500 dark:text-slate-400">
-            Analyse en cours...
+            {t.scanResult.analyzing}
           </Text>
           <Text className="text-sm text-slate-400 dark:text-slate-500">
             {barcode}
@@ -234,30 +234,29 @@ export default function ScanResultScreen() {
             />
           </View>
           <Text className="text-lg font-bold text-slate-900 dark:text-white text-center">
-            Erreur d&apos;analyse
+            {t.scanResult.analysisError}
           </Text>
           <Text className="text-sm text-slate-500 dark:text-slate-400 text-center leading-relaxed">
-            Impossible d&apos;analyser le code-barres. Vérifiez votre connexion
-            internet et réessayez.
+            {t.scanResult.analysisErrorDesc}
           </Text>
           <View className="flex-row gap-3 mt-4">
             <TouchableOpacity
               onPress={handleGoBack}
               className="px-6 py-3 rounded-xl bg-slate-100 dark:bg-slate-800"
               accessibilityRole="button"
-              accessibilityLabel="Retour"
+              accessibilityLabel={t.common.back}
             >
               <Text className="font-bold text-sm text-slate-700 dark:text-slate-300">
-                Retour
+                {t.common.back}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleRetry}
               className="px-6 py-3 rounded-xl bg-primary"
               accessibilityRole="button"
-              accessibilityLabel="Réessayer"
+              accessibilityLabel={t.common.retry}
             >
-              <Text className="font-bold text-sm text-white">Réessayer</Text>
+              <Text className="font-bold text-sm text-white">{t.common.retry}</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -288,20 +287,19 @@ export default function ScanResultScreen() {
             />
           </View>
           <Text className="text-lg font-bold text-slate-900 dark:text-white text-center">
-            Produit non trouvé
+            {t.scanResult.productNotFound}
           </Text>
           <Text className="text-sm text-slate-500 dark:text-slate-400 text-center leading-relaxed">
-            Le code-barres {barcode} n&apos;a pas été reconnu dans notre base de
-            données ni sur OpenFoodFacts.
+            {t.scanResult.productNotFoundDesc}
           </Text>
           <TouchableOpacity
             onPress={handleGoBack}
             className="px-8 py-3 rounded-xl bg-primary mt-4"
             accessibilityRole="button"
-            accessibilityLabel="Scanner un autre produit"
+            accessibilityLabel={t.scanResult.scanAnother}
           >
             <Text className="font-bold text-sm text-white">
-              Scanner un autre produit
+              {t.scanResult.scanAnother}
             </Text>
           </TouchableOpacity>
         </Animated.View>
@@ -327,7 +325,7 @@ export default function ScanResultScreen() {
           variant="outline"
           onPress={handleGoBack}
           color={isDark ? "#ffffff" : "#1e293b"}
-          accessibilityLabel="Retour"
+          accessibilityLabel={t.common.back}
         />
         <Text
           className="text-base font-bold text-slate-900 dark:text-white tracking-tight"
@@ -340,7 +338,7 @@ export default function ScanResultScreen() {
           variant="outline"
           onPress={handleShare}
           color={isDark ? "#ffffff" : "#1e293b"}
-          accessibilityLabel="Partager"
+          accessibilityLabel={t.scanResult.shareProduct}
         />
       </Animated.View>
 
@@ -408,12 +406,12 @@ export default function ScanResultScreen() {
                   className="text-sm font-bold tracking-wide uppercase"
                   style={{ color: statusConfig.color }}
                 >
-                  {statusConfig.label}
+                  {t.scanResult[statusConfig.labelKey]}
                 </Text>
               </View>
               <View className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded border border-slate-200 dark:border-slate-700">
                 <Text className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                  {confidencePercent}% confiance
+                  {confidencePercent}% {t.scanResult.confidence}
                 </Text>
               </View>
             </View>
@@ -429,7 +427,7 @@ export default function ScanResultScreen() {
               {product.brand && (
                 <View className="flex-row items-center gap-1">
                   <Text className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                    Marque:
+                    {t.scanResult.brand}:
                   </Text>
                   <Text className="text-sm font-semibold text-slate-900 dark:text-gray-200">
                     {product.brand}
@@ -456,10 +454,10 @@ export default function ScanResultScreen() {
                 </View>
                 <View className="flex-1">
                   <Text className="text-sm font-bold text-slate-900 dark:text-gray-200 uppercase tracking-wider">
-                    Score de Confiance
+                    {t.scanResult.confidenceScore}
                   </Text>
                   <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Basé sur l&apos;analyse des ingrédients et la base de données
+                    {t.scanResult.confidenceScoreDesc}
                   </Text>
                 </View>
               </View>
@@ -488,7 +486,7 @@ export default function ScanResultScreen() {
               <View className="flex-row items-center gap-2 mb-2">
                 <MaterialIcons name="block" size={22} color="#ef4444" />
                 <Text className="text-base font-bold text-red-800 dark:text-red-200">
-                  Boycott Actif
+                  {t.scanResult.boycottActive}
                 </Text>
               </View>
               {boycott.targets.map((target: any, idx: number) => (
@@ -498,14 +496,14 @@ export default function ScanResultScreen() {
                 >
                   <Text className="text-sm font-semibold text-red-700 dark:text-red-300">
                     {target.companyName}
-                    {target.boycottLevel === "official_bds" ? " — BDS Officiel" : ""}
+                    {target.boycottLevel === "official_bds" ? ` ${t.scanResult.bdsOfficial}` : ""}
                   </Text>
                   <Text className="text-xs text-red-600 dark:text-red-400 mt-0.5 leading-relaxed">
                     {target.reasonSummary ?? target.companyName}
                   </Text>
                   {target.sourceUrl && (
                     <Text className="text-xs text-red-500/70 dark:text-red-500/60 mt-1">
-                      Source: {target.sourceName ?? "BDS"}
+                      {t.scanResult.source}: {target.sourceName ?? "BDS"}
                     </Text>
                   )}
                 </View>
@@ -524,7 +522,7 @@ export default function ScanResultScreen() {
               className="text-lg font-bold text-slate-900 dark:text-white mb-3"
               accessibilityRole="header"
             >
-              Pourquoi ce statut ?
+              {t.scanResult.whyThisStatus}
             </Text>
             <Card variant="outlined" className="p-4">
               {haramReasons.map((reason, idx) => (
@@ -577,7 +575,7 @@ export default function ScanResultScreen() {
               className="text-lg font-bold text-slate-900 dark:text-white mb-3"
               accessibilityRole="header"
             >
-              Source de l&apos;analyse
+              {t.scanResult.analysisSource}
             </Text>
             <Card variant="outlined" className="p-4">
               <View className="flex-row items-center gap-3">
@@ -595,7 +593,7 @@ export default function ScanResultScreen() {
                 </View>
                 <View className="flex-1">
                   <Text className="text-sm font-bold text-slate-900 dark:text-gray-200">
-                    {halalAnalysis.certifierName ?? "Analyse algorithmique"}
+                    {halalAnalysis.certifierName ?? t.scanResult.algorithmicAnalysis}
                   </Text>
                   <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     {halalAnalysis.analysisSource}
@@ -608,7 +606,7 @@ export default function ScanResultScreen() {
                   }}
                 >
                   <Text className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
-                    Tier {halalAnalysis.tier === "certified" ? "1" : halalAnalysis.tier === "analyzed_clean" ? "2" : halalAnalysis.tier === "doubtful" ? "3" : "4"}
+                    {t.scanResult.tier} {halalAnalysis.tier === "certified" ? "1" : halalAnalysis.tier === "analyzed_clean" ? "2" : halalAnalysis.tier === "doubtful" ? "3" : "4"}
                   </Text>
                 </View>
               </View>
@@ -627,11 +625,11 @@ export default function ScanResultScreen() {
                 className="text-lg font-bold text-slate-900 dark:text-white"
                 accessibilityRole="header"
               >
-                Additifs détectés
+                {t.scanResult.additivesDetected}
               </Text>
               <View className="bg-slate-100 dark:bg-surface-dark border border-slate-200 dark:border-slate-700 px-2 py-1 rounded">
                 <Text className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                  {additiveReasons.length} additif{additiveReasons.length > 1 ? "s" : ""}
+                  {additiveReasons.length} {t.scanResult.additive}{additiveReasons.length > 1 ? "s" : ""}
                 </Text>
               </View>
             </View>
@@ -673,7 +671,7 @@ export default function ScanResultScreen() {
                             : "#1de560",
                     }}
                   >
-                    {additive.status === "haram" ? "Haram" : additive.status === "doubtful" ? "Douteux" : "Halal"}
+                    {additive.status === "haram" ? t.scanResult.haram : additive.status === "doubtful" ? t.scanResult.doubtful : t.scanResult.halal}
                   </Text>
                 </View>
               ))}
@@ -691,7 +689,7 @@ export default function ScanResultScreen() {
               className="text-lg font-bold text-slate-900 dark:text-white mb-3"
               accessibilityRole="header"
             >
-              Allergènes
+              {t.scanResult.allergens}
             </Text>
             <View className="flex-row flex-wrap gap-2">
               {allergensTags.map((tag) => {
@@ -721,7 +719,7 @@ export default function ScanResultScreen() {
               className="text-lg font-bold text-slate-900 dark:text-white mb-3"
               accessibilityRole="header"
             >
-              Nutrition
+              {t.scanResult.nutrition}
             </Text>
             <View className="flex-row gap-3">
               {offExtras.nutriscoreGrade && (
@@ -785,7 +783,7 @@ export default function ScanResultScreen() {
                 className="text-lg font-bold text-slate-900 dark:text-white"
                 accessibilityRole="header"
               >
-                Composition
+                {t.scanResult.composition}
               </Text>
               <View className="bg-slate-100 dark:bg-surface-dark border border-slate-200 dark:border-slate-700 px-2 py-1 rounded">
                 <Text className="text-xs font-medium text-slate-500 dark:text-slate-400">
@@ -812,15 +810,15 @@ export default function ScanResultScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={
                   showAllIngredients
-                    ? "Voir moins d'ingrédients"
-                    : "Voir tous les ingrédients"
+                    ? t.scanResult.showLessIngredients
+                    : t.scanResult.showIngredients.replace("{{count}}", String(ingredients.length))
                 }
                 accessibilityState={{ expanded: showAllIngredients }}
               >
                 <Text className="text-sm font-semibold text-slate-500 dark:text-slate-400">
                   {showAllIngredients
-                    ? "Voir moins"
-                    : `Voir les ${ingredients.length} ingrédients`}
+                    ? t.scanResult.showLess
+                    : t.scanResult.showIngredients.replace("{{count}}", String(ingredients.length))}
                 </Text>
                 <MaterialIcons
                   name={showAllIngredients ? "expand-less" : "expand-more"}
@@ -847,11 +845,10 @@ export default function ScanResultScreen() {
               />
               <View className="flex-1">
                 <Text className="text-sm font-bold text-blue-800 dark:text-blue-200">
-                  Nouveau produit ajouté
+                  {t.scanResult.newProductAdded}
                 </Text>
                 <Text className="text-sm text-blue-700 dark:text-blue-300/80 mt-0.5 leading-relaxed">
-                  Ce produit vient d&apos;être ajouté à notre base de données grâce
-                  à votre scan.
+                  {t.scanResult.newProductAddedDesc}
                 </Text>
               </View>
             </View>
@@ -882,8 +879,8 @@ export default function ScanResultScreen() {
             accessibilityRole="button"
             accessibilityLabel={
               productIsFavorite
-                ? "Retirer des favoris"
-                : "Ajouter aux favoris"
+                ? t.scanResult.removeFromFavorites
+                : t.scanResult.addToFavorites
             }
             accessibilityState={{ selected: productIsFavorite }}
           >
@@ -913,12 +910,12 @@ export default function ScanResultScreen() {
               elevation: 4,
             }}
             accessibilityRole="button"
-            accessibilityLabel="Où acheter ce produit"
-            accessibilityHint="Afficher les commerces à proximité"
+            accessibilityLabel={t.scanResult.whereToBuy}
+            accessibilityHint={t.scanResult.findStores}
           >
             <MaterialIcons name="location-on" size={22} color="#0d1b13" />
             <Text className="text-base font-bold text-slate-900">
-              Où acheter ?
+              {t.scanResult.whereToBuy}
             </Text>
           </TouchableOpacity>
 
@@ -928,8 +925,8 @@ export default function ScanResultScreen() {
             className="h-12 w-12 items-center justify-center rounded-xl bg-slate-50 dark:bg-background-dark border border-slate-100 dark:border-slate-700"
             activeOpacity={0.7}
             accessibilityRole="button"
-            accessibilityLabel="Signaler un problème"
-            accessibilityHint="Signaler une erreur sur ce produit"
+            accessibilityLabel={t.scanResult.report}
+            accessibilityHint={t.scanResult.report}
           >
             <MaterialIcons
               name="flag"

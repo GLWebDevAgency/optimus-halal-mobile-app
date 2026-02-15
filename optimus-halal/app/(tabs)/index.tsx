@@ -182,8 +182,8 @@ export default function HomeScreen() {
     if (profile?.displayName) {
       return profile.displayName.split(" ")[0];
     }
-    return "Utilisateur";
-  }, [profile]);
+    return t.common.user;
+  }, [profile, t]);
 
   const totalScans = dashboardQuery.data?.totalScans ?? 0;
 
@@ -243,8 +243,8 @@ export default function HomeScreen() {
             className="relative h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-700/50"
             activeOpacity={0.7}
             accessibilityRole="button"
-            accessibilityLabel="Notifications"
-            accessibilityHint="Voir les alertes"
+            accessibilityLabel={t.common.notifications}
+            accessibilityHint={t.common.viewAlerts}
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 1 },
@@ -307,7 +307,7 @@ export default function HomeScreen() {
                   </Text>
                 </View>
                 <Text className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  {dashboardQuery.data?.totalReports ?? 0} signalement{(dashboardQuery.data?.totalReports ?? 0) > 1 ? "s" : ""} · Niveau {profile?.level ?? 1}
+                  {dashboardQuery.data?.totalReports ?? 0} {(dashboardQuery.data?.totalReports ?? 0) > 1 ? t.home.reportsPlural : t.home.reports} · Niveau {profile?.level ?? 1}
                 </Text>
               </View>
 
@@ -367,7 +367,7 @@ export default function HomeScreen() {
             <Text accessibilityRole="header" className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
               {t.home.featured}
             </Text>
-            <TouchableOpacity activeOpacity={0.7} accessibilityRole="link" accessibilityLabel="Voir tout les articles à la une">
+            <TouchableOpacity activeOpacity={0.7} accessibilityRole="link" accessibilityLabel={`${t.home.viewAll} ${t.home.featured}`}>
               <Text className="text-xs font-semibold text-primary-dark dark:text-primary">
                 {t.home.viewAll}
               </Text>
@@ -415,7 +415,7 @@ export default function HomeScreen() {
                         }`}
                       >
                         <Text className="text-[10px] font-bold uppercase tracking-wider text-white">
-                          {item.type === "new" ? "Nouveau" : "Blog"}
+                          {item.type === "new" ? t.home.newBadge : t.home.blogBadge}
                         </Text>
                       </View>
                       <Text className="text-base font-bold text-white">
@@ -444,7 +444,7 @@ export default function HomeScreen() {
                 activeOpacity={0.7}
                 onPress={() => handleNavigate("favorites")}
                 accessibilityRole="link"
-                accessibilityLabel={`Voir tous les favoris, ${favoriteProducts.length} produits`}
+                accessibilityLabel={`${t.home.viewAll} ${t.home.favorites}, ${favoriteProducts.length}`}
               >
                 <Text className="text-xs font-semibold text-primary-dark dark:text-primary">
                   {t.home.viewAll} ({favoriteProducts.length})
@@ -463,8 +463,8 @@ export default function HomeScreen() {
                 <TouchableOpacity
                   activeOpacity={0.8}
                   accessibilityRole="button"
-                  accessibilityLabel="Ajouter un favori"
-                  accessibilityHint="Ouvrir le scanner pour ajouter un produit aux favoris"
+                  accessibilityLabel={t.home.addFavorite}
+                  accessibilityHint={t.home.emptyFavorites}
                   className="items-center justify-center gap-2 rounded-2xl bg-slate-50 dark:bg-white/5 border border-dashed border-slate-200 dark:border-slate-700/50"
                   style={{ width: 200, height: 100, paddingHorizontal: 16 }}
                   onPress={() => router.push("/(tabs)/scanner")}
@@ -475,7 +475,7 @@ export default function HomeScreen() {
                     color={isDark ? "#94a3b8" : "#64748b"}
                   />
                   <Text className="text-xs text-center text-slate-500 dark:text-slate-400">
-                    Scannez un produit pour l&apos;ajouter à vos favoris
+                    {t.home.emptyFavorites}
                   </Text>
                 </TouchableOpacity>
               </Animated.View>
@@ -488,8 +488,8 @@ export default function HomeScreen() {
                   <TouchableOpacity
                     activeOpacity={0.8}
                     accessibilityRole="button"
-                    accessibilityLabel={`Favori ${item.name}`}
-                    accessibilityHint="Voir les favoris"
+                    accessibilityLabel={`${t.home.favorites} ${item.name}`}
+                    accessibilityHint={t.home.favorites}
                     className="items-center gap-2"
                     style={{ width: FAVORITE_CIRCLE_SIZE }}
                     onPress={() => handleNavigate("favorites")}
@@ -519,8 +519,8 @@ export default function HomeScreen() {
               <TouchableOpacity
                 activeOpacity={0.7}
                 accessibilityRole="button"
-                accessibilityLabel="Ajouter un favori"
-                accessibilityHint="Ouvrir le scanner pour ajouter un produit"
+                accessibilityLabel={t.home.addFavorite}
+                accessibilityHint={t.home.emptyFavorites}
                 className="items-center gap-2"
                 style={{ width: FAVORITE_CIRCLE_SIZE }}
                 onPress={() => router.push("/(tabs)/scanner")}
@@ -554,8 +554,8 @@ export default function HomeScreen() {
             <TouchableOpacity
               activeOpacity={0.9}
               accessibilityRole="button"
-              accessibilityLabel="Aperçu de la carte"
-              accessibilityHint="Ouvrir la carte des magasins à proximité"
+              accessibilityLabel={t.map.title}
+              accessibilityHint={t.home.nearYou}
               onPress={() => router.push("/(tabs)/map")}
             >
               <View className="relative h-32 w-full overflow-hidden rounded-t-xl bg-slate-200 dark:bg-slate-800">
@@ -594,17 +594,17 @@ export default function HomeScreen() {
               </View>
               <View className="flex-1">
                 <Text className="text-sm font-bold text-slate-900 dark:text-white" numberOfLines={1}>
-                  {nearbyStore?.name ?? "Recherche en cours..."}
+                  {nearbyStore?.name ?? t.common.loading}
                 </Text>
                 <Text className="text-xs text-slate-500 dark:text-slate-400" numberOfLines={1}>
-                  {nearbyStore ? `${nearbyStore.address}, ${nearbyStore.city}` : "Chargement..."}
+                  {nearbyStore ? `${nearbyStore.address}, ${nearbyStore.city}` : t.common.loading}
                 </Text>
               </View>
               <TouchableOpacity
                 activeOpacity={0.7}
                 accessibilityRole="button"
-                accessibilityLabel="Voir la carte"
-                accessibilityHint="Ouvrir la carte des magasins"
+                accessibilityLabel={t.map.title}
+                accessibilityHint={t.home.nearYou}
                 className="rounded-full p-2 bg-slate-100 dark:bg-white/5"
                 onPress={() => router.push("/(tabs)/map")}
               >
