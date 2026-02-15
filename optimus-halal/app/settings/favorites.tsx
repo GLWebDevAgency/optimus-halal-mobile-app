@@ -9,9 +9,9 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
   Dimensions,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";

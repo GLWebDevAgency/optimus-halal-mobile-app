@@ -10,7 +10,6 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
   TextInput,
   Alert,
   StatusBar,
@@ -18,6 +17,7 @@ import {
   Platform,
   ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
