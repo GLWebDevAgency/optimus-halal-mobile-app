@@ -23,6 +23,8 @@ const envSchema = z.object({
     .string()
     .default("*")
     .describe("Comma-separated allowed origins, or * for all"),
+  SENTRY_DSN: z.string().url().optional(),
+  SENTRY_ENVIRONMENT: z.string().default("development"),
 });
 
 export type Env = z.infer<typeof envSchema>;
