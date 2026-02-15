@@ -69,6 +69,16 @@ export {
 } from './useFavorites';
 
 // ============================================
+// LOYALTY HOOKS (tRPC)
+// ============================================
+
+export {
+  useLoyaltyBalance,
+  useAchievements,
+  useLeaderboard,
+} from './useLoyalty';
+
+// ============================================
 // HAPTICS HOOK
 // ============================================
 
