@@ -195,8 +195,8 @@ export default function HomeScreen() {
     [articlesQuery.data?.items],
   );
 
-  const hasApiError =
-    alertsQuery.isError || articlesQuery.isError || dashboardQuery.isError;
+  // Only show connection error when core data fails (not optional feeds)
+  const hasApiError = dashboardQuery.isError && meQuery.isError;
 
   const userName = useMemo(() => {
     if (me?.displayName) {
