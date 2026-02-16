@@ -111,11 +111,11 @@ export const fr = {
     appearanceDark: "Sombre",
     language: "Langue",
     helpCenter: "Centre d'aide",
-    reportProblem: "Signaler un probl\u00E8me",
-    madhab: "\u00C9cole juridique",
-    healthProfile: "Profil sant\u00E9",
-    logout: "D\u00E9connexion",
-    logoutConfirm: "\u00CAtes-vous s\u00FBr de vouloir vous d\u00E9connecter ?",
+    reportProblem: "Signaler un problème",
+    madhab: "École juridique",
+    healthProfile: "Profil santé",
+    logout: "Déconnexion",
+    logoutConfirm: "Êtes-vous sûr de vouloir vous déconnecter ?",
   },
 
   // Edit Profile
@@ -147,6 +147,54 @@ export const fr = {
     changePhotoHint: "Ouvrir la galerie pour choisir une nouvelle photo",
     retryHint: "Recharger le profil",
     backHint: "Revenir à l'écran précédent",
+  },
+
+  // Madhab Screen
+  madhab: {
+    title: "École juridique",
+    infoTitle: "Pourquoi c'est important ?",
+    infoBody: "Votre école juridique (madhab) influence l'analyse de certains additifs comme la gélatine (E441) et les mono/diglycérides (E471). Les savants ont des avis différents selon les écoles.",
+    options: {
+      hanafi: {
+        label: "Hanafi",
+        description: "La plus suivie dans le monde — Turquie, Asie du Sud, Asie Centrale, Balkans",
+      },
+      shafii: {
+        label: "Shafi'i",
+        description: "Asie du Sud-Est, Afrique de l'Est, Yémen, Kurdistân",
+      },
+      maliki: {
+        label: "Maliki",
+        description: "Afrique du Nord et de l'Ouest, parties du Golfe",
+      },
+      hanbali: {
+        label: "Hanbali",
+        description: "Arabie Saoudite, Qatar, parties du Golfe",
+      },
+      general: {
+        label: "Général (le plus prudent)",
+        description: "Suit l'avis majoritaire. Recommandé si vous ne suivez pas une école spécifique.",
+      },
+    },
+  },
+
+  // Health Profile Screen
+  healthProfile: {
+    title: "Profil santé",
+    privacyTitle: "Confidentialité",
+    privacyBody: "Ces informations personnalisent les alertes santé lors du scan. Aucune donnée n'est partagée avec des tiers. Vous pouvez les désactiver à tout moment.",
+    pregnant: {
+      label: "Je suis enceinte",
+      description: "Alertes sur E171, E951, nitrites et autres additifs déconseillés",
+    },
+    children: {
+      label: "J'ai des enfants en bas âge",
+      description: "Alertes sur les colorants liés à l'hyperactivité (Southampton Six)",
+    },
+    allergens: {
+      title: "Mes allergènes",
+      description: "Gérer mes exclusions alimentaires",
+    },
   },
 
   // Favorites

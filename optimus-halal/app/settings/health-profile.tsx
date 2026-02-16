@@ -68,7 +68,7 @@ export default function HealthProfileScreen() {
           className="flex-1 text-center text-lg font-bold text-slate-900 dark:text-white"
           accessibilityRole="header"
         >
-          Profil sant\u00E9
+          {t.healthProfile.title}
         </Text>
         <View className="w-10" />
       </Animated.View>
@@ -101,13 +101,11 @@ export default function HealthProfileScreen() {
                 color={isDark ? "#60a5fa" : "#3b82f6"}
               />
               <Text className="text-sm font-semibold text-slate-900 dark:text-white">
-                Confidentialit\u00E9
+                {t.healthProfile.privacyTitle}
               </Text>
             </View>
             <Text className="text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-              Ces informations personnalisent les alertes sant\u00E9 lors du scan.
-              Aucune donn\u00E9e n\u2019est partag\u00E9e avec des tiers. Vous pouvez les
-              d\u00E9sactiver \u00E0 tout moment.
+              {t.healthProfile.privacyBody}
             </Text>
           </View>
         </Animated.View>
@@ -144,10 +142,10 @@ export default function HealthProfileScreen() {
                 </View>
                 <View className="flex-1">
                   <Text className="text-sm font-semibold text-slate-900 dark:text-white">
-                    Je suis enceinte
+                    {t.healthProfile.pregnant.label}
                   </Text>
                   <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                    Alertes sur E171, E951, nitrites et autres additifs d\u00E9conseill\u00E9s
+                    {t.healthProfile.pregnant.description}
                   </Text>
                 </View>
               </View>
@@ -159,7 +157,7 @@ export default function HealthProfileScreen() {
                   true: colors.primary,
                 }}
                 thumbColor="#ffffff"
-                accessibilityLabel="Je suis enceinte"
+                accessibilityLabel={t.healthProfile.pregnant.label}
               />
             </View>
 
@@ -192,10 +190,10 @@ export default function HealthProfileScreen() {
                 </View>
                 <View className="flex-1">
                   <Text className="text-sm font-semibold text-slate-900 dark:text-white">
-                    J'ai des enfants en bas \u00E2ge
+                    {t.healthProfile.children.label}
                   </Text>
                   <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                    Alertes sur les colorants li\u00E9s \u00E0 l\u2019hyperactivit\u00E9 (Southampton Six)
+                    {t.healthProfile.children.description}
                   </Text>
                 </View>
               </View>
@@ -207,7 +205,7 @@ export default function HealthProfileScreen() {
                   true: colors.primary,
                 }}
                 thumbColor="#ffffff"
-                accessibilityLabel="J'ai des enfants en bas age"
+                accessibilityLabel={t.healthProfile.children.label}
               />
             </View>
           </View>
@@ -222,7 +220,7 @@ export default function HealthProfileScreen() {
             onPress={() => router.push("/settings/exclusions" as any)}
             activeOpacity={0.7}
             accessibilityRole="button"
-            accessibilityLabel="G\u00E9rer mes exclusions alimentaires"
+            accessibilityLabel={t.healthProfile.allergens.description}
             className="rounded-xl p-4 flex-row items-center justify-between"
             style={{
               backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#ffffff",
@@ -247,10 +245,10 @@ export default function HealthProfileScreen() {
               </View>
               <View>
                 <Text className="text-sm font-semibold text-slate-900 dark:text-white">
-                  Mes allerg\u00E8nes
+                  {t.healthProfile.allergens.title}
                 </Text>
                 <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  G\u00E9rer mes exclusions alimentaires
+                  {t.healthProfile.allergens.description}
                 </Text>
               </View>
             </View>
@@ -266,7 +264,7 @@ export default function HealthProfileScreen() {
         {updateProfile.isPending && (
           <Animated.View entering={FadeIn.duration(200)} className="px-4 mt-2">
             <Text className="text-xs text-center text-slate-400 dark:text-slate-500">
-              Enregistrement...
+              {t.editProfile.saving}
             </Text>
           </Animated.View>
         )}

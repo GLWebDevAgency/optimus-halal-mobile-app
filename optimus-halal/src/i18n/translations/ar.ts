@@ -101,11 +101,11 @@ export const ar: TranslationKeys = {
     appearanceDark: "داكن",
     language: "اللغة",
     helpCenter: "مركز المساعدة",
-    reportProblem: "\u0627\u0644\u0625\u0628\u0644\u0627\u063A \u0639\u0646 \u0645\u0634\u0643\u0644\u0629",
-    madhab: "\u0627\u0644\u0645\u0630\u0647\u0628 \u0627\u0644\u0641\u0642\u0647\u064A",
-    healthProfile: "\u0627\u0644\u0645\u0644\u0641 \u0627\u0644\u0635\u062D\u064A",
-    logout: "\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062E\u0631\u0648\u062C",
-    logoutConfirm: "\u0647\u0644 \u0623\u0646\u062A \u0645\u062A\u0623\u0643\u062F \u0645\u0646 \u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062E\u0631\u0648\u062C\u061F",
+    reportProblem: "الإبلاغ عن مشكلة",
+    madhab: "المذهب الفقهي",
+    healthProfile: "الملف الصحي",
+    logout: "تسجيل الخروج",
+    logoutConfirm: "هل أنت متأكد من تسجيل الخروج؟",
   },
   editProfile: {
     title: "تعديل الملف",
@@ -136,6 +136,54 @@ export const ar: TranslationKeys = {
     retryHint: "إعادة تحميل الملف",
     backHint: "العودة إلى الشاشة السابقة",
   },
+  // Madhab Screen
+  madhab: {
+    title: "المذهب الفقهي",
+    infoTitle: "لماذا هذا مهم؟",
+    infoBody: "مذهبك الفقهي يؤثر على تحليل بعض الإضافات مثل الجيلاتين (E441) والأحادي/ثنائي الغليسيريد (E471). للعلماء آراء مختلفة حسب المذاهب.",
+    options: {
+      hanafi: {
+        label: "حنفي",
+        description: "الأكثر اتباعاً في العالم — تركيا، جنوب آسيا، آسيا الوسطى، البلقان",
+      },
+      shafii: {
+        label: "شافعي",
+        description: "جنوب شرق آسيا، شرق أفريقيا، اليمن، كردستان",
+      },
+      maliki: {
+        label: "مالكي",
+        description: "شمال وغرب أفريقيا، أجزاء من الخليج",
+      },
+      hanbali: {
+        label: "حنبلي",
+        description: "المملكة العربية السعودية، قطر، أجزاء من الخليج",
+      },
+      general: {
+        label: "عام (الأكثر احتياطاً)",
+        description: "يتبع رأي الأغلبية. موصى به إذا لم تتبع مذهباً محدداً.",
+      },
+    },
+  },
+
+  // Health Profile Screen
+  healthProfile: {
+    title: "الملف الصحي",
+    privacyTitle: "الخصوصية",
+    privacyBody: "هذه المعلومات تخصص تنبيهات الصحة أثناء المسح. لا يتم مشاركة أي بيانات مع أطراف ثالثة. يمكنك تعطيلها في أي وقت.",
+    pregnant: {
+      label: "أنا حامل",
+      description: "تنبيهات حول E171، E951، النتريت وإضافات أخرى غير مستحسنة",
+    },
+    children: {
+      label: "لدي أطفال صغار",
+      description: "تنبيهات حول الملونات المرتبطة بفرط النشاط (ساوثهامبتون ستة)",
+    },
+    allergens: {
+      title: "مسببات الحساسية",
+      description: "إدارة استثناءاتي الغذائية",
+    },
+  },
+
   favorites: {
     title: "مفضلاتي",
     empty: "لا توجد مفضلات",

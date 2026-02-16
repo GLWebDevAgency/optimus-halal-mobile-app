@@ -6,7 +6,7 @@
  * E471 (mono/diglycerides), and others where scholars differ.
  */
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -23,46 +23,15 @@ import { trpc } from "@/lib/trpc";
 
 type MadhabValue = "hanafi" | "shafii" | "maliki" | "hanbali" | "general";
 
-const MADHAB_OPTIONS: {
-  value: MadhabValue;
-  label: string;
-  description: string;
-  icon: keyof typeof MaterialIcons.glyphMap;
-}[] = [
-  {
-    value: "hanafi",
-    label: "Hanafi",
-    description:
-      "La plus suivie dans le monde — Turquie, Asie du Sud, Asie Centrale, Balkans",
-    icon: "mosque",
-  },
-  {
-    value: "shafii",
-    label: "Shafi'i",
-    description:
-      "Asie du Sud-Est, Afrique de l'Est, Yémen, Kurdist\u00E2n",
-    icon: "mosque",
-  },
-  {
-    value: "maliki",
-    label: "Maliki",
-    description: "Afrique du Nord et de l'Ouest, parties du Golfe",
-    icon: "mosque",
-  },
-  {
-    value: "hanbali",
-    label: "Hanbali",
-    description: "Arabie Saoudite, Qatar, parties du Golfe",
-    icon: "mosque",
-  },
-  {
-    value: "general",
-    label: "G\u00E9n\u00E9ral (le plus prudent)",
-    description:
-      "Suit l\u2019avis majoritaire. Recommand\u00E9 si vous ne suivez pas une \u00E9cole sp\u00E9cifique.",
-    icon: "shield",
-  },
-];
+const MADHAB_ICONS: Record<MadhabValue, keyof typeof MaterialIcons.glyphMap> = {
+  hanafi: "mosque",
+  shafii: "mosque",
+  maliki: "mosque",
+  hanbali: "mosque",
+  general: "shield",
+};
+
+const MADHAB_KEYS: MadhabValue[] = ["hanafi", "shafii", "maliki", "hanbali", "general"];
 
 export default function MadhabScreen() {
   const { colors, isDark } = useTheme();
@@ -76,6 +45,17 @@ export default function MadhabScreen() {
       utils.profile.getProfile.invalidate();
     },
   });
+
+  const options = useMemo(
+    () =>
+      MADHAB_KEYS.map((value) => ({
+        value,
+        label: t.madhab.options[value].label,
+        description: t.madhab.options[value].description,
+        icon: MADHAB_ICONS[value],
+      })),
+    [t]
+  );
 
   const [selected, setSelected] = useState<MadhabValue>(
     (profile?.madhab as MadhabValue) ?? "general"
@@ -115,7 +95,7 @@ export default function MadhabScreen() {
           className="flex-1 text-center text-lg font-bold text-slate-900 dark:text-white"
           accessibilityRole="header"
         >
-          \u00C9cole juridique
+          {t.madhab.title}
         </Text>
         <View className="w-10" />
       </Animated.View>
@@ -144,19 +124,17 @@ export default function MadhabScreen() {
             <View className="flex-row items-center gap-2 mb-2">
               <MaterialIcons name="info" size={18} color={colors.primary} />
               <Text className="text-sm font-semibold text-slate-900 dark:text-white">
-                Pourquoi c'est important ?
+                {t.madhab.infoTitle}
               </Text>
             </View>
             <Text className="text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-              Votre \u00E9cole juridique (madhab) influence l\u2019analyse de certains
-              additifs comme la g\u00E9latine (E441) et les mono/diglyc\u00E9rides (E471).
-              Les savants ont des avis diff\u00E9rents selon les \u00E9coles.
+              {t.madhab.infoBody}
             </Text>
           </View>
         </Animated.View>
 
         {/* Options */}
-        {MADHAB_OPTIONS.map((option, index) => (
+        {options.map((option, index) => (
           <Animated.View
             key={option.value}
             entering={FadeInDown.delay(150 + index * 60).duration(400)}
@@ -223,7 +201,7 @@ export default function MadhabScreen() {
         {updateProfile.isPending && (
           <Animated.View entering={FadeIn.duration(200)} className="px-4 mt-2">
             <Text className="text-xs text-center text-slate-400 dark:text-slate-500">
-              Enregistrement...
+              {t.editProfile.saving}
             </Text>
           </Animated.View>
         )}

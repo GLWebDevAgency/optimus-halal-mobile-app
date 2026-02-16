@@ -151,6 +151,54 @@ export const en: TranslationKeys = {
     backHint: "Go back to previous screen",
   },
 
+  // Madhab Screen
+  madhab: {
+    title: "School of jurisprudence",
+    infoTitle: "Why does it matter?",
+    infoBody: "Your school of jurisprudence (madhab) influences the analysis of certain additives like gelatin (E441) and mono/diglycerides (E471). Scholars have different opinions depending on the school.",
+    options: {
+      hanafi: {
+        label: "Hanafi",
+        description: "The most followed worldwide — Turkey, South Asia, Central Asia, Balkans",
+      },
+      shafii: {
+        label: "Shafi'i",
+        description: "Southeast Asia, East Africa, Yemen, Kurdistan",
+      },
+      maliki: {
+        label: "Maliki",
+        description: "North and West Africa, parts of the Gulf",
+      },
+      hanbali: {
+        label: "Hanbali",
+        description: "Saudi Arabia, Qatar, parts of the Gulf",
+      },
+      general: {
+        label: "General (most cautious)",
+        description: "Follows the majority opinion. Recommended if you don't follow a specific school.",
+      },
+    },
+  },
+
+  // Health Profile Screen
+  healthProfile: {
+    title: "Health profile",
+    privacyTitle: "Privacy",
+    privacyBody: "This information personalizes health alerts during scans. No data is shared with third parties. You can disable them at any time.",
+    pregnant: {
+      label: "I am pregnant",
+      description: "Alerts on E171, E951, nitrites and other inadvisable additives",
+    },
+    children: {
+      label: "I have young children",
+      description: "Alerts on colorants linked to hyperactivity (Southampton Six)",
+    },
+    allergens: {
+      title: "My allergens",
+      description: "Manage my dietary exclusions",
+    },
+  },
+
   // Favorites
   favorites: {
     title: "My favorites",
