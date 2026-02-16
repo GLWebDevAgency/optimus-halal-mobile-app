@@ -117,6 +117,35 @@ export function getFullPhoneNumber(
   return `${dialCode}${digits}`;
 }
 
+/**
+ * Parse un numéro international (+33612345678) en format local formaté
+ * Retourne { localFormatted, fullNumber, countryCode }
+ */
+export function parseInternationalPhone(
+  phone: string,
+  defaultCountryCode = "FR"
+): { localFormatted: string; fullNumber: string; countryCode: string } {
+  if (!phone) return { localFormatted: "", fullNumber: "", countryCode: defaultCountryCode };
+
+  // Trouver l'indicatif pays (trier par longueur décroissante pour matcher +213 avant +2)
+  const sorted = [...COUNTRY_CODES].sort((a, b) => b.dialCode.length - a.dialCode.length);
+  const country = sorted.find((c) => phone.startsWith(c.dialCode));
+
+  if (country) {
+    const localDigits = phone.slice(country.dialCode.length);
+    // Pour la France, préfixer avec 0
+    const localNumber = country.code === "FR" ? `0${localDigits}` : localDigits;
+    return {
+      localFormatted: formatPhoneNumber(localNumber, country.code),
+      fullNumber: phone,
+      countryCode: country.code,
+    };
+  }
+
+  // Pas de match — retourner tel quel
+  return { localFormatted: phone, fullNumber: phone, countryCode: defaultCountryCode };
+}
+
 export function PhoneInput({
   label,
   value = "",

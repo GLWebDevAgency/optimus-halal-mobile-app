@@ -36,6 +36,7 @@ import Animated, {
 import { LinearGradient } from "expo-linear-gradient";
 
 import { Card, IconButton } from "@/components/ui";
+import { PersonalAlerts, type PersonalAlert } from "@/components/scan/PersonalAlerts";
 import { useScanBarcode } from "@/hooks/useScan";
 import { useScanHistoryStore } from "@/store";
 import { useTranslation, useHaptics } from "@/hooks";
@@ -137,6 +138,7 @@ export default function ScanResultScreen() {
   const doubtfulReasons = halalAnalysis?.reasons.filter((r) => r.status === "doubtful") ?? [];
   const additiveReasons = halalAnalysis?.reasons.filter((r) => r.type === "additive") ?? [];
   const allergensTags: string[] = offExtras?.allergensTags ?? [];
+  const personalAlerts: PersonalAlert[] = (scanMutation.data as any)?.personalAlerts ?? [];
 
   // ── Local Favorites (instant UX, synced later) ──
   const { toggleFavorite, isFavorite: checkIsFavorite } =
@@ -525,6 +527,11 @@ export default function ScanResultScreen() {
               ))}
             </View>
           </Animated.View>
+        )}
+
+        {/* Personal Alerts (allergens + health warnings) */}
+        {personalAlerts.length > 0 && (
+          <PersonalAlerts alerts={personalAlerts} />
         )}
 
         {/* Halal Analysis — Pourquoi ce statut */}

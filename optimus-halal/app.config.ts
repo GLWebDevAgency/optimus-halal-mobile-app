@@ -1,0 +1,86 @@
+import { ExpoConfig, ConfigContext } from "expo/config";
+
+export default ({ config }: ConfigContext): ExpoConfig => ({
+  ...config,
+  name: "Optimus Halal",
+  slug: "optimus-halal",
+  version: "1.0.0",
+  orientation: "portrait",
+  icon: "./assets/icon.png",
+  userInterfaceStyle: "automatic",
+  scheme: "optimushalal",
+  splash: {
+    image: "./assets/splash-icon.png",
+    resizeMode: "contain",
+    backgroundColor: "#102216",
+  },
+  ios: {
+    supportsTablet: true,
+    bundleIdentifier: "com.optimushalal.app",
+    infoPlist: {
+      NSCameraUsageDescription:
+        "Optimus Halal utilise la caméra pour scanner les codes-barres des produits.",
+      NSFaceIDUsageDescription:
+        "Utilisez Face ID pour une connexion sécurisée.",
+      NSLocationWhenInUseUsageDescription:
+        "Optimus Halal utilise votre localisation pour trouver les points de vente à proximité.",
+    },
+  },
+  android: {
+    package: "com.optimushalal.app",
+    adaptiveIcon: {
+      foregroundImage: "./assets/adaptive-icon.png",
+      backgroundColor: "#102216",
+    },
+    edgeToEdgeEnabled: true,
+    permissions: [
+      "android.permission.CAMERA",
+      "android.permission.ACCESS_FINE_LOCATION",
+      "android.permission.ACCESS_COARSE_LOCATION",
+      "android.permission.USE_BIOMETRIC",
+      "android.permission.RECORD_AUDIO",
+      "android.permission.USE_FINGERPRINT",
+    ],
+  },
+  web: {
+    favicon: "./assets/favicon.png",
+    bundler: "metro",
+  },
+  plugins: [
+    "expo-router",
+    [
+      "expo-camera",
+      {
+        cameraPermission:
+          "Optimus Halal utilise la caméra pour scanner les codes-barres.",
+      },
+    ],
+    [
+      "expo-local-authentication",
+      {
+        faceIDPermission: "Permet l'authentification par Face ID.",
+      },
+    ],
+    "expo-secure-store",
+    "expo-font",
+    "@sentry/react-native",
+    "@rnmapbox/maps",
+  ],
+  runtimeVersion: {
+    policy: "appVersion",
+  },
+  updates: {
+    url: "https://u.expo.dev/74c0f55e-ea1c-4786-93a7-de4b27280104",
+  },
+  extra: {
+    eas: {
+      projectId: "74c0f55e-ea1c-4786-93a7-de4b27280104",
+    },
+    router: {},
+  },
+  experiments: {
+    typedRoutes: true,
+    reactCompiler: true,
+  },
+  owner: "gl.dev",
+});

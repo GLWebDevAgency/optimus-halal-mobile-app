@@ -1,14 +1,16 @@
 /**
- * Points of Sale Map Screen
+ * Points of Sale Map Screen — Interactive Mapbox Map
  *
- * Carte interactive avec:
- * - Vue carte en fond
- * - Barre de recherche et filtres
- * - Bottom sheet avec liste des magasins (from trpc.store.search)
- * - Marqueurs sur la carte
+ * Features:
+ * - @rnmapbox/maps with native clustering
+ * - PostGIS-powered nearby store queries (ST_DWithin)
+ * - API BAN geocoding (French address search)
+ * - Store detail bottom sheet with directions deep link
+ * - Dark/light map style via useTheme
+ * - Location puck + "My location" FAB
  */
 
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useRef } from "react";
 import {
   View,
   Text,
@@ -16,27 +18,50 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
-  useColorScheme,
   ActivityIndicator,
+  Linking,
+  Platform,
+  Keyboard,
 } from "react-native";
 import { Image } from "expo-image";
-import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useHaptics } from "@/hooks";
+import { useHaptics, useUserLocation, useMapStores, useGeocode } from "@/hooks";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useTheme } from "@/hooks/useTheme";
 import Animated, {
   FadeIn,
   FadeInDown,
   FadeInRight,
   SlideInUp,
+  FadeInUp,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
-
-import { useTranslation } from "@/hooks/useTranslation";
-import { trpc } from "@/lib/trpc";
+// Guard native Mapbox import — fails gracefully if dev client not rebuilt
+let MapView: any, Camera: any, LocationPuck: any, ShapeSource: any, CircleLayer: any, SymbolLayer: any;
+let MAPBOX_AVAILABLE = false;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const Mapbox = require("@rnmapbox/maps");
+  Mapbox.default.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_TOKEN ?? "");
+  MapView = Mapbox.MapView;
+  Camera = Mapbox.Camera;
+  LocationPuck = Mapbox.LocationPuck;
+  ShapeSource = Mapbox.ShapeSource;
+  CircleLayer = Mapbox.CircleLayer;
+  SymbolLayer = Mapbox.SymbolLayer;
+  MAPBOX_AVAILABLE = true;
+} catch {
+  console.warn("@rnmapbox/maps native code not available. Rebuild dev client required.");
+}
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const CARD_WIDTH = 280;
+
+// Default center: France
+const FRANCE_CENTER: [number, number] = [2.3522, 46.6034];
+const DEFAULT_ZOOM = 5;
+const FOCUSED_ZOOM = 13;
 
 // Filter → storeType mapping (backend enum values)
 const FILTER_IDS = [
@@ -44,10 +69,9 @@ const FILTER_IDS = [
   { id: "restaurant", filterKey: "restaurants" as const, storeType: "restaurant" as const },
   { id: "supermarket", filterKey: "grocery" as const, storeType: "supermarket" as const },
   { id: "certified", filterKey: "certified" as const, halalOnly: true },
-  { id: "abattoir", filterKey: "rating" as const, storeType: "abattoir" as const },
 ];
 
-// ── Store type icons ────────────────────────────────────────
+// Store type icons
 const STORE_TYPE_ICON: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   butcher: "restaurant",
   restaurant: "restaurant-menu",
@@ -59,31 +83,162 @@ const STORE_TYPE_ICON: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   other: "store",
 };
 
-// ── Store Card (adapted to real DB shape) ───────────────────
-interface StoreItem {
+// ── GeoJSON Types ──────────────────────────────────────────
+interface StoreFeatureProperties {
   id: string;
   name: string;
   storeType: string;
   imageUrl: string | null;
   address: string;
   city: string;
+  postalCode: string | null;
+  phone: string | null;
+  website: string | null;
   certifier: string;
+  certifierName: string | null;
   halalCertified: boolean;
   averageRating: number;
   reviewCount: number;
+  distance: number;
 }
 
-const StoreCard = React.memo(function StoreCard({
+// ── Helpers ────────────────────────────────────────────────
+function formatDistance(meters: number): string {
+  if (meters < 1000) return `${Math.round(meters)}m`;
+  return `${(meters / 1000).toFixed(1)}km`;
+}
+
+function openDirections(lat: number, lon: number, name: string) {
+  const encoded = encodeURIComponent(name);
+  const url = Platform.select({
+    ios: `maps://app?daddr=${lat},${lon}&q=${encoded}`,
+    android: `geo:${lat},${lon}?q=${lat},${lon}(${encoded})`,
+  });
+  if (url) Linking.openURL(url);
+}
+
+function callStore(phone: string) {
+  Linking.openURL(`tel:${phone}`);
+}
+
+// ── Store Detail Card ──────────────────────────────────────
+const StoreDetailCard = React.memo(function StoreDetailCard({
   store,
-  index,
-  onPress,
+  onDirections,
+  onCall,
+  onClose,
+  colors,
 }: {
-  store: StoreItem;
-  index: number;
-  onPress: () => void;
+  store: StoreFeatureProperties;
+  onDirections: () => void;
+  onCall: () => void;
+  onClose: () => void;
+  colors: ReturnType<typeof useTheme>["colors"];
 }) {
   const { t } = useTranslation();
-  const isFeatured = index === 0;
+  const certLabel = store.certifier !== "none" ? store.certifier.toUpperCase() : null;
+
+  return (
+    <Animated.View entering={FadeInUp.duration(300)} className="px-5 pb-4">
+      {/* Header row */}
+      <View className="flex-row items-start justify-between mb-2">
+        <View className="flex-1 pr-3">
+          <Text
+            className="text-lg font-bold"
+            style={{ color: colors.textPrimary }}
+            numberOfLines={1}
+          >
+            {store.name}
+          </Text>
+          <Text className="text-sm" style={{ color: colors.textSecondary }} numberOfLines={1}>
+            {store.address}, {store.city}
+          </Text>
+        </View>
+        <TouchableOpacity
+          onPress={onClose}
+          className="w-8 h-8 rounded-full items-center justify-center"
+          style={{ backgroundColor: colors.buttonSecondary }}
+          accessibilityRole="button"
+          accessibilityLabel="Fermer"
+        >
+          <MaterialIcons name="close" size={18} color={colors.textSecondary} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Badges row */}
+      <View className="flex-row items-center gap-2 mb-3">
+        {certLabel && (
+          <View className="px-2 py-0.5 rounded" style={{ backgroundColor: colors.primaryLight }}>
+            <Text className="text-xs font-bold" style={{ color: colors.primary }}>
+              {certLabel}
+            </Text>
+          </View>
+        )}
+        {store.averageRating > 0 && (
+          <View className="flex-row items-center gap-1">
+            <MaterialIcons name="star" size={14} color="#fbbf24" />
+            <Text className="text-xs font-bold" style={{ color: colors.textPrimary }}>
+              {store.averageRating.toFixed(1)}
+            </Text>
+            <Text className="text-xs" style={{ color: colors.textMuted }}>
+              ({store.reviewCount})
+            </Text>
+          </View>
+        )}
+        <View className="flex-row items-center gap-1">
+          <MaterialIcons name="near-me" size={12} color={colors.textMuted} />
+          <Text className="text-xs" style={{ color: colors.textMuted }}>
+            {formatDistance(store.distance)}
+          </Text>
+        </View>
+      </View>
+
+      {/* Action buttons */}
+      <View className="flex-row gap-3">
+        <TouchableOpacity
+          onPress={onDirections}
+          className="flex-1 flex-row items-center justify-center gap-2 py-3 rounded-xl"
+          style={{ backgroundColor: colors.primary }}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel={`${t.map.getDirections} ${store.name}`}
+        >
+          <MaterialIcons name="directions" size={20} color="#fff" />
+          <Text className="text-sm font-semibold text-white">{t.map.getDirections}</Text>
+        </TouchableOpacity>
+
+        {store.phone && (
+          <TouchableOpacity
+            onPress={onCall}
+            className="flex-row items-center justify-center gap-2 py-3 px-5 rounded-xl"
+            style={{ backgroundColor: colors.buttonSecondary }}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel={`${t.map.callStore} ${store.name}`}
+          >
+            <MaterialIcons name="phone" size={20} color={colors.textPrimary} />
+            <Text className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
+              {t.map.callStore}
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </Animated.View>
+  );
+});
+
+// ── Store List Card (horizontal scroll) ────────────────────
+const StoreCard = React.memo(function StoreCard({
+  store,
+  isSelected,
+  onPress,
+  colors,
+}: {
+  store: StoreFeatureProperties;
+  isSelected: boolean;
+  onPress: () => void;
+  colors: ReturnType<typeof useTheme>["colors"];
+}) {
   const certLabel = store.certifier !== "none" ? store.certifier.toUpperCase() : null;
 
   return (
@@ -91,36 +246,37 @@ const StoreCard = React.memo(function StoreCard({
       onPress={onPress}
       activeOpacity={0.9}
       accessibilityRole="button"
-      accessibilityLabel={`${store.name}, ${store.city}, note ${store.averageRating}`}
-      className={`w-[280px] rounded-xl p-3 ${
-        isFeatured
-          ? "bg-slate-800 border border-primary/40"
-          : "bg-slate-800 border border-slate-700 opacity-90"
-      }`}
+      accessibilityLabel={`${store.name}, ${store.city}, ${formatDistance(store.distance)}`}
+      className="w-[280px] rounded-xl p-3"
       style={{
-        shadowColor: isFeatured ? "#1de560" : "#000",
+        backgroundColor: colors.card,
+        borderWidth: 1,
+        borderColor: isSelected ? colors.primary : colors.cardBorder,
+        shadowColor: isSelected ? colors.primary : "#000",
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: isFeatured ? 0.3 : 0.2,
+        shadowOpacity: isSelected ? 0.3 : 0.15,
         shadowRadius: 8,
         elevation: 4,
       }}
     >
       <View className="flex-row gap-3">
         {/* Image */}
-        <View className="w-20 h-20 rounded-lg bg-slate-700 overflow-hidden items-center justify-center">
+        <View
+          className="w-16 h-16 rounded-lg overflow-hidden items-center justify-center"
+          style={{ backgroundColor: colors.buttonSecondary }}
+        >
           {store.imageUrl ? (
             <Image
               source={{ uri: store.imageUrl }}
               className="w-full h-full"
               contentFit="cover"
               transition={200}
-              accessibilityLabel={`Photo de ${store.name}`}
             />
           ) : (
             <MaterialIcons
               name={STORE_TYPE_ICON[store.storeType] ?? "store"}
-              size={28}
-              color="#94a3b8"
+              size={24}
+              color={colors.textMuted}
             />
           )}
         </View>
@@ -128,364 +284,679 @@ const StoreCard = React.memo(function StoreCard({
         {/* Info */}
         <View className="flex-1 justify-center">
           <View className="flex-row items-start justify-between">
-            <Text className="font-bold text-white flex-1 pr-2" numberOfLines={1}>
+            <Text
+              className="font-bold flex-1 pr-2"
+              style={{ color: colors.textPrimary }}
+              numberOfLines={1}
+            >
               {store.name}
             </Text>
             {certLabel && (
-              <View
-                className={`px-1.5 py-0.5 rounded ${
-                  certLabel === "AVS" || certLabel === "ACHAHADA"
-                    ? "bg-primary/20"
-                    : "bg-slate-700"
-                }`}
-              >
-                <Text
-                  className={`text-[10px] font-bold ${
-                    certLabel === "AVS" || certLabel === "ACHAHADA"
-                      ? "text-primary"
-                      : "text-slate-300"
-                  }`}
-                >
+              <View className="px-1.5 py-0.5 rounded" style={{ backgroundColor: colors.primaryLight }}>
+                <Text className="text-[10px] font-bold" style={{ color: colors.primary }}>
                   {certLabel}
                 </Text>
               </View>
             )}
           </View>
-          <Text className="text-xs text-slate-400 mb-1" numberOfLines={1}>
-            {store.city}
+          <Text className="text-xs mb-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
+            {store.city} · {formatDistance(store.distance)}
           </Text>
           {store.averageRating > 0 && (
-            <View className="flex-row items-center gap-1 mb-1">
-              <MaterialIcons name="star" size={14} color="#fbbf24" />
-              <Text className="text-xs font-bold text-white">{store.averageRating.toFixed(1)}</Text>
-              <Text className="text-xs text-slate-400">({store.reviewCount})</Text>
+            <View className="flex-row items-center gap-1">
+              <MaterialIcons name="star" size={12} color="#fbbf24" />
+              <Text className="text-xs font-bold" style={{ color: colors.textPrimary }}>
+                {store.averageRating.toFixed(1)}
+              </Text>
             </View>
           )}
-          <View className="flex-row items-center gap-1">
-            <MaterialIcons name="near-me" size={12} color="#94a3b8" />
-            <Text className="text-xs text-slate-400" numberOfLines={1}>{store.address}</Text>
-          </View>
         </View>
       </View>
-
-      {/* Action Button */}
-      <TouchableOpacity
-        className={`mt-3 w-full py-2 rounded-lg flex-row items-center justify-center gap-2 ${
-          isFeatured
-            ? "bg-primary/20 border border-primary/20"
-            : "bg-slate-700"
-        }`}
-        activeOpacity={0.7}
-        accessibilityRole="button"
-        accessibilityLabel={isFeatured ? `${t.map.directions} ${store.name}` : `${t.map.viewDetails} ${store.name}`}
-      >
-        <MaterialIcons
-          name={isFeatured ? "directions" : "visibility"}
-          size={18}
-          color={isFeatured ? "#1de560" : "#ffffff"}
-        />
-        <Text
-          className={`text-sm font-semibold ${
-            isFeatured ? "text-primary" : "text-white"
-          }`}
-        >
-          {isFeatured ? t.map.directions : t.map.viewDetails}
-        </Text>
-      </TouchableOpacity>
     </TouchableOpacity>
   );
 });
 
+// ── Main Map Screen ────────────────────────────────────────
 export default function MapScreen() {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
   const { impact } = useHaptics();
   const { t } = useTranslation();
+  const { isDark, colors } = useTheme();
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilters, setActiveFilters] = useState<string[]>(["butcher"]);
+  // Location
+  const { location: userLocation, permission, isLoading: locationLoading, refresh: refreshLocation } = useUserLocation();
 
-  // Build query params from active filters
-  const queryParams = useMemo(() => {
-    const params: {
-      query?: string;
-      storeType?: "supermarket" | "butcher" | "restaurant" | "bakery" | "abattoir" | "wholesaler" | "online" | "other";
-      halalCertifiedOnly: boolean;
-      limit: number;
-    } = { halalCertifiedOnly: false, limit: 20 };
+  // Map state
+  const cameraRef = useRef<any>(null);
+  const [mapRegion, setMapRegion] = useState<{
+    latitude: number;
+    longitude: number;
+    radiusKm: number;
+  } | null>(null);
 
-    if (searchQuery.trim()) params.query = searchQuery.trim();
+  // Filters
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
 
-    // Apply storeType from first matching type filter
+  // Geocode
+  const { suggestions, search: geocodeSearch, clearSuggestions } = useGeocode();
+  const [searchText, setSearchText] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Build filter options for useMapStores
+  const storeTypeFilter = useMemo(() => {
     for (const f of FILTER_IDS) {
       if (activeFilters.includes(f.id) && "storeType" in f) {
-        params.storeType = f.storeType;
-        break;
+        return f.storeType;
       }
     }
+    return undefined;
+  }, [activeFilters]);
 
-    if (activeFilters.includes("certified")) {
-      params.halalCertifiedOnly = true;
-    }
+  const halalCertifiedOnly = activeFilters.includes("certified");
 
-    return params;
-  }, [searchQuery, activeFilters]);
-
-  const storesQuery = trpc.store.search.useQuery(queryParams, {
-    staleTime: 60_000,
-    placeholderData: (prev) => prev,
+  // Fetch stores
+  const storesQuery = useMapStores(mapRegion, {
+    storeType: storeTypeFilter,
+    halalCertifiedOnly,
+    limit: 50,
   });
 
-  const stores = storesQuery.data?.items ?? [];
+  const stores = useMemo(() => storesQuery.data ?? [], [storesQuery.data]);
 
-  const toggleFilter = useCallback(
-    (filterId: string) => {
+  // Selected store data
+  const selectedStore = useMemo(() => {
+    if (!selectedStoreId) return null;
+    return stores.find((s) => s.id === selectedStoreId) ?? null;
+  }, [selectedStoreId, stores]);
+
+  // Build GeoJSON for Mapbox ShapeSource
+  const storesGeoJSON = useMemo(() => ({
+    type: "FeatureCollection" as const,
+    features: stores.map((s) => ({
+      type: "Feature" as const,
+      id: s.id,
+      geometry: {
+        type: "Point" as const,
+        coordinates: [s.longitude, s.latitude] as [number, number],
+      },
+      properties: {
+        id: s.id,
+        name: s.name,
+        storeType: s.storeType,
+        imageUrl: s.imageUrl,
+        address: s.address,
+        city: s.city,
+        postalCode: s.postalCode,
+        phone: s.phone,
+        website: s.website,
+        certifier: s.certifier,
+        certifierName: s.certifierName,
+        halalCertified: s.halalCertified,
+        averageRating: s.averageRating,
+        reviewCount: s.reviewCount,
+        distance: s.distance,
+      } satisfies StoreFeatureProperties,
+    })),
+  }), [stores]);
+
+  // Map style based on theme
+  const mapStyleURL = isDark
+    ? "mapbox://styles/mapbox/dark-v11"
+    : "mapbox://styles/mapbox/light-v11";
+
+  // ── Handlers ───────────────────────────────────────────
+  const handleRegionChange = useCallback((feature: any) => {
+    const center = feature?.geometry?.coordinates;
+    if (!center) return;
+    // Approximate radius from zoom: zoom 10 ≈ 15km, zoom 13 ≈ 3km, zoom 15 ≈ 1km
+    const zoom = feature?.properties?.zoomLevel ?? 10;
+    const radiusKm = Math.max(0.5, Math.min(50, 40000 / Math.pow(2, zoom)));
+    setMapRegion({
+      latitude: center[1],
+      longitude: center[0],
+      radiusKm,
+    });
+  }, []);
+
+  const handleMarkerPress = useCallback((event: any) => {
+    const feature = event?.features?.[0];
+    if (!feature) return;
+
+    // If it's a cluster, zoom in
+    if (feature.properties?.cluster) {
+      const coords = feature.geometry?.coordinates;
+      if (coords) {
+        cameraRef.current?.setCamera({
+          centerCoordinate: coords,
+          zoomLevel: (feature.properties.clusterExpansionZoom ?? 12) + 1,
+          animationDuration: 500,
+        });
+      }
+      return;
+    }
+
+    // Individual marker
+    const storeId = feature.properties?.id;
+    if (storeId) {
       impact();
-      setActiveFilters((prev) =>
-        prev.includes(filterId)
-          ? prev.filter((id) => id !== filterId)
-          : [...prev, filterId]
-      );
-    },
-    []
-  );
+      setSelectedStoreId(storeId);
+    }
+  }, [impact]);
 
   const handleMyLocation = useCallback(() => {
     impact();
+    if (userLocation) {
+      cameraRef.current?.setCamera({
+        centerCoordinate: [userLocation.longitude, userLocation.latitude],
+        zoomLevel: FOCUSED_ZOOM,
+        animationDuration: 800,
+      });
+    } else {
+      refreshLocation();
+    }
+  }, [userLocation, refreshLocation, impact]);
+
+  const toggleFilter = useCallback((filterId: string) => {
+    impact();
+    setActiveFilters((prev) =>
+      prev.includes(filterId)
+        ? prev.filter((id) => id !== filterId)
+        : [...prev, filterId]
+    );
+  }, [impact]);
+
+  const handleSearchTextChange = useCallback((text: string) => {
+    setSearchText(text);
+    setShowSuggestions(true);
+    geocodeSearch(text);
+  }, [geocodeSearch]);
+
+  const handleSuggestionPress = useCallback((suggestion: { latitude: number; longitude: number; label: string }) => {
+    impact();
+    setSearchText(suggestion.label);
+    setShowSuggestions(false);
+    clearSuggestions();
+    Keyboard.dismiss();
+    cameraRef.current?.setCamera({
+      centerCoordinate: [suggestion.longitude, suggestion.latitude],
+      zoomLevel: FOCUSED_ZOOM,
+      animationDuration: 800,
+    });
+  }, [clearSuggestions, impact]);
+
+  const handleStoreCardPress = useCallback((store: typeof stores[number]) => {
+    impact();
+    setSelectedStoreId(store.id);
+    cameraRef.current?.setCamera({
+      centerCoordinate: [store.longitude, store.latitude],
+      zoomLevel: 15,
+      animationDuration: 600,
+    });
+  }, [impact]);
+
+  const handleCloseDetail = useCallback(() => {
+    setSelectedStoreId(null);
   }, []);
 
-  const handleStorePress = useCallback((storeId: string) => {
-    impact();
-  }, []);
+  // Initial camera position
+  const initialCenter: [number, number] = userLocation
+    ? [userLocation.longitude, userLocation.latitude]
+    : FRANCE_CENTER;
+  const initialZoom = userLocation ? FOCUSED_ZOOM : DEFAULT_ZOOM;
+
+  // ── Render ─────────────────────────────────────────────
+
+  // Fallback when native Mapbox module isn't available (dev client not rebuilt)
+  if (!MAPBOX_AVAILABLE) {
+    return (
+      <View className="flex-1 items-center justify-center px-8" style={{ backgroundColor: colors.background }}>
+        <MaterialIcons name="map" size={64} color={colors.textMuted} />
+        <Text className="text-lg font-bold mt-4 text-center" style={{ color: colors.textPrimary }}>
+          {t.map.title}
+        </Text>
+        <Text className="text-sm mt-2 text-center leading-5" style={{ color: colors.textSecondary }}>
+          La carte nécessite un rebuild du client de développement.{"\n\n"}
+          Lancez : npx expo prebuild && npx expo run:ios
+        </Text>
+      </View>
+    );
+  }
 
   return (
-    <View className="flex-1 bg-slate-900">
-      {/* Map Background */}
-      <View className="absolute inset-0">
-        <Image
-          source={{
-            uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuBYIKA5a0FeZU9C9EfDX-8wvGXljSyovGnPZrYXKcMzyiy2RxkFKrXfAo2M1M0_etwk27ZD2QkAeDysIKRGwCITJkwkZIjkulQ_j0GawjhXMkoW9WmQFFhNkOfAOPSj2rY6R2zTIzGwu98nyYuJvCVSY6S2ot88mj0gyXcidEFYxiPT10UpH2E6Om3yUHjkZ6HQwB9apITnYGqV4dm8AgWT9xIVtl4niS_DydRv5jmgTFv6j7M4QB0276EHezcSrTy7y3Y0lO7KMjkV",
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
+      {/* Mapbox Map */}
+      <MapView
+        style={{ flex: 1 }}
+        styleURL={mapStyleURL}
+        logoEnabled={false}
+        attributionEnabled={false}
+        compassEnabled
+        compassViewPosition={2}
+        compassViewMargins={{ x: 16, y: SCREEN_HEIGHT * 0.35 }}
+        scaleBarEnabled={false}
+        onCameraChanged={handleRegionChange}
+      >
+        <Camera
+          ref={cameraRef}
+          defaultSettings={{
+            centerCoordinate: initialCenter,
+            zoomLevel: initialZoom,
           }}
-          className="w-full h-full"
-          contentFit="cover"
-          transition={200}
-          style={{ opacity: 0.7 }}
-          accessible={false}
+          animationDuration={0}
         />
-        <View className="absolute inset-0 bg-slate-900/40" />
 
-        {/* User location marker */}
-        <View className="absolute" style={{ top: "45%", left: "48%" }}>
-          <View className="w-16 h-16 rounded-full bg-primary/20 absolute" />
-          <View
-            className="w-4 h-4 rounded-full bg-primary border-2 border-white z-10"
-            style={{
-              shadowColor: "#1de560",
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.5,
-              shadowRadius: 15,
-            }}
+        {/* User location puck */}
+        {permission === "granted" && (
+          <LocationPuck
+            puckBearingEnabled
+            pulsing={{ isEnabled: true, color: colors.primary }}
           />
-        </View>
+        )}
 
-        {/* Map Controls */}
-        <View
-          className="absolute right-4 gap-2"
-          style={{ top: SCREEN_HEIGHT * 0.25 }}
-        >
-          <TouchableOpacity
-            onPress={handleMyLocation}
-            className="w-10 h-10 rounded-lg bg-surface-dark/90 border border-slate-700 items-center justify-center"
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="Ma position"
-            accessibilityHint="Centrer la carte sur ma position"
+        {/* Store markers with clustering */}
+        {stores.length > 0 && (
+          <ShapeSource
+            id="stores-source"
+            shape={storesGeoJSON}
+            cluster
+            clusterRadius={50}
+            clusterMaxZoomLevel={14}
+            onPress={handleMarkerPress}
           >
-            <MaterialIcons name="my-location" size={20} color="#ffffff" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="w-10 h-10 rounded-lg bg-surface-dark/90 border border-slate-700 items-center justify-center"
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="Couches de la carte"
-            accessibilityHint="Changer le style de la carte"
-          >
-            <MaterialIcons name="layers" size={20} color="#ffffff" />
-          </TouchableOpacity>
-        </View>
-      </View>
+            {/* Cluster circles */}
+            <CircleLayer
+              id="clusters"
+              filter={["has", "point_count"]}
+              style={{
+                circleColor: colors.primary,
+                circleRadius: [
+                  "step",
+                  ["get", "point_count"],
+                  18,  // default
+                  10, 24, // 10+ stores
+                  50, 32, // 50+ stores
+                ],
+                circleOpacity: 0.85,
+                circleStrokeWidth: 2,
+                circleStrokeColor: "#ffffff",
+              }}
+            />
+
+            {/* Cluster count text */}
+            <SymbolLayer
+              id="cluster-count"
+              filter={["has", "point_count"]}
+              style={{
+                textField: ["get", "point_count_abbreviated"],
+                textSize: 13,
+                textColor: "#ffffff",
+                textFont: ["DIN Pro Medium"],
+                textAllowOverlap: true,
+              }}
+            />
+
+            {/* Individual store markers */}
+            <CircleLayer
+              id="store-markers"
+              filter={["!", ["has", "point_count"]]}
+              style={{
+                circleColor: [
+                  "case",
+                  ["get", "halalCertified"],
+                  colors.primary,
+                  isDark ? "#64748b" : "#94a3b8",
+                ],
+                circleRadius: [
+                  "case",
+                  ["==", ["get", "id"], selectedStoreId ?? ""],
+                  10,
+                  7,
+                ],
+                circleStrokeWidth: 2,
+                circleStrokeColor: "#ffffff",
+                circleOpacity: 0.9,
+              }}
+            />
+          </ShapeSource>
+        )}
+      </MapView>
 
       {/* Top Header with gradient */}
-      <LinearGradient
-        colors={["rgba(15,23,42,0.9)", "rgba(15,23,42,0.5)", "transparent"]}
-        style={{ paddingTop: insets.top + 12, paddingHorizontal: 16, paddingBottom: 40 }}
-      >
-        {/* Search Bar */}
-        <Animated.View
-          entering={FadeInDown.delay(100).duration(400)}
-          className="flex-row gap-3 mb-4"
+      <View className="absolute top-0 left-0 right-0" style={{ zIndex: 10 }}>
+        <LinearGradient
+          colors={
+            isDark
+              ? ["rgba(16,34,23,0.95)", "rgba(16,34,23,0.6)", "transparent"]
+              : ["rgba(246,248,247,0.95)", "rgba(246,248,247,0.6)", "transparent"]
+          }
+          style={{ paddingTop: insets.top + 8, paddingHorizontal: 16, paddingBottom: 32 }}
         >
-          <View className="flex-1 h-12 flex-row items-center px-4 rounded-lg bg-surface-dark/90 border border-slate-700">
-            <MaterialIcons name="search" size={20} color="#94a3b8" />
-            <TextInput
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder={t.map.searchPlaceholder}
-              placeholderTextColor="#94a3b8"
-              className="flex-1 ml-3 text-white text-base"
-              style={{ fontFamily: "Inter" }}
-              returnKeyType="search"
-            />
-          </View>
-          <TouchableOpacity
-            onPress={() => router.push("/(tabs)/alerts" as any)}
-            className="relative h-12 w-12 rounded-full bg-surface-dark/90 border border-slate-700 items-center justify-center"
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel={t.common.notifications}
-            accessibilityHint={t.common.viewAlerts}
+          {/* Search Bar */}
+          <Animated.View
+            entering={FadeInDown.delay(100).duration(400)}
+            className="flex-row gap-3 mb-3"
           >
-            <MaterialIcons name="notifications" size={22} color="#ffffff" />
-          </TouchableOpacity>
-        </Animated.View>
-
-        {/* Filter Chips */}
-        <Animated.ScrollView
-          entering={FadeInRight.delay(200).duration(400)}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 8 }}
-        >
-          {FILTER_IDS.map((filter) => {
-            const isActive = activeFilters.includes(filter.id);
-            const filterLabel = t.map.filters[filter.filterKey];
-            return (
-              <TouchableOpacity
-                key={filter.id}
-                onPress={() => toggleFilter(filter.id)}
-                className={`h-9 flex-row items-center gap-1.5 px-4 rounded-full ${
-                  isActive
-                    ? "bg-primary"
-                    : "bg-surface-dark/80 border border-slate-700"
-                }`}
-                activeOpacity={0.7}
-                accessibilityRole="button"
-                accessibilityLabel={`${filterLabel}${isActive ? `, ${t.common.selected}` : ""}`}
-                accessibilityHint={filterLabel}
-                style={
-                  isActive
-                    ? {
-                        shadowColor: "#1de560",
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.3,
-                        shadowRadius: 8,
-                      }
-                    : {}
-                }
-              >
-                <Text
-                  className={`text-sm ${
-                    isActive ? "font-semibold text-white" : "font-medium text-gray-200"
-                  }`}
+            <View
+              className="flex-1 h-12 flex-row items-center px-4 rounded-xl"
+              style={{
+                backgroundColor: isDark ? "rgba(30,41,59,0.9)" : "rgba(255,255,255,0.95)",
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}
+            >
+              <MaterialIcons name="search" size={20} color={colors.textMuted} />
+              <TextInput
+                value={searchText}
+                onChangeText={handleSearchTextChange}
+                placeholder={t.map.searchAddress}
+                placeholderTextColor={colors.textMuted}
+                className="flex-1 ml-3 text-base"
+                style={{ color: colors.textPrimary }}
+                returnKeyType="search"
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => {
+                  // Delay to allow suggestion press
+                  setTimeout(() => setShowSuggestions(false), 200);
+                }}
+              />
+              {searchText.length > 0 && (
+                <TouchableOpacity
+                  onPress={() => {
+                    setSearchText("");
+                    clearSuggestions();
+                    setShowSuggestions(false);
+                  }}
+                  hitSlop={8}
                 >
-                  {filterLabel}
-                </Text>
-                {isActive && (
-                  <MaterialIcons name="close" size={18} color="#ffffff" />
-                )}
-              </TouchableOpacity>
-            );
-          })}
-        </Animated.ScrollView>
-      </LinearGradient>
+                  <MaterialIcons name="close" size={18} color={colors.textMuted} />
+                </TouchableOpacity>
+              )}
+            </View>
+          </Animated.View>
+
+          {/* Geocode Suggestions */}
+          {showSuggestions && suggestions.length > 0 && (
+            <Animated.View
+              entering={FadeIn.duration(200)}
+              className="rounded-xl mb-3 overflow-hidden"
+              style={{
+                backgroundColor: isDark ? "rgba(30,41,59,0.95)" : "rgba(255,255,255,0.98)",
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}
+            >
+              {suggestions.map((s, i) => (
+                <TouchableOpacity
+                  key={`${s.latitude}-${s.longitude}-${i}`}
+                  onPress={() => handleSuggestionPress(s)}
+                  className="flex-row items-center px-4 py-3"
+                  style={{
+                    borderBottomWidth: i < suggestions.length - 1 ? 1 : 0,
+                    borderBottomColor: colors.borderLight,
+                  }}
+                >
+                  <MaterialIcons name="place" size={18} color={colors.primary} />
+                  <View className="flex-1 ml-3">
+                    <Text className="text-sm" style={{ color: colors.textPrimary }} numberOfLines={1}>
+                      {s.label}
+                    </Text>
+                    <Text className="text-xs" style={{ color: colors.textMuted }}>
+                      {s.postcode} {s.city}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </Animated.View>
+          )}
+
+          {/* Filter Chips */}
+          <Animated.ScrollView
+            entering={FadeInRight.delay(200).duration(400)}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 8 }}
+          >
+            {FILTER_IDS.map((filter) => {
+              const isActive = activeFilters.includes(filter.id);
+              const filterLabel = t.map.filters[filter.filterKey];
+              return (
+                <TouchableOpacity
+                  key={filter.id}
+                  onPress={() => toggleFilter(filter.id)}
+                  className="h-9 flex-row items-center gap-1.5 px-4 rounded-full"
+                  style={{
+                    backgroundColor: isActive
+                      ? colors.primary
+                      : isDark
+                        ? "rgba(30,41,59,0.8)"
+                        : "rgba(255,255,255,0.9)",
+                    borderWidth: isActive ? 0 : 1,
+                    borderColor: colors.border,
+                  }}
+                  activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${filterLabel}${isActive ? `, ${t.common.selected}` : ""}`}
+                >
+                  <Text
+                    className={`text-sm ${isActive ? "font-semibold" : "font-medium"}`}
+                    style={{ color: isActive ? "#ffffff" : colors.textPrimary }}
+                  >
+                    {filterLabel}
+                  </Text>
+                  {isActive && (
+                    <MaterialIcons name="close" size={16} color="#ffffff" />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </Animated.ScrollView>
+        </LinearGradient>
+      </View>
+
+      {/* Map Controls (right side) */}
+      <View
+        className="absolute right-4 gap-2"
+        style={{ top: insets.top + 140, zIndex: 5 }}
+      >
+        {/* My Location FAB */}
+        <TouchableOpacity
+          onPress={handleMyLocation}
+          className="w-11 h-11 rounded-xl items-center justify-center"
+          style={{
+            backgroundColor: isDark ? "rgba(30,41,59,0.9)" : "rgba(255,255,255,0.95)",
+            borderWidth: 1,
+            borderColor: colors.border,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.15,
+            shadowRadius: 4,
+            elevation: 3,
+          }}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={t.map.myLocation}
+        >
+          <MaterialIcons
+            name="my-location"
+            size={22}
+            color={userLocation ? colors.primary : colors.textMuted}
+          />
+        </TouchableOpacity>
+      </View>
 
       {/* Results count badge */}
-      <Animated.View
-        entering={FadeIn.delay(400).duration(400)}
-        className="absolute right-4"
-        style={{ bottom: 280 + insets.bottom }}
-      >
-        <View
-          className="flex-row items-center gap-2 bg-surface-dark border border-slate-600 h-12 px-5 rounded-full"
-          style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-            elevation: 4,
-          }}
+      {stores.length > 0 && !selectedStore && (
+        <Animated.View
+          entering={FadeIn.delay(400).duration(400)}
+          className="absolute right-4"
+          style={{ bottom: 260 + insets.bottom, zIndex: 5 }}
         >
-          <MaterialIcons name="format-list-bulleted" size={20} color="#1de560" />
-          <Text className="font-semibold text-sm text-white">
-            {storesQuery.data?.total ?? "..."} {t.map.results}
-          </Text>
+          <View
+            className="flex-row items-center gap-2 h-10 px-4 rounded-full"
+            style={{
+              backgroundColor: isDark ? "rgba(30,41,59,0.9)" : "rgba(255,255,255,0.95)",
+              borderWidth: 1,
+              borderColor: colors.border,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.15,
+              shadowRadius: 4,
+              elevation: 3,
+            }}
+          >
+            <MaterialIcons name="place" size={16} color={colors.primary} />
+            <Text className="font-semibold text-sm" style={{ color: colors.textPrimary }}>
+              {stores.length} {stores.length > 1 ? t.map.stores : t.map.store}
+            </Text>
+          </View>
+        </Animated.View>
+      )}
+
+      {/* Loading indicator */}
+      {(storesQuery.isFetching || locationLoading) && (
+        <View
+          className="absolute left-4"
+          style={{ bottom: 260 + insets.bottom, zIndex: 5 }}
+        >
+          <View
+            className="h-10 px-4 rounded-full flex-row items-center gap-2"
+            style={{
+              backgroundColor: isDark ? "rgba(30,41,59,0.9)" : "rgba(255,255,255,0.95)",
+              borderWidth: 1,
+              borderColor: colors.border,
+            }}
+          >
+            <ActivityIndicator size="small" color={colors.primary} />
+            <Text className="text-xs" style={{ color: colors.textMuted }}>
+              {locationLoading ? t.map.locating : t.map.searchResults}
+            </Text>
+          </View>
         </View>
-      </Animated.View>
+      )}
 
       {/* Bottom Sheet */}
       <Animated.View
         entering={SlideInUp.delay(300).duration(500)}
-        className="absolute bottom-0 left-0 right-0 bg-surface-dark rounded-t-2xl border-t border-slate-700/50"
+        className="absolute bottom-0 left-0 right-0 rounded-t-2xl"
         style={{
-          height: 260 + insets.bottom,
+          backgroundColor: colors.card,
+          borderTopWidth: 1,
+          borderTopColor: colors.cardBorder,
+          minHeight: selectedStore ? 220 + insets.bottom : 240 + insets.bottom,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 6,
+          shadowOpacity: 0.15,
+          shadowRadius: 8,
           elevation: 8,
         }}
       >
         {/* Handle */}
         <View className="w-full h-6 items-center justify-center pt-2">
-          <View className="w-10 h-1 rounded-full bg-slate-600" />
+          <View className="w-10 h-1 rounded-full" style={{ backgroundColor: colors.border }} />
         </View>
 
-        {/* Content */}
-        <View className="flex-1 pb-6">
-          {/* Header */}
-          <View className="flex-row items-center justify-between px-5 mb-3">
-            <Text accessibilityRole="header" className="text-lg font-bold text-white">{t.map.nearYou}</Text>
-            <Text className="text-primary text-sm font-semibold">
-              {storesQuery.data?.total ?? 0} {(storesQuery.data?.total ?? 0) > 1 ? t.map.stores : t.map.store}
-            </Text>
-          </View>
-
-          {/* Store Cards */}
-          {storesQuery.isPending ? (
-            <View className="flex-1 items-center justify-center">
-              <ActivityIndicator size="small" color="#1de560" />
-            </View>
-          ) : stores.length === 0 ? (
-            <View className="flex-1 items-center justify-center px-8">
-              <MaterialIcons name="search-off" size={32} color="#64748b" />
-              <Text className="text-sm text-slate-400 mt-2 text-center">
-                {t.map.noStoresFound}
+        {selectedStore ? (
+          /* Store Detail */
+          <StoreDetailCard
+            store={selectedStore as StoreFeatureProperties}
+            onDirections={() => openDirections(
+              selectedStore.latitude,
+              selectedStore.longitude,
+              selectedStore.name,
+            )}
+            onCall={() => selectedStore.phone && callStore(selectedStore.phone)}
+            onClose={handleCloseDetail}
+            colors={colors}
+          />
+        ) : (
+          /* Store List */
+          <View className="flex-1 pb-4">
+            {/* Header */}
+            <View className="flex-row items-center justify-between px-5 mb-3">
+              <Text
+                accessibilityRole="header"
+                className="text-lg font-bold"
+                style={{ color: colors.textPrimary }}
+              >
+                {t.map.nearYou}
               </Text>
+              {stores.length > 0 && (
+                <Text className="text-sm font-semibold" style={{ color: colors.primary }}>
+                  {stores.length} {stores.length > 1 ? t.map.stores : t.map.store}
+                </Text>
+              )}
             </View>
-          ) : (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 20, gap: 16 }}
-              snapToInterval={CARD_WIDTH + 16}
-              decelerationRate="fast"
-            >
-              {stores.map((store: any, index: number) => (
-                <Animated.View
-                  key={store.id}
-                  entering={FadeInRight.delay(400 + index * 100).duration(400)}
-                >
-                  <StoreCard
-                    store={store}
-                    index={index}
-                    onPress={() => handleStorePress(store.id)}
-                  />
-                </Animated.View>
-              ))}
-            </ScrollView>
-          )}
-        </View>
+
+            {/* Store Cards */}
+            {storesQuery.isPending && !storesQuery.data ? (
+              <View className="flex-1 items-center justify-center py-8">
+                <ActivityIndicator size="small" color={colors.primary} />
+              </View>
+            ) : stores.length === 0 ? (
+              <View className="flex-1 items-center justify-center px-8 py-6">
+                <MaterialIcons name="explore" size={32} color={colors.textMuted} />
+                <Text className="text-sm mt-2 text-center" style={{ color: colors.textSecondary }}>
+                  {mapRegion ? t.map.noStoresFound : t.map.locating}
+                </Text>
+              </View>
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
+                snapToInterval={CARD_WIDTH + 12}
+                decelerationRate="fast"
+              >
+                {stores.map((store, index) => (
+                  <Animated.View
+                    key={store.id}
+                    entering={FadeInRight.delay(index * 80).duration(300)}
+                  >
+                    <StoreCard
+                      store={store as StoreFeatureProperties}
+                      isSelected={store.id === selectedStoreId}
+                      onPress={() => handleStoreCardPress(store)}
+                      colors={colors}
+                    />
+                  </Animated.View>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+        )}
       </Animated.View>
+
+      {/* Location denied banner */}
+      {permission === "denied" && (
+        <Animated.View
+          entering={FadeIn.duration(400)}
+          className="absolute left-4 right-4 rounded-xl p-4"
+          style={{
+            top: insets.top + 160,
+            backgroundColor: isDark ? "rgba(239,68,68,0.15)" : "rgba(239,68,68,0.1)",
+            borderWidth: 1,
+            borderColor: "rgba(239,68,68,0.3)",
+            zIndex: 15,
+          }}
+        >
+          <Text className="text-sm font-semibold" style={{ color: "#ef4444" }}>
+            {t.map.locationDenied}
+          </Text>
+          <Text className="text-xs mt-1" style={{ color: colors.textSecondary }}>
+            {t.map.locationDeniedDesc}
+          </Text>
+          <TouchableOpacity
+            onPress={() => Linking.openSettings()}
+            className="mt-2 self-start px-3 py-1.5 rounded-lg"
+            style={{ backgroundColor: "rgba(239,68,68,0.2)" }}
+          >
+            <Text className="text-xs font-semibold" style={{ color: "#ef4444" }}>
+              {t.map.openSettings}
+            </Text>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
     </View>
   );
 }

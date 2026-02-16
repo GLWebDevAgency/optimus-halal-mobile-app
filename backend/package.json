@@ -14,11 +14,14 @@
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx --env-file=.env src/db/seeds/run.ts",
     "db:seed:dev": "tsx --env-file=.env src/db/seeds/dev-seed.ts",
+    "db:seed:additives": "tsx --env-file=.env src/db/seeds/additives-seed.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.990.0",
+    "@aws-sdk/s3-request-presigner": "^3.990.0",
     "@hono/node-server": "^1.13.0",
     "@hono/trpc-server": "^0.3.0",
     "@sentry/node": "^10.38.0",

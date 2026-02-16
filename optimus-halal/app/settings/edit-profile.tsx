@@ -27,7 +27,8 @@ import { useMe } from "@/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
-import { PhoneInput, LocationPicker } from "@/components/ui";
+import { useImageUpload } from "@/hooks/useImageUpload";
+import { PhoneInput, LocationPicker, parseInternationalPhone } from "@/components/ui";
 import { City, FRENCH_CITIES } from "@/constants/locations";
 
 export default function EditProfileScreen() {
@@ -39,6 +40,7 @@ export default function EditProfileScreen() {
   const updateMutation = trpc.profile.updateProfile.useMutation({
     onSuccess: () => utils.auth.me.invalidate(),
   });
+  const { upload: uploadImage, isUploading: isUploadingAvatar } = useImageUpload();
 
   // Form state - initialized from profile
   const [displayName, setDisplayName] = useState("");
@@ -58,8 +60,10 @@ export default function EditProfileScreen() {
     if (profile && !isInitialized) {
       setDisplayName(profile.displayName || "");
       setEmail(profile.email || "");
-      setPhoneNumber(profile.phoneNumber || "");
-      setFullPhoneNumber(profile.phoneNumber || "");
+      // Parse le numéro international (+33612345678) en format local (06 12 34 56 78)
+      const parsed = parseInternationalPhone(profile.phoneNumber || "");
+      setPhoneNumber(parsed.localFormatted);
+      setFullPhoneNumber(parsed.fullNumber);
       setBio(profile.bio || "");
       setAvatarUrl(profile.avatarUrl || "");
       // Trouver la ville si elle existe dans le profil
@@ -109,10 +113,10 @@ export default function EditProfileScreen() {
     bottomBorder: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
   };
 
-  // Handle image picker
+  // Handle image picker → upload to R2 → set CDN URL
   const handleChangePhoto = useCallback(async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
+
     if (!permissionResult.granted) {
       Alert.alert(t.editProfile.permissionRequired, t.editProfile.galleryPermission);
       return;
@@ -126,9 +130,17 @@ export default function EditProfileScreen() {
     });
 
     if (!result.canceled && result.assets[0]) {
-      setAvatarUrl(result.assets[0].uri);
+      try {
+        const cdnUrl = await uploadImage({
+          uri: result.assets[0].uri,
+          type: "avatar",
+        });
+        setAvatarUrl(cdnUrl);
+      } catch {
+        Alert.alert(t.common.error, t.editProfile.saveError);
+      }
     }
-  }, []);
+  }, [uploadImage, t]);
 
   // Safe back navigation — prevents GO_BACK crash when no screen to return to
   const safeGoBack = useCallback(() => {
@@ -592,7 +604,7 @@ export default function EditProfileScreen() {
           <TouchableOpacity
             onPress={handleSave}
             activeOpacity={0.9}
-            disabled={isSaving || !hasChanges}
+            disabled={isSaving || isUploadingAvatar || !hasChanges}
             style={{
               backgroundColor: hasChanges ? themeColors.primary : (isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"),
               borderRadius: 16,

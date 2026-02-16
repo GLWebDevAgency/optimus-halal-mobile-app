@@ -83,3 +83,18 @@ export {
 // ============================================
 
 export { useHaptics } from './useHaptics';
+
+// ============================================
+// MAP HOOKS
+// ============================================
+
+export { useUserLocation } from './useUserLocation';
+export { useMapStores } from './useMapStores';
+export { useGeocode } from './useGeocode';
+export type { GeocodeSuggestion } from './useGeocode';
+
+// ============================================
+// IMAGE UPLOAD HOOK (R2)
+// ============================================
+// NOT barrel-exported: expo-image-manipulator requires native module.
+// Import directly: import { useImageUpload } from '@/hooks/useImageUpload'

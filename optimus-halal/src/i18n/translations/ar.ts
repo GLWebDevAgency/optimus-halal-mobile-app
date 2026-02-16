@@ -102,6 +102,8 @@ export const ar: TranslationKeys = {
     language: "اللغة",
     helpCenter: "مركز المساعدة",
     reportProblem: "الإبلاغ عن مشكلة",
+    madhab: "المذهب الفقهي",
+    healthProfile: "الملف الصحي",
     logout: "تسجيل الخروج",
     logoutConfirm: "هل أنت متأكد من تسجيل الخروج؟",
   },
@@ -134,6 +136,54 @@ export const ar: TranslationKeys = {
     retryHint: "إعادة تحميل الملف",
     backHint: "العودة إلى الشاشة السابقة",
   },
+  // Madhab Screen
+  madhab: {
+    title: "المذهب الفقهي",
+    infoTitle: "لماذا هذا مهم؟",
+    infoBody: "مذهبك الفقهي يؤثر على تحليل بعض الإضافات مثل الجيلاتين (E441) والأحادي/ثنائي الغليسيريد (E471). للعلماء آراء مختلفة حسب المذاهب.",
+    options: {
+      hanafi: {
+        label: "حنفي",
+        description: "الأكثر اتباعاً في العالم — تركيا، جنوب آسيا، آسيا الوسطى، البلقان",
+      },
+      shafii: {
+        label: "شافعي",
+        description: "جنوب شرق آسيا، شرق أفريقيا، اليمن، كردستان",
+      },
+      maliki: {
+        label: "مالكي",
+        description: "شمال وغرب أفريقيا، أجزاء من الخليج",
+      },
+      hanbali: {
+        label: "حنبلي",
+        description: "المملكة العربية السعودية، قطر، أجزاء من الخليج",
+      },
+      general: {
+        label: "عام (الأكثر احتياطاً)",
+        description: "يتبع رأي الأغلبية. موصى به إذا لم تتبع مذهباً محدداً.",
+      },
+    },
+  },
+
+  // Health Profile Screen
+  healthProfile: {
+    title: "الملف الصحي",
+    privacyTitle: "الخصوصية",
+    privacyBody: "هذه المعلومات تخصص تنبيهات الصحة أثناء المسح. لا يتم مشاركة أي بيانات مع أطراف ثالثة. يمكنك تعطيلها في أي وقت.",
+    pregnant: {
+      label: "أنا حامل",
+      description: "تنبيهات حول E171، E951، النتريت وإضافات أخرى غير مستحسنة",
+    },
+    children: {
+      label: "لدي أطفال صغار",
+      description: "تنبيهات حول الملونات المرتبطة بفرط النشاط (ساوثهامبتون ستة)",
+    },
+    allergens: {
+      title: "مسببات الحساسية",
+      description: "إدارة استثناءاتي الغذائية",
+    },
+  },
+
   favorites: {
     title: "مفضلاتي",
     empty: "لا توجد مفضلات",
@@ -321,6 +371,19 @@ export const ar: TranslationKeys = {
     store: "متجر",
     stores: "متاجر",
     noStoresFound: "لم يتم العثور على متاجر لهذه الفلاتر",
+    searchAddress: "ابحث عن عنوان...",
+    locating: "جارٍ تحديد الموقع...",
+    locationDenied: "تم رفض الوصول إلى الموقع",
+    locationDeniedDesc: "فعّل الموقع في الإعدادات لرؤية المتاجر القريبة.",
+    openSettings: "فتح الإعدادات",
+    storeDetail: "تفاصيل المتجر",
+    hours: "ساعات العمل",
+    getDirections: "الاتجاهات",
+    callStore: "اتصال",
+    kmAway: "{{distance}} كم",
+    clusterCount: "{{count}} متاجر",
+    myLocation: "موقعي",
+    searchResults: "نتائج البحث",
   },
   marketplace: {
     title: "المتجر",

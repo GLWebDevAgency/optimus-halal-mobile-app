@@ -25,6 +25,12 @@ const envSchema = z.object({
     .describe("Comma-separated allowed origins, or * for all"),
   SENTRY_DSN: z.string().url().optional(),
   SENTRY_ENVIRONMENT: z.string().default("development"),
+  // Cloudflare R2
+  R2_ACCOUNT_ID: z.string().min(1).optional(),
+  R2_ACCESS_KEY_ID: z.string().min(1).optional(),
+  R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+  R2_BUCKET_NAME: z.string().default("optimus-halal"),
+  R2_PUBLIC_DOMAIN: z.string().default("pub-f871593571bd4d04a86a25015aac1057.r2.dev"),
 });
 
 export type Env = z.infer<typeof envSchema>;

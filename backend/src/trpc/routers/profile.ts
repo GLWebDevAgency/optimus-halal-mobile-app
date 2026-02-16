@@ -19,7 +19,7 @@ export const profileRouter = router({
       z.object({
         displayName: z.string().min(2).max(100).optional(),
         phoneNumber: z.string().max(20).optional(),
-        avatarUrl: z.string().url().optional(),
+        avatarUrl: z.string().optional(),
         bio: z.string().max(500).optional(),
         city: z.string().max(100).optional(),
         preferredLanguage: z.enum(["fr", "en", "ar"]).optional(),
@@ -28,6 +28,11 @@ export const profileRouter = router({
           .optional(),
         dietaryRestrictions: z.array(z.string()).optional(),
         allergens: z.array(z.string()).optional(),
+        madhab: z
+          .enum(["hanafi", "shafii", "maliki", "hanbali", "general"])
+          .optional(),
+        isPregnant: z.boolean().optional(),
+        hasChildren: z.boolean().optional(),
         notificationEnabled: z.boolean().optional(),
         biometricEnabled: z.boolean().optional(),
         darkMode: z.boolean().optional(),

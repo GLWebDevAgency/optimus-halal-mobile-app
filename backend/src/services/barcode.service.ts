@@ -1,6 +1,9 @@
 import { env } from "../lib/env.js";
 import { redis } from "../lib/redis.js";
 import { logger } from "../lib/logger.js";
+import { db } from "../db/index.js";
+import { additives, additiveMadhabRulings } from "../db/schema/index.js";
+import { eq, and, inArray } from "drizzle-orm";
 
 // ── OpenFoodFacts Types ─────────────────────────────────────
 
@@ -98,10 +101,12 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeResult> {
   }
 }
 
-// ── Halal Analysis v2 — 4 Tiers ────────────────────────────
+// ── Halal Analysis v3 — Madhab-Aware + DB-Backed ───────────
 
 export type HalalStatus = "halal" | "haram" | "doubtful" | "unknown";
 export type HalalTier = "certified" | "analyzed_clean" | "doubtful" | "haram";
+export type Madhab = "hanafi" | "shafii" | "maliki" | "hanbali" | "general";
+export type HalalStrictness = "relaxed" | "moderate" | "strict" | "very_strict";
 
 export interface HalalAnalysis {
   status: HalalStatus;
@@ -119,7 +124,116 @@ export interface HalalReason {
   explanation: string;
 }
 
-// ── Additives Halal Database ────────────────────────────────
+export interface HalalAnalysisOptions {
+  madhab: Madhab;
+  strictness: HalalStrictness;
+}
+
+// ── DB-Backed Additive Lookup ───────────────────────────────
+
+interface AdditiveAnalysisResult {
+  code: string;
+  name: string;
+  halalStatus: HalalStatus;
+  explanation: string;
+  toxicityLevel: string;
+  riskPregnant: boolean;
+  riskChildren: boolean;
+  riskAllergic: boolean;
+  madhabOverride?: {
+    ruling: HalalStatus;
+    explanation: string;
+  };
+}
+
+async function lookupAdditives(
+  tags: string[],
+  madhab: Madhab
+): Promise<AdditiveAnalysisResult[]> {
+  // Normalize: "en:e322i" → "E322"
+  const codes = [
+    ...new Set(
+      tags.map((t) =>
+        t
+          .replace(/^en:/, "")
+          .toUpperCase()
+          .replace(/[a-z]$/i, "")
+      )
+    ),
+  ];
+
+  if (codes.length === 0) return [];
+
+  const dbAdditives = await db
+    .select()
+    .from(additives)
+    .where(inArray(additives.code, codes));
+
+  const results: AdditiveAnalysisResult[] = [];
+
+  for (const add of dbAdditives) {
+    let madhabOverride: AdditiveAnalysisResult["madhabOverride"] = undefined;
+
+    if (madhab !== "general") {
+      const [ruling] = await db
+        .select()
+        .from(additiveMadhabRulings)
+        .where(
+          and(
+            eq(additiveMadhabRulings.additiveCode, add.code),
+            eq(additiveMadhabRulings.madhab, madhab)
+          )
+        )
+        .limit(1);
+
+      if (ruling) {
+        madhabOverride = {
+          ruling: ruling.ruling as HalalStatus,
+          explanation: ruling.explanationFr,
+        };
+      }
+    }
+
+    results.push({
+      code: add.code,
+      name: add.nameFr,
+      halalStatus: (madhabOverride?.ruling ?? add.halalStatusDefault) as HalalStatus,
+      explanation: madhabOverride?.explanation ?? add.halalExplanationFr ?? "",
+      toxicityLevel: add.toxicityLevel,
+      riskPregnant: add.riskPregnant,
+      riskChildren: add.riskChildren,
+      riskAllergic: add.riskAllergic,
+      madhabOverride,
+    });
+  }
+
+  // Fallback: check tags not found in DB against the hardcoded map
+  for (const tag of tags) {
+    const code = tag
+      .replace(/^en:/, "")
+      .toUpperCase()
+      .replace(/[a-z]$/i, "");
+    if (!dbAdditives.find((a) => a.code === code)) {
+      const fallback = ADDITIVES_HALAL_DB[tag.toLowerCase()];
+      if (fallback) {
+        results.push({
+          code,
+          name: fallback.name,
+          halalStatus: fallback.status,
+          explanation: fallback.explanation,
+          toxicityLevel: "safe",
+          riskPregnant: false,
+          riskChildren: false,
+          riskAllergic: false,
+        });
+      }
+    }
+  }
+
+  return results;
+}
+
+// ── Legacy Additives Fallback (kept for tags not yet in DB) ─
 
 interface AdditiveInfo {
   name: string;
@@ -205,14 +319,15 @@ const HALAL_LABEL_TAGS = [
   "ar:halal",
 ];
 
-// ── Main Analysis Function ──────────────────────────────────
+// ── Main Analysis Function (v3 — async + madhab-aware) ─────
 
-export function analyzeHalalStatus(
+export async function analyzeHalalStatus(
   ingredientsText: string | undefined,
   additivesTags?: string[],
   labelsTags?: string[],
   ingredientsAnalysisTags?: string[],
-): HalalAnalysis {
+  options: HalalAnalysisOptions = { madhab: "general", strictness: "moderate" },
+): Promise<HalalAnalysis> {
   const reasons: HalalReason[] = [];
 
   // ── TIER 1: Check halal certification labels ──────────────
@@ -251,25 +366,26 @@ export function analyzeHalalStatus(
   let worstStatus: HalalStatus = "unknown";
   let worstConfidence = 0;
 
-  // Check additives from OFF tags (more reliable than text parsing)
+  // Check additives via DB + madhab rulings
   if (additivesTags?.length) {
-    for (const tag of additivesTags) {
-      const info = ADDITIVES_HALAL_DB[tag.toLowerCase()];
-      if (info) {
-        reasons.push({
-          type: "additive",
-          name: `${tag.replace("en:", "").toUpperCase()} (${info.name})`,
-          status: info.status,
-          explanation: info.explanation,
-        });
+    const additiveResults = await lookupAdditives(additivesTags, options.madhab);
 
-        if (info.status === "haram") {
-          worstStatus = "haram";
-          worstConfidence = Math.max(worstConfidence, 0.9);
-        } else if (info.status === "doubtful" && worstStatus !== "haram") {
-          worstStatus = "doubtful";
-          worstConfidence = Math.max(worstConfidence, 0.6);
-        }
+    for (const add of additiveResults) {
+      reasons.push({
+        type: "additive",
+        name: `${add.code} (${add.name})`,
+        status: add.halalStatus as "halal" | "haram" | "doubtful",
+        explanation: add.madhabOverride
+          ? `${add.explanation} (selon école ${options.madhab})`
+          : add.explanation,
+      });
+
+      if (add.halalStatus === "haram") {
+        worstStatus = "haram";
+        worstConfidence = Math.max(worstConfidence, 0.9);
+      } else if (add.halalStatus === "doubtful" && worstStatus !== "haram") {
+        worstStatus = "doubtful";
+        worstConfidence = Math.max(worstConfidence, 0.6);
       }
     }
   }
@@ -294,7 +410,6 @@ export function analyzeHalalStatus(
     if (worstStatus !== "haram") {
       for (const keyword of DOUBTFUL_INGREDIENTS) {
         if (lower.includes(keyword)) {
-          // If product is labelled vegan, E471-type doubtful ingredients are vegetable-origin
           const isVegan = ingredientsAnalysisTags?.includes("en:vegan");
           if (isVegan) {
             reasons.push({
@@ -322,53 +437,96 @@ export function analyzeHalalStatus(
 
   // No ingredients at all → unknown
   if (!ingredientsText && (!additivesTags || additivesTags.length === 0)) {
-    return {
-      status: "unknown",
-      confidence: 0,
-      tier: "doubtful",
-      reasons: [{ type: "ingredient", name: "—", status: "doubtful", explanation: "Aucun ingrédient disponible" }],
-      certifierName: null,
-      analysisSource: "Analyse automatique Optimus",
-    };
+    return applyStrictnessOverlay(
+      {
+        status: "unknown",
+        confidence: 0,
+        tier: "doubtful",
+        reasons: [{ type: "ingredient", name: "—", status: "doubtful", explanation: "Aucun ingrédient disponible" }],
+        certifierName: null,
+        analysisSource: "Analyse automatique Optimus",
+      },
+      options.strictness
+    );
   }
 
   // Determine final tier
   if (worstStatus === "haram") {
-    return {
-      status: "haram",
-      confidence: worstConfidence,
-      tier: "haram",
-      reasons,
-      certifierName: null,
-      analysisSource: "Analyse automatique Optimus",
-    };
+    return applyStrictnessOverlay(
+      {
+        status: "haram",
+        confidence: worstConfidence,
+        tier: "haram",
+        reasons,
+        certifierName: null,
+        analysisSource: "Analyse automatique Optimus",
+      },
+      options.strictness
+    );
   }
 
   if (worstStatus === "doubtful") {
-    return {
-      status: "doubtful",
-      confidence: worstConfidence,
-      tier: "doubtful",
-      reasons,
-      certifierName: null,
-      analysisSource: "Analyse automatique Optimus",
-    };
+    return applyStrictnessOverlay(
+      {
+        status: "doubtful",
+        confidence: worstConfidence,
+        tier: "doubtful",
+        reasons,
+        certifierName: null,
+        analysisSource: "Analyse automatique Optimus",
+      },
+      options.strictness
+    );
   }
 
   // No issues found → analyzed clean
-  return {
-    status: "halal",
-    confidence: 0.8,
-    tier: "analyzed_clean",
-    reasons: reasons.length > 0 ? reasons : [{
-      type: "ingredient",
-      name: "Tous les ingrédients",
+  return applyStrictnessOverlay(
+    {
       status: "halal",
-      explanation: "Aucun ingrédient haram ou douteux détecté",
-    }],
-    certifierName: null,
-    analysisSource: "Analyse automatique Optimus",
-  };
+      confidence: 0.8,
+      tier: "analyzed_clean",
+      reasons: reasons.length > 0 ? reasons : [{
+        type: "ingredient",
+        name: "Tous les ingrédients",
+        status: "halal",
+        explanation: "Aucun ingrédient haram ou douteux détecté",
+      }],
+      certifierName: null,
+      analysisSource: "Analyse automatique Optimus",
+    },
+    options.strictness
+  );
+}
+
+// ── Strictness Overlay ──────────────────────────────────────
+
+function applyStrictnessOverlay(
+  result: HalalAnalysis,
+  strictness: HalalStrictness
+): HalalAnalysis {
+  switch (strictness) {
+    case "relaxed":
+      if (result.status === "doubtful") {
+        return { ...result, status: "halal", confidence: 0.5 };
+      }
+      return result;
+    case "strict":
+      if (result.status === "doubtful") {
+        return { ...result, confidence: Math.max(result.confidence, 0.7) };
+      }
+      return result;
+    case "very_strict":
+      if (result.tier !== "certified") {
+        return {
+          ...result,
+          status: result.status === "haram" ? "haram" : "doubtful",
+          confidence: result.status === "haram" ? result.confidence : 0.3,
+        };
+      }
+      return result;
+    default: // "moderate"
+      return result;
+  }
 }
 
 // ── Explanation helpers ─────────────────────────────────────

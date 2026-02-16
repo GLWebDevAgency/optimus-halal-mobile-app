@@ -47,15 +47,17 @@ export class OptimusApiError extends Error {
 
   static fromTRPCError(error: unknown): OptimusApiError {
     if (error && typeof error === "object") {
-      if ("shape" in error) {
-        const shape = (error as any).shape;
+      // TRPCClientError with a valid server shape (has code + message)
+      const shape = (error as any).shape;
+      if (shape && typeof shape === "object" && shape.message) {
         return new OptimusApiError(
-          shape?.code || ERROR_CODES.UNKNOWN_ERROR,
-          shape?.message || "An unexpected error occurred",
-          shape?.data
+          shape.code || ERROR_CODES.UNKNOWN_ERROR,
+          shape.message,
+          shape.data
         );
       }
 
+      // TRPCClientError or similar with top-level code + message
       if ("code" in error && "message" in error) {
         const trpcError = error as {
           code: string;
@@ -69,10 +71,9 @@ export class OptimusApiError extends Error {
         );
       }
 
+      // Generic Error with a message
       if (error instanceof Error) {
-        return new OptimusApiError(ERROR_CODES.UNKNOWN_ERROR, error.message, {
-          stack: error.stack,
-        });
+        return new OptimusApiError(ERROR_CODES.UNKNOWN_ERROR, error.message);
       }
     }
     return new OptimusApiError(
