@@ -27,7 +27,7 @@ import { useMe } from "@/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
-import { PhoneInput, LocationPicker } from "@/components/ui";
+import { PhoneInput, LocationPicker, parseInternationalPhone } from "@/components/ui";
 import { City, FRENCH_CITIES } from "@/constants/locations";
 
 export default function EditProfileScreen() {
@@ -58,8 +58,10 @@ export default function EditProfileScreen() {
     if (profile && !isInitialized) {
       setDisplayName(profile.displayName || "");
       setEmail(profile.email || "");
-      setPhoneNumber(profile.phoneNumber || "");
-      setFullPhoneNumber(profile.phoneNumber || "");
+      // Parse le numéro international (+33612345678) en format local (06 12 34 56 78)
+      const parsed = parseInternationalPhone(profile.phoneNumber || "");
+      setPhoneNumber(parsed.localFormatted);
+      setFullPhoneNumber(parsed.fullNumber);
       setBio(profile.bio || "");
       setAvatarUrl(profile.avatarUrl || "");
       // Trouver la ville si elle existe dans le profil

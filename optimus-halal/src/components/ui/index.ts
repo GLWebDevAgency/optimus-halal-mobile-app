@@ -6,7 +6,7 @@
 
 export { Button, type ButtonProps } from "./Button";
 export { Input, type InputProps } from "./Input";
-export { PhoneInput, type PhoneInputProps, type CountryCode, COUNTRY_CODES, validateFrenchPhone, getFullPhoneNumber } from "./PhoneInput";
+export { PhoneInput, type PhoneInputProps, type CountryCode, COUNTRY_CODES, validateFrenchPhone, getFullPhoneNumber, parseInternationalPhone } from "./PhoneInput";
 export { LocationPicker, type LocationPickerProps } from "./LocationPicker";
 export { Card, CardHeader, CardContent, CardFooter, type CardProps } from "./Card";
 export { Badge, CertificationBadge, type BadgeProps, type CertificationBadgeProps } from "./Badge";
