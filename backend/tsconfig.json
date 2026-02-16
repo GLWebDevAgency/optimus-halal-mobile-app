@@ -20,5 +20,5 @@
     }
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "drizzle", "src/db/seeds"]
+  "exclude": ["node_modules", "dist", "drizzle", "src/db/seeds", "src/__tests__"]
 }
