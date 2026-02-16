@@ -76,37 +76,45 @@ export const storeRouter = router({
             "abattoir", "wholesaler", "online", "other",
           ])
           .optional(),
-        limit: z.number().min(1).max(50).default(20),
+        halalCertifiedOnly: z.boolean().default(false),
+        limit: z.number().min(1).max(100).default(20),
       })
     )
     .query(async ({ ctx, input }) => {
-      // Haversine distance formula in SQL
+      const radiusMeters = input.radiusKm * 1000;
+      const point = sql`ST_SetSRID(ST_MakePoint(${input.longitude}, ${input.latitude}), 4326)::geography`;
+
+      const conditions = [
+        eq(stores.isActive, true),
+        sql`ST_DWithin("stores"."location", ${point}, ${radiusMeters})`,
+      ];
+
+      if (input.storeType) conditions.push(eq(stores.storeType, input.storeType));
+      if (input.halalCertifiedOnly) conditions.push(eq(stores.halalCertified, true));
+
       const items = await ctx.db
         .select({
-          store: stores,
-          distance: sql<number>`
-            (6371 * acos(
-              cos(radians(${input.latitude})) * cos(radians(${stores.latitude}))
-              * cos(radians(${stores.longitude}) - radians(${input.longitude}))
-              + sin(radians(${input.latitude})) * sin(radians(${stores.latitude}))
-            ))
-          `.as("distance"),
+          id: stores.id,
+          name: stores.name,
+          storeType: stores.storeType,
+          imageUrl: stores.imageUrl,
+          address: stores.address,
+          city: stores.city,
+          postalCode: stores.postalCode,
+          phone: stores.phone,
+          website: stores.website,
+          latitude: stores.latitude,
+          longitude: stores.longitude,
+          halalCertified: stores.halalCertified,
+          certifier: stores.certifier,
+          certifierName: stores.certifierName,
+          averageRating: stores.averageRating,
+          reviewCount: stores.reviewCount,
+          distance: sql<number>`round(ST_Distance("stores"."location", ${point})::numeric)`.as("distance"),
         })
         .from(stores)
-        .where(
-          and(
-            eq(stores.isActive, true),
-            input.storeType ? eq(stores.storeType, input.storeType) : undefined,
-            sql`
-              (6371 * acos(
-                cos(radians(${input.latitude})) * cos(radians(${stores.latitude}))
-                * cos(radians(${stores.longitude}) - radians(${input.longitude}))
-                + sin(radians(${input.latitude})) * sin(radians(${stores.latitude}))
-              )) <= ${input.radiusKm}
-            `
-          )
-        )
-        .orderBy(sql`distance`)
+        .where(and(...conditions))
+        .orderBy(sql`ST_Distance("stores"."location", ${point})`)
         .limit(input.limit);
 
       return items;
