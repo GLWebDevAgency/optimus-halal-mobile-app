@@ -18,6 +18,8 @@ RETURNS TRIGGER AS $$
 BEGIN
   IF NEW.latitude IS NOT NULL AND NEW.longitude IS NOT NULL THEN
     NEW.location := ST_SetSRID(ST_MakePoint(NEW.longitude, NEW.latitude), 4326)::geography;
+  ELSE
+    NEW.location := NULL;
   END IF;
   RETURN NEW;
 END;

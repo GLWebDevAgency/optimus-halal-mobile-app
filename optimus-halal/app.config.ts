@@ -64,12 +64,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-secure-store",
     "expo-font",
     "@sentry/react-native",
-    [
-      "@rnmapbox/maps",
-      {
-        RNMapboxMapsDownloadToken: process.env.MAPBOX_DOWNLOADS_TOKEN,
-      },
-    ],
+    "@rnmapbox/maps",
   ],
   runtimeVersion: {
     policy: "appVersion",
