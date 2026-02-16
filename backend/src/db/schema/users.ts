@@ -10,6 +10,14 @@ export const halalStrictnessEnum = pgEnum("halal_strictness", [
 
 export const languageEnum = pgEnum("language", ["fr", "en", "ar"]);
 
+export const madhabEnum = pgEnum("madhab", [
+  "hanafi",
+  "shafii",
+  "maliki",
+  "hanbali",
+  "general",
+]);
+
 export const users = pgTable(
   "users",
   {
@@ -27,6 +35,9 @@ export const users = pgTable(
       .notNull(),
     dietaryRestrictions: t.text("dietary_restrictions").array(),
     allergens: t.text().array(),
+    madhab: madhabEnum().default("general").notNull(),
+    isPregnant: t.boolean("is_pregnant").default(false).notNull(),
+    hasChildren: t.boolean("has_children").default(false).notNull(),
     level: t.integer().default(1).notNull(),
     experiencePoints: t.integer("experience_points").default(0).notNull(),
     totalScans: t.integer("total_scans").default(0).notNull(),
