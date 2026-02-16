@@ -1,9 +1,12 @@
 /**
  * API Configuration - Enterprise-grade Mobile App
- * 
- * Environment-based configuration for API connectivity
- * Netflix/Stripe/Shopify/Airbnb/Spotify standards
+ *
+ * Environment-based configuration for API connectivity.
+ * In dev mode, auto-detects the LAN IP from Expo's metro bundler
+ * so you never need to update .env when WiFi reconnects.
  */
+
+import Constants from "expo-constants";
 
 // ============================================
 // ENVIRONMENT DETECTION
@@ -15,14 +18,33 @@ const isDevelopment = __DEV__;
 // API ENDPOINTS
 // ============================================
 
-/** Development API base URL - Local backend via LAN IP (for physical device) */
-const DEV_API_URL = `http://${
-  // Set EXPO_PUBLIC_API_HOST in optimus-halal/.env to your machine's LAN IP
-  process.env.EXPO_PUBLIC_API_HOST ?? '192.168.68.52'
-}:3000`;
+/**
+ * Auto-detect dev machine LAN IP from Expo metro bundler.
+ *
+ * Constants.expoConfig.hostUri = "192.168.x.x:8081" (metro port)
+ * We strip the port and reuse the hostname for our backend on :3000.
+ * Falls back to EXPO_PUBLIC_API_HOST env var, then localhost.
+ */
+function getDevApiUrl(): string {
+  // 1. Expo metro bundler knows the correct LAN IP
+  const hostUri = Constants.expoConfig?.hostUri;
+  if (hostUri) {
+    const host = hostUri.split(":")[0];
+    if (host) return `http://${host}:3000`;
+  }
+
+  // 2. Explicit env override (CI, custom setups)
+  const envHost = process.env.EXPO_PUBLIC_API_HOST;
+  if (envHost) return `http://${envHost}:3000`;
+
+  // 3. Last resort
+  return "http://localhost:3000";
+}
+
+const DEV_API_URL = getDevApiUrl();
 
 /** Production API base URL (same BFF for now) */
-const PROD_API_URL = 'https://mobile-bff-production-aefc.up.railway.app';
+const PROD_API_URL = "https://mobile-bff-production-aefc.up.railway.app";
 
 // ============================================
 // CONFIGURATION
@@ -118,3 +140,7 @@ export const ERROR_CODES = {
 // ============================================
 
 export const API_CONFIG = getApiConfig();
+
+if (isDevelopment) {
+  console.log(`[API] Dev URL auto-detected: ${API_CONFIG.baseUrl}`);
+}
