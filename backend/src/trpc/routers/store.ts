@@ -3,6 +3,8 @@ import { eq, and, ilike, or, desc, sql } from "drizzle-orm";
 import { router, publicProcedure, protectedProcedure } from "../trpc.js";
 import { stores, storeHours, storeSubscriptions } from "../../db/schema/index.js";
 import { notFound, conflict } from "../../lib/errors.js";
+import { withCache } from "../../lib/cache.js";
+import ngeohash from "ngeohash";
 
 function escapeLike(str: string): string {
   return str.replace(/[%_\\]/g, "\\$&");
@@ -81,43 +83,47 @@ export const storeRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      const radiusMeters = input.radiusKm * 1000;
-      const point = sql`ST_SetSRID(ST_MakePoint(${input.longitude}, ${input.latitude}), 4326)::geography`;
+      // Geohash precision 5 (~5km cells) for cache key
+      const gh = ngeohash.encode(input.latitude, input.longitude, 5);
+      const cacheKey = `stores:v1:nearby:${gh}:${input.storeType ?? "all"}:${input.halalCertifiedOnly ? "1" : "0"}`;
 
-      const conditions = [
-        eq(stores.isActive, true),
-        sql`ST_DWithin("stores"."location", ${point}, ${radiusMeters})`,
-      ];
+      return withCache(ctx.redis, cacheKey, 300, async () => {
+        const radiusMeters = input.radiusKm * 1000;
+        const point = sql`ST_SetSRID(ST_MakePoint(${input.longitude}, ${input.latitude}), 4326)::geography`;
 
-      if (input.storeType) conditions.push(eq(stores.storeType, input.storeType));
-      if (input.halalCertifiedOnly) conditions.push(eq(stores.halalCertified, true));
+        const conditions = [
+          eq(stores.isActive, true),
+          sql`ST_DWithin("stores"."location", ${point}, ${radiusMeters})`,
+        ];
 
-      const items = await ctx.db
-        .select({
-          id: stores.id,
-          name: stores.name,
-          storeType: stores.storeType,
-          imageUrl: stores.imageUrl,
-          address: stores.address,
-          city: stores.city,
-          postalCode: stores.postalCode,
-          phone: stores.phone,
-          website: stores.website,
-          latitude: stores.latitude,
-          longitude: stores.longitude,
-          halalCertified: stores.halalCertified,
-          certifier: stores.certifier,
-          certifierName: stores.certifierName,
-          averageRating: stores.averageRating,
-          reviewCount: stores.reviewCount,
-          distance: sql<number>`round(ST_Distance("stores"."location", ${point})::numeric)`.as("distance"),
-        })
-        .from(stores)
-        .where(and(...conditions))
-        .orderBy(sql`ST_Distance("stores"."location", ${point})`)
-        .limit(input.limit);
+        if (input.storeType) conditions.push(eq(stores.storeType, input.storeType));
+        if (input.halalCertifiedOnly) conditions.push(eq(stores.halalCertified, true));
 
-      return items;
+        return ctx.db
+          .select({
+            id: stores.id,
+            name: stores.name,
+            storeType: stores.storeType,
+            imageUrl: stores.imageUrl,
+            address: stores.address,
+            city: stores.city,
+            postalCode: stores.postalCode,
+            phone: stores.phone,
+            website: stores.website,
+            latitude: stores.latitude,
+            longitude: stores.longitude,
+            halalCertified: stores.halalCertified,
+            certifier: stores.certifier,
+            certifierName: stores.certifierName,
+            averageRating: stores.averageRating,
+            reviewCount: stores.reviewCount,
+            distance: sql<number>`round(ST_Distance("stores"."location", ${point})::numeric)`.as("distance"),
+          })
+          .from(stores)
+          .where(and(...conditions))
+          .orderBy(sql`ST_Distance("stores"."location", ${point})`)
+          .limit(input.limit);
+      });
     }),
 
   getById: publicProcedure

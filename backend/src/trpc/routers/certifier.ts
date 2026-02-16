@@ -2,25 +2,28 @@ import { z } from "zod";
 import { eq, desc } from "drizzle-orm";
 import { router, publicProcedure } from "../trpc.js";
 import { certifiers } from "../../db/schema/index.js";
+import { withCache } from "../../lib/cache.js";
 
 export const certifierRouter = router({
   /** Get all certifiers ranked by trust score (descending) */
   ranking: publicProcedure.query(async ({ ctx }) => {
-    return ctx.db
-      .select({
-        id: certifiers.id,
-        name: certifiers.name,
-        website: certifiers.website,
-        creationYear: certifiers.creationYear,
-        halalAssessment: certifiers.halalAssessment,
-        trustScore: certifiers.trustScore,
-        acceptsStunning: certifiers.acceptsStunning,
-        controllersAreEmployees: certifiers.controllersAreEmployees,
-        controllersPresentEachProduction: certifiers.controllersPresentEachProduction,
-      })
-      .from(certifiers)
-      .where(eq(certifiers.isActive, true))
-      .orderBy(desc(certifiers.trustScore));
+    return withCache(ctx.redis, "certifiers:v1:ranking", 3600, () =>
+      ctx.db
+        .select({
+          id: certifiers.id,
+          name: certifiers.name,
+          website: certifiers.website,
+          creationYear: certifiers.creationYear,
+          halalAssessment: certifiers.halalAssessment,
+          trustScore: certifiers.trustScore,
+          acceptsStunning: certifiers.acceptsStunning,
+          controllersAreEmployees: certifiers.controllersAreEmployees,
+          controllersPresentEachProduction: certifiers.controllersPresentEachProduction,
+        })
+        .from(certifiers)
+        .where(eq(certifiers.isActive, true))
+        .orderBy(desc(certifiers.trustScore)),
+    );
   }),
 
   /** Get a single certifier with full details */
@@ -38,15 +41,17 @@ export const certifierRouter = router({
 
   /** Get only certifiers that pass halal assessment */
   trusted: publicProcedure.query(async ({ ctx }) => {
-    return ctx.db
-      .select({
-        id: certifiers.id,
-        name: certifiers.name,
-        trustScore: certifiers.trustScore,
-        website: certifiers.website,
-      })
-      .from(certifiers)
-      .where(eq(certifiers.halalAssessment, true))
-      .orderBy(desc(certifiers.trustScore));
+    return withCache(ctx.redis, "certifiers:v1:trusted", 3600, () =>
+      ctx.db
+        .select({
+          id: certifiers.id,
+          name: certifiers.name,
+          trustScore: certifiers.trustScore,
+          website: certifiers.website,
+        })
+        .from(certifiers)
+        .where(eq(certifiers.halalAssessment, true))
+        .orderBy(desc(certifiers.trustScore)),
+    );
   }),
 });

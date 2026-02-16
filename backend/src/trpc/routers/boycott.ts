@@ -2,6 +2,7 @@ import { z } from "zod";
 import { eq, sql, desc, and } from "drizzle-orm";
 import { router, publicProcedure } from "../trpc.js";
 import { boycottTargets } from "../../db/schema/index.js";
+import { withCache } from "../../lib/cache.js";
 
 export const boycottRouter = router({
   /**
@@ -51,6 +52,7 @@ export const boycottRouter = router({
 
   /**
    * List all boycott targets, optionally filtered by level.
+   * Cached 1h — boycott list changes rarely.
    */
   list: publicProcedure
     .input(
@@ -61,26 +63,38 @@ export const boycottRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      const conditions = [eq(boycottTargets.isActive, true)];
+      // Only cache first page without cursor (most common request)
+      const cacheKey = !input.cursor
+        ? `boycott:v1:list:${input.level ?? "all"}:${input.limit}`
+        : null;
 
-      if (input.level) {
-        conditions.push(eq(boycottTargets.boycottLevel, input.level));
+      const fetcher = async () => {
+        const conditions = [eq(boycottTargets.isActive, true)];
+
+        if (input.level) {
+          conditions.push(eq(boycottTargets.boycottLevel, input.level));
+        }
+
+        const items = await ctx.db
+          .select()
+          .from(boycottTargets)
+          .where(and(...conditions))
+          .orderBy(desc(boycottTargets.addedAt))
+          .limit(input.limit + 1);
+
+        let nextCursor: string | undefined;
+        if (items.length > input.limit) {
+          const next = items.pop()!;
+          nextCursor = next.id;
+        }
+
+        return { items, nextCursor };
+      };
+
+      if (cacheKey) {
+        return withCache(ctx.redis, cacheKey, 3600, fetcher);
       }
-
-      const items = await ctx.db
-        .select()
-        .from(boycottTargets)
-        .where(and(...conditions))
-        .orderBy(desc(boycottTargets.addedAt))
-        .limit(input.limit + 1);
-
-      let nextCursor: string | undefined;
-      if (items.length > input.limit) {
-        const next = items.pop()!;
-        nextCursor = next.id;
-      }
-
-      return { items, nextCursor };
+      return fetcher();
     }),
 
   /**
