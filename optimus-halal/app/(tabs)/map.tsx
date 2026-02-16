@@ -406,11 +406,11 @@ export default function MapScreen() {
     : "mapbox://styles/mapbox/light-v11";
 
   // ── Handlers ───────────────────────────────────────────
-  const handleRegionChange = useCallback((feature: any) => {
-    const center = feature?.geometry?.coordinates;
+  const handleRegionChange = useCallback((state: any) => {
+    // @rnmapbox/maps v10: { properties: { center: [lng, lat], zoom } }
+    const center = state?.properties?.center;
     if (!center) return;
-    // Approximate radius from zoom: zoom 10 ≈ 15km, zoom 13 ≈ 3km, zoom 15 ≈ 1km
-    const zoom = feature?.properties?.zoomLevel ?? 10;
+    const zoom = state?.properties?.zoom ?? 10;
     const radiusKm = Math.max(0.5, Math.min(50, 40000 / Math.pow(2, zoom)));
     setMapRegion({
       latitude: center[1],
