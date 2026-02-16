@@ -470,10 +470,24 @@ export default function ProfileScreen() {
               onPress={() => router.push("/settings/notifications" as any)}
             />
             <MenuItem
+              icon="auto-stories"
+              iconBgColor={isDark ? "rgba(168,85,247,0.1)" : "#f5f3ff"}
+              iconColor={isDark ? "#c084fc" : "#7c3aed"}
+              title="\u00C9cole juridique (Madhab)"
+              onPress={() => router.push("/settings/madhab" as any)}
+            />
+            <MenuItem
+              icon="monitor-heart"
+              iconBgColor={isDark ? "rgba(244,114,182,0.1)" : "#fdf2f8"}
+              iconColor={isDark ? "#f472b6" : "#ec4899"}
+              title="Profil sant\u00E9"
+              onPress={() => router.push("/settings/health-profile" as any)}
+            />
+            <MenuItem
               icon="gavel"
               iconBgColor={isDark ? "rgba(239,68,68,0.1)" : "#fef2f2"}
               iconColor={isDark ? "#f87171" : "#dc2626"}
-              title="Boycott & Éthique"
+              title="Boycott & \u00C9thique"
               onPress={() => router.push("/settings/boycott-list" as any)}
             />
             <MenuItem

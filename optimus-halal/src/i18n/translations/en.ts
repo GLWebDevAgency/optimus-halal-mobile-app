@@ -114,6 +114,8 @@ export const en: TranslationKeys = {
     language: "Language",
     helpCenter: "Help center",
     reportProblem: "Report a problem",
+    madhab: "School of jurisprudence",
+    healthProfile: "Health profile",
     logout: "Logout",
     logoutConfirm: "Are you sure you want to logout?",
   },

@@ -32,6 +32,8 @@ export default function SettingsLayout() {
         <Stack.Screen name="exclusions" />
         <Stack.Screen name="notifications" />
         <Stack.Screen name="favorites" />
+        <Stack.Screen name="madhab" />
+        <Stack.Screen name="health-profile" />
       </Stack>
     </QueryErrorBoundary>
   );

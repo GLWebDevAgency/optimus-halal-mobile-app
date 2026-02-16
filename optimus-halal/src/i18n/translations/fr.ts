@@ -111,9 +111,11 @@ export const fr = {
     appearanceDark: "Sombre",
     language: "Langue",
     helpCenter: "Centre d'aide",
-    reportProblem: "Signaler un problème",
-    logout: "Déconnexion",
-    logoutConfirm: "Êtes-vous sûr de vouloir vous déconnecter ?",
+    reportProblem: "Signaler un probl\u00E8me",
+    madhab: "\u00C9cole juridique",
+    healthProfile: "Profil sant\u00E9",
+    logout: "D\u00E9connexion",
+    logoutConfirm: "\u00CAtes-vous s\u00FBr de vouloir vous d\u00E9connecter ?",
   },
 
   // Edit Profile
