@@ -18,7 +18,7 @@ const isDevelopment = __DEV__;
 /** Development API base URL - Local backend via LAN IP (for physical device) */
 const DEV_API_URL = `http://${
   // Set EXPO_PUBLIC_API_HOST in optimus-halal/.env to your machine's LAN IP
-  process.env.EXPO_PUBLIC_API_HOST ?? '192.168.53.102'
+  process.env.EXPO_PUBLIC_API_HOST ?? '192.168.68.52'
 }:3000`;
 
 /** Production API base URL (same BFF for now) */

@@ -83,3 +83,9 @@ export {
 // ============================================
 
 export { useHaptics } from './useHaptics';
+
+// ============================================
+// IMAGE UPLOAD HOOK (R2)
+// ============================================
+// NOT barrel-exported: expo-image-manipulator requires native module.
+// Import directly: import { useImageUpload } from '@/hooks/useImageUpload'

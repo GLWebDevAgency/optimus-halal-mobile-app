@@ -29,6 +29,7 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useHaptics, useTranslation } from "@/hooks";
+import { useImageUpload } from "@/hooks/useImageUpload";
 import { ImpactFeedbackStyle } from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import Animated, {
@@ -87,6 +88,7 @@ export default function ReportingFormScreen() {
   const [details, setDetails] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
   const [allowContact, setAllowContact] = useState(true);
+  const { upload: uploadImage, isUploading } = useImageUpload();
 
   const createReport = trpc.report.createReport.useMutation({
     onSuccess: () => {
@@ -133,7 +135,10 @@ export default function ReportingFormScreen() {
     setSelectedViolation(id);
   }, []);
 
+  const MAX_PHOTOS = 5;
+
   const handleAddPhoto = useCallback(async () => {
+    if (photos.length >= MAX_PHOTOS) return;
     impact();
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -145,28 +150,37 @@ export default function ReportingFormScreen() {
     if (!result.canceled && result.assets[0]) {
       setPhotos((prev) => [...prev, result.assets[0].uri]);
     }
-  }, []);
+  }, [photos.length, impact]);
 
   const handleRemovePhoto = useCallback((index: number) => {
     impact(ImpactFeedbackStyle.Medium);
     setPhotos((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
-  const handleSubmit = useCallback(() => {
-    if (!isFormValid || createReport.isPending) return;
+  const handleSubmit = useCallback(async () => {
+    if (!isFormValid || createReport.isPending || isUploading) return;
 
     const violationType = VIOLATION_TYPES.find((v) => v.id === selectedViolation);
     if (!violationType) return;
 
-    createReport.mutate({
-      type: violationType.backendType,
-      title: title.trim(),
-      description: details.trim(),
-      // Photos are local URIs — in production, upload to S3/Cloudflare first
-      // For now, filter out local file:// URIs and only send real URLs
-      photoUrls: photos.filter((p) => p.startsWith("http")),
-    });
-  }, [isFormValid, selectedViolation, title, details, photos, createReport]);
+    try {
+      // Upload all local photos to R2, keep already-uploaded URLs as-is
+      const photoUrls = await Promise.all(
+        photos.map((p) =>
+          p.startsWith("http") ? p : uploadImage({ uri: p, type: "report" }),
+        ),
+      );
+
+      createReport.mutate({
+        type: violationType.backendType,
+        title: title.trim(),
+        description: details.trim(),
+        photoUrls,
+      });
+    } catch {
+      Alert.alert(t.common.error, t.report.errorMessage);
+    }
+  }, [isFormValid, selectedViolation, title, details, photos, createReport, isUploading, uploadImage, t]);
 
   const handleScanBarcode = useCallback(() => {
     impact();
@@ -398,7 +412,12 @@ export default function ReportingFormScreen() {
           {/* Upload Zone */}
           <TouchableOpacity
             onPress={handleAddPhoto}
-            className="w-full h-36 border-2 border-dashed border-gray-300 dark:border-white/20 rounded-xl items-center justify-center bg-gray-50/50 dark:bg-[#1e293b] gap-2"
+            disabled={photos.length >= MAX_PHOTOS}
+            className={`w-full h-36 border-2 border-dashed rounded-xl items-center justify-center gap-2 ${
+              photos.length >= MAX_PHOTOS
+                ? "border-gray-200 dark:border-white/10 bg-gray-100/50 dark:bg-[#1e293b]/50 opacity-50"
+                : "border-gray-300 dark:border-white/20 bg-gray-50/50 dark:bg-[#1e293b]"
+            }`}
             activeOpacity={0.8}
           >
             <View className="w-12 h-12 rounded-full bg-white dark:bg-white/10 shadow-sm items-center justify-center">
@@ -406,10 +425,10 @@ export default function ReportingFormScreen() {
             </View>
             <View className="items-center">
               <Text className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                Touchez pour ajouter
+                {photos.length >= MAX_PHOTOS ? `${MAX_PHOTOS}/${MAX_PHOTOS} photos` : "Touchez pour ajouter"}
               </Text>
               <Text className="text-[11px] text-gray-400 mt-0.5">
-                Supporte JPG, PNG jusqu&apos;à 10MB
+                {photos.length >= MAX_PHOTOS ? "Limite atteinte" : `${photos.length}/${MAX_PHOTOS} — JPG, PNG, WebP`}
               </Text>
             </View>
           </TouchableOpacity>
@@ -482,15 +501,15 @@ export default function ReportingFormScreen() {
       >
         <TouchableOpacity
           onPress={handleSubmit}
-          disabled={!isFormValid || createReport.isPending}
+          disabled={!isFormValid || createReport.isPending || isUploading}
           className={`w-full py-4 rounded-xl flex-row items-center justify-center gap-2 ${
-            isFormValid && !createReport.isPending
+            isFormValid && !createReport.isPending && !isUploading
               ? "bg-emerald-500"
               : "bg-gray-300 dark:bg-gray-700"
           }`}
           activeOpacity={0.9}
           style={
-            isFormValid && !createReport.isPending
+            isFormValid && !createReport.isPending && !isUploading
               ? {
                   shadowColor: "#10b981",
                   shadowOffset: { width: 0, height: 0 },
@@ -500,7 +519,7 @@ export default function ReportingFormScreen() {
               : {}
           }
         >
-          {createReport.isPending ? (
+          {createReport.isPending || isUploading ? (
             <ActivityIndicator size="small" color="#ffffff" />
           ) : (
             <>
