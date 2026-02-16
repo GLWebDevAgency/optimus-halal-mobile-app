@@ -14,6 +14,7 @@
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx --env-file=.env src/db/seeds/run.ts",
     "db:seed:dev": "tsx --env-file=.env src/db/seeds/dev-seed.ts",
+    "db:seed:additives": "tsx --env-file=.env src/db/seeds/additives-seed.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"

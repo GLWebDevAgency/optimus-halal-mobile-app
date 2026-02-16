@@ -13,6 +13,7 @@ import { statsRouter } from "./routers/stats.js";
 import { boycottRouter } from "./routers/boycott.js";
 import { certifierRouter } from "./routers/certifier.js";
 import { articleRouter } from "./routers/article.js";
+import { additiveRouter } from "./routers/additive.js";
 
 export const appRouter = router({
   auth: authRouter,
@@ -29,6 +30,7 @@ export const appRouter = router({
   boycott: boycottRouter,
   certifier: certifierRouter,
   article: articleRouter,
+  additive: additiveRouter,
 });
 
 export type AppRouter = typeof appRouter;

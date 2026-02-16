@@ -28,6 +28,11 @@ export const profileRouter = router({
           .optional(),
         dietaryRestrictions: z.array(z.string()).optional(),
         allergens: z.array(z.string()).optional(),
+        madhab: z
+          .enum(["hanafi", "shafii", "maliki", "hanbali", "general"])
+          .optional(),
+        isPregnant: z.boolean().optional(),
+        hasChildren: z.boolean().optional(),
         notificationEnabled: z.boolean().optional(),
         biometricEnabled: z.boolean().optional(),
         darkMode: z.boolean().optional(),

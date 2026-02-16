@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, desc, sql, and } from "drizzle-orm";
+import { eq, desc, sql, and, inArray } from "drizzle-orm";
 import { router, protectedProcedure } from "../trpc.js";
 import {
   scans,
@@ -7,12 +7,14 @@ import {
   users,
   analysisRequests,
   boycottTargets,
+  additives as additivesTable,
 } from "../../db/schema/index.js";
 import {
   lookupBarcode,
   analyzeHalalStatus,
   type HalalAnalysis,
 } from "../../services/barcode.service.js";
+import { matchAllergens } from "../../services/allergen.service.js";
 import { notFound } from "../../lib/errors.js";
 
 // ── Boycott check helper ────────────────────────────────────
@@ -62,6 +64,18 @@ export const scanRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      // 0. Fetch user profile for madhab-aware analysis + personal alerts
+      const userProfile = await ctx.db.query.users.findFirst({
+        where: eq(users.id, ctx.userId),
+        columns: {
+          madhab: true,
+          halalStrictness: true,
+          allergens: true,
+          isPregnant: true,
+          hasChildren: true,
+        },
+      });
+
       // 1. Check if product exists in DB
       let product = await ctx.db.query.products.findFirst({
         where: eq(products.barcode, input.barcode),
@@ -69,6 +83,11 @@ export const scanRouter = router({
 
       let halalAnalysis: HalalAnalysis | null = null;
       let offData: Record<string, unknown> | null = null;
+
+      const analysisOptions = {
+        madhab: userProfile?.madhab ?? ("general" as const),
+        strictness: userProfile?.halalStrictness ?? ("moderate" as const),
+      };
 
       // 2. If not, fetch from OpenFoodFacts
       if (!product) {
@@ -78,12 +97,13 @@ export const scanRouter = router({
           const off = offResult.product;
           offData = off as unknown as Record<string, unknown>;
 
-          // v2 analysis: uses additives_tags, labels_tags, ingredients_analysis_tags
-          halalAnalysis = analyzeHalalStatus(
+          // v3 analysis: async, madhab-aware, DB-backed
+          halalAnalysis = await analyzeHalalStatus(
             off.ingredients_text,
             off.additives_tags,
             off.labels_tags,
             off.ingredients_analysis_tags,
+            analysisOptions,
           );
 
           const [newProduct] = await ctx.db
@@ -109,14 +129,15 @@ export const scanRouter = router({
           product = newProduct;
         }
       } else {
-        // Product exists — re-run analysis from stored OFF data for detailed reasons
+        // Product exists — re-run analysis with user's madhab preferences
         const storedOff = product.offData as Record<string, unknown> | null;
         if (storedOff) {
-          halalAnalysis = analyzeHalalStatus(
+          halalAnalysis = await analyzeHalalStatus(
             storedOff.ingredients_text as string | undefined,
             storedOff.additives_tags as string[] | undefined,
             storedOff.labels_tags as string[] | undefined,
             storedOff.ingredients_analysis_tags as string[] | undefined,
+            analysisOptions,
           );
         }
       }
@@ -124,7 +145,87 @@ export const scanRouter = router({
       // 3. Check boycott status
       const boycottResult = await checkBoycott(ctx.db, product?.brand);
 
-      // 4. Record scan + update user stats
+      // 4. Build personal alerts
+      const personalAlerts: {
+        type: "allergen" | "health" | "boycott";
+        severity: "high" | "medium" | "low";
+        title: string;
+        description: string;
+      }[] = [];
+
+      const offProduct = offData
+        ? (offData as any)
+        : product?.offData
+          ? (product.offData as any)
+          : null;
+
+      // 4a. Allergen matching
+      if (userProfile?.allergens?.length && offProduct) {
+        const allergenMatches = matchAllergens(
+          userProfile.allergens,
+          offProduct.allergens_tags ?? [],
+          offProduct.traces_tags ?? []
+        );
+
+        for (const match of allergenMatches) {
+          personalAlerts.push({
+            type: "allergen",
+            severity: match.severity,
+            title:
+              match.matchType === "allergen"
+                ? `Contient : ${match.userAllergen}`
+                : `Traces possibles : ${match.userAllergen}`,
+            description:
+              match.matchType === "allergen"
+                ? `Ce produit contient un allergène de votre profil (${match.userAllergen}).`
+                : `Ce produit peut contenir des traces de ${match.userAllergen}.`,
+          });
+        }
+      }
+
+      // 4b. Health warnings (pregnant/children + risky additives)
+      if (offProduct?.additives_tags?.length) {
+        const codes = [
+          ...new Set(
+            (offProduct.additives_tags as string[]).map((t: string) =>
+              t
+                .replace(/^en:/, "")
+                .toUpperCase()
+                .replace(/[a-z]$/i, "")
+            )
+          ),
+        ];
+
+        const riskyAdditives = await ctx.db
+          .select()
+          .from(additivesTable)
+          .where(inArray(additivesTable.code, codes));
+
+        for (const add of riskyAdditives) {
+          if (add.riskPregnant && userProfile?.isPregnant) {
+            personalAlerts.push({
+              type: "health",
+              severity: "high",
+              title: `${add.code} déconseillé (grossesse)`,
+              description:
+                add.healthEffectsFr ??
+                `${add.nameFr} est déconseillé aux femmes enceintes.`,
+            });
+          }
+          if (add.riskChildren && userProfile?.hasChildren) {
+            personalAlerts.push({
+              type: "health",
+              severity: "medium",
+              title: `${add.code} attention (enfants)`,
+              description:
+                add.healthEffectsFr ??
+                `${add.nameFr} peut affecter les enfants.`,
+            });
+          }
+        }
+      }
+
+      // 5. Record scan + update user stats
       const result = await ctx.db.transaction(async (tx) => {
         const [scan] = await tx
           .insert(scans)
@@ -173,7 +274,7 @@ export const scanRouter = router({
         return scan;
       });
 
-      // 5. Build enriched OFF extras for the mobile app
+      // 6. Build enriched OFF extras for the mobile app
       const storedOff = (product?.offData ?? offData) as Record<string, unknown> | null;
       const offExtras = storedOff ? {
         nutriscoreGrade: (storedOff.nutriscore_grade as string) ?? null,
@@ -195,6 +296,7 @@ export const scanRouter = router({
         halalAnalysis,
         boycott: boycottResult,
         offExtras,
+        personalAlerts,
       };
     }),
 
