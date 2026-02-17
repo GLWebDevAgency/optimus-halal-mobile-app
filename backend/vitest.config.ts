@@ -10,6 +10,9 @@ export default defineConfig({
     testTimeout: 15_000,
     hookTimeout: 30_000,
     pool: "forks",
+    // Integration tests share a single DB — run files sequentially to avoid
+    // TRUNCATE race conditions between parallel workers
+    fileParallelism: false,
     alias: {
       "@/*": path.resolve(__dirname, "./src/*"),
     },
