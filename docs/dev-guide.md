@@ -116,10 +116,10 @@ npx expo start --dev-client
 
 ### Preview (recette)
 
-| Service | URL | Details |
-|---------|-----|---------|
-| Backend | `https://mobile-bff-production-aefc.up.railway.app` | Meme instance que prod (Railway) |
-| Mobile | APK Android installable | Build EAS `preview` profile |
+| Service | URL                                            | Details                                |
+|---------|------------------------------------------------|----------------------------------------|
+| Backend | `https://mobile-bff-preview.up.railway.app`    | Instance preview Railway (env séparée) |
+| Mobile  | APK Android installable                        | Build EAS `preview` profile            |
 
 L'APK preview se connecte au backend Railway. Installer via le lien EAS Build.
 
