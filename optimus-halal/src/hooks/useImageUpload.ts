@@ -23,6 +23,32 @@ const RESIZE_CONFIG = {
   report: { width: 1200 },
 } as const;
 
+/** PUT a blob to a presigned URL using XMLHttpRequest (more reliable than fetch for binary in RN) */
+function putBlobToPresignedUrl(
+  url: string,
+  blob: Blob,
+  contentType: string,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", url, true);
+    xhr.setRequestHeader("Content-Type", contentType);
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve();
+      } else {
+        reject(new Error(`Upload échoué: ${xhr.status} ${xhr.statusText}`));
+      }
+    };
+
+    xhr.onerror = () => reject(new Error("Erreur réseau lors de l'upload"));
+    xhr.ontimeout = () => reject(new Error("Upload timeout"));
+    xhr.timeout = 30_000;
+    xhr.send(blob);
+  });
+}
+
 export function useImageUpload() {
   const activeUploads = useRef(0);
   const [isUploading, setIsUploading] = useState(false);
@@ -52,19 +78,12 @@ export function useImageUpload() {
           contentType: "image/webp",
         });
 
-        // 3. Read file as blob and PUT directly to R2
+        // 3. Read resized file as blob
         const fileResponse = await fetch(result.uri);
         const blob = await fileResponse.blob();
 
-        const uploadResponse = await fetch(uploadUrl, {
-          method: "PUT",
-          headers: { "Content-Type": "image/webp" },
-          body: blob,
-        });
-
-        if (!uploadResponse.ok) {
-          throw new Error(`Upload échoué: ${uploadResponse.status}`);
-        }
+        // 4. PUT directly to R2 via XHR (fetch blob body is unreliable in RN)
+        await putBlobToPresignedUrl(uploadUrl, blob, "image/webp");
 
         return cdnUrl;
       } finally {

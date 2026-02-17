@@ -21,6 +21,10 @@ function getS3Client(): S3Client {
       accessKeyId: env.R2_ACCESS_KEY_ID,
       secretAccessKey: env.R2_SECRET_ACCESS_KEY,
     },
+    // Disable automatic checksums — mobile clients can't recompute CRC32
+    // for presigned URL uploads (AWS SDK v3.600+ adds them by default)
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
   });
   return _s3;
 }
