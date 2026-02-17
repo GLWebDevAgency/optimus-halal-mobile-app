@@ -89,6 +89,11 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Drop PostGIS before schema push (avoids spatial_ref_sys prompt)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -p 5433 -U postgres -d optimus_test -c "DROP EXTENSION IF EXISTS postgis CASCADE;"
+
       - name: Push DB schema
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5433/optimus_test
@@ -98,6 +103,11 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -p 5433 -U postgres -d optimus_test -f drizzle/0002_add_postgis.sql
+
+      - name: Apply scaling indexes
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -p 5433 -U postgres -d optimus_test -f drizzle/0003_scaling_indexes.sql
 
       - name: Run tests
         env:

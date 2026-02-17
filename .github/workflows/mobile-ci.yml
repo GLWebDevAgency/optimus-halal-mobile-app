@@ -47,10 +47,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: optimus-halal/package-lock.json
+          cache: pnpm
+          cache-dependency-path: optimus-halal/pnpm-lock.yaml
 
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
 
       # Backend types needed for @backend/* path alias (drizzle-orm, etc.)
       - name: Install backend type dependencies
@@ -58,10 +58,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Typecheck
-        run: npx tsc --noEmit
+        run: pnpm exec tsc --noEmit
 
       - name: Lint
-        run: npx eslint .
+        run: pnpm exec eslint .
         continue-on-error: true
 
   # ── EAS Build Preview (Recette) ──────────────────
@@ -78,13 +78,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: optimus-halal/package-lock.json
+          cache: pnpm
+          cache-dependency-path: optimus-halal/pnpm-lock.yaml
 
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
 
       - uses: expo/expo-github-action@v8
         with:
@@ -106,13 +110,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: optimus-halal/package-lock.json
+          cache: pnpm
+          cache-dependency-path: optimus-halal/pnpm-lock.yaml
 
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
 
       - uses: expo/expo-github-action@v8
         with:
@@ -134,13 +142,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: optimus-halal/package-lock.json
+          cache: pnpm
+          cache-dependency-path: optimus-halal/pnpm-lock.yaml
 
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
 
       - uses: expo/expo-github-action@v8
         with:
