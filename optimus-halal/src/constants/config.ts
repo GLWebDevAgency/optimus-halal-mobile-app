@@ -93,9 +93,9 @@ export const CERTIFICATION_AUTHORITIES = [
  * Halal Status Types
  */
 export enum HalalStatus {
-  CERTIFIED = "certified",
+  HALAL = "halal",
   DOUBTFUL = "doubtful",
-  NOT_HALAL = "not_halal",
+  HARAM = "haram",
   UNKNOWN = "unknown",
 }
 

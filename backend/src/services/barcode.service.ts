@@ -167,7 +167,8 @@ async function lookupAdditives(
   const dbAdditives = await db
     .select()
     .from(additives)
-    .where(inArray(additives.code, codes));
+    .where(inArray(additives.code, codes))
+    .orderBy(additives.code);
 
   const results: AdditiveAnalysisResult[] = [];
 

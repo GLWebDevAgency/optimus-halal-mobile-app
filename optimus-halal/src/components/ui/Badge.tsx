@@ -112,13 +112,13 @@ export const Badge: React.FC<BadgeProps> = ({
  * Certification Badge - Special variant for halal certifications
  */
 export interface CertificationBadgeProps {
-  status: "certified" | "doubtful" | "not_halal" | "unknown";
+  status: "halal" | "doubtful" | "haram" | "unknown";
   authority?: string;
   size?: "sm" | "md" | "lg";
 }
 
 const certificationConfig = {
-  certified: {
+  halal: {
     variant: "success" as const,
     icon: "verified" as const,
     label: "Certifié Halal",
@@ -128,7 +128,7 @@ const certificationConfig = {
     icon: "help" as const,
     label: "Certification Douteuse",
   },
-  not_halal: {
+  haram: {
     variant: "danger" as const,
     icon: "cancel" as const,
     label: "Non Halal",

@@ -40,17 +40,22 @@ import { LinearGradient } from "expo-linear-gradient";
 // Guard native Mapbox import — fails gracefully if dev client not rebuilt
 let MapView: any, Camera: any, LocationPuck: any, ShapeSource: any, CircleLayer: any, SymbolLayer: any;
 let MAPBOX_AVAILABLE = false;
+const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN ?? "";
 try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const Mapbox = require("@rnmapbox/maps");
-  Mapbox.default.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_TOKEN ?? "");
-  MapView = Mapbox.MapView;
-  Camera = Mapbox.Camera;
-  LocationPuck = Mapbox.LocationPuck;
-  ShapeSource = Mapbox.ShapeSource;
-  CircleLayer = Mapbox.CircleLayer;
-  SymbolLayer = Mapbox.SymbolLayer;
-  MAPBOX_AVAILABLE = true;
+  if (!MAPBOX_TOKEN) {
+    console.warn("EXPO_PUBLIC_MAPBOX_TOKEN is missing — map disabled.");
+  } else {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const Mapbox = require("@rnmapbox/maps");
+    Mapbox.default.setAccessToken(MAPBOX_TOKEN);
+    MapView = Mapbox.MapView;
+    Camera = Mapbox.Camera;
+    LocationPuck = Mapbox.LocationPuck;
+    ShapeSource = Mapbox.ShapeSource;
+    CircleLayer = Mapbox.CircleLayer;
+    SymbolLayer = Mapbox.SymbolLayer;
+    MAPBOX_AVAILABLE = true;
+  }
 } catch {
   console.warn("@rnmapbox/maps native code not available. Rebuild dev client required.");
 }
@@ -507,7 +512,7 @@ export default function MapScreen() {
 
   // ── Render ─────────────────────────────────────────────
 
-  // Fallback when native Mapbox module isn't available (dev client not rebuilt)
+  // Fallback when Mapbox isn't available (missing token or native module)
   if (!MAPBOX_AVAILABLE) {
     return (
       <View className="flex-1 items-center justify-center px-8" style={{ backgroundColor: colors.background }}>
@@ -516,8 +521,9 @@ export default function MapScreen() {
           {t.map.title}
         </Text>
         <Text className="text-sm mt-2 text-center leading-5" style={{ color: colors.textSecondary }}>
-          La carte nécessite un rebuild du client de développement.{"\n\n"}
-          Lancez : npx expo prebuild && npx expo run:ios
+          {MAPBOX_TOKEN
+            ? "La carte nécessite un rebuild du client de développement.\n\nLancez : npx expo prebuild && npx expo run:android"
+            : "Le token Mapbox est manquant. Vérifiez EXPO_PUBLIC_MAPBOX_TOKEN dans votre fichier .env et relancez le build."}
         </Text>
       </View>
     );

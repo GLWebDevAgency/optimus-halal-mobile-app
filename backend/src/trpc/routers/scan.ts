@@ -199,7 +199,8 @@ export const scanRouter = router({
         const riskyAdditives = await ctx.db
           .select()
           .from(additivesTable)
-          .where(inArray(additivesTable.code, codes));
+          .where(inArray(additivesTable.code, codes))
+          .orderBy(additivesTable.code);
 
         for (const add of riskyAdditives) {
           if (add.riskPregnant && userProfile?.isPregnant) {
