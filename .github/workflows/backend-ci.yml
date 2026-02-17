@@ -97,7 +97,7 @@ jobs:
       - name: Push DB schema
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5433/optimus_test
-        run: pnpm run db:push
+        run: pnpm exec tsc && pnpm exec drizzle-kit push --force
 
       - name: Apply PostGIS migration
         env:

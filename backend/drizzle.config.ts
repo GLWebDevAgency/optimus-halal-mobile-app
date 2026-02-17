@@ -8,5 +8,6 @@ export default defineConfig({
     url: process.env.DATABASE_URL!,
   },
   verbose: true,
-  strict: true,
+  // In CI (GitHub Actions sets CI=true), skip confirmation prompts
+  strict: !process.env.CI,
 });
