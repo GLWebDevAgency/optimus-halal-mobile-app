@@ -35,6 +35,7 @@ services:
       - "6432:5432"
     environment:
       DATABASE_URL: postgres://postgres:postgres@postgis:5432/optimus_halal
+      AUTH_TYPE: scram-sha-256
       POOL_MODE: transaction
       DEFAULT_POOL_SIZE: 25
       MAX_CLIENT_CONN: 200
