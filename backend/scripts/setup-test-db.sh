@@ -14,7 +14,7 @@ else
     -e POSTGRES_PASSWORD=postgres \
     -e POSTGRES_DB=optimus_test \
     -p $DB_PORT:5432 \
-    postgres:16-alpine
+    postgis/postgis:17-3.5
 
   echo "Waiting for Postgres to be ready..."
   until docker exec $CONTAINER_NAME pg_isready -U postgres > /dev/null 2>&1; do
@@ -24,5 +24,8 @@ fi
 
 echo "Pushing schema..."
 DATABASE_URL="postgres://postgres:postgres@localhost:$DB_PORT/optimus_test" pnpm run db:push
+
+echo "Applying PostGIS migration..."
+PGPASSWORD=postgres psql -h localhost -p $DB_PORT -U postgres -d optimus_test -f drizzle/0002_add_postgis.sql
 
 echo "Test DB ready at localhost:$DB_PORT/optimus_test"
