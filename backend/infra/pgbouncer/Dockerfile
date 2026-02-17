@@ -1,7 +1,7 @@
 # PgBouncer — Connection pooler for PostGIS DB on Railway
 # Transaction mode: each transaction borrows a server connection, then returns it.
 # This allows 1000+ client connections with only 25 actual DB connections.
-FROM edoburu/pgbouncer:1.23.0
+FROM edoburu/pgbouncer:v1.24.1-p1
 
 # PgBouncer config is injected via environment variables:
 #   DATABASE_URL    — upstream PostGIS connection string
