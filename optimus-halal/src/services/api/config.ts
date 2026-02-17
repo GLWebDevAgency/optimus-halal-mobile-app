@@ -43,8 +43,24 @@ function getDevApiUrl(): string {
 
 const DEV_API_URL = getDevApiUrl();
 
-/** Production API base URL (same BFF for now) */
+/** Production API base URL (fallback) */
 const PROD_API_URL = "https://mobile-bff-production-aefc.up.railway.app";
+
+/**
+ * Resolve API base URL.
+ * Priority: EXPO_PUBLIC_API_URL (explicit) > dev auto-detect > prod fallback
+ */
+function resolveBaseUrl(): string {
+  // 1. Explicit override via EAS build env (preview, production, custom)
+  const envUrl = process.env.EXPO_PUBLIC_API_URL;
+  if (envUrl) return envUrl;
+
+  // 2. Dev mode: auto-detect LAN IP
+  if (isDevelopment) return DEV_API_URL;
+
+  // 3. Fallback: production
+  return PROD_API_URL;
+}
 
 // ============================================
 // CONFIGURATION
@@ -76,7 +92,7 @@ export interface ApiConfig {
  * Get API configuration based on environment
  */
 export function getApiConfig(): ApiConfig {
-  const baseUrl = isDevelopment ? DEV_API_URL : PROD_API_URL;
+  const baseUrl = resolveBaseUrl();
 
   return {
     baseUrl,
