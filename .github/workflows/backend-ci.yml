@@ -11,6 +11,16 @@ on:
     paths:
       - 'backend/**'
       - '.github/workflows/backend-ci.yml'
+  workflow_dispatch:
+    inputs:
+      deploy_target:
+        description: 'Deploy target environment'
+        required: true
+        type: choice
+        options:
+          - preview
+          - production
+        default: preview
 
 defaults:
   run:
@@ -137,12 +147,57 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm run build
 
-  # ── Deploy to Railway ───────────────────────────
-  deploy:
-    name: Deploy to Railway
+  # ── Deploy Preview (auto on push) ──────────────
+  # Runs on: push to main (auto) or manual trigger with preview
+  deploy-preview:
+    name: Deploy Preview (Railway)
     runs-on: ubuntu-latest
     needs: build
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: |
+      (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_target == 'preview')
+
+    environment:
+      name: preview
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway (Preview)
+        working-directory: backend
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
+        run: railway up --service "$RAILWAY_SERVICE_ID" --environment preview --detach
+
+      - name: Verify preview deployment
+        env:
+          PREVIEW_URL: ${{ vars.RAILWAY_PREVIEW_URL }}
+        run: |
+          if [ -z "$PREVIEW_URL" ]; then
+            echo "RAILWAY_PREVIEW_URL not set — skipping health check"
+            exit 0
+          fi
+          echo "Waiting 30s for deployment to stabilize..."
+          sleep 30
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PREVIEW_URL/health" || echo "000")
+          if [ "$STATUS" = "200" ]; then
+            echo "Preview health check passed (HTTP $STATUS)"
+          else
+            echo "Warning: Preview health check returned HTTP $STATUS (deployment may still be starting)"
+          fi
+
+  # ── Deploy Production (manual only) ────────────
+  # Runs on: MANUAL TRIGGER ONLY (workflow_dispatch with production)
+  # Only triggered after preview is validated
+  deploy-production:
+    name: Deploy Production (Railway)
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_target == 'production'
 
     environment:
       name: production
@@ -154,20 +209,20 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli
 
-      - name: Deploy to Railway
+      - name: Deploy to Railway (Production)
         working-directory: backend
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
-        run: railway up --service "$RAILWAY_SERVICE_ID" --detach
+        run: railway up --service "$RAILWAY_SERVICE_ID" --environment production --detach
 
-      - name: Verify deployment health
+      - name: Verify production deployment
         run: |
           echo "Waiting 30s for deployment to stabilize..."
           sleep 30
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://mobile-bff-production-aefc.up.railway.app/health || echo "000")
           if [ "$STATUS" = "200" ]; then
-            echo "Health check passed (HTTP $STATUS)"
+            echo "Production health check passed (HTTP $STATUS)"
           else
-            echo "Warning: Health check returned HTTP $STATUS (deployment may still be starting)"
+            echo "Warning: Production health check returned HTTP $STATUS (deployment may still be starting)"
           fi
