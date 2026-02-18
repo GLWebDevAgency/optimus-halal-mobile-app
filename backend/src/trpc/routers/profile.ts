@@ -19,7 +19,25 @@ export const profileRouter = router({
       z.object({
         displayName: z.string().min(2).max(100).optional(),
         phoneNumber: z.string().max(20).optional(),
-        avatarUrl: z.string().optional(),
+        avatarUrl: z.string().url().refine(
+          (url) => {
+            try {
+              const { hostname } = new URL(url);
+              const allowed = [
+                "lh3.googleusercontent.com",
+                "avatars.githubusercontent.com",
+                "cloudflare-ipfs.com",
+                "res.cloudinary.com",
+                "i.imgur.com",
+                "storage.googleapis.com",
+              ];
+              return allowed.some((d) => hostname === d || hostname.endsWith("." + d));
+            } catch {
+              return false;
+            }
+          },
+          { message: "URL d'avatar non autorisée" }
+        ).optional(),
         bio: z.string().max(500).optional(),
         city: z.string().max(100).optional(),
         preferredLanguage: z.enum(["fr", "en", "ar"]).optional(),

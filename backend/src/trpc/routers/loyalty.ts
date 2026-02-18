@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { createHash } from "crypto";
 import { eq, desc, sql, and, gt } from "drizzle-orm";
 import { router, protectedProcedure, publicProcedure } from "../trpc.js";
 import {
@@ -10,6 +11,10 @@ import {
   users,
 } from "../../db/schema/index.js";
 import { notFound, badRequest } from "../../lib/errors.js";
+
+function hashUserId(id: string): string {
+  return createHash("sha256").update(id).digest("hex").slice(0, 16);
+}
 
 export const loyaltyRouter = router({
   getBalance: protectedProcedure.query(async ({ ctx }) => {
@@ -175,7 +180,7 @@ export const loyaltyRouter = router({
   getLeaderboard: publicProcedure
     .input(z.object({ limit: z.number().min(1).max(50).default(20) }))
     .query(async ({ ctx, input }) => {
-      return ctx.db
+      const rows = await ctx.db
         .select({
           id: users.id,
           displayName: users.displayName,
@@ -188,5 +193,7 @@ export const loyaltyRouter = router({
         .where(eq(users.isActive, true))
         .orderBy(desc(users.experiencePoints))
         .limit(input.limit);
+
+      return rows.map((row) => ({ ...row, id: hashUserId(row.id) }));
     }),
 });

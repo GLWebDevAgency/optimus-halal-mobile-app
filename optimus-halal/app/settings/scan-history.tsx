@@ -19,6 +19,7 @@ import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useScanHistory } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
+import { EmptyState } from "@/components/ui";
 
 const LOCALE_MAP: Record<string, string> = { fr: "fr-FR", en: "en-US", ar: "ar-SA" };
 
@@ -260,33 +261,13 @@ export default function ScanHistoryScreen() {
       <Header colors={colors} t={t} count={scans.length} />
 
       {scans.length === 0 ? (
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 80 }}>
-          <MaterialIcons name="history" size={64} color={colors.textMuted} />
-          <Text style={{ color: colors.textSecondary, fontSize: 18, marginTop: 16 }}>
-            {t.scanHistory.noScans}
-          </Text>
-          <Text style={{ color: colors.textMuted, fontSize: 14, marginTop: 8, textAlign: "center", paddingHorizontal: 32 }}>
-            {t.scanHistory.noScansDesc}
-          </Text>
-          <TouchableOpacity
-            onPress={() => router.push("/(tabs)/scanner")}
-            style={{
-              marginTop: 24,
-              backgroundColor: colors.primary,
-              paddingHorizontal: 24,
-              paddingVertical: 12,
-              borderRadius: 12,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={t.scanHistory.scanProduct}
-          >
-            <MaterialIcons name="qr-code-scanner" size={18} color={isDark ? "#102217" : "#0d1b13"} />
-            <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>{t.scanHistory.scanProduct}</Text>
-          </TouchableOpacity>
-        </View>
+        <EmptyState
+          icon="history"
+          title={t.scanHistory.noScans}
+          message={t.scanHistory.noScansDesc}
+          actionLabel={t.scanHistory.scanProduct}
+          onAction={() => router.push("/(tabs)/scanner")}
+        />
       ) : (
         <FlashList
           data={scans}

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { router, protectedProcedure, publicProcedure } from "../trpc.js";
-import { reports, reviews, products, stores } from "../../db/schema/index.js";
+import { reports, reviews, reviewHelpfulVotes, products, stores } from "../../db/schema/index.js";
 import { notFound } from "../../lib/errors.js";
 
 export const reportRouter = router({
@@ -134,10 +134,25 @@ export const reportRouter = router({
   markHelpful: protectedProcedure
     .input(z.object({ reviewId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
+      // Insert vote — if already exists, do nothing (deduplication)
+      const [vote] = await ctx.db
+        .insert(reviewHelpfulVotes)
+        .values({
+          reviewId: input.reviewId,
+          userId: ctx.userId,
+        })
+        .onConflictDoNothing()
+        .returning();
+
+      if (!vote) {
+        return { success: false, alreadyVoted: true };
+      }
+
       await ctx.db
         .update(reviews)
         .set({ helpfulCount: sql`${reviews.helpfulCount} + 1` })
         .where(eq(reviews.id, input.reviewId));
-      return { success: true };
+
+      return { success: true, alreadyVoted: false };
     }),
 });

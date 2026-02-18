@@ -84,5 +84,28 @@ export const reviews = pgTable(
   ]
 );
 
+export const reviewHelpfulVotes = pgTable(
+  "review_helpful_votes",
+  {
+    id: t.uuid().defaultRandom().primaryKey(),
+    reviewId: t
+      .uuid("review_id")
+      .references(() => reviews.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: t
+      .uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    createdAt: t
+      .timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    t.uniqueIndex("review_helpful_unique").on(table.reviewId, table.userId),
+  ]
+);
+
 export type Report = typeof reports.$inferSelect;
 export type Review = typeof reviews.$inferSelect;
+export type ReviewHelpfulVote = typeof reviewHelpfulVotes.$inferSelect;

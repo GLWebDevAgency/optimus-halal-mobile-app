@@ -54,6 +54,7 @@ export const en: TranslationKeys = {
     signUpWith: "By signing up, you accept our",
     and: "and our",
     stepOf: "Step {{current}} of {{total}}",
+    noInternet: "No internet connection",
   },
 
   // Navigation

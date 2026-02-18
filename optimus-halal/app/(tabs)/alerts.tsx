@@ -29,6 +29,7 @@ import Animated, {
 import { Card, EmptyState, IslamicPattern } from "@/components/ui";
 import { AlertsSkeleton } from "@/components/skeletons";
 import { useTranslation, useHaptics, useTheme } from "@/hooks";
+import type { TranslationKeys } from "@/hooks/useTranslation";
 import { trpc } from "@/lib/trpc";
 
 // ── Severity → Visual Config ────────────────────────────────
@@ -100,12 +101,12 @@ interface AlertItem {
 interface AlertCardProps {
   alert: AlertItem;
   index: number;
+  isDark: boolean;
+  t: TranslationKeys;
+  locale: string;
 }
 
-const AlertCard = React.memo(function AlertCard({ alert, index }: AlertCardProps) {
-  const { isDark } = useTheme();
-  const { t, language } = useTranslation();
-  const locale = LOCALE_MAP[language] ?? "fr-FR";
+const AlertCard = React.memo(function AlertCard({ alert, index, isDark, t, locale }: AlertCardProps) {
   const severity = (alert.severity as Severity) || "info";
   const config = SEVERITY_CONFIG[severity] ?? SEVERITY_CONFIG.info;
   const severityLabel = t.alerts.severity[severity] ?? t.alerts.severity.info;
@@ -256,7 +257,8 @@ export default function AlertsScreen() {
   const insets = useSafeAreaInsets();
   const { isDark, colors } = useTheme();
   const { impact } = useHaptics();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  const locale = LOCALE_MAP[language] ?? "fr-FR";
 
   const [activeFilter, setActiveFilter] = useState("all");
 
@@ -407,7 +409,7 @@ export default function AlertsScreen() {
           data={alertItems}
           keyExtractor={(item) => item.id}
           renderItem={({ item, index }) => (
-            <AlertCard alert={item} index={index} />
+            <AlertCard alert={item} index={index} isDark={isDark} t={t} locale={locale} />
           )}
           contentContainerStyle={{
             padding: 16,

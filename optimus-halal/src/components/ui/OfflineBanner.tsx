@@ -1,37 +1,25 @@
 /**
- * OfflineBanner — subtle connectivity indicator
+ * OfflineBanner — event-based connectivity indicator
  *
- * Polls a lightweight endpoint every 30s. Shows a red banner
- * when offline, auto-hides when connectivity returns.
+ * Uses @react-native-community/netinfo instead of polling.
+ * Shows a red banner when offline, auto-hides when connectivity returns.
  */
 
 import React, { useEffect, useState } from "react";
 import { Text } from "react-native";
 import Animated, { FadeInDown, FadeOutUp } from "react-native-reanimated";
+import NetInfo from "@react-native-community/netinfo";
+import { useTranslation } from "@/hooks";
 
 export function OfflineBanner() {
   const [isOffline, setIsOffline] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
-    let mounted = true;
-
-    const check = async () => {
-      try {
-        const resp = await fetch("https://clients3.google.com/generate_204", {
-          method: "HEAD",
-        });
-        if (mounted) setIsOffline(!resp.ok);
-      } catch {
-        if (mounted) setIsOffline(true);
-      }
-    };
-
-    check();
-    const interval = setInterval(check, 30_000);
-    return () => {
-      mounted = false;
-      clearInterval(interval);
-    };
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      setIsOffline(!(state.isConnected && state.isInternetReachable !== false));
+    });
+    return () => unsubscribe();
   }, []);
 
   if (!isOffline) return null;
@@ -43,7 +31,7 @@ export function OfflineBanner() {
       className="bg-red-500 px-4 py-2 items-center"
     >
       <Text className="text-white text-sm font-medium">
-        Pas de connexion internet
+        {t.common.noInternet}
       </Text>
     </Animated.View>
   );

@@ -52,6 +52,7 @@ export const fr = {
     signUpWith: "En vous inscrivant, vous acceptez nos",
     and: "et notre",
     stepOf: "Étape {{current}} sur {{total}}",
+    noInternet: "Pas de connexion internet",
   },
 
   // Navigation

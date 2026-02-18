@@ -54,6 +54,7 @@ export const ar: TranslationKeys = {
     signUpWith: "بالتسجيل، فإنك توافق على",
     and: "و",
     stepOf: "الخطوة {{current}} من {{total}}",
+    noInternet: "لا يوجد اتصال بالإنترنت",
   },
   nav: {
     home: "الرئيسية",
