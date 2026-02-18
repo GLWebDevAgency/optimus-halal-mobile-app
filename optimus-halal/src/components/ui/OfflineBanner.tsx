@@ -1,14 +1,14 @@
 /**
- * OfflineBanner — event-based connectivity indicator
+ * OfflineBanner — subtle connectivity indicator
  *
- * Uses @react-native-community/netinfo instead of polling.
- * Shows a red banner when offline, auto-hides when connectivity returns.
+ * Polls a lightweight endpoint every 30s. Shows a red banner
+ * when offline, auto-hides when connectivity returns.
+ * Uses AppState to pause polling when backgrounded.
  */
 
 import React, { useEffect, useState } from "react";
-import { Text } from "react-native";
+import { AppState, Text } from "react-native";
 import Animated, { FadeInDown, FadeOutUp } from "react-native-reanimated";
-import NetInfo from "@react-native-community/netinfo";
 import { useTranslation } from "@/hooks";
 
 export function OfflineBanner() {
@@ -16,10 +16,28 @@ export function OfflineBanner() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener((state) => {
-      setIsOffline(!(state.isConnected && state.isInternetReachable !== false));
-    });
-    return () => unsubscribe();
+    let mounted = true;
+
+    const check = async () => {
+      try {
+        const resp = await fetch("https://clients3.google.com/generate_204", {
+          method: "HEAD",
+        });
+        if (mounted) setIsOffline(!resp.ok);
+      } catch {
+        if (mounted) setIsOffline(true);
+      }
+    };
+
+    check();
+    const interval = setInterval(() => {
+      if (AppState.currentState === "active") check();
+    }, 30_000);
+
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   if (!isOffline) return null;
