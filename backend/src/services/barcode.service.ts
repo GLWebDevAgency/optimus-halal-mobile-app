@@ -170,30 +170,33 @@ async function lookupAdditives(
     .where(inArray(additives.code, codes))
     .orderBy(additives.code);
 
+  // Batch-fetch madhab rulings in a single query (avoids N+1)
+  const madhabRulingsMap = new Map<string, { ruling: HalalStatus; explanation: string }>();
+
+  if (madhab !== "general" && dbAdditives.length > 0) {
+    const additiveCodes = dbAdditives.map((a) => a.code);
+    const rulings = await db
+      .select()
+      .from(additiveMadhabRulings)
+      .where(
+        and(
+          inArray(additiveMadhabRulings.additiveCode, additiveCodes),
+          eq(additiveMadhabRulings.madhab, madhab)
+        )
+      );
+
+    for (const ruling of rulings) {
+      madhabRulingsMap.set(ruling.additiveCode, {
+        ruling: ruling.ruling as HalalStatus,
+        explanation: ruling.explanationFr,
+      });
+    }
+  }
+
   const results: AdditiveAnalysisResult[] = [];
 
   for (const add of dbAdditives) {
-    let madhabOverride: AdditiveAnalysisResult["madhabOverride"] = undefined;
-
-    if (madhab !== "general") {
-      const [ruling] = await db
-        .select()
-        .from(additiveMadhabRulings)
-        .where(
-          and(
-            eq(additiveMadhabRulings.additiveCode, add.code),
-            eq(additiveMadhabRulings.madhab, madhab)
-          )
-        )
-        .limit(1);
-
-      if (ruling) {
-        madhabOverride = {
-          ruling: ruling.ruling as HalalStatus,
-          explanation: ruling.explanationFr,
-        };
-      }
-    }
+    const madhabOverride = madhabRulingsMap.get(add.code) ?? undefined;
 
     results.push({
       code: add.code,

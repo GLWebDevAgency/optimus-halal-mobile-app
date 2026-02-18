@@ -145,7 +145,7 @@ export const useAuthStore = create<AuthStoreState>()((set, get) => ({
         isAuthenticated: true,
         isLoading: false,
       });
-      get().fetchProfile();
+      await get().fetchProfile();
       return true;
     }
 

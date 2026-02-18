@@ -114,3 +114,72 @@ export const addresses = pgTable("addresses", {
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Address = typeof addresses.$inferSelect;
+
+/**
+ * Column selection that excludes sensitive fields (passwordHash).
+ * Use with `db.query.users.findFirst({ columns: safeUserColumns })`.
+ */
+export const safeUserColumns = {
+  id: true,
+  email: true,
+  displayName: true,
+  phoneNumber: true,
+  avatarUrl: true,
+  bio: true,
+  city: true,
+  preferredLanguage: true,
+  halalStrictness: true,
+  dietaryRestrictions: true,
+  allergens: true,
+  madhab: true,
+  isPregnant: true,
+  hasChildren: true,
+  level: true,
+  experiencePoints: true,
+  totalScans: true,
+  currentStreak: true,
+  longestStreak: true,
+  lastScanDate: true,
+  notificationEnabled: true,
+  biometricEnabled: true,
+  darkMode: true,
+  isActive: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
+/**
+ * Column map for `.returning()` that excludes sensitive fields.
+ * Use with `.returning(safeUserReturning)` on insert/update queries.
+ */
+export const safeUserReturning = {
+  id: users.id,
+  email: users.email,
+  displayName: users.displayName,
+  phoneNumber: users.phoneNumber,
+  avatarUrl: users.avatarUrl,
+  bio: users.bio,
+  city: users.city,
+  preferredLanguage: users.preferredLanguage,
+  halalStrictness: users.halalStrictness,
+  dietaryRestrictions: users.dietaryRestrictions,
+  allergens: users.allergens,
+  madhab: users.madhab,
+  isPregnant: users.isPregnant,
+  hasChildren: users.hasChildren,
+  level: users.level,
+  experiencePoints: users.experiencePoints,
+  totalScans: users.totalScans,
+  currentStreak: users.currentStreak,
+  longestStreak: users.longestStreak,
+  lastScanDate: users.lastScanDate,
+  notificationEnabled: users.notificationEnabled,
+  biometricEnabled: users.biometricEnabled,
+  darkMode: users.darkMode,
+  isActive: users.isActive,
+  createdAt: users.createdAt,
+  updatedAt: users.updatedAt,
+};
+
+/** User type with sensitive fields (passwordHash) excluded. */
+export type SafeUser = Omit<User, "passwordHash">;

@@ -14,7 +14,6 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   I18nManager,
-  useColorScheme,
   View,
   ActivityIndicator,
   Text,
@@ -22,7 +21,7 @@ import {
   TouchableOpacity,
   Pressable,
 } from "react-native";
-import { useThemeStore, useLanguageStore } from "@/store";
+import { useLanguageStore } from "@/store";
 import { useTheme, useTranslation } from "@/hooks";
 import { useAuthStore } from "@/store/apiStores";
 import { setApiLanguage } from "@/services/api";
@@ -208,15 +207,9 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
 // ============================================
 
 export default function RootLayout() {
-  const systemColorScheme = useColorScheme();
-  const { theme } = useThemeStore();
+  const { isDark } = useTheme();
 
   const [trpcClient] = useState(() => createTRPCClientForProvider());
-
-  // Determine effective color scheme
-  const effectiveColorScheme =
-    theme === "system" ? systemColorScheme : theme;
-  const isDark = effectiveColorScheme === "dark";
 
   return (
     <ErrorBoundary>

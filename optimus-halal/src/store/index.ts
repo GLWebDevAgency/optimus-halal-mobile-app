@@ -118,33 +118,25 @@ export const useFeatureFlagsStore = create<FeatureFlagsState>()((set, get) => ({
 
 /**
  * Scan History State
+ *
+ * Favorites are managed exclusively via tRPC hooks (useFavorites.ts).
+ * This store only handles local scan history.
  */
 interface ScanHistoryState {
   history: ScanRecord[];
-  favorites: string[]; // Product IDs
   addScan: (record: ScanRecord) => void;
   clearHistory: () => void;
-  toggleFavorite: (productId: string) => void;
-  isFavorite: (productId: string) => boolean;
 }
 
 export const useScanHistoryStore = create<ScanHistoryState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       history: [],
-      favorites: [],
       addScan: (record) =>
         set((state) => ({
           history: [record, ...state.history.filter((r) => r.id !== record.id)].slice(0, 100),
         })),
       clearHistory: () => set({ history: [] }),
-      toggleFavorite: (productId) =>
-        set((state) => ({
-          favorites: state.favorites.includes(productId)
-            ? state.favorites.filter((id) => id !== productId)
-            : [...state.favorites, productId],
-        })),
-      isFavorite: (productId) => get().favorites.includes(productId),
     }),
     {
       name: "scan-history-storage",
@@ -391,79 +383,4 @@ export const useRamadanStore = create<RamadanState>()(
   )
 );
 
-/**
- * Favorites Store - Produits favoris avec données complètes
- * Partagé entre le Dashboard et l'écran Favoris
- */
-export interface FavoriteProduct {
-  id: string;
-  name: string;
-  brand: string;
-  image: string;
-  status: "excellent" | "bon" | "moyen" | "mauvais";
-  category: "food" | "cosmetic" | "halal";
-  addedAt: string;
-}
-
-interface FavoritesState {
-  favorites: FavoriteProduct[];
-  addFavorite: (product: Omit<FavoriteProduct, "addedAt">) => void;
-  removeFavorite: (productId: string) => void;
-  toggleFavorite: (product: Omit<FavoriteProduct, "addedAt">) => void;
-  isFavorite: (productId: string) => boolean;
-  getFavoriteById: (productId: string) => FavoriteProduct | undefined;
-  clearFavorites: () => void;
-}
-
-// Pas de données fictives — l'utilisateur construit sa liste en scannant
-const DEFAULT_FAVORITES: FavoriteProduct[] = [];
-
-export const useLocalFavoritesStore = create<FavoritesState>()(
-  persist(
-    (set, get) => ({
-      favorites: DEFAULT_FAVORITES,
-      addFavorite: (product) =>
-        set((state) => {
-          // Ne pas ajouter si déjà présent
-          if (state.favorites.some((f) => f.id === product.id)) {
-            return state;
-          }
-          return {
-            favorites: [
-              { ...product, addedAt: new Date().toISOString() },
-              ...state.favorites,
-            ],
-          };
-        }),
-      removeFavorite: (productId) =>
-        set((state) => ({
-          favorites: state.favorites.filter((f) => f.id !== productId),
-        })),
-      toggleFavorite: (product) =>
-        set((state) => {
-          const exists = state.favorites.some((f) => f.id === product.id);
-          if (exists) {
-            return {
-              favorites: state.favorites.filter((f) => f.id !== product.id),
-            };
-          } else {
-            return {
-              favorites: [
-                { ...product, addedAt: new Date().toISOString() },
-                ...state.favorites,
-              ],
-            };
-          }
-        }),
-      isFavorite: (productId) => get().favorites.some((f) => f.id === productId),
-      getFavoriteById: (productId) =>
-        get().favorites.find((f) => f.id === productId),
-      clearFavorites: () => set({ favorites: [] }),
-    }),
-    {
-      name: "favorites-storage",
-      storage: createJSONStorage(() => mmkvStorage),
-    }
-  )
-);
 

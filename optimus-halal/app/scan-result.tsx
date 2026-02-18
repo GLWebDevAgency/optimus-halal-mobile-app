@@ -962,8 +962,8 @@ export default function ScanResultScreen() {
   const addFavoriteMutation = useAddFavorite();
   const removeFavoriteMutation = useRemoveFavorite();
   const productIsFavorite = useMemo(
-    () => favoritesQuery.data?.some((f: any) => f.barcode === product?.barcode) ?? false,
-    [favoritesQuery.data, product?.barcode]
+    () => favoritesQuery.data?.some((f: any) => f.productId === product?.id) ?? false,
+    [favoritesQuery.data, product?.id]
   );
 
   // ── Haptic orchestration on verdict ────────────

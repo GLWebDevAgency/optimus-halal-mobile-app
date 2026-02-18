@@ -1,17 +1,17 @@
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { router, protectedProcedure } from "../trpc.js";
-import { users, addresses } from "../../db/schema/index.js";
+import { users, addresses, safeUserColumns, safeUserReturning } from "../../db/schema/index.js";
 import { notFound } from "../../lib/errors.js";
 
 export const profileRouter = router({
   getProfile: protectedProcedure.query(async ({ ctx }) => {
     const user = await ctx.db.query.users.findFirst({
       where: eq(users.id, ctx.userId),
+      columns: safeUserColumns,
     });
     if (!user) throw notFound("Utilisateur introuvable");
-    const { passwordHash: _, ...profile } = user;
-    return profile;
+    return user;
   }),
 
   updateProfile: protectedProcedure
@@ -43,11 +43,10 @@ export const profileRouter = router({
         .update(users)
         .set({ ...input, updatedAt: new Date() })
         .where(eq(users.id, ctx.userId))
-        .returning();
+        .returning(safeUserReturning);
 
       if (!updated) throw notFound("Utilisateur introuvable");
-      const { passwordHash: _, ...profile } = updated;
-      return profile;
+      return updated;
     }),
 
   getAddresses: protectedProcedure.query(async ({ ctx }) => {

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { randomInt, timingSafeEqual } from "crypto";
 import { eq, and, gt, sql } from "drizzle-orm";
 import { router, publicProcedure, protectedProcedure } from "../trpc.js";
-import { users, refreshTokens } from "../../db/schema/index.js";
+import { users, refreshTokens, safeUserColumns } from "../../db/schema/index.js";
 import {
   hashPassword,
   verifyPassword,
@@ -99,8 +99,18 @@ export const authRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       // User lookup + password verification OUTSIDE transaction
+      // Fetch only the fields needed for auth + response (passwordHash for verification)
       const user = await ctx.db.query.users.findFirst({
         where: eq(users.email, input.email.toLowerCase()),
+        columns: {
+          id: true,
+          email: true,
+          displayName: true,
+          avatarUrl: true,
+          level: true,
+          passwordHash: true,
+          isActive: true,
+        },
       });
 
       if (!user || !user.isActive) {
@@ -234,6 +244,7 @@ export const authRouter = router({
     .mutation(async ({ ctx, input }) => {
       const user = await ctx.db.query.users.findFirst({
         where: eq(users.email, input.email.toLowerCase()),
+        columns: { id: true },
       });
 
       // Always return success (don't leak email existence)
@@ -287,6 +298,7 @@ export const authRouter = router({
 
       const user = await ctx.db.query.users.findFirst({
         where: eq(users.email, emailKey),
+        columns: { id: true },
       });
 
       if (!user) throw notFound("Utilisateur introuvable");
@@ -313,11 +325,11 @@ export const authRouter = router({
   me: protectedProcedure.query(async ({ ctx }) => {
     const user = await ctx.db.query.users.findFirst({
       where: eq(users.id, ctx.userId),
+      columns: safeUserColumns,
     });
 
     if (!user) throw notFound("Utilisateur introuvable");
 
-    const { passwordHash: _, ...safeUser } = user;
-    return safeUser;
+    return user;
   }),
 });
