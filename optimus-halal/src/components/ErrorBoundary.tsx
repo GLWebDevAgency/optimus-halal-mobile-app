@@ -1,5 +1,6 @@
 import React, { Component, type ErrorInfo, type ReactNode } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
+import * as Sentry from "@sentry/react-native";
 
 interface Props {
   children: ReactNode;
@@ -20,6 +21,9 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("[ErrorBoundary]", error.message, errorInfo.componentStack);
+    Sentry.captureException(error, {
+      extra: { componentStack: errorInfo.componentStack },
+    });
   }
 
   private handleRetry = () => {
@@ -31,7 +35,7 @@ export class ErrorBoundary extends Component<Props, State> {
       if (this.props.fallback) return this.props.fallback;
 
       return (
-        <View style={styles.container}>
+        <View style={styles.container} accessibilityRole="alert">
           <Text style={styles.title}>Oups, une erreur est survenue</Text>
           <Text style={styles.message}>
             {__DEV__ ? this.state.error?.message : "Veuillez reessayer."}
@@ -53,7 +57,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
-    backgroundColor: "#fff",
+    backgroundColor: "#f8faf9",
   },
   title: { fontSize: 20, fontWeight: "700", marginBottom: 8, textAlign: "center" },
   message: { fontSize: 14, color: "#666", marginBottom: 24, textAlign: "center" },

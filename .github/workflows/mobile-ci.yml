@@ -46,7 +46,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: '22.14'
           cache: pnpm
           cache-dependency-path: optimus-halal/pnpm-lock.yaml
 
@@ -62,22 +62,35 @@ jobs:
 
       - name: Lint
         run: pnpm exec eslint .
-        continue-on-error: true
+
+  # ── Detect native dependency changes ──────────────
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      native: ${{ steps.filter.outputs.native }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            native:
+              - 'optimus-halal/package.json'
+              - 'optimus-halal/app.config.ts'
+              - 'optimus-halal/eas.json'
 
   # ── EAS Build Preview (Recette) ──────────────────
-  # Runs on: 
+  # Runs on:
   # 1. Manual trigger with preview
-  # 2. Push to main BUT ONLY if native dependencies changed (package.json/app.config.ts)
+  # 2. Push to main BUT ONLY if native dependencies changed (package.json/app.config.ts/eas.json)
   eas-build-preview:
     name: Build Preview APK (Recette)
     runs-on: ubuntu-latest
-    needs: check
+    needs: [check, detect-changes]
     if: |
       (github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'preview') ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main' && (
-        contains(github.event.commits[0].modified, 'optimus-halal/package.json') ||
-        contains(github.event.commits[0].modified, 'optimus-halal/app.config.ts')
-      ))
+      (github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.detect-changes.outputs.native == 'true')
 
     steps:
       - uses: actions/checkout@v4
@@ -88,7 +101,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: '22.14'
           cache: pnpm
           cache-dependency-path: optimus-halal/pnpm-lock.yaml
 
@@ -96,7 +109,7 @@ jobs:
 
       - uses: expo/expo-github-action@v8
         with:
-          eas-version: latest
+          eas-version: 16
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Build Preview APK
@@ -120,7 +133,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: '22.14'
           cache: pnpm
           cache-dependency-path: optimus-halal/pnpm-lock.yaml
 
@@ -128,11 +141,11 @@ jobs:
 
       - uses: expo/expo-github-action@v8
         with:
-          eas-version: latest
+          eas-version: 16
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Publish OTA Update
-        run: eas update --auto --non-interactive
+        run: eas update --auto --non-interactive --channel preview
 
   # ── EAS Build Production ─────────────────────────
   # Runs on: MANUAL TRIGGER ONLY (workflow_dispatch with production)
@@ -152,7 +165,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: '22.14'
           cache: pnpm
           cache-dependency-path: optimus-halal/pnpm-lock.yaml
 
@@ -160,7 +173,7 @@ jobs:
 
       - uses: expo/expo-github-action@v8
         with:
-          eas-version: latest
+          eas-version: 16
           token: ${{ secrets.EXPO_TOKEN }}
 
       # Android only — iOS needs Apple Distribution Certificate configured in EAS

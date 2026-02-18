@@ -21,8 +21,8 @@ const envSchema = z.object({
     .default("https://world.openfoodfacts.org/api/v2"),
   CORS_ORIGINS: z
     .string()
-    .default("*")
-    .describe("Comma-separated allowed origins, or * for all"),
+    .default("https://optimushalal.com")
+    .describe("Comma-separated allowed origins"),
   SENTRY_DSN: z.string().url().optional(),
   SENTRY_ENVIRONMENT: z.string().default("development"),
   // Cloudflare R2

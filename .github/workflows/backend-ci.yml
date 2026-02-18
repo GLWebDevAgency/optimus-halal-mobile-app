@@ -45,7 +45,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: '22.14'
           cache: pnpm
           cache-dependency-path: backend/pnpm-lock.yaml
 
@@ -58,8 +58,6 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    needs: check
-
     services:
       postgres:
         image: postgis/postgis:17-3.5
@@ -93,31 +91,19 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: '22.14'
           cache: pnpm
           cache-dependency-path: backend/pnpm-lock.yaml
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Drop PostGIS before schema push (avoids spatial_ref_sys prompt)
-        env:
-          PGPASSWORD: postgres
-        run: psql -h localhost -p 5433 -U postgres -d optimus_test -c "DROP EXTENSION IF EXISTS postgis CASCADE;"
+      - name: Build TypeScript
+        run: pnpm run build
 
-      - name: Push DB schema
+      - name: Run database migrations
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5433/optimus_test
-        run: pnpm exec tsc && pnpm exec drizzle-kit push --force
-
-      - name: Apply PostGIS migration
-        env:
-          PGPASSWORD: postgres
-        run: psql -h localhost -p 5433 -U postgres -d optimus_test -f drizzle/0002_add_postgis.sql
-
-      - name: Apply scaling indexes
-        env:
-          PGPASSWORD: postgres
-        run: psql -h localhost -p 5433 -U postgres -d optimus_test -f drizzle/0003_scaling_indexes.sql
+        run: node dist/db/migrate.js
 
       - name: Run tests
         env:
@@ -129,7 +115,7 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: test
+    needs: [check, test]
 
     steps:
       - uses: actions/checkout@v4
@@ -140,7 +126,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: '22.14'
           cache: pnpm
           cache-dependency-path: backend/pnpm-lock.yaml
 
@@ -183,12 +169,17 @@ jobs:
           fi
           echo "Waiting 30s for deployment to stabilize..."
           sleep 30
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PREVIEW_URL/health" || echo "000")
-          if [ "$STATUS" = "200" ]; then
-            echo "Preview health check passed (HTTP $STATUS)"
-          else
-            echo "Warning: Preview health check returned HTTP $STATUS (deployment may still be starting)"
-          fi
+          for i in 1 2 3 4 5; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PREVIEW_URL/health" || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "Preview health check passed (HTTP $STATUS)"
+              exit 0
+            fi
+            echo "Attempt $i: HTTP $STATUS — retrying in 15s..."
+            sleep 15
+          done
+          echo "ERROR: Preview health check failed after 5 attempts"
+          exit 1
 
   # ── Deploy Production (manual only) ────────────
   # Runs on: MANUAL TRIGGER ONLY (workflow_dispatch with production)
@@ -220,9 +211,14 @@ jobs:
         run: |
           echo "Waiting 30s for deployment to stabilize..."
           sleep 30
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://mobile-bff-production-aefc.up.railway.app/health || echo "000")
-          if [ "$STATUS" = "200" ]; then
-            echo "Production health check passed (HTTP $STATUS)"
-          else
-            echo "Warning: Production health check returned HTTP $STATUS (deployment may still be starting)"
-          fi
+          for i in 1 2 3 4 5; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://mobile-bff-production-aefc.up.railway.app/health || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "Production health check passed (HTTP $STATUS)"
+              exit 0
+            fi
+            echo "Attempt $i: HTTP $STATUS — retrying in 15s..."
+            sleep 15
+          done
+          echo "ERROR: Production health check failed after 5 attempts"
+          exit 1

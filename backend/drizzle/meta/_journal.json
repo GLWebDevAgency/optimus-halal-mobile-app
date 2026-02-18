@@ -22,6 +22,13 @@
       "when": 1771324800000,
       "tag": "0002_add_postgis",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1771411200000,
+      "tag": "0003_scaling_indexes",
+      "breakpoints": true
     }
   ]
 }

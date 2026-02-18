@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { compress } from "hono/compress";
+import { secureHeaders } from "hono/secure-headers";
 import { trpcServer } from "@hono/trpc-server";
 import { serve } from "@hono/node-server";
 import { appRouter } from "./trpc/router.js";
@@ -21,6 +22,7 @@ const app = new Hono();
 // ── Global Middleware ──────────────────────────────────────
 
 app.use("*", compress());
+app.use("*", secureHeaders());
 
 app.use("*", cors({
   origin: env.CORS_ORIGINS === "*"
@@ -119,4 +121,27 @@ logger.info("Serveur demarré", {
   url: `http://localhost:${port}`,
 });
 
-serve({ fetch: app.fetch, port });
+const server = serve({ fetch: app.fetch, port });
+
+// ── Graceful Shutdown ────────────────────────────────────
+async function shutdown(signal: string) {
+  logger.info(`${signal} received — shutting down gracefully`);
+
+  server.close(() => {
+    logger.info("HTTP server closed");
+  });
+
+  try {
+    await redis.quit();
+    logger.info("Redis connection closed");
+  } catch { /* already closed */ }
+
+  // Give in-flight requests 10s to finish
+  setTimeout(() => {
+    logger.warn("Forced shutdown after timeout");
+    process.exit(1);
+  }, 10_000).unref();
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));

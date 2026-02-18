@@ -58,15 +58,6 @@ export const defaultFeatureFlags: FeatureFlags = {
 };
 
 /**
- * API Configuration
- */
-export const API_CONFIG = {
-  BASE_URL: "https://api-gateway-production-fce7.up.railway.app",
-  TIMEOUT: 30000,
-  RETRY_ATTEMPTS: 3,
-} as const;
-
-/**
  * App Constants
  */
 export const APP_CONFIG = {

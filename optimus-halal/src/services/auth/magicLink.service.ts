@@ -1,17 +1,18 @@
 /**
  * Magic Link Authentication Service
- * 
- * Uses REST API via API Gateway for passwordless authentication
+ *
+ * Uses REST API via Mobile BFF for passwordless authentication
  * - Email-based magic links via Brevo
- * - JWT tokens (secure, short-lived)
+ * - JWT tokens stored in SecureStore (encrypted keychain)
  * - Deep linking support
  */
 
 import * as Linking from 'expo-linking';
+import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Use API Gateway Mobile routes (B2C)
-const API_URL = 'https://api-gateway-production-fce7.up.railway.app/api/mobile';
+// Use Mobile BFF routes (tRPC backend)
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://mobile-bff-production-aefc.up.railway.app';
 
 const STORAGE_KEYS = {
   ACCESS_TOKEN: '@auth:access_token',
@@ -111,10 +112,10 @@ export async function verifyMagicLinkToken(token: string): Promise<VerifyTokenRe
     }
 
     if (data.accessToken) {
-      await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, data.accessToken);
+      await SecureStore.setItemAsync(STORAGE_KEYS.ACCESS_TOKEN, data.accessToken);
     }
     if (data.refreshToken) {
-      await AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, data.refreshToken);
+      await SecureStore.setItemAsync(STORAGE_KEYS.REFRESH_TOKEN, data.refreshToken);
     }
     if (data.user) {
       await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));

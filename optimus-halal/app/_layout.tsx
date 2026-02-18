@@ -13,6 +13,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  I18nManager,
   useColorScheme,
   View,
   ActivityIndicator,
@@ -25,6 +26,7 @@ import { useThemeStore, useLanguageStore } from "@/store";
 import { useTheme, useTranslation } from "@/hooks";
 import { useAuthStore } from "@/store/apiStores";
 import { setApiLanguage } from "@/services/api";
+import { isRTL as isRTLLanguage } from "@/i18n";
 import { trpc, createTRPCClientForProvider } from "@/lib/trpc";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/ui";
@@ -34,6 +36,18 @@ import { initAnalytics } from "../src/lib/analytics";
 
 initSentry();
 initAnalytics();
+
+// ── Sync RTL direction on app startup ─────────────────────
+// I18nManager.forceRTL persists but only renders after a restart.
+// After a restart we read the persisted language and ensure the
+// I18nManager state matches — this runs synchronously before
+// any React tree renders so the layout direction is correct.
+const persistedLanguage = useLanguageStore.getState().language;
+const shouldBeRTL = isRTLLanguage(persistedLanguage);
+if (I18nManager.isRTL !== shouldBeRTL) {
+  I18nManager.forceRTL(shouldBeRTL);
+  I18nManager.allowRTL(shouldBeRTL);
+}
 
 // Create a client with enterprise-grade configuration
 const queryClient = new QueryClient({

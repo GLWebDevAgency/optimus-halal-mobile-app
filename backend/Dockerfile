@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Install deps first (Docker layer caching)
 COPY package.json pnpm-lock.yaml ./
-RUN corepack enable && corepack prepare pnpm@latest --activate \
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate \
   && pnpm install --frozen-lockfile
 
 # Build TypeScript
