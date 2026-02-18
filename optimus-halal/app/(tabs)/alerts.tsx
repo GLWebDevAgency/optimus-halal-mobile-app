@@ -60,9 +60,13 @@ const SEVERITY_CONFIG: Record<
   },
 };
 
+// ── Locale Map ──────────────────────────────────────────────
+
+const LOCALE_MAP: Record<string, string> = { fr: "fr-FR", en: "en-US", ar: "ar-SA" };
+
 // ── Relative Time Helper ────────────────────────────────────
 
-function formatRelativeTime(date: string | Date, t: any): string {
+function formatRelativeTime(date: string | Date, t: any, locale: string): string {
   const now = Date.now();
   const then = new Date(date).getTime();
   const diffMs = now - then;
@@ -74,7 +78,7 @@ function formatRelativeTime(date: string | Date, t: any): string {
   if (diffMin < 60) return t.alerts.timeAgoMinutes.replace("{{count}}", String(diffMin));
   if (diffHours < 24) return t.alerts.timeAgoHours.replace("{{count}}", String(diffHours));
   if (diffDays < 7) return t.alerts.timeAgoDays.replace("{{count}}", String(diffDays));
-  return new Date(date).toLocaleDateString("fr-FR", {
+  return new Date(date).toLocaleDateString(locale, {
     day: "numeric",
     month: "short",
   });
@@ -100,7 +104,8 @@ interface AlertCardProps {
 
 const AlertCard = React.memo(function AlertCard({ alert, index }: AlertCardProps) {
   const { isDark } = useTheme();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  const locale = LOCALE_MAP[language] ?? "fr-FR";
   const severity = (alert.severity as Severity) || "info";
   const config = SEVERITY_CONFIG[severity] ?? SEVERITY_CONFIG.info;
   const severityLabel = t.alerts.severity[severity] ?? t.alerts.severity.info;
@@ -144,7 +149,7 @@ const AlertCard = React.memo(function AlertCard({ alert, index }: AlertCardProps
             </Text>
           </View>
           <Text className="text-xs text-slate-400 dark:text-slate-500 font-medium">
-            {formatRelativeTime(alert.publishedAt, t)}
+            {formatRelativeTime(alert.publishedAt, t, locale)}
           </Text>
         </View>
 

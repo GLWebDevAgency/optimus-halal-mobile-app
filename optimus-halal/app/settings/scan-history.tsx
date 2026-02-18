@@ -20,6 +20,8 @@ import { useScanHistory } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 
+const LOCALE_MAP: Record<string, string> = { fr: "fr-FR", en: "en-US", ar: "ar-SA" };
+
 // ── Status helpers ────────────────────────────────
 
 type HalalStatus = "halal" | "haram" | "doubtful" | "unknown";
@@ -69,7 +71,7 @@ function getStatusConfig(status: string | null, isDark: boolean, t: ReturnType<t
   }
 }
 
-function formatDate(date: string | Date, t: ReturnType<typeof useTranslation>["t"]): string {
+function formatDate(date: string | Date, t: ReturnType<typeof useTranslation>["t"], locale: string): string {
   const d = new Date(date);
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
@@ -81,7 +83,7 @@ function formatDate(date: string | Date, t: ReturnType<typeof useTranslation>["t
   if (diffMin < 60) return t.alerts.timeAgoMinutes.replace("{{count}}", String(diffMin));
   if (diffH < 24) return t.alerts.timeAgoHours.replace("{{count}}", String(diffH));
   if (diffDays < 7) return t.alerts.timeAgoDays.replace("{{count}}", String(diffDays));
-  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+  return d.toLocaleDateString(locale, { day: "numeric", month: "short" });
 }
 
 // ── Types ─────────────────────────────────────────
@@ -109,9 +111,11 @@ interface ScanRowProps {
   isDark: boolean;
   colors: ReturnType<typeof useTheme>["colors"];
   t: ReturnType<typeof useTranslation>["t"];
+  language: string;
 }
 
-const ScanRow = React.memo(function ScanRow({ item, index, isDark, colors, t }: ScanRowProps) {
+const ScanRow = React.memo(function ScanRow({ item, index, isDark, colors, t, language }: ScanRowProps) {
+  const locale = LOCALE_MAP[language] ?? "fr-FR";
   const status = getStatusConfig(item.halalStatus, isDark, t);
 
   return (
@@ -170,7 +174,7 @@ const ScanRow = React.memo(function ScanRow({ item, index, isDark, colors, t }: 
             {item.product?.brand ?? item.barcode}
           </Text>
           <Text style={{ fontSize: 10, color: colors.textMuted }}>
-            {formatDate(item.scannedAt, t)}
+            {formatDate(item.scannedAt, t, locale)}
           </Text>
         </View>
 
@@ -203,16 +207,16 @@ const scanKeyExtractor = (item: ScanItem) => item.id;
 
 export default function ScanHistoryScreen() {
   const { isDark, colors } = useTheme();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const { data, isLoading, isError, refetch } = useScanHistory({ limit: 50 });
 
   const scans = useMemo(() => (data?.items ?? []) as ScanItem[], [data]);
 
   const renderItem = useCallback(
     ({ item, index }: { item: ScanItem; index: number }) => (
-      <ScanRow item={item} index={index} isDark={isDark} colors={colors} t={t} />
+      <ScanRow item={item} index={index} isDark={isDark} colors={colors} t={t} language={language} />
     ),
-    [isDark, colors, t]
+    [isDark, colors, t, language]
   );
 
   // Loading
@@ -305,12 +309,12 @@ function Header({ colors, t, count }: { colors: any; t: any; count?: number }) {
         <TouchableOpacity
           onPress={() => router.back()}
           style={{
-            marginRight: 12,
-            height: 40,
-            width: 40,
+            marginEnd: 12,
+            height: 44,
+            width: 44,
             alignItems: "center",
             justifyContent: "center",
-            borderRadius: 20,
+            borderRadius: 22,
             backgroundColor: colors.card,
             borderColor: colors.borderLight,
             borderWidth: 1,

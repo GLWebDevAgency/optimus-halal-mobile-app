@@ -42,7 +42,7 @@ export const authRouter = router({
           [user] = await tx
             .insert(users)
             .values({
-              email: input.email.toLowerCase(),
+              email: input.email.toLowerCase().trim(),
               passwordHash,
               displayName: input.displayName,
               phoneNumber: input.phoneNumber,
@@ -101,7 +101,7 @@ export const authRouter = router({
       // User lookup + password verification OUTSIDE transaction
       // Fetch only the fields needed for auth + response (passwordHash for verification)
       const user = await ctx.db.query.users.findFirst({
-        where: eq(users.email, input.email.toLowerCase()),
+        where: eq(users.email, input.email.toLowerCase().trim()),
         columns: {
           id: true,
           email: true,
@@ -243,7 +243,7 @@ export const authRouter = router({
     .input(z.object({ email: z.string().email() }))
     .mutation(async ({ ctx, input }) => {
       const user = await ctx.db.query.users.findFirst({
-        where: eq(users.email, input.email.toLowerCase()),
+        where: eq(users.email, input.email.toLowerCase().trim()),
         columns: { id: true },
       });
 
@@ -251,13 +251,13 @@ export const authRouter = router({
       if (!user) return { success: true };
 
       const resetCode = randomInt(100000, 1000000).toString();
-      const emailKey = input.email.toLowerCase();
+      const emailKey = input.email.toLowerCase().trim();
       const attemptsKey = `pwd-reset-attempts:${emailKey}`;
 
       await ctx.redis.setex(`pwd-reset:${emailKey}`, 900, resetCode);
       await ctx.redis.del(attemptsKey); // Reset attempts on new code
 
-      const emailSent = await sendPasswordResetEmail(input.email, resetCode);
+      const emailSent = await sendPasswordResetEmail(emailKey, resetCode);
       if (!emailSent) {
         logger.error("Echec envoi email de réinitialisation", { email: emailKey });
       }
@@ -274,7 +274,7 @@ export const authRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const emailKey = input.email.toLowerCase();
+      const emailKey = input.email.toLowerCase().trim();
       const key = `pwd-reset:${emailKey}`;
       const attemptsKey = `pwd-reset-attempts:${emailKey}`;
 

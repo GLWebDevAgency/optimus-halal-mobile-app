@@ -706,7 +706,7 @@ export default function HomeScreen() {
                 fallback={userName}
                 borderColor="primary"
               />
-              <View style={{ marginLeft: 12 }}>
+              <View style={{ marginStart: 12 }}>
                 <Text
                   style={[
                     styles.greetingLabel,
@@ -1368,7 +1368,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: 14,
-    paddingLeft: 18,
+    paddingStart: 18,
   },
   featuredTitle: {
     fontSize: 15,

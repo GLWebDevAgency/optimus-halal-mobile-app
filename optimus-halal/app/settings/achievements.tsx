@@ -22,6 +22,8 @@ import { useTranslation } from "@/hooks";
 import { useAchievements, useLoyaltyBalance } from "@/hooks/useLoyalty";
 import { Skeleton } from "@/components/ui/Skeleton";
 
+const LOCALE_MAP: Record<string, string> = { fr: "fr-FR", en: "en-US", ar: "ar-SA" };
+
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_GAP = 12;
 const CARD_WIDTH = (SCREEN_WIDTH - 40 - CARD_GAP) / 2;
@@ -71,6 +73,7 @@ interface AchievementCardProps {
   isDark: boolean;
   colors: ReturnType<typeof useTheme>["colors"];
   t: ReturnType<typeof useTranslation>["t"];
+  language: string;
 }
 
 const AchievementCard = React.memo(function AchievementCard({
@@ -79,6 +82,7 @@ const AchievementCard = React.memo(function AchievementCard({
   isDark,
   colors,
   t,
+  language,
 }: AchievementCardProps) {
   const iconName = getIconName(achievement.icon);
 
@@ -94,15 +98,17 @@ const AchievementCard = React.memo(function AchievementCard({
 
   const iconColor = achievement.unlocked ? "#22c55e" : colors.textMuted;
 
+  const locale = LOCALE_MAP[language] ?? "fr-FR";
+
   const formattedDate = useMemo(() => {
     if (!achievement.unlockedAt) return null;
     const date = new Date(achievement.unlockedAt);
-    return date.toLocaleDateString("fr-FR", {
+    return date.toLocaleDateString(locale, {
       day: "numeric",
       month: "short",
       year: "numeric",
     });
-  }, [achievement.unlockedAt]);
+  }, [achievement.unlockedAt, locale]);
 
   return (
     <Animated.View
@@ -209,7 +215,7 @@ function SkeletonCard({ index }: { index: number }) {
 
 export default function AchievementsScreen() {
   const { isDark, colors } = useTheme();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const router = useRouter();
 
   const {
@@ -244,10 +250,11 @@ export default function AchievementsScreen() {
           isDark={isDark}
           colors={colors}
           t={t}
+          language={language}
         />
       </View>
     ),
-    [isDark, colors, t],
+    [isDark, colors, t, language],
   );
 
   // ── Loading state ────────────────────────────────────
@@ -520,13 +527,13 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   backButton: {
-    height: 40,
-    width: 40,
+    height: 44,
+    width: 44,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 20,
+    borderRadius: 22,
     borderWidth: 1,
-    marginRight: 12,
+    marginEnd: 12,
   },
   headerTitle: {
     flex: 1,
@@ -535,7 +542,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   headerSpacer: {
-    width: 40,
+    width: 44,
   },
   countBadge: {
     borderRadius: 12,

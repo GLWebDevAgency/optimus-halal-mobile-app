@@ -37,7 +37,8 @@ export const boycottTargets = pgTable(
     updatedAt: t
       .timestamp("updated_at", { withTimezone: true })
       .defaultNow()
-      .notNull(),
+      .notNull()
+      .$onUpdateFn(() => new Date()),
     verifiedBy: t.varchar("verified_by", { length: 100 }),
   },
   (table) => [

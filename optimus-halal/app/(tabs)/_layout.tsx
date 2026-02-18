@@ -23,8 +23,11 @@ import { Tabs } from "expo-router";
 
 import { PremiumTabBar } from "@/components/navigation/PremiumTabBar";
 import { QueryErrorBoundary } from "@/components/QueryErrorBoundary";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function TabsLayout() {
+  const { t } = useTranslation();
+
   return (
     <QueryErrorBoundary>
       <Tabs
@@ -38,31 +41,31 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: "Accueil",
+            title: t.nav.home,
           }}
         />
         <Tabs.Screen
           name="map"
           options={{
-            title: "Carte",
+            title: t.nav.map,
           }}
         />
         <Tabs.Screen
           name="scanner"
           options={{
-            title: "Scanner",
+            title: t.nav.scanner,
           }}
         />
         <Tabs.Screen
           name="marketplace"
           options={{
-            title: "Market",
+            title: t.nav.marketplace,
           }}
         />
         <Tabs.Screen
           name="profile"
           options={{
-            title: "Profil",
+            title: t.nav.profile,
           }}
         />
         <Tabs.Screen

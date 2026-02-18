@@ -346,9 +346,9 @@ export default function EditProfileScreen() {
             onPress={safeGoBack}
             activeOpacity={0.7}
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
+              width: 44,
+              height: 44,
+              borderRadius: 22,
               backgroundColor: themeColors.card,
               alignItems: "center",
               justifyContent: "center",
@@ -380,7 +380,7 @@ export default function EditProfileScreen() {
           </Text>
 
           {/* Spacer for alignment */}
-          <View style={{ width: 40 }} />
+          <View style={{ width: 44 }} />
         </Animated.View>
 
         <ScrollView
@@ -451,11 +451,11 @@ export default function EditProfileScreen() {
                 activeOpacity={0.8}
                 style={{
                   position: "absolute",
-                  bottom: 0,
-                  right: 0,
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
+                  bottom: -4,
+                  right: -4,
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
                   backgroundColor: themeColors.primary,
                   alignItems: "center",
                   justifyContent: "center",

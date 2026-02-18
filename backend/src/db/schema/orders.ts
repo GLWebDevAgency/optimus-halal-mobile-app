@@ -73,7 +73,8 @@ export const reviews = pgTable(
     updatedAt: t
       .timestamp("updated_at", { withTimezone: true })
       .defaultNow()
-      .notNull(),
+      .notNull()
+      .$onUpdateFn(() => new Date()),
   },
   (table) => [
     t.index("reviews_product_id_idx").on(table.productId),

@@ -521,7 +521,7 @@ const IngredientRow = React.memo(function IngredientRow({
             name={expanded ? "expand-less" : "expand-more"}
             size={18}
             color={problemColor ?? "#f97316"}
-            style={{ marginLeft: "auto" }}
+            style={{ marginStart: "auto" }}
           />
         )}
       </View>
@@ -667,7 +667,7 @@ const ScanLoadingSkeleton = React.memo(function ScanLoadingSkeleton({
                   fontSize: 12,
                   fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
                   color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)",
-                  marginLeft: 6,
+                  marginStart: 6,
                 }}
               >
                 {barcode}

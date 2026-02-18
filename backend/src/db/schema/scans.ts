@@ -56,7 +56,8 @@ export const analysisRequests = pgTable("analysis_requests", {
   updatedAt: t
     .timestamp("updated_at", { withTimezone: true })
     .defaultNow()
-    .notNull(),
+    .notNull()
+    .$onUpdateFn(() => new Date()),
 });
 
 export type Scan = typeof scans.$inferSelect;

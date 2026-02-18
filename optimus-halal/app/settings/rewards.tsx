@@ -32,6 +32,8 @@ import {
   useMyRewards,
 } from "@/hooks/useLoyalty";
 
+const LOCALE_MAP: Record<string, string> = { fr: "fr-FR", en: "en-US", ar: "ar-SA" };
+
 // ── Types ─────────────────────────────────────────────
 
 interface RewardItem {
@@ -249,6 +251,7 @@ interface ClaimedCardProps {
   isDark: boolean;
   colors: ReturnType<typeof useTheme>["colors"];
   t: ReturnType<typeof useTranslation>["t"];
+  language: string;
 }
 
 const ClaimedRewardCard = React.memo(function ClaimedRewardCard({
@@ -257,9 +260,11 @@ const ClaimedRewardCard = React.memo(function ClaimedRewardCard({
   isDark,
   colors,
   t,
+  language,
 }: ClaimedCardProps) {
+  const locale = LOCALE_MAP[language] ?? "fr-FR";
   const claimedDate = new Date(item.userReward.claimedAt);
-  const dateStr = claimedDate.toLocaleDateString("fr-FR", {
+  const dateStr = claimedDate.toLocaleDateString(locale, {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -396,7 +401,7 @@ function SkeletonLoader({
 
 export default function RewardsScreen() {
   const { isDark, colors } = useTheme();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const { impact, notification } = useHaptics();
 
   // Data hooks
@@ -655,6 +660,7 @@ export default function RewardsScreen() {
             isDark={isDark}
             colors={colors}
             t={t}
+            language={language}
           />
         ))
       )}
@@ -739,11 +745,11 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   backButton: {
-    height: 40,
-    width: 40,
+    height: 44,
+    width: 44,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 20,
+    borderRadius: 22,
     borderWidth: 1,
   },
   headerTitle: {
@@ -754,7 +760,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   headerSpacer: {
-    width: 40,
+    width: 44,
   },
 
   // List

@@ -291,12 +291,12 @@ export default function CertifierRankingScreen() {
           <TouchableOpacity
             onPress={() => router.back()}
             style={{
-              marginRight: 12,
-              height: 40,
-              width: 40,
+              marginEnd: 12,
+              height: 44,
+              width: 44,
               alignItems: "center",
               justifyContent: "center",
-              borderRadius: 20,
+              borderRadius: 22,
               backgroundColor: colors.card,
               borderColor: colors.borderLight,
               borderWidth: 1,

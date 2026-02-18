@@ -34,7 +34,8 @@ export const articles = pgTable(
     updatedAt: t
       .timestamp("updated_at", { withTimezone: true })
       .defaultNow()
-      .notNull(),
+      .notNull()
+      .$onUpdateFn(() => new Date()),
   },
   (table) => [
     t.index("articles_published_at_idx").on(table.publishedAt),

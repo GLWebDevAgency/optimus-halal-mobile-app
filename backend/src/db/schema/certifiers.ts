@@ -53,7 +53,8 @@ export const certifiers = pgTable(
     updatedAt: t
       .timestamp("updated_at", { withTimezone: true })
       .defaultNow()
-      .notNull(),
+      .notNull()
+      .$onUpdateFn(() => new Date()),
   },
   (table) => [
     t.index("certifiers_trust_score_idx").on(table.trustScore),

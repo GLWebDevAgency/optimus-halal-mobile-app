@@ -615,9 +615,9 @@ const styles = StyleSheet.create({
     paddingBottom: 48,
   },
   headerButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: "rgba(100, 116, 139, 0.4)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.1)",

@@ -28,7 +28,8 @@ export const pushTokens = pgTable("push_tokens", {
   updatedAt: t
     .timestamp("updated_at", { withTimezone: true })
     .defaultNow()
-    .notNull(),
+    .notNull()
+    .$onUpdateFn(() => new Date()),
 });
 
 export const notifications = pgTable(
@@ -74,7 +75,8 @@ export const notificationSettings = pgTable("notification_settings", {
   updatedAt: t
     .timestamp("updated_at", { withTimezone: true })
     .defaultNow()
-    .notNull(),
+    .notNull()
+    .$onUpdateFn(() => new Date()),
 });
 
 export type Notification = typeof notifications.$inferSelect;

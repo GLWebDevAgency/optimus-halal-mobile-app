@@ -391,9 +391,9 @@ export default function ExclusionsScreen() {
         <TouchableOpacity
           onPress={() => toggleExclusion(item.id)}
           style={{
-            width: 32,
-            height: 32,
-            borderRadius: 16,
+            width: 44,
+            height: 44,
+            borderRadius: 22,
             alignItems: "center",
             justifyContent: "center",
           }}

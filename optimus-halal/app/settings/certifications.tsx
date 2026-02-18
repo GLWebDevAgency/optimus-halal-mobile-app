@@ -190,11 +190,11 @@ export default function CertificationsScreen() {
           <TouchableOpacity
             onPress={() => router.back()}
             style={{
-              height: 40,
-              width: 40,
+              height: 44,
+              width: 44,
               alignItems: "center",
               justifyContent: "center",
-              borderRadius: 20,
+              borderRadius: 22,
               backgroundColor: isDark ? "rgba(255,255,255,0.05)" : colors.card,
             }}
             accessibilityRole="button"
@@ -211,11 +211,11 @@ export default function CertificationsScreen() {
           </Text>
           <TouchableOpacity
             style={{
-              height: 40,
-              width: 40,
+              height: 44,
+              width: 44,
               alignItems: "center",
               justifyContent: "center",
-              borderRadius: 20,
+              borderRadius: 22,
               backgroundColor: isDark ? "rgba(255,255,255,0.05)" : colors.card,
             }}
             accessibilityRole="button"

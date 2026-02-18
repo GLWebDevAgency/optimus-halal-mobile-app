@@ -40,7 +40,8 @@ export const products = pgTable(
     updatedAt: t
       .timestamp("updated_at", { withTimezone: true })
       .defaultNow()
-      .notNull(),
+      .notNull()
+      .$onUpdateFn(() => new Date()),
   },
   (table) => [
     t.uniqueIndex("products_barcode_idx").on(table.barcode),

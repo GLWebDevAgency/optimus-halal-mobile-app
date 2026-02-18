@@ -635,13 +635,13 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    marginRight: 12,
+    marginEnd: 12,
   },
   headerTitleWrap: {
     flex: 1,

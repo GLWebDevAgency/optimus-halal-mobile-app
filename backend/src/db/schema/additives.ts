@@ -74,7 +74,8 @@ export const additives = pgTable("additives", {
   updatedAt: t
     .timestamp("updated_at", { withTimezone: true })
     .defaultNow()
-    .notNull(),
+    .notNull()
+    .$onUpdateFn(() => new Date()),
 });
 
 export type Additive = typeof additives.$inferSelect;

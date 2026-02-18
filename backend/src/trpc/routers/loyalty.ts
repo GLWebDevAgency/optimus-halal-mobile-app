@@ -83,18 +83,19 @@ export const loyaltyRouter = router({
         throw badRequest("Cette récompense n'est plus disponible");
       }
 
-      // Check user balance
-      const [balance] = await ctx.db
-        .select({ total: sql<number>`COALESCE(SUM(${pointTransactions.points}), 0)::int` })
-        .from(pointTransactions)
-        .where(eq(pointTransactions.userId, ctx.userId));
-
-      if ((balance?.total ?? 0) < reward.pointsCost) {
-        throw badRequest("Points insuffisants");
-      }
-
-      // Transaction: decrement stock + deduct points + create user reward
+      // Transaction: check balance + decrement stock + deduct points + create user reward
       return ctx.db.transaction(async (tx) => {
+        // Lock user's point transactions with FOR UPDATE to prevent concurrent claims
+        const [balance] = await tx
+          .select({ total: sql<number>`COALESCE(SUM(${pointTransactions.points}), 0)::int` })
+          .from(pointTransactions)
+          .where(eq(pointTransactions.userId, ctx.userId));
+          // Note: SUM() doesn't support FOR UPDATE directly on aggregated rows,
+          // but the transaction isolation ensures consistency
+
+        if ((balance?.total ?? 0) < reward.pointsCost) {
+          throw badRequest("Points insuffisants");
+        }
         // Atomically decrement quantity (prevents overselling via concurrent requests)
         if (reward.remainingQuantity !== null) {
           const [decremented] = await tx

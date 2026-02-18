@@ -240,7 +240,7 @@ export default function ArticlesListScreen() {
             </Svg>
           </View>
 
-          <View style={{ width: 40 }} />
+          <View style={{ width: 44 }} />
         </View>
 
         {/* Search bar */}
@@ -366,8 +366,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   headerIcon: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",

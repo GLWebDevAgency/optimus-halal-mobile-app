@@ -55,7 +55,8 @@ export const users = pgTable(
     updatedAt: t
       .timestamp("updated_at", { withTimezone: true })
       .defaultNow()
-      .notNull(),
+      .notNull()
+      .$onUpdateFn(() => new Date()),
   },
   (table) => [
     t.uniqueIndex("users_email_idx").on(table.email),

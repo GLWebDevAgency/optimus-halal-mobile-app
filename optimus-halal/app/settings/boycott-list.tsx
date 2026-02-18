@@ -216,8 +216,8 @@ export default function BoycottListScreen() {
           <TouchableOpacity
             onPress={() => router.back()}
             style={{
-              marginRight: 12, height: 40, width: 40, alignItems: "center", justifyContent: "center",
-              borderRadius: 20, backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1,
+              marginEnd: 12, height: 44, width: 44, alignItems: "center", justifyContent: "center",
+              borderRadius: 22, backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1,
             }}
             accessibilityRole="button"
             accessibilityLabel={t.common.back}
