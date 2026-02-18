@@ -171,7 +171,7 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PREVIEW }}
           RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
-        run: railway up --service "$RAILWAY_SERVICE_ID" --detach
+        run: railway up --service "$RAILWAY_SERVICE_ID" --environment preview --detach
 
       - name: Verify preview deployment
         env:
@@ -214,7 +214,7 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
-        run: railway up --service "$RAILWAY_SERVICE_ID" --detach
+        run: railway up --service "$RAILWAY_SERVICE_ID" --environment production --detach
 
       - name: Verify production deployment
         run: |

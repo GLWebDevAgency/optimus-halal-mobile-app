@@ -13,6 +13,9 @@ COPY tsconfig.json ./
 COPY src/ ./src/
 RUN pnpm run build
 
+# Copy migration files (needed by preDeployCommand and dist/db/migrate.js)
+COPY drizzle/ ./drizzle/
+
 # Prune dev deps for production
 RUN pnpm prune --prod
 
@@ -30,6 +33,7 @@ RUN addgroup --system --gid 1001 nodejs \
 # Copy only production node_modules + compiled JS (minimal image)
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/drizzle ./drizzle
 COPY --from=builder /app/package.json ./
 
 USER appuser

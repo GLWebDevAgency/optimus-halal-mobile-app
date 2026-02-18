@@ -48,8 +48,15 @@ app.get("/health", async (c) => {
   };
 
   try {
-    await db.execute(sql`SELECT 1`);
-    checks.database = "ok";
+    const result = await db.execute(sql`
+      SELECT count(*)::int AS c
+      FROM information_schema.tables
+      WHERE table_schema = 'public'
+        AND table_name IN ('users', 'products', 'refresh_tokens')
+    `);
+    const count = Number(result[0]?.c ?? 0);
+    checks.database = count === 3 ? "ok" : "schema_incomplete";
+    if (count < 3) checks.status = "degraded";
   } catch {
     checks.database = "error";
     checks.status = "degraded";
