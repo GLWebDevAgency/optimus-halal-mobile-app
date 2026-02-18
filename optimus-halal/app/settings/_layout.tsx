@@ -34,6 +34,9 @@ export default function SettingsLayout() {
         <Stack.Screen name="favorites" />
         <Stack.Screen name="madhab" />
         <Stack.Screen name="health-profile" />
+        <Stack.Screen name="leaderboard" />
+        <Stack.Screen name="achievements" />
+        <Stack.Screen name="rewards" />
       </Stack>
     </QueryErrorBoundary>
   );

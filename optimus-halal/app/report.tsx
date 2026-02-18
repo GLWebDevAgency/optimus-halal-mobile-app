@@ -20,7 +20,6 @@ import {
   ScrollView,
   TextInput,
   Switch,
-  useColorScheme,
   ActivityIndicator,
   Alert,
 } from "react-native";
@@ -28,7 +27,8 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useHaptics, useTranslation } from "@/hooks";
+import { useHaptics, useTranslation, useTheme } from "@/hooks";
+import { IslamicPattern } from "@/components/ui";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { ImpactFeedbackStyle } from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
@@ -41,45 +41,16 @@ import { trpc } from "@/lib/trpc";
 
 // Map UI violation types → backend report type enum
 const VIOLATION_TYPES = [
-  {
-    id: "fake-cert",
-    backendType: "incorrect_halal_status" as const,
-    icon: "verified" as const,
-    iconColor: "#fbbf24",
-    title: "Fausse Certification",
-    subtitle: "Labels trompeurs",
-  },
-  {
-    id: "unethical-labor",
-    backendType: "store_issue" as const,
-    icon: "factory" as const,
-    iconColor: "#64748b",
-    title: "Travail Non-Éthique",
-    subtitle: "Droits des travailleurs",
-  },
-  {
-    id: "contamination",
-    backendType: "wrong_ingredients" as const,
-    icon: "science" as const,
-    iconColor: "#64748b",
-    title: "Contamination",
-    subtitle: "Ingrédients haram",
-  },
-  {
-    id: "other",
-    backendType: "other" as const,
-    icon: "warning" as const,
-    iconColor: "#64748b",
-    title: "Autre Problème",
-    subtitle: "Tout le reste",
-  },
+  { id: "fake-cert", backendType: "incorrect_halal_status" as const, icon: "verified" as const, iconColor: "#fbbf24", titleKey: "violationFakeCert" as const, subtitleKey: "violationFakeCertSub" as const },
+  { id: "unethical-labor", backendType: "store_issue" as const, icon: "factory" as const, iconColor: "#64748b", titleKey: "violationUnethical" as const, subtitleKey: "violationUnethicalSub" as const },
+  { id: "contamination", backendType: "wrong_ingredients" as const, icon: "science" as const, iconColor: "#64748b", titleKey: "violationContamination" as const, subtitleKey: "violationContaminationSub" as const },
+  { id: "other", backendType: "other" as const, icon: "warning" as const, iconColor: "#64748b", titleKey: "violationOther" as const, subtitleKey: "violationOtherSub" as const },
 ];
 
 export default function ReportingFormScreen() {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
+  const { isDark } = useTheme();
   const { impact, notification } = useHaptics();
-  const isDark = colorScheme === "dark";
   const { t } = useTranslation();
 
   const [title, setTitle] = useState("");
@@ -197,6 +168,7 @@ export default function ReportingFormScreen() {
 
   return (
     <View className="flex-1 bg-background-light dark:bg-background-dark">
+      <IslamicPattern variant="tessellation" opacity={0.03} />
       {/* Header */}
       <Animated.View
         entering={FadeIn.duration(300)}
@@ -237,10 +209,10 @@ export default function ReportingFormScreen() {
         >
           <View className="flex-row justify-between items-end">
             <Text className="text-sm font-semibold tracking-wide uppercase text-emerald-500">
-              {progressPercent < 100 ? `${progress}/3 champs` : "Prêt à envoyer"}
+              {progressPercent < 100 ? t.report.progressFields.replace("{{progress}}", String(progress)) : t.report.readyToSend}
             </Text>
             <Text className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              {progressPercent}% Complété
+              {t.report.completed.replace("{{percent}}", String(progressPercent))}
             </Text>
           </View>
           <View className="rounded-full bg-gray-200 dark:bg-white/10 h-1.5 w-full overflow-hidden">
@@ -277,14 +249,14 @@ export default function ReportingFormScreen() {
           </Text>
           <TextInput
             className="w-full px-4 py-4 bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-white/10 rounded-xl text-sm font-medium text-slate-900 dark:text-white shadow-sm"
-            placeholder="Ex: Faux label halal sur produit X..."
+            placeholder={t.report.titlePlaceholder}
             placeholderTextColor="#9ca3af"
             value={title}
             onChangeText={setTitle}
             maxLength={255}
           />
           {title.length > 0 && title.length < 5 && (
-            <Text className="text-xs text-red-400">Minimum 5 caractères</Text>
+            <Text className="text-xs text-red-400">{t.report.minChars5}</Text>
           )}
         </Animated.View>
 
@@ -294,7 +266,7 @@ export default function ReportingFormScreen() {
           className="px-5 pt-8 gap-3"
         >
           <Text className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
-            2. Identifier le Produit (optionnel)
+            2. {t.report.identifyProduct}
           </Text>
           <View className="relative">
             <View className="absolute left-3.5 top-1/2 -translate-y-1/2 z-10">
@@ -302,7 +274,7 @@ export default function ReportingFormScreen() {
             </View>
             <TextInput
               className="w-full pl-11 pr-12 py-4 bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-white/10 rounded-xl text-sm font-medium text-slate-900 dark:text-white shadow-sm"
-              placeholder="Scanner code-barres ou nom..."
+              placeholder={t.report.searchPlaceholder}
               placeholderTextColor="#9ca3af"
               value={productSearch}
               onChangeText={setProductSearch}
@@ -322,7 +294,7 @@ export default function ReportingFormScreen() {
           className="px-5 pt-8 gap-3"
         >
           <Text className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
-            3. Type de Violation *
+            3. {t.report.violationType} *
           </Text>
           <View className="flex-row flex-wrap gap-3">
             {VIOLATION_TYPES.map((type) => {
@@ -357,10 +329,10 @@ export default function ReportingFormScreen() {
                     />
                   </View>
                   <Text className="text-sm font-bold text-slate-900 dark:text-white">
-                    {type.title}
+                    {t.report[type.titleKey]}
                   </Text>
                   <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    {type.subtitle}
+                    {t.report[type.subtitleKey]}
                   </Text>
                 </TouchableOpacity>
               );
@@ -374,11 +346,11 @@ export default function ReportingFormScreen() {
           className="px-5 pt-8 gap-3"
         >
           <Text className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
-            4. Détails Supplémentaires *
+            4. {t.report.additionalDetails} *
           </Text>
           <TextInput
             className="w-full p-4 bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-white/10 rounded-xl text-sm font-medium text-slate-900 dark:text-white shadow-sm"
-            placeholder="Décrivez le problème en détail..."
+            placeholder={t.report.detailsPlaceholder}
             placeholderTextColor="#9ca3af"
             value={details}
             onChangeText={setDetails}
@@ -389,7 +361,7 @@ export default function ReportingFormScreen() {
             maxLength={2000}
           />
           {details.length > 0 && details.length < 10 && (
-            <Text className="text-xs text-red-400">Minimum 10 caractères</Text>
+            <Text className="text-xs text-red-400">{t.report.minChars10}</Text>
           )}
         </Animated.View>
 
@@ -400,11 +372,11 @@ export default function ReportingFormScreen() {
         >
           <View className="flex-row justify-between items-end">
             <Text className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
-              5. Preuves Photo
+              5. {t.report.photoEvidence}
             </Text>
             <View className="bg-emerald-500/10 px-2 py-0.5 rounded-full">
               <Text className="text-xs font-semibold text-emerald-500">
-                Recommandé
+                {t.report.recommended}
               </Text>
             </View>
           </View>
@@ -425,10 +397,10 @@ export default function ReportingFormScreen() {
             </View>
             <View className="items-center">
               <Text className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                {photos.length >= MAX_PHOTOS ? `${MAX_PHOTOS}/${MAX_PHOTOS} photos` : "Touchez pour ajouter"}
+                {photos.length >= MAX_PHOTOS ? `${MAX_PHOTOS}/${MAX_PHOTOS} photos` : t.report.tapToAdd}
               </Text>
               <Text className="text-[11px] text-gray-400 mt-0.5">
-                {photos.length >= MAX_PHOTOS ? "Limite atteinte" : `${photos.length}/${MAX_PHOTOS} — JPG, PNG, WebP`}
+                {photos.length >= MAX_PHOTOS ? t.report.limitReached : `${photos.length}/${MAX_PHOTOS} — ${t.report.photoFormat}`}
               </Text>
             </View>
           </TouchableOpacity>
@@ -459,7 +431,7 @@ export default function ReportingFormScreen() {
                   {index === 0 && (
                     <View className="absolute bottom-1 right-1 bg-black/60 rounded px-1 py-0.5">
                       <Text className="text-[8px] text-white font-medium uppercase tracking-wider">
-                        Cover
+                        {t.report.cover}
                       </Text>
                     </View>
                   )}
@@ -480,7 +452,7 @@ export default function ReportingFormScreen() {
                 {t.report.allowFollowup}
               </Text>
               <Text className="text-xs text-gray-500 dark:text-gray-400">
-                Nous pourrions demander plus de détails.
+                {t.report.followupDetail}
               </Text>
             </View>
             <Switch
@@ -524,7 +496,7 @@ export default function ReportingFormScreen() {
           ) : (
             <>
               <Text className="font-bold text-base text-white">
-                Envoyer le Signalement
+                {t.report.submitReport}
               </Text>
               <MaterialIcons name="send" size={20} color="#ffffff" />
             </>
@@ -534,7 +506,7 @@ export default function ReportingFormScreen() {
         <View className="flex-row items-center justify-center gap-1.5 mt-4 opacity-70">
           <MaterialIcons name="lock" size={12} color="#9ca3af" />
           <Text className="text-[11px] text-gray-500 dark:text-gray-400 font-medium tracking-wide">
-            Chiffré de bout en bout pour votre vie privée.
+            {t.report.encryptionNotice}
           </Text>
         </View>
       </Animated.View>

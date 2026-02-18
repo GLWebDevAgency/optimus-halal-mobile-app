@@ -15,46 +15,47 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  useColorScheme,
   Platform,
 } from "react-native";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
-import { useHaptics } from "@/hooks";
+import { useHaptics, useTheme, useTranslation } from "@/hooks";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
   withSequence,
   withTiming,
+  withRepeat,
   withDelay,
   interpolate,
+  cancelAnimation,
   Easing,
   FadeIn,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import Svg, { Defs, RadialGradient, Stop, Circle } from "react-native-svg";
 
-import { colors } from "@/constants/theme";
+import { brand } from "@/theme/colors";
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 interface TabConfig {
   name: string;
-  label: string;
+  navKey: "home" | "map" | "scanner" | "marketplace" | "profile";
   iconOutline: keyof typeof MaterialIcons.glyphMap;
   iconFilled: keyof typeof MaterialIcons.glyphMap;
   isCenter?: boolean;
 }
 
 const TABS: TabConfig[] = [
-  { name: "index", label: "Accueil", iconOutline: "home", iconFilled: "home" },
-  { name: "map", label: "Carte", iconOutline: "explore", iconFilled: "explore" },
-  { name: "scanner", label: "Scanner", iconOutline: "qr-code-scanner", iconFilled: "qr-code-scanner", isCenter: true },
-  { name: "marketplace", label: "Market", iconOutline: "storefront", iconFilled: "storefront" },
-  { name: "profile", label: "Profil", iconOutline: "person-outline", iconFilled: "person" },
+  { name: "index", navKey: "home", iconOutline: "home", iconFilled: "home" },
+  { name: "map", navKey: "map", iconOutline: "explore", iconFilled: "explore" },
+  { name: "scanner", navKey: "scanner", iconOutline: "qr-code-scanner", iconFilled: "qr-code-scanner", isCenter: true },
+  { name: "marketplace", navKey: "marketplace", iconOutline: "storefront", iconFilled: "storefront" },
+  { name: "profile", navKey: "profile", iconOutline: "person-outline", iconFilled: "person" },
 ];
 
 // Composant pour l'effet de lueur radiale
@@ -82,9 +83,9 @@ interface TabItemProps {
 }
 
 function TabItem({ tab, isActive, onPress, badge, index }: TabItemProps) {
-  const colorScheme = useColorScheme();
+  const { isDark } = useTheme();
   const { impact } = useHaptics();
-  const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
   
   // Animation values
   const scale = useSharedValue(1);
@@ -158,7 +159,7 @@ function TabItem({ tab, isActive, onPress, badge, index }: TabItemProps) {
     opacity: rippleOpacity.value,
   }));
 
-  const activeColor = colors.light.primary;
+  const activeColor = brand.primary;
   const inactiveColor = isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.4)";
   const currentColor = isActive ? activeColor : inactiveColor;
 
@@ -199,7 +200,7 @@ function TabItem({ tab, isActive, onPress, badge, index }: TabItemProps) {
 
       {/* Animated Label */}
       <Animated.Text style={[styles.tabLabel, { color: currentColor }, animatedLabelStyle]}>
-        {tab.label}
+        {t.nav[tab.navKey]}
       </Animated.Text>
     </AnimatedTouchable>
   );
@@ -211,9 +212,9 @@ interface CenterButtonProps {
 }
 
 function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
-  const colorScheme = useColorScheme();
+  const { isDark } = useTheme();
   const { notification } = useHaptics();
-  const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
   
   const scale = useSharedValue(1);
   const rotation = useSharedValue(0);
@@ -222,21 +223,28 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
   const pulseScale = useSharedValue(1);
   const innerGlow = useSharedValue(0);
   
-  // Continuous pulse animation
+  // Continuous pulse animation (withRepeat on UI thread, no setInterval)
   useEffect(() => {
-    const animatePulse = () => {
-      pulseScale.value = withSequence(
+    pulseScale.value = withRepeat(
+      withSequence(
         withTiming(1.15, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
         withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.ease) })
-      );
-      glowOpacity.value = withSequence(
+      ),
+      -1,
+      false
+    );
+    glowOpacity.value = withRepeat(
+      withSequence(
         withTiming(0.35, { duration: 1200 }),
         withTiming(0.15, { duration: 1200 })
-      );
+      ),
+      -1,
+      false
+    );
+    return () => {
+      cancelAnimation(pulseScale);
+      cancelAnimation(glowOpacity);
     };
-    animatePulse();
-    const interval = setInterval(animatePulse, 2400);
-    return () => clearInterval(interval);
   }, []);
 
   // Scanning animation when active
@@ -292,7 +300,7 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
       {/* Animated ring when active - pointerEvents none */}
       <Animated.View style={[styles.scanningRing, animatedInnerRingStyle]} pointerEvents="none">
         <LinearGradient
-          colors={["transparent", colors.light.primary, "transparent"]}
+          colors={["transparent", brand.primary, "transparent"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.scanningRingGradient}
@@ -305,7 +313,7 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
           styles.buttonRing,
           { 
             borderColor: isDark ? "rgba(16,34,23,0.8)" : "rgba(255,255,255,0.9)",
-            shadowColor: isDark ? "#000" : colors.light.primary,
+            shadowColor: isDark ? "#000" : brand.primary,
           }
         ]} 
         pointerEvents="none"
@@ -315,6 +323,8 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
       <AnimatedTouchable
         onPress={handlePress}
         activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel={t.nav.scanner}
         style={[styles.centerButton, animatedButtonStyle, { zIndex: 10 }]}
       >
         {/* Glass effect background */}
@@ -334,7 +344,7 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
               <MaterialIcons
                 name="qr-code-scanner"
                 size={30}
-                color={isDark ? "#0d1b13" : colors.light.primary}
+                color={isDark ? "#0d1b13" : brand.primary}
               />
             </View>
           </LinearGradient>
@@ -342,13 +352,13 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
       </AnimatedTouchable>
 
       {/* Label below */}
-      <Animated.Text 
+      <Animated.Text
         style={[
           styles.centerLabel,
           { color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.5)" }
         ]}
       >
-        Scanner
+        {t.nav.scanner}
       </Animated.Text>
     </View>
   );
@@ -356,8 +366,7 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
 
 export function PremiumTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { isDark } = useTheme();
 
   const currentRouteName = state.routes[state.index]?.name;
 
@@ -365,15 +374,15 @@ export function PremiumTabBar({ state, navigation }: BottomTabBarProps) {
   const borderGlow = useSharedValue(0);
   
   useEffect(() => {
-    const animate = () => {
-      borderGlow.value = withSequence(
+    borderGlow.value = withRepeat(
+      withSequence(
         withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
         withTiming(0, { duration: 2000, easing: Easing.inOut(Easing.ease) })
-      );
-    };
-    animate();
-    const interval = setInterval(animate, 4000);
-    return () => clearInterval(interval);
+      ),
+      -1,
+      false
+    );
+    return () => cancelAnimation(borderGlow);
   }, []);
 
   const animatedBorderStyle = useAnimatedStyle(() => ({
@@ -426,9 +435,9 @@ export function PremiumTabBar({ state, navigation }: BottomTabBarProps) {
           <LinearGradient
             colors={[
               "transparent",
-              colors.light.primary + "40",
-              colors.light.primary + "80",
-              colors.light.primary + "40",
+              brand.primary + "40",
+              brand.primary + "80",
+              brand.primary + "40",
               "transparent",
             ]}
             start={{ x: 0, y: 0 }}

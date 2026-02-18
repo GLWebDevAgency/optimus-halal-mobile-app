@@ -52,12 +52,12 @@ function getTrustBg(score: number | null, isDark: boolean) {
   return isDark ? "rgba(239,68,68,0.15)" : "rgba(239,68,68,0.1)";
 }
 
-function getTrustLabel(score: number | null): string {
-  if (score === null) return "N/A";
-  if (score >= 80) return "Fiable";
-  if (score >= 60) return "Correct";
-  if (score >= 40) return "Moyen";
-  return "Faible";
+function getTrustLabel(score: number | null, t: ReturnType<typeof useTranslation>["t"]): string {
+  if (score === null) return t.certifierRanking.trustLabels.na;
+  if (score >= 80) return t.certifierRanking.trustLabels.reliable;
+  if (score >= 60) return t.certifierRanking.trustLabels.correct;
+  if (score >= 40) return t.certifierRanking.trustLabels.average;
+  return t.certifierRanking.trustLabels.weak;
 }
 
 // ── Certifier Card Component ──────────────────────
@@ -68,16 +68,18 @@ const CertifierCard = React.memo(function CertifierCard({
   rank,
   isDark,
   colors,
+  t,
 }: {
   item: CertifierItem;
   index: number;
   rank: number;
   isDark: boolean;
   colors: ReturnType<typeof useTheme>["colors"];
+  t: ReturnType<typeof useTranslation>["t"];
 }) {
   const trustColor = getTrustColor(item.trustScore, isDark);
   const trustBg = getTrustBg(item.trustScore, isDark);
-  const trustLabel = getTrustLabel(item.trustScore);
+  const trustLabel = getTrustLabel(item.trustScore, t);
 
   return (
     <Animated.View entering={FadeInDown.delay(index * 60).duration(300)}>
@@ -127,7 +129,7 @@ const CertifierCard = React.memo(function CertifierCard({
             </Text>
             {item.creationYear && (
               <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 2 }}>
-                Depuis {item.creationYear}
+                {t.certifierRanking.since.replace("{{year}}", String(item.creationYear))}
               </Text>
             )}
           </View>
@@ -155,28 +157,28 @@ const CertifierCard = React.memo(function CertifierCard({
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
           <CriteriaBadge
             passed={item.halalAssessment}
-            label="Halal validé"
+            label={t.certifierRanking.criteria.halalValidated}
             icon="verified"
             isDark={isDark}
             colors={colors}
           />
           <CriteriaBadge
             passed={!item.acceptsStunning}
-            label={item.acceptsStunning ? "Étourdissement" : "Sans étourdissement"}
+            label={item.acceptsStunning ? t.certifierRanking.criteria.stunning : t.certifierRanking.criteria.noStunning}
             icon={item.acceptsStunning ? "flash-on" : "flash-off"}
             isDark={isDark}
             colors={colors}
           />
           <CriteriaBadge
             passed={item.controllersAreEmployees}
-            label="Salariés"
+            label={t.certifierRanking.criteria.employees}
             icon="badge"
             isDark={isDark}
             colors={colors}
           />
           <CriteriaBadge
             passed={item.controllersPresentEachProduction}
-            label="Présence permanente"
+            label={t.certifierRanking.criteria.permanentPresence}
             icon="visibility"
             isDark={isDark}
             colors={colors}
@@ -193,7 +195,7 @@ const CertifierCard = React.memo(function CertifierCard({
           >
             <MaterialIcons name="open-in-new" size={12} color={colors.primary} />
             <Text style={{ fontSize: 11, color: colors.primary, fontWeight: "600" }}>
-              Site officiel
+              {t.certifierRanking.officialWebsite}
             </Text>
           </TouchableOpacity>
         )}
@@ -272,9 +274,10 @@ export default function CertifierRankingScreen() {
         rank={index + 1}
         isDark={isDark}
         colors={colors}
+        t={t}
       />
     ),
-    [isDark, colors]
+    [isDark, colors, t]
   );
 
   return (
@@ -299,7 +302,7 @@ export default function CertifierRankingScreen() {
               borderWidth: 1,
             }}
             accessibilityRole="button"
-            accessibilityLabel="Retour"
+            accessibilityLabel={t.common.back}
           >
             <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
@@ -308,10 +311,10 @@ export default function CertifierRankingScreen() {
               style={{ fontSize: 24, fontWeight: "700", letterSpacing: -0.5, color: colors.textPrimary }}
               accessibilityRole="header"
             >
-              Classement Confiance
+              {t.certifierRanking.title}
             </Text>
             <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
-              {trustedCount} organisme{trustedCount > 1 ? "s" : ""} validé{trustedCount > 1 ? "s" : ""} sur {items.length}
+              {(trustedCount > 1 ? t.certifierRanking.validatedCountPlural : t.certifierRanking.validatedCount).replace("{{validated}}", String(trustedCount)).replace("{{total}}", String(items.length))}
             </Text>
           </View>
         </View>
@@ -326,7 +329,7 @@ export default function CertifierRankingScreen() {
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
           <MaterialIcons name="cloud-off" size={64} color={colors.textMuted} />
           <Text style={{ color: colors.textSecondary, fontSize: 16, marginTop: 16 }}>
-            Erreur de chargement
+            {t.certifierRanking.loadError}
           </Text>
           <TouchableOpacity
             onPress={() => refetch()}
@@ -339,7 +342,7 @@ export default function CertifierRankingScreen() {
             }}
           >
             <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
-              Réessayer
+              {t.common.retry}
             </Text>
           </TouchableOpacity>
         </View>
@@ -347,7 +350,7 @@ export default function CertifierRankingScreen() {
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 80 }}>
           <MaterialIcons name="workspace-premium" size={64} color={colors.textMuted} />
           <Text style={{ color: colors.textSecondary, fontSize: 18, marginTop: 16 }}>
-            Aucun organisme
+            {t.certifierRanking.noCertifiers}
           </Text>
           <Text
             style={{
@@ -358,7 +361,7 @@ export default function CertifierRankingScreen() {
               paddingHorizontal: 32,
             }}
           >
-            Les organismes de certification seront bientôt disponibles.
+            {t.certifierRanking.noCertifiersDesc}
           </Text>
         </View>
       ) : (

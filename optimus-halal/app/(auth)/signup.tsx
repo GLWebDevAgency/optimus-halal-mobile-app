@@ -18,24 +18,22 @@ import {
   Platform,
   ScrollView,
   Alert,
-  useColorScheme,
 } from "react-native";
 import { router, Link } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
-import { Button, Input, IconButton, PhoneInput, LocationPicker, validateFrenchPhone } from "@/components/ui";
+import { Button, Input, IconButton, PhoneInput, LocationPicker, validateFrenchPhone, IslamicPattern } from "@/components/ui";
 import { useLocalAuthStore } from "@/store";
 import { authService } from "@/services/api/auth.service";
 import { City } from "@/constants/locations";
-import { useTranslation, useHaptics } from "@/hooks";
+import { useTranslation, useHaptics, useTheme } from "@/hooks";
 
 export default function SignUpScreen() {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
+  const { isDark } = useTheme();
   const { impact, notification } = useHaptics();
-  const isDark = colorScheme === "dark";
   const { t } = useTranslation();
 
   // Form state
@@ -58,9 +56,9 @@ export default function SignUpScreen() {
     }
 
     if (!phoneNumber) {
-      newErrors.phoneNumber = "Le numéro de téléphone est requis";
+      newErrors.phoneNumber = t.editProfile.phone;
     } else if (!validateFrenchPhone(phoneNumber)) {
-      newErrors.phoneNumber = "Numéro de téléphone invalide";
+      newErrors.phoneNumber = t.errors.validation;
     }
 
     // Email optionnel mais validé si renseigné
@@ -126,13 +124,13 @@ export default function SignUpScreen() {
         notification();
         router.replace("/(tabs)");
       } else {
-        Alert.alert(t.common.error, response.message || "Échec de l'inscription");
+        Alert.alert(t.common.error, response.message || t.auth.magicLink.signupFailed);
       }
     } catch (error: any) {
       console.error("[Signup] Error:", error);
       Alert.alert(
         t.common.error,
-        error.message || "Une erreur est survenue lors de l'inscription. Vérifiez votre connexion internet."
+        error.message || t.auth.magicLink.signupError
       );
     } finally {
       setIsLoading(false);
@@ -141,11 +139,14 @@ export default function SignUpScreen() {
 
   const handleSocialAuth = useCallback(async (provider: "google" | "apple") => {
     impact();
-    Alert.alert(t.common.comingSoon, `L'inscription avec ${provider === "google" ? "Google" : "Apple"} sera bientôt disponible.`);
+    Alert.alert(t.common.comingSoon, t.auth.magicLink.socialComingSoon.replace("{{provider}}", provider === "google" ? "Google" : "Apple"));
   }, []);
 
   return (
     <View className="flex-1 bg-white dark:bg-background-dark">
+      {/* Islamic Pattern Background */}
+      <IslamicPattern variant="tessellation" opacity={0.04} />
+
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
@@ -170,10 +171,10 @@ export default function SignUpScreen() {
               variant="default"
               onPress={() => router.back()}
               color={isDark ? "#ffffff" : "#1e293b"}
-              accessibilityLabel="Retour"
+              accessibilityLabel={t.common.back}
             />
             <Text className="text-sm font-medium text-slate-400 dark:text-slate-500">
-              Étape 1 sur 3
+              {t.common.stepOf.replace("{{current}}", "1").replace("{{total}}", "3")}
             </Text>
           </Animated.View>
 
@@ -197,11 +198,11 @@ export default function SignUpScreen() {
           >
             {/* Phone Number - Primary Identifier */}
             <PhoneInput
-              label="Numéro de téléphone"
+              label={t.editProfile.phone}
               value={phoneNumber}
               onChangeText={handlePhoneChange}
               error={errors.phoneNumber}
-              hint="Nous vous enverrons un code de vérification"
+              hint={t.editProfile.phoneHint}
               defaultCountryCode="FR"
             />
 
@@ -213,32 +214,32 @@ export default function SignUpScreen() {
               onChangeText={setFullName}
               autoCapitalize="words"
               error={errors.fullName}
-              accessibilityLabel="Nom complet"
-              accessibilityHint="Entrez votre nom complet"
+              accessibilityLabel={t.auth.signup.fullName}
+              accessibilityHint={t.auth.signup.fullNamePlaceholder}
             />
 
             {/* Email - Optional */}
             <Input
               label={t.auth.signup.email}
-              placeholder="nom@exemple.com (optionnel)"
+              placeholder={t.auth.signup.emailOptionalPlaceholder}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
               error={errors.email}
-              hint="Pour recevoir les alertes et confirmations"
-              accessibilityLabel="Adresse email, optionnel"
-              accessibilityHint="Entrez votre adresse email pour recevoir les alertes"
+              hint={t.auth.signup.emailOptionalHint}
+              accessibilityLabel={t.auth.signup.emailOptionalLabel}
+              accessibilityHint={t.auth.signup.emailOptionalHint}
             />
 
             {/* Location - City Picker */}
             <LocationPicker
-              label="Votre ville"
+              label={t.editProfile.yourCity}
               value={selectedCity?.name}
               onSelect={handleCitySelect}
-              placeholder="Sélectionner une ville"
-              hint="Pour trouver les commerces halal près de chez vous"
+              placeholder={t.location.selectCity}
+              hint={t.editProfile.cityHint}
               showGeolocation={true}
             />
 
@@ -250,9 +251,9 @@ export default function SignUpScreen() {
               onChangeText={setPassword}
               secureTextEntry
               error={errors.password}
-              hint="Minimum 8 caractères"
-              accessibilityLabel="Mot de passe"
-              accessibilityHint="Créez un mot de passe de minimum 8 caractères"
+              hint={t.auth.signup.passwordHint}
+              accessibilityLabel={t.auth.signup.password}
+              accessibilityHint={t.auth.signup.passwordHint}
             />
 
             {/* Submit Button */}
@@ -264,8 +265,8 @@ export default function SignUpScreen() {
               onPress={handleSignUp}
               className="mt-4"
               accessibilityRole="button"
-              accessibilityLabel="Créer un compte"
-              accessibilityHint="Double-tapez pour créer votre compte"
+              accessibilityLabel={t.auth.signup.submit}
+              accessibilityHint={t.auth.signup.submit}
               accessibilityState={{ disabled: isLoading }}
             >
               {t.auth.signup.submit}
@@ -273,7 +274,7 @@ export default function SignUpScreen() {
 
             {/* Terms */}
             <Text className="text-center text-xs text-slate-500 dark:text-slate-400 leading-relaxed px-4">
-              En vous inscrivant, vous acceptez nos{" "}
+              {t.common.signUpWith}{" "}
               <Text className="text-slate-900 dark:text-white underline">
                 {t.auth.signup.termsLink}
               </Text>{" "}
@@ -293,7 +294,7 @@ export default function SignUpScreen() {
             <View className="absolute inset-x-0 top-1/2 h-px bg-slate-200 dark:bg-slate-800" />
             <View className="items-center">
               <Text className="bg-white dark:bg-background-dark px-4 text-sm font-medium text-slate-500">
-                Ou continuer avec
+                {t.common.continueWith}
               </Text>
             </View>
           </Animated.View>
@@ -308,8 +309,8 @@ export default function SignUpScreen() {
               className="flex-1 flex-row items-center justify-center gap-2 h-14 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark"
               activeOpacity={0.7}
               accessibilityRole="button"
-              accessibilityLabel="S'inscrire avec Google"
-              accessibilityHint="Double-tapez pour vous inscrire avec votre compte Google"
+              accessibilityLabel={`${t.auth.signup.submit} Google`}
+              accessibilityHint={`${t.auth.signup.submit} Google`}
             >
               <MaterialIcons name="g-mobiledata" size={24} color="#4285F4" />
               <Text className="text-sm font-semibold text-slate-700 dark:text-white">
@@ -322,8 +323,8 @@ export default function SignUpScreen() {
               className="flex-1 flex-row items-center justify-center gap-2 h-14 rounded-xl bg-slate-900 dark:bg-white"
               activeOpacity={0.7}
               accessibilityRole="button"
-              accessibilityLabel="S'inscrire avec Apple"
-              accessibilityHint="Double-tapez pour vous inscrire avec votre compte Apple"
+              accessibilityLabel={`${t.auth.signup.submit} Apple`}
+              accessibilityHint={`${t.auth.signup.submit} Apple`}
             >
               <MaterialIcons
                 name="apple"
@@ -347,8 +348,8 @@ export default function SignUpScreen() {
                 <Text
                   className="font-bold text-gold-600"
                   accessibilityRole="link"
-                  accessibilityLabel="Se connecter"
-                  accessibilityHint="Double-tapez pour aller à la page de connexion"
+                  accessibilityLabel={t.auth.signup.loginLink}
+                  accessibilityHint={t.auth.signup.loginLink}
                 >
                   {t.auth.signup.loginLink}
                 </Text>

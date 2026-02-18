@@ -16,14 +16,13 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  useColorScheme,
 } from "react-native";
 import { Image } from "expo-image";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useHaptics } from "@/hooks";
+import { useHaptics, useTheme, useTranslation } from "@/hooks";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -33,13 +32,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { useLocalAuthStore, useLocalCartStore } from "@/store";
 
-const CATEGORIES = [
-  { id: "all", label: "Tous" },
-  { id: "food", label: "Alimentation" },
-  { id: "cosmetics", label: "Cosmétiques" },
-  { id: "supplements", label: "Compléments" },
-  { id: "fashion", label: "Mode" },
-];
+const CATEGORY_IDS = ["all", "food", "cosmetics", "supplements", "fashion"] as const;
 
 const FEATURED_PRODUCTS = [
   {
@@ -130,8 +123,7 @@ interface ProductCardProps {
 }
 
 const ProductCard = React.memo(function ProductCard({ product, onPress, onAddToCart, onToggleFavorite }: ProductCardProps) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { isDark, colors } = useTheme();
 
   return (
     <TouchableOpacity
@@ -205,7 +197,7 @@ const ProductCard = React.memo(function ProductCard({ product, onPress, onAddToC
             className="h-8 w-8 rounded-lg bg-primary items-center justify-center"
             activeOpacity={0.8}
             style={{
-              shadowColor: "#1de560",
+              shadowColor: colors.primary,
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.3,
               shadowRadius: 4,
@@ -221,9 +213,14 @@ const ProductCard = React.memo(function ProductCard({ product, onPress, onAddToC
 
 export default function MarketplaceCatalogScreen() {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
+  const { isDark, colors } = useTheme();
   const { impact, notification } = useHaptics();
-  const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
+
+  const categories = useMemo(() => CATEGORY_IDS.map((id) => ({
+    id,
+    label: t.catalog.categories[id],
+  })), [t]);
 
   const { user } = useLocalAuthStore();
   const { itemCount } = useLocalCartStore();
@@ -324,7 +321,7 @@ export default function MarketplaceCatalogScreen() {
             <TextInput
               value={searchQuery}
               onChangeText={setSearchQuery}
-              placeholder="Rechercher des produits éthiques..."
+              placeholder={t.location.searchProducts}
               placeholderTextColor="#9ca3af"
               className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 rounded-2xl text-sm text-slate-900 dark:text-white"
               style={{ fontSize: 14 }}
@@ -358,7 +355,7 @@ export default function MarketplaceCatalogScreen() {
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
               >
-                {CATEGORIES.map((category) => (
+                {categories.map((category) => (
                   <TouchableOpacity
                     key={category.id}
                     onPress={() => handleCategoryPress(category.id)}
@@ -417,14 +414,14 @@ export default function MarketplaceCatalogScreen() {
                     className="bg-primary px-4 py-2.5 rounded-lg self-start"
                     activeOpacity={0.9}
                     style={{
-                      shadowColor: "#1de560",
+                      shadowColor: colors.primary,
                       shadowOffset: { width: 0, height: 4 },
                       shadowOpacity: 0.3,
                       shadowRadius: 8,
                     }}
                   >
                     <Text className="text-slate-900 text-xs font-bold">
-                      Voir la Collection
+                      {t.catalog.viewCollection}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -437,10 +434,10 @@ export default function MarketplaceCatalogScreen() {
               className="flex-row items-center justify-between px-4 pt-6 pb-3"
             >
               <Text className="text-lg font-bold text-slate-800 dark:text-white">
-                Sélection Populaire
+                {t.catalog.popularSelection}
               </Text>
               <TouchableOpacity activeOpacity={0.7}>
-                <Text className="text-sm font-medium text-primary">Voir tout</Text>
+                <Text className="text-sm font-medium text-primary">{t.home.viewAll}</Text>
               </TouchableOpacity>
             </Animated.View>
           </>

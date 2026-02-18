@@ -7,17 +7,18 @@
  */
 
 import React, { Component, type ErrorInfo, type ReactNode } from "react";
-import { View, Text, TouchableOpacity, useColorScheme } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { useTheme, useTranslation } from "@/hooks";
 
 // ---------------------------------------------------------------------------
 // Error Fallback (functional component — supports hooks / dark mode)
 // ---------------------------------------------------------------------------
 
 function ErrorFallback({ onRetry }: { onRetry: () => void }) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { isDark } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <View
@@ -39,21 +40,20 @@ function ErrorFallback({ onRetry }: { onRetry: () => void }) {
         />
       </View>
       <Text className="text-xl font-bold text-slate-900 dark:text-white text-center mb-2">
-        Erreur de chargement
+        {t.common.loadingError}
       </Text>
       <Text className="text-sm text-slate-500 dark:text-slate-400 text-center mb-8">
-        Impossible de charger les données. Vérifiez votre connexion et
-        réessayez.
+        {t.common.loadingErrorDesc}
       </Text>
       <TouchableOpacity
         onPress={onRetry}
         activeOpacity={0.8}
         accessibilityRole="button"
-        accessibilityLabel="Réessayer"
+        accessibilityLabel={t.common.retry}
         className="bg-primary px-8 py-3 rounded-xl flex-row items-center gap-2"
       >
         <MaterialIcons name="refresh" size={20} color="#ffffff" />
-        <Text className="font-bold text-sm text-white">Réessayer</Text>
+        <Text className="font-bold text-sm text-white">{t.common.retry}</Text>
       </TouchableOpacity>
     </View>
   );

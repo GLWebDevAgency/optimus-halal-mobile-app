@@ -15,12 +15,11 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  useColorScheme,
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useHaptics, useMe, useLogout, useFavoritesList, useLoyaltyBalance } from "@/hooks";
+import { useHaptics, useTheme, useMe, useLogout, useFavoritesList, useLoyaltyBalance } from "@/hooks";
 import { ImpactFeedbackStyle } from "expo-haptics";
 import Animated, {
   FadeIn,
@@ -28,7 +27,7 @@ import Animated, {
   FadeInUp,
 } from "react-native-reanimated";
 
-import { Card, Avatar } from "@/components/ui";
+import { Card, Avatar, IslamicPattern } from "@/components/ui";
 import { ProfileSkeleton } from "@/components/skeletons";
 import { useThemeStore, usePreferencesStore } from "@/store";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -54,8 +53,7 @@ const MenuItem = React.memo(function MenuItem({
   rightElement,
   isLast,
 }: MenuItemProps) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { isDark } = useTheme();
 
   return (
     <TouchableOpacity
@@ -164,9 +162,8 @@ function xpProgress(xp: number, level: number): number {
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
+  const { isDark, colors } = useTheme();
   const { impact } = useHaptics();
-  const isDark = colorScheme === "dark";
   const { t, language } = useTranslation();
 
   // tRPC data
@@ -198,8 +195,8 @@ export default function ProfileScreen() {
 
   const handleSettings = useCallback(() => {
     impact();
-    Alert.alert(t.common.settings, t.common.settingsComingSoon);
-  }, [t, impact]);
+    router.push("/settings/appearance");
+  }, [impact]);
 
   const handleEditProfile = useCallback(() => {
     impact();
@@ -241,6 +238,9 @@ export default function ProfileScreen() {
 
   return (
     <View className="flex-1 bg-background-light dark:bg-background-dark">
+      {/* Islamic Pattern Background */}
+      <IslamicPattern variant="khatam" opacity={0.04} />
+
       {/* Header */}
       <Animated.View
         entering={FadeIn.duration(400)}
@@ -296,7 +296,7 @@ export default function ProfileScreen() {
             <View
               className="w-28 h-28 rounded-full overflow-hidden border-4 border-white dark:border-surface-dark"
               style={{
-                shadowColor: "#1de560",
+                shadowColor: colors.primary,
                 shadowOffset: { width: 0, height: 0 },
                 shadowOpacity: isDark ? 0.15 : 0,
                 shadowRadius: 15,
@@ -320,9 +320,9 @@ export default function ProfileScreen() {
 
           {/* Level Badge */}
           <View className="flex-row items-center gap-1.5 mb-6 bg-primary/5 dark:bg-primary/10 px-3 py-1 rounded-full border border-primary/10 dark:border-primary/20">
-            <MaterialIcons name="verified" size={16} color="#1de560" />
+            <MaterialIcons name="verified" size={16} color={colors.primary} />
             <Text className="text-primary font-medium text-xs uppercase tracking-wide">
-              Niveau {gamification.level} — {t.profile.consciousConsumer}
+              {t.home.level} {gamification.level} — {t.profile.consciousConsumer}
             </Text>
           </View>
 
@@ -362,7 +362,7 @@ export default function ProfileScreen() {
           {/* XP Progress */}
           <View className="flex-row items-center justify-between mb-3">
             <Text className="text-slate-500 dark:text-slate-400 text-xs font-medium">
-              XP Progression
+              {t.profile.xpProgression}
             </Text>
             <Text className="text-slate-900 dark:text-white text-xs font-bold">
               {gamification.xp} XP
@@ -379,13 +379,13 @@ export default function ProfileScreen() {
           <View className="flex-row">
             <View className="flex-1 items-center">
               <View className="w-9 h-9 rounded-full bg-primary/10 items-center justify-center mb-1.5">
-                <MaterialIcons name="local-fire-department" size={18} color="#1de560" />
+                <MaterialIcons name="local-fire-department" size={18} color={colors.primary} />
               </View>
               <Text className="text-slate-900 dark:text-white font-bold text-sm">
                 {gamification.streak}
               </Text>
               <Text className="text-slate-400 dark:text-slate-500 text-[10px]">
-                Streak
+                {t.profile.streak}
               </Text>
             </View>
             <View className="flex-1 items-center">
@@ -397,7 +397,7 @@ export default function ProfileScreen() {
                 {gamification.totalScans}
               </Text>
               <Text className="text-slate-400 dark:text-slate-500 text-[10px]">
-                Scans
+                {t.profile.stats.scans}
               </Text>
             </View>
             <View className="flex-1 items-center">
@@ -409,7 +409,7 @@ export default function ProfileScreen() {
                 {gamification.points}
               </Text>
               <Text className="text-slate-400 dark:text-slate-500 text-[10px]">
-                Points
+                {t.profile.points}
               </Text>
             </View>
           </View>
@@ -450,7 +450,7 @@ export default function ProfileScreen() {
             <MenuItem
               icon="shield-moon"
               iconBgColor={isDark ? "rgba(29,229,96,0.1)" : "#ecfdf5"}
-              iconColor="#1de560"
+              iconColor={colors.primary}
               title={t.profile.preferredCertifications}
               subtitle={certifications.slice(0, 2).join(", ").toUpperCase() || "\u2014"}
               onPress={() => router.push("/settings/certifications" as any)}
@@ -473,30 +473,51 @@ export default function ProfileScreen() {
               icon="auto-stories"
               iconBgColor={isDark ? "rgba(168,85,247,0.1)" : "#f5f3ff"}
               iconColor={isDark ? "#c084fc" : "#7c3aed"}
-              title="École juridique (Madhab)"
+              title={t.profile.madhab}
               onPress={() => router.push("/settings/madhab" as any)}
             />
             <MenuItem
               icon="monitor-heart"
               iconBgColor={isDark ? "rgba(244,114,182,0.1)" : "#fdf2f8"}
               iconColor={isDark ? "#f472b6" : "#ec4899"}
-              title="Profil santé"
+              title={t.profile.healthProfile}
               onPress={() => router.push("/settings/health-profile" as any)}
             />
             <MenuItem
               icon="gavel"
               iconBgColor={isDark ? "rgba(239,68,68,0.1)" : "#fef2f2"}
               iconColor={isDark ? "#f87171" : "#dc2626"}
-              title="Boycott & Éthique"
+              title={t.profile.boycottEthics}
               onPress={() => router.push("/settings/boycott-list" as any)}
             />
             <MenuItem
               icon="workspace-premium"
               iconBgColor={isDark ? "rgba(234,179,8,0.1)" : "#fefce8"}
               iconColor={isDark ? "#fbbf24" : "#ca8a04"}
-              title="Classement Certificateurs"
-              isLast
+              title={t.profile.certifierRanking}
               onPress={() => router.push("/settings/certifier-ranking" as any)}
+            />
+            <MenuItem
+              icon="leaderboard"
+              iconBgColor={isDark ? "rgba(59,130,246,0.1)" : "#eff6ff"}
+              iconColor={isDark ? "#60a5fa" : "#2563eb"}
+              title={t.leaderboard.title}
+              onPress={() => router.push("/settings/leaderboard" as any)}
+            />
+            <MenuItem
+              icon="emoji-events"
+              iconBgColor={isDark ? "rgba(234,179,8,0.1)" : "#fef3c7"}
+              iconColor={isDark ? "#fbbf24" : "#eab308"}
+              title={t.achievements.title}
+              onPress={() => router.push("/settings/achievements" as any)}
+            />
+            <MenuItem
+              icon="card-giftcard"
+              iconBgColor={isDark ? "rgba(34,197,94,0.1)" : "#ecfdf5"}
+              iconColor={isDark ? "#4ade80" : "#16a34a"}
+              title={t.rewards.title}
+              isLast
+              onPress={() => router.push("/settings/rewards" as any)}
             />
           </Card>
         </Animated.View>

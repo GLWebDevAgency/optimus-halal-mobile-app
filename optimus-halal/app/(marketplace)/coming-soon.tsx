@@ -14,7 +14,6 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  useColorScheme,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -23,7 +22,7 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useHaptics } from "@/hooks";
+import { useHaptics, useTheme } from "@/hooks";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -39,9 +38,8 @@ const WAITLIST_AVATARS = [
 
 export default function MarketplaceComingSoonScreen() {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
+  const { isDark, colors } = useTheme();
   const { impact, notification } = useHaptics();
-  const isDark = colorScheme === "dark";
 
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -229,7 +227,7 @@ export default function MarketplaceComingSoonScreen() {
               }`}
               activeOpacity={0.9}
               style={{
-                shadowColor: "#1de560",
+                shadowColor: colors.primary,
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.3,
                 shadowRadius: 8,

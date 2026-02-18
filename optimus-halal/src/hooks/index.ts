@@ -76,13 +76,33 @@ export {
   useLoyaltyBalance,
   useAchievements,
   useLeaderboard,
+  useLoyaltyHistory,
+  useRewards,
+  useClaimReward,
+  useMyRewards,
 } from './useLoyalty';
+
+// ============================================
+// REVIEWS HOOKS (tRPC)
+// ============================================
+
+export {
+  useCreateReview,
+  useProductReviews,
+  useMarkHelpful,
+} from './useReviews';
 
 // ============================================
 // HAPTICS HOOK
 // ============================================
 
 export { useHaptics } from './useHaptics';
+
+// ============================================
+// RAMADAN MODE HOOK
+// ============================================
+
+export { useRamadanMode } from './useRamadanMode';
 
 // ============================================
 // MAP HOOKS

@@ -25,13 +25,15 @@ import { useTranslation } from "@/hooks";
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 48) / 2;
 
-// Categories pour le filtre
-const CATEGORIES = [
-  { id: "all", label: "Tout" },
-  { id: "food", label: "Alimentaire" },
-  { id: "cosmetic", label: "Cosmétique" },
-  { id: "halal", label: "Halal Certifié" },
-];
+// Categories pour le filtre - dynamic with i18n
+function getCategories(t: ReturnType<typeof useTranslation>["t"]) {
+  return [
+    { id: "all", label: t.favorites.categories.all },
+    { id: "food", label: t.favorites.categories.food },
+    { id: "cosmetic", label: t.favorites.categories.cosmetic },
+    { id: "halal", label: t.favorites.categories.halal },
+  ];
+}
 
 type StatusType = "excellent" | "bon" | "moyen" | "mauvais";
 
@@ -41,35 +43,35 @@ interface StatusConfig {
   textColor: string;
 }
 
-const getStatusConfig = (status: StatusType, isDark: boolean): StatusConfig => {
+const getStatusConfig = (status: StatusType, isDark: boolean, t: ReturnType<typeof useTranslation>["t"]): StatusConfig => {
   switch (status) {
     case "excellent":
       return {
-        label: "Excellent",
+        label: t.favorites.status.excellent,
         bgColor: isDark ? "rgba(34,197,94,0.2)" : "rgba(34,197,94,0.15)",
         textColor: isDark ? "#4ade80" : "#15803d",
       };
     case "bon":
       return {
-        label: "Bon",
+        label: t.favorites.status.good,
         bgColor: isDark ? "rgba(19,236,106,0.2)" : "rgba(19,236,106,0.15)",
         textColor: isDark ? "#13ec6a" : "#0ea64b",
       };
     case "moyen":
       return {
-        label: "Moyen",
+        label: t.favorites.status.average,
         bgColor: isDark ? "rgba(249,115,22,0.2)" : "rgba(249,115,22,0.15)",
         textColor: isDark ? "#fb923c" : "#c2410c",
       };
     case "mauvais":
       return {
-        label: "Mauvais",
+        label: t.favorites.status.bad,
         bgColor: isDark ? "rgba(239,68,68,0.2)" : "rgba(239,68,68,0.15)",
         textColor: isDark ? "#f87171" : "#dc2626",
       };
     default:
       return {
-        label: "Inconnu",
+        label: t.favorites.status.unknown,
         bgColor: isDark ? "rgba(156,163,175,0.2)" : "rgba(156,163,175,0.15)",
         textColor: isDark ? "#9ca3af" : "#6b7280",
       };
@@ -136,12 +138,13 @@ interface ProductCardProps {
   onScan: () => void;
   isDark: boolean;
   colors: ReturnType<typeof useTheme>["colors"];
+  t: ReturnType<typeof useTranslation>["t"];
 }
 
 const favoriteKeyExtractor = (item: MappedFavorite) => item.id;
 
-const ProductCard = React.memo(function ProductCard({ product, index, onRemove, onView, onScan, isDark, colors }: ProductCardProps) {
-  const statusConfig = getStatusConfig(product.status, isDark);
+const ProductCard = React.memo(function ProductCard({ product, index, onRemove, onView, onScan, isDark, colors, t }: ProductCardProps) {
+  const statusConfig = getStatusConfig(product.status, isDark, t);
 
   return (
     <Animated.View
@@ -176,7 +179,7 @@ const ProductCard = React.memo(function ProductCard({ product, index, onRemove, 
           backgroundColor: isDark ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.9)",
         }}
         accessibilityRole="button"
-        accessibilityLabel={`Retirer ${product.name} des favoris`}
+        accessibilityLabel={`${t.favorites.removeConfirm} ${product.name}`}
       >
         <MaterialIcons name="favorite" size={18} color="#13ec6a" />
       </TouchableOpacity>
@@ -296,13 +299,13 @@ export default function FavoritesScreen() {
         productId: fav.productId,
         barcode: fav.product!.barcode,
         name: fav.product!.name,
-        brand: fav.product!.brand ?? "Marque inconnue",
+        brand: fav.product!.brand ?? t.favorites.unknownBrand,
         image: fav.product!.imageUrl ?? "",
         status: mapHalalToStatus(fav.product!.halalStatus),
         category: mapToFilterCategory(fav.product!.category),
         addedAt: String(fav.createdAt),
       }));
-  }, [rawFavorites]);
+  }, [rawFavorites, t]);
 
   const filteredFavorites = useMemo(() =>
     selectedCategory === "all"
@@ -337,7 +340,7 @@ export default function FavoritesScreen() {
               borderWidth: 1,
             }}
             accessibilityRole="button"
-            accessibilityLabel="Retour"
+            accessibilityLabel={t.common.back}
           >
             <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
@@ -348,7 +351,7 @@ export default function FavoritesScreen() {
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={{ color: colors.textSecondary, marginTop: 12 }}>
-            Chargement des favoris...
+            {t.favorites.loadingFavorites}
           </Text>
         </View>
       </SafeAreaView>
@@ -374,7 +377,7 @@ export default function FavoritesScreen() {
               borderWidth: 1,
             }}
             accessibilityRole="button"
-            accessibilityLabel="Retour"
+            accessibilityLabel={t.common.back}
           >
             <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
@@ -385,7 +388,7 @@ export default function FavoritesScreen() {
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
           <MaterialIcons name="cloud-off" size={64} color={colors.textMuted} />
           <Text style={{ color: colors.textSecondary, fontSize: 16, marginTop: 16, textAlign: "center" }}>
-            Impossible de charger vos favoris
+            {t.favorites.loadError}
           </Text>
           <TouchableOpacity
             onPress={() => refetch()}
@@ -397,10 +400,10 @@ export default function FavoritesScreen() {
               borderRadius: 12,
             }}
             accessibilityRole="button"
-            accessibilityLabel="Réessayer"
+            accessibilityLabel={t.common.retry}
           >
             <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
-              Réessayer
+              {t.common.retry}
             </Text>
           </TouchableOpacity>
         </View>
@@ -431,8 +434,8 @@ export default function FavoritesScreen() {
                 borderWidth: 1,
               }}
               accessibilityRole="button"
-              accessibilityLabel="Retour"
-              accessibilityHint="Revenir à l'écran précédent"
+              accessibilityLabel={t.common.back}
+              accessibilityHint={t.common.back}
             >
               <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
             </TouchableOpacity>
@@ -444,7 +447,7 @@ export default function FavoritesScreen() {
                 {t.favorites.title}
               </Text>
               <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
-                {favorites.length} produit{favorites.length > 1 ? "s" : ""} enregistré{favorites.length > 1 ? "s" : ""}
+                {(favorites.length > 1 ? t.favorites.productCountPlural : t.favorites.productCount).replace("{{count}}", String(favorites.length))}
               </Text>
             </View>
           </View>
@@ -461,8 +464,8 @@ export default function FavoritesScreen() {
                 borderWidth: 1,
               }}
               accessibilityRole="button"
-              accessibilityLabel="Rechercher"
-              accessibilityHint="Rechercher dans les favoris"
+              accessibilityLabel={t.common.search}
+              accessibilityHint={t.common.search}
             >
               <MaterialIcons name="search" size={22} color={colors.textPrimary} />
             </TouchableOpacity>
@@ -495,7 +498,7 @@ export default function FavoritesScreen() {
           contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
           style={{ paddingBottom: 16, paddingTop: 4 }}
         >
-          {CATEGORIES.map((cat) => {
+          {getCategories(t).map((cat) => {
             const isSelected = selectedCategory === cat.id;
             return (
               <TouchableOpacity
@@ -540,7 +543,7 @@ export default function FavoritesScreen() {
             {t.favorites.empty}
           </Text>
           <Text style={{ color: colors.textMuted, fontSize: 14, marginTop: 8, textAlign: "center", paddingHorizontal: 32 }}>
-            Ajoutez des produits à vos favoris pour les retrouver facilement.
+            {t.favorites.emptyHint}
           </Text>
           <TouchableOpacity
             onPress={() => router.push("/(tabs)/scanner")}
@@ -559,12 +562,12 @@ export default function FavoritesScreen() {
               shadowRadius: 8,
             }}
             accessibilityRole="button"
-            accessibilityLabel="Scanner un produit"
-            accessibilityHint="Ouvrir le scanner de code-barres"
+            accessibilityLabel={t.favorites.scanProduct}
+            accessibilityHint={t.favorites.scanProduct}
           >
             <MaterialIcons name="qr-code-scanner" size={18} color={isDark ? "#102217" : "#0d1b13"} />
             <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
-              Scanner un produit
+              {t.favorites.scanProduct}
             </Text>
           </TouchableOpacity>
         </View>
@@ -583,6 +586,7 @@ export default function FavoritesScreen() {
                 onScan={() => router.push("/(tabs)/scanner")}
                 isDark={isDark}
                 colors={colors}
+                t={t}
               />
             </View>
           )}
@@ -616,10 +620,10 @@ export default function FavoritesScreen() {
                 <MaterialIcons name="add-a-photo" size={24} color={colors.textSecondary} />
               </View>
               <Text style={{ fontSize: 14, fontWeight: "700", color: colors.textPrimary, textAlign: "center" }}>
-                Liste incomplète ?
+                {t.favorites.incompleteList}
               </Text>
               <Text style={{ marginTop: 4, fontSize: 12, color: colors.textSecondary, textAlign: "center" }}>
-                Scannez de nouveaux produits pour les ajouter à vos favoris.
+                {t.favorites.incompleteListHint}
               </Text>
               <TouchableOpacity
                 onPress={() => router.push("/(tabs)/scanner")}
@@ -638,12 +642,12 @@ export default function FavoritesScreen() {
                   shadowRadius: 8,
                 }}
                 accessibilityRole="button"
-                accessibilityLabel="Scanner un produit"
-                accessibilityHint="Ouvrir le scanner de code-barres"
+                accessibilityLabel={t.favorites.scanProduct}
+                accessibilityHint={t.favorites.scanProduct}
               >
                 <MaterialIcons name="qr-code-scanner" size={18} color={isDark ? "#102217" : "#0d1b13"} />
                 <Text style={{ fontSize: 12, fontWeight: "700", color: isDark ? "#102217" : "#0d1b13" }}>
-                  Scanner un produit
+                  {t.favorites.scanProduct}
                 </Text>
               </TouchableOpacity>
             </Animated.View>

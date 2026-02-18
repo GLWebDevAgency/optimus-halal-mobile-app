@@ -17,11 +17,10 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
-  useColorScheme,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Location from "expo-location";
-import { useHaptics } from "@/hooks";
+import { useHaptics, useTheme, useTranslation } from "@/hooks";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 
 import { City, FRENCH_CITIES, searchCities, findNearestCity } from "@/constants/locations";
@@ -44,14 +43,15 @@ export function LocationPicker({
   onSelect,
   error,
   hint,
-  placeholder = "Sélectionner une ville",
+  placeholder,
   containerClassName = "",
   showGeolocation = true,
   ref,
 }: LocationPickerProps) {
   const { impact, notification } = useHaptics();
-    const colorScheme = useColorScheme();
-    const isDark = colorScheme === "dark";
+    const { isDark } = useTheme();
+    const { t } = useTranslation();
+    const resolvedPlaceholder = placeholder || t.location.selectCity;
 
     const [isPickerVisible, setIsPickerVisible] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -79,8 +79,8 @@ export function LocationPicker({
         
         if (status !== "granted") {
           Alert.alert(
-            "Permission requise",
-            "Veuillez autoriser l'accès à la localisation pour utiliser cette fonctionnalité.",
+            t.location.permissionRequired,
+            t.location.permissionRequiredDesc,
             [{ text: "OK" }]
           );
           setIsLocating(false);
@@ -104,15 +104,15 @@ export function LocationPicker({
           setIsPickerVisible(false);
         } else {
           Alert.alert(
-            "Ville non trouvée",
-            "Impossible de déterminer votre ville. Veuillez la sélectionner manuellement."
+            t.location.cityNotFound,
+            t.location.cityNotFoundDesc
           );
         }
       } catch (err) {
         console.error("[LocationPicker] Geolocation error:", err);
         Alert.alert(
-          "Erreur de géolocalisation",
-          "Impossible d'obtenir votre position. Veuillez vérifier vos paramètres de localisation."
+          t.location.geolocationError,
+          t.location.geolocationErrorDesc
         );
       } finally {
         setIsLocating(false);
@@ -174,7 +174,7 @@ export function LocationPicker({
                 }`}
                 numberOfLines={1}
               >
-                {value || placeholder}
+                {value || resolvedPlaceholder}
               </Text>
             </View>
             <MaterialIcons
@@ -237,10 +237,10 @@ export function LocationPicker({
             >
               <View className="flex-1">
                 <Text className="text-lg font-bold text-slate-900 dark:text-white">
-                  Sélectionner une ville
+                  {t.location.selectCity}
                 </Text>
                 <Text className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  Recherchez ou utilisez la géolocalisation
+                  {t.location.searchOrGeolocate}
                 </Text>
               </View>
               <TouchableOpacity
@@ -281,10 +281,10 @@ export function LocationPicker({
                   )}
                   <View className="flex-1 ml-3">
                     <Text className="text-primary-700 dark:text-primary-400 font-semibold">
-                      Utiliser ma position actuelle
+                      {t.location.useMyLocation}
                     </Text>
                     <Text className="text-primary-600/70 dark:text-primary-400/70 text-xs mt-0.5">
-                      Nous détecterons automatiquement votre ville
+                      {t.location.autoDetectCity}
                     </Text>
                   </View>
                   <MaterialIcons
@@ -311,7 +311,7 @@ export function LocationPicker({
                 <TextInput
                   value={searchQuery}
                   onChangeText={setSearchQuery}
-                  placeholder="Rechercher une ville..."
+                  placeholder={t.location.searchCity}
                   placeholderTextColor="#94a3b8"
                   autoCapitalize="words"
                   autoCorrect={false}
@@ -372,10 +372,10 @@ export function LocationPicker({
                 <View className="items-center justify-center py-12">
                   <MaterialIcons name="search-off" size={48} color="#94a3b8" />
                   <Text className="text-slate-500 dark:text-slate-400 mt-4 text-center">
-                    Aucune ville trouvée
+                    {t.location.noCityFound}
                   </Text>
                   <Text className="text-slate-400 dark:text-slate-500 text-sm mt-1 text-center">
-                    Essayez une autre recherche
+                    {t.location.tryAnotherSearch}
                   </Text>
                 </View>
               }

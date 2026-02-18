@@ -14,7 +14,7 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  useColorScheme,
+  Linking,
 } from "react-native";
 import { Image } from "expo-image";
 import { FlashList } from "@shopify/flash-list";
@@ -26,9 +26,9 @@ import Animated, {
   FadeInLeft,
 } from "react-native-reanimated";
 
-import { Card, EmptyState } from "@/components/ui";
+import { Card, EmptyState, IslamicPattern } from "@/components/ui";
 import { AlertsSkeleton } from "@/components/skeletons";
-import { useTranslation, useHaptics } from "@/hooks";
+import { useTranslation, useHaptics, useTheme } from "@/hooks";
 import { trpc } from "@/lib/trpc";
 
 // ── Severity → Visual Config ────────────────────────────────
@@ -99,8 +99,7 @@ interface AlertCardProps {
 }
 
 const AlertCard = React.memo(function AlertCard({ alert, index }: AlertCardProps) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { isDark } = useTheme();
   const { t } = useTranslation();
   const severity = (alert.severity as Severity) || "info";
   const config = SEVERITY_CONFIG[severity] ?? SEVERITY_CONFIG.info;
@@ -216,6 +215,9 @@ const AlertCard = React.memo(function AlertCard({ alert, index }: AlertCardProps
                   className="flex-row items-center gap-1"
                   accessibilityRole="link"
                   accessibilityLabel={`${t.alerts.viewSource} - ${alert.title}`}
+                  onPress={() => {
+                    if (alert.sourceUrl) Linking.openURL(alert.sourceUrl);
+                  }}
                 >
                   <Text
                     className="text-xs font-bold"
@@ -247,9 +249,8 @@ const FILTERS: { id: string; severity?: "critical" | "warning" | "info" }[] = [
 
 export default function AlertsScreen() {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
+  const { isDark, colors } = useTheme();
   const { impact } = useHaptics();
-  const isDark = colorScheme === "dark";
   const { t } = useTranslation();
 
   const [activeFilter, setActiveFilter] = useState("all");
@@ -292,6 +293,9 @@ export default function AlertsScreen() {
 
   return (
     <View className="flex-1 bg-background-light dark:bg-background-dark">
+      {/* Background Islamic Pattern */}
+      <IslamicPattern variant="tessellation" opacity={0.02} />
+
       {/* Header */}
       <Animated.View
         entering={FadeIn.duration(400)}
@@ -303,7 +307,7 @@ export default function AlertsScreen() {
             <View
               className="w-8 h-8 rounded-full bg-primary items-center justify-center"
               style={{
-                shadowColor: "#1de560",
+                shadowColor: colors.primary,
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.3,
                 shadowRadius: 4,
@@ -368,6 +372,7 @@ export default function AlertsScreen() {
             </TouchableOpacity>
           ))}
         </ScrollView>
+
       </Animated.View>
 
       {/* Error State */}
@@ -415,7 +420,7 @@ export default function AlertsScreen() {
             <RefreshControl
               refreshing={alertsQuery.isFetching && !alertsQuery.isPending}
               onRefresh={handleRefresh}
-              tintColor={isDark ? "#1de560" : "#059669"}
+              tintColor={isDark ? colors.primary : "#059669"}
             />
           }
         />

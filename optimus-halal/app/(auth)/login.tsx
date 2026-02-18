@@ -13,7 +13,6 @@ import {
   Platform,
   ScrollView,
   Alert,
-  useColorScheme,
 } from "react-native";
 import { router, Link } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -21,12 +20,12 @@ import { MaterialIcons } from "@expo/vector-icons";
 import * as LocalAuthentication from "expo-local-authentication";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
-import { Button, Input } from "@/components/ui";
+import { Button, Input, IslamicPattern } from "@/components/ui";
 import { useAuthStore } from "@/store/apiStores";
-import { useTranslation, useHaptics } from "@/hooks";
+import { useTranslation, useHaptics, useTheme } from "@/hooks";
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
+  const { isDark, colors } = useTheme();
   const { impact } = useHaptics();
   const { t } = useTranslation();
 
@@ -81,7 +80,7 @@ export default function LoginScreen() {
       const message =
         error instanceof Error
           ? error.message
-          : "Une erreur est survenue lors de la connexion.";
+          : t.errors.generic;
       Alert.alert(t.common.error, message);
     } finally {
       setIsSubmitting(false);
@@ -110,7 +109,7 @@ export default function LoginScreen() {
 
     if (result.success) {
       // TODO: Implement proper biometric login with secure storage of tokens
-      Alert.alert("Info", "L'authentification biométrique sera bientôt disponible avec le nouveau système de sécurité.");
+      Alert.alert("Info", t.auth.magicLink.biometricComingSoon);
       
       /* 
       // Previous Mock Implementation - Disabled because setUser doesn't exist on API store
@@ -122,6 +121,9 @@ export default function LoginScreen() {
 
   return (
     <View className="flex-1 bg-background-light dark:bg-background-dark">
+      {/* Islamic Pattern Background */}
+      <IslamicPattern variant="tessellation" opacity={0.04} />
+
       {/* Background Decorative Elements */}
       <View className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary-500/10 rounded-full blur-[100px]" accessible={false} />
       <View className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-gold-500/5 rounded-full blur-[100px]" accessible={false} />
@@ -148,7 +150,7 @@ export default function LoginScreen() {
             {/* Logo */}
             <View className="relative w-24 h-24 rounded-2xl shadow-2xl overflow-hidden mb-6 bg-primary-500/10" accessible={false}>
               <View className="w-full h-full items-center justify-center">
-                <MaterialIcons name="verified-user" size={48} color="#1de560" />
+                <MaterialIcons name="verified-user" size={48} color={colors.primary} />
               </View>
             </View>
 
@@ -175,8 +177,8 @@ export default function LoginScreen() {
               autoCorrect={false}
               error={errors.email}
               leftIcon="mail"
-              accessibilityLabel="Adresse email"
-              accessibilityHint="Entrez votre adresse email"
+              accessibilityLabel={t.auth.login.email}
+              accessibilityHint={t.auth.login.emailPlaceholder}
             />
 
             <Input
@@ -186,8 +188,8 @@ export default function LoginScreen() {
               onChangeText={setPassword}
               secureTextEntry
               error={errors.password}
-              accessibilityLabel="Mot de passe"
-              accessibilityHint="Entrez votre mot de passe"
+              accessibilityLabel={t.auth.login.password}
+              accessibilityHint={t.auth.login.passwordPlaceholder}
             />
 
             {/* Forgot Password */}
@@ -195,8 +197,8 @@ export default function LoginScreen() {
               <Link href="/(auth)/forgot-password" asChild>
                 <TouchableOpacity
                   accessibilityRole="link"
-                  accessibilityLabel="Mot de passe oublié"
-                  accessibilityHint="Double-tapez pour réinitialiser votre mot de passe"
+                  accessibilityLabel={t.auth.login.forgotPassword}
+                  accessibilityHint={t.auth.login.forgotPassword}
                 >
                   <Text className="text-sm font-medium text-gold-500">
                     {t.auth.login.forgotPassword}
@@ -214,8 +216,8 @@ export default function LoginScreen() {
                 loading={isLoading}
                 onPress={handleLogin}
                 accessibilityRole="button"
-                accessibilityLabel="Se connecter"
-                accessibilityHint="Double-tapez pour vous connecter"
+                accessibilityLabel={t.auth.login.submit}
+                accessibilityHint={t.auth.login.submit}
                 accessibilityState={{ disabled: isLoading }}
                 icon={
                   <MaterialIcons
@@ -233,13 +235,13 @@ export default function LoginScreen() {
                 className="flex-row items-center justify-center gap-2 h-14 rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent"
                 activeOpacity={0.7}
                 accessibilityRole="button"
-                accessibilityLabel="Connexion avec Face ID"
-                accessibilityHint="Double-tapez pour vous connecter avec la biométrie"
+                accessibilityLabel={t.auth.login.biometric}
+                accessibilityHint={t.auth.login.biometric}
               >
                 <MaterialIcons
                   name="face"
                   size={24}
-                  color="#1de560"
+                  color={colors.primary}
                 />
                 <Text className="text-base font-medium text-slate-700 dark:text-slate-300">
                   {t.auth.login.biometric}
@@ -259,8 +261,8 @@ export default function LoginScreen() {
                 <Text
                   className="font-bold text-primary-500"
                   accessibilityRole="link"
-                  accessibilityLabel="Créer un compte"
-                  accessibilityHint="Double-tapez pour créer un nouveau compte"
+                  accessibilityLabel={t.auth.login.createAccount}
+                  accessibilityHint={t.auth.login.createAccount}
                 >
                   {t.auth.login.createAccount}
                 </Text>

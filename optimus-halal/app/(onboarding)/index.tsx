@@ -13,7 +13,6 @@ import {
   FlatList,
   NativeSyntheticEvent,
   NativeScrollEvent,
-  useColorScheme,
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -24,7 +23,7 @@ import Animated, {
   withSpring,
   FadeIn,
 } from "react-native-reanimated";
-import { useHaptics } from "@/hooks";
+import { useHaptics, useTheme, useTranslation } from "@/hooks";
 
 import { OnboardingSlide } from "@/components/onboarding";
 import { PageIndicator, Button } from "@/components/ui";
@@ -35,9 +34,9 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
+  const { isDark, colors } = useTheme();
   const { impact } = useHaptics();
-  const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
   
   const flatListRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -101,7 +100,7 @@ export default function OnboardingScreen() {
           activeOpacity={0.7}
         >
           <Text className="text-slate-600 dark:text-slate-400 text-sm font-semibold tracking-wide">
-            Passer
+            {t.onboarding.skip}
           </Text>
         </TouchableOpacity>
       </Animated.View>
@@ -136,7 +135,7 @@ export default function OnboardingScreen() {
           <PageIndicator
             count={onboardingSlides.length}
             currentIndex={currentIndex}
-            activeColor="#1de560"
+            activeColor={colors.primary}
             inactiveColor={isDark ? "#334155" : "#e2e8f0"}
           />
         </View>
@@ -152,7 +151,7 @@ export default function OnboardingScreen() {
               shadow-lg
             `}
             style={{
-              shadowColor: "#1de560",
+              shadowColor: colors.primary,
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.2,
               shadowRadius: 12,
@@ -164,12 +163,12 @@ export default function OnboardingScreen() {
                 isDark ? "text-slate-900" : "text-white"
               }`}
             >
-              {isLastSlide ? "Commencer" : "Suivant"}
+              {isLastSlide ? t.onboarding.start : t.onboarding.next}
             </Text>
             <MaterialIcons
               name={isLastSlide ? "check" : "arrow-forward"}
               size={20}
-              color={isDark ? "#0d1b13" : "#1de560"}
+              color={isDark ? "#0d1b13" : colors.primary}
             />
           </TouchableOpacity>
         </Animated.View>

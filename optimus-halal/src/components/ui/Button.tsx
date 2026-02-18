@@ -31,7 +31,7 @@ const variantStyles = {
   primary: {
     container: "bg-primary-500",
     text: "text-slate-900 font-bold",
-    gradient: ["#1de560", "#0fb350"] as const,
+    gradient: ["#13ec6a", "#08c454"] as const,
   },
   secondary: {
     container: "bg-slate-900 dark:bg-surface-dark",

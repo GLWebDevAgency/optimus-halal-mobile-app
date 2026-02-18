@@ -14,13 +14,13 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  useColorScheme,
 } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useHaptics } from "@/hooks";
+import { useHaptics, useTheme } from "@/hooks";
+import { brand } from "@/theme/colors";
 import { ImpactFeedbackStyle } from "expo-haptics";
 import Animated, {
   FadeIn,
@@ -178,7 +178,7 @@ function CartItem({
                   <MaterialIcons
                     name={badge.icon as any}
                     size={10}
-                    color={isDark ? (badge.color === "green" ? "#2bee6c" : undefined) : undefined}
+                    color={isDark ? (badge.color === "green" ? brand.primary : undefined) : undefined}
                   />
                   <Text className={`text-[10px] font-bold uppercase tracking-wider ${colors.text}`}>
                     {badge.label}
@@ -225,9 +225,8 @@ function CartItem({
 
 export default function CartScreen() {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
+  const { isDark, colors } = useTheme();
   const { impact, notification } = useHaptics();
-  const isDark = colorScheme === "dark";
 
   const { items, itemCount, total, removeItem, updateQuantity } = useLocalCartStore();
 
@@ -399,7 +398,7 @@ export default function CartScreen() {
               className="w-full bg-primary py-4 rounded-xl flex-row items-center justify-center gap-2 shadow-lg"
               activeOpacity={0.9}
               style={{
-                shadowColor: "#2bee6c",
+                shadowColor: colors.primary,
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.25,
                 shadowRadius: 8,

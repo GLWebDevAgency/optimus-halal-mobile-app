@@ -12,7 +12,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  useColorScheme,
   StyleSheet,
   Linking,
   Platform,
@@ -20,7 +19,7 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useHaptics } from "@/hooks";
+import { useHaptics, useTheme, useTranslation } from "@/hooks";
 import { ImpactFeedbackStyle } from "expo-haptics";
 import Animated, {
   FadeIn,
@@ -37,14 +36,12 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { colors } from "@/constants/theme";
-import { useTranslation } from "@/hooks/useTranslation";
+import { brand } from "@/theme/colors";
 
 export default function ResetConfirmationScreen() {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
+  const { isDark } = useTheme();
   const { impact, notification } = useHaptics();
-  const isDark = colorScheme === "dark";
   const { email } = useLocalSearchParams<{ email: string }>();
   const { t, isRTL } = useTranslation();
 
@@ -138,8 +135,8 @@ export default function ResetConfirmationScreen() {
           style={styles.backButton}
           activeOpacity={0.7}
           accessibilityRole="button"
-          accessibilityLabel="Retour"
-          accessibilityHint="Double-tapez pour revenir à l'écran précédent"
+          accessibilityLabel={t.common.back}
+          accessibilityHint={t.common.back}
         >
           <MaterialIcons
             name="arrow-back"
@@ -175,7 +172,7 @@ export default function ResetConfirmationScreen() {
           {/* Outer glow effect */}
           <Animated.View style={[styles.glowEffect, animatedGlowStyle]}>
             <LinearGradient
-              colors={[`${colors.light.primary}30`, "transparent"]}
+              colors={[`${brand.primary}30`, "transparent"]}
               style={styles.glowGradient}
             />
           </Animated.View>
@@ -194,7 +191,7 @@ export default function ResetConfirmationScreen() {
             <MaterialIcons
               name="mark-email-read"
               size={48}
-              color={colors.light.primary}
+              color={brand.primary}
             />
           </Animated.View>
 
@@ -257,11 +254,11 @@ export default function ResetConfirmationScreen() {
             activeOpacity={0.9}
             style={styles.primaryButton}
             accessibilityRole="button"
-            accessibilityLabel="Retour à la connexion"
-            accessibilityHint="Double-tapez pour revenir à la page de connexion"
+            accessibilityLabel={t.auth.resetConfirmation.backToLogin}
+            accessibilityHint={t.auth.resetConfirmation.backToLogin}
           >
             <LinearGradient
-              colors={[colors.light.primary, "#10d65f"]}
+              colors={[brand.primary, "#10d65f"]}
               style={styles.buttonGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -277,8 +274,8 @@ export default function ResetConfirmationScreen() {
             onPress={handleOpenEmailApp}
             activeOpacity={0.7}
             accessibilityRole="button"
-            accessibilityLabel="Ouvrir l'application email"
-            accessibilityHint="Double-tapez pour ouvrir votre application email"
+            accessibilityLabel={t.auth.resetConfirmation.openEmailApp}
+            accessibilityHint={t.auth.resetConfirmation.openEmailApp}
             style={[
               styles.secondaryButton,
               {
@@ -313,8 +310,8 @@ export default function ResetConfirmationScreen() {
           <TouchableOpacity
             onPress={handleResendLink}
             accessibilityRole="button"
-            accessibilityLabel="Renvoyer le lien"
-            accessibilityHint="Double-tapez pour renvoyer l'email de réinitialisation"
+            accessibilityLabel={t.auth.resetConfirmation.resendLink}
+            accessibilityHint={t.auth.resetConfirmation.resendLink}
           >
             <Text style={styles.resendLink}>
               {t.auth.resetConfirmation.resendLink}
@@ -332,8 +329,8 @@ export default function ResetConfirmationScreen() {
           onPress={handleContactSupport}
           style={[styles.supportButton, { flexDirection: isRTL ? "row-reverse" : "row" }]}
           accessibilityRole="link"
-          accessibilityLabel="Contacter le support"
-          accessibilityHint="Double-tapez pour envoyer un email au support"
+          accessibilityLabel={t.auth.resetConfirmation.contactSupport}
+          accessibilityHint={t.auth.resetConfirmation.contactSupport}
         >
           <MaterialIcons 
             name="help" 

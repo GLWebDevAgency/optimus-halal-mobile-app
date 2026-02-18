@@ -15,13 +15,12 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  useColorScheme,
 } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useHaptics } from "@/hooks";
+import { useHaptics, useTheme } from "@/hooks";
 import { ImpactFeedbackStyle } from "expo-haptics";
 import Animated, {
   FadeIn,
@@ -76,9 +75,8 @@ function PastOrderItem({
 
 export default function OrderTrackingScreen() {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
+  const { isDark, colors } = useTheme();
   const { impact } = useHaptics();
-  const isDark = colorScheme === "dark";
 
   const [activeFilter, setActiveFilter] = useState<"active" | "past" | "returns">("active");
 
@@ -316,7 +314,7 @@ export default function OrderTrackingScreen() {
                       </Text>
                     </View>
                     <View className="flex-row items-center gap-1 mt-0.5">
-                      <MaterialIcons name="verified" size={12} color="#2bee6c" />
+                      <MaterialIcons name="verified" size={12} color={colors.primary} />
                       <Text className="text-xs text-slate-500 dark:text-gray-400">
                         Source Éthique • Médine
                       </Text>
@@ -346,7 +344,7 @@ export default function OrderTrackingScreen() {
                       </Text>
                     </View>
                     <View className="flex-row items-center gap-1 mt-0.5">
-                      <MaterialIcons name="verified" size={12} color="#2bee6c" />
+                      <MaterialIcons name="verified" size={12} color={colors.primary} />
                       <Text className="text-xs text-slate-500 dark:text-gray-400">
                         Certifié HMC • NZ
                       </Text>

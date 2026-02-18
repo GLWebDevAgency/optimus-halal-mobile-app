@@ -7,6 +7,7 @@
 import React from "react";
 import { View, Text, ViewProps } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useTranslation } from "@/hooks";
 
 export interface BadgeProps extends ViewProps {
   variant?: "success" | "warning" | "danger" | "info" | "neutral" | "gold";
@@ -121,22 +122,22 @@ const certificationConfig = {
   halal: {
     variant: "success" as const,
     icon: "verified" as const,
-    label: "Certifié Halal",
+    labelKey: "certifiedHalal" as const,
   },
   doubtful: {
     variant: "warning" as const,
     icon: "help" as const,
-    label: "Certification Douteuse",
+    labelKey: "doubtfulCertification" as const,
   },
   haram: {
     variant: "danger" as const,
     icon: "cancel" as const,
-    label: "Non Halal",
+    labelKey: "notHalal" as const,
   },
   unknown: {
     variant: "neutral" as const,
     icon: "help-outline" as const,
-    label: "Inconnu",
+    labelKey: "unknown" as const,
   },
 };
 
@@ -145,11 +146,12 @@ export const CertificationBadge: React.FC<CertificationBadgeProps> = ({
   authority,
   size = "md",
 }) => {
+  const { t } = useTranslation();
   const config = certificationConfig[status];
 
   return (
     <Badge variant={config.variant} size={size} icon={config.icon}>
-      {authority || config.label}
+      {authority || t.badge[config.labelKey]}
     </Badge>
   );
 };

@@ -6,13 +6,11 @@
 
 import React from "react";
 import { Stack } from "expo-router";
-import { useColorScheme } from "react-native";
-import { colors } from "@/constants/theme";
+import { useTheme } from "@/hooks";
 import { QueryErrorBoundary } from "@/components/QueryErrorBoundary";
 
 export default function MarketplaceLayout() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { colors } = useTheme();
 
   return (
     <QueryErrorBoundary>
@@ -24,7 +22,7 @@ export default function MarketplaceLayout() {
         gestureEnabled: true,
         gestureDirection: "horizontal",
         contentStyle: {
-          backgroundColor: isDark ? colors.dark.background : colors.light.background,
+          backgroundColor: colors.background,
         },
       }}
     >

@@ -1,77 +1,148 @@
 /**
- * Home Dashboard Screen
+ * Home Dashboard Screen — "Premium Fintech Ethique"
  *
- * Écran principal avec:
- * - Header avec avatar et notifications
- * - Impact card (scans, reports, niveau)
- * - Quick actions (Scanner, Magasins, Marketplace, Historique)
- * - Alertes & Vigilance (tRPC alert.list — rappels, fraudes, boycotts)
- * - Actu de la Communauté (tRPC article.list — blog, guides, partenaires)
- * - Favorites section
- * - Nearby stores
+ * 4-section layout:
+ * 1. Hero Header — gradient, avatar, Salam greeting, impact stats pill, notification bell
+ * 2. Quick Actions — 2x2 grid, primary Scanner card with glow, glass-morphism cards
+ * 3. Featured Content — horizontal scroll mixing alerts + articles with cover cards
+ * 4. Quick Favorites — Instagram-stories style circles with halal status border
  */
 
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
-  useColorScheme,
+  RefreshControl,
+  Platform,
+  Dimensions,
+  StyleSheet,
 } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useHaptics } from "@/hooks";
 import Animated, {
   FadeIn,
   FadeInDown,
   FadeInRight,
-  FadeInUp,
+  useAnimatedScrollHandler,
+  useSharedValue,
+  useAnimatedStyle,
+  interpolate,
+  Extrapolation,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
+import Svg, { Path } from "react-native-svg";
 
-import { Card, Avatar } from "@/components/ui";
+import { Avatar, IslamicPattern } from "@/components/ui";
 import { HomeSkeleton } from "@/components/skeletons";
 import { useMe } from "@/hooks/useAuth";
 import { useFavoritesList } from "@/hooks/useFavorites";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useTheme } from "@/hooks/useTheme";
+import { useHaptics } from "@/hooks";
 import { trpc } from "@/lib/trpc";
 
-const FAVORITE_CIRCLE_SIZE = 72;
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const STAGGER_MS = 60;
 
-const SEVERITY_ICON: Record<string, keyof typeof MaterialIcons.glyphMap> = {
-  critical: "error",
-  warning: "warning",
-  info: "info",
+// ---------------------------------------------------------------------------
+// Color palette (kept inline for direct access; mirrors useTheme().colors)
+// ---------------------------------------------------------------------------
+const COLORS = {
+  primaryGreen: "#13ec6a",
+  primaryDark: "#0ea64b",
+  gold: "#D4AF37",
+  bgDark: "#0a1a10",
+  bgDarkEnd: "#132a1a",
+  bgLight: "#f8faf9",
+  bgLightEnd: "#ffffff",
+  cardDark: "#132a1a",
+  cardLight: "#ffffff",
+  textDark: "#e8f5e9",
+  textLight: "#0d1b13",
+  textSecDark: "#9ca3af",
+  textSecLight: "#4b5563",
+  borderDark: "rgba(255,255,255,0.06)",
+  borderLight: "#e5e7eb",
+  glassDark: "rgba(19,42,26,0.65)",
+  glassLight: "rgba(255,255,255,0.70)",
+  glassBorderDark: "rgba(255,255,255,0.08)",
+  glassBorderLight: "rgba(0,0,0,0.06)",
 };
 
-const SEVERITY_COLOR: Record<string, string> = {
-  critical: "#dc2626",
-  warning: "#d97706",
-  info: "#2563eb",
+// Severity mappings for alerts
+const SEVERITY_ACCENT: Record<string, string> = {
+  critical: "#ef4444",
+  warning: "#f59e0b",
+  info: "#3b82f6",
 };
 
-interface QuickActionProps {
+// ---------------------------------------------------------------------------
+// Animated ScrollView wrapper
+// ---------------------------------------------------------------------------
+const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
+
+// ============================================================================
+// SUB-COMPONENTS
+// ============================================================================
+
+// ---- Impact Stat Pill Item ----
+interface StatPillItemProps {
+  value: string | number;
+  label: string;
+  isDark: boolean;
+}
+
+const StatPillItem = React.memo(function StatPillItem({
+  value,
+  label,
+  isDark,
+}: StatPillItemProps) {
+  return (
+    <View className="items-center px-3">
+      <Text
+        style={{ color: COLORS.primaryGreen }}
+        className="text-base font-bold"
+      >
+        {value}
+      </Text>
+      <Text
+        style={{ color: isDark ? COLORS.textSecDark : COLORS.textSecLight }}
+        className="text-[10px] font-medium mt-0.5"
+      >
+        {label}
+      </Text>
+    </View>
+  );
+});
+
+// ---- Quick Action Card ----
+interface QuickActionCardProps {
   icon: keyof typeof MaterialIcons.glyphMap;
   title: string;
   subtitle: string;
   onPress: () => void;
   primary?: boolean;
+  isDark: boolean;
+  iconBgColor?: string;
   iconColor?: string;
+  index: number;
 }
 
-const QuickAction = React.memo(function QuickAction({
+const QuickActionCard = React.memo(function QuickActionCard({
   icon,
   title,
   subtitle,
   onPress,
-  primary,
+  primary = false,
+  isDark,
+  iconBgColor,
   iconColor,
-}: QuickActionProps) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  index,
+}: QuickActionCardProps) {
   const { impact } = useHaptics();
 
   const handlePress = useCallback(() => {
@@ -79,88 +150,330 @@ const QuickAction = React.memo(function QuickAction({
     onPress();
   }, [impact, onPress]);
 
-  return (
-    <TouchableOpacity
-      onPress={handlePress}
-      activeOpacity={0.9}
-      accessibilityRole="button"
-      accessibilityLabel={title}
-      accessibilityHint={subtitle}
-      className={`flex-1 flex-col items-start gap-3 rounded-2xl p-4 ${
-        primary
-          ? "bg-primary dark:bg-emerald-600"
-          : "bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-700/50"
-      }`}
-      style={{
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: primary ? 0.2 : 0.05,
-        shadowRadius: 8,
-        elevation: primary ? 4 : 2,
-      }}
-    >
-      <View
-        className={`h-10 w-10 items-center justify-center rounded-full ${
-          primary
-            ? "bg-white/20"
-            : "bg-slate-100 dark:bg-white/5"
-        }`}
+  if (primary) {
+    return (
+      <Animated.View
+        entering={FadeInDown.delay(240 + index * STAGGER_MS)
+          .duration(500)
+          .springify()
+          .damping(18)}
+        style={[styles.quickActionHalf]}
       >
-        <MaterialIcons
-          name={icon}
-          size={22}
-          color={
-            primary
-              ? "#ffffff"
-              : iconColor || (isDark ? "#1de560" : "#0d1b13")
-          }
-        />
-      </View>
-      <View>
-        <Text
-          className={`text-base font-bold ${
-            primary ? "text-white" : "text-slate-900 dark:text-white"
-          }`}
+        <TouchableOpacity
+          onPress={handlePress}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel={title}
+          accessibilityHint={subtitle}
+          style={[styles.quickActionPrimary]}
         >
-          {title}
-        </Text>
-        <Text
-          className={`text-xs ${
-            primary
-              ? "text-white/80"
-              : "text-slate-500 dark:text-slate-400"
-          }`}
-        >
-          {subtitle}
-        </Text>
-      </View>
-    </TouchableOpacity>
+          <LinearGradient
+            colors={["#13ec6a", "#0ea64b"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          {/* Glow overlay */}
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                backgroundColor: "rgba(255,255,255,0.08)",
+                borderRadius: 20,
+              },
+            ]}
+          />
+          <View style={styles.quickActionContent}>
+            <View style={styles.quickActionIconWrapPrimary}>
+              <MaterialIcons name={icon} size={24} color="#ffffff" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.quickActionTitlePrimary}>{title}</Text>
+              <Text style={styles.quickActionSubPrimary}>{subtitle}</Text>
+            </View>
+            <MaterialIcons name="arrow-forward" size={18} color="rgba(255,255,255,0.6)" />
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  }
+
+  // Glass-morphism card for non-primary
+  return (
+    <Animated.View
+      entering={FadeInDown.delay(240 + index * STAGGER_MS)
+        .duration(500)
+        .springify()
+        .damping(18)}
+      style={[styles.quickActionHalf]}
+    >
+      <TouchableOpacity
+        onPress={handlePress}
+        activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityLabel={title}
+        accessibilityHint={subtitle}
+        style={[
+          styles.quickActionGlass,
+          {
+            backgroundColor: isDark ? COLORS.glassDark : COLORS.glassLight,
+            borderColor: isDark
+              ? COLORS.glassBorderDark
+              : COLORS.glassBorderLight,
+          },
+        ]}
+      >
+        <View style={styles.quickActionContent}>
+          <View
+            style={[
+              styles.quickActionIconWrap,
+              {
+                backgroundColor:
+                  iconBgColor ??
+                  (isDark ? "rgba(19,236,106,0.12)" : "rgba(19,236,106,0.08)"),
+              },
+            ]}
+          >
+            <MaterialIcons
+              name={icon}
+              size={22}
+              color={iconColor ?? COLORS.primaryGreen}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text
+              style={[
+                styles.quickActionTitle,
+                { color: isDark ? COLORS.textDark : COLORS.textLight },
+              ]}
+            >
+              {title}
+            </Text>
+            <Text
+              style={[
+                styles.quickActionSub,
+                { color: isDark ? COLORS.textSecDark : COLORS.textSecLight },
+              ]}
+            >
+              {subtitle}
+            </Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
   );
 });
 
+// ---- Featured Content Card (Alerts + Articles merged) ----
+type FeaturedCardType = "alert" | "article";
+
+interface FeaturedCardData {
+  id: string;
+  type: FeaturedCardType;
+  title: string;
+  subtitle: string;
+  coverImage?: string | null;
+  badgeLabel: string;
+  badgeColor: string;
+  accentColor: string;
+  readTime?: number | null;
+}
+
+interface FeaturedCardProps {
+  item: FeaturedCardData;
+  isDark: boolean;
+  index: number;
+  onPress: () => void;
+}
+
+const FeaturedCard = React.memo(function FeaturedCard({
+  item,
+  isDark,
+  index,
+  onPress,
+}: FeaturedCardProps) {
+  return (
+    <Animated.View
+      entering={FadeInRight.delay(420 + index * 80).duration(500)}
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.88}
+        accessibilityRole="button"
+        accessibilityLabel={item.title}
+        accessibilityHint={item.subtitle}
+        style={[styles.featuredCard]}
+      >
+        {/* Background */}
+        {item.coverImage ? (
+          <Image
+            source={{ uri: item.coverImage }}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            transition={200}
+            accessible={false}
+          />
+        ) : (
+          <LinearGradient
+            colors={
+              isDark
+                ? [COLORS.cardDark, "#0a1a10"]
+                : ["#f0fdf4", "#ecfdf5"]
+            }
+            style={StyleSheet.absoluteFill}
+          />
+        )}
+
+        {/* Scrim overlay */}
+        <LinearGradient
+          colors={[
+            "transparent",
+            "rgba(0,0,0,0.35)",
+            "rgba(0,0,0,0.85)",
+          ]}
+          locations={[0, 0.5, 1]}
+          style={StyleSheet.absoluteFill}
+        />
+
+        {/* Badge top-left */}
+        <View style={styles.featuredBadgeWrap}>
+          <View
+            style={[
+              styles.featuredBadge,
+              { backgroundColor: item.badgeColor },
+            ]}
+          >
+            <Text style={styles.featuredBadgeText}>{item.badgeLabel}</Text>
+          </View>
+        </View>
+
+        {/* Content bottom */}
+        <View style={styles.featuredContent}>
+          <Text style={styles.featuredTitle} numberOfLines={2}>
+            {item.title}
+          </Text>
+          <Text style={styles.featuredSubtitle} numberOfLines={1}>
+            {item.subtitle}
+          </Text>
+        </View>
+
+        {/* Accent left border */}
+        <View
+          style={[
+            styles.featuredAccent,
+            { backgroundColor: item.accentColor },
+          ]}
+        />
+      </TouchableOpacity>
+    </Animated.View>
+  );
+});
+
+// ---- Favorite Circle (Instagram-stories style) ----
+interface FavoriteCircleProps {
+  id: string;
+  name: string;
+  image: string;
+  isDark: boolean;
+  index: number;
+  onPress: () => void;
+}
+
+const CIRCLE_SIZE = 68;
+const CIRCLE_BORDER = 2.5;
+
+const FavoriteCircle = React.memo(function FavoriteCircle({
+  name,
+  image,
+  isDark,
+  index,
+  onPress,
+}: FavoriteCircleProps) {
+  return (
+    <Animated.View
+      entering={FadeInRight.delay(540 + index * 70).duration(400)}
+    >
+      <TouchableOpacity
+        activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel={name}
+        onPress={onPress}
+        style={styles.favCircleTouch}
+      >
+        {/* Gradient ring */}
+        <LinearGradient
+          colors={["#13ec6a", "#0ea64b", "#D4AF37"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.favGradientRing}
+        >
+          <View
+            style={[
+              styles.favInnerRing,
+              {
+                backgroundColor: isDark ? COLORS.bgDark : COLORS.bgLight,
+              },
+            ]}
+          >
+            {image ? (
+              <Image
+                source={{ uri: image }}
+                style={styles.favImage}
+                contentFit="cover"
+                transition={200}
+                accessibilityLabel={`Photo de ${name}`}
+              />
+            ) : (
+              <View
+                style={[
+                  styles.favImage,
+                  {
+                    backgroundColor: isDark ? COLORS.cardDark : "#f3f4f6",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  },
+                ]}
+              >
+                <MaterialIcons
+                  name="fastfood"
+                  size={22}
+                  color={isDark ? "#475569" : "#94a3b8"}
+                />
+              </View>
+            )}
+          </View>
+        </LinearGradient>
+        <Text
+          style={[
+            styles.favName,
+            { color: isDark ? COLORS.textSecDark : COLORS.textSecLight },
+          ]}
+          numberOfLines={2}
+        >
+          {name.length > 12 ? name.split(" ")[0] : name}
+        </Text>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+});
+
+// ============================================================================
+// MAIN HOME SCREEN
+// ============================================================================
+
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
+  const { isDark, isRamadan } = useTheme();
   const { impact } = useHaptics();
-  const isDark = colorScheme === "dark";
   const { t } = useTranslation();
 
+  // ---- Data ----
   const meQuery = useMe();
   const me = meQuery.data;
   const isReady = !meQuery.isLoading;
-  const favoritesQuery = useFavoritesList({ limit: 6 });
-  const favoriteProducts = useMemo(() =>
-    (favoritesQuery.data ?? [])
-      .filter((f) => f.product !== null)
-      .map((f) => ({
-        id: f.id,
-        name: f.product!.name,
-        image: f.product!.imageUrl ?? "",
-      })),
-    [favoritesQuery.data]
-  );
 
-  // Real API queries — enabled once auth check completes
+  const favoritesQuery = useFavoritesList({ limit: 8 });
+
   const dashboardQuery = trpc.stats.userDashboard.useQuery(undefined, {
     enabled: isReady,
     staleTime: 60_000,
@@ -169,10 +482,6 @@ export default function HomeScreen() {
     enabled: isReady,
     staleTime: 30_000,
   });
-  const nearbyStoreQuery = trpc.store.search.useQuery(
-    { halalCertifiedOnly: true, limit: 1 },
-    { enabled: isReady, staleTime: 120_000 },
-  );
   const alertsQuery = trpc.alert.list.useQuery(
     { limit: 5 },
     { enabled: isReady, staleTime: 60_000 },
@@ -182,235 +491,492 @@ export default function HomeScreen() {
     { enabled: isReady, staleTime: 120_000 },
   );
 
-  const unreadCount = unreadQuery.data?.count ?? 0;
-  const nearbyStore = nearbyStoreQuery.data?.items?.[0] ?? null;
-
-  const alertItems = useMemo(
-    () => alertsQuery.data?.items ?? [],
-    [alertsQuery.data?.items],
-  );
-
-  const articleItems = useMemo(
-    () => articlesQuery.data?.items ?? [],
-    [articlesQuery.data?.items],
-  );
-
-  // Only show connection error when core data fails (not optional feeds)
-  const hasApiError = dashboardQuery.isError && meQuery.isError;
-
+  // ---- Derived data ----
   const userName = useMemo(() => {
-    if (me?.displayName) {
-      return me.displayName.split(" ")[0];
-    }
+    if (me?.displayName) return me.displayName.split(" ")[0];
     return t.common.user;
   }, [me, t]);
 
   const totalScans = dashboardQuery.data?.totalScans ?? 0;
+  const totalReports = dashboardQuery.data?.totalReports ?? 0;
+  const userLevel = me?.level ?? 1;
+  const currentStreak = me?.currentStreak ?? 0;
+  const unreadCount = unreadQuery.data?.count ?? 0;
 
-  const handleNavigate = useCallback((route: string) => {
-    impact();
-    if (route === "scanner") {
-      router.push("/(tabs)/scanner");
-    } else if (route === "map") {
-      router.push("/(tabs)/map");
-    } else if (route === "marketplace") {
-      router.push("/(tabs)/marketplace" as any);
-    } else if (route === "history") {
-      router.push("/settings/scan-history" as any);
-    } else if (route === "favorites") {
-      router.push("/settings/favorites" as any);
+  const favoriteProducts = useMemo(
+    () =>
+      (favoritesQuery.data ?? [])
+        .filter((f) => f.product !== null)
+        .map((f) => ({
+          id: f.id,
+          name: f.product!.name,
+          image: f.product!.imageUrl ?? "",
+        })),
+    [favoritesQuery.data],
+  );
+
+  // ---- Featured content: merge alerts + articles ----
+  const featuredItems = useMemo<FeaturedCardData[]>(() => {
+    const items: FeaturedCardData[] = [];
+
+    // Alerts first (max 3)
+    const alerts = alertsQuery.data?.items ?? [];
+    for (const alert of alerts.slice(0, 3)) {
+      items.push({
+        id: `alert-${alert.id}`,
+        type: "alert",
+        title: alert.title,
+        subtitle: alert.summary,
+        coverImage: null,
+        badgeLabel:
+          alert.severity === "critical"
+            ? "Urgent"
+            : alert.severity === "warning"
+              ? "Alerte"
+              : "Info",
+        badgeColor: SEVERITY_ACCENT[alert.severity] ?? "#3b82f6",
+        accentColor: SEVERITY_ACCENT[alert.severity] ?? "#3b82f6",
+      });
     }
-  }, [impact]);
 
-  // Skeleton while auth check resolves (placed after all hooks)
+    // Articles
+    const articles = articlesQuery.data?.items ?? [];
+    for (const article of articles.slice(0, 4)) {
+      items.push({
+        id: `article-${article.id}`,
+        type: "article",
+        title: article.title,
+        subtitle:
+          article.excerpt ??
+          `${article.readTimeMinutes ?? 3} min · ${article.author}`,
+        coverImage: article.coverImage,
+        badgeLabel:
+          article.type === "partner_news"
+            ? t.home.partnerBadge
+            : article.type === "educational"
+              ? t.home.guideBadge
+              : t.home.blogBadge,
+        badgeColor:
+          article.type === "partner_news"
+            ? COLORS.gold
+            : article.type === "educational"
+              ? COLORS.primaryGreen
+              : "rgba(255,255,255,0.25)",
+        accentColor: COLORS.primaryGreen,
+        readTime: article.readTimeMinutes,
+      });
+    }
+
+    return items;
+  }, [alertsQuery.data?.items, articlesQuery.data?.items, t]);
+
+  const hasApiError = dashboardQuery.isError && meQuery.isError;
+
+  // ---- Pull-to-refresh ----
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([
+      meQuery.refetch(),
+      dashboardQuery.refetch(),
+      unreadQuery.refetch(),
+      alertsQuery.refetch(),
+      articlesQuery.refetch(),
+      favoritesQuery.refetch(),
+    ]);
+    setRefreshing(false);
+  }, [
+    meQuery,
+    dashboardQuery,
+    unreadQuery,
+    alertsQuery,
+    articlesQuery,
+    favoritesQuery,
+  ]);
+
+  // ---- Parallax scroll ----
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+
+  const heroAnimStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateY: interpolate(
+          scrollY.value,
+          [-100, 0, 150],
+          [50, 0, -40],
+          Extrapolation.CLAMP,
+        ),
+      },
+    ],
+    opacity: interpolate(
+      scrollY.value,
+      [0, 200],
+      [1, 0.85],
+      Extrapolation.CLAMP,
+    ),
+  }));
+
+  // ---- Navigation handlers ----
+  const handleNavigate = useCallback(
+    (route: string) => {
+      impact();
+      if (route === "scanner") router.push("/(tabs)/scanner");
+      else if (route === "map") router.push("/(tabs)/map");
+      else if (route === "alerts") router.push("/(tabs)/alerts");
+      else if (route === "history")
+        router.push("/settings/scan-history" as any);
+      else if (route === "favorites")
+        router.push("/settings/favorites" as any);
+    },
+    [impact],
+  );
+
+  const handleFeaturedPress = useCallback(
+    (item: FeaturedCardData) => {
+      impact();
+      if (item.type === "alert") {
+        router.push("/(tabs)/alerts");
+      } else if (item.type === "article") {
+        const articleId = item.id.replace("article-", "");
+        router.push(`/articles/${articleId}`);
+      }
+    },
+    [impact],
+  );
+
+  // ---- Skeleton ----
   if (!isReady) return <HomeSkeleton />;
 
+  // ---- Render ----
   return (
-    <View className="flex-1 bg-background-light dark:bg-background-dark">
-      <ScrollView
+    <View style={{ flex: 1 }}>
+      {/* Full-screen background gradient */}
+      <LinearGradient
+        colors={
+          isDark
+            ? [COLORS.bgDark, COLORS.bgDarkEnd, COLORS.bgDark]
+            : [COLORS.bgLight, COLORS.bgLightEnd, COLORS.bgLight]
+        }
+        locations={[0, 0.4, 1]}
+        style={StyleSheet.absoluteFill}
+      />
+
+      <IslamicPattern
+        variant={isRamadan ? "khatam" : "tessellation"}
+        color={isRamadan ? "#D4AF37" : undefined}
+        opacity={isRamadan ? 0.05 : 0.03}
+      />
+
+      <AnimatedScrollView
+        onScroll={onScroll}
+        scrollEventThrottle={16}
         contentContainerStyle={{
-          paddingTop: insets.top + 16,
-          paddingBottom: 100,
+          paddingTop: insets.top + 8,
+          paddingBottom: 110,
         }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={COLORS.primaryGreen}
+            colors={[COLORS.primaryGreen]}
+            progressViewOffset={insets.top}
+          />
+        }
       >
-        {/* Header */}
-        <Animated.View
-          entering={FadeIn.delay(100).duration(400)}
-          className="flex-row items-center justify-between px-5 mb-4"
-        >
-          <View className="flex-row items-center gap-3">
-            <View className="relative">
+        {/* ====================================================
+            SECTION 1: HERO HEADER
+            ==================================================== */}
+        <Animated.View style={[{ paddingHorizontal: 20 }, heroAnimStyle]}>
+          {/* Row: Avatar + Greeting + Bell */}
+          <Animated.View
+            entering={FadeInDown.delay(0).duration(500).springify().damping(20)}
+            style={styles.headerRow}
+          >
+            <View style={styles.headerLeft}>
               <Avatar
                 size="lg"
                 source={me?.avatarUrl ?? undefined}
                 fallback={userName}
                 borderColor="primary"
               />
-            </View>
-            <View>
-              <Text className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                {t.home.greeting}
-              </Text>
-              <Text className="text-xl font-bold text-slate-900 dark:text-white">
-                {userName}
-              </Text>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            onPress={() => router.push("/(tabs)/alerts")}
-            className="relative h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-700/50"
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel={t.common.notifications}
-            accessibilityHint={t.common.viewAlerts}
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.05,
-              shadowRadius: 4,
-              elevation: 2,
-            }}
-          >
-            <MaterialIcons
-              name="notifications"
-              size={22}
-              color={isDark ? "#ffffff" : "#0d1b13"}
-            />
-            {unreadCount > 0 && (
-              <View className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-gold-500 border-2 border-white dark:border-surface-dark" />
-            )}
-          </TouchableOpacity>
-        </Animated.View>
-
-        {/* Impact Card */}
-        <Animated.View
-          entering={FadeInDown.delay(200).duration(600)}
-          className="px-5 mb-6"
-        >
-          <View
-            className="relative overflow-hidden rounded-2xl bg-white dark:bg-surface-dark p-5 border border-slate-100 dark:border-slate-700/50"
-            style={{
-              shadowColor: isDark ? "#000" : "#000",
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: isDark ? 0.3 : 0.08,
-              shadowRadius: 12,
-              elevation: 4,
-            }}
-          >
-            {/* Decorative blurs */}
-            <View
-              className="absolute -right-6 -top-6 h-32 w-32 rounded-full"
-              style={{
-                backgroundColor: "rgba(29, 229, 96, 0.15)",
-              }}
-            />
-            <View
-              className="absolute -left-6 -bottom-6 h-24 w-24 rounded-full"
-              style={{
-                backgroundColor: "rgba(212, 175, 55, 0.1)",
-              }}
-            />
-
-            <View className="flex-row items-start justify-between">
-              <View className="gap-1">
-                <Text accessibilityRole="header" className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                  {t.home.dailyImpact}
+              <View style={{ marginLeft: 12 }}>
+                <Text
+                  style={[
+                    styles.greetingLabel,
+                    {
+                      color: isDark ? COLORS.textSecDark : COLORS.textSecLight,
+                    },
+                  ]}
+                >
+                  {isRamadan ? t.home.greetingRamadan : t.home.greeting}
                 </Text>
-                <View className="flex-row items-baseline gap-2">
-                  <Text className="text-3xl font-bold text-slate-900 dark:text-gold-500">
-                    {totalScans}
-                  </Text>
-                  <Text className="text-sm font-medium text-primary-dark dark:text-primary">
-                    {t.home.healthyProducts}
+                <Text
+                  style={[
+                    styles.greetingName,
+                    { color: isDark ? COLORS.textDark : COLORS.textLight },
+                  ]}
+                >
+                  {userName}
+                </Text>
+              </View>
+            </View>
+
+            {/* Notification Bell */}
+            <TouchableOpacity
+              onPress={() => router.push("/(tabs)/alerts")}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={t.common.notifications}
+              accessibilityHint={t.common.viewAlerts}
+              style={[
+                styles.bellButton,
+                {
+                  backgroundColor: isDark
+                    ? COLORS.glassDark
+                    : COLORS.glassLight,
+                  borderColor: isDark
+                    ? COLORS.glassBorderDark
+                    : COLORS.glassBorderLight,
+                },
+              ]}
+            >
+              <MaterialIcons
+                name="notifications-none"
+                size={22}
+                color={isDark ? COLORS.textDark : COLORS.textLight}
+              />
+              {unreadCount > 0 && (
+                <View style={styles.bellBadge}>
+                  <Text style={styles.bellBadgeText}>
+                    {unreadCount > 9 ? "9+" : unreadCount}
                   </Text>
                 </View>
-                <Text className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  {dashboardQuery.data?.totalReports ?? 0} {(dashboardQuery.data?.totalReports ?? 0) > 1 ? t.home.reportsPlural : t.home.reports} · Niveau {me?.level ?? 1}
-                </Text>
-              </View>
+              )}
+            </TouchableOpacity>
+          </Animated.View>
 
-              <View className="h-12 w-12 items-center justify-center rounded-full bg-primary/10 dark:bg-primary/20">
-                <MaterialIcons
-                  name="eco"
-                  size={24}
-                  color={isDark ? "#1de560" : "#047857"}
+          {/* Impact Stats Pill */}
+          <Animated.View
+            entering={FadeInDown.delay(STAGGER_MS)
+              .duration(500)
+              .springify()
+              .damping(18)}
+            style={[
+              styles.statsPill,
+              {
+                backgroundColor: isDark
+                  ? COLORS.glassDark
+                  : COLORS.glassLight,
+                borderColor: isDark
+                  ? COLORS.glassBorderDark
+                  : COLORS.glassBorderLight,
+              },
+            ]}
+          >
+            <StatPillItem
+              value={totalScans}
+              label={t.home.productsVerified}
+              isDark={isDark}
+            />
+            <View
+              style={[
+                styles.statsDivider,
+                {
+                  backgroundColor: isDark
+                    ? "rgba(255,255,255,0.08)"
+                    : "rgba(0,0,0,0.06)",
+                },
+              ]}
+            />
+            <StatPillItem
+              value={totalReports}
+              label={t.home.alertsSent}
+              isDark={isDark}
+            />
+            <View
+              style={[
+                styles.statsDivider,
+                {
+                  backgroundColor: isDark
+                    ? "rgba(255,255,255,0.08)"
+                    : "rgba(0,0,0,0.06)",
+                },
+              ]}
+            />
+            <StatPillItem
+              value={`${t.home.guardianLevel} ${userLevel}`}
+              label={t.home.level}
+              isDark={isDark}
+            />
+            {/* Streak flame — only visible when streak > 0 */}
+            {currentStreak > 0 && (
+              <>
+                <View
+                  style={[
+                    styles.statsDivider,
+                    {
+                      backgroundColor: isDark
+                        ? "rgba(255,255,255,0.08)"
+                        : "rgba(0,0,0,0.06)",
+                    },
+                  ]}
                 />
-              </View>
+                <View className="items-center px-3">
+                  <View style={styles.streakRow}>
+                    <Text style={styles.streakFlame}>🔥</Text>
+                    <Text
+                      style={{ color: COLORS.gold, fontSize: 16, fontWeight: "800" }}
+                    >
+                      {currentStreak}
+                    </Text>
+                  </View>
+                  <Text
+                    style={{ color: isDark ? COLORS.textSecDark : COLORS.textSecLight, fontSize: 10, fontWeight: "500", marginTop: 2 }}
+                  >
+                    {currentStreak > 1 ? t.home.streakDays : t.home.streakDay}
+                  </Text>
+                </View>
+              </>
+            )}
+          </Animated.View>
+        </Animated.View>
+
+        {/* ====================================================
+            SECTION 2: QUICK ACTIONS (2x2 grid)
+            ==================================================== */}
+        <View style={styles.sectionWrap}>
+          <View style={styles.quickActionsGrid}>
+            {/* Row 1 */}
+            <View style={styles.quickActionsRow}>
+              <QuickActionCard
+                icon="qr-code-scanner"
+                title={t.home.quickActions.scanner}
+                subtitle={t.home.quickActions.scannerSub}
+                primary
+                isDark={isDark}
+                index={0}
+                onPress={() => handleNavigate("scanner")}
+              />
+              <QuickActionCard
+                icon="location-on"
+                title={t.home.quickActions.stores}
+                subtitle={t.home.quickActions.storesSub}
+                isDark={isDark}
+                iconBgColor={
+                  isDark
+                    ? "rgba(59,130,246,0.15)"
+                    : "rgba(59,130,246,0.08)"
+                }
+                iconColor="#3b82f6"
+                index={1}
+                onPress={() => handleNavigate("map")}
+              />
+            </View>
+            {/* Row 2 */}
+            <View style={styles.quickActionsRow}>
+              <QuickActionCard
+                icon="shield"
+                title={t.home.alertsSection.split("&")[0].trim()}
+                subtitle={t.home.alertsSeeAll}
+                isDark={isDark}
+                iconBgColor={
+                  isDark
+                    ? "rgba(245,158,11,0.15)"
+                    : "rgba(245,158,11,0.08)"
+                }
+                iconColor="#f59e0b"
+                index={2}
+                onPress={() => handleNavigate("alerts")}
+              />
+              <QuickActionCard
+                icon="history"
+                title={t.home.quickActions.history}
+                subtitle={t.home.quickActions.historySub}
+                isDark={isDark}
+                iconBgColor={
+                  isDark
+                    ? "rgba(148,163,184,0.15)"
+                    : "rgba(148,163,184,0.08)"
+                }
+                iconColor={isDark ? "#94a3b8" : "#64748b"}
+                index={3}
+                onPress={() => handleNavigate("history")}
+              />
             </View>
           </View>
-        </Animated.View>
-
-        {/* Quick Actions */}
-        <Animated.View
-          entering={FadeInUp.delay(300).duration(600)}
-          className="px-5 mb-6"
-        >
-          <View className="flex-row gap-3 mb-3">
-            <QuickAction
-              icon="qr-code-scanner"
-              title={t.home.quickActions.scanner}
-              subtitle={t.home.quickActions.scannerSub}
-              primary
-              onPress={() => handleNavigate("scanner")}
-            />
-            <QuickAction
-              icon="location-on"
-              title={t.home.quickActions.stores}
-              subtitle={t.home.quickActions.storesSub}
-              iconColor={isDark ? "#1de560" : "#0d1b13"}
-              onPress={() => handleNavigate("map")}
-            />
-          </View>
-          <View className="flex-row gap-3">
-            <QuickAction
-              icon="storefront"
-              title={t.home.quickActions.marketplace}
-              subtitle={t.home.quickActions.marketplaceSub}
-              iconColor={isDark ? "#D4AF37" : "#0d1b13"}
-              onPress={() => handleNavigate("marketplace")}
-            />
-            <QuickAction
-              icon="history"
-              title={t.home.quickActions.history}
-              subtitle={t.home.quickActions.historySub}
-              iconColor={isDark ? "#94a3b8" : "#0d1b13"}
-              onPress={() => handleNavigate("history")}
-            />
-          </View>
-        </Animated.View>
+        </View>
 
         {/* API Error Banner */}
         {hasApiError && (
-          <Animated.View entering={FadeIn.duration(300)} className="px-5 mb-2">
-            <View className="flex-row items-center gap-2 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/50 p-3">
+          <Animated.View
+            entering={FadeIn.duration(300)}
+            style={{ paddingHorizontal: 20, marginBottom: 8 }}
+          >
+            <View
+              style={[
+                styles.errorBanner,
+                {
+                  backgroundColor: isDark
+                    ? "rgba(239,68,68,0.1)"
+                    : "#fef2f2",
+                  borderColor: isDark
+                    ? "rgba(239,68,68,0.2)"
+                    : "#fecaca",
+                },
+              ]}
+            >
               <MaterialIcons name="cloud-off" size={16} color="#ef4444" />
-              <Text className="text-xs font-medium text-red-700 dark:text-red-300 flex-1">
+              <Text
+                style={[
+                  styles.errorBannerText,
+                  { color: isDark ? "#fca5a5" : "#b91c1c" },
+                ]}
+              >
                 {t.errors.network}
               </Text>
             </View>
           </Animated.View>
         )}
 
-        {/* Alertes & Vigilance */}
-        {alertItems.length > 0 && (
-          <Animated.View entering={FadeIn.delay(400).duration(500)} className="mb-2">
-            <View className="flex-row items-center justify-between px-5 mb-3">
-              <View className="flex-row items-center gap-2">
-                <MaterialIcons name="shield" size={18} color={isDark ? "#f59e0b" : "#d97706"} />
-                <Text accessibilityRole="header" className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-                  {t.home.alertsSection}
+        {/* ====================================================
+            SECTION 3: FEATURED CONTENT (horizontal carousel)
+            ==================================================== */}
+        {featuredItems.length > 0 && (
+          <Animated.View
+            entering={FadeInDown.delay(360).duration(500)}
+            style={{ marginTop: 4 }}
+          >
+            {/* Section header */}
+            <View style={styles.sectionHeader}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <Text
+                  accessibilityRole="header"
+                  style={[
+                    styles.sectionTitle,
+                    { color: isDark ? COLORS.textDark : COLORS.textLight },
+                  ]}
+                >
+                  {t.home.featured}
                 </Text>
+                <Svg width={20} height={10} viewBox="0 0 24 12">
+                  <Path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke={COLORS.primaryGreen} strokeWidth={1.5} fill="none" opacity={0.5} />
+                </Svg>
               </View>
               <TouchableOpacity
-                onPress={() => router.push("/(tabs)/alerts")}
+                onPress={() => router.push("/articles")}
                 activeOpacity={0.7}
                 accessibilityRole="link"
-                accessibilityLabel={t.home.alertsSeeAll}
+                accessibilityLabel={t.home.viewAll}
               >
-                <Text className="text-xs font-semibold text-primary-dark dark:text-primary">
-                  {t.home.alertsSeeAll}
+                <Text style={[styles.seeAllText, { color: COLORS.primaryGreen }]}>
+                  {t.home.viewAll}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -418,137 +984,60 @@ export default function HomeScreen() {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
+              contentContainerStyle={{
+                paddingHorizontal: 20,
+                gap: 14,
+              }}
+              decelerationRate="fast"
+              snapToInterval={SCREEN_WIDTH * 0.7 + 14}
+              snapToAlignment="start"
             >
-              {alertItems.map((alert, index) => {
-                const icon = SEVERITY_ICON[alert.severity] ?? "info";
-                const color = SEVERITY_COLOR[alert.severity] ?? "#2563eb";
-                return (
-                  <Animated.View key={alert.id} entering={FadeInRight.delay(450 + index * 80).duration(400)}>
-                    <TouchableOpacity
-                      activeOpacity={0.9}
-                      accessibilityRole="button"
-                      accessibilityLabel={alert.title}
-                      accessibilityHint={alert.summary}
-                      className={`rounded-xl p-3 border ${
-                        alert.severity === "critical"
-                          ? "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800/50"
-                          : alert.severity === "warning"
-                            ? "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50"
-                            : "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800/50"
-                      }`}
-                      style={{ width: 260 }}
-                      onPress={() => router.push("/(tabs)/alerts")}
-                    >
-                      <View className="flex-row items-start gap-2">
-                        <MaterialIcons name={icon} size={16} color={color} />
-                        <View className="flex-1">
-                          <Text className="text-sm font-bold text-slate-900 dark:text-white" numberOfLines={1}>
-                            {alert.title}
-                          </Text>
-                          <Text className="text-xs text-slate-600 dark:text-slate-400 mt-1" numberOfLines={2}>
-                            {alert.summary}
-                          </Text>
-                        </View>
-                      </View>
-                    </TouchableOpacity>
-                  </Animated.View>
-                );
-              })}
-            </ScrollView>
-          </Animated.View>
-        )}
-
-        {/* Actu de la Communauté */}
-        {articleItems.length > 0 && (
-          <Animated.View entering={FadeIn.delay(450).duration(500)} className="mt-4">
-            <View className="flex-row items-center justify-between px-5 mb-3">
-              <Text accessibilityRole="header" className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-                {t.home.communityNews}
-              </Text>
-            </View>
-
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 20, gap: 16 }}
-            >
-              {articleItems.map((article, index) => (
-                <Animated.View key={article.id} entering={FadeInRight.delay(500 + index * 100).duration(500)}>
-                  <TouchableOpacity
-                    activeOpacity={0.9}
-                    accessibilityRole="button"
-                    accessibilityLabel={article.title}
-                    accessibilityHint={article.excerpt ?? undefined}
-                    className="relative h-40 overflow-hidden rounded-2xl"
-                    style={{ width: 280 }}
-                  >
-                    {article.coverImage ? (
-                      <Image
-                        source={{ uri: article.coverImage }}
-                        className="absolute inset-0 w-full h-full"
-                        contentFit="cover"
-                        transition={200}
-                        accessible={false}
-                      />
-                    ) : (
-                      <View className="absolute inset-0 bg-slate-200 dark:bg-slate-800 items-center justify-center">
-                        <MaterialIcons name="article" size={36} color={isDark ? "#475569" : "#94a3b8"} />
-                      </View>
-                    )}
-                    <LinearGradient
-                      colors={["transparent", "rgba(0,0,0,0.7)", "rgba(0,0,0,0.9)"]}
-                      className="absolute inset-0"
-                    />
-                    <View className="absolute bottom-0 left-0 right-0 p-4">
-                      <View
-                        className={`self-start mb-1 px-2 py-0.5 rounded ${
-                          article.type === "educational"
-                            ? "bg-primary"
-                            : article.type === "partner_news"
-                              ? "bg-gold-500/80"
-                              : "bg-white/20"
-                        }`}
-                      >
-                        <Text className="text-[10px] font-bold uppercase tracking-wider text-white">
-                          {article.type === "partner_news"
-                            ? t.home.partnerBadge
-                            : article.type === "educational"
-                              ? t.home.guideBadge
-                              : t.home.blogBadge}
-                        </Text>
-                      </View>
-                      <Text className="text-base font-bold text-white" numberOfLines={1}>
-                        {article.title}
-                      </Text>
-                      <Text className="text-xs text-gray-300" numberOfLines={1}>
-                        {article.excerpt ?? `${article.readTimeMinutes ?? 3} min · ${article.author}`}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                </Animated.View>
+              {featuredItems.map((item, index) => (
+                <FeaturedCard
+                  key={item.id}
+                  item={item}
+                  isDark={isDark}
+                  index={index}
+                  onPress={() => handleFeaturedPress(item)}
+                />
               ))}
             </ScrollView>
           </Animated.View>
         )}
 
-        {/* Favorites */}
+        {/* ====================================================
+            SECTION 4: QUICK FAVORITES (stories-style)
+            ==================================================== */}
         <Animated.View
-          entering={FadeIn.delay(500).duration(500)}
-          className="mt-6"
+          entering={FadeInDown.delay(480).duration(500)}
+          style={{ marginTop: 24 }}
         >
-          <View className="flex-row items-center justify-between px-5 mb-3">
-            <Text accessibilityRole="header" className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-              {t.home.favorites}
-            </Text>
+          {/* Section header */}
+          <View style={styles.sectionHeader}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Text
+                accessibilityRole="header"
+                style={[
+                  styles.sectionTitle,
+                  { color: isDark ? COLORS.textDark : COLORS.textLight },
+                ]}
+              >
+                {t.home.favorites}
+              </Text>
+              <Svg width={20} height={10} viewBox="0 0 24 12">
+                <Path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke={COLORS.primaryGreen} strokeWidth={1.5} fill="none" opacity={0.5} />
+              </Svg>
+            </View>
             {favoriteProducts.length > 0 && (
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => handleNavigate("favorites")}
                 accessibilityRole="link"
-                accessibilityLabel={`${t.home.viewAll} ${t.home.favorites}, ${favoriteProducts.length}`}
+                accessibilityLabel={`${t.home.viewAll} ${t.home.favorites}`}
               >
-                <Text className="text-xs font-semibold text-primary-dark dark:text-primary">
+                <Text
+                  style={[styles.seeAllText, { color: COLORS.primaryGreen }]}
+                >
                   {t.home.viewAll} ({favoriteProducts.length})
                 </Text>
               </TouchableOpacity>
@@ -558,168 +1047,439 @@ export default function HomeScreen() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20, gap: 16 }}
+            contentContainerStyle={{
+              paddingHorizontal: 20,
+              gap: 16,
+            }}
           >
             {favoriteProducts.length === 0 ? (
-              <Animated.View entering={FadeInRight.delay(550).duration(400)}>
+              <Animated.View entering={FadeInRight.delay(540).duration(400)}>
                 <TouchableOpacity
                   activeOpacity={0.8}
                   accessibilityRole="button"
                   accessibilityLabel={t.home.addFavorite}
                   accessibilityHint={t.home.emptyFavorites}
-                  className="items-center justify-center gap-2 rounded-2xl bg-slate-50 dark:bg-white/5 border border-dashed border-slate-200 dark:border-slate-700/50"
-                  style={{ width: 200, height: 100, paddingHorizontal: 16 }}
                   onPress={() => router.push("/(tabs)/scanner")}
+                  style={[
+                    styles.emptyFavCard,
+                    {
+                      backgroundColor: isDark
+                        ? "rgba(255,255,255,0.03)"
+                        : "#f8fafc",
+                      borderColor: isDark
+                        ? "rgba(255,255,255,0.06)"
+                        : "#e2e8f0",
+                    },
+                  ]}
                 >
                   <MaterialIcons
                     name="favorite-border"
                     size={24}
-                    color={isDark ? "#94a3b8" : "#64748b"}
+                    color={isDark ? "#6b7280" : "#94a3b8"}
                   />
-                  <Text className="text-xs text-center text-slate-500 dark:text-slate-400">
+                  <Text
+                    style={[
+                      styles.emptyFavText,
+                      {
+                        color: isDark
+                          ? COLORS.textSecDark
+                          : COLORS.textSecLight,
+                      },
+                    ]}
+                  >
                     {t.home.emptyFavorites}
                   </Text>
                 </TouchableOpacity>
               </Animated.View>
             ) : (
-              favoriteProducts.slice(0, 6).map((item, index) => (
-                <Animated.View
+              favoriteProducts.slice(0, 8).map((item, index) => (
+                <FavoriteCircle
                   key={item.id}
-                  entering={FadeInRight.delay(550 + index * 80).duration(400)}
-                >
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${t.home.favorites} ${item.name}`}
-                    accessibilityHint={t.home.favorites}
-                    className="items-center gap-2"
-                    style={{ width: FAVORITE_CIRCLE_SIZE }}
-                    onPress={() => handleNavigate("favorites")}
-                  >
-                    <View className="h-[72px] w-[72px] rounded-full border border-slate-100 dark:border-slate-700/50 bg-white dark:bg-surface-dark p-1 overflow-hidden">
-                      <Image
-                        source={{ uri: item.image }}
-                        className="h-full w-full rounded-full"
-                        contentFit="cover"
-                        transition={200}
-                        accessibilityLabel={`Photo de ${item.name}`}
-                      />
-                    </View>
-                    <Text
-                      className="text-xs font-medium text-slate-500 dark:text-slate-400 text-center"
-                      numberOfLines={1}
-                    >
-                      {item.name.split(' ')[0]}
-                    </Text>
-                  </TouchableOpacity>
-                </Animated.View>
+                  id={item.id}
+                  name={item.name}
+                  image={item.image}
+                  isDark={isDark}
+                  index={index}
+                  onPress={() => handleNavigate("favorites")}
+                />
               ))
             )}
 
-            {/* Add button - toujours visible */}
-            <Animated.View entering={FadeInRight.delay(700).duration(400)}>
+            {/* Always-visible "Add" circle */}
+            <Animated.View
+              entering={FadeInRight.delay(
+                540 + favoriteProducts.length * 70,
+              ).duration(400)}
+            >
               <TouchableOpacity
                 activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel={t.home.addFavorite}
-                accessibilityHint={t.home.emptyFavorites}
-                className="items-center gap-2"
-                style={{ width: FAVORITE_CIRCLE_SIZE }}
                 onPress={() => router.push("/(tabs)/scanner")}
+                style={styles.favCircleTouch}
               >
-                <View className="h-[72px] w-[72px] rounded-full items-center justify-center bg-slate-100 dark:bg-white/5 border border-transparent dark:border-slate-700/50">
+                <View
+                  style={[
+                    styles.addCircle,
+                    {
+                      borderColor: isDark
+                        ? "rgba(255,255,255,0.08)"
+                        : "#e2e8f0",
+                      backgroundColor: isDark
+                        ? "rgba(255,255,255,0.04)"
+                        : "#f8fafc",
+                    },
+                  ]}
+                >
                   <MaterialIcons
                     name="add"
-                    size={28}
-                    color={isDark ? "#94a3b8" : "#64748b"}
+                    size={26}
+                    color={isDark ? "#6b7280" : "#94a3b8"}
                   />
                 </View>
-                <Text className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                <Text
+                  style={[
+                    styles.favName,
+                    {
+                      color: isDark
+                        ? COLORS.textSecDark
+                        : COLORS.textSecLight,
+                    },
+                  ]}
+                >
                   {t.home.add}
                 </Text>
               </TouchableOpacity>
             </Animated.View>
           </ScrollView>
         </Animated.View>
-
-        {/* Nearby Store */}
-        <Animated.View
-          entering={FadeInUp.delay(600).duration(600)}
-          className="mt-6 px-5"
-        >
-          <Text accessibilityRole="header" className="text-lg font-bold tracking-tight text-slate-900 dark:text-white mb-3">
-            {t.home.nearYou}
-          </Text>
-
-          <Card variant="outlined" className="overflow-hidden">
-            {/* Map Preview */}
-            <TouchableOpacity
-              activeOpacity={0.9}
-              accessibilityRole="button"
-              accessibilityLabel={t.map.title}
-              accessibilityHint={t.home.nearYou}
-              onPress={() => router.push("/(tabs)/map")}
-            >
-              <View className="relative h-32 w-full overflow-hidden rounded-t-xl bg-slate-200 dark:bg-slate-800">
-                {nearbyStore?.imageUrl ? (
-                  <Image
-                    source={{ uri: nearbyStore.imageUrl }}
-                    className="absolute inset-0 w-full h-full opacity-80 dark:opacity-60"
-                    contentFit="cover"
-                    transition={200}
-                    accessible={false}
-                  />
-                ) : (
-                  <View className="absolute inset-0 items-center justify-center">
-                    <MaterialIcons name="storefront" size={48} color={isDark ? "#334155" : "#cbd5e1"} />
-                  </View>
-                )}
-                {nearbyStore?.halalCertified && (
-                  <View className="absolute top-2 left-2 flex-row items-center gap-1 rounded-lg bg-primary/90 px-2 py-1">
-                    <MaterialIcons name="verified" size={12} color="#ffffff" />
-                    <Text className="text-[10px] font-bold text-white uppercase">
-                      {nearbyStore.certifier !== "none" ? nearbyStore.certifier.toUpperCase() : "Halal"}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </TouchableOpacity>
-
-            {/* Store Info */}
-            <View className="flex-row items-center gap-3 p-3">
-              <View className="h-10 w-10 items-center justify-center rounded-full bg-emerald-100 dark:bg-primary/20">
-                <MaterialIcons
-                  name="store"
-                  size={20}
-                  color={isDark ? "#1de560" : "#047857"}
-                />
-              </View>
-              <View className="flex-1">
-                <Text className="text-sm font-bold text-slate-900 dark:text-white" numberOfLines={1}>
-                  {nearbyStore?.name ?? t.common.loading}
-                </Text>
-                <Text className="text-xs text-slate-500 dark:text-slate-400" numberOfLines={1}>
-                  {nearbyStore ? `${nearbyStore.address}, ${nearbyStore.city}` : t.common.loading}
-                </Text>
-              </View>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                accessibilityRole="button"
-                accessibilityLabel={t.map.title}
-                accessibilityHint={t.home.nearYou}
-                className="rounded-full p-2 bg-slate-100 dark:bg-white/5"
-                onPress={() => router.push("/(tabs)/map")}
-              >
-                <MaterialIcons
-                  name="directions"
-                  size={20}
-                  color={isDark ? "#ffffff" : "#0d1b13"}
-                />
-              </TouchableOpacity>
-            </View>
-          </Card>
-        </Animated.View>
-      </ScrollView>
+      </AnimatedScrollView>
     </View>
   );
 }
+
+// ============================================================================
+// STYLES
+// ============================================================================
+
+const styles = StyleSheet.create({
+  // ---- Header ----
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  greetingLabel: {
+    fontSize: 13,
+    fontWeight: "500",
+    letterSpacing: 0.2,
+  },
+  greetingName: {
+    fontSize: 22,
+    fontWeight: "800",
+    letterSpacing: -0.5,
+    marginTop: 1,
+  },
+
+  // ---- Bell ----
+  bellButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+  },
+  bellBadge: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: "#ef4444",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  bellBadgeText: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: "#ffffff",
+  },
+
+  // ---- Stats Pill ----
+  statsPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    marginBottom: 20,
+  },
+  statsDivider: {
+    width: 1,
+    height: 28,
+    borderRadius: 0.5,
+  },
+  streakRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
+  streakFlame: {
+    fontSize: 14,
+  },
+
+  // ---- Quick Actions ----
+  sectionWrap: {
+    paddingHorizontal: 20,
+  },
+  quickActionsGrid: {
+    gap: 10,
+  },
+  quickActionsRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  quickActionHalf: {
+    flex: 1,
+  },
+  quickActionPrimary: {
+    borderRadius: 20,
+    overflow: "hidden",
+    padding: 16,
+    minHeight: 80,
+    justifyContent: "center",
+    // Shadow glow
+    ...Platform.select({
+      ios: {
+        shadowColor: "#13ec6a",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.35,
+        shadowRadius: 16,
+      },
+      android: { elevation: 8 },
+    }),
+  },
+  quickActionGlass: {
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 16,
+    minHeight: 80,
+    justifyContent: "center",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+      },
+      android: { elevation: 2 },
+    }),
+  },
+  quickActionContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  quickActionIconWrapPrimary: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  quickActionIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  quickActionTitlePrimary: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#ffffff",
+    letterSpacing: -0.2,
+  },
+  quickActionSubPrimary: {
+    fontSize: 11,
+    color: "rgba(255,255,255,0.75)",
+    marginTop: 1,
+  },
+  quickActionTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    letterSpacing: -0.2,
+  },
+  quickActionSub: {
+    fontSize: 11,
+    marginTop: 1,
+  },
+
+  // ---- Featured ----
+  featuredCard: {
+    width: SCREEN_WIDTH * 0.7,
+    height: 170,
+    borderRadius: 18,
+    overflow: "hidden",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+      },
+      android: { elevation: 4 },
+    }),
+  },
+  featuredBadgeWrap: {
+    position: "absolute",
+    top: 12,
+    left: 12,
+    zIndex: 10,
+  },
+  featuredBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  featuredBadgeText: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: "#ffffff",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  featuredContent: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 14,
+    paddingLeft: 18,
+  },
+  featuredTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#ffffff",
+    lineHeight: 20,
+    letterSpacing: -0.2,
+  },
+  featuredSubtitle: {
+    fontSize: 11,
+    color: "rgba(255,255,255,0.65)",
+    marginTop: 3,
+  },
+  featuredAccent: {
+    position: "absolute",
+    top: 12,
+    bottom: 12,
+    left: 0,
+    width: 3,
+    borderTopRightRadius: 3,
+    borderBottomRightRadius: 3,
+  },
+
+  // ---- Section headers ----
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    marginBottom: 14,
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    letterSpacing: -0.3,
+  },
+  seeAllText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
+  // ---- Favorites ----
+  favCircleTouch: {
+    alignItems: "center",
+    width: CIRCLE_SIZE + 12,
+    gap: 6,
+  },
+  favGradientRing: {
+    width: CIRCLE_SIZE + CIRCLE_BORDER * 2 + 4,
+    height: CIRCLE_SIZE + CIRCLE_BORDER * 2 + 4,
+    borderRadius: (CIRCLE_SIZE + CIRCLE_BORDER * 2 + 4) / 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  favInnerRing: {
+    width: CIRCLE_SIZE + 2,
+    height: CIRCLE_SIZE + 2,
+    borderRadius: (CIRCLE_SIZE + 2) / 2,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: CIRCLE_BORDER,
+  },
+  favImage: {
+    width: CIRCLE_SIZE - CIRCLE_BORDER * 2,
+    height: CIRCLE_SIZE - CIRCLE_BORDER * 2,
+    borderRadius: (CIRCLE_SIZE - CIRCLE_BORDER * 2) / 2,
+  },
+  favName: {
+    fontSize: 10,
+    fontWeight: "600",
+    textAlign: "center",
+    lineHeight: 13,
+  },
+  addCircle: {
+    width: CIRCLE_SIZE + CIRCLE_BORDER * 2 + 4,
+    height: CIRCLE_SIZE + CIRCLE_BORDER * 2 + 4,
+    borderRadius: (CIRCLE_SIZE + CIRCLE_BORDER * 2 + 4) / 2,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyFavCard: {
+    width: 220,
+    height: 90,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingHorizontal: 16,
+  },
+  emptyFavText: {
+    fontSize: 11,
+    textAlign: "center",
+    lineHeight: 15,
+  },
+
+  // ---- Error ----
+  errorBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 12,
+  },
+  errorBannerText: {
+    fontSize: 12,
+    fontWeight: "600",
+    flex: 1,
+  },
+});

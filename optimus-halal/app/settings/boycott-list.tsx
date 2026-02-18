@@ -23,40 +23,42 @@ import { trpc } from "@/lib/trpc";
 
 type BoycottLevel = "official_bds" | "grassroots" | "pressure" | "community";
 
-const LEVEL_FILTERS: { id: BoycottLevel | "all"; label: string }[] = [
-  { id: "all", label: "Tous" },
-  { id: "official_bds", label: "BDS Officiel" },
-  { id: "grassroots", label: "Populaire" },
-  { id: "pressure", label: "Pression" },
-  { id: "community", label: "Communauté" },
-];
+function getLevelFilters(t: ReturnType<typeof useTranslation>["t"]): { id: BoycottLevel | "all"; label: string }[] {
+  return [
+    { id: "all", label: t.boycott.filters.all },
+    { id: "official_bds", label: t.boycott.filters.officialBds },
+    { id: "grassroots", label: t.boycott.filters.grassroots },
+    { id: "pressure", label: t.boycott.filters.pressure },
+    { id: "community", label: t.boycott.filters.community },
+  ];
+}
 
-function getLevelConfig(level: string, isDark: boolean) {
+function getLevelConfig(level: string, isDark: boolean, t: ReturnType<typeof useTranslation>["t"]) {
   switch (level) {
     case "official_bds":
       return {
-        label: "BDS",
+        label: t.boycott.levels.bds,
         bgColor: isDark ? "rgba(239,68,68,0.15)" : "rgba(239,68,68,0.1)",
         textColor: isDark ? "#f87171" : "#dc2626",
         icon: "gavel" as const,
       };
     case "grassroots":
       return {
-        label: "Populaire",
+        label: t.boycott.levels.grassroots,
         bgColor: isDark ? "rgba(249,115,22,0.15)" : "rgba(249,115,22,0.1)",
         textColor: isDark ? "#fb923c" : "#c2410c",
         icon: "people" as const,
       };
     case "pressure":
       return {
-        label: "Pression",
+        label: t.boycott.levels.pressure,
         bgColor: isDark ? "rgba(234,179,8,0.15)" : "rgba(234,179,8,0.1)",
         textColor: isDark ? "#fbbf24" : "#a16207",
         icon: "trending-up" as const,
       };
     default:
       return {
-        label: "Communauté",
+        label: t.boycott.levels.community,
         bgColor: isDark ? "rgba(59,130,246,0.15)" : "rgba(59,130,246,0.1)",
         textColor: isDark ? "#60a5fa" : "#2563eb",
         icon: "groups" as const,
@@ -96,13 +98,15 @@ const BoycottCard = React.memo(function BoycottCard({
   index,
   isDark,
   colors,
+  t,
 }: {
   item: BoycottItem;
   index: number;
   isDark: boolean;
   colors: ReturnType<typeof useTheme>["colors"];
+  t: ReturnType<typeof useTranslation>["t"];
 }) {
-  const level = getLevelConfig(item.boycottLevel, isDark);
+  const level = getLevelConfig(item.boycottLevel, isDark, t);
   const severityColor = getSeverityColor(item.severity, isDark);
 
   return (
@@ -128,7 +132,7 @@ const BoycottCard = React.memo(function BoycottCard({
             </Text>
             {item.parentCompany && (
               <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 2 }}>
-                Groupe : {item.parentCompany}
+                {t.boycott.parentGroup} : {item.parentCompany}
               </Text>
             )}
           </View>
@@ -172,7 +176,7 @@ const BoycottCard = React.memo(function BoycottCard({
         {/* Source */}
         {item.sourceName && (
           <Text style={{ fontSize: 10, color: colors.textMuted, marginTop: 8 }}>
-            Source : {item.sourceName}
+            {t.boycott.source} : {item.sourceName}
           </Text>
         )}
       </View>
@@ -199,9 +203,9 @@ export default function BoycottListScreen() {
 
   const renderItem = useCallback(
     ({ item, index }: { item: BoycottItem; index: number }) => (
-      <BoycottCard item={item} index={index} isDark={isDark} colors={colors} />
+      <BoycottCard item={item} index={index} isDark={isDark} colors={colors} t={t} />
     ),
-    [isDark, colors]
+    [isDark, colors, t]
   );
 
   return (
@@ -216,16 +220,16 @@ export default function BoycottListScreen() {
               borderRadius: 20, backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1,
             }}
             accessibilityRole="button"
-            accessibilityLabel="Retour"
+            accessibilityLabel={t.common.back}
           >
             <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
           <View>
             <Text style={{ fontSize: 24, fontWeight: "700", letterSpacing: -0.5, color: colors.textPrimary }} accessibilityRole="header">
-              Boycott & Éthique
+              {t.boycott.title}
             </Text>
             <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
-              {items.length} entreprise{items.length > 1 ? "s" : ""} listée{items.length > 1 ? "s" : ""}
+              {(items.length > 1 ? t.boycott.companyCountPlural : t.boycott.companyCount).replace("{{count}}", String(items.length))}
             </Text>
           </View>
         </View>
@@ -235,7 +239,7 @@ export default function BoycottListScreen() {
       <Animated.View entering={FadeIn.delay(100).duration(400)}>
         <FlashList
           horizontal
-          data={LEVEL_FILTERS}
+          data={getLevelFilters(t)}
           keyExtractor={(item) => item.id}
           renderItem={({ item: filter }) => {
             const isSelected = selectedLevel === filter.id;
@@ -272,17 +276,17 @@ export default function BoycottListScreen() {
       ) : isError ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
           <MaterialIcons name="cloud-off" size={64} color={colors.textMuted} />
-          <Text style={{ color: colors.textSecondary, fontSize: 16, marginTop: 16 }}>Erreur de chargement</Text>
+          <Text style={{ color: colors.textSecondary, fontSize: 16, marginTop: 16 }}>{t.boycott.loadError}</Text>
           <TouchableOpacity onPress={() => refetch()} style={{ marginTop: 20, backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 }}>
-            <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>Réessayer</Text>
+            <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>{t.common.retry}</Text>
           </TouchableOpacity>
         </View>
       ) : items.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 80 }}>
           <MaterialIcons name="check-circle" size={64} color={colors.primary} />
-          <Text style={{ color: colors.textSecondary, fontSize: 18, marginTop: 16 }}>Aucune entreprise listée</Text>
+          <Text style={{ color: colors.textSecondary, fontSize: 18, marginTop: 16 }}>{t.boycott.noCompanies}</Text>
           <Text style={{ color: colors.textMuted, fontSize: 14, marginTop: 8, textAlign: "center", paddingHorizontal: 32 }}>
-            Aucune cible de boycott active pour ce filtre.
+            {t.boycott.noCompaniesDesc}
           </Text>
         </View>
       ) : (

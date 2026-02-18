@@ -13,7 +13,6 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  useColorScheme,
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -21,13 +20,13 @@ import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
 import { AUTH_CONFIG } from "@/constants/config";
-import { useTranslation, useHaptics } from "@/hooks";
+import { IslamicPattern } from "@/components/ui";
+import { useTranslation, useHaptics, useTheme } from "@/hooks";
 
 export default function AuthWelcomeScreen() {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
+  const { isDark } = useTheme();
   const { impact } = useHaptics();
-  const isDark = colorScheme === "dark";
   const { t } = useTranslation();
 
   const authMode = AUTH_CONFIG.mode;
@@ -56,6 +55,9 @@ export default function AuthWelcomeScreen() {
 
   return (
     <View className="flex-1 bg-white dark:bg-background-dark">
+      {/* Islamic Pattern Background */}
+      <IslamicPattern variant="tessellation" opacity={0.04} />
+
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,
@@ -74,10 +76,10 @@ export default function AuthWelcomeScreen() {
             <MaterialIcons name="verified" size={48} color="white" />
           </View>
           <Text className="text-slate-900 dark:text-white text-3xl font-bold" accessibilityRole="header">
-            Optimus Halal
+            {t.auth.welcome.appName}
           </Text>
           <Text className="text-slate-500 dark:text-slate-400 mt-2 text-center">
-            Consommation halal transparente
+            {t.auth.welcome.tagline}
           </Text>
         </Animated.View>
 
@@ -87,12 +89,12 @@ export default function AuthWelcomeScreen() {
           className="mb-8"
         >
           <Text className="text-slate-900 dark:text-white text-2xl font-bold mb-2" accessibilityRole="header">
-            Bienvenue !
+            {t.auth.welcome.greeting}
           </Text>
           <Text className="text-slate-500 dark:text-slate-400 text-base">
-            {authMode === "v2" 
-              ? "Connectez-vous en un clic avec votre email"
-              : "Connectez-vous pour accéder à toutes les fonctionnalités"
+            {authMode === "v2"
+              ? t.auth.welcome.subtitleV2
+              : t.auth.welcome.subtitleHybrid
             }
           </Text>
         </Animated.View>
@@ -106,8 +108,8 @@ export default function AuthWelcomeScreen() {
             onPress={handleMagicLink}
             activeOpacity={0.9}
             accessibilityRole="button"
-            accessibilityLabel="Connexion par email"
-            accessibilityHint="Double-tapez pour vous connecter avec un lien magique par email"
+            accessibilityLabel={t.auth.welcome.emailLogin}
+            accessibilityHint={t.auth.welcome.emailLoginDesc}
             className="bg-primary-500 rounded-2xl p-6 border-2 border-primary-600"
             style={{
               shadowColor: "#13ec6a",
@@ -123,24 +125,24 @@ export default function AuthWelcomeScreen() {
                   <MaterialIcons name="mail-outline" size={24} color="white" />
                 </View>
                 <Text className="text-white text-lg font-bold">
-                  Connexion par email
+                  {t.auth.welcome.emailLogin}
                 </Text>
               </View>
               {authMode === "hybrid" && (
                 <View className="bg-white/20 px-2 py-1 rounded-full">
                   <Text className="text-white text-xs font-semibold">
-                    Recommandé
+                    {t.auth.welcome.recommended}
                   </Text>
                 </View>
               )}
             </View>
             <Text className="text-white/90 text-sm leading-relaxed">
-              Recevez un lien de connexion instantané. Simple, rapide et sécurisé.
+              {t.auth.welcome.emailLoginDesc}
             </Text>
             <View className="flex-row items-center mt-3">
               <MaterialIcons name="check-circle" size={16} color="white" />
               <Text className="text-white/90 text-xs ml-2">
-                Pas de mot de passe à retenir
+                {t.auth.welcome.noPasswordNeeded}
               </Text>
             </View>
           </TouchableOpacity>
@@ -156,7 +158,7 @@ export default function AuthWelcomeScreen() {
               <View className="absolute inset-x-0 top-1/2 h-px bg-slate-200 dark:bg-slate-800" />
               <View className="items-center">
                 <Text className="bg-white dark:bg-background-dark px-4 text-sm text-slate-500">
-                  ou
+                  {t.common.or}
                 </Text>
               </View>
             </Animated.View>
@@ -166,8 +168,8 @@ export default function AuthWelcomeScreen() {
                 onPress={handleTraditionalLogin}
                 activeOpacity={0.7}
                 accessibilityRole="button"
-                accessibilityLabel="Connexion classique"
-                accessibilityHint="Double-tapez pour vous connecter avec email et mot de passe"
+                accessibilityLabel={t.auth.welcome.classicLogin}
+                accessibilityHint={t.auth.welcome.classicLoginDesc}
                 className="bg-white dark:bg-surface-dark rounded-2xl p-5 border border-slate-200 dark:border-slate-700"
               >
                 <View className="flex-row items-center">
@@ -180,10 +182,10 @@ export default function AuthWelcomeScreen() {
                   </View>
                   <View className="flex-1">
                     <Text className="text-slate-900 dark:text-white font-semibold">
-                      Connexion classique
+                      {t.auth.welcome.classicLogin}
                     </Text>
                     <Text className="text-slate-500 dark:text-slate-400 text-sm">
-                      Email et mot de passe
+                      {t.auth.welcome.classicLoginDesc}
                     </Text>
                   </View>
                   <MaterialIcons
@@ -203,28 +205,28 @@ export default function AuthWelcomeScreen() {
           className="mt-12 bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6"
         >
           <Text className="text-slate-900 dark:text-white font-semibold mb-4" accessibilityRole="header">
-            Pourquoi s&apos;inscrire ?
+            {t.auth.welcome.whySignUp}
           </Text>
           
           <View className="space-y-3">
             <View className="flex-row items-start">
               <MaterialIcons name="qr-code-scanner" size={20} color="#13ec6a" />
               <Text className="text-slate-600 dark:text-slate-400 text-sm ml-3 flex-1">
-                Scanner et vérifier instantanément les produits halal
+                {t.auth.welcome.benefit1}
               </Text>
             </View>
             
             <View className="flex-row items-start">
               <MaterialIcons name="location-on" size={20} color="#13ec6a" />
               <Text className="text-slate-600 dark:text-slate-400 text-sm ml-3 flex-1">
-                Trouver des commerces halal certifiés près de chez vous
+                {t.auth.welcome.benefit2}
               </Text>
             </View>
             
             <View className="flex-row items-start">
               <MaterialIcons name="notifications-active" size={20} color="#13ec6a" />
               <Text className="text-slate-600 dark:text-slate-400 text-sm ml-3 flex-1">
-                Recevoir des alertes sur vos produits favoris
+                {t.auth.welcome.benefit3}
               </Text>
             </View>
           </View>
@@ -236,8 +238,8 @@ export default function AuthWelcomeScreen() {
           className="items-center mt-8"
         >
           <Text className="text-xs text-slate-500 dark:text-slate-400 text-center">
-            En continuant, vous acceptez nos{"\n"}
-            <Text className="underline">{t.auth.signup.termsLink}</Text> et notre{" "}
+            {t.common.signUpWith}{"\n"}
+            <Text className="underline">{t.auth.signup.termsLink}</Text> {t.common.and}{" "}
             <Text className="underline">{t.auth.signup.privacyLink}</Text>
           </Text>
         </Animated.View>

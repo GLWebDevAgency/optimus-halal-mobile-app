@@ -442,8 +442,8 @@ export default function ExclusionsScreen() {
             borderColor: themeColors.cardBorder,
           }}
           accessibilityRole="button"
-          accessibilityLabel="Retour"
-          accessibilityHint="Revenir à l'écran précédent"
+          accessibilityLabel={t.common.back}
+          accessibilityHint={t.common.back}
         >
           <MaterialIcons name="arrow-back" size={22} color={themeColors.textPrimary} />
         </TouchableOpacity>
@@ -482,7 +482,7 @@ export default function ExclusionsScreen() {
               color: themeColors.primary,
             }}
           >
-            Fin
+            {t.exclusions.done}
           </Text>
         </TouchableOpacity>
       </Animated.View>
@@ -531,7 +531,7 @@ export default function ExclusionsScreen() {
                 color: themeColors.textPrimary,
               }}
             >
-              Certification Halal active
+              {t.exclusions.halalCertActive}
             </Text>
             <Text
               style={{
@@ -541,7 +541,7 @@ export default function ExclusionsScreen() {
                 lineHeight: 18,
               }}
             >
-              Tous les produits sont déjà filtrés selon les standards Halal. Ajoutez ici vos intolérances ou régimes personnels.
+              {t.exclusions.halalCertActiveDesc}
             </Text>
           </View>
         </Animated.View>
@@ -575,7 +575,7 @@ export default function ExclusionsScreen() {
             <TextInput
               value={searchQuery}
               onChangeText={handleSearchChange}
-              placeholder="Ajouter un ingrédient, un additif (E120)..."
+              placeholder={t.exclusions.searchPlaceholder}
               placeholderTextColor={themeColors.textSecondary}
               style={{
                 flex: 1,
@@ -667,7 +667,7 @@ export default function ExclusionsScreen() {
               }}
               accessibilityRole="header"
             >
-              Allergènes courants
+              {t.exclusions.commonAllergens}
             </Text>
             <Text
               style={{
@@ -675,7 +675,7 @@ export default function ExclusionsScreen() {
                 color: themeColors.textSecondary,
               }}
             >
-              Sélection rapide
+              {t.exclusions.quickSelect}
             </Text>
           </View>
 
@@ -714,7 +714,7 @@ export default function ExclusionsScreen() {
               }}
               accessibilityRole="header"
             >
-              Mes exclusions
+              {t.exclusions.myExclusions}
             </Text>
             {activeCount > 0 && (
               <View
@@ -732,7 +732,7 @@ export default function ExclusionsScreen() {
                     color: isDark ? "#ffffff" : themeColors.textSecondary,
                   }}
                 >
-                  {activeCount} active{activeCount > 1 ? "s" : ""}
+                  {(activeCount > 1 ? t.exclusions.activeCountPlural : t.exclusions.activeCount).replace("{{count}}", String(activeCount))}
                 </Text>
               </View>
             )}
@@ -762,7 +762,7 @@ export default function ExclusionsScreen() {
                   textAlign: "center",
                 }}
               >
-                Aucune exclusion active.{"\n"}Sélectionnez un allergène ou recherchez un ingrédient.
+                {t.exclusions.emptyExclusions}
               </Text>
             </View>
           )}
@@ -786,7 +786,7 @@ export default function ExclusionsScreen() {
               justifyContent: "center",
             }}
             accessibilityRole="button"
-            accessibilityLabel="Ajouter une autre exclusion"
+            accessibilityLabel={t.exclusions.addAnother}
             accessibilityHint="Ouvrir les suggestions pour ajouter une exclusion"
           >
             <MaterialIcons name="add" size={18} color={themeColors.textSecondary} />
@@ -798,7 +798,7 @@ export default function ExclusionsScreen() {
                 color: themeColors.textSecondary,
               }}
             >
-              Ajouter une autre exclusion
+              {t.exclusions.addAnother}
             </Text>
           </TouchableOpacity>
         </Animated.View>
@@ -837,7 +837,7 @@ export default function ExclusionsScreen() {
             elevation: 4,
           }}
           accessibilityRole="button"
-          accessibilityLabel="Enregistrer les préférences"
+          accessibilityLabel={t.exclusions.savePreferences}
           accessibilityHint="Sauvegarder vos exclusions et revenir"
         >
           <Text
@@ -847,7 +847,7 @@ export default function ExclusionsScreen() {
               color: "#102217",
             }}
           >
-            Enregistrer les préférences
+            {t.exclusions.savePreferences}
           </Text>
         </TouchableOpacity>
       </Animated.View>

@@ -19,13 +19,12 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
-  useColorScheme,
 } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useHaptics } from "@/hooks";
+import { useHaptics, useTheme } from "@/hooks";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -37,9 +36,8 @@ import { useLocalCartStore } from "@/store";
 
 export default function CheckoutScreen() {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
+  const { isDark, colors } = useTheme();
   const { impact, notification } = useHaptics();
-  const isDark = colorScheme === "dark";
 
   const { items, total, clearCart } = useLocalCartStore();
 
@@ -123,7 +121,7 @@ export default function CheckoutScreen() {
             <View className="flex-row items-center gap-4 bg-white dark:bg-[#1c3024] p-4 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
               <View className="flex-row items-start gap-4 flex-1">
                 <View className="w-12 h-12 items-center justify-center rounded-lg bg-[#e7f3eb] dark:bg-white/10">
-                  <MaterialIcons name="location-on" size={24} color={isDark ? "#2bee6c" : "#0d1b12"} />
+                  <MaterialIcons name="location-on" size={24} color={isDark ? colors.primary : "#0d1b12"} />
                 </View>
                 <View className="flex-1">
                   <Text className="text-base font-medium text-slate-900 dark:text-white">
@@ -165,7 +163,7 @@ export default function CheckoutScreen() {
               <MaterialIcons
                 name={selectedShipping === "standard" ? "radio-button-checked" : "radio-button-unchecked"}
                 size={24}
-                color={selectedShipping === "standard" ? "#2bee6c" : "#9ca3af"}
+                color={selectedShipping === "standard" ? colors.primary : "#9ca3af"}
               />
               <View className="flex-1">
                 <View className="flex-row justify-between items-center">
@@ -195,7 +193,7 @@ export default function CheckoutScreen() {
               <MaterialIcons
                 name={selectedShipping === "express" ? "radio-button-checked" : "radio-button-unchecked"}
                 size={24}
-                color={selectedShipping === "express" ? "#2bee6c" : "#9ca3af"}
+                color={selectedShipping === "express" ? colors.primary : "#9ca3af"}
               />
               <View className="flex-1">
                 <View className="flex-row justify-between items-center">
@@ -279,7 +277,7 @@ export default function CheckoutScreen() {
                       onChangeText={setCardNumber}
                     />
                     <View className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <MaterialIcons name="lock" size={18} color="#2bee6c" />
+                      <MaterialIcons name="lock" size={18} color={colors.primary} />
                     </View>
                   </View>
 
@@ -383,7 +381,7 @@ export default function CheckoutScreen() {
             className="rounded-xl p-4 flex-row items-center gap-3 border border-primary/20"
           >
             <View className="bg-white dark:bg-white/10 p-2 rounded-full">
-              <MaterialIcons name="volunteer-activism" size={24} color="#2bee6c" />
+              <MaterialIcons name="volunteer-activism" size={24} color={colors.primary} />
             </View>
             <View className="flex-1">
               <Text className="text-sm font-bold text-slate-900 dark:text-white">
@@ -451,7 +449,7 @@ export default function CheckoutScreen() {
           className="w-full bg-primary py-3.5 rounded-xl flex-row items-center justify-center gap-2 shadow-lg"
           activeOpacity={0.9}
           style={{
-            shadowColor: "#2bee6c",
+            shadowColor: colors.primary,
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.2,
             shadowRadius: 8,

@@ -18,13 +18,12 @@ import {
   StyleSheet,
   Dimensions,
   Alert,
-  useColorScheme,
   StatusBar,
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useHaptics } from "@/hooks";
+import { useHaptics, useTheme } from "@/hooks";
 import { ImpactFeedbackStyle } from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import Animated, {
@@ -34,6 +33,7 @@ import Animated, {
   withTiming,
   withSequence,
   withSpring,
+  cancelAnimation,
   Easing,
   FadeIn,
   FadeInDown,
@@ -45,17 +45,17 @@ import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 
 import { useTranslation } from "@/hooks/useTranslation";
+import { brand } from "@/theme/colors";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const SCAN_FRAME_WIDTH = 320;
 const SCAN_FRAME_HEIGHT = 288;
 const CORNER_SIZE = 48;
 const CORNER_THICKNESS = 4;
-const PRIMARY_COLOR = "#1de560";
 
 export default function ScannerScreen() {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
+  const { colors } = useTheme();
   const { impact, notification } = useHaptics();
   const { t } = useTranslation();
   const cameraRef = useRef<CameraView>(null);
@@ -82,6 +82,7 @@ export default function ScannerScreen() {
       -1,
       false
     );
+    return () => cancelAnimation(scanLinePosition);
   }, []);
 
   // Corner glow pulsing
@@ -94,6 +95,7 @@ export default function ScannerScreen() {
       -1,
       false
     );
+    return () => cancelAnimation(cornerGlow);
   }, []);
 
   // Button pulse animation
@@ -114,6 +116,10 @@ export default function ScannerScreen() {
       -1,
       false
     );
+    return () => {
+      cancelAnimation(pulseScale);
+      cancelAnimation(pulseOpacity);
+    };
   }, []);
 
   const animatedScanLineStyle = useAnimatedStyle(() => ({
@@ -152,7 +158,8 @@ export default function ScannerScreen() {
 
       setScanned(true);
       setIsScanning(false);
-      notification();
+      // Barcode detected — medium impact for the "discovery moment"
+      impact(ImpactFeedbackStyle.Medium);
 
       router.push({
         pathname: "/scan-result",
@@ -164,7 +171,7 @@ export default function ScannerScreen() {
         setIsScanning(true);
       }, 2000);
     },
-    [scanned, notification]
+    [scanned, impact]
   );
 
   const handleOpenGallery = useCallback(async () => {
@@ -196,8 +203,8 @@ export default function ScannerScreen() {
 
   const handleOpenHistory = useCallback(async () => {
     impact();
-    router.push("/scan-result" as any);
-  }, []);
+    router.push("/settings/scan-history");
+  }, [impact]);
 
   const handleBarcodeScanned = useCallback(
     ({ data, type }: { data: string; type: string }) => {
@@ -243,7 +250,7 @@ export default function ScannerScreen() {
           style={styles.permissionContent}
         >
           <View style={styles.permissionIconContainer}>
-            <MaterialIcons name="camera-alt" size={48} color={PRIMARY_COLOR} />
+            <MaterialIcons name="camera-alt" size={48} color={colors.primary} />
           </View>
           <View style={styles.permissionTextContainer}>
             <Text style={styles.permissionTitle}>{t.scanner.noPermission}</Text>
@@ -309,7 +316,7 @@ export default function ScannerScreen() {
             {/* Animated Scan Line */}
             <Animated.View style={[styles.scanLine, animatedScanLineStyle]}>
               <LinearGradient
-                colors={["transparent", PRIMARY_COLOR, "transparent"]}
+                colors={["transparent", colors.primary, "transparent"]}
                 start={{ x: 0, y: 0.5 }}
                 end={{ x: 1, y: 0.5 }}
                 style={styles.scanLineGradient}
@@ -351,7 +358,7 @@ export default function ScannerScreen() {
 
           {/* App Title Badge */}
           <Animated.View entering={FadeIn.delay(300).duration(400)} style={styles.titleBadge}>
-            <MaterialIcons name="verified-user" size={18} color={PRIMARY_COLOR} />
+            <MaterialIcons name="verified-user" size={18} color={colors.primary} />
             <Text style={styles.titleText}>{t.scanner.halalScanner}</Text>
           </Animated.View>
 
@@ -367,7 +374,7 @@ export default function ScannerScreen() {
               <MaterialIcons
                 name={isFlashOn ? "flash-on" : "flash-off"}
                 size={20}
-                color={isFlashOn ? PRIMARY_COLOR : "#ffffff"}
+                color={isFlashOn ? colors.primary : "#ffffff"}
               />
             </TouchableOpacity>
           </Animated.View>
@@ -410,7 +417,7 @@ export default function ScannerScreen() {
               {/* Pulsing Glow */}
               <Animated.View style={[styles.captureGlow, animatedPulseStyle]}>
                 <LinearGradient
-                  colors={[`${PRIMARY_COLOR}40`, `${PRIMARY_COLOR}00`]}
+                  colors={[`${colors.primary}40`, `${colors.primary}00`]}
                   style={styles.captureGlowGradient}
                 />
               </Animated.View>
@@ -505,7 +512,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   permissionButton: {
-    backgroundColor: PRIMARY_COLOR,
+    backgroundColor: brand.primary,
     paddingHorizontal: 32,
     paddingVertical: 16,
     borderRadius: 16,
@@ -552,9 +559,9 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: CORNER_SIZE,
     height: CORNER_SIZE,
-    borderColor: PRIMARY_COLOR,
+    borderColor: brand.primary,
     borderWidth: CORNER_THICKNESS,
-    shadowColor: PRIMARY_COLOR,
+    shadowColor: brand.primary,
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 15,
     elevation: 5,
@@ -595,7 +602,7 @@ const styles = StyleSheet.create({
   },
   scanLineGradient: {
     flex: 1,
-    shadowColor: PRIMARY_COLOR,
+    shadowColor: brand.primary,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.9,
     shadowRadius: 15,
@@ -720,10 +727,10 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: PRIMARY_COLOR,
+    backgroundColor: brand.primary,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: PRIMARY_COLOR,
+    shadowColor: brand.primary,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 25,

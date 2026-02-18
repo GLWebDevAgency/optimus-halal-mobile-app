@@ -12,7 +12,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  useColorScheme,
   StyleSheet,
   TextInput,
   KeyboardAvoidingView,
@@ -23,7 +22,7 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useHaptics } from "@/hooks";
+import { useHaptics, useTheme, useTranslation } from "@/hooks";
 import { ImpactFeedbackStyle, NotificationFeedbackType } from "expo-haptics";
 import Animated, {
   FadeIn,
@@ -36,8 +35,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { colors } from "@/constants/theme";
-import { useTranslation } from "@/hooks/useTranslation";
+import { brand } from "@/theme/colors";
 
 type PasswordStrength = "weak" | "medium" | "strong" | "very-strong";
 
@@ -50,9 +48,8 @@ interface PasswordStrengthResult {
 
 export default function SetNewPasswordScreen() {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
+  const { isDark } = useTheme();
   const { impact, notification } = useHaptics();
-  const isDark = colorScheme === "dark";
   useLocalSearchParams<{ token: string }>();
   const { t, isRTL } = useTranslation();
 
@@ -209,8 +206,8 @@ export default function SetNewPasswordScreen() {
           style={styles.backButton}
           activeOpacity={0.7}
           accessibilityRole="button"
-          accessibilityLabel="Retour"
-          accessibilityHint="Double-tapez pour revenir à l'écran précédent"
+          accessibilityLabel={t.common.back}
+          accessibilityHint={t.common.back}
         >
           <MaterialIcons
             name="arrow-back-ios-new"
@@ -290,7 +287,7 @@ export default function SetNewPasswordScreen() {
                   {
                     backgroundColor: isDark ? "#193324" : "#ffffff",
                     borderColor: focusedField === "new" 
-                      ? colors.light.primary 
+                      ? brand.primary 
                       : isDark ? "#326747" : "#e5e7eb",
                   }
                 ]}
@@ -312,14 +309,14 @@ export default function SetNewPasswordScreen() {
                   secureTextEntry={!showNewPassword}
                   autoCapitalize="none"
                   autoCorrect={false}
-                  accessibilityLabel="Nouveau mot de passe"
-                  accessibilityHint="Entrez votre nouveau mot de passe"
+                  accessibilityLabel={t.auth.setNewPassword.newPassword}
+                  accessibilityHint={t.auth.setNewPassword.newPasswordPlaceholder}
                 />
                 <TouchableOpacity
                   onPress={() => setShowNewPassword(!showNewPassword)}
                   style={styles.toggleButton}
                   accessibilityRole="button"
-                  accessibilityLabel={showNewPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                  accessibilityLabel={showNewPassword ? t.auth.setNewPassword.confirmPassword : t.auth.setNewPassword.newPassword}
                 >
                   <MaterialIcons
                     name={showNewPassword ? "visibility" : "visibility-off"}
@@ -374,7 +371,7 @@ export default function SetNewPasswordScreen() {
                     borderColor: confirmPassword && !passwordsMatch 
                       ? "#ef4444"
                       : focusedField === "confirm" 
-                        ? colors.light.primary 
+                        ? brand.primary 
                         : isDark ? "#326747" : "#e5e7eb",
                   }
                 ]}
@@ -396,14 +393,14 @@ export default function SetNewPasswordScreen() {
                   secureTextEntry={!showConfirmPassword}
                   autoCapitalize="none"
                   autoCorrect={false}
-                  accessibilityLabel="Confirmer le mot de passe"
-                  accessibilityHint="Entrez à nouveau votre nouveau mot de passe"
+                  accessibilityLabel={t.auth.setNewPassword.confirmPassword}
+                  accessibilityHint={t.auth.setNewPassword.confirmPasswordPlaceholder}
                 />
                 <TouchableOpacity
                   onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                   style={styles.toggleButton}
                   accessibilityRole="button"
-                  accessibilityLabel={showConfirmPassword ? "Masquer la confirmation" : "Afficher la confirmation"}
+                  accessibilityLabel={showConfirmPassword ? t.auth.setNewPassword.confirmPassword : t.auth.setNewPassword.confirmPassword}
                 >
                   <MaterialIcons
                     name={showConfirmPassword ? "visibility" : "visibility-off"}
@@ -451,7 +448,7 @@ export default function SetNewPasswordScreen() {
               <MaterialIcons
                 name="info"
                 size={20}
-                color={colors.light.primary}
+                color={brand.primary}
                 style={styles.infoIcon}
               />
               <Text 
@@ -477,8 +474,8 @@ export default function SetNewPasswordScreen() {
                 disabled={!isFormValid || isLoading}
                 activeOpacity={0.9}
                 accessibilityRole="button"
-                accessibilityLabel="Réinitialiser le mot de passe"
-                accessibilityHint="Double-tapez pour enregistrer votre nouveau mot de passe"
+                accessibilityLabel={t.auth.setNewPassword.submit}
+                accessibilityHint={t.auth.setNewPassword.submit}
                 accessibilityState={{ disabled: !isFormValid || isLoading }}
                 style={[
                   styles.submitButton,
@@ -487,7 +484,7 @@ export default function SetNewPasswordScreen() {
               >
                 <LinearGradient
                   colors={isFormValid 
-                    ? [colors.light.primary, "#0fd660"]
+                    ? [brand.primary, "#0fd660"]
                     : ["#6b7280", "#4b5563"]
                   }
                   style={styles.buttonGradient}

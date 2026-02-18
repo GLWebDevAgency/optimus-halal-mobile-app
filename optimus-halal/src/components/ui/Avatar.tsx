@@ -39,7 +39,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   fallback = "?",
   borderColor = "none",
   showBadge = false,
-  badgeColor = "#1de560",
+  badgeColor = "#13ec6a",
   className = "",
   ...props
 }) => {

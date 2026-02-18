@@ -22,7 +22,7 @@ export interface PageIndicatorProps extends ViewProps {
 export const PageIndicator: React.FC<PageIndicatorProps> = ({
   count,
   currentIndex,
-  activeColor = "#1de560",
+  activeColor = "#13ec6a",
   inactiveColor = "#e2e8f0",
   className = "",
   ...props
@@ -65,7 +65,7 @@ export const AnimatedPageIndicator: React.FC<AnimatedPageIndicatorProps> = ({
   count,
   scrollX,
   pageWidth,
-  activeColor = "#1de560",
+  activeColor = "#13ec6a",
   inactiveColor = "#e2e8f0",
   className = "",
   ...props

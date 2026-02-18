@@ -9,57 +9,58 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Primary Colors - Emerald Green
+        // Primary Colors — aligned with theme/colors.ts (source of truth: #13ec6a)
         primary: {
-          DEFAULT: "#1de560",
-          50: "#edfff4",
-          100: "#d5ffe6",
-          200: "#aeffd0",
-          300: "#70ffad",
-          400: "#2bee6c",
-          500: "#1de560",
-          600: "#0fb350",
-          700: "#0ea35c",
-          800: "#0f7f49",
-          900: "#10683f",
-          950: "#023a21",
+          DEFAULT: "#13ec6a",
+          50: "#eafff3",
+          100: "#c9ffe2",
+          200: "#96ffc7",
+          300: "#55f9a4",
+          400: "#22ee7e",
+          500: "#13ec6a",
+          600: "#08c454",
+          700: "#099a44",
+          800: "#0d7939",
+          900: "#0c6231",
+          950: "#013719",
         },
-        // Gold Accent
+        // Gold Accent — aligned with theme/colors.ts
         gold: {
           DEFAULT: "#D4AF37",
-          50: "#fefce8",
-          100: "#fef9c3",
-          200: "#fef08a",
-          300: "#fde047",
-          400: "#fbbf24",
+          50: "#fdf9e8",
+          100: "#faf0c3",
+          200: "#f6e18a",
+          300: "#f0cc47",
+          400: "#e8b824",
           500: "#D4AF37",
-          600: "#d97706",
-          700: "#b45309",
-          800: "#92400e",
-          900: "#78350f",
+          600: "#c08a18",
+          700: "#9a6518",
+          800: "#7f501b",
+          900: "#6c421c",
+          950: "#3f220c",
         },
         // Background Colors
         background: {
-          light: "#f6f8f6",
-          dark: "#102216",
+          light: "#f8faf9",
+          dark: "#0a1a10",
         },
         // Surface Colors
         surface: {
           light: "#ffffff",
-          dark: "#1e293b",
+          dark: "#132a1a",
         },
         // Text Colors
         text: {
           main: "#0d1b13",
-          "main-dark": "#ffffff",
+          "main-dark": "#e8f5e9",
           secondary: "#4b5563",
-          "secondary-dark": "#94a3b8",
+          "secondary-dark": "#9ca3af",
         },
-        // Status Colors
+        // Status Colors — aligned with theme/colors.ts semantic tokens
         success: {
-          DEFAULT: "#10b981",
-          light: "#d1fae5",
-          dark: "#065f46",
+          DEFAULT: "#22c55e",
+          light: "#dcfce7",
+          dark: "#166534",
         },
         warning: {
           DEFAULT: "#f59e0b",
@@ -70,6 +71,12 @@ module.exports = {
           DEFAULT: "#ef4444",
           light: "#fee2e2",
           dark: "#991b1b",
+        },
+        // Info
+        info: {
+          DEFAULT: "#3b82f6",
+          light: "#dbeafe",
+          dark: "#1e40af",
         },
       },
       fontFamily: {
@@ -89,8 +96,8 @@ module.exports = {
       boxShadow: {
         soft: "0 2px 8px -1px rgba(0, 0, 0, 0.05), 0 1px 4px -1px rgba(0, 0, 0, 0.01)",
         "soft-dark": "0 4px 20px -2px rgba(0, 0, 0, 0.5)",
-        glow: "0 0 15px -3px rgba(29, 229, 96, 0.15)",
-        "glow-primary": "0 0 20px rgba(29, 229, 96, 0.3)",
+        glow: "0 0 15px -3px rgba(19, 236, 106, 0.15)",
+        "glow-primary": "0 0 20px rgba(19, 236, 106, 0.3)",
         float: "0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.15)",
         sheet: "0 -4px 6px -1px rgba(0, 0, 0, 0.3)",
       },

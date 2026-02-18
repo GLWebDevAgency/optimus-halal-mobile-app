@@ -370,6 +370,28 @@ export const usePreferencesStore = create<UserPreferencesState>()(
 );
 
 /**
+ * Ramadan Mode State
+ * null = auto-detect from date, true = forced on, false = forced off
+ */
+interface RamadanState {
+  manualOverride: boolean | null;
+  setManualOverride: (override: boolean | null) => void;
+}
+
+export const useRamadanStore = create<RamadanState>()(
+  persist(
+    (set) => ({
+      manualOverride: null,
+      setManualOverride: (override) => set({ manualOverride: override }),
+    }),
+    {
+      name: "ramadan-storage",
+      storage: createJSONStorage(() => mmkvStorage),
+    }
+  )
+);
+
+/**
  * Favorites Store - Produits favoris avec données complètes
  * Partagé entre le Dashboard et l'écran Favoris
  */

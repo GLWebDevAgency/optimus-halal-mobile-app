@@ -18,14 +18,14 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  useColorScheme,
   Dimensions,
 } from "react-native";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useHaptics } from "@/hooks";
+import { useHaptics, useTheme } from "@/hooks";
+import { brand } from "@/theme/colors";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -96,7 +96,7 @@ function CircularProgress({ score, grade }: { score: number; grade: string }) {
         <Path
           d={`M28 4 a 24 24 0 0 1 0 48 a 24 24 0 0 1 0 -48`}
           fill="none"
-          stroke="#1de560"
+          stroke={brand.primary}
           strokeWidth={strokeWidth}
           strokeDasharray={strokeDasharray}
           strokeLinecap="round"
@@ -112,9 +112,8 @@ function CircularProgress({ score, grade }: { score: number; grade: string }) {
 export default function ProductDetailScreen() {
   useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
+  const { isDark, colors } = useTheme();
   const { impact, notification } = useHaptics();
-  const isDark = colorScheme === "dark";
 
   const { addItem, itemCount } = useLocalCartStore();
 
@@ -302,7 +301,7 @@ export default function ProductDetailScreen() {
                 <Text className="text-base font-bold text-slate-800 dark:text-white">
                   Score Éthique: {product.ethicalScore}/100
                 </Text>
-                <MaterialIcons name="verified" size={14} color="#1de560" />
+                <MaterialIcons name="verified" size={14} color={colors.primary} />
               </View>
               <Text className="text-xs text-slate-500 dark:text-slate-400 leading-snug">
                 Excellente transparence. Provenance durable, sans cruauté avec traçabilité complète.
@@ -467,7 +466,7 @@ export default function ProductDetailScreen() {
                     transition={200}
                   />
                   <View className="absolute top-2 right-2 bg-white/90 dark:bg-black/60 rounded-full p-1">
-                    <MaterialIcons name="eco" size={16} color="#1de560" />
+                    <MaterialIcons name="eco" size={16} color={colors.primary} />
                   </View>
                 </View>
                 <Text
@@ -513,7 +512,7 @@ export default function ProductDetailScreen() {
             className="flex-1 bg-primary py-4 rounded-xl flex-row items-center justify-center gap-2"
             activeOpacity={0.9}
             style={{
-              shadowColor: "#1de560",
+              shadowColor: colors.primary,
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.3,
               shadowRadius: 8,

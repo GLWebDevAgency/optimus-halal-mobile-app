@@ -22,6 +22,7 @@ import {
   Pressable,
 } from "react-native";
 import { useThemeStore, useLanguageStore } from "@/store";
+import { useTheme, useTranslation } from "@/hooks";
 import { useAuthStore } from "@/store/apiStores";
 import { setApiLanguage } from "@/services/api";
 import { trpc, createTRPCClientForProvider } from "@/lib/trpc";
@@ -58,6 +59,7 @@ const queryClient = new QueryClient({
 /** Debug log overlay — shown when init hangs or on long press */
 function DebugOverlay({ onClose }: { onClose: () => void }) {
   const [logs, setLogs] = useState(logger.getFormattedLogs());
+  const { t } = useTranslation();
 
   useEffect(() => {
     const unsub = logger.subscribe(() => setLogs(logger.getFormattedLogs()));
@@ -71,12 +73,12 @@ function DebugOverlay({ onClose }: { onClose: () => void }) {
           Debug Logs
         </Text>
         <TouchableOpacity onPress={onClose}>
-          <Text style={{ color: "#fff", fontSize: 16 }}>Fermer</Text>
+          <Text style={{ color: "#fff", fontSize: 16 }}>{t.common.close}</Text>
         </TouchableOpacity>
       </View>
       <ScrollView style={{ flex: 1 }}>
         <Text style={{ color: "#e0e0e0", fontSize: 11, fontFamily: "monospace" }}>
-          {logs || "Aucun log collecté"}
+          {logs || t.common.noLogsCollected}
         </Text>
       </ScrollView>
     </View>
@@ -89,7 +91,8 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
   const initialize = useAuthStore((state) => state.initialize);
   const isInitializing = useAuthStore((state) => state.isInitializing);
   const language = useLanguageStore((state) => state.language);
-  const colorScheme = useColorScheme();
+  const { isDark: initIsDark } = useTheme();
+  const { t } = useTranslation();
   const [showDebug, setShowDebug] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
   const initCalled = useRef(false);
@@ -140,11 +143,11 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
       <Pressable
         onLongPress={handleLongPress}
         delayLongPress={3000}
-        style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colorScheme === "dark" ? "#0f1a13" : "#ffffff" }}
+        style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: initIsDark ? "#0f1a13" : "#ffffff" }}
       >
         <ActivityIndicator size="large" color="#16a34a" />
         <Text style={{ color: "#888", fontSize: 12, marginTop: 16 }}>
-          Chargement... (appui long = logs)
+          {t.common.loadingLongPress}
         </Text>
       </Pressable>
     );
@@ -153,19 +156,19 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
   // If timed out, show debug info + option to continue
   if (timedOut && isInitializing) {
     return (
-      <View style={{ flex: 1, backgroundColor: colorScheme === "dark" ? "#0f1a13" : "#ffffff", padding: 24, paddingTop: 60 }}>
+      <View style={{ flex: 1, backgroundColor: initIsDark ? "#0f1a13" : "#ffffff", padding: 24, paddingTop: 60 }}>
         <Text style={{ color: "#ef4444", fontSize: 18, fontWeight: "bold", marginBottom: 12 }}>
-          Initialisation trop longue
+          {t.common.initTooLong}
         </Text>
         <Text style={{ color: "#888", fontSize: 14, marginBottom: 16 }}>
-          L&apos;app n&apos;a pas pu s&apos;initialiser en {INIT_TIMEOUT_MS / 1000}s.
+          {t.common.initTooLongDesc.replace("{{seconds}}", String(INIT_TIMEOUT_MS / 1000))}
         </Text>
         <TouchableOpacity
           onPress={() => setShowDebug(true)}
           style={{ backgroundColor: "#16a34a", padding: 12, borderRadius: 8, marginBottom: 12 }}
         >
           <Text style={{ color: "#fff", textAlign: "center", fontWeight: "bold" }}>
-            Voir les logs
+            {t.common.viewLogs}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -176,7 +179,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
           style={{ backgroundColor: "#333", padding: 12, borderRadius: 8 }}
         >
           <Text style={{ color: "#fff", textAlign: "center" }}>
-            Continuer quand même
+            {t.common.continueAnyway}
           </Text>
         </TouchableOpacity>
       </View>
@@ -266,6 +269,13 @@ export default function RootLayout() {
                       animationDuration: 350,
                       gestureEnabled: true,
                       gestureDirection: "vertical",
+                    }}
+                  />
+                  <Stack.Screen
+                    name="articles"
+                    options={{
+                      animation: "fade_from_bottom",
+                      animationDuration: 300,
                     }}
                   />
                 </Stack>

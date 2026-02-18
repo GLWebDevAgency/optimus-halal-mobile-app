@@ -6,9 +6,10 @@
  */
 
 import React from "react";
-import { View, Text, TouchableOpacity, useColorScheme } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
+import { useTheme } from "@/hooks";
 
 export interface EmptyStateProps {
   /** MaterialIcons icon name */
@@ -30,8 +31,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   actionLabel,
   onAction,
 }) => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { isDark, colors } = useTheme();
 
   return (
     <Animated.View
@@ -44,14 +44,14 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
             className="w-20 h-20 rounded-full items-center justify-center mb-6"
             style={{
               backgroundColor: isDark
-                ? "rgba(29,229,96,0.1)"
-                : "rgba(29,229,96,0.08)",
+                ? "rgba(19,236,106,0.1)"
+                : "rgba(19,236,106,0.08)",
             }}
           >
             <MaterialIcons
               name={icon}
               size={36}
-              color={isDark ? "#1de560" : "#059669"}
+              color={colors.primary}
             />
           </View>
         </Animated.View>

@@ -32,11 +32,11 @@ interface StatusConfig {
   iconColor: string;
 }
 
-function getStatusConfig(status: string | null, isDark: boolean): StatusConfig {
+function getStatusConfig(status: string | null, isDark: boolean, t: ReturnType<typeof useTranslation>["t"]): StatusConfig {
   switch (status as HalalStatus) {
     case "halal":
       return {
-        label: "Halal",
+        label: t.scanHistory.statusHalal,
         icon: "verified",
         bgColor: isDark ? "rgba(34,197,94,0.15)" : "rgba(34,197,94,0.1)",
         textColor: isDark ? "#4ade80" : "#15803d",
@@ -44,7 +44,7 @@ function getStatusConfig(status: string | null, isDark: boolean): StatusConfig {
       };
     case "haram":
       return {
-        label: "Haram",
+        label: t.scanHistory.statusHaram,
         icon: "cancel",
         bgColor: isDark ? "rgba(239,68,68,0.15)" : "rgba(239,68,68,0.1)",
         textColor: isDark ? "#f87171" : "#dc2626",
@@ -52,7 +52,7 @@ function getStatusConfig(status: string | null, isDark: boolean): StatusConfig {
       };
     case "doubtful":
       return {
-        label: "Douteux",
+        label: t.scanHistory.statusDoubtful,
         icon: "help",
         bgColor: isDark ? "rgba(249,115,22,0.15)" : "rgba(249,115,22,0.1)",
         textColor: isDark ? "#fb923c" : "#c2410c",
@@ -60,7 +60,7 @@ function getStatusConfig(status: string | null, isDark: boolean): StatusConfig {
       };
     default:
       return {
-        label: "Inconnu",
+        label: t.scanHistory.statusUnknown,
         icon: "help-outline",
         bgColor: isDark ? "rgba(156,163,175,0.15)" : "rgba(156,163,175,0.1)",
         textColor: isDark ? "#9ca3af" : "#6b7280",
@@ -69,7 +69,7 @@ function getStatusConfig(status: string | null, isDark: boolean): StatusConfig {
   }
 }
 
-function formatDate(date: string | Date): string {
+function formatDate(date: string | Date, t: ReturnType<typeof useTranslation>["t"]): string {
   const d = new Date(date);
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
@@ -77,10 +77,10 @@ function formatDate(date: string | Date): string {
   const diffH = Math.floor(diffMs / 3_600_000);
   const diffDays = Math.floor(diffMs / 86_400_000);
 
-  if (diffMin < 1) return "À l'instant";
-  if (diffMin < 60) return `Il y a ${diffMin} min`;
-  if (diffH < 24) return `Il y a ${diffH}h`;
-  if (diffDays < 7) return `Il y a ${diffDays}j`;
+  if (diffMin < 1) return t.alerts.timeAgoJustNow;
+  if (diffMin < 60) return t.alerts.timeAgoMinutes.replace("{{count}}", String(diffMin));
+  if (diffH < 24) return t.alerts.timeAgoHours.replace("{{count}}", String(diffH));
+  if (diffDays < 7) return t.alerts.timeAgoDays.replace("{{count}}", String(diffDays));
   return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
 }
 
@@ -108,10 +108,11 @@ interface ScanRowProps {
   index: number;
   isDark: boolean;
   colors: ReturnType<typeof useTheme>["colors"];
+  t: ReturnType<typeof useTranslation>["t"];
 }
 
-const ScanRow = React.memo(function ScanRow({ item, index, isDark, colors }: ScanRowProps) {
-  const status = getStatusConfig(item.halalStatus, isDark);
+const ScanRow = React.memo(function ScanRow({ item, index, isDark, colors, t }: ScanRowProps) {
+  const status = getStatusConfig(item.halalStatus, isDark, t);
 
   return (
     <Animated.View entering={FadeInDown.delay(index * 60).duration(300)}>
@@ -163,13 +164,13 @@ const ScanRow = React.memo(function ScanRow({ item, index, isDark, colors }: Sca
             style={{ fontSize: 14, fontWeight: "700", color: colors.textPrimary, marginBottom: 2 }}
             numberOfLines={1}
           >
-            {item.product?.name ?? "Produit inconnu"}
+            {item.product?.name ?? t.scanHistory.unknownProduct}
           </Text>
           <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 4 }} numberOfLines={1}>
             {item.product?.brand ?? item.barcode}
           </Text>
           <Text style={{ fontSize: 10, color: colors.textMuted }}>
-            {formatDate(item.scannedAt)}
+            {formatDate(item.scannedAt, t)}
           </Text>
         </View>
 
@@ -209,9 +210,9 @@ export default function ScanHistoryScreen() {
 
   const renderItem = useCallback(
     ({ item, index }: { item: ScanItem; index: number }) => (
-      <ScanRow item={item} index={index} isDark={isDark} colors={colors} />
+      <ScanRow item={item} index={index} isDark={isDark} colors={colors} t={t} />
     ),
-    [isDark, colors]
+    [isDark, colors, t]
   );
 
   // Loading
@@ -221,7 +222,7 @@ export default function ScanHistoryScreen() {
         <Header colors={colors} t={t} />
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={{ color: colors.textSecondary, marginTop: 12 }}>Chargement...</Text>
+          <Text style={{ color: colors.textSecondary, marginTop: 12 }}>{t.common.loading}</Text>
         </View>
       </SafeAreaView>
     );
@@ -235,15 +236,15 @@ export default function ScanHistoryScreen() {
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
           <MaterialIcons name="cloud-off" size={64} color={colors.textMuted} />
           <Text style={{ color: colors.textSecondary, fontSize: 16, marginTop: 16, textAlign: "center" }}>
-            Impossible de charger l'historique
+            {t.scanHistory.loadError}
           </Text>
           <TouchableOpacity
             onPress={() => refetch()}
             style={{ marginTop: 20, backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 }}
             accessibilityRole="button"
-            accessibilityLabel="Réessayer"
+            accessibilityLabel={t.common.retry}
           >
-            <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>Réessayer</Text>
+            <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>{t.common.retry}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -258,10 +259,10 @@ export default function ScanHistoryScreen() {
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 80 }}>
           <MaterialIcons name="history" size={64} color={colors.textMuted} />
           <Text style={{ color: colors.textSecondary, fontSize: 18, marginTop: 16 }}>
-            Aucun scan
+            {t.scanHistory.noScans}
           </Text>
           <Text style={{ color: colors.textMuted, fontSize: 14, marginTop: 8, textAlign: "center", paddingHorizontal: 32 }}>
-            Scannez un produit pour voir son historique ici.
+            {t.scanHistory.noScansDesc}
           </Text>
           <TouchableOpacity
             onPress={() => router.push("/(tabs)/scanner")}
@@ -276,10 +277,10 @@ export default function ScanHistoryScreen() {
               gap: 8,
             }}
             accessibilityRole="button"
-            accessibilityLabel="Scanner un produit"
+            accessibilityLabel={t.scanHistory.scanProduct}
           >
             <MaterialIcons name="qr-code-scanner" size={18} color={isDark ? "#102217" : "#0d1b13"} />
-            <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>Scanner un produit</Text>
+            <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>{t.scanHistory.scanProduct}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -315,7 +316,7 @@ function Header({ colors, t, count }: { colors: any; t: any; count?: number }) {
             borderWidth: 1,
           }}
           accessibilityRole="button"
-          accessibilityLabel="Retour"
+          accessibilityLabel={t.common.back}
         >
           <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
@@ -324,11 +325,11 @@ function Header({ colors, t, count }: { colors: any; t: any; count?: number }) {
             style={{ fontSize: 24, fontWeight: "700", letterSpacing: -0.5, color: colors.textPrimary }}
             accessibilityRole="header"
           >
-            Historique
+            {t.scanHistory.title}
           </Text>
           {count !== undefined && (
             <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
-              {count} scan{count > 1 ? "s" : ""} effectué{count > 1 ? "s" : ""}
+              {(count > 1 ? t.scanHistory.scanCountPlural : t.scanHistory.scanCount).replace("{{count}}", String(count))}
             </Text>
           )}
         </View>

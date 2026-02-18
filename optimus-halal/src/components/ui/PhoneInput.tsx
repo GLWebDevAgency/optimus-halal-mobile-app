@@ -16,9 +16,9 @@ import {
   TouchableOpacity,
   Modal,
   FlatList,
-  useColorScheme,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useTheme } from "@/hooks";
 
 export interface CountryCode {
   code: string;
@@ -157,8 +157,7 @@ export function PhoneInput({
   ref,
   ...props
 }: PhoneInputProps) {
-    const colorScheme = useColorScheme();
-    const isDark = colorScheme === "dark";
+    const { isDark } = useTheme();
     
     const [selectedCountry, setSelectedCountry] = useState<CountryCode>(
       COUNTRY_CODES.find((c) => c.code === defaultCountryCode) || COUNTRY_CODES[0]

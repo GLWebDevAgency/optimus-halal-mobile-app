@@ -12,13 +12,12 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  useColorScheme,
 } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useHaptics } from "@/hooks";
+import { useHaptics, useTheme, useTranslation } from "@/hooks";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -26,10 +25,10 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 
+import { IslamicPattern } from "@/components/ui";
 import { useFeatureFlagsStore, useLocalCartStore } from "@/store";
-import { useTranslation } from "@/hooks/useTranslation";
 import { trpc } from "@/lib/trpc";
-import { colors } from "@/constants/theme";
+import { brand, gold } from "@/theme/colors";
 
 interface Product {
   id: string;
@@ -56,9 +55,8 @@ const HALAL_STATUS_COLOR: Record<string, string> = {
 };
 
 const ProductCard = React.memo(function ProductCard({ product, index }: { product: Product; index: number }) {
-  const colorScheme = useColorScheme();
+  const { isDark } = useTheme();
   const { impact, notification } = useHaptics();
-  const isDark = colorScheme === "dark";
   const { t } = useTranslation();
   const { addItem } = useLocalCartStore();
 
@@ -138,7 +136,7 @@ const ProductCard = React.memo(function ProductCard({ product, index }: { produc
 
           {product.certifierName && (
             <View className="flex-row items-center mb-2">
-              <MaterialIcons name="verified" size={14} color={colors.primary.DEFAULT} />
+              <MaterialIcons name="verified" size={14} color={brand.primary} />
               <Text className="text-xs text-slate-500 dark:text-slate-400 ml-1" numberOfLines={1}>
                 {product.certifierName}
               </Text>
@@ -162,7 +160,7 @@ const ProductCard = React.memo(function ProductCard({ product, index }: { produc
               accessibilityRole="button"
               accessibilityLabel={`${t.marketplace.addToCart} ${product.name}`}
             >
-              <MaterialIcons name="add-shopping-cart" size={16} color={colors.primary.DEFAULT} />
+              <MaterialIcons name="add-shopping-cart" size={16} color={brand.primary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -173,9 +171,8 @@ const ProductCard = React.memo(function ProductCard({ product, index }: { produc
 
 export default function MarketplaceTab() {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
+  const { isDark } = useTheme();
   const { impact } = useHaptics();
-  const isDark = colorScheme === "dark";
   const { t } = useTranslation();
   const { flags } = useFeatureFlagsStore();
   const { itemCount } = useLocalCartStore();
@@ -239,6 +236,9 @@ export default function MarketplaceTab() {
   if (!flags.marketplaceEnabled) {
     return (
       <View className="flex-1 bg-background-light dark:bg-background-dark">
+        {/* Background Islamic Pattern */}
+        <IslamicPattern variant="khatam" opacity={0.04} />
+
         <ScrollView
           contentContainerStyle={{
             paddingTop: insets.top + 16,
@@ -286,7 +286,7 @@ export default function MarketplaceTab() {
               colors={isDark ? ["#1a2420", "#0d1b13"] : ["#f0fdf4", "#dcfce7"]}
               className="rounded-3xl p-8 items-center"
               style={{
-                shadowColor: colors.primary.DEFAULT,
+                shadowColor: brand.primary,
                 shadowOffset: { width: 0, height: 8 },
                 shadowOpacity: 0.15,
                 shadowRadius: 24,
@@ -294,7 +294,7 @@ export default function MarketplaceTab() {
               }}
             >
               <View className="w-24 h-24 rounded-full bg-primary/20 items-center justify-center mb-6">
-                <MaterialIcons name="storefront" size={48} color={colors.primary.DEFAULT} />
+                <MaterialIcons name="storefront" size={48} color={brand.primary} />
               </View>
               <Text className="text-xl font-bold text-slate-900 dark:text-white text-center mb-2">
                 {t.marketplace.comingSoon}
@@ -322,6 +322,9 @@ export default function MarketplaceTab() {
 
   return (
     <View className="flex-1 bg-background-light dark:bg-background-dark">
+      {/* Background Islamic Pattern */}
+      <IslamicPattern variant="khatam" opacity={0.04} />
+
       <ScrollView
         contentContainerStyle={{
           paddingTop: insets.top + 16,
@@ -332,7 +335,7 @@ export default function MarketplaceTab() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.primary.DEFAULT}
+            tintColor={brand.primary}
           />
         }
       >
@@ -453,7 +456,7 @@ export default function MarketplaceTab() {
 
           {productsQuery.isLoading ? (
             <View className="items-center justify-center py-8">
-              <RefreshControl refreshing={true} tintColor={colors.primary.DEFAULT} />
+              <RefreshControl refreshing={true} tintColor={brand.primary} />
             </View>
           ) : products.length === 0 ? (
             <View className="items-center justify-center py-8 px-5">
@@ -485,7 +488,7 @@ export default function MarketplaceTab() {
             end={{ x: 1, y: 1 }}
             className="rounded-2xl p-5 flex-row items-center"
             style={{
-              shadowColor: colors.gold.DEFAULT,
+              shadowColor: gold[500],
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.15,
               shadowRadius: 12,
@@ -510,11 +513,11 @@ export default function MarketplaceTab() {
                 <Text className="text-sm font-semibold text-gold-600 dark:text-gold-500">
                   {t.marketplace.discoverOffers}
                 </Text>
-                <MaterialIcons name="arrow-forward" size={16} color={colors.gold.DEFAULT} />
+                <MaterialIcons name="arrow-forward" size={16} color={gold[500]} />
               </TouchableOpacity>
             </View>
             <View className="w-16 h-16 rounded-full bg-gold-500/20 items-center justify-center">
-              <MaterialIcons name="local-shipping" size={32} color={colors.gold.DEFAULT} />
+              <MaterialIcons name="local-shipping" size={32} color={gold[500]} />
             </View>
           </LinearGradient>
         </Animated.View>

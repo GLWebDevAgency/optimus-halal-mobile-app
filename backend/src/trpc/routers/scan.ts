@@ -8,6 +8,7 @@ import {
   analysisRequests,
   boycottTargets,
   additives as additivesTable,
+  additiveMadhabRulings,
 } from "../../db/schema/index.js";
 import {
   lookupBarcode,
@@ -16,6 +17,18 @@ import {
 } from "../../services/barcode.service.js";
 import { matchAllergens } from "../../services/allergen.service.js";
 import { notFound } from "../../lib/errors.js";
+
+// ── Level thresholds ──────────────────────────────────────────
+// XP required to REACH each level (index = level - 1)
+// Level 1: 0+, Level 2: 100+, Level 3: 300+, ... Level 10: 10000+
+const LEVEL_THRESHOLDS = [0, 100, 300, 600, 1000, 1500, 2500, 4000, 6000, 10000];
+
+function calculateLevel(xp: number): number {
+  for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
+    if (xp >= LEVEL_THRESHOLDS[i]) return i + 1;
+  }
+  return 1;
+}
 
 // ── Boycott check helper ────────────────────────────────────
 
@@ -52,6 +65,122 @@ async function checkBoycott(db: any, brand: string | null | undefined) {
       sourceName: t.sourceName,
     })),
   };
+}
+
+// ── Madhab verdicts helper ─────────────────────────────────
+// Fetches all 4 school rulings for problematic additives in one query,
+// then computes a per-school verdict (worst status across additives).
+
+const MADHAB_SCHOOLS = ["hanafi", "shafii", "maliki", "hanbali"] as const;
+
+export interface MadhabVerdictItem {
+  madhab: (typeof MADHAB_SCHOOLS)[number];
+  status: "halal" | "doubtful" | "haram";
+  conflictingAdditives: Array<{
+    code: string;
+    name: string;
+    ruling: string;
+    explanation: string;
+    scholarlyReference: string | null;
+  }>;
+}
+
+async function computeMadhabVerdicts(
+  db: any,
+  halalAnalysis: HalalAnalysis | null
+): Promise<MadhabVerdictItem[]> {
+  if (!halalAnalysis) return [];
+
+  // If product is certified halal → all schools agree
+  if (halalAnalysis.tier === "certified") {
+    return MADHAB_SCHOOLS.map((m) => ({
+      madhab: m,
+      status: "halal" as const,
+      conflictingAdditives: [],
+    }));
+  }
+
+  // Extract additive codes from analysis reasons (format: "E441 (Gélatine)")
+  // Validate format with regex to avoid querying with garbage codes
+  const additiveCodes = halalAnalysis.reasons
+    .filter((r) => r.type === "additive" && r.status !== "halal")
+    .map((r) => r.name.split(" ")[0])
+    .filter((code) => /^E\d+[a-z]?$/i.test(code));
+
+  if (additiveCodes.length === 0) {
+    // No problematic additives → all schools: same as general analysis
+    return MADHAB_SCHOOLS.map((m) => ({
+      madhab: m,
+      status: halalAnalysis.status as "halal" | "doubtful" | "haram",
+      conflictingAdditives: [],
+    }));
+  }
+
+  // Fetch all madhab rulings + additive names in one join query
+  const rulings = await db
+    .select({
+      additiveCode: additiveMadhabRulings.additiveCode,
+      madhab: additiveMadhabRulings.madhab,
+      ruling: additiveMadhabRulings.ruling,
+      explanationFr: additiveMadhabRulings.explanationFr,
+      scholarlyReference: additiveMadhabRulings.scholarlyReference,
+      additiveName: additivesTable.nameFr,
+    })
+    .from(additiveMadhabRulings)
+    .innerJoin(
+      additivesTable,
+      eq(additiveMadhabRulings.additiveCode, additivesTable.code)
+    )
+    .where(inArray(additiveMadhabRulings.additiveCode, additiveCodes));
+
+  // Type for joined ruling rows
+  type RulingRow = {
+    additiveCode: string;
+    madhab: string;
+    ruling: string;
+    explanationFr: string;
+    scholarlyReference: string | null;
+    additiveName: string;
+  };
+
+  // Group by madhab
+  const byMadhab = new Map<string, RulingRow[]>();
+  for (const r of rulings as RulingRow[]) {
+    const list = byMadhab.get(r.madhab) ?? [];
+    list.push(r);
+    byMadhab.set(r.madhab, list);
+  }
+
+  // Worst-status logic: haram > doubtful > halal
+  const STATUS_WEIGHT = { haram: 3, doubtful: 2, halal: 1, unknown: 0 } as const;
+
+  return MADHAB_SCHOOLS.map((madhab) => {
+    const schoolRulings = byMadhab.get(madhab) ?? [];
+
+    // Non-halal rulings for this school
+    const conflicting = schoolRulings.filter((r: RulingRow) => r.ruling !== "halal");
+
+    // If no rulings exist for this school, fall back to general analysis status
+    const worstStatus = schoolRulings.length > 0
+      ? schoolRulings.reduce((worst: "halal" | "doubtful" | "haram", r: RulingRow) => {
+          const w = STATUS_WEIGHT[r.ruling as keyof typeof STATUS_WEIGHT] ?? 0;
+          const cw = STATUS_WEIGHT[worst as keyof typeof STATUS_WEIGHT] ?? 0;
+          return w > cw ? (r.ruling as "halal" | "doubtful" | "haram") : worst;
+        }, "halal" as "halal" | "doubtful" | "haram")
+      : (halalAnalysis.status as "halal" | "doubtful" | "haram");
+
+    return {
+      madhab,
+      status: worstStatus,
+      conflictingAdditives: conflicting.map((r: RulingRow) => ({
+        code: r.additiveCode,
+        name: r.additiveName ?? r.additiveCode,
+        ruling: r.ruling,
+        explanation: r.explanationFr,
+        scholarlyReference: r.scholarlyReference,
+      })),
+    };
+  });
 }
 
 export const scanRouter = router({
@@ -244,7 +373,13 @@ export const scanRouter = router({
         const now = new Date();
         const user = await tx.query.users.findFirst({
           where: eq(users.id, ctx.userId),
-          columns: { lastScanDate: true, currentStreak: true, longestStreak: true },
+          columns: {
+            lastScanDate: true,
+            currentStreak: true,
+            longestStreak: true,
+            experiencePoints: true,
+            level: true,
+          },
         });
 
         let newStreak = 1;
@@ -260,11 +395,18 @@ export const scanRouter = router({
           }
         }
 
+        // Level-up detection
+        const previousXp = user?.experiencePoints ?? 0;
+        const previousLevel = user?.level ?? 1;
+        const newXp = previousXp + 10;
+        const newLevel = calculateLevel(newXp);
+
         await tx
           .update(users)
           .set({
             totalScans: sql`${users.totalScans} + 1`,
-            experiencePoints: sql`${users.experiencePoints} + 10`,
+            experiencePoints: newXp,
+            level: newLevel,
             currentStreak: newStreak,
             longestStreak: sql`GREATEST(${users.longestStreak}, ${newStreak})`,
             lastScanDate: now,
@@ -272,7 +414,12 @@ export const scanRouter = router({
           })
           .where(eq(users.id, ctx.userId));
 
-        return scan;
+        return {
+          scan,
+          levelUp: newLevel > previousLevel
+            ? { previousLevel, newLevel, newXp }
+            : null,
+        };
       });
 
       // 6. Build enriched OFF extras for the mobile app
@@ -290,14 +437,31 @@ export const scanRouter = router({
         origins: (storedOff.origins as string) ?? null,
       } : null;
 
+      // 7. Community scan count — how many OTHER users verified this product
+      const [communityCount] = await ctx.db
+        .select({ count: sql<number>`count(DISTINCT ${scans.userId})::int` })
+        .from(scans)
+        .where(
+          and(
+            eq(scans.barcode, input.barcode),
+            sql`${scans.userId} != ${ctx.userId}`
+          )
+        );
+
+      // 8. Madhab verdicts — all 4 school opinions for comparative display
+      const madhabVerdicts = await computeMadhabVerdicts(ctx.db, halalAnalysis);
+
       return {
-        scan: result,
+        scan: result.scan,
         product: product ?? null,
         isNewProduct: !product,
         halalAnalysis,
         boycott: boycottResult,
         offExtras,
         personalAlerts,
+        communityVerifiedCount: communityCount?.count ?? 0,
+        madhabVerdicts,
+        levelUp: result.levelUp,
       };
     }),
 
