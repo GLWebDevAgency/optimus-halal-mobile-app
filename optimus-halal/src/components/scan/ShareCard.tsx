@@ -3,8 +3,7 @@
  *
  * Creates a branded, formatted message for WhatsApp/Instagram sharing
  * with emoji status indicators and trust score.
- *
- * No extra native dependencies needed — uses React Native's built-in Share API.
+ * All labels are passed by the caller (i18n-aware).
  */
 
 import { Share } from "react-native";
@@ -28,7 +27,7 @@ export interface ShareLabels {
   tagline: string;
 }
 
-// ── Emoji & label maps (French defaults) ─────────────────────
+// ── Emoji map ────────────────────────────────────────────────
 
 const STATUS_EMOJI: Record<string, string> = {
   halal: "✅",
@@ -37,29 +36,13 @@ const STATUS_EMOJI: Record<string, string> = {
   unknown: "❓",
 };
 
-const SHARED_LABELS: Omit<ShareLabels, "statusLabel"> = {
-  certifiedBy: "Certifié par",
-  boycotted: "Produit boycotté",
-  verifiedWith: "Vérifié avec Optimus Halal",
-  tagline: "L'app halal de confiance",
-};
-
-const DEFAULT_LABELS: Record<string, ShareLabels> = {
-  halal:    { ...SHARED_LABELS, statusLabel: "HALAL CERTIFIÉ" },
-  haram:    { ...SHARED_LABELS, statusLabel: "HARAM DÉTECTÉ" },
-  doubtful: { ...SHARED_LABELS, statusLabel: "STATUT DOUTEUX" },
-  unknown:  { ...SHARED_LABELS, statusLabel: "NON VÉRIFIÉ" },
-};
-
 // ── Message generator ────────────────────────────────────────
 
 export function generateShareMessage(
   data: ShareCardData,
-  labelsOverride?: Partial<ShareLabels>,
+  labels: ShareLabels,
 ): string {
   const emoji = STATUS_EMOJI[data.halalStatus] ?? "❓";
-  const defaults = DEFAULT_LABELS[data.halalStatus] ?? DEFAULT_LABELS.unknown;
-  const labels: ShareLabels = { ...defaults, ...labelsOverride };
 
   let message = `${emoji} ${labels.statusLabel}\n\n`;
 
@@ -90,9 +73,9 @@ export function generateShareMessage(
 
 export async function shareProductCard(
   data: ShareCardData,
-  labelsOverride?: Partial<ShareLabels>,
+  labels: ShareLabels,
 ): Promise<void> {
-  const message = generateShareMessage(data, labelsOverride);
+  const message = generateShareMessage(data, labels);
 
   try {
     await Share.share({ message });

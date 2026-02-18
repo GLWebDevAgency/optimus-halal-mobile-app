@@ -447,6 +447,8 @@ export const ar: TranslationKeys = {
     tierAnalyzed: "تم التحليل",
     tierDoubtful: "غير مؤكد",
     tierUnknown: "غير محقق",
+    shareBoycotted: "منتج مقاطع",
+    shareTagline: "تطبيق الحلال الموثوق",
   },
   map: {
     title: "الخريطة",

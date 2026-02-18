@@ -34,8 +34,9 @@ function promptRTLRestartIfNeeded(newLang: Language): void {
         text: isNewRTL ? "إعادة التشغيل" : "Redémarrer",
         onPress: async () => {
           try {
+            // @ts-expect-error — expo-updates only available in EAS production builds
             const Updates = await import("expo-updates");
-            await Updates.reloadAsync();
+            await (Updates as { reloadAsync: () => Promise<void> }).reloadAsync();
           } catch {
             // Fallback for dev builds where native module isn't available
             Alert.alert(

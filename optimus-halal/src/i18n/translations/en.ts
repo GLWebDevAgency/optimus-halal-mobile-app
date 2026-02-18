@@ -538,6 +538,8 @@ export const en: TranslationKeys = {
     tierAnalyzed: "Analyzed",
     tierDoubtful: "Uncertain",
     tierUnknown: "Unverified",
+    shareBoycotted: "Boycotted product",
+    shareTagline: "The trusted halal app",
   },
 
   // Map

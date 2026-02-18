@@ -996,15 +996,30 @@ export default function ScanResultScreen() {
   const handleShare = useCallback(async () => {
     impact();
     if (!product) return;
-    await shareProductCard({
-      productName: product.name,
-      brand: product.brand ?? null,
-      halalStatus: halalStatus as "halal" | "haram" | "doubtful" | "unknown",
-      certifier: halalAnalysis?.certifierName ?? null,
-      isBoycotted: !!boycott,
-      barcode: product.barcode,
-    });
-  }, [product, halalStatus, halalAnalysis, boycott, impact]);
+    const statusLabelMap: Record<string, string> = {
+      halal: t.scanResult.certifiedHalal,
+      haram: t.scanResult.haramDetected,
+      doubtful: t.scanResult.doubtfulStatus,
+      unknown: t.scanResult.unverified,
+    };
+    await shareProductCard(
+      {
+        productName: product.name,
+        brand: product.brand ?? null,
+        halalStatus: halalStatus as "halal" | "haram" | "doubtful" | "unknown",
+        certifier: halalAnalysis?.certifierName ?? null,
+        isBoycotted: !!boycott,
+        barcode: product.barcode,
+      },
+      {
+        statusLabel: statusLabelMap[halalStatus] ?? statusLabelMap.unknown,
+        certifiedBy: t.scanResult.certifiedBy,
+        boycotted: t.scanResult.shareBoycotted,
+        verifiedWith: t.scanResult.verifiedWith,
+        tagline: t.scanResult.shareTagline,
+      },
+    );
+  }, [product, halalStatus, halalAnalysis, boycott, impact, t]);
 
   const handleToggleFavorite = useCallback(() => {
     impact(ImpactFeedbackStyle.Medium);

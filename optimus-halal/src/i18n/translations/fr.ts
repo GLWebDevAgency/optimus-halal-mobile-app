@@ -536,6 +536,8 @@ export const fr = {
     tierAnalyzed: "Analysé",
     tierDoubtful: "Incertain",
     tierUnknown: "Non vérifié",
+    shareBoycotted: "Produit boycotté",
+    shareTagline: "L'app halal de confiance",
   },
 
   // Map
