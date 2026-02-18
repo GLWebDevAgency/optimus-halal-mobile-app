@@ -4,7 +4,6 @@
 
 import { useCallback } from "react";
 import { Alert, I18nManager } from "react-native";
-import * as Updates from "expo-updates";
 import { useLanguageStore } from "@/store";
 import { getTranslation, isRTL, type Language, type TranslationKeys } from "@/i18n";
 import { setApiLanguage } from "@/services/api";
@@ -35,9 +34,10 @@ function promptRTLRestartIfNeeded(newLang: Language): void {
         text: isNewRTL ? "إعادة التشغيل" : "Redémarrer",
         onPress: async () => {
           try {
+            const Updates = await import("expo-updates");
             await Updates.reloadAsync();
           } catch {
-            // Fallback for dev builds where Updates isn't available
+            // Fallback for dev builds where native module isn't available
             Alert.alert(
               "Redémarrage manuel requis",
               "Veuillez fermer et rouvrir l'application.",
