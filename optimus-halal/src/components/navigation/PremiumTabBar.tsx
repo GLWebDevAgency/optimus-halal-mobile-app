@@ -168,6 +168,9 @@ function TabItem({ tab, isActive, onPress, badge, index }: TabItemProps) {
       onPress={handlePress}
       activeOpacity={1}
       style={[styles.tabItem, animatedContainerStyle]}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: isActive }}
+      accessibilityLabel={t.nav[tab.navKey]}
     >
       {/* Ripple Effect */}
       <Animated.View style={[styles.ripple, animatedRippleStyle]}>

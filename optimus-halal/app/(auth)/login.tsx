@@ -34,11 +34,11 @@ export default function LoginScreen() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   // Use the API-connected Auth Store instead of the local one
-  const { login, isLoading: isAuthLoading, error: authError } = useAuthStore();
+  const { login, isLoggingIn, error: authError } = useAuthStore();
   
   // Local loading state for UI feedback
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const isLoading = isSubmitting || isAuthLoading;
+  const isLoading = isSubmitting || isLoggingIn;
 
   const validateForm = useCallback(() => {
     const newErrors: { email?: string; password?: string } = {};

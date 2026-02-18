@@ -896,7 +896,7 @@ export default function ScanResultScreen() {
   );
   const allergensTags: string[] = offExtras?.allergensTags ?? [];
   const personalAlerts: PersonalAlert[] =
-    (scanMutation.data as any)?.personalAlerts ?? [];
+    scanMutation.data?.personalAlerts ?? [];
 
   // ── Halal Alternatives Query ──────────────────
   const alternativesQuery = trpc.product.getAlternatives.useQuery(
@@ -1832,7 +1832,7 @@ export default function ScanResultScreen() {
                     <Text style={{ fontSize: 12, fontWeight: "600", color: colors.textPrimary, marginTop: 8 }} numberOfLines={2}>
                       {alt.name}
                     </Text>
-                    <StatusPill status={(alt.halalStatus as any) ?? "unknown"} size="sm" animated={false} />
+                    <StatusPill status={(alt.halalStatus ?? "unknown") as "halal" | "haram" | "doubtful" | "unknown"} size="sm" animated={false} />
                   </TouchableOpacity>
                 ))}
               </ScrollView>

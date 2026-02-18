@@ -27,8 +27,11 @@ interface AuthStoreState {
   isAuthenticated: boolean;
   /** True only during app startup initialization — gates the splash/loading screen */
   isInitializing: boolean;
-  /** Per-operation loading flag for individual screens (login, register, etc.) */
-  isLoading: boolean;
+  /** Per-operation loading flags for individual screens */
+  isLoggingIn: boolean;
+  isRegistering: boolean;
+  isResettingPassword: boolean;
+  isFetchingProfile: boolean;
   error: string | null;
 
   // Actions
@@ -52,7 +55,10 @@ export const useAuthStore = create<AuthStoreState>()((set, get) => ({
   profile: null,
   isAuthenticated: false,
   isInitializing: true,
-  isLoading: false,
+  isLoggingIn: false,
+  isRegistering: false,
+  isResettingPassword: false,
+  isFetchingProfile: false,
   error: null,
 
   initialize: async () => {
@@ -105,13 +111,13 @@ export const useAuthStore = create<AuthStoreState>()((set, get) => ({
   },
 
   login: async (email, password) => {
-    set({ isLoading: true, error: null });
+    set({ isLoggingIn: true, error: null });
     const { data, error } = await safeApiCall(() =>
       api.auth.login(email, password)
     );
 
     if (error) {
-      set({ isLoading: false, error: error.message });
+      set({ isLoggingIn: false, error: error.message });
       return false;
     }
 
@@ -119,23 +125,23 @@ export const useAuthStore = create<AuthStoreState>()((set, get) => ({
       set({
         user: data.user,
         isAuthenticated: true,
-        isLoading: false,
+        isLoggingIn: false,
       });
       // Fetch full profile - MUST await to ensure token is fully propagated
       await get().fetchProfile();
       return true;
     }
 
-    set({ isLoading: false, error: "Login failed" });
+    set({ isLoggingIn: false, error: "Login failed" });
     return false;
   },
 
   register: async (input) => {
-    set({ isLoading: true, error: null });
+    set({ isRegistering: true, error: null });
     const { data, error } = await safeApiCall(() => api.auth.register(input));
 
     if (error) {
-      set({ isLoading: false, error: error.message });
+      set({ isRegistering: false, error: error.message });
       return false;
     }
 
@@ -143,68 +149,68 @@ export const useAuthStore = create<AuthStoreState>()((set, get) => ({
       set({
         user: data.user,
         isAuthenticated: true,
-        isLoading: false,
+        isRegistering: false,
       });
       await get().fetchProfile();
       return true;
     }
 
-    set({ isLoading: false, error: "Registration failed" });
+    set({ isRegistering: false, error: "Registration failed" });
     return false;
   },
 
   logout: async () => {
-    set({ isLoading: true });
+    set({ isLoggingIn: true });
     await api.auth.logout();
     set({
       user: null,
       profile: null,
       isAuthenticated: false,
-      isLoading: false,
+      isLoggingIn: false,
     });
   },
 
   requestPasswordReset: async (email) => {
-    set({ isLoading: true, error: null });
+    set({ isResettingPassword: true, error: null });
     const { data, error } = await safeApiCall(() =>
       api.auth.requestPasswordReset(email)
     );
 
     if (error) {
-      set({ isLoading: false, error: error.message });
+      set({ isResettingPassword: false, error: error.message });
       return false;
     }
 
-    set({ isLoading: false });
+    set({ isResettingPassword: false });
     return data?.success ?? false;
   },
 
   confirmPasswordReset: async (email, code, newPassword) => {
-    set({ isLoading: true, error: null });
+    set({ isResettingPassword: true, error: null });
     const { data, error } = await safeApiCall(() =>
       api.auth.confirmPasswordReset(email, code, newPassword)
     );
 
     if (error) {
-      set({ isLoading: false, error: error.message });
+      set({ isResettingPassword: false, error: error.message });
       return false;
     }
 
-    set({ isLoading: false });
+    set({ isResettingPassword: false });
     return data?.success ?? false;
   },
 
   fetchProfile: async () => {
-    set({ isLoading: true, error: null });
+    set({ isFetchingProfile: true, error: null });
     const { data, error } = await safeApiCall(() => api.profile.getProfile(), {
       suppressLog: true,
     });
 
     if (data) {
-      set({ profile: data, isLoading: false, error: null });
+      set({ profile: data, isFetchingProfile: false, error: null });
     } else if (error) {
       if (error.code === "UNAUTHORIZED") {
-        set({ isLoading: false });
+        set({ isFetchingProfile: false });
         Alert.alert(
           "Session expirée",
           "Votre session a expiré. Veuillez vous reconnecter.",
@@ -219,12 +225,12 @@ export const useAuthStore = create<AuthStoreState>()((set, get) => ({
         );
       } else {
         set({
-          isLoading: false,
+          isFetchingProfile: false,
           error: error.message || "Failed to load profile",
         });
       }
     } else {
-      set({ isLoading: false });
+      set({ isFetchingProfile: false });
     }
   },
 
