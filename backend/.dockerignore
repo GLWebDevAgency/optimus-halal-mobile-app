@@ -9,5 +9,4 @@ dist
 coverage
 src/__tests__
 vitest.config.ts
-tsconfig.json
 README.md
