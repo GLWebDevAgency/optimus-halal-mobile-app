@@ -11,6 +11,7 @@ RUN corepack enable && corepack prepare pnpm@9.15.4 --activate \
 # Build TypeScript
 COPY tsconfig.json ./
 COPY src/ ./src/
+COPY asset/ ./asset/
 RUN pnpm run build
 
 # Copy migration files (needed by preDeployCommand and dist/db/migrate.js)
