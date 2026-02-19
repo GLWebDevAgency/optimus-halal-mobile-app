@@ -27,6 +27,7 @@ import { useAuthStore } from "@/store/apiStores";
 import { setApiLanguage } from "@/services/api";
 import { isRTL as isRTLLanguage } from "@/i18n";
 import { trpc, createTRPCClientForProvider } from "@/lib/trpc";
+import { useColorScheme as useNativeWindColorScheme } from "nativewind";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/ui";
 import { logger } from "@/lib/logger";
@@ -207,7 +208,14 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
 // ============================================
 
 export default function RootLayout() {
-  const { isDark } = useTheme();
+  const { isDark, effectiveTheme } = useTheme();
+  const { setColorScheme } = useNativeWindColorScheme();
+
+  // Sync NativeWind dark mode with the app's useTheme() store
+  // so `dark:` Tailwind classes match the user's theme preference
+  useEffect(() => {
+    setColorScheme(effectiveTheme);
+  }, [effectiveTheme, setColorScheme]);
 
   const [trpcClient] = useState(() => createTRPCClientForProvider());
 

@@ -257,6 +257,11 @@ export const fr = {
       bad: "Mauvais",
       unknown: "Inconnu",
     },
+    addError: "Impossible d'ajouter aux favoris",
+    removeError: "Impossible de retirer des favoris",
+    premiumLimitTitle: "Limite atteinte",
+    premiumLimitMessage: "Vous avez atteint la limite de 5 favoris. Passez à Optimus+ pour des favoris illimités.",
+    alreadyFavorite: "Ce produit est déjà dans vos favoris",
   },
 
   // Certifications

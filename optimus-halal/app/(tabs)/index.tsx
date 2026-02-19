@@ -42,36 +42,13 @@ import { useMe } from "@/hooks/useAuth";
 import { useFavoritesList } from "@/hooks/useFavorites";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTheme } from "@/hooks/useTheme";
+import { brand, glass, lightTheme, darkTheme } from "@/theme/colors";
 import { useHaptics } from "@/hooks";
 import { trpc } from "@/lib/trpc";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const STAGGER_MS = 60;
 
-// ---------------------------------------------------------------------------
-// Color palette (kept inline for direct access; mirrors useTheme().colors)
-// ---------------------------------------------------------------------------
-const COLORS = {
-  primaryGreen: "#13ec6a",
-  primaryDark: "#0ea64b",
-  gold: "#D4AF37",
-  bgDark: "#0a1a10",
-  bgDarkEnd: "#132a1a",
-  bgLight: "#f8faf9",
-  bgLightEnd: "#ffffff",
-  cardDark: "#132a1a",
-  cardLight: "#ffffff",
-  textDark: "#e8f5e9",
-  textLight: "#0d1b13",
-  textSecDark: "#9ca3af",
-  textSecLight: "#4b5563",
-  borderDark: "rgba(255,255,255,0.06)",
-  borderLight: "#e5e7eb",
-  glassDark: "rgba(19,42,26,0.65)",
-  glassLight: "rgba(255,255,255,0.70)",
-  glassBorderDark: "rgba(255,255,255,0.08)",
-  glassBorderLight: "rgba(0,0,0,0.06)",
-};
 
 // Severity mappings for alerts
 const SEVERITY_ACCENT: Record<string, string> = {
@@ -93,24 +70,26 @@ const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 interface StatPillItemProps {
   value: string | number;
   label: string;
-  isDark: boolean;
+  primaryColor: string;
+  secondaryColor: string;
 }
 
 const StatPillItem = React.memo(function StatPillItem({
   value,
   label,
-  isDark,
+  primaryColor,
+  secondaryColor,
 }: StatPillItemProps) {
   return (
     <View className="items-center px-3">
       <Text
-        style={{ color: COLORS.primaryGreen }}
+        style={{ color: primaryColor }}
         className="text-base font-bold"
       >
         {value}
       </Text>
       <Text
-        style={{ color: isDark ? COLORS.textSecDark : COLORS.textSecLight }}
+        style={{ color: secondaryColor }}
         className="text-[10px] font-medium mt-0.5"
       >
         {label}
@@ -216,10 +195,10 @@ const QuickActionCard = React.memo(function QuickActionCard({
         style={[
           styles.quickActionGlass,
           {
-            backgroundColor: isDark ? COLORS.glassDark : COLORS.glassLight,
+            backgroundColor: isDark ? glass.dark.bg : glass.light.bg,
             borderColor: isDark
-              ? COLORS.glassBorderDark
-              : COLORS.glassBorderLight,
+              ? glass.dark.border
+              : glass.light.border,
           },
         ]}
       >
@@ -237,14 +216,14 @@ const QuickActionCard = React.memo(function QuickActionCard({
             <MaterialIcons
               name={icon}
               size={22}
-              color={iconColor ?? COLORS.primaryGreen}
+              color={iconColor ?? brand.primary}
             />
           </View>
           <View style={{ flex: 1 }}>
             <Text
               style={[
                 styles.quickActionTitle,
-                { color: isDark ? COLORS.textDark : COLORS.textLight },
+                { color: isDark ? darkTheme.textPrimary : lightTheme.textPrimary },
               ]}
             >
               {title}
@@ -252,7 +231,7 @@ const QuickActionCard = React.memo(function QuickActionCard({
             <Text
               style={[
                 styles.quickActionSub,
-                { color: isDark ? COLORS.textSecDark : COLORS.textSecLight },
+                { color: isDark ? darkTheme.textSecondary : lightTheme.textSecondary },
               ]}
             >
               {subtitle}
@@ -317,7 +296,7 @@ const FeaturedCard = React.memo(function FeaturedCard({
           <LinearGradient
             colors={
               isDark
-                ? [COLORS.cardDark, "#0a1a10"]
+                ? [darkTheme.card, darkTheme.background]
                 : ["#f0fdf4", "#ecfdf5"]
             }
             style={StyleSheet.absoluteFill}
@@ -411,7 +390,7 @@ const FavoriteCircle = React.memo(function FavoriteCircle({
             style={[
               styles.favInnerRing,
               {
-                backgroundColor: isDark ? COLORS.bgDark : COLORS.bgLight,
+                backgroundColor: isDark ? darkTheme.background : lightTheme.background,
               },
             ]}
           >
@@ -428,7 +407,7 @@ const FavoriteCircle = React.memo(function FavoriteCircle({
                 style={[
                   styles.favImage,
                   {
-                    backgroundColor: isDark ? COLORS.cardDark : "#f3f4f6",
+                    backgroundColor: isDark ? darkTheme.card : "#f3f4f6",
                     alignItems: "center",
                     justifyContent: "center",
                   },
@@ -446,7 +425,7 @@ const FavoriteCircle = React.memo(function FavoriteCircle({
         <Text
           style={[
             styles.favName,
-            { color: isDark ? COLORS.textSecDark : COLORS.textSecLight },
+            { color: isDark ? darkTheme.textSecondary : lightTheme.textSecondary },
           ]}
           numberOfLines={2}
         >
@@ -463,7 +442,7 @@ const FavoriteCircle = React.memo(function FavoriteCircle({
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const { isDark, isRamadan } = useTheme();
+  const { isDark, isRamadan, colors, heroGradient } = useTheme();
   const { impact } = useHaptics();
   const { t } = useTranslation();
 
@@ -558,17 +537,17 @@ export default function HomeScreen() {
               : t.home.blogBadge,
         badgeColor:
           article.type === "partner_news"
-            ? COLORS.gold
+            ? brand.gold
             : article.type === "educational"
-              ? COLORS.primaryGreen
+              ? colors.primary
               : "rgba(255,255,255,0.25)",
-        accentColor: COLORS.primaryGreen,
+        accentColor: colors.primary,
         readTime: article.readTimeMinutes,
       });
     }
 
     return items;
-  }, [alertsQuery.data?.items, articlesQuery.data?.items, t]);
+  }, [alertsQuery.data?.items, articlesQuery.data?.items, t, colors.primary]);
 
   const hasApiError = dashboardQuery.isError && meQuery.isError;
 
@@ -657,11 +636,11 @@ export default function HomeScreen() {
     <View style={{ flex: 1 }}>
       {/* Full-screen background gradient */}
       <LinearGradient
-        colors={
-          isDark
-            ? [COLORS.bgDark, COLORS.bgDarkEnd, COLORS.bgDark]
-            : [COLORS.bgLight, COLORS.bgLightEnd, COLORS.bgLight]
-        }
+        colors={[
+          colors.background,
+          isDark ? colors.card : colors.backgroundSecondary,
+          colors.background,
+        ] as [string, string, string]}
         locations={[0, 0.4, 1]}
         style={StyleSheet.absoluteFill}
       />
@@ -684,8 +663,8 @@ export default function HomeScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={COLORS.primaryGreen}
-            colors={[COLORS.primaryGreen]}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
             progressViewOffset={insets.top}
           />
         }
@@ -711,7 +690,7 @@ export default function HomeScreen() {
                   style={[
                     styles.greetingLabel,
                     {
-                      color: isDark ? COLORS.textSecDark : COLORS.textSecLight,
+                      color: colors.textSecondary,
                     },
                   ]}
                 >
@@ -720,7 +699,7 @@ export default function HomeScreen() {
                 <Text
                   style={[
                     styles.greetingName,
-                    { color: isDark ? COLORS.textDark : COLORS.textLight },
+                    { color: colors.textPrimary },
                   ]}
                 >
                   {userName}
@@ -739,18 +718,18 @@ export default function HomeScreen() {
                 styles.bellButton,
                 {
                   backgroundColor: isDark
-                    ? COLORS.glassDark
-                    : COLORS.glassLight,
+                    ? "rgba(255,255,255,0.06)"
+                    : "rgba(255,255,255,0.7)",
                   borderColor: isDark
-                    ? COLORS.glassBorderDark
-                    : COLORS.glassBorderLight,
+                    ? "rgba(255,255,255,0.08)"
+                    : "rgba(0,0,0,0.06)",
                 },
               ]}
             >
               <MaterialIcons
                 name="notifications-none"
                 size={22}
-                color={isDark ? COLORS.textDark : COLORS.textLight}
+                color={colors.textPrimary}
               />
               {unreadCount > 0 && (
                 <View style={styles.bellBadge}>
@@ -772,18 +751,19 @@ export default function HomeScreen() {
               styles.statsPill,
               {
                 backgroundColor: isDark
-                  ? COLORS.glassDark
-                  : COLORS.glassLight,
+                  ? "rgba(255,255,255,0.06)"
+                  : "rgba(255,255,255,0.7)",
                 borderColor: isDark
-                  ? COLORS.glassBorderDark
-                  : COLORS.glassBorderLight,
+                  ? "rgba(255,255,255,0.08)"
+                  : "rgba(0,0,0,0.06)",
               },
             ]}
           >
             <StatPillItem
               value={totalScans}
               label={t.home.productsVerified}
-              isDark={isDark}
+              primaryColor={colors.textPrimary}
+              secondaryColor={colors.textSecondary}
             />
             <View
               style={[
@@ -798,7 +778,8 @@ export default function HomeScreen() {
             <StatPillItem
               value={totalReports}
               label={t.home.alertsSent}
-              isDark={isDark}
+              primaryColor={colors.textPrimary}
+              secondaryColor={colors.textSecondary}
             />
             <View
               style={[
@@ -813,7 +794,8 @@ export default function HomeScreen() {
             <StatPillItem
               value={`${t.home.guardianLevel} ${userLevel}`}
               label={t.home.level}
-              isDark={isDark}
+              primaryColor={colors.textPrimary}
+              secondaryColor={colors.textSecondary}
             />
             {/* Streak flame — only visible when streak > 0 */}
             {currentStreak > 0 && (
@@ -832,13 +814,13 @@ export default function HomeScreen() {
                   <View style={styles.streakRow}>
                     <Text style={styles.streakFlame}>🔥</Text>
                     <Text
-                      style={{ color: COLORS.gold, fontSize: 16, fontWeight: "800" }}
+                      style={{ color: brand.gold, fontSize: 16, fontWeight: "800" }}
                     >
                       {currentStreak}
                     </Text>
                   </View>
                   <Text
-                    style={{ color: isDark ? COLORS.textSecDark : COLORS.textSecLight, fontSize: 10, fontWeight: "500", marginTop: 2 }}
+                    style={{ color: colors.textSecondary, fontSize: 10, fontWeight: "500", marginTop: 2 }}
                   >
                     {currentStreak > 1 ? t.home.streakDays : t.home.streakDay}
                   </Text>
@@ -960,13 +942,13 @@ export default function HomeScreen() {
                   accessibilityRole="header"
                   style={[
                     styles.sectionTitle,
-                    { color: isDark ? COLORS.textDark : COLORS.textLight },
+                    { color: colors.textPrimary },
                   ]}
                 >
                   {t.home.featured}
                 </Text>
                 <Svg width={20} height={10} viewBox="0 0 24 12">
-                  <Path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke={COLORS.primaryGreen} strokeWidth={1.5} fill="none" opacity={0.5} />
+                  <Path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke={colors.primary} strokeWidth={1.5} fill="none" opacity={0.5} />
                 </Svg>
               </View>
               <TouchableOpacity
@@ -975,7 +957,7 @@ export default function HomeScreen() {
                 accessibilityRole="link"
                 accessibilityLabel={t.home.viewAll}
               >
-                <Text style={[styles.seeAllText, { color: COLORS.primaryGreen }]}>
+                <Text style={[styles.seeAllText, { color: colors.primary }]}>
                   {t.home.viewAll}
                 </Text>
               </TouchableOpacity>
@@ -1019,13 +1001,13 @@ export default function HomeScreen() {
                 accessibilityRole="header"
                 style={[
                   styles.sectionTitle,
-                  { color: isDark ? COLORS.textDark : COLORS.textLight },
+                  { color: colors.textPrimary },
                 ]}
               >
                 {t.home.favorites}
               </Text>
               <Svg width={20} height={10} viewBox="0 0 24 12">
-                <Path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke={COLORS.primaryGreen} strokeWidth={1.5} fill="none" opacity={0.5} />
+                <Path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke={colors.primary} strokeWidth={1.5} fill="none" opacity={0.5} />
               </Svg>
             </View>
             {favoriteProducts.length > 0 && (
@@ -1036,7 +1018,7 @@ export default function HomeScreen() {
                 accessibilityLabel={`${t.home.viewAll} ${t.home.favorites}`}
               >
                 <Text
-                  style={[styles.seeAllText, { color: COLORS.primaryGreen }]}
+                  style={[styles.seeAllText, { color: colors.primary }]}
                 >
                   {t.home.viewAll} ({favoriteProducts.length})
                 </Text>
@@ -1081,9 +1063,7 @@ export default function HomeScreen() {
                     style={[
                       styles.emptyFavText,
                       {
-                        color: isDark
-                          ? COLORS.textSecDark
-                          : COLORS.textSecLight,
+                        color: colors.textSecondary,
                       },
                     ]}
                   >
@@ -1141,9 +1121,7 @@ export default function HomeScreen() {
                   style={[
                     styles.favName,
                     {
-                      color: isDark
-                        ? COLORS.textSecDark
-                        : COLORS.textSecLight,
+                      color: colors.textSecondary,
                     },
                   ]}
                 >
@@ -1259,8 +1237,8 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     padding: 16,
     minHeight: 80,
-    justifyContent: "center",
-    // Shadow glow
+    justifyContent: "center" as const,
+    // iOS: glow shadow — Android: skip elevation (causes rectangular clip with overflow+borderRadius)
     ...Platform.select({
       ios: {
         shadowColor: "#13ec6a",
@@ -1268,7 +1246,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.35,
         shadowRadius: 16,
       },
-      android: { elevation: 8 },
+      android: {},
     }),
   },
   quickActionGlass: {
@@ -1276,7 +1254,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 16,
     minHeight: 80,
-    justifyContent: "center",
+    justifyContent: "center" as const,
+    // iOS: subtle shadow — Android: skip elevation (causes rectangular border artifacts)
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -1284,7 +1263,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.06,
         shadowRadius: 8,
       },
-      android: { elevation: 2 },
+      android: {},
     }),
   },
   quickActionContent: {

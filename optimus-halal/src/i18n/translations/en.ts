@@ -259,6 +259,11 @@ export const en: TranslationKeys = {
       bad: "Bad",
       unknown: "Unknown",
     },
+    addError: "Failed to add to favorites",
+    removeError: "Failed to remove from favorites",
+    premiumLimitTitle: "Limit reached",
+    premiumLimitMessage: "You've reached the 5 favorites limit. Upgrade to Optimus+ for unlimited favorites.",
+    alreadyFavorite: "This product is already in your favorites",
   },
 
   // Certifications

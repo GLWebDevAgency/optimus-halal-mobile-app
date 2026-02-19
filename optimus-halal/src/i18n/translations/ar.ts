@@ -243,6 +243,11 @@ export const ar: TranslationKeys = {
       bad: "سيئ",
       unknown: "غير معروف",
     },
+    addError: "تعذّرت الإضافة إلى المفضلة",
+    removeError: "تعذّر الحذف من المفضلة",
+    premiumLimitTitle: "تم بلوغ الحد",
+    premiumLimitMessage: "لقد بلغت حد 5 مفضلات. اشترك في Optimus+ للمفضلات غير المحدودة.",
+    alreadyFavorite: "هذا المنتج موجود بالفعل في مفضلاتك",
   },
   certifications: {
     title: "الشهادات المفضلة",

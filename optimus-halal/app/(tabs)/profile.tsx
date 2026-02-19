@@ -53,7 +53,7 @@ const MenuItem = React.memo(function MenuItem({
   rightElement,
   isLast,
 }: MenuItemProps) {
-  const { isDark } = useTheme();
+  const { colors } = useTheme();
 
   return (
     <TouchableOpacity
@@ -62,9 +62,8 @@ const MenuItem = React.memo(function MenuItem({
       accessibilityRole="button"
       accessibilityLabel={title}
       accessibilityHint={subtitle ? subtitle : undefined}
-      className={`flex-row items-center justify-between p-4 ${
-        !isLast ? "border-b border-slate-100 dark:border-white/5" : ""
-      }`}
+      className="flex-row items-center justify-between p-4"
+      style={!isLast ? { borderBottomWidth: 1, borderBottomColor: colors.borderLight } : undefined}
     >
       <View className="flex-row items-center gap-3">
         <View
@@ -73,21 +72,21 @@ const MenuItem = React.memo(function MenuItem({
         >
           <MaterialIcons name={icon} size={18} color={iconColor} />
         </View>
-        <Text className="text-slate-700 dark:text-slate-200 font-medium text-sm">
+        <Text className="font-medium text-sm" style={{ color: colors.textPrimary }}>
           {title}
         </Text>
       </View>
       {rightElement || (
         <View className="flex-row items-center gap-2">
           {subtitle && (
-            <Text className="text-slate-400 dark:text-slate-500 text-xs">
+            <Text className="text-xs" style={{ color: colors.textSecondary }}>
               {subtitle}
             </Text>
           )}
           <MaterialIcons
             name="chevron-right"
             size={20}
-            color={isDark ? "#475569" : "#94a3b8"}
+            color={colors.iconSecondary}
           />
         </View>
       )}
@@ -112,14 +111,19 @@ const StatsCard = React.memo(function StatsCard({
   subtitle,
   onPress,
 }: StatsCardProps) {
+  const { colors } = useTheme();
+
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.9}
       accessibilityRole="button"
       accessibilityLabel={`${title}, ${subtitle}`}
-      className="flex-1 p-4 rounded-2xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-white/5"
+      className="flex-1 p-4 rounded-2xl"
       style={{
+        backgroundColor: colors.card,
+        borderWidth: 1,
+        borderColor: colors.borderLight,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
@@ -133,10 +137,10 @@ const StatsCard = React.memo(function StatsCard({
       >
         <MaterialIcons name={icon} size={20} color={iconColor} />
       </View>
-      <Text className="text-slate-900 dark:text-white font-bold text-sm">
+      <Text className="font-bold text-sm" style={{ color: colors.textPrimary }}>
         {title}
       </Text>
-      <Text className="text-slate-500 dark:text-slate-400 text-xs mt-1">
+      <Text className="text-xs mt-1" style={{ color: colors.textSecondary }}>
         {subtitle}
       </Text>
     </TouchableOpacity>
@@ -240,15 +244,14 @@ export default function ProfileScreen() {
   if (profileLoading || !profile) return <ProfileSkeleton />;
 
   return (
-    <View className="flex-1 bg-background-light dark:bg-background-dark">
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
       {/* Islamic Pattern Background */}
       <IslamicPattern variant="khatam" opacity={0.04} />
 
       {/* Header */}
       <Animated.View
         entering={FadeIn.duration(400)}
-        className="bg-background-light/95 dark:bg-background-dark/95 border-b border-transparent dark:border-white/5"
-        style={{ paddingTop: insets.top }}
+        style={{ paddingTop: insets.top, backgroundColor: colors.background, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}
       >
         <View className="flex-row items-center justify-between p-4">
           <TouchableOpacity
@@ -262,17 +265,17 @@ export default function ProfileScreen() {
             <MaterialIcons
               name="notifications"
               size={24}
-              color={isDark ? "#94a3b8" : "#64748b"}
+              color={colors.iconSecondary}
             />
           </TouchableOpacity>
-          <Text accessibilityRole="header" className="text-slate-900 dark:text-white text-lg font-bold tracking-tight">
+          <Text accessibilityRole="header" className="text-lg font-bold tracking-tight" style={{ color: colors.textPrimary }}>
             {t.profile.title}
           </Text>
           <TouchableOpacity onPress={handleSettings} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel={t.common.settings} accessibilityHint={t.common.openSettings}>
             <MaterialIcons
               name="settings"
               size={24}
-              color={isDark ? "#94a3b8" : "#64748b"}
+              color={colors.iconSecondary}
             />
           </TouchableOpacity>
         </View>
@@ -297,8 +300,10 @@ export default function ProfileScreen() {
             className="relative mb-5"
           >
             <View
-              className="w-28 h-28 rounded-full overflow-hidden border-4 border-white dark:border-surface-dark"
+              className="w-28 h-28 rounded-full overflow-hidden"
               style={{
+                borderWidth: 4,
+                borderColor: colors.card,
                 shadowColor: colors.primary,
                 shadowOffset: { width: 0, height: 0 },
                 shadowOpacity: isDark ? 0.15 : 0,
@@ -311,20 +316,23 @@ export default function ProfileScreen() {
                 fallback={userName}
               />
             </View>
-            <View className="absolute bottom-0 right-0 bg-primary rounded-full p-2 border-4 border-background-light dark:border-background-dark">
+            <View className="absolute bottom-0 right-0 rounded-full p-2" style={{ backgroundColor: colors.primary, borderWidth: 4, borderColor: colors.background }}>
               <MaterialIcons name="edit" size={14} color="#ffffff" />
             </View>
           </TouchableOpacity>
 
           {/* Name */}
-          <Text className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
+          <Text className="text-2xl font-bold mb-1" style={{ color: colors.textPrimary }}>
             {userName}
           </Text>
 
           {/* Level Badge */}
-          <View className="flex-row items-center gap-1.5 mb-6 bg-primary/5 dark:bg-primary/10 px-3 py-1 rounded-full border border-primary/10 dark:border-primary/20">
+          <View
+            className="flex-row items-center gap-1.5 mb-6 px-3 py-1 rounded-full"
+            style={{ backgroundColor: colors.primaryLight, borderWidth: 1, borderColor: colors.primaryLight }}
+          >
             <MaterialIcons name="verified" size={16} color={colors.primary} />
-            <Text className="text-primary font-medium text-xs uppercase tracking-wide">
+            <Text className="font-medium text-xs uppercase tracking-wide" style={{ color: colors.primary }}>
               {t.home.level} {gamification.level} — {t.profile.consciousConsumer}
             </Text>
           </View>
@@ -335,8 +343,11 @@ export default function ProfileScreen() {
             activeOpacity={0.9}
             accessibilityRole="button"
             accessibilityLabel={t.profile.editProfile}
-            className="h-11 px-8 rounded-full bg-slate-900 dark:bg-surface-dark dark:border dark:border-white/10 items-center justify-center w-full max-w-[200px]"
+            className="h-11 px-8 rounded-full items-center justify-center w-full max-w-[200px]"
             style={{
+              backgroundColor: isDark ? colors.card : "#0f172a",
+              borderWidth: isDark ? 1 : 0,
+              borderColor: isDark ? colors.borderLight : "transparent",
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.05,
@@ -344,7 +355,7 @@ export default function ProfileScreen() {
               elevation: 2,
             }}
           >
-            <Text className="font-semibold text-sm text-white">
+            <Text className="font-semibold text-sm" style={{ color: "#ffffff" }}>
               {t.profile.editProfile}
             </Text>
           </TouchableOpacity>
@@ -353,8 +364,11 @@ export default function ProfileScreen() {
         {/* Gamification Card */}
         <Animated.View
           entering={FadeInUp.delay(150).duration(500)}
-          className="mx-4 mb-6 p-4 rounded-2xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-white/5"
+          className="mx-4 mb-6 p-4 rounded-2xl"
           style={{
+            backgroundColor: colors.card,
+            borderWidth: 1,
+            borderColor: colors.borderLight,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.05,
@@ -364,30 +378,30 @@ export default function ProfileScreen() {
         >
           {/* XP Progress */}
           <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-slate-500 dark:text-slate-400 text-xs font-medium">
+            <Text className="text-xs font-medium" style={{ color: colors.textSecondary }}>
               {t.profile.xpProgression}
             </Text>
-            <Text className="text-slate-900 dark:text-white text-xs font-bold">
+            <Text className="text-xs font-bold" style={{ color: colors.textPrimary }}>
               {gamification.xp} XP
             </Text>
           </View>
-          <View className="h-2 rounded-full bg-slate-100 dark:bg-white/5 mb-4 overflow-hidden">
+          <View className="h-2 rounded-full mb-4 overflow-hidden" style={{ backgroundColor: colors.backgroundSecondary }}>
             <View
-              className="h-full rounded-full bg-primary"
-              style={{ width: `${Math.round(progress * 100)}%` }}
+              className="h-full rounded-full"
+              style={{ width: `${Math.round(progress * 100)}%`, backgroundColor: colors.primary }}
             />
           </View>
 
           {/* Quick Stats Row */}
           <View className="flex-row">
             <View className="flex-1 items-center">
-              <View className="w-9 h-9 rounded-full bg-primary/10 items-center justify-center mb-1.5">
+              <View className="w-9 h-9 rounded-full items-center justify-center mb-1.5" style={{ backgroundColor: colors.primaryLight }}>
                 <MaterialIcons name="local-fire-department" size={18} color={colors.primary} />
               </View>
-              <Text className="text-slate-900 dark:text-white font-bold text-sm">
+              <Text className="font-bold text-sm" style={{ color: colors.textPrimary }}>
                 {gamification.streak}
               </Text>
-              <Text className="text-slate-400 dark:text-slate-500 text-[10px]">
+              <Text className="text-[10px]" style={{ color: colors.textSecondary }}>
                 {t.profile.streak}
               </Text>
             </View>
@@ -396,10 +410,10 @@ export default function ProfileScreen() {
                 style={{ backgroundColor: isDark ? "rgba(59,130,246,0.1)" : "#eff6ff" }}>
                 <MaterialIcons name="qr-code-scanner" size={18} color={isDark ? "#60a5fa" : "#2563eb"} />
               </View>
-              <Text className="text-slate-900 dark:text-white font-bold text-sm">
+              <Text className="font-bold text-sm" style={{ color: colors.textPrimary }}>
                 {gamification.totalScans}
               </Text>
-              <Text className="text-slate-400 dark:text-slate-500 text-[10px]">
+              <Text className="text-[10px]" style={{ color: colors.textSecondary }}>
                 {t.profile.stats.scans}
               </Text>
             </View>
@@ -408,10 +422,10 @@ export default function ProfileScreen() {
                 style={{ backgroundColor: isDark ? "rgba(234,179,8,0.1)" : "#fef3c7" }}>
                 <MaterialIcons name="stars" size={18} color="#eab308" />
               </View>
-              <Text className="text-slate-900 dark:text-white font-bold text-sm">
+              <Text className="font-bold text-sm" style={{ color: colors.textPrimary }}>
                 {gamification.points}
               </Text>
-              <Text className="text-slate-400 dark:text-slate-500 text-[10px]">
+              <Text className="text-[10px]" style={{ color: colors.textSecondary }}>
                 {t.profile.points}
               </Text>
             </View>
@@ -479,7 +493,7 @@ export default function ProfileScreen() {
           entering={FadeInUp.delay(300).duration(500)}
           className="px-4 mb-6"
         >
-          <Text accessibilityRole="header" className="text-slate-900 dark:text-slate-200 text-base font-bold px-2 mb-3">
+          <Text accessibilityRole="header" className="text-base font-bold px-2 mb-3" style={{ color: colors.textPrimary }}>
             {t.profile.preferences}
           </Text>
           <Card variant="elevated" className="overflow-hidden p-0">
@@ -563,7 +577,7 @@ export default function ProfileScreen() {
           entering={FadeInUp.delay(400).duration(500)}
           className="px-4 mb-8"
         >
-          <Text accessibilityRole="header" className="text-slate-900 dark:text-slate-200 text-base font-bold px-2 mb-3">
+          <Text accessibilityRole="header" className="text-base font-bold px-2 mb-3" style={{ color: colors.textPrimary }}>
             {t.profile.account}
           </Text>
           <Card variant="elevated" className="overflow-hidden p-0">
@@ -611,8 +625,11 @@ export default function ProfileScreen() {
             activeOpacity={0.9}
             accessibilityRole="button"
             accessibilityLabel={t.profile.logout}
-            className="w-full bg-white dark:bg-surface-dark border border-red-100 dark:border-red-900/30 rounded-xl p-3.5 flex-row items-center justify-center gap-2"
+            className="w-full rounded-xl p-3.5 flex-row items-center justify-center gap-2"
             style={{
+              backgroundColor: colors.card,
+              borderWidth: 1,
+              borderColor: isDark ? "rgba(239,68,68,0.15)" : "#fee2e2",
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.05,
@@ -621,12 +638,12 @@ export default function ProfileScreen() {
             }}
           >
             <MaterialIcons name="logout" size={18} color="#ef4444" />
-            <Text className="font-bold text-sm text-red-600 dark:text-red-400">
+            <Text className="font-bold text-sm" style={{ color: isDark ? "#f87171" : "#dc2626" }}>
               {t.profile.logout}
             </Text>
           </TouchableOpacity>
 
-          <Text className="text-center text-slate-400 dark:text-slate-600 text-xs mt-6">
+          <Text className="text-center text-xs mt-6" style={{ color: colors.textMuted }}>
             {t.common.version} 2.1.0
           </Text>
         </Animated.View>

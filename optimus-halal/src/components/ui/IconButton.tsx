@@ -5,7 +5,7 @@
  */
 
 import React from "react";
-import { TouchableOpacity, TouchableOpacityProps, View } from "react-native";
+import { TouchableOpacity, TouchableOpacityProps, View, Text } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useHaptics } from "@/hooks";
 
@@ -21,7 +21,7 @@ export interface IconButtonProps extends TouchableOpacityProps {
 
 const sizeConfig = {
   sm: { button: 44, icon: 18, badge: 14 },
-  md: { button: 40, icon: 22, badge: 16 },
+  md: { button: 44, icon: 22, badge: 16 },
   lg: { button: 48, icon: 26, badge: 18 },
 };
 
@@ -78,9 +78,9 @@ export const IconButton: React.FC<IconButtonProps> = ({
             paddingHorizontal: 4,
           }}
         >
-          <View className="text-white text-[10px] font-bold">
+          <Text className="text-white text-[10px] font-bold">
             {badge > 99 ? "99+" : badge}
-          </View>
+          </Text>
         </View>
       )}
     </TouchableOpacity>

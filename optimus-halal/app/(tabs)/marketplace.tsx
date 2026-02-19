@@ -28,7 +28,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { IslamicPattern } from "@/components/ui";
 import { useFeatureFlagsStore, useLocalCartStore } from "@/store";
 import { trpc } from "@/lib/trpc";
-import { brand, gold } from "@/theme/colors";
+import { brand, gold, halalStatus } from "@/theme/colors";
 
 interface Product {
   id: string;
@@ -48,14 +48,14 @@ const CATEGORIES = [
 ];
 
 const HALAL_STATUS_COLOR: Record<string, string> = {
-  halal: "#16a34a",
-  doubtful: "#d97706",
-  haram: "#dc2626",
-  unknown: "#6b7280",
+  halal: halalStatus.halal.base,
+  doubtful: halalStatus.doubtful.base,
+  haram: halalStatus.haram.base,
+  unknown: halalStatus.unknown.base,
 };
 
 const ProductCard = React.memo(function ProductCard({ product, index }: { product: Product; index: number }) {
-  const { isDark } = useTheme();
+  const { isDark, colors } = useTheme();
   const { impact, notification } = useHaptics();
   const { t } = useTranslation();
   const { addItem } = useLocalCartStore();
@@ -82,13 +82,17 @@ const ProductCard = React.memo(function ProductCard({ product, index }: { produc
       entering={FadeInRight.delay(index * 100).duration(400)}
       className="w-44 mr-4"
     >
+      {/* Outer view: elevation + no overflow clipping */}
       <TouchableOpacity
         onPress={handlePress}
         activeOpacity={0.8}
         accessibilityRole="button"
         accessibilityLabel={`${product.name}, ${product.brand ?? ""}, ${product.halalStatus}`}
-        className="bg-white dark:bg-surface-dark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700/50"
         style={{
+          backgroundColor: colors.card,
+          borderColor: colors.borderLight,
+          borderWidth: 1,
+          borderRadius: 16,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: isDark ? 0.3 : 0.1,
@@ -96,72 +100,80 @@ const ProductCard = React.memo(function ProductCard({ product, index }: { produc
           elevation: 4,
         }}
       >
-        <View className="relative">
-          {product.image ? (
-            <Image
-              source={{ uri: product.image }}
-              className="w-full h-32"
-              contentFit="cover"
-              transition={200}
-              accessibilityLabel={`Photo de ${product.name}`}
-            />
-          ) : (
-            <View className="w-full h-32 bg-slate-100 dark:bg-slate-800 items-center justify-center">
-              <MaterialIcons name="inventory-2" size={32} color={isDark ? "#475569" : "#94a3b8"} />
-            </View>
-          )}
-          {/* Halal status badge */}
-          <View
-            className="absolute top-2 left-2 px-2 py-1 rounded-full"
-            style={{ backgroundColor: statusColor }}
-          >
-            <Text className="text-[10px] font-bold text-white uppercase">
-              {product.halalStatus}
-            </Text>
-          </View>
-        </View>
-
-        <View className="p-3">
-          {product.brand && (
-            <Text className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-              {product.brand}
-            </Text>
-          )}
-          <Text
-            className="text-sm font-semibold text-slate-900 dark:text-white mb-2"
-            numberOfLines={2}
-          >
-            {product.name}
-          </Text>
-
-          {product.certifierName && (
-            <View className="flex-row items-center mb-2">
-              <MaterialIcons name="verified" size={14} color={brand.primary} />
-              <Text className="text-xs text-slate-500 dark:text-slate-400 ml-1" numberOfLines={1}>
-                {product.certifierName}
-              </Text>
-            </View>
-          )}
-
-          <View className="flex-row items-center justify-between">
-            {product.price != null ? (
-              <Text className="text-lg font-bold text-primary dark:text-primary">
-                {product.price.toFixed(2)}€
-              </Text>
+        {/* Inner view: overflow hidden + borderRadius for clipping */}
+        <View style={{ borderRadius: 16, overflow: "hidden" }}>
+          <View className="relative">
+            {product.image ? (
+              <Image
+                source={{ uri: product.image }}
+                className="w-full h-32"
+                contentFit="cover"
+                transition={200}
+                accessibilityLabel={`Photo de ${product.name}`}
+              />
             ) : (
-              <Text className="text-xs text-slate-400 dark:text-slate-500">
-                Prix N/A
+              <View
+                className="w-full h-32 items-center justify-center"
+                style={{ backgroundColor: colors.buttonSecondary }}
+              >
+                <MaterialIcons name="inventory-2" size={32} color={colors.iconSecondary} />
+              </View>
+            )}
+            {/* Halal status badge */}
+            <View
+              className="absolute top-2 left-2 px-2 py-1 rounded-full"
+              style={{ backgroundColor: statusColor }}
+            >
+              <Text className="text-[10px] font-bold text-white uppercase">
+                {product.halalStatus}
+              </Text>
+            </View>
+          </View>
+
+          <View className="p-3">
+            {product.brand && (
+              <Text className="text-xs mb-1" style={{ color: colors.textSecondary }}>
+                {product.brand}
               </Text>
             )}
-            <TouchableOpacity
-              onPress={handleAddToCart}
-              className="bg-primary/10 dark:bg-primary/20 p-2 rounded-full"
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel={`${t.marketplace.addToCart} ${product.name}`}
+            <Text
+              className="text-sm font-semibold mb-2"
+              numberOfLines={2}
+              style={{ color: colors.textPrimary }}
             >
-              <MaterialIcons name="add-shopping-cart" size={16} color={brand.primary} />
-            </TouchableOpacity>
+              {product.name}
+            </Text>
+
+            {product.certifierName && (
+              <View className="flex-row items-center mb-2">
+                <MaterialIcons name="verified" size={14} color={colors.primary} />
+                <Text className="text-xs ml-1" numberOfLines={1} style={{ color: colors.textSecondary }}>
+                  {product.certifierName}
+                </Text>
+              </View>
+            )}
+
+            <View className="flex-row items-center justify-between">
+              {product.price != null ? (
+                <Text className="text-lg font-bold" style={{ color: colors.primary }}>
+                  {product.price.toFixed(2)}€
+                </Text>
+              ) : (
+                <Text className="text-xs" style={{ color: colors.textMuted }}>
+                  Prix N/A
+                </Text>
+              )}
+              <TouchableOpacity
+                onPress={handleAddToCart}
+                className="p-2 rounded-full"
+                style={{ backgroundColor: colors.primaryLight }}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={`${t.marketplace.addToCart} ${product.name}`}
+              >
+                <MaterialIcons name="add-shopping-cart" size={16} color={colors.primary} />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </TouchableOpacity>
@@ -171,7 +183,7 @@ const ProductCard = React.memo(function ProductCard({ product, index }: { produc
 
 export default function MarketplaceTab() {
   const insets = useSafeAreaInsets();
-  const { isDark } = useTheme();
+  const { isDark, colors } = useTheme();
   const { impact } = useHaptics();
   const { t } = useTranslation();
   const { flags } = useFeatureFlagsStore();
@@ -235,7 +247,7 @@ export default function MarketplaceTab() {
 
   if (!flags.marketplaceEnabled) {
     return (
-      <View className="flex-1 bg-background-light dark:bg-background-dark">
+      <View className="flex-1" style={{ backgroundColor: colors.background }}>
         {/* Background Islamic Pattern */}
         <IslamicPattern variant="khatam" opacity={0.04} />
 
@@ -251,16 +263,17 @@ export default function MarketplaceTab() {
           >
             <View className="flex-row items-center justify-between">
               <View>
-                <Text className="text-2xl font-bold text-slate-900 dark:text-white">
+                <Text className="text-2xl font-bold" style={{ color: colors.textPrimary }}>
                   {t.marketplace.title}
                 </Text>
-                <Text className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                <Text className="text-sm mt-1" style={{ color: colors.textSecondary }}>
                   {t.common.comingSoon}
                 </Text>
               </View>
               <TouchableOpacity
                 onPress={handleAlertsPress}
-                className="relative h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-700/50"
+                className="relative h-10 w-10 items-center justify-center rounded-full"
+                style={{ backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1 }}
                 activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel={t.common.notifications}
@@ -269,10 +282,13 @@ export default function MarketplaceTab() {
                 <MaterialIcons
                   name="notifications"
                   size={22}
-                  color={isDark ? "#ffffff" : "#0d1b13"}
+                  color={colors.iconPrimary}
                 />
                 {unreadCount > 0 && (
-                  <View className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-gold-500 border-2 border-white dark:border-surface-dark" />
+                  <View
+                    className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full"
+                    style={{ backgroundColor: gold[500], borderColor: colors.card, borderWidth: 2 }}
+                  />
                 )}
               </TouchableOpacity>
             </View>
@@ -293,25 +309,29 @@ export default function MarketplaceTab() {
                 elevation: 8,
               }}
             >
-              <View className="w-24 h-24 rounded-full bg-primary/20 items-center justify-center mb-6">
-                <MaterialIcons name="storefront" size={48} color={brand.primary} />
+              <View
+                className="w-24 h-24 rounded-full items-center justify-center mb-6"
+                style={{ backgroundColor: colors.primaryLight }}
+              >
+                <MaterialIcons name="storefront" size={48} color={colors.primary} />
               </View>
-              <Text className="text-xl font-bold text-slate-900 dark:text-white text-center mb-2">
+              <Text className="text-xl font-bold text-center mb-2" style={{ color: colors.textPrimary }}>
                 {t.marketplace.comingSoon}
               </Text>
-              <Text className="text-sm text-slate-600 dark:text-slate-400 text-center mb-6">
+              <Text className="text-sm text-center mb-6" style={{ color: colors.textSecondary }}>
                 {t.marketplace.comingSoonDesc}
               </Text>
               <TouchableOpacity
                 onPress={() => router.push("/(marketplace)/coming-soon" as any)}
-                className="bg-primary px-6 py-3 rounded-xl flex-row items-center gap-2"
+                className="px-6 py-3 rounded-xl flex-row items-center gap-2"
+                style={{ backgroundColor: colors.primary }}
                 activeOpacity={0.8}
                 accessibilityRole="button"
                 accessibilityLabel={t.marketplace.joinWaitlist}
                 accessibilityHint={t.marketplace.joinWaitlist}
               >
                 <MaterialIcons name="notifications-active" size={20} color="#0d1b12" />
-                <Text className="font-bold text-slate-900">{t.marketplace.joinWaitlist}</Text>
+                <Text className="font-bold" style={{ color: colors.textPrimary }}>{t.marketplace.joinWaitlist}</Text>
               </TouchableOpacity>
             </LinearGradient>
           </Animated.View>
@@ -321,7 +341,7 @@ export default function MarketplaceTab() {
   }
 
   return (
-    <View className="flex-1 bg-background-light dark:bg-background-dark">
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
       {/* Background Islamic Pattern */}
       <IslamicPattern variant="khatam" opacity={0.04} />
 
@@ -344,10 +364,10 @@ export default function MarketplaceTab() {
           className="flex-row items-center justify-between px-5 mb-4"
         >
           <View>
-            <Text accessibilityRole="header" className="text-2xl font-bold text-slate-900 dark:text-white">
+            <Text accessibilityRole="header" className="text-2xl font-bold" style={{ color: colors.textPrimary }}>
               {t.marketplace.title}
             </Text>
-            <Text className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            <Text className="text-sm mt-1" style={{ color: colors.textSecondary }}>
               {t.marketplace.subtitle}
             </Text>
           </View>
@@ -355,7 +375,8 @@ export default function MarketplaceTab() {
           <View className="flex-row items-center gap-3">
             <TouchableOpacity
               onPress={handleAlertsPress}
-              className="relative h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-700/50"
+              className="relative h-10 w-10 items-center justify-center rounded-full"
+              style={{ backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1 }}
               activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel={t.common.notifications}
@@ -364,16 +385,20 @@ export default function MarketplaceTab() {
               <MaterialIcons
                 name="notifications"
                 size={22}
-                color={isDark ? "#ffffff" : "#0d1b13"}
+                color={colors.iconPrimary}
               />
               {unreadCount > 0 && (
-                <View className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-gold-500 border-2 border-white dark:border-surface-dark" />
+                <View
+                  className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: gold[500], borderColor: colors.card, borderWidth: 2 }}
+                />
               )}
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={handleCartPress}
-              className="relative h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-700/50"
+              className="relative h-10 w-10 items-center justify-center rounded-full"
+              style={{ backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1 }}
               activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel={t.marketplace.viewCart}
@@ -382,10 +407,13 @@ export default function MarketplaceTab() {
               <MaterialIcons
                 name="shopping-cart"
                 size={22}
-                color={isDark ? "#ffffff" : "#0d1b13"}
+                color={colors.iconPrimary}
               />
               {itemCount > 0 && (
-                <View className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-primary items-center justify-center px-1">
+                <View
+                  className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full items-center justify-center px-1"
+                  style={{ backgroundColor: colors.primary }}
+                >
                   <Text className="text-[10px] font-bold text-white">
                     {itemCount > 99 ? "99+" : itemCount}
                   </Text>
@@ -406,30 +434,29 @@ export default function MarketplaceTab() {
           >
             {CATEGORIES.map((category, index) => {
               const categoryLabel = t.marketplace.categories[category.id];
+              const isSelected = selectedCategory === category.id;
               return (
                 <TouchableOpacity
                   key={category.id}
                   onPress={() => handleCategoryPress(category.id)}
-                  className={`flex-row items-center px-4 py-2 rounded-full mr-3 ${
-                    selectedCategory === category.id
-                      ? "bg-primary"
-                      : "bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700"
-                  }`}
+                  className="flex-row items-center px-4 py-2 rounded-full mr-3"
+                  style={
+                    isSelected
+                      ? { backgroundColor: colors.primary }
+                      : { backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1 }
+                  }
                   activeOpacity={0.7}
                   accessibilityRole="button"
-                  accessibilityLabel={`${categoryLabel}${selectedCategory === category.id ? `, ${t.common.selected}` : ""}`}
+                  accessibilityLabel={`${categoryLabel}${isSelected ? `, ${t.common.selected}` : ""}`}
                 >
                   <MaterialIcons
                     name={category.icon}
                     size={18}
-                    color={selectedCategory === category.id ? "#fff" : (isDark ? "#94a3b8" : "#64748b")}
+                    color={isSelected ? "#fff" : colors.iconSecondary}
                   />
                   <Text
-                    className={`ml-2 text-sm font-medium ${
-                      selectedCategory === category.id
-                        ? "text-white"
-                        : "text-slate-600 dark:text-slate-400"
-                    }`}
+                    className="ml-2 text-sm font-medium"
+                    style={{ color: isSelected ? "#fff" : colors.textSecondary }}
                   >
                     {categoryLabel}
                   </Text>
@@ -444,11 +471,11 @@ export default function MarketplaceTab() {
           className="mb-6"
         >
           <View className="flex-row items-center justify-between px-5 mb-4">
-            <Text accessibilityRole="header" className="text-lg font-bold text-slate-900 dark:text-white">
+            <Text accessibilityRole="header" className="text-lg font-bold" style={{ color: colors.textPrimary }}>
               {t.marketplace.featured}
             </Text>
             <TouchableOpacity onPress={handleViewAllPress} activeOpacity={0.7} accessibilityRole="link" accessibilityLabel={`${t.home.viewAll} ${t.marketplace.featured}`}>
-              <Text className="text-sm font-medium text-primary">
+              <Text className="text-sm font-medium" style={{ color: colors.primary }}>
                 {t.home.viewAll}
               </Text>
             </TouchableOpacity>
@@ -460,8 +487,8 @@ export default function MarketplaceTab() {
             </View>
           ) : products.length === 0 ? (
             <View className="items-center justify-center py-8 px-5">
-              <MaterialIcons name="inventory-2" size={40} color={isDark ? "#475569" : "#94a3b8"} />
-              <Text className="text-sm text-slate-500 dark:text-slate-400 mt-3 text-center">
+              <MaterialIcons name="inventory-2" size={40} color={colors.iconSecondary} />
+              <Text className="text-sm mt-3 text-center" style={{ color: colors.textSecondary }}>
                 Aucun produit trouvé
               </Text>
             </View>
@@ -496,10 +523,10 @@ export default function MarketplaceTab() {
             }}
           >
             <View className="flex-1 mr-4">
-              <Text className="text-lg font-bold text-slate-900 dark:text-white mb-1">
+              <Text className="text-lg font-bold mb-1" style={{ color: colors.textPrimary }}>
                 {t.marketplace.freeShipping}
               </Text>
-              <Text className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+              <Text className="text-sm mb-3" style={{ color: colors.textSecondary }}>
                 {t.marketplace.freeShippingDesc}
               </Text>
               <TouchableOpacity
@@ -510,13 +537,16 @@ export default function MarketplaceTab() {
                 accessibilityLabel={t.marketplace.discoverOffers}
                 accessibilityHint={t.marketplace.freeShipping}
               >
-                <Text className="text-sm font-semibold text-gold-600 dark:text-gold-500">
+                <Text className="text-sm font-semibold" style={{ color: gold[500] }}>
                   {t.marketplace.discoverOffers}
                 </Text>
                 <MaterialIcons name="arrow-forward" size={16} color={gold[500]} />
               </TouchableOpacity>
             </View>
-            <View className="w-16 h-16 rounded-full bg-gold-500/20 items-center justify-center">
+            <View
+              className="w-16 h-16 rounded-full items-center justify-center"
+              style={{ backgroundColor: "rgba(212, 175, 55, 0.20)" }}
+            >
               <MaterialIcons name="local-shipping" size={32} color={gold[500]} />
             </View>
           </LinearGradient>

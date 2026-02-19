@@ -129,6 +129,8 @@ function PodiumCard({
   const isFirst = rank === 1;
   const avatarSize = isFirst ? 64 : 48;
 
+  const a11yLabel = `${rank}${rank === 1 ? "er" : "e"}: ${entry.displayName ?? "---"}, ${t.leaderboard.level} ${entry.level ?? 1}, ${formatXp(entry.experiencePoints)} ${t.leaderboard.xp}${isCurrentUser ? ` (${t.leaderboard.you})` : ""}`;
+
   return (
     <Animated.View
       entering={FadeInDown.delay(rank === 1 ? 100 : rank === 2 ? 0 : 200).duration(400)}
@@ -145,6 +147,8 @@ function PodiumCard({
           marginTop: isFirst ? 0 : 24,
         },
       ]}
+      accessible
+      accessibilityLabel={a11yLabel}
     >
       {/* Crown / medal icon */}
       <View style={styles.podiumMedalRow}>
@@ -235,6 +239,8 @@ const RankedRow = React.memo(function RankedRow({
         : "rgba(0,0,0,0.015)"
       : "transparent";
 
+  const a11yLabel = `${rank}e: ${entry.displayName ?? "---"}, ${t.leaderboard.level} ${entry.level ?? 1}, ${formatXp(entry.experiencePoints)} ${t.leaderboard.xp}, ${entry.totalScans ?? 0} scans${isCurrentUser ? ` (${t.leaderboard.you})` : ""}`;
+
   return (
     <Animated.View entering={FadeInDown.delay((rank - 4) * 40).duration(300)}>
       <View
@@ -250,6 +256,8 @@ const RankedRow = React.memo(function RankedRow({
             borderWidth: isCurrentUser ? 1 : 0.5,
           },
         ]}
+        accessible
+        accessibilityLabel={a11yLabel}
       >
         {/* Rank number */}
         <View style={styles.rankNumberWrap}>
@@ -404,7 +412,7 @@ export default function LeaderboardScreen() {
   if (leaderboardQuery.isLoading) {
     return (
       <SafeAreaView
-        style={[styles.container, { backgroundColor: isDark ? "#0a0f0c" : "#f8faf9" }]}
+        style={[styles.container, { backgroundColor: colors.background }]}
       >
         <Header
           onBack={handleBack}
@@ -427,7 +435,7 @@ export default function LeaderboardScreen() {
   if (leaderboardQuery.isError) {
     return (
       <SafeAreaView
-        style={[styles.container, { backgroundColor: isDark ? "#0a0f0c" : "#f8faf9" }]}
+        style={[styles.container, { backgroundColor: colors.background }]}
       >
         <Header
           onBack={handleBack}
@@ -458,7 +466,7 @@ export default function LeaderboardScreen() {
   if (allEntries.length === 0) {
     return (
       <SafeAreaView
-        style={[styles.container, { backgroundColor: isDark ? "#0a0f0c" : "#f8faf9" }]}
+        style={[styles.container, { backgroundColor: colors.background }]}
       >
         <Header
           onBack={handleBack}
@@ -537,7 +545,7 @@ export default function LeaderboardScreen() {
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: isDark ? "#0a0f0c" : "#f8faf9" }]}
+      style={[styles.container, { backgroundColor: colors.background }]}
     >
       <Header
         onBack={handleBack}
@@ -581,8 +589,8 @@ function Header({
         style={[
           styles.backButton,
           {
-            backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "#ffffff",
-            borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+            backgroundColor: colors.card,
+            borderColor: colors.border,
           },
         ]}
         accessibilityRole="button"

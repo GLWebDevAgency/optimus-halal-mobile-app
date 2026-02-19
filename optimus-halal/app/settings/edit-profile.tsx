@@ -32,7 +32,7 @@ import { PhoneInput, LocationPicker, parseInternationalPhone } from "@/component
 import { City, FRENCH_CITIES } from "@/constants/locations";
 
 export default function EditProfileScreen() {
-  const { isDark } = useTheme();
+  const { isDark, colors } = useTheme();
   const { t } = useTranslation();
   const utils = trpc.useUtils();
   const meQuery = useMe();
@@ -99,19 +99,7 @@ export default function EditProfileScreen() {
     setSelectedCity(city);
   }, []);
 
-  // Theme-aware colors
-  const themeColors = {
-    background: isDark ? "#102217" : "#f6f8f7",
-    card: isDark ? "#1a2e22" : "#ffffff",
-    cardBorder: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
-    textPrimary: isDark ? "#e8f5e9" : "#0d1b13",
-    textSecondary: isDark ? "#9ca3af" : "#4b5563",
-    primary: "#13ec6a",
-    primaryDark: "#0ea64b",
-    inputRing: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
-    placeholderText: isDark ? "#6b7280" : "#9ca3af",
-    bottomBorder: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
-  };
+  // Theme colors — canonical tokens from useTheme()
 
   // Handle image picker → upload to R2 → set CDN URL
   const handleChangePhoto = useCallback(async () => {
@@ -202,7 +190,7 @@ export default function EditProfileScreen() {
             style={{
               fontSize: 14,
               fontWeight: "600",
-              color: themeColors.textPrimary,
+              color: colors.textPrimary,
             }}
           >
             {label}
@@ -211,7 +199,7 @@ export default function EditProfileScreen() {
             <Text
               style={{
                 fontSize: 12,
-                color: themeColors.textSecondary,
+                color: colors.textSecondary,
               }}
             >
               {t.editProfile.optional}
@@ -223,7 +211,7 @@ export default function EditProfileScreen() {
             value={value}
             onChangeText={onChangeText}
             placeholder={placeholder}
-            placeholderTextColor={themeColors.placeholderText}
+            placeholderTextColor={colors.textMuted}
             keyboardType={options?.keyboardType || "default"}
             autoCapitalize={options?.autoCapitalize || "sentences"}
             editable={isEditable}
@@ -232,20 +220,20 @@ export default function EditProfileScreen() {
             style={{
               width: "100%",
               borderRadius: 12,
-              backgroundColor: isEditable ? themeColors.card : (isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)"),
+              backgroundColor: isEditable ? colors.card : (isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)"),
               paddingVertical: 14,
               paddingLeft: 44,
               paddingRight: 16,
               fontSize: 15,
-              color: isEditable ? themeColors.textPrimary : themeColors.textSecondary,
+              color: isEditable ? colors.textPrimary : colors.textSecondary,
               borderWidth: 1,
-              borderColor: themeColors.inputRing,
+              borderColor: colors.border,
             }}
           />
           <MaterialIcons
             name={icon}
             size={20}
-            color={themeColors.textSecondary}
+            color={colors.textSecondary}
             style={{
               position: "absolute",
               left: 14,
@@ -260,10 +248,10 @@ export default function EditProfileScreen() {
   // Show loading skeleton while fetching profile
   if (meQuery.isLoading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background, alignItems: "center", justifyContent: "center" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, alignItems: "center", justifyContent: "center" }}>
         <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
-        <ActivityIndicator size="large" color={themeColors.primary} />
-        <Text style={{ marginTop: 16, color: themeColors.textSecondary }}>{t.editProfile.loadingProfile}</Text>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={{ marginTop: 16, color: colors.textSecondary }}>{t.editProfile.loadingProfile}</Text>
       </SafeAreaView>
     );
   }
@@ -271,13 +259,13 @@ export default function EditProfileScreen() {
   // Show error state if profile failed to load
   if (meQuery.isError && !profile) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background, alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, alignItems: "center", justifyContent: "center", padding: 20 }}>
         <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
         <MaterialIcons name="error-outline" size={48} color="#ef4444" style={{ marginBottom: 16 }} />
         <Text style={{
           fontSize: 18,
           fontWeight: "700",
-          color: themeColors.textPrimary,
+          color: colors.textPrimary,
           textAlign: "center",
           marginBottom: 8
         }}>
@@ -285,7 +273,7 @@ export default function EditProfileScreen() {
         </Text>
         <Text style={{
           fontSize: 14,
-          color: themeColors.textSecondary,
+          color: colors.textSecondary,
           textAlign: "center",
           marginBottom: 24
         }}>
@@ -294,7 +282,7 @@ export default function EditProfileScreen() {
         <TouchableOpacity
           onPress={() => meQuery.refetch()}
           style={{
-            backgroundColor: themeColors.primary,
+            backgroundColor: colors.primary,
             paddingHorizontal: 24,
             paddingVertical: 12,
             borderRadius: 12,
@@ -315,14 +303,14 @@ export default function EditProfileScreen() {
           accessibilityLabel={t.common.back}
           accessibilityHint={t.editProfile.backHint}
         >
-          <Text style={{ color: themeColors.textSecondary }}>{t.common.back}</Text>
+          <Text style={{ color: colors.textSecondary }}>{t.common.back}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       
       <KeyboardAvoidingView
@@ -349,11 +337,11 @@ export default function EditProfileScreen() {
               width: 44,
               height: 44,
               borderRadius: 22,
-              backgroundColor: themeColors.card,
+              backgroundColor: colors.card,
               alignItems: "center",
               justifyContent: "center",
               borderWidth: 1,
-              borderColor: themeColors.cardBorder,
+              borderColor: colors.cardBorder,
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 1 },
               shadowOpacity: 0.05,
@@ -364,7 +352,7 @@ export default function EditProfileScreen() {
             accessibilityLabel={t.common.back}
             accessibilityHint={t.editProfile.backHint}
           >
-            <MaterialIcons name="arrow-back" size={22} color={themeColors.textPrimary} />
+            <MaterialIcons name="arrow-back" size={22} color={colors.textPrimary} />
           </TouchableOpacity>
 
           {/* Title */}
@@ -372,7 +360,7 @@ export default function EditProfileScreen() {
             style={{
               fontSize: 18,
               fontWeight: "700",
-              color: themeColors.textPrimary,
+              color: colors.textPrimary,
             }}
             accessibilityRole="header"
           >
@@ -407,7 +395,7 @@ export default function EditProfileScreen() {
                   borderRadius: 56,
                   overflow: "hidden",
                   borderWidth: 4,
-                  borderColor: themeColors.card,
+                  borderColor: colors.card,
                   shadowColor: "#000",
                   shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: 0.15,
@@ -436,7 +424,7 @@ export default function EditProfileScreen() {
                       style={{
                         fontSize: 40,
                         fontWeight: "700",
-                        color: themeColors.primary,
+                        color: colors.primary,
                       }}
                     >
                       {displayName.charAt(0).toUpperCase() || "U"}
@@ -456,11 +444,11 @@ export default function EditProfileScreen() {
                   width: 44,
                   height: 44,
                   borderRadius: 22,
-                  backgroundColor: themeColors.primary,
+                  backgroundColor: colors.primary,
                   alignItems: "center",
                   justifyContent: "center",
                   borderWidth: 2,
-                  borderColor: isDark ? themeColors.background : "#ffffff",
+                  borderColor: isDark ? colors.background : "#ffffff",
                   shadowColor: "#000",
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.2,
@@ -486,7 +474,7 @@ export default function EditProfileScreen() {
                 style={{
                   fontSize: 14,
                   fontWeight: "500",
-                  color: themeColors.textSecondary,
+                  color: colors.textSecondary,
                 }}
               >
                 {t.editProfile.changePhoto}
@@ -546,7 +534,7 @@ export default function EditProfileScreen() {
                 style={{
                   fontSize: 14,
                   fontWeight: "600",
-                  color: themeColors.textPrimary,
+                  color: colors.textPrimary,
                 }}
               >
                 {t.editProfile.bio}
@@ -554,7 +542,7 @@ export default function EditProfileScreen() {
               <Text
                 style={{
                   fontSize: 12,
-                  color: themeColors.textSecondary,
+                  color: colors.textSecondary,
                 }}
               >
                 {t.editProfile.optional}
@@ -564,7 +552,7 @@ export default function EditProfileScreen() {
               value={bio}
               onChangeText={setBio}
               placeholder={t.editProfile.bioHint}
-              placeholderTextColor={themeColors.placeholderText}
+              placeholderTextColor={colors.textMuted}
               multiline
               numberOfLines={4}
               textAlignVertical="top"
@@ -573,13 +561,13 @@ export default function EditProfileScreen() {
               style={{
                 width: "100%",
                 borderRadius: 12,
-                backgroundColor: themeColors.card,
+                backgroundColor: colors.card,
                 paddingVertical: 12,
                 paddingHorizontal: 16,
                 fontSize: 15,
-                color: themeColors.textPrimary,
+                color: colors.textPrimary,
                 borderWidth: 1,
-                borderColor: themeColors.inputRing,
+                borderColor: colors.border,
                 minHeight: 100,
               }}
             />
@@ -599,7 +587,7 @@ export default function EditProfileScreen() {
             paddingBottom: 32,
             backgroundColor: isDark ? "rgba(16, 34, 23, 0.95)" : "rgba(246, 248, 247, 0.95)",
             borderTopWidth: 1,
-            borderTopColor: themeColors.bottomBorder,
+            borderTopColor: colors.cardBorder,
           }}
         >
           <TouchableOpacity
@@ -607,7 +595,7 @@ export default function EditProfileScreen() {
             activeOpacity={0.9}
             disabled={isSaving || isUploadingAvatar || !hasChanges}
             style={{
-              backgroundColor: hasChanges ? themeColors.primary : (isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"),
+              backgroundColor: hasChanges ? colors.primary : (isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"),
               borderRadius: 16,
               paddingVertical: 16,
               alignItems: "center",
@@ -643,7 +631,7 @@ export default function EditProfileScreen() {
                 style={{
                   fontSize: 16,
                   fontWeight: "700",
-                  color: hasChanges ? "#0d1b13" : themeColors.textSecondary,
+                  color: hasChanges ? "#0d1b13" : colors.textSecondary,
                 }}
               >
                 {hasChanges ? t.common.saveChanges : t.common.noChanges}

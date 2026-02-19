@@ -261,8 +261,12 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
     return () => {
       cancelAnimation(pulseScale);
       cancelAnimation(glowOpacity);
+      cancelAnimation(scale);
+      cancelAnimation(rotation);
+      cancelAnimation(glowScale);
+      cancelAnimation(innerGlow);
     };
-  }, [reducedMotion]);
+  }, [reducedMotion, pulseScale, glowOpacity, scale, rotation, glowScale, innerGlow]);
 
   // Scanning animation when active
   useEffect(() => {
@@ -439,12 +443,25 @@ export function PremiumTabBar({ state, navigation }: BottomTabBarProps) {
 
   return (
     <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 8) }]}>
-      {/* Glassmorphism background */}
-      <BlurView
-        intensity={isDark ? 60 : 90}
-        tint={isDark ? "dark" : "light"}
-        style={styles.blurContainer}
-      />
+      {/* Glassmorphism background — BlurView is iOS-only; Android gets opaque fallback */}
+      {Platform.OS === "ios" ? (
+        <BlurView
+          intensity={isDark ? 60 : 90}
+          tint={isDark ? "dark" : "light"}
+          style={styles.blurContainer}
+        />
+      ) : (
+        <View
+          style={[
+            styles.blurContainer,
+            {
+              backgroundColor: isDark
+                ? "rgba(10, 20, 14, 0.97)"
+                : "rgba(255, 255, 255, 0.97)",
+            },
+          ]}
+        />
+      )}
       
       {/* Background overlay with gradient */}
       <View style={[
@@ -523,6 +540,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 100,
+    ...Platform.select({
+      android: {
+        borderTopLeftRadius: 28,
+        borderTopRightRadius: 28,
+        elevation: 24,
+      },
+    }),
   },
   blurContainer: {
     ...StyleSheet.absoluteFillObject,
@@ -541,9 +565,6 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: -12 },
         shadowOpacity: 0.15,
         shadowRadius: 28,
-      },
-      android: {
-        elevation: 24,
       },
     }),
   },
@@ -668,7 +689,6 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    overflow: "hidden",
     ...Platform.select({
       ios: {
         shadowColor: "#13ec6a",
