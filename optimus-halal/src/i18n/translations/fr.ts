@@ -543,6 +543,11 @@ export const fr = {
     tierUnknown: "Non vérifié",
     shareBoycotted: "Produit boycotté",
     shareTagline: "L'app halal de confiance",
+    // Marketplace integration
+    viewOnMarketplace: "Voir sur le marketplace",
+    buyAlternative: "Acheter",
+    shopHalalAlternatives: "Trouver des alternatives halal",
+    shopOnMarketplace: "Explorer le marketplace",
   },
 
   // Map
@@ -962,6 +967,26 @@ export const fr = {
     outOfStock: "Épuisé",
     availableRewards: "Récompenses disponibles",
     level: "Niveau {{level}}",
+    // Streak Freeze
+    streakFreeze: "Gel de série",
+    streakFreezeDesc: "Protégez votre série si vous manquez 1 à 3 jours",
+    buyFreeze: "Acheter un gel",
+    freezeCost: "{{cost}} points",
+    freezeCount: "{{count}} gel disponible",
+    freezeCountPlural: "{{count}} gels disponibles",
+    maxFreezes: "Maximum atteint",
+    freezeUsed: "Gel utilisé ! Votre série est protégée",
+    // Milestones
+    milestones: "Jalons de série",
+    nextMilestone: "Prochain jalon : {{days}} jours",
+    milestoneReached: "Jalon {{days}} jours atteint ! +{{xp}} XP",
+    streakMilestone3: "Débutant (3 jours)",
+    streakMilestone7: "Régulier (7 jours)",
+    streakMilestone14: "Engagé (14 jours)",
+    streakMilestone30: "Fidèle (30 jours)",
+    streakMilestone60: "Expert (60 jours)",
+    streakMilestone100: "Maître (100 jours)",
+    streakMilestone365: "Légende (365 jours)",
   },
 
   // Scan History

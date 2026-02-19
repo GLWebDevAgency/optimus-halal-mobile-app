@@ -8,6 +8,7 @@
 import React, { useEffect } from "react";
 import { View, StyleSheet, type ViewStyle, type StyleProp } from "react-native";
 import { useTheme } from "@/hooks";
+import { neutral } from "@/theme/colors";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -56,7 +57,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
     width: width as ViewStyle["width"],
     height,
     borderRadius,
-    backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "#e5e7eb",
+    backgroundColor: isDark ? "rgba(255,255,255,0.08)" : neutral[200],
   };
 
   return (

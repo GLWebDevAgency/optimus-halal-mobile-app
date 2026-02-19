@@ -67,26 +67,13 @@ export const subscriptionRouter = router({
         receiptData: z.string().max(10000),
       })
     )
-    .mutation(async ({ ctx, input }) => {
-      // TODO: Validate receipt with provider API
-      // For now, log the event and mark premium (will be replaced with real validation)
-      await ctx.db
-        .update(users)
-        .set({
-          subscriptionTier: "premium",
-          subscriptionProvider: input.provider,
-          subscriptionProductId: input.productId,
-        })
-        .where(eq(users.id, ctx.userId));
-
-      await ctx.db.insert(subscriptionEvents).values({
-        userId: ctx.userId,
-        eventType: "INITIAL_PURCHASE",
-        provider: input.provider,
-        productId: input.productId,
-        environment: "PRODUCTION",
-      });
-
-      return { success: true, tier: "premium" as const };
+    .mutation(async () => {
+      // SECURITY: Receipt validation not yet implemented.
+      // Enabling this without server-side receipt verification (RevenueCat/Stripe)
+      // would allow any authenticated user to self-grant premium (CVSS 8.1).
+      // Use the RevenueCat webhook endpoint instead.
+      throw new Error(
+        "Vérification d'achat non disponible. Utilisez le processus d'achat in-app."
+      );
     }),
 });

@@ -24,7 +24,7 @@ export const AUTH_CONFIG = {
    * - "v2": Magic Link uniquement (sans mot de passe)
    * - "hybrid": Les deux options disponibles
    */
-  mode: "v1" as AuthMode,
+  mode: "hybrid" as AuthMode,
 } as const;
 
 export interface FeatureFlags {
@@ -59,7 +59,7 @@ export const defaultFeatureFlags: FeatureFlags = {
   offlineMode: true,
   pushNotifications: true,
   aiScanner: false,
-  gamificationEnabled: false,
+  gamificationEnabled: true,
   socialSharing: true,
   analyticsEnabled: true,
   paywallEnabled: false,

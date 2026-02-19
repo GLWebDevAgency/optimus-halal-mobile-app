@@ -29,11 +29,14 @@ export {
   setTokens,
   clearTokens,
   getAccessToken,
+  getRefreshToken,
   isAuthenticated,
   getDeviceId,
   setApiLanguage,
   safeApiCall,
   checkApiHealth,
+  performTokenRefresh,
+  setOnAuthFailure,
   OptimusApiError,
 } from './client';
 

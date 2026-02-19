@@ -149,6 +149,10 @@ export function getAccessToken(): string | null {
   return accessToken;
 }
 
+export function getRefreshToken(): string | null {
+  return refreshToken;
+}
+
 export function isAuthenticated(): boolean {
   return !!accessToken;
 }
@@ -256,11 +260,27 @@ function createApiClient() {
   return client;
 }
 
+// ============================================
+// AUTH FAILURE CALLBACK
+// ============================================
+
+type AuthFailureCallback = () => void;
+let onAuthFailure: AuthFailureCallback | null = null;
+
+/**
+ * Register a callback invoked when token refresh fails (user must re-login).
+ * Typically called once from the root layout to wire up Zustand store clearing.
+ */
+export function setOnAuthFailure(cb: AuthFailureCallback): void {
+  onAuthFailure = cb;
+}
+
 /**
  * Token refresh via BFF auth.refresh procedure.
  * Uses apiClient directly — isRefreshing flag prevents recursive 401 handling.
+ * Exported so the React Query tRPC client can reuse the same refresh lock.
  */
-async function performTokenRefresh(): Promise<void> {
+export async function performTokenRefresh(): Promise<void> {
   if (isRefreshing && refreshPromise) {
     await refreshPromise;
     return;
@@ -282,6 +302,8 @@ async function performTokenRefresh(): Promise<void> {
       }
     } catch (error) {
       await clearTokens();
+      logger.warn("Auth", "Token refresh failed — logging out", String(error));
+      onAuthFailure?.();
       throw error;
     } finally {
       isRefreshing = false;

@@ -10,7 +10,7 @@
  * - Location puck + "My location" FAB
  */
 
-import React, { useState, useCallback, useMemo, useRef } from "react";
+import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -22,6 +22,7 @@ import {
   Linking,
   Platform,
   Keyboard,
+  InteractionManager,
 } from "react-native";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -33,7 +34,7 @@ import Animated, {
   FadeIn,
   FadeInDown,
   FadeInRight,
-  SlideInUp,
+  SlideInDown,
   FadeInUp,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
@@ -369,6 +370,14 @@ export default function MapScreen() {
 
   const stores = useMemo(() => storesQuery.data ?? [], [storesQuery.data]);
 
+  const [isMapReady, setIsMapReady] = useState(false);
+  useEffect(() => {
+    const task = InteractionManager.runAfterInteractions(() => {
+      setIsMapReady(true);
+    });
+    return () => task.cancel();
+  }, []);
+
   // Selected store data
   const selectedStore = useMemo(() => {
     if (!selectedStoreId) return null;
@@ -504,11 +513,24 @@ export default function MapScreen() {
     setSelectedStoreId(null);
   }, []);
 
-  // Initial camera position
-  const initialCenter: [number, number] = userLocation
-    ? [userLocation.longitude, userLocation.latitude]
-    : FRANCE_CENTER;
-  const initialZoom = userLocation ? FOCUSED_ZOOM : DEFAULT_ZOOM;
+  // Progressive zoom: always start at France overview, then fly to user
+  const [hasAnimatedToUser, setHasAnimatedToUser] = useState(false);
+
+  useEffect(() => {
+    if (userLocation && !hasAnimatedToUser && cameraRef.current) {
+      setHasAnimatedToUser(true);
+      // Short delay so the map renders first, then smooth fly-to
+      const timer = setTimeout(() => {
+        cameraRef.current?.setCamera({
+          centerCoordinate: [userLocation.longitude, userLocation.latitude],
+          zoomLevel: FOCUSED_ZOOM,
+          animationDuration: 2000,
+          animationMode: "flyTo",
+        });
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [userLocation, hasAnimatedToUser]);
 
   // ── Render ─────────────────────────────────────────────
 
@@ -532,6 +554,7 @@ export default function MapScreen() {
   return (
     <View className="flex-1" style={{ backgroundColor: colors.background }}>
       {/* Mapbox Map */}
+      {isMapReady ? (
       <MapView
         style={{ flex: 1 }}
         styleURL={mapStyleURL}
@@ -546,8 +569,8 @@ export default function MapScreen() {
         <Camera
           ref={cameraRef}
           defaultSettings={{
-            centerCoordinate: initialCenter,
-            zoomLevel: initialZoom,
+            centerCoordinate: FRANCE_CENTER,
+            zoomLevel: DEFAULT_ZOOM,
           }}
           animationDuration={0}
         />
@@ -627,6 +650,11 @@ export default function MapScreen() {
           </ShapeSource>
         )}
       </MapView>
+      ) : (
+        <View style={{ flex: 1, backgroundColor: colors.background, alignItems: "center", justifyContent: "center" }}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      )}
 
       {/* Top Header with gradient */}
       <View className="absolute top-0 left-0 right-0" style={{ zIndex: 10 }}>
@@ -843,7 +871,7 @@ export default function MapScreen() {
 
       {/* Bottom Sheet */}
       <Animated.View
-        entering={SlideInUp.delay(300).duration(500)}
+        entering={SlideInDown.delay(300).duration(500)}
         className="absolute bottom-0 left-0 right-0 rounded-t-2xl"
         style={{
           backgroundColor: colors.card,

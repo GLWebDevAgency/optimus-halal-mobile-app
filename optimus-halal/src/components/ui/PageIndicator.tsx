@@ -11,6 +11,7 @@ import Animated, {
   interpolate,
   SharedValue,
 } from "react-native-reanimated";
+import { brand, neutral } from "@/theme/colors";
 
 export interface PageIndicatorProps extends ViewProps {
   count: number;
@@ -22,8 +23,8 @@ export interface PageIndicatorProps extends ViewProps {
 export const PageIndicator: React.FC<PageIndicatorProps> = ({
   count,
   currentIndex,
-  activeColor = "#13ec6a",
-  inactiveColor = "#e2e8f0",
+  activeColor = brand.primary,
+  inactiveColor = neutral[200],
   className = "",
   ...props
 }) => {
@@ -65,8 +66,8 @@ export const AnimatedPageIndicator: React.FC<AnimatedPageIndicatorProps> = ({
   count,
   scrollX,
   pageWidth,
-  activeColor = "#13ec6a",
-  inactiveColor = "#e2e8f0",
+  activeColor = brand.primary,
+  inactiveColor = neutral[200],
   className = "",
   ...props
 }) => {

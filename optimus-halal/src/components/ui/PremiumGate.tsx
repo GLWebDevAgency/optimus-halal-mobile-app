@@ -35,18 +35,14 @@ export function PremiumGate({ feature, children, fallback }: PremiumGateProps) {
       style={{
         padding: 20,
         alignItems: "center",
-        backgroundColor: isDark
-          ? "rgba(19,236,106,0.05)"
-          : "rgba(19,236,106,0.03)",
+        backgroundColor: colors.primaryLight,
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: isDark
-          ? "rgba(19,236,106,0.15)"
-          : "rgba(19,236,106,0.1)",
+        borderColor: colors.primaryLight,
         margin: 16,
       }}
     >
-      <MaterialIcons name="workspace-premium" size={32} color="#13ec6a" />
+      <MaterialIcons name="workspace-premium" size={32} color={colors.primary} />
       <Text
         style={{
           color: colors.textPrimary,
@@ -75,7 +71,7 @@ export function PremiumGate({ feature, children, fallback }: PremiumGateProps) {
         }}
         style={{
           marginTop: 12,
-          backgroundColor: "#13ec6a",
+          backgroundColor: colors.buttonPrimary,
           paddingHorizontal: 24,
           paddingVertical: 10,
           borderRadius: 12,
@@ -83,7 +79,7 @@ export function PremiumGate({ feature, children, fallback }: PremiumGateProps) {
         accessibilityRole="button"
         accessibilityLabel="Upgrade to Optimus+"
       >
-        <Text style={{ color: "#0d1b13", fontWeight: "700", fontSize: 14 }}>
+        <Text style={{ color: isDark ? "#e8f5e9" : "#0d1b13", fontWeight: "700", fontSize: 14 }}>
           {t.common.upgrade}
         </Text>
       </TouchableOpacity>

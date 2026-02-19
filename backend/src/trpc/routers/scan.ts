@@ -379,10 +379,12 @@ export const scanRouter = router({
             longestStreak: true,
             experiencePoints: true,
             level: true,
+            streakFreezeCount: true,
           },
         });
 
         let newStreak = 1;
+        let usedStreakFreeze = false;
         if (user?.lastScanDate) {
           const lastScan = new Date(user.lastScanDate);
           const diffDays = Math.floor(
@@ -392,13 +394,24 @@ export const scanRouter = router({
             newStreak = user.currentStreak ?? 1;
           } else if (diffDays === 1) {
             newStreak = (user.currentStreak ?? 0) + 1;
+          } else if (diffDays <= 3 && (user.streakFreezeCount ?? 0) > 0) {
+            // Streak freeze: preserve streak if missed 1-3 days and user has freezes
+            newStreak = (user.currentStreak ?? 0) + 1;
+            usedStreakFreeze = true;
           }
+          // else: diffDays > 3 or no freeze → newStreak stays 1 (reset)
         }
+
+        // Milestone bonus XP: award extra XP when streak hits key thresholds
+        const STREAK_MILESTONES: Record<number, number> = {
+          3: 15, 7: 30, 14: 50, 30: 100, 60: 200, 100: 500, 365: 1000,
+        };
+        const milestoneBonus = STREAK_MILESTONES[newStreak] ?? 0;
 
         // Level-up detection
         const previousXp = user?.experiencePoints ?? 0;
         const previousLevel = user?.level ?? 1;
-        const newXp = previousXp + 10;
+        const newXp = previousXp + 10 + milestoneBonus;
         const newLevel = calculateLevel(newXp);
 
         await tx
@@ -411,6 +424,12 @@ export const scanRouter = router({
             longestStreak: sql`GREATEST(${users.longestStreak}, ${newStreak})`,
             lastScanDate: now,
             updatedAt: now,
+            ...(usedStreakFreeze
+              ? {
+                  streakFreezeCount: sql`${users.streakFreezeCount} - 1`,
+                  streakFreezeLastUsed: now,
+                }
+              : {}),
           })
           .where(eq(users.id, ctx.userId));
 
@@ -419,6 +438,11 @@ export const scanRouter = router({
           levelUp: newLevel > previousLevel
             ? { previousLevel, newLevel, newXp }
             : null,
+          streakInfo: {
+            current: newStreak,
+            usedFreeze: usedStreakFreeze,
+            milestoneBonus: milestoneBonus > 0 ? { streak: newStreak, bonusXp: milestoneBonus } : null,
+          },
         };
       });
 

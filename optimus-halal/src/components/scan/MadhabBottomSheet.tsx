@@ -31,6 +31,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
+import { halalStatus, neutral, darkTheme, lightTheme } from "@/theme/colors";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -52,9 +53,9 @@ interface MadhabBottomSheetProps {
 }
 
 const STATUS_COLORS = {
-  halal: "#22c55e",
-  doubtful: "#f97316",
-  haram: "#ef4444",
+  halal: halalStatus.halal.base,
+  doubtful: halalStatus.doubtful.base,
+  haram: halalStatus.haram.base,
 } as const;
 
 const STATUS_ICONS = {
@@ -125,7 +126,7 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
         style={[
           styles.sheet,
           {
-            backgroundColor: isDark ? "#0f1a12" : "#ffffff",
+            backgroundColor: isDark ? darkTheme.background : lightTheme.backgroundSecondary,
             paddingBottom: insets.bottom + 20,
           },
           sheetStyle,
@@ -234,7 +235,7 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
                       styles.rulingBadge,
                       {
                         backgroundColor:
-                          `${STATUS_COLORS[add.ruling as keyof typeof STATUS_COLORS] ?? "#6b7280"}15`,
+                          `${STATUS_COLORS[add.ruling as keyof typeof STATUS_COLORS] ?? neutral[500]}15`,
                       },
                     ]}
                   >
@@ -244,7 +245,7 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
                         {
                           color:
                             STATUS_COLORS[add.ruling as keyof typeof STATUS_COLORS] ??
-                            "#6b7280",
+                            neutral[500],
                         },
                       ]}
                     >

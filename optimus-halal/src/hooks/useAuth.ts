@@ -2,10 +2,11 @@ import { trpc } from "@/lib/trpc";
 import { setTokens, clearTokens } from "@services/api/client";
 import { useQueryClient } from "@tanstack/react-query";
 
-export function useMe() {
+export function useMe(options?: { enabled?: boolean }) {
   return trpc.auth.me.useQuery(undefined, {
     retry: false,
     staleTime: 1000 * 60 * 5, // 5 min
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -15,7 +16,7 @@ export function useLogin() {
   return trpc.auth.login.useMutation({
     onSuccess: async (data) => {
       await setTokens(data.accessToken, data.refreshToken);
-      queryClient.invalidateQueries({ queryKey: [["auth", "me"]] });
+      await queryClient.invalidateQueries({ queryKey: [["auth", "me"]] });
     },
   });
 }

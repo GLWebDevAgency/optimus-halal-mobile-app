@@ -8,6 +8,7 @@ import React from "react";
 import { TouchableOpacity, Text, View, TouchableOpacityProps } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useHaptics } from "@/hooks";
+import { lightTheme, brand, neutral } from "@/theme/colors";
 
 export interface ChipProps extends TouchableOpacityProps {
   label: string;
@@ -61,7 +62,7 @@ export const Chip: React.FC<ChipProps> = ({
         <MaterialIcons
           name={icon}
           size={16}
-          color={selected ? (variant === "primary" ? "#0d1b13" : "#ffffff") : "#64748b"}
+          color={selected ? (variant === "primary" ? lightTheme.textPrimary : brand.white) : neutral[600]}
         />
       )}
       <Text className={`text-sm ${textStyles}`}>{label}</Text>
@@ -73,7 +74,7 @@ export const Chip: React.FC<ChipProps> = ({
           <MaterialIcons
             name="close"
             size={16}
-            color={selected ? (variant === "primary" ? "#0d1b13" : "#ffffff") : "#64748b"}
+            color={selected ? (variant === "primary" ? lightTheme.textPrimary : brand.white) : neutral[600]}
           />
         </TouchableOpacity>
       )}

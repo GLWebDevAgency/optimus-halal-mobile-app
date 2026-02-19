@@ -3,6 +3,10 @@ import { eq, ilike, or, and, inArray } from "drizzle-orm";
 import { publicProcedure, protectedProcedure, router } from "../trpc.js";
 import { additives, additiveMadhabRulings } from "../../db/schema/index.js";
 
+function escapeLike(str: string): string {
+  return str.replace(/[%_\\]/g, "\\$&");
+}
+
 export const additiveRouter = router({
   list: publicProcedure
     .input(
@@ -55,7 +59,7 @@ export const additiveRouter = router({
   search: publicProcedure
     .input(z.object({ query: z.string().min(1).max(100) }))
     .query(async ({ ctx, input }) => {
-      const q = `%${input.query}%`;
+      const q = `%${escapeLike(input.query)}%`;
 
       return ctx.db
         .select()
@@ -100,26 +104,26 @@ export const additiveRouter = router({
         .from(additives)
         .where(inArray(additives.code, codes));
 
-      const results = [];
-      for (const additive of dbAdditives) {
-        let madhabRuling = null;
-        if (input.madhab !== "general") {
-          const [ruling] = await ctx.db
-            .select()
-            .from(additiveMadhabRulings)
-            .where(
-              and(
-                eq(additiveMadhabRulings.additiveCode, additive.code),
-                eq(additiveMadhabRulings.madhab, input.madhab)
-              )
+      // Batch fetch all madhab rulings in one query (fixes N+1)
+      let rulingsByCode: Record<string, (typeof additiveMadhabRulings.$inferSelect)> = {};
+      if (input.madhab !== "general" && codes.length > 0) {
+        const allRulings = await ctx.db
+          .select()
+          .from(additiveMadhabRulings)
+          .where(
+            and(
+              inArray(additiveMadhabRulings.additiveCode, codes),
+              eq(additiveMadhabRulings.madhab, input.madhab)
             )
-            .limit(1);
-          madhabRuling = ruling ?? null;
+          );
+        for (const r of allRulings) {
+          rulingsByCode[r.additiveCode] = r;
         }
-
-        results.push({ ...additive, madhabRuling });
       }
 
-      return results;
+      return dbAdditives.map((additive) => ({
+        ...additive,
+        madhabRuling: rulingsByCode[additive.code] ?? null,
+      }));
     }),
 });

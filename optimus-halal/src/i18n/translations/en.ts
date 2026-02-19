@@ -545,6 +545,11 @@ export const en: TranslationKeys = {
     tierUnknown: "Unverified",
     shareBoycotted: "Boycotted product",
     shareTagline: "The trusted halal app",
+    // Marketplace integration
+    viewOnMarketplace: "View on marketplace",
+    buyAlternative: "Buy",
+    shopHalalAlternatives: "Find halal alternatives",
+    shopOnMarketplace: "Explore marketplace",
   },
 
   // Map
@@ -952,6 +957,26 @@ export const en: TranslationKeys = {
     outOfStock: "Out of stock",
     availableRewards: "Available Rewards",
     level: "Level {{level}}",
+    // Streak Freeze
+    streakFreeze: "Streak Freeze",
+    streakFreezeDesc: "Protect your streak if you miss 1 to 3 days",
+    buyFreeze: "Buy a freeze",
+    freezeCost: "{{cost}} points",
+    freezeCount: "{{count}} freeze available",
+    freezeCountPlural: "{{count}} freezes available",
+    maxFreezes: "Maximum reached",
+    freezeUsed: "Freeze used! Your streak is protected",
+    // Milestones
+    milestones: "Streak Milestones",
+    nextMilestone: "Next milestone: {{days}} days",
+    milestoneReached: "{{days}}-day milestone reached! +{{xp}} XP",
+    streakMilestone3: "Beginner (3 days)",
+    streakMilestone7: "Regular (7 days)",
+    streakMilestone14: "Committed (14 days)",
+    streakMilestone30: "Loyal (30 days)",
+    streakMilestone60: "Expert (60 days)",
+    streakMilestone100: "Master (100 days)",
+    streakMilestone365: "Legend (365 days)",
   },
 
   // Scan History

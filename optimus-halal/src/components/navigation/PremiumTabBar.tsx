@@ -39,7 +39,7 @@ import Animated, {
 import { LinearGradient } from "expo-linear-gradient";
 import Svg, { Defs, RadialGradient, Stop, Circle } from "react-native-svg";
 
-import { brand } from "@/theme/colors";
+import { brand, gradients, darkTheme } from "@/theme/colors";
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -359,7 +359,7 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
           <LinearGradient
             colors={isDark 
               ? ["rgba(255,255,255,0.95)", "rgba(240,255,245,0.9)"]
-              : ["#0d1b13", "#152a1c"]
+              : [...gradients.heroDark]
             }
             style={styles.centerButtonGradient}
           >
@@ -371,7 +371,7 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
               <MaterialIcons
                 name="qr-code-scanner"
                 size={30}
-                color={isDark ? "#0d1b13" : brand.primary}
+                color={isDark ? darkTheme.textInverse : brand.primary}
               />
             </View>
           </LinearGradient>
@@ -652,7 +652,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 10,
     fontWeight: "bold",
-    color: "#ffffff",
+    color: brand.white,
   },
   centerButtonWrapper: {
     position: "relative",
@@ -691,7 +691,7 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     ...Platform.select({
       ios: {
-        shadowColor: "#13ec6a",
+        shadowColor: brand.primary,
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.5,
         shadowRadius: 16,

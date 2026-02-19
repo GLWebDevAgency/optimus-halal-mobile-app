@@ -19,6 +19,7 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTheme } from "@/hooks";
+import { neutral, brand, darkTheme, lightTheme } from "@/theme/colors";
 
 export interface CountryCode {
   code: string;
@@ -227,7 +228,7 @@ export function PhoneInput({
             <MaterialIcons
               name="arrow-drop-down"
               size={20}
-              color={isDark ? "#94a3b8" : "#64748b"}
+              color={isDark ? neutral[400] : neutral[600]}
             />
           </TouchableOpacity>
 
@@ -248,7 +249,7 @@ export function PhoneInput({
               text-base
             `}
             placeholder="6 12 34 56 78"
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor={neutral[400]}
             keyboardType="phone-pad"
             value={localValue}
             onChangeText={handleChangeText}
@@ -293,7 +294,7 @@ export function PhoneInput({
                 <MaterialIcons
                   name="close"
                   size={24}
-                  color={isDark ? "#ffffff" : "#0f172a"}
+                  color={isDark ? darkTheme.textPrimary : lightTheme.textPrimary}
                 />
               </TouchableOpacity>
             </View>
@@ -321,7 +322,7 @@ export function PhoneInput({
                     </Text>
                   </View>
                   {selectedCountry.code === item.code && (
-                    <MaterialIcons name="check" size={24} color="#13ec6a" />
+                    <MaterialIcons name="check" size={24} color={brand.primary} />
                   )}
                 </TouchableOpacity>
               )}

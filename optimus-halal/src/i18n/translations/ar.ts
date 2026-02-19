@@ -454,6 +454,11 @@ export const ar: TranslationKeys = {
     tierUnknown: "غير محقق",
     shareBoycotted: "منتج مقاطع",
     shareTagline: "تطبيق الحلال الموثوق",
+    // Marketplace integration
+    viewOnMarketplace: "عرض في المتجر",
+    buyAlternative: "شراء",
+    shopHalalAlternatives: "إيجاد بدائل حلال",
+    shopOnMarketplace: "استكشاف المتجر",
   },
   map: {
     title: "الخريطة",
@@ -834,6 +839,26 @@ export const ar: TranslationKeys = {
     outOfStock: "نفذت الكمية",
     availableRewards: "المكافآت المتاحة",
     level: "المستوى {{level}}",
+    // Streak Freeze
+    streakFreeze: "تجميد السلسلة",
+    streakFreezeDesc: "احمِ سلسلتك إذا فاتك يوم إلى 3 أيام",
+    buyFreeze: "شراء تجميد",
+    freezeCost: "{{cost}} نقطة",
+    freezeCount: "{{count}} تجميد متاح",
+    freezeCountPlural: "{{count}} تجميدات متاحة",
+    maxFreezes: "الحد الأقصى",
+    freezeUsed: "تم استخدام التجميد! سلسلتك محمية",
+    // Milestones
+    milestones: "إنجازات السلسلة",
+    nextMilestone: "الإنجاز التالي: {{days}} يوم",
+    milestoneReached: "إنجاز {{days}} يوم! +{{xp}} نقطة خبرة",
+    streakMilestone3: "مبتدئ (3 أيام)",
+    streakMilestone7: "منتظم (7 أيام)",
+    streakMilestone14: "ملتزم (14 يوم)",
+    streakMilestone30: "وفي (30 يوم)",
+    streakMilestone60: "خبير (60 يوم)",
+    streakMilestone100: "أستاذ (100 يوم)",
+    streakMilestone365: "أسطورة (365 يوم)",
   },
 
   // Scan History

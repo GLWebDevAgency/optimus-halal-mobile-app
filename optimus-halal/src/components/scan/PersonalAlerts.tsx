@@ -11,6 +11,7 @@ import { View, Text } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTheme } from "@/hooks/useTheme";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { semantic, halalStatus } from "@/theme/colors";
 
 export interface PersonalAlert {
   type: "allergen" | "health" | "boycott";
@@ -39,7 +40,7 @@ export function PersonalAlerts({ alerts }: { alerts: PersonalAlert[] }) {
       </Text>
       {alerts.map((alert, i) => {
         const isHigh = alert.severity === "high";
-        const accentColor = isHigh ? "#ef4444" : "#f97316";
+        const accentColor = isHigh ? semantic.danger.base : halalStatus.doubtful.base;
         const bgColor = isHigh
           ? isDark
             ? "rgba(239,68,68,0.1)"

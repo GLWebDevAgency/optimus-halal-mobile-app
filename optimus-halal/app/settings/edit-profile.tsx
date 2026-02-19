@@ -1,7 +1,5 @@
 /**
  * Edit Profile Screen
- * Connected to real API via apiStores
- * Enterprise-grade implementation
  */
 
 import React, { useState, useCallback, useEffect, useMemo } from "react";

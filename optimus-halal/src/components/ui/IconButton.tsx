@@ -8,6 +8,7 @@ import React from "react";
 import { TouchableOpacity, TouchableOpacityProps, View, Text } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useHaptics } from "@/hooks";
+import { neutral } from "@/theme/colors";
 
 export interface IconButtonProps extends TouchableOpacityProps {
   icon: keyof typeof MaterialIcons.glyphMap;
@@ -67,7 +68,7 @@ export const IconButton: React.FC<IconButtonProps> = ({
       <MaterialIcons
         name={icon}
         size={sizeStyles.icon}
-        color={color || "#64748b"}
+        color={color || neutral[600]}
       />
       {badge !== undefined && badge > 0 && (
         <View

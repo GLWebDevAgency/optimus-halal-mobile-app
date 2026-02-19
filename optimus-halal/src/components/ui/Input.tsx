@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { neutral } from "@/theme/colors";
 
 export interface InputProps extends TextInputProps {
   label?: string;
@@ -59,7 +60,7 @@ export function Input({
               <MaterialIcons
                 name={leftIcon}
                 size={20}
-                color="#94a3b8"
+                color={neutral[400]}
               />
             </View>
           )}
@@ -80,7 +81,7 @@ export function Input({
               text-base
               ${className}
             `}
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor={neutral[400]}
             secureTextEntry={isPassword ? !isPasswordVisible : false}
             {...props}
           />
@@ -99,7 +100,7 @@ export function Input({
                     : rightIcon!
                 }
                 size={20}
-                color="#94a3b8"
+                color={neutral[400]}
               />
             </TouchableOpacity>
           )}

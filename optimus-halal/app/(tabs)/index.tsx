@@ -20,6 +20,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { Image } from "expo-image";
+import { Shadow } from "react-native-shadow-2";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -43,7 +44,8 @@ import { useFavoritesList } from "@/hooks/useFavorites";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTheme } from "@/hooks/useTheme";
 import { brand, glass, lightTheme, darkTheme } from "@/theme/colors";
-import { useHaptics } from "@/hooks";
+import { getShadows } from "@/theme/shadows";
+import { useHaptics, useUserLocation, useMapStores } from "@/hooks";
 import { trpc } from "@/lib/trpc";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -138,14 +140,15 @@ const QuickActionCard = React.memo(function QuickActionCard({
           .damping(18)}
         style={[styles.quickActionHalf]}
       >
-        <TouchableOpacity
-          onPress={handlePress}
-          activeOpacity={0.85}
-          accessibilityRole="button"
-          accessibilityLabel={title}
-          accessibilityHint={subtitle}
-          style={[styles.quickActionPrimary]}
-        >
+        <Shadow distance={12} startColor={isDark ? "#13ec6a40" : "#13ec6a25"} offset={[0, 0]} style={{ borderRadius: 20, width: "100%" }}>
+          <TouchableOpacity
+            onPress={handlePress}
+            activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityLabel={title}
+            accessibilityHint={subtitle}
+            style={styles.quickActionPrimary}
+          >
           <LinearGradient
             colors={["#13ec6a", "#0ea64b"]}
             start={{ x: 0, y: 0 }}
@@ -172,7 +175,8 @@ const QuickActionCard = React.memo(function QuickActionCard({
             </View>
             <MaterialIcons name="arrow-forward" size={18} color="rgba(255,255,255,0.6)" />
           </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        </Shadow>
       </Animated.View>
     );
   }
@@ -186,22 +190,23 @@ const QuickActionCard = React.memo(function QuickActionCard({
         .damping(18)}
       style={[styles.quickActionHalf]}
     >
-      <TouchableOpacity
-        onPress={handlePress}
-        activeOpacity={0.85}
-        accessibilityRole="button"
-        accessibilityLabel={title}
-        accessibilityHint={subtitle}
-        style={[
-          styles.quickActionGlass,
-          {
-            backgroundColor: isDark ? glass.dark.bg : glass.light.bg,
-            borderColor: isDark
-              ? glass.dark.border
-              : glass.light.border,
-          },
-        ]}
-      >
+      <Shadow distance={4} startColor={isDark ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.04)"} offset={[0, 1]} style={{ borderRadius: 20, width: "100%" }}>
+        <TouchableOpacity
+          onPress={handlePress}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel={title}
+          accessibilityHint={subtitle}
+          style={[
+            styles.quickActionGlass,
+            {
+              backgroundColor: isDark ? glass.dark.bg : glass.light.bg,
+              borderColor: isDark
+                ? glass.dark.border
+                : glass.light.border,
+            },
+          ]}
+        >
         <View style={styles.quickActionContent}>
           <View
             style={[
@@ -239,6 +244,7 @@ const QuickActionCard = React.memo(function QuickActionCard({
           </View>
         </View>
       </TouchableOpacity>
+      </Shadow>
     </Animated.View>
   );
 });
@@ -275,14 +281,15 @@ const FeaturedCard = React.memo(function FeaturedCard({
     <Animated.View
       entering={FadeInRight.delay(420 + index * 80).duration(500)}
     >
-      <TouchableOpacity
-        onPress={onPress}
-        activeOpacity={0.88}
-        accessibilityRole="button"
-        accessibilityLabel={item.title}
-        accessibilityHint={item.subtitle}
-        style={[styles.featuredCard]}
-      >
+      <Shadow distance={8} startColor={isDark ? "rgba(19,236,106,0.15)" : "rgba(0,0,0,0.06)"} offset={[0, 2]} style={{ borderRadius: 24, width: "100%", marginBottom: 16 }}>
+        <TouchableOpacity
+          onPress={onPress}
+          activeOpacity={0.88}
+          accessibilityRole="button"
+          accessibilityLabel={item.title}
+          accessibilityHint={item.subtitle}
+          style={styles.featuredCard}
+        >
         {/* Background */}
         {item.coverImage ? (
           <Image
@@ -343,6 +350,72 @@ const FeaturedCard = React.memo(function FeaturedCard({
             { backgroundColor: item.accentColor },
           ]}
         />
+      </TouchableOpacity>
+      </Shadow>
+    </Animated.View>
+  );
+});
+
+// ---- Discover Store Card (Map Preview) ----
+interface DiscoverStoreCardProps {
+  store: any;
+  isDark: boolean;
+  colors: any;
+  index: number;
+  onPress: () => void;
+}
+
+const DiscoverStoreCard = React.memo(function DiscoverStoreCard({
+  store,
+  isDark,
+  colors,
+  index,
+  onPress,
+}: DiscoverStoreCardProps) {
+  const { impact } = useHaptics();
+
+  const handlePress = useCallback(() => {
+    impact();
+    onPress();
+  }, [impact, onPress]);
+
+  return (
+    <Animated.View entering={FadeInRight.delay(400 + index * 80).duration(500)}>
+      <TouchableOpacity
+        onPress={handlePress}
+        activeOpacity={0.88}
+        className="w-[200px] h-[120px] rounded-[18px] overflow-hidden p-3 justify-end"
+        style={{
+          backgroundColor: isDark ? glass.dark.bg : glass.light.bg,
+          borderWidth: 1,
+          borderColor: isDark ? glass.dark.border : glass.light.border,
+        }}
+      >
+        {store.imageUrl ? (
+          <Image
+            source={{ uri: store.imageUrl }}
+            style={[StyleSheet.absoluteFill, { opacity: 0.65 }]}
+            contentFit="cover"
+            transition={200}
+          />
+        ) : (
+          <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', opacity: 0.1 }]}>
+             <MaterialIcons name="fastfood" size={48} color={isDark ? "#fff" : "#000"} />
+          </View>
+        )}
+        <LinearGradient
+          colors={["transparent", isDark ? "rgba(15,23,42,0.9)" : "rgba(255,255,255,0.95)"]}
+          locations={[0, 0.8]}
+          style={StyleSheet.absoluteFill}
+        />
+        <View className="relative z-10">
+          <Text className="text-sm font-bold mb-0.5" style={{ color: colors.textPrimary }} numberOfLines={1}>
+            {store.name}
+          </Text>
+          <Text className="text-[10px] font-medium" style={{ color: brand.gold }} numberOfLines={1}>
+            {store.storeType.toUpperCase()} {store.halalCertified ? "• CERTIFIÉ" : ""}
+          </Text>
+        </View>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -450,6 +523,25 @@ export default function HomeScreen() {
   const meQuery = useMe();
   const me = meQuery.data;
   const isReady = !meQuery.isLoading;
+
+  // ---- Map Stores (Around You) ----
+  const { location: userLocation } = useUserLocation();
+  const storesQuery = useMapStores(
+    userLocation
+      ? {
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude,
+          radiusKm: 20,
+        }
+      : {
+          // Fallback to Paris center if location denied/unavailable
+          latitude: 48.8566,
+          longitude: 2.3522,
+          radiusKm: 20,
+        },
+    { limit: 5 }
+  );
+  const nearbyStores = useMemo(() => storesQuery.data ?? [], [storesQuery.data]);
 
   const favoritesQuery = useFavoritesList({ limit: 8 });
 
@@ -928,12 +1020,71 @@ export default function HomeScreen() {
         )}
 
         {/* ====================================================
+            SECTION 2.5: DISCOVER AROUND YOU (Social Map Preview)
+            ==================================================== */}
+        {nearbyStores.length > 0 && (
+          <Animated.View
+            entering={FadeInDown.delay(320).duration(500)}
+            style={{ marginTop: 24 }}
+          >
+            {/* Section header */}
+            <View style={styles.sectionHeader}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <Text
+                  accessibilityRole="header"
+                  style={[
+                    styles.sectionTitle,
+                    { color: colors.textPrimary },
+                  ]}
+                >
+                  Autour de vous
+                </Text>
+                <Svg width={20} height={10} viewBox="0 0 24 12">
+                  <Path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke={brand.gold} strokeWidth={1.5} fill="none" opacity={0.8} />
+                </Svg>
+              </View>
+              <TouchableOpacity
+                onPress={() => router.push("/(tabs)/map")}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.seeAllText, { color: brand.gold }]}>
+                  Ouvrir la Map
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{
+                paddingHorizontal: 20,
+                gap: 12,
+              }}
+              decelerationRate="fast"
+              snapToInterval={212}
+              snapToAlignment="start"
+            >
+              {nearbyStores.map((store, index) => (
+                <DiscoverStoreCard
+                  key={store.id}
+                  store={store}
+                  isDark={isDark}
+                  colors={colors}
+                  index={index}
+                  onPress={() => router.push("/(tabs)/map")}
+                />
+              ))}
+            </ScrollView>
+          </Animated.View>
+        )}
+
+        {/* ====================================================
             SECTION 3: FEATURED CONTENT (horizontal carousel)
             ==================================================== */}
         {featuredItems.length > 0 && (
           <Animated.View
             entering={FadeInDown.delay(360).duration(500)}
-            style={{ marginTop: 4 }}
+            style={{ marginTop: 24 }}
           >
             {/* Section header */}
             <View style={styles.sectionHeader}>
@@ -1238,16 +1389,6 @@ const styles = StyleSheet.create({
     padding: 16,
     minHeight: 80,
     justifyContent: "center" as const,
-    // iOS: glow shadow — Android: skip elevation (causes rectangular clip with overflow+borderRadius)
-    ...Platform.select({
-      ios: {
-        shadowColor: "#13ec6a",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.35,
-        shadowRadius: 16,
-      },
-      android: {},
-    }),
   },
   quickActionGlass: {
     borderRadius: 20,
@@ -1255,16 +1396,6 @@ const styles = StyleSheet.create({
     padding: 16,
     minHeight: 80,
     justifyContent: "center" as const,
-    // iOS: subtle shadow — Android: skip elevation (causes rectangular border artifacts)
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-      },
-      android: {},
-    }),
   },
   quickActionContent: {
     flexDirection: "row",
@@ -1313,15 +1444,6 @@ const styles = StyleSheet.create({
     height: 170,
     borderRadius: 18,
     overflow: "hidden",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
-      },
-      android: { elevation: 4 },
-    }),
   },
   featuredBadgeWrap: {
     position: "absolute",
