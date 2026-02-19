@@ -249,25 +249,27 @@ export default function ResetConfirmationScreen() {
           style={styles.actionsContainer}
         >
           {/* Back to Login Button */}
-          <TouchableOpacity
-            onPress={handleBackToLogin}
-            activeOpacity={0.9}
-            style={styles.primaryButton}
-            accessibilityRole="button"
-            accessibilityLabel={t.auth.resetConfirmation.backToLogin}
-            accessibilityHint={t.auth.resetConfirmation.backToLogin}
-          >
-            <LinearGradient
-              colors={[brand.primary, "#10d65f"]}
-              style={styles.buttonGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
+          <View style={styles.primaryButtonShadow}>
+            <TouchableOpacity
+              onPress={handleBackToLogin}
+              activeOpacity={0.9}
+              style={styles.primaryButton}
+              accessibilityRole="button"
+              accessibilityLabel={t.auth.resetConfirmation.backToLogin}
+              accessibilityHint={t.auth.resetConfirmation.backToLogin}
             >
-              <Text style={styles.primaryButtonText}>
-                {t.auth.resetConfirmation.backToLogin}
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
+              <LinearGradient
+                colors={[brand.primary, "#10d65f"]}
+                style={styles.buttonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Text style={styles.primaryButtonText}>
+                  {t.auth.resetConfirmation.backToLogin}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
 
           {/* Open Email App Button */}
           <TouchableOpacity
@@ -449,14 +451,17 @@ const styles = StyleSheet.create({
     maxWidth: 340,
     gap: 16,
   },
-  primaryButton: {
+  primaryButtonShadow: {
     borderRadius: 12,
-    overflow: "hidden",
     shadowColor: "#13ec6a",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,
     elevation: 8,
+  },
+  primaryButton: {
+    borderRadius: 12,
+    overflow: "hidden" as const,
   },
   buttonGradient: {
     height: 48,

@@ -5,7 +5,7 @@
  */
 
 import React from "react";
-import { View, ViewProps, TouchableOpacity } from "react-native";
+import { View, ViewProps, TouchableOpacity, Platform } from "react-native";
 
 export interface CardProps extends Omit<ViewProps, 'onBlur' | 'onFocus'> {
   variant?: "elevated" | "outlined" | "filled";
@@ -39,17 +39,18 @@ export const Card: React.FC<CardProps> = ({
 }) => {
   const baseStyles = "rounded-2xl overflow-hidden";
   const variantStyle = variantStyles[variant];
+  const androidElevation = variant === "elevated" && Platform.OS === "android" ? { elevation: 2 } : undefined;
 
   if (pressable && onPress) {
     // Extract only the props compatible with TouchableOpacity
     const { style, testID, accessibilityLabel, accessibilityHint } = props;
-    
+
     return (
       <TouchableOpacity
         onPress={onPress}
         activeOpacity={0.8}
         className={`${baseStyles} ${variantStyle} ${className}`}
-        style={style}
+        style={[style, androidElevation]}
         testID={testID}
         accessibilityLabel={accessibilityLabel}
         accessibilityHint={accessibilityHint}
@@ -60,7 +61,7 @@ export const Card: React.FC<CardProps> = ({
   }
 
   return (
-    <View className={`${baseStyles} ${variantStyle} ${className}`} {...props}>
+    <View className={`${baseStyles} ${variantStyle} ${className}`} style={[props.style, androidElevation]} {...props}>
       {children}
     </View>
   );
