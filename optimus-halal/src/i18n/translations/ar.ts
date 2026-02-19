@@ -898,6 +898,31 @@ export const ar: TranslationKeys = {
     },
   },
 
+  // Premium Paywall
+  premium: {
+    perMonth: "/شهر",
+    perYear: "/سنة",
+    oneTime: "شراء لمرة واحدة",
+    save50: "وفر 50%",
+    bestValue: "أفضل قيمة",
+    subtitle: "افتح جميع الميزات لتجربة حلال كاملة",
+    unlimitedFavorites: "مفضلات غير محدودة",
+    fullHistory: "سجل المسح الكامل",
+    madhabAlerts: "تنبيهات مخصصة حسب المذهب",
+    healthProfile: "ملف صحي متقدم",
+    offlineCache: "ذاكرة تخزين مؤقت بدون إنترنت (100 مسح)",
+    premiumMap: "خريطة متميزة مع تقييمات وصور",
+    badge: "شارة المستهلك الواعي",
+    prioritySupport: "دعم ذو أولوية",
+    subscribe: "اشترك في Optimus+",
+    restorePurchases: "استعادة المشتريات",
+    alreadyPremium: "أنت Optimus+",
+    enjoyFeatures: "استمتع بجميع الميزات المتميزة",
+    purchaseComingSoon: "الشراء داخل التطبيق قريبا",
+    restoreComingSoon: "ستتوفر الاستعادة قريبا",
+    legal: "يتجدد الاشتراك تلقائيا ما لم يتم إلغاؤه قبل 24 ساعة من نهاية الفترة. راجع شروط الاستخدام وسياسة الخصوصية.",
+  },
+
   badge: {
     certifiedHalal: "حلال معتمد",
     doubtfulCertification: "شهادة مشكوك فيها",

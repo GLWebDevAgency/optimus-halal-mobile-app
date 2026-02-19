@@ -37,6 +37,7 @@ export default function SettingsLayout() {
         <Stack.Screen name="leaderboard" />
         <Stack.Screen name="achievements" />
         <Stack.Screen name="rewards" />
+        <Stack.Screen name="premium" options={{ animation: "slide_from_bottom", animationDuration: 300 }} />
       </Stack>
     </QueryErrorBoundary>
   );

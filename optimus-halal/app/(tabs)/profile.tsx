@@ -19,7 +19,7 @@ import {
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useHaptics, useTheme, useMe, useLogout, useFavoritesList, useLoyaltyBalance } from "@/hooks";
+import { useHaptics, useTheme, useMe, useLogout, useFavoritesList, useLoyaltyBalance, usePremium } from "@/hooks";
 import { ImpactFeedbackStyle } from "expo-haptics";
 import Animated, {
   FadeIn,
@@ -165,6 +165,9 @@ export default function ProfileScreen() {
   const { isDark, colors } = useTheme();
   const { impact } = useHaptics();
   const { t, language } = useTranslation();
+
+  // Premium status
+  const { isPremium } = usePremium();
 
   // tRPC data
   const { data: profile, isLoading: profileLoading } = useMe();
@@ -436,6 +439,39 @@ export default function ProfileScreen() {
             subtitle={`${favoritesCount} ${t.profile.stats.productsSaved}`}
             onPress={handleFavorites}
           />
+        </Animated.View>
+
+        {/* Optimus+ Premium Entry */}
+        <Animated.View entering={FadeInUp.delay(250).duration(500)} className="px-4 mb-4">
+          <TouchableOpacity
+            onPress={() => {
+              impact();
+              router.push("/settings/premium" as any);
+            }}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Optimus+"
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              padding: 16,
+              borderRadius: 14,
+              backgroundColor: isDark ? "rgba(19,236,106,0.08)" : "rgba(19,236,106,0.04)",
+              borderWidth: 1,
+              borderColor: isDark ? "rgba(19,236,106,0.15)" : "rgba(19,236,106,0.1)",
+            }}
+          >
+            <MaterialIcons name="workspace-premium" size={24} color="#13ec6a" />
+            <View style={{ flex: 1, marginStart: 12 }}>
+              <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: "700" }}>
+                Optimus+
+              </Text>
+              <Text style={{ color: colors.textSecondary, fontSize: 12 }} numberOfLines={1}>
+                {isPremium ? t.premium.enjoyFeatures : t.premium.subtitle}
+              </Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
         </Animated.View>
 
         {/* Preferences Section */}

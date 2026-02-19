@@ -1016,6 +1016,31 @@ export const en: TranslationKeys = {
     },
   },
 
+  // Premium Paywall
+  premium: {
+    perMonth: "/month",
+    perYear: "/year",
+    oneTime: "One-time purchase",
+    save50: "Save 50%",
+    bestValue: "BEST VALUE",
+    subtitle: "Unlock all features for a complete halal experience",
+    unlimitedFavorites: "Unlimited favorites",
+    fullHistory: "Full scan history",
+    madhabAlerts: "Personalized madhab alerts",
+    healthProfile: "Advanced health profile",
+    offlineCache: "Offline cache (100 scans)",
+    premiumMap: "Premium map with reviews & photos",
+    badge: "Conscious Consumer badge",
+    prioritySupport: "Priority support",
+    subscribe: "Subscribe to Optimus+",
+    restorePurchases: "Restore purchases",
+    alreadyPremium: "You are Optimus+",
+    enjoyFeatures: "Enjoy all premium features",
+    purchaseComingSoon: "In-app purchase coming soon",
+    restoreComingSoon: "Restore will be available soon",
+    legal: "Subscription auto-renews unless cancelled 24h before end of period. See our Terms of Use and Privacy Policy.",
+  },
+
   badge: {
     certifiedHalal: "Halal Certified",
     doubtfulCertification: "Doubtful Certification",
