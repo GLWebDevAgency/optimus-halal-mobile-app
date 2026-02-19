@@ -280,6 +280,22 @@ export const ramadan = {
 } as const;
 
 // ---------------------------------------------------------------------------
+// Store Type Category Colors
+// ---------------------------------------------------------------------------
+
+/** Distinct color for each store type — used on map markers, filter chips, card gradients. */
+export const storeTypeColors = {
+  butcher:     { base: "#ef4444", light: "#fecaca", dark: "#fca5a5", icon: "restaurant" as const },
+  restaurant:  { base: "#f97316", light: "#fed7aa", dark: "#fdba74", icon: "restaurant-menu" as const },
+  supermarket: { base: "#3b82f6", light: "#bfdbfe", dark: "#93c5fd", icon: "shopping-cart" as const },
+  bakery:      { base: "#D4AF37", light: "#fef3c7", dark: "#fde68a", icon: "bakery-dining" as const },
+  abattoir:    { base: "#8b5cf6", light: "#ddd6fe", dark: "#c4b5fd", icon: "agriculture" as const },
+  wholesaler:  { base: "#06b6d4", light: "#cffafe", dark: "#67e8f9", icon: "local-shipping" as const },
+  online:      { base: "#10b981", light: "#d1fae5", dark: "#6ee7b7", icon: "language" as const },
+  other:       { base: "#6b7280", light: "#e5e7eb", dark: "#d1d5db", icon: "store" as const },
+} as const;
+
+// ---------------------------------------------------------------------------
 // Signature Gradients
 // ---------------------------------------------------------------------------
 
@@ -326,6 +342,7 @@ export const colors = {
   glass,
   gradients,
   ramadan,
+  storeTypeColors,
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -343,4 +360,5 @@ export type BrandColors = typeof brand;
 export type GlassColors = typeof glass;
 export type RamadanColors = typeof ramadan;
 export type Gradients = typeof gradients;
+export type StoreTypeColors = typeof storeTypeColors;
 export type Colors = typeof colors;

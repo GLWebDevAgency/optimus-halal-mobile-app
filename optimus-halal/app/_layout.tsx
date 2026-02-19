@@ -6,7 +6,7 @@
  */
 
 import "../global.css";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Stack, SplashScreen } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -255,12 +255,16 @@ export default function RootLayout() {
     Inter_900Black,
   });
 
-  // Sync NativeWind dark mode with the app's useTheme() store
-  // so `dark:` Tailwind classes match the user's theme preference
-  useEffect(() => {
+  // Sync NativeWind dark mode synchronously before paint to avoid
+  // a 1-frame flash where dark: classes lag behind inline colors
+  useLayoutEffect(() => {
     setColorScheme(effectiveTheme);
+  }, [effectiveTheme, setColorScheme]);
+
+  // Android navigation bar color — async native call, no layout impact
+  useEffect(() => {
     setNavigationBarTheme(isDark);
-  }, [effectiveTheme, setColorScheme, isDark]);
+  }, [isDark]);
 
   const [trpcClient] = useState(() => createTRPCClientForProvider());
 

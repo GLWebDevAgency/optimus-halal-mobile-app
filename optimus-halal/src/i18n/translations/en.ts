@@ -589,6 +589,18 @@ export const en: TranslationKeys = {
     clusterCount: "{{count}} stores",
     myLocation: "My location",
     searchResults: "Search results",
+    searchThisArea: "Search this area",
+    openNow: "Open now",
+    closingSoon: "Closes in {{minutes}}min",
+    openingSoon: "Opens in {{minutes}}min",
+    closedNow: "Closed",
+    opensAt: "Opens at {{time}}",
+    closesAt: "Closes at {{time}}",
+    searchStores: "Search stores...",
+    recentSearches: "Recent searches",
+    addresses: "Addresses",
+    storeResults: "Stores",
+    noResults: "No results",
   },
 
   // Marketplace

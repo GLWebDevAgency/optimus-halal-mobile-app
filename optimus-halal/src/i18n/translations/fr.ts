@@ -587,6 +587,18 @@ export const fr = {
     clusterCount: "{{count}} magasins",
     myLocation: "Ma position",
     searchResults: "Résultats de recherche",
+    searchThisArea: "Rechercher dans cette zone",
+    openNow: "Ouvert maintenant",
+    closingSoon: "Ferme dans {{minutes}}min",
+    openingSoon: "Ouvre dans {{minutes}}min",
+    closedNow: "Fermé",
+    opensAt: "Ouvre à {{time}}",
+    closesAt: "Ferme à {{time}}",
+    searchStores: "Rechercher un commerce...",
+    recentSearches: "Recherches récentes",
+    addresses: "Adresses",
+    storeResults: "Commerces",
+    noResults: "Aucun résultat",
   },
 
   // Marketplace
