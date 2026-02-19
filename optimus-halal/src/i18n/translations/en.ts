@@ -55,6 +55,8 @@ export const en: TranslationKeys = {
     and: "and our",
     stepOf: "Step {{current}} of {{total}}",
     noInternet: "No internet connection",
+    premiumRequired: "This feature requires Optimus+",
+    upgrade: "Upgrade to Optimus+",
   },
 
   // Navigation

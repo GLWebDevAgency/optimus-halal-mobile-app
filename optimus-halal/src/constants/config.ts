@@ -44,6 +44,13 @@ export interface FeatureFlags {
   socialSharing: boolean;
   // Analytics
   analyticsEnabled: boolean;
+  // Premium gates
+  paywallEnabled: boolean;
+  favoritesLimitEnabled: boolean;
+  scanHistoryLimitEnabled: boolean;
+  offlineCacheEnabled: boolean;
+  premiumMapEnabled: boolean;
+  healthProfileEnabled: boolean;
 }
 
 export const defaultFeatureFlags: FeatureFlags = {
@@ -55,6 +62,12 @@ export const defaultFeatureFlags: FeatureFlags = {
   gamificationEnabled: false,
   socialSharing: true,
   analyticsEnabled: true,
+  paywallEnabled: false,
+  favoritesLimitEnabled: false,
+  scanHistoryLimitEnabled: false,
+  offlineCacheEnabled: false,
+  premiumMapEnabled: false,
+  healthProfileEnabled: false,
 };
 
 /**

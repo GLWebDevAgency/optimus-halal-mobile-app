@@ -55,6 +55,8 @@ export const ar: TranslationKeys = {
     and: "و",
     stepOf: "الخطوة {{current}} من {{total}}",
     noInternet: "لا يوجد اتصال بالإنترنت",
+    premiumRequired: "هذه الميزة تتطلب Optimus+",
+    upgrade: "الترقية إلى Optimus+",
   },
   nav: {
     home: "الرئيسية",

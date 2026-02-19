@@ -114,6 +114,12 @@ export { useGeocode } from './useGeocode';
 export type { GeocodeSuggestion } from './useGeocode';
 
 // ============================================
+// PREMIUM HOOK
+// ============================================
+
+export { usePremium } from './usePremium';
+
+// ============================================
 // IMAGE UPLOAD HOOK (R2)
 // ============================================
 // NOT barrel-exported: expo-image-manipulator requires native module.

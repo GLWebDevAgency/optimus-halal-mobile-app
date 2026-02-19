@@ -53,6 +53,8 @@ export const fr = {
     and: "et notre",
     stepOf: "Étape {{current}} sur {{total}}",
     noInternet: "Pas de connexion internet",
+    premiumRequired: "Cette fonctionnalite necessite Optimus+",
+    upgrade: "Passer a Optimus+",
   },
 
   // Navigation
