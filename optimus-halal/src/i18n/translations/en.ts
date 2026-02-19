@@ -475,8 +475,6 @@ export const en: TranslationKeys = {
     allergens: "Allergens",
     nutrition: "Nutrition",
     composition: "Composition",
-    nutritionScore: "Nutri-Score",
-    novaScore: "NOVA Score",
     addToFavorites: "Add to favorites",
     removeFromFavorites: "Remove from favorites",
     report: "Report an error",

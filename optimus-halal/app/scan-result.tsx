@@ -1318,6 +1318,29 @@ export default function ScanResultScreen() {
           </Animated.View>
         </LinearGradient>
 
+        {/* ── Product Image Showcase (max 200px) ── */}
+        {product.imageUrl && (
+          <Animated.View
+            entering={FadeIn.delay(SUSPENSE_DURATION + 600).duration(400)}
+            style={[
+              styles.productImageShowcase,
+              {
+                backgroundColor: isDark
+                  ? "rgba(255,255,255,0.03)"
+                  : "rgba(0,0,0,0.02)",
+              },
+            ]}
+          >
+            <Image
+              source={{ uri: product.imageUrl }}
+              style={styles.productImageLarge}
+              contentFit="contain"
+              transition={300}
+              accessibilityLabel={product.name}
+            />
+          </Animated.View>
+        )}
+
         {/* ════════════════════════════════════════════════════
             CONTENT SECTIONS (below the fold)
             ════════════════════════════════════════════════════ */}
@@ -2234,6 +2257,20 @@ const styles = StyleSheet.create({
     fontWeight: "600" as const,
   },
 
+  // ── Product image showcase (below HERO) ────────
+  productImageShowcase: {
+    alignItems: "center",
+    paddingVertical: 16,
+    marginHorizontal: 20,
+    marginTop: -8,
+    borderRadius: 16,
+  },
+  productImageLarge: {
+    width: "100%",
+    height: 200,
+    borderRadius: 12,
+  },
+
   // ── Product overlay ────────────────────────────
   productOverlay: {
     flexDirection: "row",
@@ -2247,17 +2284,17 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   productThumb: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
+    width: 80,
+    height: 80,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
   },
   productThumbImage: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
+    width: 80,
+    height: 80,
+    borderRadius: 14,
   },
   productTextContainer: {
     flex: 1,

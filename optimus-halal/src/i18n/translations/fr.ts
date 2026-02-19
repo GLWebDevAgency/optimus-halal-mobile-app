@@ -473,8 +473,6 @@ export const fr = {
     allergens: "Allergènes",
     nutrition: "Nutrition",
     composition: "Composition",
-    nutritionScore: "Nutri-Score",
-    novaScore: "Score NOVA",
     addToFavorites: "Ajouter aux favoris",
     removeFromFavorites: "Retirer des favoris",
     report: "Signaler une erreur",

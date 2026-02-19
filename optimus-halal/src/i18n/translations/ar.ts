@@ -384,8 +384,6 @@ export const ar: TranslationKeys = {
     allergens: "مسببات الحساسية",
     nutrition: "التغذية",
     composition: "التركيب",
-    nutritionScore: "التقييم الغذائي",
-    novaScore: "تقييم NOVA",
     addToFavorites: "إضافة للمفضلات",
     removeFromFavorites: "إزالة من المفضلات",
     report: "الإبلاغ عن خطأ",
