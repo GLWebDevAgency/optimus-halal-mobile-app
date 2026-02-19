@@ -54,6 +54,9 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
+      - name: Security audit
+        run: pnpm audit --audit-level=high
+
   # ── Test ───────────────────────────────────────
   test:
     name: Test

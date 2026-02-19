@@ -11,6 +11,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { useTheme, useTranslation } from "@/hooks";
+import { semantic, darkTheme, lightTheme } from "@/theme/colors";
 
 // ---------------------------------------------------------------------------
 // Error Fallback (functional component — supports hooks / dark mode)
@@ -23,7 +24,7 @@ function ErrorFallback({ onRetry }: { onRetry: () => void }) {
   return (
     <View
       className="flex-1 items-center justify-center px-8"
-      style={{ backgroundColor: isDark ? "#0f1a13" : "#ffffff" }}
+      style={{ backgroundColor: isDark ? darkTheme.background : lightTheme.backgroundSecondary }}
     >
       <View
         className="w-20 h-20 rounded-full items-center justify-center mb-6"
@@ -36,7 +37,7 @@ function ErrorFallback({ onRetry }: { onRetry: () => void }) {
         <MaterialIcons
           name="error-outline"
           size={36}
-          color={isDark ? "#f87171" : "#ef4444"}
+          color={semantic.danger.base}
         />
       </View>
       <Text className="text-xl font-bold text-slate-900 dark:text-white text-center mb-2">
@@ -52,7 +53,7 @@ function ErrorFallback({ onRetry }: { onRetry: () => void }) {
         accessibilityLabel={t.common.retry}
         className="bg-primary px-8 py-3 rounded-xl flex-row items-center gap-2"
       >
-        <MaterialIcons name="refresh" size={20} color="#ffffff" />
+        <MaterialIcons name="refresh" size={20} color={lightTheme.textInverse} />
         <Text className="font-bold text-sm text-white">{t.common.retry}</Text>
       </TouchableOpacity>
     </View>

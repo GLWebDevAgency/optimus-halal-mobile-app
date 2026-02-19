@@ -6,8 +6,8 @@
  */
 
 import "../global.css";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Stack } from "expo-router";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Stack, SplashScreen } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -23,18 +23,31 @@ import {
 } from "react-native";
 import { useLanguageStore } from "@/store";
 import { useTheme, useTranslation } from "@/hooks";
-import { useAuthStore } from "@/store/apiStores";
-import { setApiLanguage } from "@/services/api";
+import { initializeTokens, isAuthenticated as hasStoredTokens, clearTokens, setApiLanguage, setOnAuthFailure } from "@/services/api";
+import { useMe } from "@/hooks/useAuth";
 import { isRTL as isRTLLanguage } from "@/i18n";
 import { trpc, createTRPCClientForProvider } from "@/lib/trpc";
+import { useColorScheme as useNativeWindColorScheme } from "nativewind";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/ui";
 import { logger } from "@/lib/logger";
 import { initSentry } from "../src/lib/sentry";
 import { initAnalytics } from "../src/lib/analytics";
+import { setNavigationBarTheme } from "@/lib/navigationBar";
+import {
+  useFonts,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  Inter_900Black,
+} from "@expo-google-fonts/inter";
 
 initSentry();
 initAnalytics();
+
+// Prevent the splash screen from auto-hiding before theme and state are ready
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 // ── Sync RTL direction on app startup ─────────────────────
 // I18nManager.forceRTL persists but only renders after a restart.
@@ -101,24 +114,36 @@ function DebugOverlay({ onClose }: { onClose: () => void }) {
 const INIT_TIMEOUT_MS = 8000;
 
 function AppInitializer({ children }: { children: React.ReactNode }) {
-  const initialize = useAuthStore((state) => state.initialize);
-  const isInitializing = useAuthStore((state) => state.isInitializing);
   const language = useLanguageStore((state) => state.language);
   const { isDark: initIsDark } = useTheme();
   const { t } = useTranslation();
   const [showDebug, setShowDebug] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
+  const [tokensReady, setTokensReady] = useState(false);
+  const [forceReady, setForceReady] = useState(false);
   const initCalled = useRef(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Step 1: Load tokens from SecureStore
   useEffect(() => {
     if (initCalled.current) return;
     initCalled.current = true;
 
-    logger.info("AppInit", "useEffect: calling initialize()");
-    initialize().catch((e) =>
-      logger.error("AppInit", "initialize() threw", String(e))
-    );
+    // Register auth failure callback — invoked when token refresh fails.
+    // Clears tokens and React Query cache so the user is redirected to login.
+    setOnAuthFailure(() => {
+      logger.warn("Auth", "onAuthFailure: clearing tokens + query cache");
+      clearTokens().catch(() => {});
+      queryClient.clear();
+    });
+
+    logger.info("AppInit", "useEffect: loading tokens from SecureStore");
+    initializeTokens()
+      .catch((e) => logger.error("AppInit", "initializeTokens() threw", String(e)))
+      .finally(() => {
+        logger.info("AppInit", "tokens loaded, hasStoredTokens:", hasStoredTokens());
+        setTokensReady(true);
+      });
     setApiLanguage(language);
 
     // Safety timeout — force past loading if init hangs
@@ -132,11 +157,23 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // Step 2: Once tokens loaded, fetch user profile (only if tokens exist)
+  const shouldFetchMe = tokensReady && hasStoredTokens();
+  const meQuery = useMe({ enabled: shouldFetchMe });
+
+  // Initialization is done when:
+  // - tokens loaded AND no tokens → not authenticated, done immediately
+  // - tokens loaded AND has tokens AND meQuery resolved → done
+  // - forceReady → user bypassed timeout
+  const isInitializing = !forceReady && (!tokensReady || (shouldFetchMe && meQuery.isLoading));
+
   // Clear timeout as soon as init completes
   useEffect(() => {
     if (!isInitializing && timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
+      // Hide splash screen smoothly now that everything is ready
+      setTimeout(() => SplashScreen.hideAsync(), 100);
     }
   }, [isInitializing]);
 
@@ -186,7 +223,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => {
-            useAuthStore.setState({ isInitializing: false });
+            setForceReady(true);
             setTimedOut(false);
           }}
           style={{ backgroundColor: "#333", padding: 12, borderRadius: 8 }}
@@ -207,9 +244,32 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
 // ============================================
 
 export default function RootLayout() {
-  const { isDark } = useTheme();
+  const { isDark, effectiveTheme } = useTheme();
+  const { setColorScheme } = useNativeWindColorScheme();
+
+  const [fontsLoaded] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    Inter_900Black,
+  });
+
+  // Sync NativeWind dark mode synchronously before paint to avoid
+  // a 1-frame flash where dark: classes lag behind inline colors
+  useLayoutEffect(() => {
+    setColorScheme(effectiveTheme);
+  }, [effectiveTheme, setColorScheme]);
+
+  // Android navigation bar color — async native call, no layout impact
+  useEffect(() => {
+    setNavigationBarTheme(isDark);
+  }, [isDark]);
 
   const [trpcClient] = useState(() => createTRPCClientForProvider());
+
+  // Keep splash screen visible until fonts are ready
+  if (!fontsLoaded) return null;
 
   return (
     <ErrorBoundary>

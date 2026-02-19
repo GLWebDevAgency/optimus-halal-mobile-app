@@ -49,6 +49,8 @@ export const users = pgTable(
     currentStreak: t.integer("current_streak").default(0).notNull(),
     longestStreak: t.integer("longest_streak").default(0).notNull(),
     lastScanDate: t.timestamp("last_scan_date", { withTimezone: true }),
+    streakFreezeCount: t.integer("streak_freeze_count").default(0).notNull(),
+    streakFreezeLastUsed: t.timestamp("streak_freeze_last_used", { withTimezone: true }),
     notificationEnabled: t.boolean("notification_enabled").default(true).notNull(),
     biometricEnabled: t.boolean("biometric_enabled").default(false).notNull(),
     darkMode: t.boolean("dark_mode").default(false).notNull(),
@@ -84,23 +86,30 @@ export const users = pgTable(
   ]
 );
 
-export const refreshTokens = pgTable("refresh_tokens", {
-  id: t.uuid().defaultRandom().primaryKey(),
-  userId: t
-    .uuid("user_id")
-    .references(() => users.id, { onDelete: "cascade" })
-    .notNull(),
-  tokenHash: t.text("token_hash").notNull(),
-  deviceId: t.varchar("device_id", { length: 255 }),
-  deviceName: t.varchar("device_name", { length: 255 }),
-  expiresAt: t
-    .timestamp("expires_at", { withTimezone: true })
-    .notNull(),
-  createdAt: t
-    .timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
+export const refreshTokens = pgTable(
+  "refresh_tokens",
+  {
+    id: t.uuid().defaultRandom().primaryKey(),
+    userId: t
+      .uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    tokenHash: t.text("token_hash").notNull(),
+    deviceId: t.varchar("device_id", { length: 255 }),
+    deviceName: t.varchar("device_name", { length: 255 }),
+    expiresAt: t
+      .timestamp("expires_at", { withTimezone: true })
+      .notNull(),
+    createdAt: t
+      .timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    t.uniqueIndex("refresh_tokens_token_hash_idx").on(table.tokenHash),
+    t.index("refresh_tokens_user_id_idx").on(table.userId),
+  ]
+);
 
 export const addresses = pgTable("addresses", {
   id: t.uuid().defaultRandom().primaryKey(),

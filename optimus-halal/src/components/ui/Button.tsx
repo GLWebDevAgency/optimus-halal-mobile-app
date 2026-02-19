@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useHaptics } from "@/hooks";
-import { semantic, darkTheme } from "@/theme/colors";
+import { semantic, darkTheme, brand, primary } from "@/theme/colors";
 
 export interface ButtonProps extends TouchableOpacityProps {
   variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
@@ -32,7 +32,7 @@ const variantStyles = {
   primary: {
     container: "bg-primary-500",
     text: "text-slate-900 font-bold",
-    gradient: ["#13ec6a", "#08c454"] as const,
+    gradient: [brand.primary, primary[600]] as const,
   },
   secondary: {
     container: "bg-slate-900 dark:bg-surface-dark",
@@ -101,7 +101,7 @@ export const Button: React.FC<ButtonProps> = ({
       {icon && iconPosition === "left" && !loading && icon}
       {loading ? (
         <ActivityIndicator
-          color={variant === "primary" ? darkTheme.textInverse : "#ffffff"}
+          color={variant === "primary" ? darkTheme.textInverse : brand.white}
           size="small"
         />
       ) : (

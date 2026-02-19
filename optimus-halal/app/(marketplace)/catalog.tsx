@@ -19,7 +19,7 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import { FlashList } from "@shopify/flash-list";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useHaptics, useTheme, useTranslation } from "@/hooks";
@@ -225,8 +225,16 @@ export default function MarketplaceCatalogScreen() {
   const { user } = useLocalAuthStore();
   const { itemCount } = useLocalCartStore();
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  // Accept optional search/category params from scan-result navigation
+  const { search: initialSearch, category: initialCategory } = useLocalSearchParams<{
+    search?: string;
+    category?: string;
+  }>();
+
+  const [searchQuery, setSearchQuery] = useState(initialSearch ?? "");
+  const [selectedCategory, setSelectedCategory] = useState(
+    initialCategory && CATEGORY_IDS.includes(initialCategory as any) ? initialCategory : "all"
+  );
   const [products, setProducts] = useState(PRODUCTS);
 
   const filteredProducts = useMemo(() => {

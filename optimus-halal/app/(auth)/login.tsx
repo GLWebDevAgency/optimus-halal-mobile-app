@@ -21,8 +21,9 @@ import * as LocalAuthentication from "expo-local-authentication";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
 import { Button, Input, IslamicPattern } from "@/components/ui";
-import { useAuthStore } from "@/store/apiStores";
+import { useLogin } from "@/hooks/useAuth";
 import { useTranslation, useHaptics, useTheme } from "@/hooks";
+
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const { isDark, colors } = useTheme();
@@ -33,12 +34,8 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-  // Use the API-connected Auth Store instead of the local one
-  const { login, isLoggingIn, error: authError } = useAuthStore();
-  
-  // Local loading state for UI feedback
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const isLoading = isSubmitting || isLoggingIn;
+  const loginMutation = useLogin();
+  const isLoading = loginMutation.isPending;
 
   const validateForm = useCallback(() => {
     const newErrors: { email?: string; password?: string } = {};
@@ -62,30 +59,20 @@ export default function LoginScreen() {
   const handleLogin = useCallback(async () => {
     if (!validateForm()) return;
 
-    setIsSubmitting(true);
     impact();
 
     try {
-      // Use the store action which handles API call, tokens, profile fetch, and state update
-      const success = await login(email, password);
-
-      if (success) {
-        router.replace("/(tabs)");
-      } else {
-        // Error is handled by store but we can show alert if needed, 
-        // though the UI might display authError
-        Alert.alert(t.common.error, authError || t.auth.login.errors.invalidCredentials);
-      }
+      // mutateAsync sets tokens + awaits useMe() cache invalidation (see useLogin hook)
+      await loginMutation.mutateAsync({ email, password });
+      router.replace("/(tabs)");
     } catch (error: unknown) {
       const message =
         error instanceof Error
           ? error.message
           : t.errors.generic;
       Alert.alert(t.common.error, message);
-    } finally {
-      setIsSubmitting(false);
     }
-  }, [email, password, validateForm, login, authError]);
+  }, [email, password, validateForm, loginMutation, impact]);
 
   const handleBiometricLogin = useCallback(async () => {
     impact();

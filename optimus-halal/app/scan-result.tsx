@@ -23,6 +23,7 @@ import {
   Dimensions,
   StyleSheet,
   Platform,
+  Alert,
 } from "react-native";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
@@ -50,11 +51,15 @@ import { BlurView } from "expo-blur";
 import { IconButton, IslamicPattern, ArabicCalligraphy, StatusPill, LevelUpCelebration } from "@/components/ui";
 import { PersonalAlerts, type PersonalAlert } from "@/components/scan/PersonalAlerts";
 import { MadhabBottomSheet } from "@/components/scan/MadhabBottomSheet";
-import { shareProductCard } from "@/components/scan/ShareCard";
+import { ShareCardView, captureAndShareCard } from "@/components/scan/ShareCard";
 import { trpc } from "@/lib/trpc";
 import { useScanBarcode } from "@/hooks/useScan";
 import { useTranslation, useHaptics, useAddFavorite, useRemoveFavorite, useCreateReview } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
+import { halalStatus as halalStatusTokens, brand as brandTokens } from "@/theme/colors";
+import { GlowCard } from "@/components/ui/GlowCard";
+import { usePremium } from "@/hooks/usePremium";
+import { useFeatureFlagsStore } from "@/store";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const HERO_HEIGHT = SCREEN_HEIGHT * 0.5;
@@ -74,15 +79,15 @@ const STATUS_CONFIG: Record<string, StatusVisualConfig> = {
   halal: {
     labelKey: "certifiedHalal",
     icon: "verified",
-    color: "#22c55e",
-    glowColor: "#13ec6a",
+    color: halalStatusTokens.halal.base,
+    glowColor: brandTokens.primary,
     gradientDark: ["#0a1a10", "#0f2418", "#132a1a"],
     gradientLight: ["#ecfdf5", "#d1fae5", "#a7f3d0"],
   },
   haram: {
     labelKey: "haramDetected",
     icon: "dangerous",
-    color: "#ef4444",
+    color: halalStatusTokens.haram.base,
     glowColor: "#dc2626",
     gradientDark: ["#1a0a0a", "#221111", "#2a1313"],
     gradientLight: ["#fef2f2", "#fecaca", "#fca5a5"],
@@ -90,7 +95,7 @@ const STATUS_CONFIG: Record<string, StatusVisualConfig> = {
   doubtful: {
     labelKey: "doubtfulStatus",
     icon: "help",
-    color: "#f97316",
+    color: halalStatusTokens.doubtful.base,
     glowColor: "#ea580c",
     gradientDark: ["#1a140a", "#221b11", "#2a1f13"],
     gradientLight: ["#fff7ed", "#fed7aa", "#fdba74"],
@@ -98,7 +103,7 @@ const STATUS_CONFIG: Record<string, StatusVisualConfig> = {
   unknown: {
     labelKey: "unverified",
     icon: "help-outline",
-    color: "#94a3b8",
+    color: halalStatusTokens.unknown.base,
     glowColor: "#64748b",
     gradientDark: ["#0f0f0f", "#151515", "#1a1a1a"],
     gradientLight: ["#f8fafc", "#e2e8f0", "#cbd5e1"],
@@ -115,21 +120,21 @@ const MADHAB_LABEL_KEY = {
   hanbali: "madhabHanbali",
 } as const;
 
-// Nutri-Score color map
+// Nutri-Score color map (follows international nutrition labelling standard)
 const NUTRISCORE_COLORS: Record<string, string> = {
-  a: "#22c55e",
+  a: halalStatusTokens.halal.base,
   b: "#84cc16",
   c: "#eab308",
-  d: "#f97316",
-  e: "#ef4444",
+  d: halalStatusTokens.doubtful.base,
+  e: halalStatusTokens.haram.base,
 };
 
-// NOVA group color map
+// NOVA group color map (1=unprocessed → 4=ultra-processed)
 const NOVA_COLORS: Record<number, string> = {
-  1: "#22c55e",
+  1: halalStatusTokens.halal.base,
   2: "#eab308",
-  3: "#f97316",
-  4: "#ef4444",
+  3: halalStatusTokens.doubtful.base,
+  4: halalStatusTokens.haram.base,
 };
 
 // ── Pulsing Glow Ring (behind status icon) ──────────────────
@@ -496,7 +501,7 @@ const IngredientRow = React.memo(function IngredientRow({
             styles.ingredientDot,
             {
               backgroundColor: isProblematic
-                ? problemColor ?? "#f97316"
+                ? problemColor ?? halalStatusTokens.doubtful.base
                 : isDark
                   ? "rgba(255,255,255,0.15)"
                   : "rgba(0,0,0,0.12)",
@@ -508,7 +513,7 @@ const IngredientRow = React.memo(function IngredientRow({
             styles.ingredientName,
             {
               color: isProblematic
-                ? problemColor ?? "#f97316"
+                ? problemColor ?? halalStatusTokens.doubtful.base
                 : colors.textPrimary,
               fontWeight: isProblematic ? "600" : "400",
             },
@@ -520,7 +525,7 @@ const IngredientRow = React.memo(function IngredientRow({
           <MaterialIcons
             name={expanded ? "expand-less" : "expand-more"}
             size={18}
-            color={problemColor ?? "#f97316"}
+            color={problemColor ?? halalStatusTokens.doubtful.base}
             style={{ marginStart: "auto" }}
           />
         )}
@@ -541,14 +546,14 @@ const IngredientRow = React.memo(function IngredientRow({
                 paddingHorizontal: 6,
                 paddingVertical: 2,
                 borderRadius: 4,
-                backgroundColor: (problemColor ?? "#f97316") + "20",
+                backgroundColor: (problemColor ?? halalStatusTokens.doubtful.base) + "20",
               }}
             >
               <Text
                 style={{
                   fontSize: 11,
                   fontWeight: "700",
-                  color: problemColor ?? "#f97316",
+                  color: problemColor ?? halalStatusTokens.doubtful.base,
                   textTransform: "uppercase",
                 }}
               >
@@ -860,6 +865,7 @@ export default function ScanResultScreen() {
   // ── tRPC Mutation ──────────────────────────────
   const scanMutation = useScanBarcode();
   const hasFired = useRef(false);
+  const shareCardRef = useRef<View>(null);
 
   useEffect(() => {
     if (barcode && !hasFired.current) {
@@ -876,6 +882,9 @@ export default function ScanResultScreen() {
   const communityVerifiedCount = scanMutation.data?.communityVerifiedCount ?? 0;
   const madhabVerdicts = scanMutation.data?.madhabVerdicts ?? [];
   const levelUp = scanMutation.data?.levelUp ?? null;
+
+  // ── Social Proof (From Backend) ──────
+  const totalScansCount = communityVerifiedCount;
 
   const halalStatus: HalalStatusKey =
     (product?.halalStatus as HalalStatusKey) ?? "unknown";
@@ -899,6 +908,9 @@ export default function ScanResultScreen() {
     scanMutation.data?.personalAlerts ?? [];
 
   // ── Halal Alternatives Query ──────────────────
+  const { isPremium, showPaywall } = usePremium();
+  const { isFeatureEnabled } = useFeatureFlagsStore();
+  const marketplaceEnabled = isFeatureEnabled("marketplaceEnabled");
   const alternativesQuery = trpc.product.getAlternatives.useQuery(
     { productId: product?.id ?? "", limit: 3 },
     { enabled: !!product?.id }
@@ -937,7 +949,7 @@ export default function ScanResultScreen() {
     const names = new Map<string, { color: string; explanation: string; status: string }>();
     for (const r of haramReasons) {
       names.set(r.name.toLowerCase(), {
-        color: "#ef4444",
+        color: halalStatusTokens.haram.base,
         explanation: r.explanation,
         status: r.status,
       });
@@ -945,7 +957,7 @@ export default function ScanResultScreen() {
     for (const r of doubtfulReasons) {
       if (!names.has(r.name.toLowerCase())) {
         names.set(r.name.toLowerCase(), {
-          color: "#f97316",
+          color: halalStatusTokens.doubtful.base,
           explanation: r.explanation,
           status: r.status,
         });
@@ -967,9 +979,11 @@ export default function ScanResultScreen() {
   );
 
   // ── Haptic orchestration on verdict ────────────
-  // Two-phase haptic: immediate feedback + delayed reinforcement.
-  // Halal = relief (success + soft landing), Haram = alarm (double error),
-  // Doubtful = caution (warning + light nudge).
+  // Context-aware two-phase haptic: each verdict gets a distinct tactile signature.
+  // Halal   = relief   (success + soft landing)
+  // Haram   = alarm    (double error pulse)
+  // Doubtful = caution (warning + light nudge)
+  // Unknown  = neutral (single light tap, no notification)
   const hasFiredHaptic = useRef(false);
   useEffect(() => {
     if (product && !hasFiredHaptic.current) {
@@ -980,9 +994,12 @@ export default function ScanResultScreen() {
       } else if (halalStatus === "haram") {
         notification(NotificationFeedbackType.Error);
         setTimeout(() => notification(NotificationFeedbackType.Error), 180);
-      } else {
+      } else if (halalStatus === "doubtful") {
         notification(NotificationFeedbackType.Warning);
         setTimeout(() => impact(ImpactFeedbackStyle.Light), 250);
+      } else {
+        // unknown — neutral single tap, no notification vibration
+        impact(ImpactFeedbackStyle.Light);
       }
     }
   }, [product, halalStatus, notification, impact]);
@@ -993,48 +1010,90 @@ export default function ScanResultScreen() {
     router.back();
   }, [impact]);
 
-  const handleShare = useCallback(async () => {
-    impact();
-    if (!product) return;
+  const shareData = useMemo(() => {
+    if (!product) return null;
+    return {
+      productName: product.name,
+      brand: product.brand ?? null,
+      halalStatus: halalStatus as "halal" | "haram" | "doubtful" | "unknown",
+      certifier: halalAnalysis?.certifierName ?? null,
+      isBoycotted: !!boycott,
+      barcode: product.barcode,
+    };
+  }, [product, halalStatus, halalAnalysis, boycott]);
+
+  const shareLabels = useMemo(() => {
     const statusLabelMap: Record<string, string> = {
       halal: t.scanResult.certifiedHalal,
       haram: t.scanResult.haramDetected,
       doubtful: t.scanResult.doubtfulStatus,
       unknown: t.scanResult.unverified,
     };
-    await shareProductCard(
-      {
-        productName: product.name,
-        brand: product.brand ?? null,
-        halalStatus: halalStatus as "halal" | "haram" | "doubtful" | "unknown",
-        certifier: halalAnalysis?.certifierName ?? null,
-        isBoycotted: !!boycott,
-        barcode: product.barcode,
-      },
-      {
-        statusLabel: statusLabelMap[halalStatus] ?? statusLabelMap.unknown,
-        certifiedBy: t.scanResult.certifiedBy,
-        boycotted: t.scanResult.shareBoycotted,
-        verifiedWith: t.scanResult.verifiedWith,
-        tagline: t.scanResult.shareTagline,
-      },
-    );
-  }, [product, halalStatus, halalAnalysis, boycott, impact, t]);
+    return {
+      statusLabel: statusLabelMap[halalStatus] ?? statusLabelMap.unknown,
+      certifiedBy: t.scanResult.certifiedBy,
+      boycotted: t.scanResult.shareBoycotted,
+      verifiedWith: t.scanResult.verifiedWith,
+      tagline: t.scanResult.shareTagline,
+    };
+  }, [halalStatus, t]);
+
+  const handleShare = useCallback(async () => {
+    impact();
+    if (!shareData) return;
+    await captureAndShareCard(shareCardRef, shareData, shareLabels);
+  }, [shareData, shareLabels, impact]);
+
+  const isFavMutating = addFavoriteMutation.isPending || removeFavoriteMutation.isPending;
 
   const handleToggleFavorite = useCallback(() => {
+    if (isFavMutating || !product?.id) return;
     impact(ImpactFeedbackStyle.Medium);
-    if (!product?.id) return;
     if (productIsFavorite) {
-      removeFavoriteMutation.mutate({ productId: product.id });
+      removeFavoriteMutation.mutate(
+        { productId: product.id },
+        {
+          onError: () => {
+            Alert.alert(t.favorites.removeError);
+          },
+        }
+      );
     } else {
-      addFavoriteMutation.mutate({ productId: product.id });
+      addFavoriteMutation.mutate(
+        { productId: product.id },
+        {
+          onError: (err) => {
+            if (err.data?.code === "FORBIDDEN") {
+              Alert.alert(
+                t.favorites.premiumLimitTitle,
+                t.favorites.premiumLimitMessage,
+                [{ text: "OK" }]
+              );
+            } else if (err.data?.code === "CONFLICT") {
+              // Already favorited — stale cache, will self-correct on refetch
+            } else {
+              Alert.alert(t.favorites.addError);
+            }
+          },
+        }
+      );
     }
-  }, [product, productIsFavorite, addFavoriteMutation, removeFavoriteMutation, impact]);
+  }, [isFavMutating, product, productIsFavorite, addFavoriteMutation, removeFavoriteMutation, impact, t]);
 
   const handleFindStores = useCallback(() => {
     impact();
-    router.push("/(tabs)/map");
-  }, [impact]);
+    if (marketplaceEnabled) {
+      // Navigate to marketplace catalog, pre-filtered by product name/category
+      router.navigate({
+        pathname: "/(marketplace)/catalog",
+        params: {
+          ...(product?.name ? { search: product.name } : {}),
+        },
+      } as any);
+    } else {
+      router.navigate("/(tabs)/map");
+    }
+  }, [impact, marketplaceEnabled, product?.name]);
 
   const handleReport = useCallback(() => {
     impact();
@@ -1203,6 +1262,26 @@ export default function ScanResultScreen() {
                 </Text>
               </View>
             )}
+
+            {/* Social Proof badge (Scanned X times) */}
+            <View
+              style={[
+                styles.communityBadge,
+                {
+                  backgroundColor: isDark
+                    ? "rgba(255,255,255,0.06)"
+                    : "rgba(0,0,0,0.04)",
+                  borderColor: isDark
+                    ? "rgba(212,175,55,0.2)"
+                    : "rgba(212,175,55,0.15)",
+                },
+              ]}
+            >
+              <MaterialIcons name="local-fire-department" size={12} color={brandTokens.gold} />
+              <Text style={[styles.communityBadgeText, { color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)" }]}>
+                {(t.scanResult as any).scannedByCommunity?.replace("{{count}}", (totalScansCount/1000).toFixed(1) + "k") ?? `Scanné ${(totalScansCount/1000).toFixed(1)}k fois`}
+              </Text>
+            </View>
           </Animated.View>
 
           {/* Madhab verdicts row — compact, below metadata */}
@@ -1214,7 +1293,7 @@ export default function ScanResultScreen() {
               {madhabVerdicts.map((v) => {
                 const labelKey = MADHAB_LABEL_KEY[v.madhab as keyof typeof MADHAB_LABEL_KEY];
                 const label = labelKey ? t.scanResult[labelKey] : v.madhab;
-                const badgeColor = v.status === "halal" ? "#22c55e" : v.status === "doubtful" ? "#f97316" : "#ef4444";
+                const badgeColor = halalStatusTokens[v.status as keyof typeof halalStatusTokens]?.base ?? halalStatusTokens.unknown.base;
                 const badgeIcon = v.status === "halal" ? "check-circle" : v.status === "doubtful" ? "help" : "cancel";
                 return (
                   <TouchableOpacity
@@ -1345,6 +1424,120 @@ export default function ScanResultScreen() {
             CONTENT SECTIONS (below the fold)
             ════════════════════════════════════════════════════ */}
         <View style={styles.contentContainer}>
+          {/* ── Halal Alternatives (Contextual Cross-Selling) ── */}
+          {(halalStatus === "haram" || halalStatus === "doubtful") &&
+            alternativesQuery.data && alternativesQuery.data.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(100).duration(500)} style={{ marginBottom: 20 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <Text style={{ fontSize: 16, fontWeight: "800", color: colors.textPrimary }}>
+                  {t.scanResult.halalAlternatives}
+                </Text>
+                <MaterialIcons name={marketplaceEnabled ? "storefront" : "local-mall"} size={20} color={brandTokens.gold} />
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingBottom: 4 }}>
+                {alternativesQuery.data.slice(0, 3).map((alt: any, index: number) => {
+                  const isPremiumLocked = index === 2 && !isPremium;
+                  return (
+                    <TouchableOpacity
+                      key={alt.id}
+                      onPress={() => {
+                        if (isPremiumLocked) {
+                          showPaywall();
+                        } else if (marketplaceEnabled) {
+                          // Navigate to marketplace product page (cross-tab: use navigate)
+                          router.navigate({ pathname: "/(marketplace)/product/[id]", params: { id: alt.id } } as any);
+                        } else {
+                          // Fallback: open scan-result for the alternative
+                          router.navigate({ pathname: "/scan-result", params: { barcode: alt.barcode } });
+                        }
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <GlowCard
+                        glowColor={brandTokens.gold}
+                        glowIntensity="subtle"
+                        style={{
+                          width: 150,
+                          padding: 12,
+                          backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#ffffff",
+                          justifyContent: "space-between",
+                          overflow: "hidden"
+                        }}
+                      >
+                        {isPremiumLocked && (
+                          <View style={[StyleSheet.absoluteFill, { zIndex: 10, backgroundColor: isDark ? "rgba(10,10,10,0.8)" : "rgba(255,255,255,0.8)", alignItems: "center", justifyContent: "center" }]}>
+                             <MaterialIcons name="lock" size={28} color={brandTokens.gold} />
+                             <Text style={{ color: brandTokens.gold, fontSize: 10, fontWeight: "800", marginTop: 4, textAlign: "center" }}>VANTA GOLD</Text>
+                          </View>
+                        )}
+                        <View style={{ opacity: isPremiumLocked ? 0.3 : 1 }}>
+                          {alt.imageUrl ? (
+                            <Image source={{ uri: alt.imageUrl }} style={{ width: 70, height: 70, borderRadius: 10, alignSelf: "center", marginBottom: 8 }} contentFit="cover" transition={200} />
+                          ) : (
+                            <View style={{ width: 70, height: 70, borderRadius: 10, alignSelf: "center", marginBottom: 8, backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)", alignItems: "center", justifyContent: "center" }}>
+                              <MaterialIcons name="image" size={24} color={colors.textMuted} />
+                            </View>
+                          )}
+                          <Text style={{ fontSize: 13, fontWeight: "700", color: colors.textPrimary, marginBottom: 4 }} numberOfLines={2}>
+                            {alt.name}
+                          </Text>
+                          <StatusPill status={(alt.halalStatus ?? "halal") as "halal" | "haram" | "doubtful" | "unknown"} size="sm" animated={false} />
+                          {/* Marketplace buy indicator */}
+                          {marketplaceEnabled && !isPremiumLocked && (
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 6, backgroundColor: isDark ? "rgba(19,236,106,0.1)" : "rgba(19,236,106,0.08)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, alignSelf: "flex-start" }}>
+                              <MaterialIcons name="shopping-cart" size={11} color={brandTokens.primary} />
+                              <Text style={{ fontSize: 10, fontWeight: "700", color: brandTokens.primary }}>{t.scanResult.buyAlternative}</Text>
+                            </View>
+                          )}
+                        </View>
+                      </GlowCard>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+              {/* ── "Explore marketplace" CTA — shop halal alternatives by category ── */}
+              <TouchableOpacity
+                onPress={() => {
+                  impact();
+                  if (marketplaceEnabled) {
+                    // Navigate to marketplace catalog with product category pre-filtered
+                    router.navigate({
+                      pathname: "/(marketplace)/catalog",
+                      params: {
+                        ...(product?.category ? { search: product.category } : {}),
+                      },
+                    } as any);
+                  } else {
+                    // Marketplace not yet enabled — go to coming-soon / marketplace index
+                    router.navigate("/(marketplace)/" as any);
+                  }
+                }}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel={t.scanResult.shopHalalAlternatives}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  marginTop: 14,
+                  paddingVertical: 12,
+                  paddingHorizontal: 20,
+                  borderRadius: 14,
+                  backgroundColor: isDark ? "rgba(19,236,106,0.08)" : "rgba(19,236,106,0.06)",
+                  borderWidth: 1,
+                  borderColor: isDark ? "rgba(19,236,106,0.2)" : "rgba(19,236,106,0.15)",
+                }}
+              >
+                <MaterialIcons name="storefront" size={18} color={brandTokens.primary} />
+                <Text style={{ fontSize: 14, fontWeight: "700", color: brandTokens.primary }}>
+                  {marketplaceEnabled ? t.scanResult.shopHalalAlternatives : t.scanResult.shopOnMarketplace}
+                </Text>
+                <MaterialIcons name="arrow-forward" size={16} color={brandTokens.primary} />
+              </TouchableOpacity>
+            </Animated.View>
+          )}
+
           {/* ── Boycott Alert (highest priority after verdict) ── */}
           {boycott?.isBoycotted && (
             <Animated.View entering={FadeInDown.delay(100).duration(500)}>
@@ -1664,11 +1857,7 @@ export default function ScanResultScreen() {
                         styles.additiveDot,
                         {
                           backgroundColor:
-                            additive.status === "haram"
-                              ? "#ef4444"
-                              : additive.status === "doubtful"
-                                ? "#f97316"
-                                : "#22c55e",
+                            halalStatusTokens[additive.status as keyof typeof halalStatusTokens]?.base ?? halalStatusTokens.halal.base,
                         },
                       ]}
                     />
@@ -1695,11 +1884,7 @@ export default function ScanResultScreen() {
                         styles.additiveStatus,
                         {
                           color:
-                            additive.status === "haram"
-                              ? "#ef4444"
-                              : additive.status === "doubtful"
-                                ? "#f97316"
-                                : "#22c55e",
+                            halalStatusTokens[additive.status as keyof typeof halalStatusTokens]?.base ?? halalStatusTokens.halal.base,
                         },
                       ]}
                     >
@@ -1833,49 +2018,7 @@ export default function ScanResultScreen() {
             </Animated.View>
           )}
 
-          {/* ── Halal Alternatives ── */}
-          {alternativesQuery.data && alternativesQuery.data.length > 0 && (
-            <Animated.View entering={FadeInDown.delay(420).duration(500)}>
-              <Text style={{ fontSize: 15, fontWeight: "700", color: colors.textPrimary, marginBottom: 8 }}>{t.scanResult.halalAlternatives}</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingVertical: 4 }}>
-                {alternativesQuery.data.map((alt: any) => (
-                  <TouchableOpacity
-                    key={alt.id}
-                    onPress={() => router.push({ pathname: "/scan-result", params: { barcode: alt.barcode } })}
-                    style={{
-                      width: 140,
-                      borderRadius: 16,
-                      backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "#ffffff",
-                      borderWidth: 1,
-                      borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
-                      padding: 12,
-                    }}
-                  >
-                    {alt.imageUrl ? (
-                      <Image
-                        source={{ uri: alt.imageUrl }}
-                        style={{ width: 60, height: 60, borderRadius: 8, alignSelf: "center" }}
-                        contentFit="cover"
-                        transition={200}
-                      />
-                    ) : (
-                      <View style={{
-                        width: 60, height: 60, borderRadius: 8, alignSelf: "center",
-                        backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)",
-                        alignItems: "center", justifyContent: "center",
-                      }}>
-                        <MaterialIcons name="image" size={24} color={colors.textMuted} />
-                      </View>
-                    )}
-                    <Text style={{ fontSize: 12, fontWeight: "600", color: colors.textPrimary, marginTop: 8 }} numberOfLines={2}>
-                      {alt.name}
-                    </Text>
-                    <StatusPill status={(alt.halalStatus ?? "unknown") as "halal" | "haram" | "doubtful" | "unknown"} size="sm" animated={false} />
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </Animated.View>
-          )}
+          {/* ── Halal Alternatives previously here, moved to top of contentContainer ── */}
 
           {/* ── Votre Avis Compte (local vote) ── */}
           {product && (
@@ -2001,108 +2144,223 @@ export default function ScanResultScreen() {
           },
         ]}
       >
-        <BlurView
-          intensity={isDark ? 40 : 60}
-          tint={isDark ? "dark" : "light"}
-          style={styles.actionBarBlur}
-        >
+        {/* Glassmorphism bar — BlurView is iOS-only; Android gets opaque fallback */}
+        {Platform.OS === "ios" ? (
+          <BlurView
+            intensity={isDark ? 40 : 60}
+            tint={isDark ? "dark" : "light"}
+            style={styles.actionBarBlur}
+          >
+            <View
+              style={[
+                styles.actionBarInner,
+                {
+                  borderColor: isDark
+                    ? "rgba(255,255,255,0.08)"
+                    : "rgba(0,0,0,0.06)",
+                },
+              ]}
+            >
+              {/* Favorite */}
+              <TouchableOpacity
+                onPress={handleFavAnimated}
+                disabled={isFavMutating}
+                style={[
+                  styles.actionButton,
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(255,255,255,0.06)"
+                      : "rgba(0,0,0,0.04)",
+                    opacity: isFavMutating ? 0.5 : 1,
+                  },
+                ]}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  productIsFavorite
+                    ? t.scanResult.removeFromFavorites
+                    : t.scanResult.addToFavorites
+                }
+                accessibilityState={{ selected: productIsFavorite, busy: isFavMutating }}
+              >
+                <Animated.View style={favAnimatedStyle}>
+                  <MaterialIcons
+                    name={productIsFavorite ? "favorite" : "favorite-border"}
+                    size={24}
+                    color={productIsFavorite ? "#ef4444" : colors.textSecondary}
+                  />
+                </Animated.View>
+              </TouchableOpacity>
+
+              {/* Share */}
+              <TouchableOpacity
+                onPress={handleShare}
+                style={[
+                  styles.actionButton,
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(255,255,255,0.06)"
+                      : "rgba(0,0,0,0.04)",
+                  },
+                ]}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={t.scanResult.shareProduct}
+              >
+                <MaterialIcons
+                  name="share"
+                  size={22}
+                  color={colors.textSecondary}
+                />
+              </TouchableOpacity>
+
+              {/* Where to Buy (primary CTA) */}
+              <TouchableOpacity
+                onPress={handleFindStores}
+                style={styles.ctaButton}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel={t.scanResult.whereToBuy}
+                accessibilityHint={t.scanResult.findStores}
+              >
+                <MaterialIcons name={marketplaceEnabled ? "shopping-cart" : "location-on"} size={20} color="#0d1b13" />
+                <Text style={styles.ctaText}>{marketplaceEnabled ? t.scanResult.viewOnMarketplace : t.scanResult.whereToBuy}</Text>
+              </TouchableOpacity>
+
+              {/* Report */}
+              <TouchableOpacity
+                onPress={handleReport}
+                style={[
+                  styles.actionButton,
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(255,255,255,0.06)"
+                      : "rgba(0,0,0,0.04)",
+                  },
+                ]}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={t.scanResult.report}
+              >
+                <MaterialIcons
+                  name="flag"
+                  size={22}
+                  color={colors.textSecondary}
+                />
+              </TouchableOpacity>
+            </View>
+          </BlurView>
+        ) : (
           <View
             style={[
-              styles.actionBarInner,
+              styles.actionBarBlur,
               {
-                borderColor: isDark
-                  ? "rgba(255,255,255,0.08)"
-                  : "rgba(0,0,0,0.06)",
+                backgroundColor: isDark
+                  ? "rgba(10, 20, 14, 0.97)"
+                  : "rgba(255, 255, 255, 0.97)",
               },
             ]}
           >
-            {/* Favorite */}
-            <TouchableOpacity
-              onPress={handleFavAnimated}
+            <View
               style={[
-                styles.actionButton,
+                styles.actionBarInner,
                 {
-                  backgroundColor: isDark
-                    ? "rgba(255,255,255,0.06)"
-                    : "rgba(0,0,0,0.04)",
+                  borderColor: isDark
+                    ? "rgba(255,255,255,0.08)"
+                    : "rgba(0,0,0,0.06)",
                 },
               ]}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel={
-                productIsFavorite
-                  ? t.scanResult.removeFromFavorites
-                  : t.scanResult.addToFavorites
-              }
-              accessibilityState={{ selected: productIsFavorite }}
             >
-              <Animated.View style={favAnimatedStyle}>
+              {/* Favorite */}
+              <TouchableOpacity
+                onPress={handleFavAnimated}
+                disabled={isFavMutating}
+                style={[
+                  styles.actionButton,
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(255,255,255,0.06)"
+                      : "rgba(0,0,0,0.04)",
+                    opacity: isFavMutating ? 0.5 : 1,
+                  },
+                ]}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  productIsFavorite
+                    ? t.scanResult.removeFromFavorites
+                    : t.scanResult.addToFavorites
+                }
+                accessibilityState={{ selected: productIsFavorite, busy: isFavMutating }}
+              >
+                <Animated.View style={favAnimatedStyle}>
+                  <MaterialIcons
+                    name={productIsFavorite ? "favorite" : "favorite-border"}
+                    size={24}
+                    color={productIsFavorite ? "#ef4444" : colors.textSecondary}
+                  />
+                </Animated.View>
+              </TouchableOpacity>
+
+              {/* Share */}
+              <TouchableOpacity
+                onPress={handleShare}
+                style={[
+                  styles.actionButton,
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(255,255,255,0.06)"
+                      : "rgba(0,0,0,0.04)",
+                  },
+                ]}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={t.scanResult.shareProduct}
+              >
                 <MaterialIcons
-                  name={productIsFavorite ? "favorite" : "favorite-border"}
-                  size={24}
-                  color={productIsFavorite ? "#ef4444" : colors.textSecondary}
+                  name="share"
+                  size={22}
+                  color={colors.textSecondary}
                 />
-              </Animated.View>
-            </TouchableOpacity>
+              </TouchableOpacity>
 
-            {/* Share */}
-            <TouchableOpacity
-              onPress={handleShare}
-              style={[
-                styles.actionButton,
-                {
-                  backgroundColor: isDark
-                    ? "rgba(255,255,255,0.06)"
-                    : "rgba(0,0,0,0.04)",
-                },
-              ]}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel={t.scanResult.shareProduct}
-            >
-              <MaterialIcons
-                name="share"
-                size={22}
-                color={colors.textSecondary}
-              />
-            </TouchableOpacity>
+              {/* Where to Buy (primary CTA) */}
+              <TouchableOpacity
+                onPress={handleFindStores}
+                style={styles.ctaButton}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel={t.scanResult.whereToBuy}
+                accessibilityHint={t.scanResult.findStores}
+              >
+                <MaterialIcons name={marketplaceEnabled ? "shopping-cart" : "location-on"} size={20} color="#0d1b13" />
+                <Text style={styles.ctaText}>{marketplaceEnabled ? t.scanResult.viewOnMarketplace : t.scanResult.whereToBuy}</Text>
+              </TouchableOpacity>
 
-            {/* Where to Buy (primary CTA) */}
-            <TouchableOpacity
-              onPress={handleFindStores}
-              style={styles.ctaButton}
-              activeOpacity={0.85}
-              accessibilityRole="button"
-              accessibilityLabel={t.scanResult.whereToBuy}
-              accessibilityHint={t.scanResult.findStores}
-            >
-              <MaterialIcons name="location-on" size={20} color="#0d1b13" />
-              <Text style={styles.ctaText}>{t.scanResult.whereToBuy}</Text>
-            </TouchableOpacity>
-
-            {/* Report */}
-            <TouchableOpacity
-              onPress={handleReport}
-              style={[
-                styles.actionButton,
-                {
-                  backgroundColor: isDark
-                    ? "rgba(255,255,255,0.06)"
-                    : "rgba(0,0,0,0.04)",
-                },
-              ]}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel={t.scanResult.report}
-            >
-              <MaterialIcons
-                name="flag"
-                size={22}
-                color={colors.textSecondary}
-              />
-            </TouchableOpacity>
+              {/* Report */}
+              <TouchableOpacity
+                onPress={handleReport}
+                style={[
+                  styles.actionButton,
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(255,255,255,0.06)"
+                      : "rgba(0,0,0,0.04)",
+                  },
+                ]}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={t.scanResult.report}
+              >
+                <MaterialIcons
+                  name="flag"
+                  size={22}
+                  color={colors.textSecondary}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
-        </BlurView>
+        )}
       </Animated.View>
 
       {/* ── Level-Up Celebration Overlay ── */}
@@ -2130,6 +2388,13 @@ export default function ScanResultScreen() {
         conflictingAdditives={selectedMadhab?.conflictingAdditives ?? []}
         onClose={handleCloseMadhab}
       />
+
+      {/* ── Off-screen Share Card (captured as image) ── */}
+      {shareData && (
+        <View style={styles.offScreen} pointerEvents="none">
+          <ShareCardView ref={shareCardRef} data={shareData} labels={shareLabels} />
+        </View>
+      )}
     </View>
   );
 }
@@ -2678,5 +2943,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "800",
     color: "#0d1b13",
+  },
+  offScreen: {
+    position: "absolute",
+    left: -9999,
+    top: 0,
+    opacity: 1,
   },
 });

@@ -610,11 +610,7 @@ export default function ExclusionsScreen() {
                 top: 60,
                 left: 0,
                 right: 0,
-                backgroundColor: themeColors.card,
                 borderRadius: 12,
-                borderWidth: 1,
-                borderColor: themeColors.cardBorder,
-                overflow: "hidden",
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.15,
@@ -623,6 +619,13 @@ export default function ExclusionsScreen() {
                 zIndex: 100,
               }}
             >
+              <View style={{
+                backgroundColor: themeColors.card,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: themeColors.cardBorder,
+                overflow: "hidden",
+              }}>
               {filteredSuggestions.slice(0, 4).map((suggestion, index) => (
                 <TouchableOpacity
                   key={suggestion.id}
@@ -649,6 +652,7 @@ export default function ExclusionsScreen() {
                   </View>
                 </TouchableOpacity>
               ))}
+              </View>
             </Animated.View>
           )}
         </Animated.View>

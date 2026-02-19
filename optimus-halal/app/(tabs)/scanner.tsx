@@ -18,8 +18,9 @@ import {
   StyleSheet,
   Dimensions,
   Alert,
-  StatusBar,
+  Platform,
 } from "react-native";
+import { StatusBar } from "expo-status-bar";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -39,6 +40,7 @@ import Animated, {
   FadeInDown,
   FadeInUp,
   interpolate,
+  useReducedMotion,
 } from "react-native-reanimated";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { LinearGradient } from "expo-linear-gradient";
@@ -65,6 +67,8 @@ export default function ScannerScreen() {
   const [isScanning, setIsScanning] = useState(true);
   const [scanned, setScanned] = useState(false);
 
+  const reducedMotion = useReducedMotion();
+
   // Animation values
   const scanLinePosition = useSharedValue(0);
   const cornerGlow = useSharedValue(0.3);
@@ -72,8 +76,9 @@ export default function ScannerScreen() {
   const pulseOpacity = useSharedValue(0.5);
   const buttonScale = useSharedValue(1);
 
-  // Scan line animation
+  // Scan line animation (disabled when user prefers reduced motion)
   useEffect(() => {
+    if (reducedMotion) return;
     scanLinePosition.value = withRepeat(
       withSequence(
         withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
@@ -83,10 +88,11 @@ export default function ScannerScreen() {
       false
     );
     return () => cancelAnimation(scanLinePosition);
-  }, []);
+  }, [reducedMotion]);
 
   // Corner glow pulsing
   useEffect(() => {
+    if (reducedMotion) return;
     cornerGlow.value = withRepeat(
       withSequence(
         withTiming(0.8, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
@@ -96,10 +102,11 @@ export default function ScannerScreen() {
       false
     );
     return () => cancelAnimation(cornerGlow);
-  }, []);
+  }, [reducedMotion]);
 
   // Button pulse animation
   useEffect(() => {
+    if (reducedMotion) return;
     pulseScale.value = withRepeat(
       withSequence(
         withTiming(1.15, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
@@ -120,7 +127,7 @@ export default function ScannerScreen() {
       cancelAnimation(pulseScale);
       cancelAnimation(pulseOpacity);
     };
-  }, []);
+  }, [reducedMotion]);
 
   const animatedScanLineStyle = useAnimatedStyle(() => ({
     transform: [
@@ -234,7 +241,7 @@ export default function ScannerScreen() {
   if (!permission) {
     return (
       <View style={styles.loadingContainer}>
-        <StatusBar barStyle="light-content" />
+        <StatusBar style="light" />
         <Text style={styles.loadingText}>{t.scanner.scanning}</Text>
       </View>
     );
@@ -244,7 +251,7 @@ export default function ScannerScreen() {
   if (!permission.granted) {
     return (
       <View style={styles.permissionContainer}>
-        <StatusBar barStyle="light-content" />
+        <StatusBar style="light" />
         <Animated.View
           entering={FadeInDown.delay(200).duration(600)}
           style={styles.permissionContent}
@@ -277,7 +284,7 @@ export default function ScannerScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      <StatusBar style="light" />
 
       {/* Camera View - Full Screen */}
       <CameraView
@@ -294,16 +301,28 @@ export default function ScannerScreen() {
       {/* Dark Overlay Mask with Cutout */}
       <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
         {/* Top overlay */}
-        <BlurView intensity={5} tint="dark" style={[styles.overlaySection, { height: (SCREEN_HEIGHT - SCAN_FRAME_HEIGHT) / 2 }]}>
-          <View style={styles.overlayDark} />
-        </BlurView>
+        {Platform.OS === "ios" ? (
+          <BlurView intensity={5} tint="dark" style={[styles.overlaySection, { height: (SCREEN_HEIGHT - SCAN_FRAME_HEIGHT) / 2 }]}>
+            <View style={styles.overlayDark} />
+          </BlurView>
+        ) : (
+          <View style={[styles.overlaySection, { height: (SCREEN_HEIGHT - SCAN_FRAME_HEIGHT) / 2 }]}>
+            <View style={styles.overlayDark} />
+          </View>
+        )}
 
         {/* Middle row with cutout */}
         <View style={[styles.middleRow, { height: SCAN_FRAME_HEIGHT }]}>
           {/* Left overlay */}
-          <BlurView intensity={5} tint="dark" style={styles.sideOverlay}>
-            <View style={styles.overlayDark} />
-          </BlurView>
+          {Platform.OS === "ios" ? (
+            <BlurView intensity={5} tint="dark" style={styles.sideOverlay}>
+              <View style={styles.overlayDark} />
+            </BlurView>
+          ) : (
+            <View style={styles.sideOverlay}>
+              <View style={styles.overlayDark} />
+            </View>
+          )}
 
           {/* Transparent Scan Frame */}
           <View style={styles.scanFrame}>
@@ -325,15 +344,27 @@ export default function ScannerScreen() {
           </View>
 
           {/* Right overlay */}
-          <BlurView intensity={5} tint="dark" style={styles.sideOverlay}>
-            <View style={styles.overlayDark} />
-          </BlurView>
+          {Platform.OS === "ios" ? (
+            <BlurView intensity={5} tint="dark" style={styles.sideOverlay}>
+              <View style={styles.overlayDark} />
+            </BlurView>
+          ) : (
+            <View style={styles.sideOverlay}>
+              <View style={styles.overlayDark} />
+            </View>
+          )}
         </View>
 
         {/* Bottom overlay */}
-        <BlurView intensity={5} tint="dark" style={[styles.overlaySection, { flex: 1 }]}>
-          <View style={styles.overlayDark} />
-        </BlurView>
+        {Platform.OS === "ios" ? (
+          <BlurView intensity={5} tint="dark" style={[styles.overlaySection, { flex: 1 }]}>
+            <View style={styles.overlayDark} />
+          </BlurView>
+        ) : (
+          <View style={[styles.overlaySection, { flex: 1 }]}>
+            <View style={styles.overlayDark} />
+          </View>
+        )}
       </View>
 
       {/* UI Controls Layer */}
@@ -386,9 +417,15 @@ export default function ScannerScreen() {
           style={[styles.instructionContainer, { top: (SCREEN_HEIGHT + SCAN_FRAME_HEIGHT) / 2 + 24 }]}
           pointerEvents="none"
         >
-          <BlurView intensity={40} tint="dark" style={styles.instructionBlur}>
-            <Text style={styles.instructionText}>{t.scanner.instruction}</Text>
-          </BlurView>
+          {Platform.OS === "ios" ? (
+            <BlurView intensity={40} tint="dark" style={styles.instructionBlur}>
+              <Text style={styles.instructionText}>{t.scanner.instruction}</Text>
+            </BlurView>
+          ) : (
+            <View style={[styles.instructionBlur, { backgroundColor: "rgba(0,0,0,0.65)" }]}>
+              <Text style={styles.instructionText}>{t.scanner.instruction}</Text>
+            </View>
+          )}
         </Animated.View>
 
         {/* Bottom Control Dock */}

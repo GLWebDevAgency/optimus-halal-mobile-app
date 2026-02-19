@@ -31,6 +31,7 @@ import { AlertsSkeleton } from "@/components/skeletons";
 import { useTranslation, useHaptics, useTheme } from "@/hooks";
 import type { TranslationKeys } from "@/hooks/useTranslation";
 import { trpc } from "@/lib/trpc";
+import { semantic } from "@/theme/colors";
 
 // ── Severity → Visual Config ────────────────────────────────
 
@@ -46,17 +47,17 @@ const SEVERITY_CONFIG: Record<
 > = {
   critical: {
     icon: "error",
-    color: "#ef4444",
+    color: semantic.danger.base,
     bgColor: "rgba(239,68,68,0.1)",
   },
   warning: {
     icon: "warning",
-    color: "#f59e0b",
+    color: semantic.warning.base,
     bgColor: "rgba(245,158,11,0.15)",
   },
   info: {
     icon: "info",
-    color: "#3b82f6",
+    color: semantic.info.base,
     bgColor: "rgba(59,130,246,0.1)",
   },
 };
@@ -98,15 +99,25 @@ interface AlertItem {
   categoryId: string | null;
 }
 
+/** Theme colors subset needed by AlertCard */
+interface ThemeColors {
+  textPrimary: string;
+  textSecondary: string;
+  textMuted: string;
+  borderLight: string;
+  buttonSecondary: string;
+}
+
 interface AlertCardProps {
   alert: AlertItem;
   index: number;
   isDark: boolean;
+  colors: ThemeColors;
   t: TranslationKeys;
   locale: string;
 }
 
-const AlertCard = React.memo(function AlertCard({ alert, index, isDark, t, locale }: AlertCardProps) {
+const AlertCard = React.memo(function AlertCard({ alert, index, isDark, colors, t, locale }: AlertCardProps) {
   const severity = (alert.severity as Severity) || "info";
   const config = SEVERITY_CONFIG[severity] ?? SEVERITY_CONFIG.info;
   const severityLabel = t.alerts.severity[severity] ?? t.alerts.severity.info;
@@ -149,7 +160,10 @@ const AlertCard = React.memo(function AlertCard({ alert, index, isDark, t, local
               {severityLabel}
             </Text>
           </View>
-          <Text className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+          <Text
+            className="text-xs font-medium"
+            style={{ color: colors.textMuted }}
+          >
             {formatRelativeTime(alert.publishedAt, t, locale)}
           </Text>
         </View>
@@ -178,15 +192,24 @@ const AlertCard = React.memo(function AlertCard({ alert, index, isDark, t, local
             {(severity !== "critical" || !alert.imageUrl) && (
               <View className="flex-row gap-4 mb-3">
                 <View className="flex-1">
-                  <Text className="text-slate-900 dark:text-white font-bold text-lg leading-tight mb-2">
+                  <Text
+                    className="font-bold text-lg leading-tight mb-2"
+                    style={{ color: colors.textPrimary }}
+                  >
                     {alert.title}
                   </Text>
-                  <Text className="text-slate-600 dark:text-gray-300 text-sm leading-relaxed">
+                  <Text
+                    className="text-sm leading-relaxed"
+                    style={{ color: colors.textSecondary }}
+                  >
                     {alert.summary}
                   </Text>
                 </View>
                 {severity !== "critical" && alert.imageUrl && (
-                  <View className="w-24 h-24 rounded-lg bg-slate-100 dark:bg-slate-700 overflow-hidden">
+                  <View
+                    className="w-24 h-24 rounded-lg overflow-hidden"
+                    style={{ backgroundColor: colors.buttonSecondary }}
+                  >
                     <Image
                       source={{ uri: alert.imageUrl }}
                       className="w-full h-full"
@@ -201,19 +224,31 @@ const AlertCard = React.memo(function AlertCard({ alert, index, isDark, t, local
 
             {/* Summary for critical with image */}
             {severity === "critical" && alert.imageUrl && (
-              <Text className="text-slate-600 dark:text-gray-300 text-sm leading-relaxed mb-3">
+              <Text
+                className="text-sm leading-relaxed mb-3"
+                style={{ color: colors.textSecondary }}
+              >
                 {alert.summary}
               </Text>
             )}
 
             {/* Source link */}
             {alert.sourceUrl && (
-              <View className="pt-3 border-t border-slate-100 dark:border-slate-700 flex-row items-center justify-between">
+              <View
+                className="pt-3 flex-row items-center justify-between"
+                style={{ borderTopWidth: 1, borderTopColor: colors.borderLight }}
+              >
                 <View className="flex-row items-center gap-2">
-                  <View className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 items-center justify-center">
+                  <View
+                    className="w-5 h-5 rounded-full items-center justify-center"
+                    style={{ backgroundColor: colors.buttonSecondary }}
+                  >
                     <MaterialIcons name="public" size={12} color="#64748b" />
                   </View>
-                  <Text className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  <Text
+                    className="text-xs font-semibold"
+                    style={{ color: colors.textMuted }}
+                  >
                     {t.alerts.source}
                   </Text>
                 </View>
@@ -299,21 +334,26 @@ export default function AlertsScreen() {
   }
 
   return (
-    <View className="flex-1 bg-background-light dark:bg-background-dark">
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
       {/* Background Islamic Pattern */}
       <IslamicPattern variant="tessellation" opacity={0.02} />
 
       {/* Header */}
       <Animated.View
         entering={FadeIn.duration(400)}
-        className="bg-background-light/95 dark:bg-background-dark/95 border-b border-slate-100 dark:border-slate-800"
-        style={{ paddingTop: insets.top }}
+        style={{
+          paddingTop: insets.top,
+          backgroundColor: isDark ? "rgba(10,26,16,0.95)" : "rgba(248,250,249,0.95)",
+          borderBottomWidth: 1,
+          borderBottomColor: colors.borderLight,
+        }}
       >
         <View className="flex-row items-center justify-between px-4 py-3">
           <View className="flex-row items-center gap-3">
             <View
-              className="w-8 h-8 rounded-full bg-primary items-center justify-center"
+              className="w-8 h-8 rounded-full items-center justify-center"
               style={{
+                backgroundColor: colors.primary,
                 shadowColor: colors.primary,
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.3,
@@ -324,7 +364,8 @@ export default function AlertsScreen() {
             </View>
             <Text
               accessibilityRole="header"
-              className="text-slate-900 dark:text-white text-xl font-bold tracking-tight"
+              className="text-xl font-bold tracking-tight"
+              style={{ color: colors.textPrimary }}
             >
               {t.alerts.title}
             </Text>
@@ -351,33 +392,38 @@ export default function AlertsScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 12, gap: 8 }}
         >
-          {FILTERS.map((filter) => (
-            <TouchableOpacity
-              key={filter.id}
-              onPress={() => handleFilterChange(filter.id)}
-              className={`h-9 px-5 rounded-full items-center justify-center ${
-                activeFilter === filter.id
-                  ? "bg-slate-900 dark:bg-white"
-                  : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
-              }`}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel={`${filterLabels[filter.id]}${
-                activeFilter === filter.id ? `, ${t.common.selected}` : ""
-              }`}
-              accessibilityHint={filterLabels[filter.id]}
-            >
-              <Text
-                className={`text-sm ${
-                  activeFilter === filter.id
-                    ? "font-semibold text-white dark:text-slate-900"
-                    : "font-medium text-slate-600 dark:text-gray-300"
+          {FILTERS.map((filter) => {
+            const isActive = activeFilter === filter.id;
+            return (
+              <TouchableOpacity
+                key={filter.id}
+                onPress={() => handleFilterChange(filter.id)}
+                className="h-9 px-5 rounded-full items-center justify-center"
+                style={
+                  isActive
+                    ? { backgroundColor: isDark ? "#ffffff" : "#0f172a" }
+                    : { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.borderLight }
+                }
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={`${filterLabels[filter.id]}${
+                  isActive ? `, ${t.common.selected}` : ""
                 }`}
+                accessibilityHint={filterLabels[filter.id]}
               >
-                {filterLabels[filter.id]}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text
+                  className={`text-sm ${isActive ? "font-semibold" : "font-medium"}`}
+                  style={{
+                    color: isActive
+                      ? (isDark ? "#0f172a" : "#ffffff")
+                      : colors.textSecondary,
+                  }}
+                >
+                  {filterLabels[filter.id]}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
 
       </Animated.View>
@@ -390,15 +436,19 @@ export default function AlertsScreen() {
             size={48}
             color={isDark ? "#475569" : "#94a3b8"}
           />
-          <Text className="text-slate-500 dark:text-slate-400 text-base font-medium mt-4 text-center">
+          <Text
+            className="text-base font-medium mt-4 text-center"
+            style={{ color: colors.textMuted }}
+          >
             {t.alerts.loadError}
           </Text>
           <TouchableOpacity
             onPress={() => alertsQuery.refetch()}
-            className="mt-4 bg-primary px-6 py-2.5 rounded-full"
+            className="mt-4 px-6 py-2.5 rounded-full"
+            style={{ backgroundColor: colors.primary }}
             activeOpacity={0.8}
           >
-            <Text className="text-slate-900 font-bold text-sm">{t.common.retry}</Text>
+            <Text className="font-bold text-sm" style={{ color: "#0d1b13" }}>{t.common.retry}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -409,7 +459,7 @@ export default function AlertsScreen() {
           data={alertItems}
           keyExtractor={(item) => item.id}
           renderItem={({ item, index }) => (
-            <AlertCard alert={item} index={index} isDark={isDark} t={t} locale={locale} />
+            <AlertCard alert={item} index={index} isDark={isDark} colors={colors} t={t} locale={locale} />
           )}
           contentContainerStyle={{
             padding: 16,

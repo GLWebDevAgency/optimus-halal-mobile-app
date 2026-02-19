@@ -88,7 +88,7 @@ interface ThemeState {
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
-      theme: "light", // Light mode par défaut
+      theme: "system", // Respecte la preference systeme de l'utilisateur
       setTheme: (theme) => set({ theme }),
     }),
     {

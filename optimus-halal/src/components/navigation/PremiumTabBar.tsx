@@ -39,7 +39,7 @@ import Animated, {
 import { LinearGradient } from "expo-linear-gradient";
 import Svg, { Defs, RadialGradient, Stop, Circle } from "react-native-svg";
 
-import { brand } from "@/theme/colors";
+import { brand, gradients, darkTheme } from "@/theme/colors";
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -261,8 +261,12 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
     return () => {
       cancelAnimation(pulseScale);
       cancelAnimation(glowOpacity);
+      cancelAnimation(scale);
+      cancelAnimation(rotation);
+      cancelAnimation(glowScale);
+      cancelAnimation(innerGlow);
     };
-  }, [reducedMotion]);
+  }, [reducedMotion, pulseScale, glowOpacity, scale, rotation, glowScale, innerGlow]);
 
   // Scanning animation when active
   useEffect(() => {
@@ -355,7 +359,7 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
           <LinearGradient
             colors={isDark 
               ? ["rgba(255,255,255,0.95)", "rgba(240,255,245,0.9)"]
-              : ["#0d1b13", "#152a1c"]
+              : [...gradients.heroDark]
             }
             style={styles.centerButtonGradient}
           >
@@ -367,7 +371,7 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
               <MaterialIcons
                 name="qr-code-scanner"
                 size={30}
-                color={isDark ? "#0d1b13" : brand.primary}
+                color={isDark ? darkTheme.textInverse : brand.primary}
               />
             </View>
           </LinearGradient>
@@ -439,12 +443,25 @@ export function PremiumTabBar({ state, navigation }: BottomTabBarProps) {
 
   return (
     <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 8) }]}>
-      {/* Glassmorphism background */}
-      <BlurView
-        intensity={isDark ? 60 : 90}
-        tint={isDark ? "dark" : "light"}
-        style={styles.blurContainer}
-      />
+      {/* Glassmorphism background — BlurView is iOS-only; Android gets opaque fallback */}
+      {Platform.OS === "ios" ? (
+        <BlurView
+          intensity={isDark ? 60 : 90}
+          tint={isDark ? "dark" : "light"}
+          style={styles.blurContainer}
+        />
+      ) : (
+        <View
+          style={[
+            styles.blurContainer,
+            {
+              backgroundColor: isDark
+                ? "rgba(10, 20, 14, 0.97)"
+                : "rgba(255, 255, 255, 0.97)",
+            },
+          ]}
+        />
+      )}
       
       {/* Background overlay with gradient */}
       <View style={[
@@ -523,6 +540,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 100,
+    ...Platform.select({
+      android: {
+        borderTopLeftRadius: 28,
+        borderTopRightRadius: 28,
+        elevation: 24,
+      },
+    }),
   },
   blurContainer: {
     ...StyleSheet.absoluteFillObject,
@@ -541,9 +565,6 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: -12 },
         shadowOpacity: 0.15,
         shadowRadius: 28,
-      },
-      android: {
-        elevation: 24,
       },
     }),
   },
@@ -631,7 +652,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 10,
     fontWeight: "bold",
-    color: "#ffffff",
+    color: brand.white,
   },
   centerButtonWrapper: {
     position: "relative",
@@ -668,10 +689,9 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    overflow: "hidden",
     ...Platform.select({
       ios: {
-        shadowColor: "#13ec6a",
+        shadowColor: brand.primary,
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.5,
         shadowRadius: 16,

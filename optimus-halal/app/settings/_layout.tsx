@@ -19,8 +19,8 @@ export default function SettingsLayout() {
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: colors.background },
-          animation: "fade_from_bottom",
-          animationDuration: 300,
+          animation: "slide_from_right",
+          animationDuration: 250,
           gestureEnabled: true,
           gestureDirection: "horizontal",
         }}

@@ -7,6 +7,7 @@
 import React from "react";
 import { View, ViewProps, Text } from "react-native";
 import { Image } from "expo-image";
+import { brand } from "@/theme/colors";
 
 export interface AvatarProps extends ViewProps {
   source?: string;
@@ -20,7 +21,7 @@ export interface AvatarProps extends ViewProps {
 const sizeConfig = {
   xs: { container: 24, text: 10, border: 1, badge: 6 },
   sm: { container: 32, text: 12, border: 2, badge: 8 },
-  md: { container: 40, text: 14, border: 2, badge: 10 },
+  md: { container: 44, text: 14, border: 2, badge: 10 },
   lg: { container: 48, text: 16, border: 2, badge: 12 },
   xl: { container: 64, text: 20, border: 3, badge: 14 },
   "2xl": { container: 96, text: 28, border: 4, badge: 18 },
@@ -39,7 +40,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   fallback = "?",
   borderColor = "none",
   showBadge = false,
-  badgeColor = "#13ec6a",
+  badgeColor = brand.primary,
   className = "",
   ...props
 }) => {

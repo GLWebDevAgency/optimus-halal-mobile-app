@@ -546,7 +546,7 @@ export default function FavoritesScreen() {
             {t.favorites.emptyHint}
           </Text>
           <TouchableOpacity
-            onPress={() => router.push("/(tabs)/scanner")}
+            onPress={() => router.navigate("/(tabs)/scanner")}
             style={{
               marginTop: 24,
               backgroundColor: colors.primary,
@@ -583,7 +583,7 @@ export default function FavoritesScreen() {
                 index={index}
                 onRemove={() => handleRemove(item.productId)}
                 onView={() => router.push(`/scan-result?barcode=${item.barcode}`)}
-                onScan={() => router.push("/(tabs)/scanner")}
+                onScan={() => router.navigate("/(tabs)/scanner")}
                 isDark={isDark}
                 colors={colors}
                 t={t}
@@ -626,7 +626,7 @@ export default function FavoritesScreen() {
                 {t.favorites.incompleteListHint}
               </Text>
               <TouchableOpacity
-                onPress={() => router.push("/(tabs)/scanner")}
+                onPress={() => router.navigate("/(tabs)/scanner")}
                 style={{
                   marginTop: 16,
                   flexDirection: "row",

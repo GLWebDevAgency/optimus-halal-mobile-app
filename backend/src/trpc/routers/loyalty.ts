@@ -196,4 +196,80 @@ export const loyaltyRouter = router({
 
       return rows.map((row) => ({ ...row, id: hashUserId(row.id) }));
     }),
+
+  // ── Streak Freeze ─────────────────────────────────────
+
+  /** Get current streak info including freeze tokens and milestones */
+  getStreakInfo: protectedProcedure.query(async ({ ctx }) => {
+    const user = await ctx.db.query.users.findFirst({
+      where: eq(users.id, ctx.userId),
+      columns: {
+        currentStreak: true,
+        longestStreak: true,
+        lastScanDate: true,
+        streakFreezeCount: true,
+        streakFreezeLastUsed: true,
+        subscriptionTier: true,
+      },
+    });
+    if (!user) return null;
+
+    const MILESTONES = [3, 7, 14, 30, 60, 100, 365];
+    const nextMilestone = MILESTONES.find((m) => m > (user.currentStreak ?? 0)) ?? null;
+    const milestonesReached = MILESTONES.filter((m) => m <= (user.currentStreak ?? 0));
+
+    return {
+      currentStreak: user.currentStreak,
+      longestStreak: user.longestStreak,
+      lastScanDate: user.lastScanDate,
+      freezeCount: user.streakFreezeCount,
+      freezeLastUsed: user.streakFreezeLastUsed,
+      nextMilestone,
+      milestonesReached,
+      isPremium: user.subscriptionTier === "premium",
+    };
+  }),
+
+  /** Buy a streak freeze with loyalty points (50 points per freeze, max 3) */
+  buyStreakFreeze: protectedProcedure.mutation(async ({ ctx }) => {
+    const FREEZE_COST = 50;
+    const MAX_FREEZES = 3;
+
+    return ctx.db.transaction(async (tx) => {
+      const user = await tx.query.users.findFirst({
+        where: eq(users.id, ctx.userId),
+        columns: { streakFreezeCount: true },
+      });
+      if (!user) throw notFound("Utilisateur introuvable");
+      if ((user.streakFreezeCount ?? 0) >= MAX_FREEZES) {
+        throw badRequest(`Vous avez déjà le maximum de ${MAX_FREEZES} gels de série`);
+      }
+
+      const [balance] = await tx
+        .select({ total: sql<number>`COALESCE(SUM(${pointTransactions.points}), 0)::int` })
+        .from(pointTransactions)
+        .where(eq(pointTransactions.userId, ctx.userId));
+
+      if ((balance?.total ?? 0) < FREEZE_COST) {
+        throw badRequest(`Points insuffisants (${FREEZE_COST} requis)`);
+      }
+
+      // Deduct points
+      await tx.insert(pointTransactions).values({
+        userId: ctx.userId,
+        action: "redemption",
+        points: -FREEZE_COST,
+        description: "Achat: Gel de série",
+        referenceType: "streak_freeze",
+      });
+
+      // Add freeze token
+      await tx
+        .update(users)
+        .set({ streakFreezeCount: sql`${users.streakFreezeCount} + 1` })
+        .where(eq(users.id, ctx.userId));
+
+      return { newFreezeCount: (user.streakFreezeCount ?? 0) + 1, cost: FREEZE_COST };
+    });
+  }),
 });
