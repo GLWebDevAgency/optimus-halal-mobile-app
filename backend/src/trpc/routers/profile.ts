@@ -3,6 +3,7 @@ import { eq, and } from "drizzle-orm";
 import { router, protectedProcedure } from "../trpc.js";
 import { users, addresses, safeUserColumns, safeUserReturning } from "../../db/schema/index.js";
 import { notFound } from "../../lib/errors.js";
+import { env } from "../../lib/env.js";
 
 export const profileRouter = router({
   getProfile: protectedProcedure.query(async ({ ctx }) => {
@@ -30,6 +31,7 @@ export const profileRouter = router({
                 "res.cloudinary.com",
                 "i.imgur.com",
                 "storage.googleapis.com",
+                env.R2_PUBLIC_DOMAIN,
               ];
               return allowed.some((d) => hostname === d || hostname.endsWith("." + d));
             } catch {
