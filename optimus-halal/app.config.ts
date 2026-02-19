@@ -63,7 +63,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     "expo-secure-store",
     "expo-font",
-    "@sentry/react-native",
+    [
+      "@sentry/react-native",
+      {
+        organization: "limame-ghassene",
+        project: "optimus-halal",
+      },
+    ],
     "@rnmapbox/maps",
   ],
   runtimeVersion: {
