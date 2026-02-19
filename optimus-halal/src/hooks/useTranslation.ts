@@ -35,6 +35,7 @@ function promptRTLRestartIfNeeded(newLang: Language): void {
         onPress: async () => {
           try {
             // @ts-expect-error — expo-updates only available in EAS production builds
+            // eslint-disable-next-line import/no-unresolved
             const Updates = await import("expo-updates");
             await (Updates as { reloadAsync: () => Promise<void> }).reloadAsync();
           } catch {
