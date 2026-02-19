@@ -34,20 +34,27 @@
 
 ## 2. Actions Manuelles Requises (TOI SEUL)
 
-### 2.1 Railway — Appliquer la migration DB
+### 2.1 Railway — Migrations + Seeds (AUTOMATIQUE)
 
-La migration 0004 doit etre appliquee sur la base de production.
+> **Les migrations et seeds sont maintenant automatiques.** Le `preDeployCommand` dans `railway.toml` execute `node dist/db/entrypoint.js` avant chaque deploy. Ce pipeline fait:
+>
+> 1. **Migrate** — applique toutes les migrations Drizzle pendantes
+> 2. **Seed** — 6 phases idempotentes (certifiers, stores, boycott, additives, alerts, articles)
+> 3. **Verify** — verifie que les tables requises existent
+>
+> **Aucune action manuelle requise** — a chaque `git push`, Railway execute le pipeline avant de demarrer le serveur.
+
+Si tu dois forcer une re-execution manuelle:
 
 ```bash
-# Option A: Via Railway CLI
-railway run npx drizzle-kit migrate
+# Via Railway CLI
+railway run node dist/db/entrypoint.js
 
-# Option B: Manuellement — copier le SQL de:
-# backend/drizzle/0004_bitter_green_goblin.sql
-# et l'executer dans le Railway Postgres console
+# En local
+cd backend && pnpm db:setup
 ```
 
-**Contenu de la migration:**
+**Derniere migration (0004):**
 - CREATE TYPE `subscription_tier` ('free', 'premium')
 - CREATE TYPE `subscription_event_type` (8 types d'evenements)
 - CREATE TABLE `subscription_events` (11 colonnes)
@@ -239,7 +246,7 @@ Hono Webhook Handler (backend/src/routes/webhook.ts)
 
 ## 7. Checklist de lancement
 
-- [ ] Migration 0004 appliquee sur Railway Postgres
+- [x] Migrations automatiques via `preDeployCommand` (plus de step manuelle)
 - [ ] `REVENUECAT_WEBHOOK_SECRET` ajoute dans Railway env vars
 - [ ] Compte RevenueCat cree + projet configure
 - [ ] Entitlement `premium` cree dans RevenueCat
@@ -288,4 +295,60 @@ Hono Webhook Handler (backend/src/routes/webhook.ts)
 
 ---
 
-*Document genere le 2026-02-19 — Sprint 16-17 Premium Monetisation*
+## 9. DB Automation — Pipeline de deploiement
+
+### Architecture
+
+```text
+git push origin main
+    |
+    v
+Railway preDeployCommand
+    |
+    v
+entrypoint.js (backend/src/db/entrypoint.ts)
+    |
+    |-- Phase 1: MIGRATE
+    |   └── Drizzle programmatic migration (drizzle/*)
+    |
+    |-- Phase 2: SEED (skipped if NODE_ENV=test)
+    |   ├── 1. Certifiers (12 organismes halal)
+    |   ├── 2. Stores (boucheries, restaurants halal)
+    |   ├── 3. Boycott targets (BDS data)
+    |   ├── 4. Additives (200+ E-numbers + madhab rulings)
+    |   ├── 5. Alert categories + alerts
+    |   └── 6. Articles (Al-Kanz + editoriaux)
+    |
+    |-- Phase 3: VERIFY
+    |   └── Check required tables: users, products, refresh_tokens, scans, additives
+    |
+    v
+Server starts (Hono + tRPC)
+```
+
+### Commandes
+
+| Commande | Contexte | Description |
+|----------|----------|-------------|
+| `pnpm db:setup` | Dev local | Entrypoint complet (migrate + seed + verify) |
+| `pnpm db:seed:all` | Dev local | Seeds uniquement (sans migration) |
+| `pnpm db:migrate` | Dev local | Migration uniquement |
+| `./scripts/setup-test-db.sh` | Test local | Docker Postgres + migrate (pas de seeds) |
+
+### Environnements
+
+| Env             | Migrate | Seed                                     | Verify | Comportement erreur       |
+| --------------- | ------- | ---------------------------------------- | ------ | ------------------------- |
+| **production**  | Oui     | Oui (6 phases)                           | Oui    | Fail hard — deploy bloque |
+| **development** | Oui     | Oui (6 phases)                           | Oui    | Warning — continue        |
+| **test**        | Oui     | Non (tests gerent leurs propres donnees) | Oui    | Fail hard                 |
+
+### Idempotence
+
+Tous les seeds utilisent `ON CONFLICT DO UPDATE` ou `DO NOTHING` — safe a re-executer sur chaque deploy sans risque de doublons.
+
+---
+
+---
+
+Document mis a jour le 2026-02-19 — Sprint 16-17 Premium + DB Automation
