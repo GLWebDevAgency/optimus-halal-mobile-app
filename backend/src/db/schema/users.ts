@@ -18,6 +18,11 @@ export const madhabEnum = pgEnum("madhab", [
   "general",
 ]);
 
+export const subscriptionTierEnum = pgEnum("subscription_tier", [
+  "free",
+  "premium",
+]);
+
 export const users = pgTable(
   "users",
   {
@@ -57,6 +62,21 @@ export const users = pgTable(
       .defaultNow()
       .notNull()
       .$onUpdateFn(() => new Date()),
+    // ── Subscription ──
+    subscriptionTier: subscriptionTierEnum("subscription_tier")
+      .notNull()
+      .default("free"),
+    subscriptionExpiresAt: t.timestamp("subscription_expires_at", {
+      withTimezone: true,
+    }),
+    subscriptionProvider: t.varchar("subscription_provider", { length: 20 }),
+    // 'revenuecat' | 'stripe' | 'manual'
+    subscriptionProductId: t.varchar("subscription_product_id", {
+      length: 100,
+    }),
+    subscriptionExternalId: t.varchar("subscription_external_id", {
+      length: 255,
+    }),
   },
   (table) => [
     t.uniqueIndex("users_email_idx").on(table.email),
@@ -147,6 +167,11 @@ export const safeUserColumns = {
   isActive: true,
   createdAt: true,
   updatedAt: true,
+  subscriptionTier: true,
+  subscriptionExpiresAt: true,
+  subscriptionProvider: true,
+  subscriptionProductId: true,
+  // NOTE: subscriptionExternalId is NOT included (private)
 } as const;
 
 /**
@@ -180,7 +205,12 @@ export const safeUserReturning = {
   isActive: users.isActive,
   createdAt: users.createdAt,
   updatedAt: users.updatedAt,
+  subscriptionTier: users.subscriptionTier,
+  subscriptionExpiresAt: users.subscriptionExpiresAt,
+  subscriptionProvider: users.subscriptionProvider,
+  subscriptionProductId: users.subscriptionProductId,
+  // NOTE: subscriptionExternalId excluded
 };
 
 /** User type with sensitive fields (passwordHash) excluded. */
-export type SafeUser = Omit<User, "passwordHash">;
+export type SafeUser = Omit<User, "passwordHash" | "subscriptionExternalId">;
