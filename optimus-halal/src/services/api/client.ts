@@ -211,8 +211,7 @@ function createApiClient() {
 
             if (
               response.status === HTTP_STATUS.UNAUTHORIZED &&
-              refreshToken &&
-              !isRefreshing
+              refreshToken
             ) {
               await performTokenRefresh();
               return fetch(url, {

@@ -88,8 +88,17 @@ export const storeRouter = router({
       const cacheKey = `stores:v2:nearby:${gh}:${input.storeType ?? "all"}:${input.halalCertifiedOnly ? "1" : "0"}`;
 
       return withCache(ctx.redis, cacheKey, 300, async () => {
-        const radiusMeters = input.radiusKm * 1000;
+        const radiusMeters = Math.max(input.radiusKm * 1000, 100); // Guard: minimum 100m
         const point = sql`ST_SetSRID(ST_MakePoint(${input.longitude}, ${input.latitude}), 4326)::geography`;
+
+        // Relevance scoring formula — single source of truth (used in SELECT + ORDER BY)
+        const relevanceExpr = sql`(
+          0.35 * (1.0 - LEAST(ST_Distance("stores"."location", ${point}) / ${radiusMeters}, 1.0))
+          + 0.25 * CASE WHEN "stores"."halal_certified" THEN COALESCE("stores"."average_rating", 2.5) / 5.0 ELSE 0 END
+          + 0.20 * (ln(1 + COALESCE("stores"."review_count", 0)) / ln(501.0))
+          + 0.15 * CASE WHEN COALESCE("stores"."review_count", 0) > 0 THEN (COALESCE("stores"."average_rating", 2.5) - 1.0) / 4.0 ELSE 0.5 END
+          + 0.05 * (1.0 / (1 + EXTRACT(EPOCH FROM NOW() - COALESCE("stores"."updated_at", "stores"."created_at")) / 7776000.0))
+        )`;
 
         const conditions = [
           eq(stores.isActive, true),
@@ -132,23 +141,11 @@ export const storeRouter = router({
               LIMIT 1
             )`.as("today_close"),
             distance: sql<number>`round(ST_Distance("stores"."location", ${point})::numeric)`.as("distance"),
-            relevanceScore: sql<number>`round((
-              0.35 * (1.0 - LEAST(ST_Distance("stores"."location", ${point}) / ${radiusMeters}, 1.0))
-              + 0.25 * CASE WHEN "stores"."halal_certified" THEN COALESCE("stores"."average_rating", 2.5) / 5.0 ELSE 0 END
-              + 0.20 * (ln(1 + COALESCE("stores"."review_count", 0)) / ln(501.0))
-              + 0.15 * CASE WHEN COALESCE("stores"."review_count", 0) > 0 THEN (COALESCE("stores"."average_rating", 2.5) - 1.0) / 4.0 ELSE 0.5 END
-              + 0.05 * (1.0 / (1 + EXTRACT(EPOCH FROM NOW() - COALESCE("stores"."updated_at", "stores"."created_at")) / 7776000.0))
-            )::numeric, 3)`.as("relevance_score"),
+            relevanceScore: sql<number>`round(${relevanceExpr}::numeric, 3)`.as("relevance_score"),
           })
           .from(stores)
           .where(and(...conditions))
-          .orderBy(sql`(
-            0.35 * (1.0 - LEAST(ST_Distance("stores"."location", ${point}) / ${radiusMeters}, 1.0))
-            + 0.25 * CASE WHEN "stores"."halal_certified" THEN COALESCE("stores"."average_rating", 2.5) / 5.0 ELSE 0 END
-            + 0.20 * (ln(1 + COALESCE("stores"."review_count", 0)) / ln(501.0))
-            + 0.15 * CASE WHEN COALESCE("stores"."review_count", 0) > 0 THEN (COALESCE("stores"."average_rating", 2.5) - 1.0) / 4.0 ELSE 0.5 END
-            + 0.05 * (1.0 / (1 + EXTRACT(EPOCH FROM NOW() - COALESCE("stores"."updated_at", "stores"."created_at")) / 7776000.0))
-          ) DESC`)
+          .orderBy(sql`${relevanceExpr} DESC`)
           .limit(input.limit);
       });
     }),

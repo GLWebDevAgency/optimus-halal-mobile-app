@@ -239,19 +239,20 @@ const StoreDetailCard = React.memo(function StoreDetailCard({
 const StoreCard = React.memo(function StoreCard({
   store,
   isSelected,
-  onPress,
+  onPressId,
   colors,
 }: {
   store: StoreFeatureProperties;
   isSelected: boolean;
-  onPress: () => void;
+  onPressId: (storeId: string) => void;
   colors: ReturnType<typeof useTheme>["colors"];
 }) {
   const certLabel = store.certifier !== "none" ? store.certifier.toUpperCase() : null;
+  const handlePress = useCallback(() => onPressId(store.id), [onPressId, store.id]);
 
   return (
     <TouchableOpacity
-      onPress={onPress}
+      onPress={handlePress}
       activeOpacity={0.9}
       accessibilityRole="button"
       accessibilityLabel={`${store.name}, ${store.city}, ${formatDistance(store.distance)}`}
@@ -521,13 +522,25 @@ export default function MapScreen() {
 
   const toggleFilter = useCallback((filterId: string) => {
     impact();
-    setActiveFilters((prev) =>
-      prev.includes(filterId)
-        ? prev.filter((id) => id !== filterId)
-        : [...prev, filterId]
-    );
-    trackEvent("map_filter_toggled", { filter_id: filterId, action: activeFilters.includes(filterId) ? "disabled" : "enabled" });
-  }, [impact, activeFilters]);
+    setActiveFilters((prev) => {
+      const wasActive = prev.includes(filterId);
+      const isTypeFilter = FILTER_IDS.some((f) => f.id === filterId && "storeType" in f);
+
+      let next: string[];
+      if (wasActive) {
+        next = prev.filter((id) => id !== filterId);
+      } else if (isTypeFilter) {
+        // Type filters are mutually exclusive — deselect other types first
+        const otherTypeIds = FILTER_IDS.filter((f) => "storeType" in f && f.id !== filterId).map((f) => f.id);
+        next = [...prev.filter((id) => !otherTypeIds.includes(id)), filterId];
+      } else {
+        next = [...prev, filterId];
+      }
+
+      trackEvent("map_filter_toggled", { filter_id: filterId, action: wasActive ? "disabled" : "enabled" });
+      return next;
+    });
+  }, [impact]);
 
   const handleSearchTextChange = useCallback((text: string) => {
     setSearchText(text);
@@ -569,6 +582,14 @@ export default function MapScreen() {
       padding: { bottom: SCREEN_HEIGHT * 0.35, top: 0, left: 0, right: 0 },
     });
   }, [impact]);
+
+  // Stable callback for StoreCard (avoids breaking React.memo with anonymous lambdas)
+  const storesRef = useRef(stores);
+  storesRef.current = stores;
+  const handleStoreCardPressById = useCallback((storeId: string) => {
+    const store = storesRef.current.find((s) => s.id === storeId);
+    if (store) handleStoreCardPress(store);
+  }, [handleStoreCardPress]);
 
   const handleCloseDetail = useCallback(() => {
     setSelectedStoreId(null);
@@ -1074,7 +1095,7 @@ export default function MapScreen() {
                       <StoreCard
                         store={item as StoreFeatureProperties}
                         isSelected={item.id === selectedStoreId}
-                        onPress={() => handleStoreCardPress(item)}
+                        onPressId={handleStoreCardPressById}
                         colors={colors}
                       />
                     </Animated.View>
