@@ -74,3 +74,21 @@ const isAuthenticated = middleware(async ({ ctx, next }) => {
 });
 
 export const protectedProcedure = t.procedure.use(isAuthenticated);
+
+const isPremium = middleware(async ({ ctx, next }) => {
+  if (!ctx.userId) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "You must be logged in to access this resource",
+    });
+  }
+  if (ctx.subscriptionTier !== "premium") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Cette fonctionnalite necessite Optimus+",
+    });
+  }
+  return next({ ctx });
+});
+
+export const premiumProcedure = t.procedure.use(isAuthenticated).use(isPremium);

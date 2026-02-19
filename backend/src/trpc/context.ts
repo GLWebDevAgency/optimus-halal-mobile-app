@@ -1,5 +1,7 @@
 import type { Context as HonoContext } from "hono";
+import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
+import { users } from "../db/schema/index.js";
 import { redis } from "../lib/redis.js";
 import { verifyAccessToken } from "../services/auth.service.js";
 import { logger } from "../lib/logger.js";
@@ -8,6 +10,7 @@ export interface Context {
   db: typeof db;
   redis: typeof redis;
   userId: string | null;
+  subscriptionTier: "free" | "premium";
   requestId: string;
   [key: string]: unknown;
 }
@@ -29,10 +32,20 @@ export async function createContext(c: HonoContext): Promise<Context> {
     }
   }
 
+  let subscriptionTier: "free" | "premium" = "free";
+  if (userId) {
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+      columns: { subscriptionTier: true },
+    });
+    subscriptionTier = user?.subscriptionTier ?? "free";
+  }
+
   return {
     db,
     redis,
     userId,
+    subscriptionTier,
     requestId: crypto.randomUUID(),
   };
 }
