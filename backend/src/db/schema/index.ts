@@ -11,3 +11,4 @@ export * from "./boycott.js";
 export * from "./certifiers.js";
 export * from "./articles.js";
 export * from "./additives.js";
+export * from "./subscriptions.js";
