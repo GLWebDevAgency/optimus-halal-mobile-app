@@ -14,6 +14,7 @@ import { db } from "./db/index.js";
 import { redis } from "./lib/redis.js";
 import { sql } from "drizzle-orm";
 import { initSentry, Sentry } from "./lib/sentry.js";
+import { webhookRoutes } from "./routes/webhook.js";
 
 initSentry();
 
@@ -76,6 +77,9 @@ app.get("/health", async (c) => {
 
   return c.json(checks, checks.status === "ok" ? 200 : 503);
 });
+
+// ── Webhook Routes ──────────────────────────────────────
+app.route("/webhooks", webhookRoutes);
 
 // ── tRPC Handler ──────────────────────────────────────────
 
