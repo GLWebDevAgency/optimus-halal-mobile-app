@@ -17,8 +17,8 @@ export const profileRouter = router({
   updateProfile: protectedProcedure
     .input(
       z.object({
-        displayName: z.string().min(2).max(100).optional(),
-        phoneNumber: z.string().max(20).optional(),
+        displayName: z.string().trim().min(2).max(100).optional(),
+        phoneNumber: z.string().trim().max(20).optional(),
         avatarUrl: z.string().url().refine(
           (url) => {
             try {
@@ -38,14 +38,14 @@ export const profileRouter = router({
           },
           { message: "URL d'avatar non autorisée" }
         ).optional(),
-        bio: z.string().max(500).optional(),
-        city: z.string().max(100).optional(),
+        bio: z.string().trim().max(500).optional(),
+        city: z.string().trim().max(100).optional(),
         preferredLanguage: z.enum(["fr", "en", "ar"]).optional(),
         halalStrictness: z
           .enum(["relaxed", "moderate", "strict", "very_strict"])
           .optional(),
-        dietaryRestrictions: z.array(z.string()).optional(),
-        allergens: z.array(z.string()).optional(),
+        dietaryRestrictions: z.array(z.string()).max(50).optional(),
+        allergens: z.array(z.string()).max(50).optional(),
         madhab: z
           .enum(["hanafi", "shafii", "maliki", "hanbali", "general"])
           .optional(),
@@ -77,19 +77,19 @@ export const profileRouter = router({
   addAddress: protectedProcedure
     .input(
       z.object({
-        label: z.string().max(50).optional(),
+        label: z.string().trim().max(50).optional(),
         addressType: z.enum(["home", "work", "other"]).default("home"),
-        fullName: z.string().min(2).max(100),
-        phone: z.string().max(20).optional(),
-        street: z.string().min(1),
-        streetNumber: z.string().max(20).optional(),
-        apartment: z.string().max(50).optional(),
-        city: z.string().min(1).max(100),
-        postalCode: z.string().min(1).max(10),
-        country: z.string().max(50).default("France"),
-        instructions: z.string().max(500).optional(),
-        latitude: z.number().optional(),
-        longitude: z.number().optional(),
+        fullName: z.string().trim().min(2).max(100),
+        phone: z.string().trim().max(20).optional(),
+        street: z.string().trim().min(1),
+        streetNumber: z.string().trim().max(20).optional(),
+        apartment: z.string().trim().max(50).optional(),
+        city: z.string().trim().min(1).max(100),
+        postalCode: z.string().trim().min(1).max(10),
+        country: z.string().trim().max(50).default("France"),
+        instructions: z.string().trim().max(500).optional(),
+        latitude: z.number().min(-90).max(90).optional(),
+        longitude: z.number().min(-180).max(180).optional(),
         isDefault: z.boolean().default(false),
       })
     )
@@ -116,18 +116,18 @@ export const profileRouter = router({
     .input(
       z.object({
         id: z.string().uuid(),
-        label: z.string().max(50).optional(),
+        label: z.string().trim().max(50).optional(),
         addressType: z.enum(["home", "work", "other"]).optional(),
-        fullName: z.string().min(2).max(100).optional(),
-        phone: z.string().max(20).optional(),
-        street: z.string().min(1).optional(),
-        streetNumber: z.string().max(20).optional(),
-        apartment: z.string().max(50).optional(),
-        city: z.string().min(1).max(100).optional(),
-        postalCode: z.string().min(1).max(10).optional(),
-        instructions: z.string().max(500).optional(),
-        latitude: z.number().optional(),
-        longitude: z.number().optional(),
+        fullName: z.string().trim().min(2).max(100).optional(),
+        phone: z.string().trim().max(20).optional(),
+        street: z.string().trim().min(1).optional(),
+        streetNumber: z.string().trim().max(20).optional(),
+        apartment: z.string().trim().max(50).optional(),
+        city: z.string().trim().min(1).max(100).optional(),
+        postalCode: z.string().trim().min(1).max(10).optional(),
+        instructions: z.string().trim().max(500).optional(),
+        latitude: z.number().min(-90).max(90).optional(),
+        longitude: z.number().min(-180).max(180).optional(),
         isDefault: z.boolean().optional(),
       })
     )

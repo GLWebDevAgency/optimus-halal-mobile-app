@@ -20,7 +20,7 @@ export interface IconButtonProps extends TouchableOpacityProps {
 }
 
 const sizeConfig = {
-  sm: { button: 32, icon: 18, badge: 14 },
+  sm: { button: 44, icon: 18, badge: 14 },
   md: { button: 40, icon: 22, badge: 16 },
   lg: { button: 48, icon: 26, badge: 18 },
 };

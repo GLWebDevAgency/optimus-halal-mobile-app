@@ -187,9 +187,9 @@ export const scanRouter = router({
   scanBarcode: protectedProcedure
     .input(
       z.object({
-        barcode: z.string().min(1).max(50),
-        latitude: z.number().optional(),
-        longitude: z.number().optional(),
+        barcode: z.string().regex(/^[0-9]{4,14}$/, "Code-barres invalide"),
+        latitude: z.number().min(-90).max(90).optional(),
+        longitude: z.number().min(-180).max(180).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -541,11 +541,11 @@ export const scanRouter = router({
   requestAnalysis: protectedProcedure
     .input(
       z.object({
-        barcode: z.string().min(1).max(50),
-        productName: z.string().max(255).optional(),
-        brandName: z.string().max(255).optional(),
-        photoUrls: z.array(z.string().url()).optional(),
-        notes: z.string().max(1000).optional(),
+        barcode: z.string().regex(/^[0-9]{4,14}$/, "Code-barres invalide"),
+        productName: z.string().trim().max(255).optional(),
+        brandName: z.string().trim().max(255).optional(),
+        photoUrls: z.array(z.string().url()).max(10).optional(),
+        notes: z.string().trim().max(1000).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {

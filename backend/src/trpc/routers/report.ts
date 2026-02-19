@@ -19,8 +19,8 @@ export const reportRouter = router({
         ]),
         productId: z.string().uuid().optional(),
         storeId: z.string().uuid().optional(),
-        title: z.string().min(5).max(255),
-        description: z.string().min(10).max(2000),
+        title: z.string().trim().min(5).max(255),
+        description: z.string().trim().min(10).max(2000),
         photoUrls: z.array(z.string().url()).max(5).optional(),
       })
     )
@@ -57,7 +57,7 @@ export const reportRouter = router({
         productId: z.string().uuid().optional(),
         storeId: z.string().uuid().optional(),
         rating: z.number().int().min(1).max(5),
-        comment: z.string().max(2000).optional(),
+        comment: z.string().trim().max(2000).optional(),
         photoUrls: z.array(z.string().url()).max(5).optional(),
       })
     )

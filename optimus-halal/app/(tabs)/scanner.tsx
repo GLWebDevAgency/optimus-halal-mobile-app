@@ -45,7 +45,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 
 import { useTranslation } from "@/hooks/useTranslation";
-import { brand } from "@/theme/colors";
+import { brand, darkTheme } from "@/theme/colors";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const SCAN_FRAME_WIDTH = 320;
@@ -434,7 +434,7 @@ export default function ScannerScreen() {
                     accessibilityLabel={t.scanner.title}
                     accessibilityHint={t.scanner.instruction}
                   >
-                    <MaterialIcons name="qr-code-scanner" size={36} color="#0d1b13" />
+                    <MaterialIcons name="qr-code-scanner" size={36} color={colors.textPrimary} />
                   </TouchableOpacity>
                 </Animated.View>
               </View>
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
   permissionButtonText: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#0d1b13",
+    color: darkTheme.textInverse,
   },
   cancelButton: {
     paddingVertical: 12,

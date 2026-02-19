@@ -135,7 +135,7 @@ export const AvatarGroup: React.FC<AvatarGroupProps> = ({
       {visibleAvatars.map((avatar, index) => (
         <View
           key={index}
-          style={{ marginLeft: index > 0 ? -config.container / 3 : 0 }}
+          style={{ marginStart: index > 0 ? -config.container / 3 : 0 }}
         >
           <Avatar
             source={avatar.source}
@@ -151,7 +151,7 @@ export const AvatarGroup: React.FC<AvatarGroupProps> = ({
           style={{
             width: config.container,
             height: config.container,
-            marginLeft: -config.container / 3,
+            marginStart: -config.container / 3,
           }}
         >
           <Text

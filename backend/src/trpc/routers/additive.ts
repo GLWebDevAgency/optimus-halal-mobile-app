@@ -74,7 +74,7 @@ export const additiveRouter = router({
   getForProduct: publicProcedure
     .input(
       z.object({
-        additiveTags: z.array(z.string()),
+        additiveTags: z.array(z.string()).max(100),
         madhab: z
           .enum(["hanafi", "shafii", "maliki", "hanbali", "general"])
           .default("general"),

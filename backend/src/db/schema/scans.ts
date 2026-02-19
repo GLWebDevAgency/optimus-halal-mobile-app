@@ -18,7 +18,7 @@ export const scans = pgTable(
       .uuid("user_id")
       .references(() => users.id, { onDelete: "cascade" })
       .notNull(),
-    productId: t.uuid("product_id").references(() => products.id),
+    productId: t.uuid("product_id").references(() => products.id, { onDelete: "set null" }),
     barcode: t.varchar({ length: 50 }).notNull(),
     halalStatus: t.varchar("halal_status", { length: 20 }),
     confidenceScore: t.doublePrecision("confidence_score"),

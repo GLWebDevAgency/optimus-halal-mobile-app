@@ -27,10 +27,10 @@ export const authRouter = router({
   register: publicProcedure
     .input(
       z.object({
-        email: z.string().email(),
+        email: z.string().trim().email(),
         password: z.string().min(8).max(128),
-        displayName: z.string().min(2).max(100),
-        phoneNumber: z.string().optional(),
+        displayName: z.string().trim().min(2).max(100),
+        phoneNumber: z.string().trim().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -91,10 +91,10 @@ export const authRouter = router({
   login: publicProcedure
     .input(
       z.object({
-        email: z.string().email(),
+        email: z.string().trim().email(),
         password: z.string(),
-        deviceId: z.string().optional(),
-        deviceName: z.string().optional(),
+        deviceId: z.string().trim().optional(),
+        deviceName: z.string().trim().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -240,7 +240,7 @@ export const authRouter = router({
     }),
 
   requestPasswordReset: publicProcedure
-    .input(z.object({ email: z.string().email() }))
+    .input(z.object({ email: z.string().trim().email() }))
     .mutation(async ({ ctx, input }) => {
       const user = await ctx.db.query.users.findFirst({
         where: eq(users.email, input.email.toLowerCase().trim()),
@@ -268,7 +268,7 @@ export const authRouter = router({
   resetPassword: publicProcedure
     .input(
       z.object({
-        email: z.string().email(),
+        email: z.string().trim().email(),
         code: z.string().length(6),
         newPassword: z.string().min(8).max(128),
       })

@@ -32,6 +32,7 @@ import Animated, {
   withDelay,
   interpolate,
   cancelAnimation,
+  useReducedMotion,
   Easing,
   FadeIn,
 } from "react-native-reanimated";
@@ -86,7 +87,8 @@ function TabItem({ tab, isActive, onPress, badge, index }: TabItemProps) {
   const { isDark } = useTheme();
   const { impact } = useHaptics();
   const { t } = useTranslation();
-  
+  const reducedMotion = useReducedMotion();
+
   // Animation values
   const scale = useSharedValue(1);
   const iconScale = useSharedValue(1);
@@ -95,8 +97,15 @@ function TabItem({ tab, isActive, onPress, badge, index }: TabItemProps) {
   const glowOpacity = useSharedValue(0);
   const rippleScale = useSharedValue(0);
   const rippleOpacity = useSharedValue(0);
-  
+
   useEffect(() => {
+    if (reducedMotion) {
+      translateY.value = isActive ? -4 : 0;
+      iconScale.value = 1;
+      labelOpacity.value = isActive ? 1 : 0;
+      glowOpacity.value = isActive ? 1 : 0;
+      return;
+    }
     if (isActive) {
       translateY.value = withSpring(-4, { damping: 12, stiffness: 180 });
       iconScale.value = withSequence(
@@ -111,24 +120,27 @@ function TabItem({ tab, isActive, onPress, badge, index }: TabItemProps) {
       labelOpacity.value = withTiming(0, { duration: 150 });
       glowOpacity.value = withTiming(0, { duration: 200 });
     }
-  }, [isActive]);
+  }, [isActive, reducedMotion]);
 
   const triggerRipple = useCallback(() => {
+    if (reducedMotion) return;
     rippleScale.value = 0;
     rippleOpacity.value = 0.4;
     rippleScale.value = withTiming(1.5, { duration: 400, easing: Easing.out(Easing.cubic) });
     rippleOpacity.value = withDelay(100, withTiming(0, { duration: 300 }));
-  }, []);
+  }, [reducedMotion]);
 
   const handlePress = useCallback(async () => {
     impact();
-    triggerRipple();
-    scale.value = withSequence(
-      withSpring(0.9, { damping: 10, stiffness: 400 }),
-      withSpring(1, { damping: 12, stiffness: 300 })
-    );
+    if (!reducedMotion) {
+      triggerRipple();
+      scale.value = withSequence(
+        withSpring(0.9, { damping: 10, stiffness: 400 }),
+        withSpring(1, { damping: 12, stiffness: 300 })
+      );
+    }
     onPress();
-  }, [onPress, triggerRipple]);
+  }, [onPress, triggerRipple, reducedMotion]);
 
   const animatedContainerStyle = useAnimatedStyle(() => ({
     transform: [
@@ -218,16 +230,18 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
   const { isDark } = useTheme();
   const { notification } = useHaptics();
   const { t } = useTranslation();
-  
+  const reducedMotion = useReducedMotion();
+
   const scale = useSharedValue(1);
   const rotation = useSharedValue(0);
   const glowScale = useSharedValue(1);
-  const glowOpacity = useSharedValue(0.5);
+  const glowOpacity = useSharedValue(reducedMotion ? 0.25 : 0.5);
   const pulseScale = useSharedValue(1);
   const innerGlow = useSharedValue(0);
-  
-  // Continuous pulse animation (withRepeat on UI thread, no setInterval)
+
+  // Continuous pulse animation (skip when reduced motion)
   useEffect(() => {
+    if (reducedMotion) return;
     pulseScale.value = withRepeat(
       withSequence(
         withTiming(1.15, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
@@ -248,10 +262,14 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
       cancelAnimation(pulseScale);
       cancelAnimation(glowOpacity);
     };
-  }, []);
+  }, [reducedMotion]);
 
   // Scanning animation when active
   useEffect(() => {
+    if (reducedMotion) {
+      innerGlow.value = isActive ? 1 : 0;
+      return;
+    }
     if (isActive) {
       innerGlow.value = withTiming(1, { duration: 300 });
       rotation.value = withSequence(
@@ -260,21 +278,23 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
     } else {
       innerGlow.value = withTiming(0, { duration: 300 });
     }
-  }, [isActive]);
+  }, [isActive, reducedMotion]);
 
   const handlePress = useCallback(async () => {
     notification();
-    scale.value = withSequence(
-      withSpring(0.85, { damping: 8, stiffness: 400 }),
-      withSpring(1.1, { damping: 8, stiffness: 300 }),
-      withSpring(1, { damping: 10, stiffness: 200 })
-    );
-    glowScale.value = withSequence(
-      withSpring(1.5, { damping: 10, stiffness: 200 }),
-      withSpring(1, { damping: 15, stiffness: 200 })
-    );
+    if (!reducedMotion) {
+      scale.value = withSequence(
+        withSpring(0.85, { damping: 8, stiffness: 400 }),
+        withSpring(1.1, { damping: 8, stiffness: 300 }),
+        withSpring(1, { damping: 10, stiffness: 200 })
+      );
+      glowScale.value = withSequence(
+        withSpring(1.5, { damping: 10, stiffness: 200 }),
+        withSpring(1, { damping: 15, stiffness: 200 })
+      );
+    }
     onPress();
-  }, [onPress]);
+  }, [onPress, reducedMotion]);
 
   const animatedButtonStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -370,13 +390,15 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
 export function PremiumTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { isDark } = useTheme();
+  const reducedMotion = useReducedMotion();
 
   const currentRouteName = state.routes[state.index]?.name;
 
-  // Animated border glow
-  const borderGlow = useSharedValue(0);
-  
+  // Animated border glow (skip when reduced motion)
+  const borderGlow = useSharedValue(reducedMotion ? 0.45 : 0);
+
   useEffect(() => {
+    if (reducedMotion) return;
     borderGlow.value = withRepeat(
       withSequence(
         withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
@@ -386,7 +408,7 @@ export function PremiumTabBar({ state, navigation }: BottomTabBarProps) {
       false
     );
     return () => cancelAnimation(borderGlow);
-  }, []);
+  }, [reducedMotion]);
 
   const animatedBorderStyle = useAnimatedStyle(() => ({
     opacity: interpolate(borderGlow.value, [0, 1], [0.3, 0.6]),

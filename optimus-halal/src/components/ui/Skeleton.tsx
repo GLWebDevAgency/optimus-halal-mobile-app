@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     flex: 1,
-    marginLeft: 12,
+    marginStart: 12,
     justifyContent: "center",
   },
 });

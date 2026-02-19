@@ -227,7 +227,7 @@ export function PhoneInput({
             <MaterialIcons
               name="arrow-drop-down"
               size={20}
-              color="#94a3b8"
+              color={isDark ? "#94a3b8" : "#64748b"}
             />
           </TouchableOpacity>
 

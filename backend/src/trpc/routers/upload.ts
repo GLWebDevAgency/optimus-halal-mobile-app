@@ -45,7 +45,7 @@ export const uploadRouter = router({
     }),
 
   deleteImage: protectedProcedure
-    .input(z.object({ key: z.string().min(1) }))
+    .input(z.object({ key: z.string().regex(/^(avatars|reports)\/[0-9a-f-]{36}\/.+$/, "Clé de fichier invalide") }))
     .mutation(async ({ ctx, input }) => {
       // Strict ownership check: key must start with a known prefix + userId
       const isOwned =
