@@ -1,13 +1,16 @@
 /**
  * Additives Seed — 200+ E-numbers with halal status, toxicity, EFSA, and madhab rulings.
  * Idempotent via ON CONFLICT DO UPDATE / DO NOTHING.
+ *
+ * Standalone runner: pnpm db:seed:additives
+ * Data re-exported from additives-data.ts for unified runner.
  */
 
 import { db } from "../index.js";
 import { additives, additiveMadhabRulings } from "../schema/index.js";
 import type { NewAdditive, NewAdditiveMadhabRuling } from "../schema/additives.js";
 
-const ADDITIVES_DATA: NewAdditive[] = [
+export const ADDITIVES_DATA: NewAdditive[] = [
   // ── COLORANTS (E100-E199) ────────────────────────────
   { code: "E100", nameFr: "Curcumine", nameEn: "Curcumin", category: "colorant", halalStatusDefault: "halal", halalExplanationFr: "Colorant naturel extrait du curcuma", origin: "plant", toxicityLevel: "safe", adiMgPerKg: 3, riskPregnant: false, riskChildren: false, riskAllergic: false, efsaStatus: "approved" },
   { code: "E101", nameFr: "Riboflavine", nameEn: "Riboflavin", category: "colorant", halalStatusDefault: "halal", halalExplanationFr: "Vitamine B2, synthétique ou végétale", origin: "synthetic", toxicityLevel: "safe", riskPregnant: false, riskChildren: false, riskAllergic: false, efsaStatus: "approved" },
@@ -165,7 +168,7 @@ const ADDITIVES_DATA: NewAdditive[] = [
 
 // ── Madhab-Specific Rulings ─────────────────────────────────
 
-const MADHAB_RULINGS: Omit<NewAdditiveMadhabRuling, "id" | "createdAt">[] = [
+export const MADHAB_RULINGS: Omit<NewAdditiveMadhabRuling, "id" | "createdAt">[] = [
   // E441 Gelatin — most contested
   { additiveCode: "E441", madhab: "hanafi", ruling: "doubtful", explanationFr: "Débat sur l'istihalah (transformation chimique). Certains grands savants hanafis acceptent que la transformation rend la gélatine pure, mais la majorité des muftis contemporains considèrent la transformation insuffisante.", explanationEn: "Debate on istihalah. Some senior Hanafi scholars accept transformation makes gelatin pure, but most contemporary muftis consider it insufficient.", scholarlyReference: "SeekersGuidance, Darul Ifta Azaadville" },
   { additiveCode: "E441", madhab: "shafii", ruling: "haram", explanationFr: "L'école shafi'ite n'accepte pas l'istihalah pour les substances najis. La gélatine d'animal non-zabiha ou porcine reste impure.", explanationEn: "Shafi'i school does not accept istihalah for najis substances.", scholarlyReference: "IslamQA, Utrujj Foundation" },
@@ -248,12 +251,16 @@ async function seedAdditives() {
   console.log(`✅ ${MADHAB_RULINGS.length} madhab rulings seeded`);
 }
 
-seedAdditives()
-  .then(() => {
-    console.log("🎉 Additives seed complete!");
-    process.exit(0);
-  })
-  .catch((err) => {
-    console.error("❌ Seed failed:", err);
-    process.exit(1);
-  });
+// Only run standalone when executed directly (not imported by unified runner)
+const isMainModule = process.argv[1]?.includes("additives-seed");
+if (isMainModule) {
+  seedAdditives()
+    .then(() => {
+      console.log("🎉 Additives seed complete!");
+      process.exit(0);
+    })
+    .catch((err) => {
+      console.error("❌ Seed failed:", err);
+      process.exit(1);
+    });
+}

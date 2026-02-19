@@ -3,7 +3,7 @@ builder = "DOCKERFILE"
 dockerfilePath = "./Dockerfile"
 
 [deploy]
-preDeployCommand = "node dist/db/migrate.js"
+preDeployCommand = "node dist/db/entrypoint.js"
 startCommand = "node --max-old-space-size=512 --optimize-for-size dist/index.js"
 healthcheckPath = "/health"
 healthcheckTimeout = 30
