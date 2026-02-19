@@ -14,6 +14,7 @@ export function createTestCaller(overrides: Partial<Context> = {}) {
     db,
     redis,
     userId: null,
+    subscriptionTier: "free",
     requestId: "test-request-id",
     ...overrides,
   });
