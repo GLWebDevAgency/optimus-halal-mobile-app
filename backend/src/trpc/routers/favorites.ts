@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure } from "../trpc.js";
 import { favorites, favoriteFolders, products } from "../../db/schema/index.js";
 import { notFound, conflict } from "../../lib/errors.js";
@@ -55,6 +56,22 @@ export const favoritesRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      // Premium gate: free users limited to 5 favorites
+      if (ctx.subscriptionTier !== "premium") {
+        const countResult = await ctx.db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(favorites)
+          .where(eq(favorites.userId, ctx.userId))
+          .then((r) => r[0] ?? { count: 0 });
+        if (countResult.count >= 5) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message:
+              "Limite de 5 favoris atteinte. Passez a Optimus+ pour des favoris illimites.",
+          });
+        }
+      }
+
       const existing = await ctx.db.query.favorites.findFirst({
         where: and(
           eq(favorites.userId, ctx.userId),
