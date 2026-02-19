@@ -15,6 +15,7 @@ import { certifierRouter } from "./routers/certifier.js";
 import { articleRouter } from "./routers/article.js";
 import { additiveRouter } from "./routers/additive.js";
 import { uploadRouter } from "./routers/upload.js";
+import { subscriptionRouter } from "./routers/subscription.js";
 
 export const appRouter = router({
   auth: authRouter,
@@ -33,6 +34,7 @@ export const appRouter = router({
   article: articleRouter,
   additive: additiveRouter,
   upload: uploadRouter,
+  subscription: subscriptionRouter,
 });
 
 export type AppRouter = typeof appRouter;
