@@ -604,9 +604,9 @@ export default function HomeScreen() {
   const handleNavigate = useCallback(
     (route: string) => {
       impact();
-      if (route === "scanner") router.push("/(tabs)/scanner");
-      else if (route === "map") router.push("/(tabs)/map");
-      else if (route === "alerts") router.push("/(tabs)/alerts");
+      if (route === "scanner") router.navigate("/(tabs)/scanner");
+      else if (route === "map") router.navigate("/(tabs)/map");
+      else if (route === "alerts") router.navigate("/(tabs)/alerts");
       else if (route === "history")
         router.push("/settings/scan-history" as any);
       else if (route === "favorites")
@@ -619,7 +619,7 @@ export default function HomeScreen() {
     (item: FeaturedCardData) => {
       impact();
       if (item.type === "alert") {
-        router.push("/(tabs)/alerts");
+        router.navigate("/(tabs)/alerts");
       } else if (item.type === "article") {
         const articleId = item.id.replace("article-", "");
         router.push(`/articles/${articleId}`);
@@ -709,7 +709,7 @@ export default function HomeScreen() {
 
             {/* Notification Bell */}
             <TouchableOpacity
-              onPress={() => router.push("/(tabs)/alerts")}
+              onPress={() => router.navigate("/(tabs)/alerts")}
               activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel={t.common.notifications}
@@ -1041,7 +1041,7 @@ export default function HomeScreen() {
                   accessibilityRole="button"
                   accessibilityLabel={t.home.addFavorite}
                   accessibilityHint={t.home.emptyFavorites}
-                  onPress={() => router.push("/(tabs)/scanner")}
+                  onPress={() => router.navigate("/(tabs)/scanner")}
                   style={[
                     styles.emptyFavCard,
                     {
@@ -1095,7 +1095,7 @@ export default function HomeScreen() {
                 activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel={t.home.addFavorite}
-                onPress={() => router.push("/(tabs)/scanner")}
+                onPress={() => router.navigate("/(tabs)/scanner")}
                 style={styles.favCircleTouch}
               >
                 <View

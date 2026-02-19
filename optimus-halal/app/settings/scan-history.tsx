@@ -266,7 +266,7 @@ export default function ScanHistoryScreen() {
           title={t.scanHistory.noScans}
           message={t.scanHistory.noScansDesc}
           actionLabel={t.scanHistory.scanProduct}
-          onAction={() => router.push("/(tabs)/scanner")}
+          onAction={() => router.navigate("/(tabs)/scanner")}
         />
       ) : (
         <FlashList

@@ -242,7 +242,7 @@ export default function MarketplaceTab() {
 
   const handleAlertsPress = useCallback(() => {
     impact();
-    router.push("/(tabs)/alerts" as any);
+    router.navigate("/(tabs)/alerts" as any);
   }, []);
 
   if (!flags.marketplaceEnabled) {

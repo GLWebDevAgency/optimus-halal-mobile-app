@@ -155,7 +155,7 @@ export default function ReportingFormScreen() {
 
   const handleScanBarcode = useCallback(() => {
     impact();
-    router.push("/(tabs)/scanner");
+    router.navigate("/(tabs)/scanner");
   }, []);
 
   // Progress: title filled = 33%, violation selected = 66%, details filled = 100%

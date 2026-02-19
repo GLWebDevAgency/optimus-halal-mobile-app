@@ -255,7 +255,7 @@ export default function ProfileScreen() {
       >
         <View className="flex-row items-center justify-between p-4">
           <TouchableOpacity
-            onPress={() => router.push("/(tabs)/alerts" as any)}
+            onPress={() => router.navigate("/(tabs)/alerts" as any)}
             activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel={t.common.notifications}

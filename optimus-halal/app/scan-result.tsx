@@ -1061,7 +1061,7 @@ export default function ScanResultScreen() {
 
   const handleFindStores = useCallback(() => {
     impact();
-    router.push("/(tabs)/map");
+    router.navigate("/(tabs)/map");
   }, [impact]);
 
   const handleReport = useCallback(() => {
