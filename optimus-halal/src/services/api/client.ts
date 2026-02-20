@@ -209,9 +209,22 @@ function createApiClient() {
             });
             clearTimeout(timeoutId);
 
+            // 429 — rate limited: return immediately, don't retry
+            if (response.status === HTTP_STATUS.TOO_MANY_REQUESTS) {
+              return response;
+            }
+
+            // Only refresh tokens for protected-route 401s.
+            // Public auth procedures (login/register) return 401 for invalid
+            // credentials — those must reach the caller directly.
+            const urlStr = typeof url === "string" ? url : url.toString();
+            const isAuthPublic = ["auth.login", "auth.register", "auth.refresh", "auth.resetPassword"]
+              .some((p) => urlStr.includes(encodeURIComponent(p)) || urlStr.includes(p));
+
             if (
               response.status === HTTP_STATUS.UNAUTHORIZED &&
-              refreshToken
+              refreshToken &&
+              !isAuthPublic
             ) {
               await performTokenRefresh();
               return fetch(url, {
