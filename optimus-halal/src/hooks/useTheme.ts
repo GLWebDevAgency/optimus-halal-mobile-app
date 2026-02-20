@@ -14,6 +14,7 @@ import { useColorScheme } from "react-native";
 import { useThemeStore } from "@/store";
 import {
   brand,
+  gold,
   lightTheme,
   darkTheme,
   ramadan as ramadanColors,
@@ -53,13 +54,13 @@ export const useTheme = () => {
     textSecondary: t.textSecondary,
     textMuted: t.textMuted,
 
-    // Primary — gold accent during Ramadan
-    primary: isRamadan ? ramadanColors.gold : brand.primary,
-    primaryDark: isRamadan ? ramadanColors.indigo : brand.primaryDark,
+    // Primary — gold in dark mode, green in light, gold during Ramadan
+    primary: isRamadan ? ramadanColors.gold : isDark ? gold[500] : brand.primary,
+    primaryDark: isRamadan ? ramadanColors.indigo : isDark ? "#CFA533" : brand.primaryDark,
     primaryLight: isRamadan
       ? ramadanColors.crescentGlow
       : isDark
-        ? "rgba(19, 236, 106, 0.15)"
+        ? "rgba(207, 165, 51, 0.15)"
         : "rgba(19, 236, 106, 0.10)",
 
     // Status colors (unchanged — halal verdicts should stay consistent)
@@ -78,7 +79,7 @@ export const useTheme = () => {
     overlay: t.overlay,
 
     // Button backgrounds
-    buttonPrimary: isRamadan ? ramadanColors.gold : brand.primary,
+    buttonPrimary: isRamadan ? ramadanColors.gold : isDark ? gold[500] : brand.primary,
     buttonSecondary: t.buttonSecondary,
     buttonSecondaryHover: t.buttonSecondaryHover,
 
@@ -92,6 +93,16 @@ export const useTheme = () => {
     isRamadan
       ? (isDark ? gradients.ramadanDark : gradients.ramadanLight)
       : (isDark ? gradients.heroDark : gradients.heroLight),
+    [isDark, isRamadan],
+  );
+
+  // Primary CTA gradient — gold in dark mode
+  const primaryGradient = useMemo(() =>
+    isRamadan
+      ? gradients.ramadanPrimary
+      : isDark
+        ? (["#FDE08B", "#CFA533"] as const)
+        : gradients.primary,
     [isDark, isRamadan],
   );
 
@@ -118,6 +129,7 @@ export const useTheme = () => {
     isRamadan,
     colors,
     heroGradient,
+    primaryGradient,
     themeLabels,
     themeIcons,
   };
