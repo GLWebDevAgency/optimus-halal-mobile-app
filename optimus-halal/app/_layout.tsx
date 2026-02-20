@@ -67,10 +67,15 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
       gcTime: 1000 * 60 * 30, // 30 minutes cache
-      retry: 3,
+      retry: (failureCount, error) => {
+        // Never retry on rate-limited or auth errors — server won't change its mind
+        const status = (error as any)?.data?.httpStatus ?? (error as any)?.status;
+        if (status === 429 || status === 401 || status === 403) return false;
+        return failureCount < 3;
+      },
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      refetchOnWindowFocus: true,
-      refetchOnReconnect: true,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: "always",
     },
     mutations: {
       retry: 1,

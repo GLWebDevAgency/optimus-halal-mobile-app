@@ -1,7 +1,12 @@
 /**
  * Login Screen
- * 
- * Écran de connexion avec email/password et biométrie
+ *
+ * Écran de connexion avec email/password et biométrie.
+ * Enterprise-grade error handling:
+ * - Inline animated error banner (no Alert.alert)
+ * - Structured tRPC error code parsing → i18n messages
+ * - Haptic error feedback (NotificationFeedbackType.Error)
+ * - Auto-clear error on input change
  */
 
 import React, { useState, useCallback } from "react";
@@ -12,30 +17,130 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
+  Pressable,
 } from "react-native";
 import { router, Link } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as LocalAuthentication from "expo-local-authentication";
-import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeInUp,
+  FadeOut,
+  useSharedValue,
+  useAnimatedStyle,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 
 import { Button, Input, IslamicPattern } from "@/components/ui";
 import { useLogin } from "@/hooks/useAuth";
 import { useTranslation, useHaptics, useTheme } from "@/hooks";
+import type { TranslationKeys } from "@/i18n";
+
+// ── Error Classification ────────────────────────────────────
+
+type AuthErrorType =
+  | "invalidCredentials"
+  | "accountDisabled"
+  | "networkError"
+  | "rateLimited"
+  | "serverError";
+
+/**
+ * Parse a tRPC mutation error into a structured auth error type.
+ * tRPC v11 client errors expose `.data.code` (tRPC code) and
+ * `.data.httpStatus` for classification.
+ */
+function classifyAuthError(error: unknown): AuthErrorType {
+  if (!error || typeof error !== "object") return "serverError";
+
+  const trpcData = (error as any).data;
+  const httpStatus: number | undefined = trpcData?.httpStatus;
+  const trpcCode: string | undefined = trpcData?.code;
+
+  // Network / fetch failure — no response from server
+  if (error instanceof TypeError && (error as Error).message?.includes("Network")) {
+    return "networkError";
+  }
+  if ((error as any)?.code === "NETWORK_ERROR" || (error as any)?.name === "OptimusApiError") {
+    return "networkError";
+  }
+
+  // Rate limited (429)
+  if (httpStatus === 429 || trpcCode === "TOO_MANY_REQUESTS") {
+    return "rateLimited";
+  }
+
+  // Unauthorized (401) — invalid credentials or disabled account
+  if (httpStatus === 401 || trpcCode === "UNAUTHORIZED") {
+    const message = (error as any)?.message ?? "";
+    if (typeof message === "string" && message.toLowerCase().includes("désactivé")) {
+      return "accountDisabled";
+    }
+    return "invalidCredentials";
+  }
+
+  // Server error (500+)
+  if (httpStatus && httpStatus >= 500) {
+    return "serverError";
+  }
+
+  return "serverError";
+}
+
+/** Map auth error type → i18n key from `t.auth.login.errors`. */
+function getAuthErrorMessage(
+  errorType: AuthErrorType,
+  t: TranslationKeys
+): string {
+  return t.auth.login.errors[errorType] ?? t.errors.generic;
+}
+
+// ── Component ───────────────────────────────────────────────
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const { isDark, colors } = useTheme();
-  const { impact } = useHaptics();
+  const { impact, notification } = useHaptics();
   const { t } = useTranslation();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const loginMutation = useLogin();
   const isLoading = loginMutation.isPending;
+
+  // Shake animation for the error banner
+  const shakeX = useSharedValue(0);
+  const shakeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shakeX.value }],
+  }));
+
+  const triggerShake = useCallback(() => {
+    shakeX.value = withSequence(
+      withTiming(-8, { duration: 50 }),
+      withTiming(8, { duration: 50 }),
+      withTiming(-6, { duration: 50 }),
+      withTiming(6, { duration: 50 }),
+      withTiming(0, { duration: 50 })
+    );
+  }, [shakeX]);
+
+  // Clear server error when user modifies inputs
+  const handleEmailChange = useCallback((text: string) => {
+    setEmail(text);
+    if (serverError) setServerError(null);
+  }, [serverError]);
+
+  const handlePasswordChange = useCallback((text: string) => {
+    setPassword(text);
+    if (serverError) setServerError(null);
+  }, [serverError]);
 
   const validateForm = useCallback(() => {
     const newErrors: { email?: string; password?: string } = {};
@@ -52,40 +157,41 @@ export default function LoginScreen() {
       newErrors.password = t.auth.login.errors.passwordTooShort;
     }
 
-    setErrors(newErrors);
+    setFieldErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [email, password]);
+  }, [email, password, t]);
 
   const handleLogin = useCallback(async () => {
+    setServerError(null);
     if (!validateForm()) return;
 
     impact();
 
     try {
-      // mutateAsync sets tokens + awaits useMe() cache invalidation (see useLogin hook)
-      await loginMutation.mutateAsync({ email, password });
+      await loginMutation.mutateAsync({ email: email.trim().toLowerCase(), password });
       router.replace("/(tabs)");
     } catch (error: unknown) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : t.errors.generic;
-      Alert.alert(t.common.error, message);
+      const errorType = classifyAuthError(error);
+      const message = getAuthErrorMessage(errorType, t);
+
+      setServerError(message);
+      triggerShake();
+      notification(Haptics.NotificationFeedbackType.Error);
     }
-  }, [email, password, validateForm, loginMutation, impact]);
+  }, [email, password, validateForm, loginMutation, impact, notification, triggerShake, t]);
 
   const handleBiometricLogin = useCallback(async () => {
     impact();
 
     const hasHardware = await LocalAuthentication.hasHardwareAsync();
     if (!hasHardware) {
-      Alert.alert(t.common.error, t.auth.biometric.notAvailable);
+      setServerError(t.auth.biometric.notAvailable);
       return;
     }
 
     const isEnrolled = await LocalAuthentication.isEnrolledAsync();
     if (!isEnrolled) {
-      Alert.alert(t.common.error, t.auth.biometric.notConfigured);
+      setServerError(t.auth.biometric.notConfigured);
       return;
     }
 
@@ -95,16 +201,9 @@ export default function LoginScreen() {
     });
 
     if (result.success) {
-      // TODO: Implement proper biometric login with secure storage of tokens
-      Alert.alert("Info", t.auth.magicLink.biometricComingSoon);
-      
-      /* 
-      // Previous Mock Implementation - Disabled because setUser doesn't exist on API store
-      setUser({ ... });
-      router.replace("/(tabs)");
-      */
+      setServerError(t.auth.magicLink.biometricComingSoon);
     }
-  }, []);
+  }, [impact, t]);
 
   return (
     <View className="flex-1 bg-background-light dark:bg-background-dark">
@@ -149,6 +248,33 @@ export default function LoginScreen() {
             </Text>
           </Animated.View>
 
+          {/* Server Error Banner */}
+          {serverError && (
+            <Animated.View
+              entering={FadeIn.duration(300)}
+              exiting={FadeOut.duration(200)}
+              style={shakeStyle}
+              className="mb-4"
+              accessibilityRole="alert"
+              accessibilityLiveRegion="assertive"
+            >
+              <View className="flex-row items-center gap-3 p-4 rounded-xl bg-red-500/10 dark:bg-red-500/15 border border-red-500/20">
+                <MaterialIcons name="error-outline" size={20} color="#ef4444" />
+                <Text className="flex-1 text-sm font-medium text-red-600 dark:text-red-400">
+                  {serverError}
+                </Text>
+                <Pressable
+                  onPress={() => setServerError(null)}
+                  hitSlop={8}
+                  accessibilityLabel={t.common.close}
+                  accessibilityRole="button"
+                >
+                  <MaterialIcons name="close" size={18} color={isDark ? "#f87171" : "#dc2626"} />
+                </Pressable>
+              </View>
+            </Animated.View>
+          )}
+
           {/* Form */}
           <Animated.View
             entering={FadeInUp.delay(200).duration(600)}
@@ -158,11 +284,11 @@ export default function LoginScreen() {
               label={t.auth.login.email}
               placeholder={t.auth.login.emailPlaceholder}
               value={email}
-              onChangeText={setEmail}
+              onChangeText={handleEmailChange}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
-              error={errors.email}
+              error={fieldErrors.email}
               leftIcon="mail"
               accessibilityLabel={t.auth.login.email}
               accessibilityHint={t.auth.login.emailPlaceholder}
@@ -172,9 +298,9 @@ export default function LoginScreen() {
               label={t.auth.login.password}
               placeholder={t.auth.login.passwordPlaceholder}
               value={password}
-              onChangeText={setPassword}
+              onChangeText={handlePasswordChange}
               secureTextEntry
-              error={errors.password}
+              error={fieldErrors.password}
               accessibilityLabel={t.auth.login.password}
               accessibilityHint={t.auth.login.passwordPlaceholder}
             />

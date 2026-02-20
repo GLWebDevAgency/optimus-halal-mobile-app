@@ -740,7 +740,11 @@ export const en: TranslationKeys = {
         emailInvalid: "Invalid email",
         passwordRequired: "Password is required",
         passwordTooShort: "Minimum 8 characters",
-        invalidCredentials: "Invalid credentials",
+        invalidCredentials: "Incorrect email or password",
+        accountDisabled: "This account has been disabled. Contact support.",
+        networkError: "Unable to connect to the server. Check your connection.",
+        rateLimited: "Too many attempts. Please wait before trying again.",
+        serverError: "Server error. Please try again in a moment.",
       },
     },
     // Signup

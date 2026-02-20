@@ -622,7 +622,11 @@ export const ar: TranslationKeys = {
         emailInvalid: "بريد إلكتروني غير صالح",
         passwordRequired: "كلمة المرور مطلوبة",
         passwordTooShort: "8 أحرف على الأقل",
-        invalidCredentials: "بيانات اعتماد غير صالحة",
+        invalidCredentials: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+        accountDisabled: "تم تعطيل هذا الحساب. تواصل مع الدعم.",
+        networkError: "تعذر الاتصال بالخادم. تحقق من اتصالك بالإنترنت.",
+        rateLimited: "محاولات كثيرة. يرجى الانتظار قبل المحاولة مرة أخرى.",
+        serverError: "خطأ في الخادم. يرجى المحاولة بعد قليل.",
       },
     },
     // Signup

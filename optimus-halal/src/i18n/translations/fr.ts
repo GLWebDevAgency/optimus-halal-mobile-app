@@ -741,7 +741,11 @@ export const fr = {
         emailInvalid: "Email invalide",
         passwordRequired: "Le mot de passe est requis",
         passwordTooShort: "Minimum 8 caractères",
-        invalidCredentials: "Identifiants incorrects",
+        invalidCredentials: "Email ou mot de passe incorrect",
+        accountDisabled: "Ce compte a été désactivé. Contactez le support.",
+        networkError: "Impossible de se connecter au serveur. Vérifiez votre connexion.",
+        rateLimited: "Trop de tentatives. Veuillez patienter avant de réessayer.",
+        serverError: "Erreur serveur. Veuillez réessayer dans quelques instants.",
       },
     },
     // Signup
