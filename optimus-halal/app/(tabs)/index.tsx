@@ -167,13 +167,13 @@ const QuickActionCard = React.memo(function QuickActionCard({
           />
           <View style={styles.quickActionContent}>
             <View style={styles.quickActionIconWrapPrimary}>
-              <MaterialIcons name={icon} size={24} color="#ffffff" />
+              <MaterialIcons name={icon} size={24} color={isDark ? "#1A1A1A" : "#ffffff"} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.quickActionTitlePrimary}>{title}</Text>
-              <Text style={styles.quickActionSubPrimary}>{subtitle}</Text>
+              <Text style={[styles.quickActionTitlePrimary, isDark && { color: "#1A1A1A" }]}>{title}</Text>
+              <Text style={[styles.quickActionSubPrimary, isDark && { color: "rgba(26,26,26,0.7)" }]}>{subtitle}</Text>
             </View>
-            <MaterialIcons name="arrow-forward" size={18} color="rgba(255,255,255,0.6)" />
+            <MaterialIcons name="arrow-forward" size={18} color={isDark ? "rgba(26,26,26,0.5)" : "rgba(255,255,255,0.6)"} />
           </View>
           </TouchableOpacity>
         </Shadow>
@@ -190,7 +190,7 @@ const QuickActionCard = React.memo(function QuickActionCard({
         .damping(18)}
       style={[styles.quickActionHalf]}
     >
-      <Shadow distance={4} startColor={isDark ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.04)"} offset={[0, 1]} style={{ borderRadius: 20, width: "100%" }}>
+      <Shadow distance={isDark ? 8 : 4} startColor={isDark ? "rgba(207,165,51,0.12)" : "rgba(0,0,0,0.04)"} offset={[0, 0]} style={{ borderRadius: 20, width: "100%" }}>
         <TouchableOpacity
           onPress={handlePress}
           activeOpacity={0.85}
@@ -821,7 +821,7 @@ export default function HomeScreen() {
               <MaterialIcons
                 name="notifications-none"
                 size={22}
-                color={colors.textPrimary}
+                color={isDark ? colors.primary : colors.textPrimary}
               />
               {unreadCount > 0 && (
                 <View style={styles.bellBadge}>
