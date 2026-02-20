@@ -1,18 +1,17 @@
 /**
  * useMapStores — Fetch nearby stores for the map viewport
  *
- * Lightweight debounce to coalesce rapid React state updates.
- * The heavy debouncing (500ms idle detection) happens in map.tsx's
- * camera handler — this hook just adds a small buffer (150ms) to
- * batch any synchronous setState calls from the parent.
+ * Zero debounce: the camera handler in map.tsx already debounces (200ms
+ * post-gesture) and quantizes coordinates (~110m grid). By the time
+ * region reaches this hook, it's stable and quantized — pass directly
+ * to the query for minimum latency.
  *
- * Google Maps-like behavior:
- * - placeholderData keeps old markers visible during refetch
- * - staleTime prevents duplicate requests for the same viewport
- * - refetchOnWindowFocus keeps data fresh when returning to app
+ * Combined with speculative prefetch during gesture, this gives
+ * near-instant store appearance when the user stops panning:
+ * speculative fetch warms both TanStack Query cache and backend Redis,
+ * so the final query often resolves from memory with 0ms network wait.
  */
 
-import { useState, useEffect, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 
 interface MapRegion {
@@ -25,38 +24,25 @@ interface UseMapStoresOptions {
   storeType?: "supermarket" | "butcher" | "restaurant" | "bakery" | "abattoir" | "wholesaler" | "online" | "other";
   halalCertifiedOnly?: boolean;
   limit?: number;
-  debounceMs?: number;
 }
 
 export function useMapStores(
   region: MapRegion | null,
   options: UseMapStoresOptions = {},
 ) {
-  const { storeType, halalCertifiedOnly = false, limit = 50, debounceMs = 150 } = options;
-  const [debouncedRegion, setDebouncedRegion] = useState(region);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      setDebouncedRegion(region);
-    }, debounceMs);
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [region?.latitude, region?.longitude, region?.radiusKm, debounceMs]);
+  const { storeType, halalCertifiedOnly = false, limit = 50 } = options;
 
   const query = trpc.store.nearby.useQuery(
     {
-      latitude: debouncedRegion?.latitude ?? 0,
-      longitude: debouncedRegion?.longitude ?? 0,
-      radiusKm: debouncedRegion?.radiusKm ?? 5,
+      latitude: region?.latitude ?? 0,
+      longitude: region?.longitude ?? 0,
+      radiusKm: region?.radiusKm ?? 5,
       storeType,
       halalCertifiedOnly,
       limit,
     },
     {
-      enabled: debouncedRegion !== null,
+      enabled: region !== null,
       staleTime: 30_000,
       placeholderData: (prev) => prev,
       refetchOnWindowFocus: true,

@@ -460,30 +460,29 @@ export default function MapScreen() {
     const center = state?.properties?.center;
     if (!center) return;
 
-    // Skip if camera hasn't moved significantly (~100m)
+    // Quantize to ~110m grid (0.001°). This is the KEY perf optimization:
+    // speculative prefetches during gesture produce the SAME quantized coords
+    // as the final fetch → TanStack Query returns from memory cache instantly.
+    const lat = Math.round(center[1] * 1000) / 1000;
+    const lng = Math.round(center[0] * 1000) / 1000;
+
+    // Skip if quantized position hasn't changed
     if (lastCenterRef.current) {
       const [prevLng, prevLat] = lastCenterRef.current;
-      const dlat = Math.abs(center[1] - prevLat);
-      const dlng = Math.abs(center[0] - prevLng);
-      if (dlat < 0.001 && dlng < 0.001) return;
+      if (lat === prevLat && lng === prevLng) return;
     }
-    lastCenterRef.current = center;
+    lastCenterRef.current = [lng, lat];
 
     const zoom = state?.properties?.zoom ?? 10;
     const radiusKm = Math.max(0.5, Math.min(50, 40000 / Math.pow(2, zoom)));
-    setMapRegion({
-      latitude: center[1],
-      longitude: center[0],
-      radiusKm,
-    });
+    setMapRegion({ latitude: lat, longitude: lng, radiusKm });
 
     // Persist viewport for tab remount restoration
     _lastViewport = { center: [center[0], center[1]], zoom };
 
-    // Hide "search this area" on every successful region commit —
-    // it will only re-show if the query returns 0 results (see effect below)
+    // Hide "search this area" on every successful region commit
     setShowSearchThisArea(false);
-    lastCommittedCenterRef.current = [center[0], center[1]];
+    lastCommittedCenterRef.current = [lng, lat];
 
     trackEvent("map_viewport_changed", {
       center_lat: Math.round(center[1] * 100) / 100,
@@ -492,25 +491,38 @@ export default function MapScreen() {
     });
   }, []);
 
-  // Primary camera handler — debounce-on-idle with safety net.
-  // Two debounce durations:
-  //   - 2000ms during active gesture (safety net if no post-gesture event fires)
-  //   - 400ms after gesture ends (captures final deceleration position)
-  // During gesture, events fire every frame → timer keeps resetting (2s never
-  // fires). If events suddenly stop without a final isGestureActive=false
-  // event (edge case on some Mapbox/Android sequences), the 2s timer fires
-  // as a safety net to commit the last known position.
+  // Speculative prefetch: fires every ~1s DURING gesture to warm caches
+  // (both TanStack Query in-memory and backend Redis). When the finger lifts,
+  // the final position's quantized coords likely match a speculative fetch
+  // → data appears from cache with 0ms network wait.
+  const lastSpeculativeTsRef = useRef(0);
+
+  // Camera handler with speculative prefetch + short post-gesture debounce.
   const handleCameraChanged = useCallback((state: any) => {
     lastCameraStateRef.current = state;
 
     if (cameraIdleTimerRef.current) clearTimeout(cameraIdleTimerRef.current);
 
     const isActive = state?.gestures?.isGestureActive;
-    const delay = isActive ? 2000 : 400;
 
+    if (isActive) {
+      // During gesture: speculative prefetch every 1s + 2s safety net
+      const now = Date.now();
+      if (now - lastSpeculativeTsRef.current > 1000) {
+        lastSpeculativeTsRef.current = now;
+        commitRegionUpdate(state);
+      }
+      // Safety net if no post-gesture event fires
+      cameraIdleTimerRef.current = setTimeout(() => {
+        commitRegionUpdate(lastCameraStateRef.current);
+      }, 2000);
+      return;
+    }
+
+    // Post-gesture: short 200ms debounce to capture final deceleration
     cameraIdleTimerRef.current = setTimeout(() => {
       commitRegionUpdate(lastCameraStateRef.current);
-    }, delay);
+    }, 200);
   }, [commitRegionUpdate]);
 
   // Cleanup idle timer on unmount
