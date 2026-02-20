@@ -346,11 +346,17 @@ export default function MapScreen() {
   const cameraRef = useRef<any>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => [240 + insets.bottom, "50%", "90%"], [insets.bottom]);
+  // Initialize with France center so the query fires immediately —
+  // waiting for onMapIdle can hang forever if Mapbox tiles fail to load
   const [mapRegion, setMapRegion] = useState<{
     latitude: number;
     longitude: number;
     radiusKm: number;
-  } | null>(null);
+  }>({
+    latitude: FRANCE_CENTER[1],
+    longitude: FRANCE_CENTER[0],
+    radiusKm: 50,
+  });
 
   // Filters
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
@@ -373,11 +379,11 @@ export default function MapScreen() {
 
   const halalCertifiedOnly = activeFilters.includes("certified");
 
-  // Fetch stores
+  // Fetch stores — mapRegion is always non-null (initialized with France center)
   const storesQuery = useMapStores(mapRegion, {
     storeType: storeTypeFilter,
     halalCertifiedOnly,
-    limit: 50,
+    limit: 100,
   });
 
   const stores = useMemo(() => storesQuery.data ?? [], [storesQuery.data]);
@@ -401,9 +407,9 @@ export default function MapScreen() {
   // Build GeoJSON for Mapbox ShapeSource
   const storesGeoJSON = useMemo(() => ({
     type: "FeatureCollection" as const,
-    features: stores.map((s) => ({
+    features: stores.map((s, index) => ({
       type: "Feature" as const,
-      id: s.id,
+      id: index,
       geometry: {
         type: "Point" as const,
         coordinates: [s.longitude, s.latitude] as [number, number],
@@ -478,6 +484,18 @@ export default function MapScreen() {
       lastFetchedCenterRef.current = [center[0], center[1]];
     }
   }, []);
+
+  // Backup: onCameraChanged fires more reliably than onMapIdle (which
+  // waits for ALL tiles to finish loading and can hang indefinitely).
+  // Throttled to 1s, only when gesture is inactive (finger lifted).
+  const lastCameraChangedTsRef = useRef(0);
+  const handleCameraChanged = useCallback((state: any) => {
+    if (state?.gestures?.isGestureActive) return;
+    const now = Date.now();
+    if (now - lastCameraChangedTsRef.current < 1000) return;
+    lastCameraChangedTsRef.current = now;
+    handleRegionChange(state);
+  }, [handleRegionChange]);
 
   const handleMarkerPress = useCallback((event: any) => {
     const feature = event?.features?.[0];
@@ -607,6 +625,16 @@ export default function MapScreen() {
         animationDuration: 2000,
         animationMode: "flyTo",
       });
+      // Force region update after animation completes — don't rely solely
+      // on onMapIdle which can hang if tiles fail to load
+      const radiusKm = Math.max(0.5, Math.min(50, 40000 / Math.pow(2, FOCUSED_ZOOM)));
+      setTimeout(() => {
+        setMapRegion({
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude,
+          radiusKm,
+        });
+      }, 2100);
     }
   }, [userLocation, hasAnimatedToUser, isStyleLoaded]);
 
@@ -651,6 +679,7 @@ export default function MapScreen() {
         compassViewMargins={{ x: 16, y: SCREEN_HEIGHT * 0.35 }}
         scaleBarEnabled={false}
         onMapIdle={handleRegionChange}
+        onCameraChanged={handleCameraChanged}
         onDidFinishLoadingMap={() => {
           setIsStyleLoaded(true);
           trackEvent("map_opened", { source: "tab_bar", has_location: !!userLocation });
@@ -675,7 +704,7 @@ export default function MapScreen() {
 
         {/* Store markers with clustering — wait for style to load to avoid
             "Layer store-markers is not in style" race condition */}
-        {isStyleLoaded && stores.length > 0 && (
+        {isStyleLoaded && (
           <ShapeSource
             id="stores-source"
             shape={storesGeoJSON}
@@ -1072,15 +1101,18 @@ export default function MapScreen() {
               </View>
 
               {/* Store Cards */}
-              {storesQuery.isPending && !storesQuery.data ? (
+              {(storesQuery.isLoading || locationLoading || (storesQuery.isFetching && stores.length === 0)) ? (
                 <View className="flex-1 items-center justify-center py-8">
                   <ActivityIndicator size="small" color={colors.primary} />
+                  <Text className="text-xs mt-2" style={{ color: colors.textMuted }}>
+                    {locationLoading ? t.map.locating : t.map.searchResults}
+                  </Text>
                 </View>
               ) : stores.length === 0 ? (
                 <View className="flex-1 items-center justify-center px-8 py-6">
                   <MaterialIcons name="explore" size={32} color={colors.textMuted} />
                   <Text className="text-sm mt-2 text-center" style={{ color: colors.textSecondary }}>
-                    {mapRegion ? t.map.noStoresFound : t.map.locating}
+                    {t.map.noStoresFound}
                   </Text>
                 </View>
               ) : (

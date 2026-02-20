@@ -25,6 +25,7 @@ export async function withCache<T>(
   ttl: number,
   fetcher: () => Promise<T>,
   jitter?: number,
+  options?: { skipEmpty?: boolean },
 ): Promise<T> {
   try {
     const cached = await redis.get(key);
@@ -36,13 +37,18 @@ export async function withCache<T>(
 
   const data = await fetcher();
 
-  try {
-    // Add jitter to TTL to avoid thundering herd
-    const jitterSec = jitter ?? Math.ceil(ttl * 0.1);
-    const finalTtl = ttl + Math.floor(Math.random() * jitterSec);
-    await redis.setex(key, finalTtl, JSON.stringify(data));
-  } catch (err) {
-    logger.warn("Cache write failed", { key, error: (err as Error).message });
+  // Skip caching empty arrays to avoid poisoning downstream queries
+  const isEmpty = options?.skipEmpty && Array.isArray(data) && data.length === 0;
+
+  if (!isEmpty) {
+    try {
+      // Add jitter to TTL to avoid thundering herd
+      const jitterSec = jitter ?? Math.ceil(ttl * 0.1);
+      const finalTtl = ttl + Math.floor(Math.random() * jitterSec);
+      await redis.setex(key, finalTtl, JSON.stringify(data));
+    } catch (err) {
+      logger.warn("Cache write failed", { key, error: (err as Error).message });
+    }
   }
 
   return data;

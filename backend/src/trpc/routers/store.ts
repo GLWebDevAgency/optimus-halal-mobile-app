@@ -85,7 +85,7 @@ export const storeRouter = router({
     .query(async ({ ctx, input }) => {
       // Geohash precision 5 (~5km cells) for cache key
       const gh = ngeohash.encode(input.latitude, input.longitude, 5);
-      const cacheKey = `stores:v2:nearby:${gh}:${input.storeType ?? "all"}:${input.halalCertifiedOnly ? "1" : "0"}`;
+      const cacheKey = `stores:v3:nearby:${gh}:r${input.radiusKm}:l${input.limit}:t${input.storeType ?? "all"}:h${input.halalCertifiedOnly ? "1" : "0"}`;
 
       return withCache(ctx.redis, cacheKey, 300, async () => {
         const radiusMeters = Math.max(input.radiusKm * 1000, 100); // Guard: minimum 100m
@@ -140,14 +140,14 @@ export const storeRouter = router({
               AND NOT sh.is_closed
               LIMIT 1
             )`.as("today_close"),
-            distance: sql<number>`round(ST_Distance("stores"."location", ${point})::numeric)`.as("distance"),
-            relevanceScore: sql<number>`round(${relevanceExpr}::numeric, 3)`.as("relevance_score"),
+            distance: sql<number>`round(ST_Distance("stores"."location", ${point}))::float8`.as("distance"),
+            relevanceScore: sql<number>`round((${relevanceExpr})::numeric, 3)::float8`.as("relevance_score"),
           })
           .from(stores)
           .where(and(...conditions))
           .orderBy(sql`${relevanceExpr} DESC`)
           .limit(input.limit);
-      });
+      }, undefined, { skipEmpty: true });
     }),
 
   getById: publicProcedure

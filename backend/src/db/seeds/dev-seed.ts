@@ -429,6 +429,7 @@ async function main() {
   console.log(`  Scans:         ${counts[6][0].count}`);
   console.log(`  Notifications: ${counts[7][0].count}`);
   console.log("\n  🔑 Login: dev@optimus.fr / password123");
+  console.log("  📍 Stores are seeded by entrypoint.ts (real AVS/Achahada data)");
 
   await client.end();
 }

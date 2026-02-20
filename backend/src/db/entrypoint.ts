@@ -91,7 +91,7 @@ try {
     ORDER BY table_name
   `);
   const tables = result.map((r: Record<string, unknown>) => r.table_name as string);
-  const requiredTables = ["users", "products", "refresh_tokens", "scans", "additives"];
+  const requiredTables = ["users", "products", "refresh_tokens", "scans", "additives", "stores"];
   const missing = requiredTables.filter((t) => !tables.includes(t));
 
   if (missing.length > 0) {
