@@ -439,14 +439,19 @@ export default function MapScreen() {
     ? "mapbox://styles/mapbox/dark-v11"
     : "mapbox://styles/mapbox/light-v11";
 
-  // "Search this area" state
-  const lastFetchedCenterRef = useRef<[number, number] | null>(null);
+  // "Search this area" — manual refresh fallback (shows after large pans)
+  const lastCommittedCenterRef = useRef<[number, number] | null>(null);
   const [showSearchThisArea, setShowSearchThisArea] = useState(false);
 
-  // ── Handlers ───────────────────────────────────────────
+  // ── Camera idle detection (Google Maps pattern) ─────────
+  // Instead of relying on onMapIdle (tile-dependent, unreliable) or
+  // a simple throttle (misses final deceleration position), we debounce:
+  // save every camera state, fire region update Xms after the LAST change.
   const lastCenterRef = useRef<[number, number] | null>(null);
+  const cameraIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastCameraStateRef = useRef<any>(null);
 
-  const handleRegionChange = useCallback((state: any) => {
+  const commitRegionUpdate = useCallback((state: any) => {
     const center = state?.properties?.center;
     if (!center) return;
 
@@ -466,36 +471,56 @@ export default function MapScreen() {
       longitude: center[0],
       radiusKm,
     });
+
+    // Show "search this area" for large pans (>5km from last committed fetch)
+    // Normal pans auto-fetch; this is just a manual refresh hint for big jumps
+    if (lastCommittedCenterRef.current) {
+      const [prevLng, prevLat] = lastCommittedCenterRef.current;
+      const dLat = Math.abs(center[1] - prevLat);
+      const dLng = Math.abs(center[0] - prevLng);
+      // ~5km threshold (0.045 degrees ≈ 5km at French latitudes)
+      if (dLat > 0.045 || dLng > 0.045) {
+        setShowSearchThisArea(true);
+      } else {
+        setShowSearchThisArea(false);
+      }
+    }
+    lastCommittedCenterRef.current = [center[0], center[1]];
+
     trackEvent("map_viewport_changed", {
       center_lat: Math.round(center[1] * 100) / 100,
       center_lng: Math.round(center[0] * 100) / 100,
       zoom_level: Math.round(zoom),
     });
-
-    // Show "search this area" if panned >2km from last fetch
-    if (lastFetchedCenterRef.current) {
-      const [prevLng, prevLat] = lastFetchedCenterRef.current;
-      const dLat = Math.abs(center[1] - prevLat);
-      const dLng = Math.abs(center[0] - prevLng);
-      if (dLat > 0.018 || dLng > 0.018) {
-        setShowSearchThisArea(true);
-      }
-    } else {
-      lastFetchedCenterRef.current = [center[0], center[1]];
-    }
   }, []);
 
-  // Backup: onCameraChanged fires more reliably than onMapIdle (which
-  // waits for ALL tiles to finish loading and can hang indefinitely).
-  // Throttled to 1s, only when gesture is inactive (finger lifted).
-  const lastCameraChangedTsRef = useRef(0);
+  // Primary camera handler — debounce-on-idle.
+  // Fires on EVERY camera change (gesture, deceleration, programmatic).
+  // Waits 500ms after the LAST event before committing → always captures
+  // the final resting position, even after fast fling deceleration.
   const handleCameraChanged = useCallback((state: any) => {
-    if (state?.gestures?.isGestureActive) return;
-    const now = Date.now();
-    if (now - lastCameraChangedTsRef.current < 1000) return;
-    lastCameraChangedTsRef.current = now;
-    handleRegionChange(state);
-  }, [handleRegionChange]);
+    lastCameraStateRef.current = state;
+
+    // During active gesture: save state but don't start idle timer yet
+    // (finger still on screen → camera will keep moving)
+    if (state?.gestures?.isGestureActive) {
+      if (cameraIdleTimerRef.current) clearTimeout(cameraIdleTimerRef.current);
+      return;
+    }
+
+    // Gesture ended or programmatic animation — debounce 500ms
+    if (cameraIdleTimerRef.current) clearTimeout(cameraIdleTimerRef.current);
+    cameraIdleTimerRef.current = setTimeout(() => {
+      commitRegionUpdate(lastCameraStateRef.current);
+    }, 500);
+  }, [commitRegionUpdate]);
+
+  // Cleanup idle timer on unmount
+  useEffect(() => {
+    return () => {
+      if (cameraIdleTimerRef.current) clearTimeout(cameraIdleTimerRef.current);
+    };
+  }, []);
 
   const handleMarkerPress = useCallback((event: any) => {
     const feature = event?.features?.[0];
@@ -581,12 +606,15 @@ export default function MapScreen() {
   }, [clearSuggestions, impact]);
 
   const handleSearchThisArea = useCallback(() => {
-    if (lastCenterRef.current) {
-      lastFetchedCenterRef.current = lastCenterRef.current;
+    // Force a fresh fetch at current camera position
+    if (lastCameraStateRef.current) {
+      commitRegionUpdate(lastCameraStateRef.current);
     }
+    // Also refetch even if region hasn't changed (cache bypass via React Query)
+    storesQuery.refetch();
     setShowSearchThisArea(false);
     trackEvent("map_search_this_area", {});
-  }, []);
+  }, [commitRegionUpdate, storesQuery]);
 
   const handleStoreCardPress = useCallback((store: typeof stores[number]) => {
     impact();
@@ -625,16 +653,8 @@ export default function MapScreen() {
         animationDuration: 2000,
         animationMode: "flyTo",
       });
-      // Force region update after animation completes — don't rely solely
-      // on onMapIdle which can hang if tiles fail to load
-      const radiusKm = Math.max(0.5, Math.min(50, 40000 / Math.pow(2, FOCUSED_ZOOM)));
-      setTimeout(() => {
-        setMapRegion({
-          latitude: userLocation.latitude,
-          longitude: userLocation.longitude,
-          radiusKm,
-        });
-      }, 2100);
+      // handleCameraChanged debounce-on-idle will capture the final position
+      // after the fly animation completes (~2s + 500ms debounce)
     }
   }, [userLocation, hasAnimatedToUser, isStyleLoaded]);
 
@@ -678,7 +698,6 @@ export default function MapScreen() {
         compassViewPosition={2}
         compassViewMargins={{ x: 16, y: SCREEN_HEIGHT * 0.35 }}
         scaleBarEnabled={false}
-        onMapIdle={handleRegionChange}
         onCameraChanged={handleCameraChanged}
         onDidFinishLoadingMap={() => {
           setIsStyleLoaded(true);

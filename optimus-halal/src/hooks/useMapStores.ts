@@ -1,7 +1,15 @@
 /**
  * useMapStores — Fetch nearby stores for the map viewport
  *
- * Debounces calls to trpc.store.nearby when camera moves.
+ * Lightweight debounce to coalesce rapid React state updates.
+ * The heavy debouncing (500ms idle detection) happens in map.tsx's
+ * camera handler — this hook just adds a small buffer (150ms) to
+ * batch any synchronous setState calls from the parent.
+ *
+ * Google Maps-like behavior:
+ * - placeholderData keeps old markers visible during refetch
+ * - staleTime prevents duplicate requests for the same viewport
+ * - refetchOnWindowFocus keeps data fresh when returning to app
  */
 
 import { useState, useEffect, useRef } from "react";
@@ -24,7 +32,7 @@ export function useMapStores(
   region: MapRegion | null,
   options: UseMapStoresOptions = {},
 ) {
-  const { storeType, halalCertifiedOnly = false, limit = 50, debounceMs = 300 } = options;
+  const { storeType, halalCertifiedOnly = false, limit = 50, debounceMs = 150 } = options;
   const [debouncedRegion, setDebouncedRegion] = useState(region);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -51,6 +59,7 @@ export function useMapStores(
       enabled: debouncedRegion !== null,
       staleTime: 30_000,
       placeholderData: (prev) => prev,
+      refetchOnWindowFocus: true,
     },
   );
 
