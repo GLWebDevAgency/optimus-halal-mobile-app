@@ -44,7 +44,7 @@ type AuthState = "input" | "sent" | "verifying" | "success";
 
 export default function MagicLinkLoginScreen() {
   const insets = useSafeAreaInsets();
-  const { isDark } = useTheme();
+  const { colors, isDark } = useTheme();
   const { impact, notification } = useHaptics();
   const { t } = useTranslation();
   const params = useLocalSearchParams();
@@ -307,7 +307,7 @@ export default function MagicLinkLoginScreen() {
         className="w-24 h-24 rounded-full bg-primary-50 dark:bg-primary-900/30 items-center justify-center mb-6"
         accessible={false}
       >
-        <MaterialIcons name="mail-outline" size={48} color="#13ec6a" />
+        <MaterialIcons name="mail-outline" size={48} color={colors.primary} />
       </Animated.View>
 
       {/* Title */}
@@ -406,7 +406,7 @@ export default function MagicLinkLoginScreen() {
       entering={FadeIn.duration(400)}
       className="items-center py-12"
     >
-      <ActivityIndicator size="large" color="#13ec6a" />
+      <ActivityIndicator size="large" color={colors.primary} />
       <Text className="text-slate-600 dark:text-slate-400 mt-4">
         {t.auth.magicLink.verifying}
       </Text>
@@ -419,7 +419,7 @@ export default function MagicLinkLoginScreen() {
       className="items-center py-12"
     >
       <View className="w-24 h-24 rounded-full bg-primary-50 dark:bg-primary-900/30 items-center justify-center mb-4" accessible={false}>
-        <MaterialIcons name="check-circle" size={48} color="#13ec6a" />
+        <MaterialIcons name="check-circle" size={48} color={colors.primary} />
       </View>
       <Text className="text-slate-900 dark:text-white text-2xl font-bold" accessibilityRole="header">
         {t.auth.magicLink.loginSuccess}

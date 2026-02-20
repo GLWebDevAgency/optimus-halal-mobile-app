@@ -7,8 +7,10 @@
 import React, { useEffect } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
+import { useTheme } from "@/hooks/useTheme";
 
 export default function MagicLinkVerifyScreen() {
+  const { colors } = useTheme();
   const params = useLocalSearchParams();
 
   useEffect(() => {
@@ -27,7 +29,7 @@ export default function MagicLinkVerifyScreen() {
 
   return (
     <View className="flex-1 bg-white dark:bg-background-dark items-center justify-center">
-      <ActivityIndicator size="large" color="#13ec6a" />
+      <ActivityIndicator size="large" color={colors.primary} />
     </View>
   );
 }

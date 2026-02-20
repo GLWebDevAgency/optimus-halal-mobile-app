@@ -38,7 +38,7 @@ import { brand } from "@/theme/colors";
 
 export default function ForgotPasswordScreen() {
   const insets = useSafeAreaInsets();
-  const { isDark } = useTheme();
+  const { colors, isDark } = useTheme();
   const { impact, notification } = useHaptics();
   const { t, isRTL } = useTranslation();
 
@@ -311,6 +311,7 @@ export default function ForgotPasswordScreen() {
                   accessibilityState={{ disabled: isLoading }}
                   style={[
                     styles.submitButton,
+                    { shadowColor: colors.primary },
                     isLoading && styles.submitButtonDisabled
                   ]}
                 >
@@ -356,7 +357,7 @@ export default function ForgotPasswordScreen() {
                 >
                   {t.auth.forgotPassword.rememberPassword}
                 </Text>
-                <Text style={styles.footerLink}>
+                <Text style={[styles.footerLink, { color: colors.primary }]}>
                   {t.auth.forgotPassword.loginLink}
                 </Text>
               </TouchableOpacity>
@@ -479,7 +480,6 @@ const styles = StyleSheet.create({
   submitButton: {
     borderRadius: 12,
     overflow: "hidden",
-    shadowColor: "#13ec6a",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,
@@ -534,6 +534,5 @@ const styles = StyleSheet.create({
   footerLink: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#13ec6a",
   },
 });

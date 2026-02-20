@@ -40,7 +40,7 @@ import { brand } from "@/theme/colors";
 
 export default function ResetConfirmationScreen() {
   const insets = useSafeAreaInsets();
-  const { isDark } = useTheme();
+  const { colors, isDark } = useTheme();
   const { impact, notification } = useHaptics();
   const { email } = useLocalSearchParams<{ email: string }>();
   const { t, isRTL } = useTranslation();
@@ -196,11 +196,11 @@ export default function ResetConfirmationScreen() {
           </Animated.View>
 
           {/* Decorative check badge */}
-          <Animated.View 
+          <Animated.View
             style={[
               styles.checkBadge,
               animatedCheckStyle,
-              { borderColor: isDark ? "#102217" : "#ffffff" }
+              { backgroundColor: colors.primary, borderColor: isDark ? "#102217" : "#ffffff" }
             ]}
           >
             <MaterialIcons name="check" size={12} color="#102217" />
@@ -249,7 +249,7 @@ export default function ResetConfirmationScreen() {
           style={styles.actionsContainer}
         >
           {/* Back to Login Button */}
-          <View style={styles.primaryButtonShadow}>
+          <View style={[styles.primaryButtonShadow, { shadowColor: colors.primary }]}>
             <TouchableOpacity
               onPress={handleBackToLogin}
               activeOpacity={0.9}
@@ -315,7 +315,7 @@ export default function ResetConfirmationScreen() {
             accessibilityLabel={t.auth.resetConfirmation.resendLink}
             accessibilityHint={t.auth.resetConfirmation.resendLink}
           >
-            <Text style={styles.resendLink}>
+            <Text style={[styles.resendLink, { color: colors.primary }]}>
               {t.auth.resetConfirmation.resendLink}
             </Text>
           </TouchableOpacity>
@@ -425,7 +425,6 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "#13ec6a",
     borderWidth: 4,
     alignItems: "center",
     justifyContent: "center",
@@ -453,7 +452,6 @@ const styles = StyleSheet.create({
   },
   primaryButtonShadow: {
     borderRadius: 12,
-    shadowColor: "#13ec6a",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,
@@ -496,7 +494,6 @@ const styles = StyleSheet.create({
   resendLink: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#13ec6a",
     marginTop: 4,
   },
   footer: {

@@ -475,7 +475,7 @@ export default function ProfileScreen() {
               borderColor: isDark ? "rgba(19,236,106,0.15)" : "rgba(19,236,106,0.1)",
             }}
           >
-            <MaterialIcons name="workspace-premium" size={24} color="#13ec6a" />
+            <MaterialIcons name="workspace-premium" size={24} color={colors.primary} />
             <View style={{ flex: 1, marginStart: 12 }}>
               <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: "700" }}>
                 Optimus+
