@@ -83,9 +83,11 @@ export const storeRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      // Geohash precision 5 (~5km cells) for cache key
-      const gh = ngeohash.encode(input.latitude, input.longitude, 5);
-      const cacheKey = `stores:v3:nearby:${gh}:r${input.radiusKm}:l${input.limit}:t${input.storeType ?? "all"}:h${input.halalCertifiedOnly ? "1" : "0"}`;
+      // Dynamic geohash precision: coarser at wide radius, finer at urban zoom
+      // p4=~39km (country), p5=~5km (city), p6=~1.2km (neighborhood)
+      const ghPrecision = input.radiusKm <= 2 ? 6 : input.radiusKm <= 10 ? 5 : 4;
+      const gh = ngeohash.encode(input.latitude, input.longitude, ghPrecision);
+      const cacheKey = `stores:v4:nearby:${gh}:r${input.radiusKm}:l${input.limit}:t${input.storeType ?? "all"}:h${input.halalCertifiedOnly ? "1" : "0"}`;
 
       return withCache(ctx.redis, cacheKey, 300, async () => {
         const radiusMeters = Math.max(input.radiusKm * 1000, 100); // Guard: minimum 100m

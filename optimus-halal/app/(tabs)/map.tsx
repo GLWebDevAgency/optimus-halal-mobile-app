@@ -71,6 +71,11 @@ const FRANCE_CENTER: [number, number] = [2.3522, 46.6034];
 const DEFAULT_ZOOM = 5;
 const FOCUSED_ZOOM = 13;
 
+// Module-level: persists across tab navigation (React unmount/remount)
+// but resets on app restart (fresh animation on cold start)
+let _hasAnimatedToUser = false;
+let _lastViewport: { center: [number, number]; zoom: number } | null = null;
+
 // Filter → storeType mapping (backend enum values)
 const FILTER_IDS = [
   { id: "butcher", filterKey: "butchers" as const, storeType: "butcher" as const },
@@ -472,19 +477,12 @@ export default function MapScreen() {
       radiusKm,
     });
 
-    // Show "search this area" for large pans (>5km from last committed fetch)
-    // Normal pans auto-fetch; this is just a manual refresh hint for big jumps
-    if (lastCommittedCenterRef.current) {
-      const [prevLng, prevLat] = lastCommittedCenterRef.current;
-      const dLat = Math.abs(center[1] - prevLat);
-      const dLng = Math.abs(center[0] - prevLng);
-      // ~5km threshold (0.045 degrees ≈ 5km at French latitudes)
-      if (dLat > 0.045 || dLng > 0.045) {
-        setShowSearchThisArea(true);
-      } else {
-        setShowSearchThisArea(false);
-      }
-    }
+    // Persist viewport for tab remount restoration
+    _lastViewport = { center: [center[0], center[1]], zoom };
+
+    // Hide "search this area" on every successful region commit —
+    // it will only re-show if the query returns 0 results (see effect below)
+    setShowSearchThisArea(false);
     lastCommittedCenterRef.current = [center[0], center[1]];
 
     trackEvent("map_viewport_changed", {
@@ -494,25 +492,25 @@ export default function MapScreen() {
     });
   }, []);
 
-  // Primary camera handler — debounce-on-idle.
-  // Fires on EVERY camera change (gesture, deceleration, programmatic).
-  // Waits 500ms after the LAST event before committing → always captures
-  // the final resting position, even after fast fling deceleration.
+  // Primary camera handler — debounce-on-idle with safety net.
+  // Two debounce durations:
+  //   - 2000ms during active gesture (safety net if no post-gesture event fires)
+  //   - 400ms after gesture ends (captures final deceleration position)
+  // During gesture, events fire every frame → timer keeps resetting (2s never
+  // fires). If events suddenly stop without a final isGestureActive=false
+  // event (edge case on some Mapbox/Android sequences), the 2s timer fires
+  // as a safety net to commit the last known position.
   const handleCameraChanged = useCallback((state: any) => {
     lastCameraStateRef.current = state;
 
-    // During active gesture: save state but don't start idle timer yet
-    // (finger still on screen → camera will keep moving)
-    if (state?.gestures?.isGestureActive) {
-      if (cameraIdleTimerRef.current) clearTimeout(cameraIdleTimerRef.current);
-      return;
-    }
-
-    // Gesture ended or programmatic animation — debounce 500ms
     if (cameraIdleTimerRef.current) clearTimeout(cameraIdleTimerRef.current);
+
+    const isActive = state?.gestures?.isGestureActive;
+    const delay = isActive ? 2000 : 400;
+
     cameraIdleTimerRef.current = setTimeout(() => {
       commitRegionUpdate(lastCameraStateRef.current);
-    }, 500);
+    }, delay);
   }, [commitRegionUpdate]);
 
   // Cleanup idle timer on unmount
@@ -641,22 +639,44 @@ export default function MapScreen() {
     setSelectedStoreId(null);
   }, []);
 
-  // Progressive zoom: always start at France overview, then fly to user
-  const [hasAnimatedToUser, setHasAnimatedToUser] = useState(false);
+  // Progressive zoom: fly to user on first load only.
+  // _hasAnimatedToUser is module-level → survives tab navigation (no re-zoom).
+  // _lastViewport is module-level → restores camera position on remount.
+  const [hasAnimatedToUser, setHasAnimatedToUser] = useState(_hasAnimatedToUser);
 
   useEffect(() => {
-    if (userLocation && !hasAnimatedToUser && isStyleLoaded && cameraRef.current) {
+    if (!isStyleLoaded || !cameraRef.current) return;
+
+    // Returning to map tab — restore last viewport instantly (no animation)
+    if (_hasAnimatedToUser && _lastViewport) {
+      cameraRef.current.setCamera({
+        centerCoordinate: _lastViewport.center,
+        zoomLevel: _lastViewport.zoom,
+        animationDuration: 0,
+      });
+      return;
+    }
+
+    // First load — fly to user location
+    if (userLocation && !hasAnimatedToUser) {
       setHasAnimatedToUser(true);
+      _hasAnimatedToUser = true;
       cameraRef.current.setCamera({
         centerCoordinate: [userLocation.longitude, userLocation.latitude],
         zoomLevel: FOCUSED_ZOOM,
         animationDuration: 2000,
         animationMode: "flyTo",
       });
-      // handleCameraChanged debounce-on-idle will capture the final position
-      // after the fly animation completes (~2s + 500ms debounce)
     }
   }, [userLocation, hasAnimatedToUser, isStyleLoaded]);
+
+  // Show "search this area" as manual retry when auto-fetch returned 0 results
+  // and the user has interacted with the map (not initial load)
+  useEffect(() => {
+    if (!storesQuery.isFetching && storesQuery.data?.length === 0 && hasAnimatedToUser) {
+      setShowSearchThisArea(true);
+    }
+  }, [storesQuery.isFetching, storesQuery.data?.length, hasAnimatedToUser]);
 
   // Auto-snap bottom sheet on store selection
   useEffect(() => {
