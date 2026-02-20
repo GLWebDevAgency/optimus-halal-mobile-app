@@ -87,7 +87,10 @@ export const storeRouter = router({
       // p4=~39km (country), p5=~5km (city), p6=~1.2km (neighborhood)
       const ghPrecision = input.radiusKm <= 2 ? 6 : input.radiusKm <= 10 ? 5 : 4;
       const gh = ngeohash.encode(input.latitude, input.longitude, ghPrecision);
-      const cacheKey = `stores:v4:nearby:${gh}:r${input.radiusKm}:l${input.limit}:t${input.storeType ?? "all"}:h${input.halalCertifiedOnly ? "1" : "0"}`;
+      // Bucket radiusKm to nearest 0.5km for better cache hit rate
+      // (zoom jitter produces 4.88km vs 4.55km → same bucket = cache hit)
+      const rBucket = Math.round(input.radiusKm * 2) / 2;
+      const cacheKey = `stores:v5:nearby:${gh}:r${rBucket}:l${input.limit}:t${input.storeType ?? "all"}:h${input.halalCertifiedOnly ? "1" : "0"}`;
 
       return withCache(ctx.redis, cacheKey, 300, async () => {
         const radiusMeters = Math.max(input.radiusKm * 1000, 100); // Guard: minimum 100m
@@ -118,9 +121,7 @@ export const storeRouter = router({
             imageUrl: stores.imageUrl,
             address: stores.address,
             city: stores.city,
-            postalCode: stores.postalCode,
             phone: stores.phone,
-            website: stores.website,
             latitude: stores.latitude,
             longitude: stores.longitude,
             halalCertified: stores.halalCertified,
@@ -128,20 +129,6 @@ export const storeRouter = router({
             certifierName: stores.certifierName,
             averageRating: stores.averageRating,
             reviewCount: stores.reviewCount,
-            todayOpen: sql<string | null>`(
-              SELECT sh.open_time::text FROM store_hours sh
-              WHERE sh.store_id = stores.id
-              AND sh.day_of_week = EXTRACT(DOW FROM NOW())::int
-              AND NOT sh.is_closed
-              LIMIT 1
-            )`.as("today_open"),
-            todayClose: sql<string | null>`(
-              SELECT sh.close_time::text FROM store_hours sh
-              WHERE sh.store_id = stores.id
-              AND sh.day_of_week = EXTRACT(DOW FROM NOW())::int
-              AND NOT sh.is_closed
-              LIMIT 1
-            )`.as("today_close"),
             distance: sql<number>`round(ST_Distance("stores"."location", ${point}))::float8`.as("distance"),
             relevanceScore: sql<number>`round((${relevanceExpr})::numeric, 3)::float8`.as("relevance_score"),
           })

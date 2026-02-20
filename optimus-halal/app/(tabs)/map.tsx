@@ -104,9 +104,7 @@ interface StoreFeatureProperties {
   imageUrl: string | null;
   address: string;
   city: string;
-  postalCode: string | null;
   phone: string | null;
-  website: string | null;
   certifier: string;
   certifierName: string | null;
   halalCertified: boolean;
@@ -426,9 +424,7 @@ export default function MapScreen() {
         imageUrl: s.imageUrl,
         address: s.address,
         city: s.city,
-        postalCode: s.postalCode,
         phone: s.phone,
-        website: s.website,
         certifier: s.certifier,
         certifierName: s.certifierName,
         halalCertified: s.halalCertified,
