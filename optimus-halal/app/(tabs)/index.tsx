@@ -140,7 +140,7 @@ const QuickActionCard = React.memo(function QuickActionCard({
           .damping(18)}
         style={[styles.quickActionHalf]}
       >
-        <Shadow distance={12} startColor={isDark ? "#13ec6a40" : "#13ec6a25"} offset={[0, 0]} style={{ borderRadius: 20, width: "100%" }}>
+        <Shadow distance={12} startColor={isDark ? "#CFA53340" : "#13ec6a25"} offset={[0, 0]} style={{ borderRadius: 20, width: "100%" }}>
           <TouchableOpacity
             onPress={handlePress}
             activeOpacity={0.85}
@@ -150,7 +150,7 @@ const QuickActionCard = React.memo(function QuickActionCard({
             style={styles.quickActionPrimary}
           >
           <LinearGradient
-            colors={["#13ec6a", "#0ea64b"]}
+            colors={isDark ? ["#FDE08B", "#CFA533"] : ["#13ec6a", "#0ea64b"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}
@@ -454,7 +454,7 @@ const FavoriteCircle = React.memo(function FavoriteCircle({
       >
         {/* Gradient ring */}
         <LinearGradient
-          colors={["#13ec6a", "#0ea64b", "#D4AF37"]}
+          colors={isDark ? ["#D4AF37", "#CFA533", "#FDE08B"] : ["#13ec6a", "#0ea64b", "#D4AF37"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.favGradientRing}
