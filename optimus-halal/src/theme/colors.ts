@@ -5,8 +5,8 @@
  * All screens, components, and hooks MUST reference these tokens.
  *
  * Design philosophy:
- *  - Primary green (#13ec6a) is ELECTRIC and ALIVE
- *  - Dark mode = "deep forest" (green-tinted blacks, not gray)
+ *  - Primary green (#13ec6a) for light mode — ELECTRIC and ALIVE
+ *  - Dark mode = luxury gold (#D4AF37) on anthracite (#121212)
  *  - Light mode = "clean and warm" (not sterile white)
  *  - Gold (#D4AF37) for premium / gamification accents
  *
@@ -179,22 +179,22 @@ export const lightTheme = {
 
 /**
  * Dark-mode contextual tokens.
- * "Deep forest" — green-tinted blacks, not flat gray.
+ * Luxury gold on anthracite — warm neutrals, not green-tinted.
  */
 export const darkTheme = {
   /** Page-level backgrounds */
-  background: "#0a1a10",
-  backgroundSecondary: "#071209",
+  background: "#121212",
+  backgroundSecondary: "#1A1A1A",
 
   /** Cards and elevated surfaces */
-  card: "#132a1a",
-  cardBorder: "rgba(255, 255, 255, 0.05)",
+  card: "#1E1E1E",
+  cardBorder: "rgba(207, 165, 51, 0.15)",
 
   /** Typography hierarchy */
-  textPrimary: "#e8f5e9",
-  textSecondary: "#9ca3af",
+  textPrimary: "#FFFFFF",
+  textSecondary: "#A0A0A0",
   textMuted: "#6b7280",
-  textInverse: "#0d1b13",
+  textInverse: "#1A1A1A",
 
   /** Borders */
   border: "rgba(255, 255, 255, 0.10)",
@@ -206,14 +206,14 @@ export const darkTheme = {
   overlayHeavy: "rgba(0, 0, 0, 0.80)",
 
   /** Buttons */
-  buttonSecondary: "rgba(255, 255, 255, 0.05)",
-  buttonSecondaryHover: "rgba(255, 255, 255, 0.10)",
+  buttonSecondary: "rgba(255, 255, 255, 0.04)",
+  buttonSecondaryHover: "rgba(255, 255, 255, 0.08)",
 
   /** Icons */
-  iconPrimary: "#e8f5e9",
-  iconSecondary: "#9ca3af",
+  iconPrimary: "#FFFFFF",
+  iconSecondary: "#A0A0A0",
 
-  /** Status scores */
+  /** Status scores (unchanged — halal verdicts stay consistent) */
   statusExcellent: "#22c55e",
   statusExcellentBg: "rgba(34, 197, 94, 0.20)",
   statusBon: "#13ec6a",
@@ -256,11 +256,11 @@ export const glass = {
     highlight: "rgba(255, 255, 255, 0.50)",
   },
   dark: {
-    bg: "rgba(19, 42, 26, 0.65)",
-    bgSubtle: "rgba(19, 42, 26, 0.40)",
-    border: "rgba(255, 255, 255, 0.08)",
-    borderStrong: "rgba(255, 255, 255, 0.12)",
-    highlight: "rgba(255, 255, 255, 0.05)",
+    bg: "rgba(255, 255, 255, 0.04)",
+    bgSubtle: "rgba(255, 255, 255, 0.02)",
+    border: "rgba(207, 165, 51, 0.20)",
+    borderStrong: "rgba(207, 165, 51, 0.30)",
+    highlight: "rgba(207, 165, 51, 0.08)",
   },
 } as const;
 
@@ -310,7 +310,7 @@ export const gradients = {
   /** Warning (amber → red). */
   alert: ["#f59e0b", "#ef4444"] as const,
   /** Hero dark mode (deep forest). */
-  heroDark: ["#0a1a10", "#132a1a"] as const,
+  heroDark: ["#121212", "#1A1A1A"] as const,
   /** Hero light mode (warm white). */
   heroLight: ["#f8faf9", "#ffffff"] as const,
   /** Ramadan hero dark (warm black → deep indigo). */
