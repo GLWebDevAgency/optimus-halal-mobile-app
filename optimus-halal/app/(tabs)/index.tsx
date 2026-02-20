@@ -181,6 +181,11 @@ const QuickActionCard = React.memo(function QuickActionCard({
     );
   }
 
+  // Gold halo gradient direction based on proximity to scanner card (index 0, top-left)
+  // index 1 (top-right): glow from left | index 2 (bottom-left): glow from top | index 3 (bottom-right): glow diagonal
+  const glowStart = index === 2 ? { x: 0, y: 0 } : index === 3 ? { x: 0, y: 0 } : { x: 0, y: 0 };
+  const glowEnd = index === 2 ? { x: 0, y: 0.5 } : index === 3 ? { x: 0.5, y: 0.5 } : { x: 0.5, y: 0 };
+
   // Glass-morphism card for non-primary
   return (
     <Animated.View
@@ -190,7 +195,7 @@ const QuickActionCard = React.memo(function QuickActionCard({
         .damping(18)}
       style={[styles.quickActionHalf]}
     >
-      <Shadow distance={isDark ? 8 : 4} startColor={isDark ? "rgba(207,165,51,0.12)" : "rgba(0,0,0,0.04)"} offset={[0, 0]} style={{ borderRadius: 20, width: "100%" }}>
+      <Shadow distance={4} startColor={isDark ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.04)"} offset={[0, 1]} style={{ borderRadius: 20, width: "100%" }}>
         <TouchableOpacity
           onPress={handlePress}
           activeOpacity={0.85}
@@ -207,6 +212,16 @@ const QuickActionCard = React.memo(function QuickActionCard({
             },
           ]}
         >
+        {/* Directional gold halo — radiates from scanner card, covers ~50% */}
+        {isDark && (
+          <LinearGradient
+            colors={["rgba(207,165,51,0.10)", "rgba(207,165,51,0.03)", "transparent"]}
+            start={glowStart}
+            end={glowEnd}
+            style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
+            pointerEvents="none"
+          />
+        )}
         <View style={styles.quickActionContent}>
           <View
             style={[
