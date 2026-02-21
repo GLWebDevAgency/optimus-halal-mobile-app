@@ -147,7 +147,7 @@ export const darkShadows = {
  * <View style={shadow.card} />
  * ```
  */
-export const getShadows = (isDark: boolean): typeof lightShadows =>
+export const getShadows = (isDark: boolean): Record<ShadowLevel, ShadowPreset> =>
   isDark ? darkShadows : lightShadows;
 
 // ---------------------------------------------------------------------------
