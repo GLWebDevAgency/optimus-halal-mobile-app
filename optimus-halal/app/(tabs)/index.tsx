@@ -215,7 +215,7 @@ const QuickActionCard = React.memo(function QuickActionCard({
         {/* Directional gold halo — radiates from scanner card, covers ~50% */}
         {isDark && (
           <LinearGradient
-            colors={["rgba(207,165,51,0.10)", "rgba(207,165,51,0.03)", "transparent"]}
+            colors={["rgba(207,165,51,0.18)", "rgba(207,165,51,0.07)", "transparent"]}
             start={glowStart}
             end={glowEnd}
             style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
