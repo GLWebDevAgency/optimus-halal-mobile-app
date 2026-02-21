@@ -25,7 +25,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { IslamicPattern } from "@/components/ui";
+import { PremiumBackground } from "@/components/ui";
 import { useFeatureFlagsStore, useLocalCartStore } from "@/store";
 import { trpc } from "@/lib/trpc";
 import { brand, gold, halalStatus } from "@/theme/colors";
@@ -247,9 +247,8 @@ export default function MarketplaceTab() {
 
   if (!flags.marketplaceEnabled) {
     return (
-      <View className="flex-1" style={{ backgroundColor: colors.background }}>
-        {/* Background Islamic Pattern */}
-        <IslamicPattern variant="khatam" opacity={0.04} />
+      <View className="flex-1">
+        <PremiumBackground />
 
         <ScrollView
           contentContainerStyle={{
@@ -341,9 +340,8 @@ export default function MarketplaceTab() {
   }
 
   return (
-    <View className="flex-1" style={{ backgroundColor: colors.background }}>
-      {/* Background Islamic Pattern */}
-      <IslamicPattern variant="khatam" opacity={0.04} />
+    <View className="flex-1">
+      <PremiumBackground />
 
       <ScrollView
         contentContainerStyle={{

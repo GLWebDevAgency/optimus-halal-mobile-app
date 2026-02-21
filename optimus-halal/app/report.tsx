@@ -28,7 +28,7 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useHaptics, useTranslation, useTheme } from "@/hooks";
-import { IslamicPattern } from "@/components/ui";
+import { PremiumBackground } from "@/components/ui";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { ImpactFeedbackStyle } from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
@@ -167,8 +167,8 @@ export default function ReportingFormScreen() {
   const progressPercent = Math.round((progress / 3) * 100);
 
   return (
-    <View className="flex-1" style={{ backgroundColor: colors.background }}>
-      <IslamicPattern variant="tessellation" opacity={0.03} />
+    <View className="flex-1">
+      <PremiumBackground />
       {/* Header */}
       <Animated.View
         entering={FadeIn.duration(300)}

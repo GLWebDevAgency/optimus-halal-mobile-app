@@ -27,7 +27,7 @@ import Animated, {
   FadeInUp,
 } from "react-native-reanimated";
 
-import { Card, Avatar, IslamicPattern } from "@/components/ui";
+import { Card, Avatar, PremiumBackground } from "@/components/ui";
 import { ProfileSkeleton } from "@/components/skeletons";
 import { useThemeStore, usePreferencesStore } from "@/store";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -244,9 +244,8 @@ export default function ProfileScreen() {
   if (profileLoading || !profile) return <ProfileSkeleton />;
 
   return (
-    <View className="flex-1" style={{ backgroundColor: colors.background }}>
-      {/* Islamic Pattern Background */}
-      <IslamicPattern variant="khatam" opacity={0.04} />
+    <View className="flex-1">
+      <PremiumBackground />
 
       {/* Header */}
       <Animated.View

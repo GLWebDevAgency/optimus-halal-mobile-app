@@ -20,7 +20,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
 import { AUTH_CONFIG } from "@/constants/config";
-import { IslamicPattern } from "@/components/ui";
+import { PremiumBackground } from "@/components/ui";
 import { useTranslation, useHaptics, useTheme } from "@/hooks";
 
 export default function AuthWelcomeScreen() {
@@ -54,9 +54,8 @@ export default function AuthWelcomeScreen() {
   }
 
   return (
-    <View className="flex-1 bg-white dark:bg-background-dark">
-      {/* Islamic Pattern Background */}
-      <IslamicPattern variant="tessellation" opacity={0.04} />
+    <View className="flex-1">
+      <PremiumBackground />
 
       <ScrollView
         contentContainerStyle={{

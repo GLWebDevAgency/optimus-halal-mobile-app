@@ -37,7 +37,7 @@ import Animated, {
 import { LinearGradient } from "expo-linear-gradient";
 import Svg, { Path } from "react-native-svg";
 
-import { Avatar, IslamicPattern } from "@/components/ui";
+import { Avatar, PremiumBackground } from "@/components/ui";
 import { HomeSkeleton } from "@/components/skeletons";
 import { useMe } from "@/hooks/useAuth";
 import { useFavoritesList } from "@/hooks/useFavorites";
@@ -741,22 +741,8 @@ export default function HomeScreen() {
   // ---- Render ----
   return (
     <View style={{ flex: 1 }}>
-      {/* Full-screen background gradient */}
-      <LinearGradient
-        colors={[
-          colors.background,
-          isDark ? colors.card : colors.backgroundSecondary,
-          colors.background,
-        ] as [string, string, string]}
-        locations={[0, 0.4, 1]}
-        style={StyleSheet.absoluteFill}
-      />
-
-      <IslamicPattern
-        variant={isRamadan ? "khatam" : "tessellation"}
-        color={isRamadan ? "#D4AF37" : undefined}
-        opacity={isRamadan ? 0.05 : 0.03}
-      />
+      {/* Ultra-premium ambient background */}
+      <PremiumBackground />
 
       <AnimatedScrollView
         onScroll={onScroll}

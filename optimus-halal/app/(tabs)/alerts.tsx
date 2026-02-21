@@ -26,7 +26,7 @@ import Animated, {
   FadeInLeft,
 } from "react-native-reanimated";
 
-import { Card, EmptyState, IslamicPattern } from "@/components/ui";
+import { Card, EmptyState, PremiumBackground } from "@/components/ui";
 import { AlertsSkeleton } from "@/components/skeletons";
 import { useTranslation, useHaptics, useTheme } from "@/hooks";
 import type { TranslationKeys } from "@/hooks/useTranslation";
@@ -334,9 +334,8 @@ export default function AlertsScreen() {
   }
 
   return (
-    <View className="flex-1" style={{ backgroundColor: colors.background }}>
-      {/* Background Islamic Pattern */}
-      <IslamicPattern variant="tessellation" opacity={0.02} />
+    <View className="flex-1">
+      <PremiumBackground />
 
       {/* Header */}
       <Animated.View

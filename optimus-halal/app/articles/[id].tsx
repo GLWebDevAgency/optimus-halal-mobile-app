@@ -2,7 +2,7 @@
  * Article Detail Screen — "Killer 2026" Design
  *
  * Full-bleed cover, parallax header, elegant typography,
- * IslamicPattern overlay, share action, tag chips.
+ * premium background, share action, tag chips.
  */
 
 import React, { useCallback } from "react";
@@ -26,7 +26,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 
-import { IslamicPattern } from "@/components/ui";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useHaptics } from "@/hooks";
@@ -163,9 +162,6 @@ export default function ArticleDetailScreen() {
             locations={[0, 0.3, 0.55, 1]}
             style={StyleSheet.absoluteFill}
           />
-
-          {/* Islamic overlay */}
-          <IslamicPattern variant="arabesque" opacity={0.05} />
 
           {/* Top bar */}
           <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>

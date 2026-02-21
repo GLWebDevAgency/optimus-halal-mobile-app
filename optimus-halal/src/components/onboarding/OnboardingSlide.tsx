@@ -15,10 +15,9 @@ import Animated, {
 } from "react-native-reanimated";
 import type { OnboardingSlide as OnboardingSlideType } from "@constants/onboarding";
 import { useTheme } from "@/hooks";
-import { IslamicPattern } from "@/components/ui";
+import { PremiumBackground } from "@/components/ui";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const patterns = ["tessellation", "arabesque", "khatam"] as const;
 
 interface OnboardingSlideProps {
   slide: OnboardingSlideType;
@@ -62,8 +61,8 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
             className="absolute inset-0"
           />
 
-          {/* Islamic Pattern Overlay */}
-          <IslamicPattern variant={patterns[index] ?? "tessellation"} opacity={0.04} />
+          {/* Premium Background */}
+          <PremiumBackground noOrb />
 
           {/* Floating Badge */}
           <View className="absolute top-4 right-4 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-2 rounded-xl shadow-lg border border-gold-500/20 items-center justify-center">

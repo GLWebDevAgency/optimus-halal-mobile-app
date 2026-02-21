@@ -35,7 +35,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-import { Button, Input, IslamicPattern } from "@/components/ui";
+import { Button, Input, PremiumBackground } from "@/components/ui";
 import { useLogin } from "@/hooks/useAuth";
 import { useTranslation, useHaptics, useTheme } from "@/hooks";
 import type { TranslationKeys } from "@/i18n";
@@ -206,13 +206,8 @@ export default function LoginScreen() {
   }, [impact, t]);
 
   return (
-    <View className="flex-1 bg-background-light dark:bg-background-dark">
-      {/* Islamic Pattern Background */}
-      <IslamicPattern variant="tessellation" opacity={0.04} />
-
-      {/* Background Decorative Elements */}
-      <View className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary-500/10 rounded-full blur-[100px]" accessible={false} />
-      <View className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-gold-500/5 rounded-full blur-[100px]" accessible={false} />
+    <View className="flex-1">
+      <PremiumBackground />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}

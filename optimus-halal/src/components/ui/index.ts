@@ -20,6 +20,7 @@ export { OfflineBanner } from "./OfflineBanner";
 export { IslamicPattern } from "./IslamicPattern";
 export { ArabicCalligraphy } from "./ArabicCalligraphy";
 export { GlowCard } from "./GlowCard";
+export { PremiumBackground, type PremiumBackgroundProps } from "./PremiumBackground";
 
 export { StatusPill } from "./StatusPill";
 export { TrustRing } from "./TrustRing";

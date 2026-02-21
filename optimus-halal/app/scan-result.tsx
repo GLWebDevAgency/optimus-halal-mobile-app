@@ -48,7 +48,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
-import { IconButton, IslamicPattern, ArabicCalligraphy, StatusPill, LevelUpCelebration } from "@/components/ui";
+import { IconButton, ArabicCalligraphy, StatusPill, LevelUpCelebration } from "@/components/ui";
 import { PersonalAlerts, type PersonalAlert } from "@/components/scan/PersonalAlerts";
 import { MadhabBottomSheet } from "@/components/scan/MadhabBottomSheet";
 import { ShareCardView, captureAndShareCard } from "@/components/scan/ShareCard";
@@ -1179,9 +1179,6 @@ export default function ScanResultScreen() {
           accessibilityRole="summary"
           accessibilityLabel={`${t.scanResult[statusConfig.labelKey]}`}
         >
-          {/* Islamic pattern overlay */}
-          <IslamicPattern variant="khatam" opacity={0.03} />
-
           {/* ── GROUP 1: Verdict Cluster ── */}
           <Animated.View entering={FadeIn.delay(50).duration(400)} style={styles.verdictCluster}>
             <StatusIcon config={statusConfig} />

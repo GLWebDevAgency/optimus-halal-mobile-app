@@ -2,7 +2,7 @@
  * Article List Screen — "Killer 2026" Design
  *
  * Filter chips (type + tags), search, infinite scroll,
- * IslamicPattern overlay, card-based layout.
+ * premium background, card-based layout.
  */
 
 import React, { useCallback, useMemo, useState } from "react";
@@ -25,7 +25,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeIn, FadeInDown, FadeInRight } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 
-import { IslamicPattern, EmptyState } from "@/components/ui";
+import { PremiumBackground, EmptyState } from "@/components/ui";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useHaptics } from "@/hooks";
@@ -209,9 +209,8 @@ export default function ArticlesListScreen() {
   );
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
-      {/* Background pattern */}
-      <IslamicPattern variant="tessellation" opacity={0.02} />
+    <View style={[styles.root]}>
+      <PremiumBackground />
 
       {/* ---- Header ---- */}
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>

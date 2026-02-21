@@ -24,7 +24,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
-import { Button, Input, IconButton, PhoneInput, LocationPicker, validateFrenchPhone, IslamicPattern } from "@/components/ui";
+import { Button, Input, IconButton, PhoneInput, LocationPicker, validateFrenchPhone, PremiumBackground } from "@/components/ui";
 import { useLocalAuthStore } from "@/store";
 import { authService } from "@/services/api/auth.service";
 import { City } from "@/constants/locations";
@@ -143,9 +143,8 @@ export default function SignUpScreen() {
   }, []);
 
   return (
-    <View className="flex-1 bg-white dark:bg-background-dark">
-      {/* Islamic Pattern Background */}
-      <IslamicPattern variant="tessellation" opacity={0.04} />
+    <View className="flex-1">
+      <PremiumBackground />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
