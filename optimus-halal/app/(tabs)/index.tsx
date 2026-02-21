@@ -140,7 +140,7 @@ const QuickActionCard = React.memo(function QuickActionCard({
           .damping(18)}
         style={[styles.quickActionHalf]}
       >
-        <Shadow distance={12} startColor={isDark ? "#13ec6a40" : "#13ec6a25"} offset={[0, 0]} style={{ borderRadius: 20, width: "100%" }}>
+        <Shadow distance={12} startColor={isDark ? "#CFA53340" : "#13ec6a25"} offset={[0, 0]} style={{ borderRadius: 20, width: "100%" }}>
           <TouchableOpacity
             onPress={handlePress}
             activeOpacity={0.85}
@@ -150,7 +150,7 @@ const QuickActionCard = React.memo(function QuickActionCard({
             style={styles.quickActionPrimary}
           >
           <LinearGradient
-            colors={["#13ec6a", "#0ea64b"]}
+            colors={isDark ? ["#FDE08B", "#CFA533"] : ["#13ec6a", "#0ea64b"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}
@@ -167,19 +167,24 @@ const QuickActionCard = React.memo(function QuickActionCard({
           />
           <View style={styles.quickActionContent}>
             <View style={styles.quickActionIconWrapPrimary}>
-              <MaterialIcons name={icon} size={24} color="#ffffff" />
+              <MaterialIcons name={icon} size={24} color={isDark ? "#1A1A1A" : "#ffffff"} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.quickActionTitlePrimary}>{title}</Text>
-              <Text style={styles.quickActionSubPrimary}>{subtitle}</Text>
+              <Text style={[styles.quickActionTitlePrimary, isDark && { color: "#1A1A1A" }]}>{title}</Text>
+              <Text style={[styles.quickActionSubPrimary, isDark && { color: "rgba(26,26,26,0.7)" }]}>{subtitle}</Text>
             </View>
-            <MaterialIcons name="arrow-forward" size={18} color="rgba(255,255,255,0.6)" />
+            <MaterialIcons name="arrow-forward" size={18} color={isDark ? "rgba(26,26,26,0.5)" : "rgba(255,255,255,0.6)"} />
           </View>
           </TouchableOpacity>
         </Shadow>
       </Animated.View>
     );
   }
+
+  // Gold halo gradient direction based on proximity to scanner card (index 0, top-left)
+  // index 1 (top-right): glow from left | index 2 (bottom-left): glow from top | index 3 (bottom-right): glow diagonal
+  const glowStart = index === 2 ? { x: 0, y: 0 } : index === 3 ? { x: 0, y: 0 } : { x: 0, y: 0 };
+  const glowEnd = index === 2 ? { x: 0, y: 0.5 } : index === 3 ? { x: 0.5, y: 0.5 } : { x: 0.5, y: 0 };
 
   // Glass-morphism card for non-primary
   return (
@@ -190,7 +195,7 @@ const QuickActionCard = React.memo(function QuickActionCard({
         .damping(18)}
       style={[styles.quickActionHalf]}
     >
-      <Shadow distance={4} startColor={isDark ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.04)"} offset={[0, 1]} style={{ borderRadius: 20, width: "100%" }}>
+      <Shadow distance={4} startColor={isDark ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.04)"} offset={[0, 1]} style={{ borderRadius: 20, width: "100%" }}>
         <TouchableOpacity
           onPress={handlePress}
           activeOpacity={0.85}
@@ -207,6 +212,16 @@ const QuickActionCard = React.memo(function QuickActionCard({
             },
           ]}
         >
+        {/* Directional gold halo — radiates from scanner card, covers ~50% */}
+        {isDark && (
+          <LinearGradient
+            colors={["rgba(207,165,51,0.18)", "rgba(207,165,51,0.07)", "transparent"]}
+            start={glowStart}
+            end={glowEnd}
+            style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
+            pointerEvents="none"
+          />
+        )}
         <View style={styles.quickActionContent}>
           <View
             style={[
@@ -454,7 +469,7 @@ const FavoriteCircle = React.memo(function FavoriteCircle({
       >
         {/* Gradient ring */}
         <LinearGradient
-          colors={["#13ec6a", "#0ea64b", "#D4AF37"]}
+          colors={isDark ? ["#D4AF37", "#CFA533", "#FDE08B"] : ["#13ec6a", "#0ea64b", "#D4AF37"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.favGradientRing}
@@ -821,7 +836,7 @@ export default function HomeScreen() {
               <MaterialIcons
                 name="notifications-none"
                 size={22}
-                color={colors.textPrimary}
+                color={isDark ? colors.primary : colors.textPrimary}
               />
               {unreadCount > 0 && (
                 <View style={styles.bellBadge}>

@@ -13,7 +13,7 @@ import {
   TouchableOpacityProps,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useHaptics } from "@/hooks";
+import { useHaptics, useTheme } from "@/hooks";
 import { semantic, darkTheme, brand, primary } from "@/theme/colors";
 
 export interface ButtonProps extends TouchableOpacityProps {
@@ -86,6 +86,7 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const { impact } = useHaptics();
+  const { isDark } = useTheme();
   const variantStyle = variantStyles[variant];
   const sizeStyle = sizeStyles[size];
 
@@ -126,7 +127,11 @@ export const Button: React.FC<ButtonProps> = ({
     accessibilityState: { disabled: disabled || loading, busy: loading },
   };
 
-  if (variantStyle.gradient && !disabled) {
+  const resolvedGradient = variant === "primary" && isDark
+    ? (["#FDE08B", "#CFA533"] as const)
+    : variantStyle.gradient;
+
+  if (resolvedGradient && !disabled) {
     return (
       <TouchableOpacity
         onPress={handlePress}
@@ -136,7 +141,7 @@ export const Button: React.FC<ButtonProps> = ({
         {...props}
       >
         <LinearGradient
-          colors={variantStyle.gradient}
+          colors={resolvedGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           className="absolute inset-0 rounded-2xl"

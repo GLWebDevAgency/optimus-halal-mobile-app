@@ -43,7 +43,7 @@ interface StatusConfig {
   textColor: string;
 }
 
-const getStatusConfig = (status: StatusType, isDark: boolean, t: ReturnType<typeof useTranslation>["t"]): StatusConfig => {
+const getStatusConfig = (status: StatusType, isDark: boolean, t: ReturnType<typeof useTranslation>["t"], themeColors: ReturnType<typeof useTheme>["colors"]): StatusConfig => {
   switch (status) {
     case "excellent":
       return {
@@ -55,7 +55,7 @@ const getStatusConfig = (status: StatusType, isDark: boolean, t: ReturnType<type
       return {
         label: t.favorites.status.good,
         bgColor: isDark ? "rgba(19,236,106,0.2)" : "rgba(19,236,106,0.15)",
-        textColor: isDark ? "#13ec6a" : "#0ea64b",
+        textColor: isDark ? themeColors.primary : themeColors.primaryDark,
       };
     case "moyen":
       return {
@@ -144,7 +144,7 @@ interface ProductCardProps {
 const favoriteKeyExtractor = (item: MappedFavorite) => item.id;
 
 const ProductCard = React.memo(function ProductCard({ product, index, onRemove, onView, onScan, isDark, colors, t }: ProductCardProps) {
-  const statusConfig = getStatusConfig(product.status, isDark, t);
+  const statusConfig = getStatusConfig(product.status, isDark, t, colors);
 
   return (
     <Animated.View
@@ -181,7 +181,7 @@ const ProductCard = React.memo(function ProductCard({ product, index, onRemove, 
         accessibilityRole="button"
         accessibilityLabel={`${t.favorites.removeConfirm} ${product.name}`}
       >
-        <MaterialIcons name="favorite" size={18} color="#13ec6a" />
+        <MaterialIcons name="favorite" size={18} color={colors.primary} />
       </TouchableOpacity>
 
       {/* Product Image */}

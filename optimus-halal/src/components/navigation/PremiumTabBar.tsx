@@ -39,7 +39,7 @@ import Animated, {
 import { LinearGradient } from "expo-linear-gradient";
 import Svg, { Defs, RadialGradient, Stop, Circle } from "react-native-svg";
 
-import { brand, gradients, darkTheme } from "@/theme/colors";
+import { brand, gold, gradients } from "@/theme/colors";
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -171,7 +171,7 @@ function TabItem({ tab, isActive, onPress, badge, index }: TabItemProps) {
     opacity: rippleOpacity.value,
   }));
 
-  const activeColor = brand.primary;
+  const activeColor = isDark ? gold[500] : brand.primary;
   const inactiveColor = isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.4)";
   const currentColor = isActive ? activeColor : inactiveColor;
 
@@ -319,7 +319,9 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
       {/* Multiple glow layers for depth - pointerEvents none to allow touch through */}
       <Animated.View style={[styles.outerGlow, animatedOuterGlowStyle]} pointerEvents="none">
         <LinearGradient
-          colors={["rgba(19, 236, 106, 0.25)", "rgba(19, 236, 106, 0)"]}
+          colors={isDark
+            ? ["rgba(207, 165, 51, 0.25)", "rgba(207, 165, 51, 0)"]
+            : ["rgba(19, 236, 106, 0.25)", "rgba(19, 236, 106, 0)"]}
           style={styles.glowGradient}
         />
       </Animated.View>
@@ -327,7 +329,7 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
       {/* Animated ring when active - pointerEvents none */}
       <Animated.View style={[styles.scanningRing, animatedInnerRingStyle]} pointerEvents="none">
         <LinearGradient
-          colors={["transparent", brand.primary, "transparent"]}
+          colors={["transparent", isDark ? gold[500] : brand.primary, "transparent"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.scanningRingGradient}
@@ -339,7 +341,7 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
         style={[
           styles.buttonRing,
           { 
-            borderColor: isDark ? "rgba(16,34,23,0.8)" : "rgba(255,255,255,0.9)",
+            borderColor: isDark ? "rgba(207,165,51,0.4)" : "rgba(255,255,255,0.9)",
             shadowColor: isDark ? "#000" : brand.primary,
           }
         ]} 
@@ -352,13 +354,22 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
         activeOpacity={0.8}
         accessibilityRole="button"
         accessibilityLabel={t.nav.scanner}
-        style={[styles.centerButton, animatedButtonStyle, { zIndex: 10 }]}
+        style={[
+          styles.centerButton,
+          animatedButtonStyle,
+          {
+            zIndex: 10,
+            ...Platform.select({
+              ios: { shadowColor: isDark ? "#CFA533" : brand.primary },
+            }),
+          },
+        ]}
       >
         {/* Glass effect background */}
         <View style={styles.centerButtonInner}>
           <LinearGradient
-            colors={isDark 
-              ? ["rgba(255,255,255,0.95)", "rgba(240,255,245,0.9)"]
+            colors={isDark
+              ? ["#FDE08B", "#CFA533"]
               : [...gradients.heroDark]
             }
             style={styles.centerButtonGradient}
@@ -371,7 +382,7 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
               <MaterialIcons
                 name="qr-code-scanner"
                 size={30}
-                color={isDark ? darkTheme.textInverse : brand.primary}
+                color={isDark ? "#1A1A1A" : brand.primary}
               />
             </View>
           </LinearGradient>
@@ -456,7 +467,7 @@ export function PremiumTabBar({ state, navigation }: BottomTabBarProps) {
             styles.blurContainer,
             {
               backgroundColor: isDark
-                ? "rgba(10, 20, 14, 0.97)"
+                ? "rgba(18, 18, 18, 0.97)"
                 : "rgba(255, 255, 255, 0.97)",
             },
           ]}
@@ -468,7 +479,7 @@ export function PremiumTabBar({ state, navigation }: BottomTabBarProps) {
         styles.backgroundContainer,
         { 
           backgroundColor: isDark 
-            ? "rgba(10, 20, 14, 0.85)" 
+            ? "rgba(18, 18, 18, 0.85)" 
             : "rgba(255, 255, 255, 0.85)",
         }
       ]}>
@@ -477,9 +488,9 @@ export function PremiumTabBar({ state, navigation }: BottomTabBarProps) {
           <LinearGradient
             colors={[
               "transparent",
-              brand.primary + "40",
-              brand.primary + "80",
-              brand.primary + "40",
+              (isDark ? gold[500] : brand.primary) + "40",
+              (isDark ? gold[500] : brand.primary) + "80",
+              (isDark ? gold[500] : brand.primary) + "40",
               "transparent",
             ]}
             start={{ x: 0, y: 0 }}
@@ -691,7 +702,6 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     ...Platform.select({
       ios: {
-        shadowColor: brand.primary,
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.5,
         shadowRadius: 16,

@@ -1,6 +1,5 @@
 import React from "react";
 import { View, type ViewStyle, type ViewProps } from "react-native";
-import { brand } from "@/theme/colors";
 import { radius } from "@/theme/spacing";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -20,13 +19,14 @@ const GLOW_CONFIG: Record<GlowIntensity, { opacity: number; radius: number; elev
 };
 
 export const GlowCard: React.FC<GlowCardProps> = ({
-  glowColor = brand.primary,
+  glowColor,
   glowIntensity = "subtle",
   children,
   style,
   ...props
 }) => {
   const { colors } = useTheme();
+  const resolvedGlowColor = glowColor ?? colors.primary;
   const glow = GLOW_CONFIG[glowIntensity];
 
   return (
@@ -38,7 +38,7 @@ export const GlowCard: React.FC<GlowCardProps> = ({
           padding: 16,
           borderWidth: 1,
           borderColor: colors.cardBorder,
-          shadowColor: glowColor,
+          shadowColor: resolvedGlowColor,
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: glow.opacity,
           shadowRadius: glow.radius,

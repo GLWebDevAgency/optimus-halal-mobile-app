@@ -187,7 +187,7 @@ const SEARCH_SUGGESTIONS = [
 
 export default function ExclusionsScreen() {
   const { exclusions, toggleExclusion } = usePreferencesStore();
-  const { isDark } = useTheme();
+  const { colors, isDark } = useTheme();
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -199,7 +199,7 @@ export default function ExclusionsScreen() {
     cardBorder: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
     textPrimary: isDark ? "#e8f5e9" : "#0d1b13",
     textSecondary: isDark ? "#9ca3af" : "#4b5563",
-    primary: "#13ec6a",
+    primary: colors.primary,
     primaryDark: "#0ea64b",
     inputBg: isDark ? "#1a2e22" : "#ffffff",
     inputBorder: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",

@@ -49,7 +49,7 @@ export function LocationPicker({
   ref,
 }: LocationPickerProps) {
   const { impact, notification } = useHaptics();
-    const { isDark } = useTheme();
+    const { colors, isDark } = useTheme();
     const { t } = useTranslation();
     const resolvedPlaceholder = placeholder || t.location.selectCity;
 
@@ -164,7 +164,7 @@ export function LocationPicker({
               <MaterialIcons
                 name="location-on"
                 size={20}
-                color={value ? "#13ec6a" : "#94a3b8"}
+                color={value ? colors.primary : "#94a3b8"}
               />
               <Text
                 className={`ml-2 text-base ${
@@ -198,9 +198,9 @@ export function LocationPicker({
               `}
             >
               {isLocating ? (
-                <ActivityIndicator size="small" color="#13ec6a" />
+                <ActivityIndicator size="small" color={colors.primary} />
               ) : (
-                <MaterialIcons name="my-location" size={22} color="#13ec6a" />
+                <MaterialIcons name="my-location" size={22} color={colors.primary} />
               )}
             </TouchableOpacity>
           )}
@@ -275,9 +275,9 @@ export function LocationPicker({
                   `}
                 >
                   {isLocating ? (
-                    <ActivityIndicator size="small" color="#13ec6a" />
+                    <ActivityIndicator size="small" color={colors.primary} />
                   ) : (
-                    <MaterialIcons name="my-location" size={24} color="#13ec6a" />
+                    <MaterialIcons name="my-location" size={24} color={colors.primary} />
                   )}
                   <View className="flex-1 ml-3">
                     <Text className="text-primary-700 dark:text-primary-400 font-semibold">
@@ -290,7 +290,7 @@ export function LocationPicker({
                   <MaterialIcons
                     name="chevron-right"
                     size={24}
-                    color="#13ec6a"
+                    color={colors.primary}
                   />
                 </TouchableOpacity>
               </Animated.View>
@@ -348,7 +348,7 @@ export function LocationPicker({
                         ${isDark ? "bg-primary-900/30" : "bg-primary-50"}
                       `}
                     >
-                      <MaterialIcons name="location-city" size={20} color="#13ec6a" />
+                      <MaterialIcons name="location-city" size={20} color={colors.primary} />
                     </View>
                     <View className="flex-1">
                       <Text className="text-slate-900 dark:text-white font-medium">

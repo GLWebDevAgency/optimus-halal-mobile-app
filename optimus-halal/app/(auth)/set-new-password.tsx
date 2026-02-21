@@ -48,7 +48,7 @@ interface PasswordStrengthResult {
 
 export default function SetNewPasswordScreen() {
   const insets = useSafeAreaInsets();
-  const { isDark } = useTheme();
+  const { colors, isDark } = useTheme();
   const { impact, notification } = useHaptics();
   useLocalSearchParams<{ token: string }>();
   const { t, isRTL } = useTranslation();
@@ -79,9 +79,9 @@ export default function SetNewPasswordScreen() {
     } else if (score <= 5) {
       return { strength: "strong", score: 3, label: t.auth.setNewPassword.strength.strong, color: "#22c55e" };
     } else {
-      return { strength: "very-strong", score: 4, label: t.auth.setNewPassword.strength.veryStrong, color: "#13ec6a" };
+      return { strength: "very-strong", score: 4, label: t.auth.setNewPassword.strength.veryStrong, color: colors.primary };
     }
-  }, [t]);
+  }, [t, colors.primary]);
 
   const passwordStrength = useMemo(() => {
     return getPasswordStrength(newPassword);
@@ -479,6 +479,7 @@ export default function SetNewPasswordScreen() {
                 accessibilityState={{ disabled: !isFormValid || isLoading }}
                 style={[
                   styles.submitButton,
+                  { shadowColor: colors.primary },
                   (!isFormValid || isLoading) && styles.submitButtonDisabled
                 ]}
               >
@@ -654,7 +655,6 @@ const styles = StyleSheet.create({
   submitButton: {
     borderRadius: 12,
     overflow: "hidden",
-    shadowColor: "#13ec6a",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,

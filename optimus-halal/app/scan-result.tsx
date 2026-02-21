@@ -584,7 +584,7 @@ const ScanLoadingSkeleton = React.memo(function ScanLoadingSkeleton({
 }: {
   barcode?: string;
 }) {
-  const { isDark } = useTheme();
+  const { isDark, colors } = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
@@ -644,7 +644,7 @@ const ScanLoadingSkeleton = React.memo(function ScanLoadingSkeleton({
           <Text
             style={[
               styles.loadingTitle,
-              { color: isDark ? "#13ec6a" : "#0ea64b" },
+              { color: isDark ? colors.primary : colors.primaryDark },
             ]}
           >
             {t.scanResult.analyzing.replace("...", "")}{dots}
@@ -787,7 +787,7 @@ const ScanErrorState = React.memo(function ScanErrorState({
           </TouchableOpacity>
           <TouchableOpacity
             onPress={onRetry}
-            style={[styles.stateButton, { backgroundColor: "#13ec6a" }]}
+            style={[styles.stateButton, { backgroundColor: colors.primary }]}
             accessibilityRole="button"
             accessibilityLabel={t.common.retry}
           >
@@ -838,7 +838,7 @@ const ScanNotFoundState = React.memo(function ScanNotFoundState({
         </Text>
         <TouchableOpacity
           onPress={onGoBack}
-          style={[styles.stateButton, { backgroundColor: "#13ec6a", marginTop: 16 }]}
+          style={[styles.stateButton, { backgroundColor: colors.primary, marginTop: 16 }]}
           accessibilityRole="button"
           accessibilityLabel={t.scanResult.scanAnother}
         >
@@ -1663,7 +1663,7 @@ export default function ScanResultScreen() {
                       <MaterialIcons
                         name={halalAnalysis.certifierName ? "verified" : "analytics"}
                         size={20}
-                        color="#13ec6a"
+                        color={colors.primary}
                       />
                     </View>
                     <Text
@@ -2042,14 +2042,14 @@ export default function ScanResultScreen() {
                     }}
                     style={{
                       width: 52, height: 52, borderRadius: 26, alignItems: "center", justifyContent: "center",
-                      backgroundColor: userVote === "up" ? "#13ec6a20" : isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                      backgroundColor: userVote === "up" ? colors.primaryLight : isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
                       borderWidth: userVote === "up" ? 2 : 1,
-                      borderColor: userVote === "up" ? "#13ec6a" : isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
+                      borderColor: userVote === "up" ? colors.primary : isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
                     }}
                     accessibilityRole="button"
                     accessibilityLabel={t.scanResult.accurateResult}
                   >
-                    <MaterialIcons name="thumb-up" size={24} color={userVote === "up" ? "#13ec6a" : colors.textSecondary} />
+                    <MaterialIcons name="thumb-up" size={24} color={userVote === "up" ? colors.primary : colors.textSecondary} />
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => {
@@ -2217,7 +2217,7 @@ export default function ScanResultScreen() {
               {/* Where to Buy (primary CTA) */}
               <TouchableOpacity
                 onPress={handleFindStores}
-                style={styles.ctaButton}
+                style={[styles.ctaButton, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
                 activeOpacity={0.85}
                 accessibilityRole="button"
                 accessibilityLabel={t.scanResult.whereToBuy}
@@ -2327,7 +2327,7 @@ export default function ScanResultScreen() {
               {/* Where to Buy (primary CTA) */}
               <TouchableOpacity
                 onPress={handleFindStores}
-                style={styles.ctaButton}
+                style={[styles.ctaButton, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
                 activeOpacity={0.85}
                 accessibilityRole="button"
                 accessibilityLabel={t.scanResult.whereToBuy}
@@ -2927,13 +2927,11 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 46,
     borderRadius: 14,
-    backgroundColor: "#13ec6a",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
     // Green glow
-    shadowColor: "#13ec6a",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
     shadowRadius: 12,

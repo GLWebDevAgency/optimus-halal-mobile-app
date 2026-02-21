@@ -101,7 +101,7 @@ export default function PremiumPaywallScreen() {
           </TouchableOpacity>
         </View>
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 32 }}>
-          <MaterialIcons name="workspace-premium" size={64} color="#13ec6a" />
+          <MaterialIcons name="workspace-premium" size={64} color={colors.primary} />
           <Text style={{ color: colors.textPrimary, fontSize: 24, fontWeight: "800", marginTop: 16, textAlign: "center" }}>
             Optimus+
           </Text>
@@ -128,7 +128,7 @@ export default function PremiumPaywallScreen() {
           </TouchableOpacity>
         </View>
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 32 }}>
-          <MaterialIcons name="verified" size={64} color="#13ec6a" />
+          <MaterialIcons name="verified" size={64} color={colors.primary} />
           <Text style={{ color: colors.textPrimary, fontSize: 24, fontWeight: "800", marginTop: 16 }}>
             {t.premium.alreadyPremium}
           </Text>
@@ -169,7 +169,7 @@ export default function PremiumPaywallScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         {/* Hero */}
         <Animated.View entering={FadeIn.duration(400)} style={{ alignItems: "center", paddingVertical: 24 }}>
-          <MaterialIcons name="workspace-premium" size={56} color="#13ec6a" />
+          <MaterialIcons name="workspace-premium" size={56} color={colors.primary} />
           <Text style={{ color: colors.textPrimary, fontSize: 28, fontWeight: "900", marginTop: 12 }}>
             Optimus+
           </Text>
@@ -192,12 +192,12 @@ export default function PremiumPaywallScreen() {
                   justifyContent: "center",
                 }}
               >
-                <MaterialIcons name={feature.icon} size={20} color="#13ec6a" />
+                <MaterialIcons name={feature.icon} size={20} color={colors.primary} />
               </View>
               <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: "500", flex: 1 }}>
                 {feature.label}
               </Text>
-              <MaterialIcons name="check-circle" size={20} color="#13ec6a" />
+              <MaterialIcons name="check-circle" size={20} color={colors.primary} />
             </View>
           ))}
         </Animated.View>
@@ -221,7 +221,7 @@ export default function PremiumPaywallScreen() {
                   padding: 16,
                   borderRadius: 14,
                   borderWidth: 2,
-                  borderColor: isSelected ? "#13ec6a" : isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
+                  borderColor: isSelected ? colors.primary : isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
                   backgroundColor: isSelected
                     ? isDark ? "rgba(19,236,106,0.08)" : "rgba(19,236,106,0.04)"
                     : "transparent",
@@ -233,7 +233,7 @@ export default function PremiumPaywallScreen() {
                       {plan.price}
                     </Text>
                     {plan.badge && (
-                      <View style={{ backgroundColor: "#13ec6a", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
+                      <View style={{ backgroundColor: colors.primary, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
                         <Text style={{ color: "#0d1b13", fontSize: 11, fontWeight: "800" }}>
                           {plan.badge}
                         </Text>
@@ -248,7 +248,7 @@ export default function PremiumPaywallScreen() {
                 <MaterialIcons
                   name={isSelected ? "radio-button-checked" : "radio-button-unchecked"}
                   size={24}
-                  color={isSelected ? "#13ec6a" : colors.textSecondary}
+                  color={isSelected ? colors.primary : colors.textSecondary}
                 />
               </TouchableOpacity>
             );
@@ -262,7 +262,7 @@ export default function PremiumPaywallScreen() {
             accessibilityRole="button"
             accessibilityLabel={t.premium.subscribe}
             style={{
-              backgroundColor: "#13ec6a",
+              backgroundColor: colors.primary,
               paddingVertical: 16,
               borderRadius: 14,
               alignItems: "center",

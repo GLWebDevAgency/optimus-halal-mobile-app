@@ -2,6 +2,7 @@ import React from "react";
 import { View, type ViewStyle } from "react-native";
 import Svg, { Path, Defs, Pattern, Rect } from "react-native-svg";
 import { brand } from "@/theme/colors";
+import { useTheme } from "@/hooks/useTheme";
 
 type PatternVariant = "tessellation" | "arabesque" | "khatam";
 
@@ -32,17 +33,20 @@ const PATTERN_PATHS: Record<PatternVariant, { d: string; viewBox: string; size: 
 
 export const IslamicPattern: React.FC<IslamicPatternProps> = ({
   variant = "tessellation",
-  color = brand.primary,
-  opacity = 0.03,
+  color,
+  opacity,
   style,
 }) => {
+  const { isDark } = useTheme();
+  const resolvedColor = color ?? (isDark ? "#808080" : brand.primary);
+  const resolvedOpacity = opacity ?? (isDark ? 0.06 : 0.03);
   const pattern = PATTERN_PATHS[variant];
   return (
     <View style={[{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }, style]} pointerEvents="none">
       <Svg width="100%" height="100%">
         <Defs>
           <Pattern id={`islamic-${variant}`} x="0" y="0" width={pattern.size} height={pattern.size} patternUnits="userSpaceOnUse">
-            <Path d={pattern.d} fill={color} fillOpacity={opacity} stroke={color} strokeOpacity={opacity * 0.5} strokeWidth={0.5} />
+            <Path d={pattern.d} fill={resolvedColor} fillOpacity={resolvedOpacity} stroke={resolvedColor} strokeOpacity={resolvedOpacity * 0.5} strokeWidth={0.5} />
           </Pattern>
         </Defs>
         <Rect x="0" y="0" width="100%" height="100%" fill={`url(#islamic-${variant})`} />

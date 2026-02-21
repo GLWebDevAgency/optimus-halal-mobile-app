@@ -37,15 +37,15 @@ interface NotificationCategory {
   key: string;
 }
 
-const GENERAL_SETTINGS_STATIC = [
+const getGeneralSettings = (primaryColor: string) => [
   {
     id: "push",
     nameKey: "pushNotifications" as const,
     descKey: "enableAll" as const,
     icon: "notifications-active" as keyof typeof MaterialIcons.glyphMap,
     iconColor: {
-      light: { bg: "rgba(19, 236, 106, 0.1)", text: "#13ec6a" },
-      dark: { bg: "rgba(19, 236, 106, 0.1)", text: "#13ec6a" },
+      light: { bg: "rgba(19, 236, 106, 0.1)", text: primaryColor },
+      dark: { bg: "rgba(19, 236, 106, 0.1)", text: primaryColor },
     },
     key: "pushEnabled",
   },
@@ -105,7 +105,7 @@ const FREQUENCY_OPTIONS_STATIC = [
 ];
 
 export default function NotificationsScreen() {
-  const { isDark } = useTheme();
+  const { colors, isDark } = useTheme();
   const { t } = useTranslation();
 
   // ── tRPC: fetch + mutate notification settings ──
@@ -130,6 +130,8 @@ export default function NotificationsScreen() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [frequency, setFrequency] = useState<FrequencyOption>("daily");
 
+  const generalSettings = getGeneralSettings(colors.primary);
+
   // Theme-aware colors
   const themeColors = {
     background: isDark ? "#102217" : "#f6f8f7",
@@ -137,7 +139,7 @@ export default function NotificationsScreen() {
     cardBorder: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
     textPrimary: isDark ? "#e8f5e9" : "#0d1b13",
     textSecondary: isDark ? "#9ca3af" : "#4b5563",
-    primary: "#13ec6a",
+    primary: colors.primary,
     toggleOff: isDark ? "#2d4436" : "#e0e0e0",
     headerBorder: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.1)",
   };
@@ -186,7 +188,7 @@ export default function NotificationsScreen() {
 
   // Render setting item with toggle
   const renderSettingItem = (
-    setting: typeof GENERAL_SETTINGS_STATIC[0],
+    setting: ReturnType<typeof getGeneralSettings>[0],
     isLast: boolean
   ) => {
     const iconColors = isDark ? setting.iconColor.dark : setting.iconColor.light;
@@ -482,8 +484,8 @@ export default function NotificationsScreen() {
               borderColor: themeColors.cardBorder,
             }}
           >
-            {GENERAL_SETTINGS_STATIC.map((setting, index) =>
-              renderSettingItem(setting, index === GENERAL_SETTINGS_STATIC.length - 1)
+            {generalSettings.map((setting, index) =>
+              renderSettingItem(setting, index === generalSettings.length - 1)
             )}
           </View>
         </Animated.View>

@@ -58,14 +58,14 @@ interface EthicalCriteria {
 }
 
 // Données des certifications halal
-const HALAL_CERTIFICATIONS: Certification[] = [
+const getHalalCertifications = (primaryColor: string): Certification[] => [
   {
     id: "avs",
     code: "AVS",
     name: "A Votre Service",
     description: "Contrôle strict, abattage manuel sans étourdissement, traçabilité indépendante.",
-    color: "#13ec6a",
-    colorDark: "#13ec6a",
+    color: primaryColor,
+    colorDark: primaryColor,
     bgColor: "rgba(19, 236, 106, 0.1)",
     bgColorDark: "rgba(19, 236, 106, 0.1)",
     borderColor: "rgba(19, 236, 106, 0.2)",
@@ -159,6 +159,7 @@ const ETHICAL_CRITERIA: EthicalCriteria[] = [
 export default function CertificationsScreen() {
   const { colors, isDark } = useTheme();
   const { t } = useTranslation();
+  const halalCertifications = getHalalCertifications(colors.primary);
   const { certifications, toggleCertification } = usePreferencesStore();
   const [selectedCert, setSelectedCert] = useState<Certification | null>(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -250,7 +251,7 @@ export default function CertificationsScreen() {
 
         {/* Liste des Certifications Halal */}
         <View style={{ paddingHorizontal: 20, gap: 16 }}>
-          {HALAL_CERTIFICATIONS.map((cert, index) => {
+          {halalCertifications.map((cert, index) => {
             const isEnabled = isCertEnabled(cert.id);
             const cardOpacity = isEnabled ? 1 : 0.8;
 

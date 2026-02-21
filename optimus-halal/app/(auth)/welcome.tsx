@@ -25,7 +25,7 @@ import { useTranslation, useHaptics, useTheme } from "@/hooks";
 
 export default function AuthWelcomeScreen() {
   const insets = useSafeAreaInsets();
-  const { isDark } = useTheme();
+  const { colors, isDark } = useTheme();
   const { impact } = useHaptics();
   const { t } = useTranslation();
 
@@ -112,7 +112,7 @@ export default function AuthWelcomeScreen() {
             accessibilityHint={t.auth.welcome.emailLoginDesc}
             className="bg-primary-500 rounded-2xl p-6 border-2 border-primary-600"
             style={{
-              shadowColor: "#13ec6a",
+              shadowColor: colors.primary,
               shadowOffset: { width: 0, height: 8 },
               shadowOpacity: 0.3,
               shadowRadius: 16,
@@ -210,21 +210,21 @@ export default function AuthWelcomeScreen() {
           
           <View className="space-y-3">
             <View className="flex-row items-start">
-              <MaterialIcons name="qr-code-scanner" size={20} color="#13ec6a" />
+              <MaterialIcons name="qr-code-scanner" size={20} color={colors.primary} />
               <Text className="text-slate-600 dark:text-slate-400 text-sm ml-3 flex-1">
                 {t.auth.welcome.benefit1}
               </Text>
             </View>
             
             <View className="flex-row items-start">
-              <MaterialIcons name="location-on" size={20} color="#13ec6a" />
+              <MaterialIcons name="location-on" size={20} color={colors.primary} />
               <Text className="text-slate-600 dark:text-slate-400 text-sm ml-3 flex-1">
                 {t.auth.welcome.benefit2}
               </Text>
             </View>
             
             <View className="flex-row items-start">
-              <MaterialIcons name="notifications-active" size={20} color="#13ec6a" />
+              <MaterialIcons name="notifications-active" size={20} color={colors.primary} />
               <Text className="text-slate-600 dark:text-slate-400 text-sm ml-3 flex-1">
                 {t.auth.welcome.benefit3}
               </Text>

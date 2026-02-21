@@ -5,14 +5,14 @@
  * iOS uses `shadowColor`, `shadowOffset`, `shadowOpacity`, `shadowRadius`.
  * Android uses `elevation` (shadows are system-rendered, color is ignored).
  *
- * Dark-mode shadows use a subtle green glow from the primary color
- * to reinforce the "deep forest" aesthetic.
+ * Dark-mode shadows use a subtle gold glow from the gold accent color
+ * to reinforce the luxury aesthetic.
  *
  * @module theme/shadows
  */
 
 import { type ViewStyle } from "react-native";
-import { primary } from "./colors";
+import { primary, gold } from "./colors";
 
 // ---------------------------------------------------------------------------
 // Shadow Type
@@ -84,7 +84,7 @@ export const lightShadows = {
 
 /**
  * Shadows for dark backgrounds.
- * Deep black base with a subtle green glow to match the forest theme.
+ * Deep black base with a subtle gold glow to match the luxury theme.
  */
 export const darkShadows = {
   /** Barely visible — input fields, flat cards. */
@@ -96,27 +96,27 @@ export const darkShadows = {
     elevation: 1,
   } satisfies ShadowPreset,
 
-  /** Standard card elevation with subtle green tint. */
+  /** Standard card elevation with subtle gold tint. */
   card: {
-    shadowColor: primary[900],
+    shadowColor: gold[900],
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.30,
     shadowRadius: 10,
     elevation: 3,
   } satisfies ShadowPreset,
 
-  /** Floating elements — pronounced green glow. */
+  /** Floating elements — pronounced gold glow. */
   float: {
-    shadowColor: primary[800],
+    shadowColor: gold[800],
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
     shadowRadius: 16,
     elevation: 6,
   } satisfies ShadowPreset,
 
-  /** Hero elements — dramatic depth with primary glow. */
+  /** Hero elements — dramatic depth with gold glow. */
   hero: {
-    shadowColor: primary[500],
+    shadowColor: gold[500],
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,
     shadowRadius: 24,
@@ -125,7 +125,7 @@ export const darkShadows = {
 
   /** Pure glow — active states, focused elements. Brighter for dark mode. */
   glow: {
-    shadowColor: primary[500],
+    shadowColor: gold[500],
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.40,
     shadowRadius: 20,
