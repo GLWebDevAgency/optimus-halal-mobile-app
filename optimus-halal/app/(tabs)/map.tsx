@@ -43,12 +43,6 @@ import { trackEvent } from "@/lib/analytics";
 import Animated, {
   FadeIn,
   FadeInRight,
-  useSharedValue,
-  useAnimatedStyle,
-  withSequence,
-  withTiming,
-  withDelay,
-  Easing,
 } from "react-native-reanimated";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 // Guard native Mapbox import — fails gracefully if dev client not rebuilt
@@ -194,33 +188,26 @@ export default function MapScreen() {
   // Track bottom sheet snap position (avoid fighting user gestures)
   const currentSnapIndexRef = useRef(0);
 
-  // Sheet-level bounce — the entire bottom sheet lifts ~18px then settles back
-  // to physically suggest "hey, you can slide me up". Premium Apple Maps-like affordance.
-  const sheetBounceY = useSharedValue(0);
+  // Sheet-level bounce — programmatically nudge the sheet upward via snapToPosition
+  // then settle back to peek. Creates a physical "hey, pull me up" affordance.
+  const bounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const triggerSheetBounce = useCallback(() => {
+    const sheet = bottomSheetRef.current;
+    if (!sheet) return;
+    // Peek height + 30px overshoot → brief lift, then snap back to index 0
+    const peekHeight = 240 + insets.bottom;
+    sheet.snapToPosition(peekHeight + 30);
+    bounceTimerRef.current = setTimeout(() => {
+      sheet.snapToIndex(0);
+    }, 400);
+  }, [insets.bottom]);
 
   useEffect(() => {
-    if (selectedStoreId && currentSnapIndexRef.current === 0) {
-      // Wait for the store card to render and settle, then do a single gentle bounce
-      sheetBounceY.value = withDelay(
-        700,
-        withSequence(
-          // Lift up 18px over 350ms with gentle ease-out (feels like a physical nudge)
-          withTiming(-18, { duration: 350, easing: Easing.out(Easing.cubic) }),
-          // Hold briefly at peak for the user to notice
-          withDelay(80, withTiming(0, { duration: 500, easing: Easing.bezierFn(0.25, 0.1, 0.25, 1) })),
-          // Subtle second micro-bounce (premium feel — like a physical object settling)
-          withDelay(50, withTiming(-5, { duration: 200, easing: Easing.out(Easing.quad) })),
-          withTiming(0, { duration: 300, easing: Easing.inOut(Easing.ease) }),
-        ),
-      );
-    } else {
-      sheetBounceY.value = 0;
-    }
-  }, [selectedStoreId, sheetBounceY]);
-
-  const sheetBounceStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: sheetBounceY.value }],
-  }));
+    return () => {
+      if (bounceTimerRef.current) clearTimeout(bounceTimerRef.current);
+    };
+  }, []);
 
   // Selected store data
   const selectedStore = useMemo(() => {
@@ -547,14 +534,16 @@ export default function MapScreen() {
   }, [storesQuery.isFetching, storesQuery.data?.length, hasAnimatedToUser]);
 
   // Auto-snap bottom sheet — keep at peek (index 0) for both states.
-  // Store detail card fits in peek height; user pulls up for more.
+  // When a store is selected, trigger a subtle bounce after a delay.
   useEffect(() => {
     if (!selectedStoreId) {
       bottomSheetRef.current?.snapToIndex(0);
+    } else if (currentSnapIndexRef.current === 0) {
+      // Bounce the sheet after card renders to hint "pull me up"
+      const t = setTimeout(triggerSheetBounce, 700);
+      return () => clearTimeout(t);
     }
-    // When selecting a store: don't auto-snap up — let the peek show the card
-    // and the pull-up hint animate to invite the user to expand.
-  }, [selectedStoreId]);
+  }, [selectedStoreId, triggerSheetBounce]);
 
   // Deep-link: fly to store from home carousel "Autour de vous"
   // Waits for map style to load, then animates camera + selects store + opens sheet
@@ -739,7 +728,6 @@ export default function MapScreen() {
       />
 
       {/* Bottom Sheet — gesture-driven, Google Maps style */}
-      <Animated.View style={[{ flex: 0 }, sheetBounceStyle]}>
       <BottomSheet
         ref={bottomSheetRef}
         index={0}
@@ -760,9 +748,10 @@ export default function MapScreen() {
         onChange={(index) => {
           currentSnapIndexRef.current = index;
           impact();
-          // Cancel any remaining bounce once user interacts with the sheet
-          if (index > 0) {
-            sheetBounceY.value = 0;
+          // Cancel any pending bounce if user manually expanded
+          if (index > 0 && bounceTimerRef.current) {
+            clearTimeout(bounceTimerRef.current);
+            bounceTimerRef.current = null;
           }
         }}
         style={{
@@ -865,7 +854,6 @@ export default function MapScreen() {
           )}
         </BottomSheetView>
       </BottomSheet>
-      </Animated.View>
 
       {/* Location denied banner */}
       {permission === "denied" && (
