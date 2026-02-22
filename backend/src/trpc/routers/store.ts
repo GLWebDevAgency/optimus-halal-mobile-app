@@ -50,21 +50,25 @@ export const storeRouter = router({
       if (input.city) conditions.push(ilike(stores.city, `%${escapeLike(input.city)}%`));
       if (input.halalCertifiedOnly) conditions.push(eq(stores.halalCertified, true));
 
-      // Single query: COUNT(*) OVER() piggybacks total onto each row
-      const rows = await ctx.db
-        .select({
-          store: stores,
-          total: sql<number>`count(*)::int OVER()`.as("total"),
-        })
-        .from(stores)
-        .where(and(...conditions))
-        .orderBy(desc(stores.averageRating))
-        .limit(input.limit)
-        .offset(input.offset);
+      const where = and(...conditions);
+
+      const [items, countResult] = await Promise.all([
+        ctx.db
+          .select()
+          .from(stores)
+          .where(where)
+          .orderBy(desc(stores.averageRating))
+          .limit(input.limit)
+          .offset(input.offset),
+        ctx.db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(stores)
+          .where(where),
+      ]);
 
       return {
-        items: rows.map((r) => r.store),
-        total: rows[0]?.total ?? 0,
+        items,
+        total: countResult[0]?.count ?? 0,
       };
     }),
 
