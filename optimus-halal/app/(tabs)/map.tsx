@@ -45,7 +45,6 @@ import Animated, {
   FadeInRight,
   useSharedValue,
   useAnimatedStyle,
-  withRepeat,
   withSequence,
   withTiming,
   withDelay,
@@ -195,34 +194,32 @@ export default function MapScreen() {
   // Track bottom sheet snap position (avoid fighting user gestures)
   const currentSnapIndexRef = useRef(0);
 
-  // Pull-up hint animation — gentle bounce to invite expansion
-  const pullHintY = useSharedValue(0);
-  const pullHintOpacity = useSharedValue(0);
+  // Sheet-level bounce — the entire bottom sheet lifts ~18px then settles back
+  // to physically suggest "hey, you can slide me up". Premium Apple Maps-like affordance.
+  const sheetBounceY = useSharedValue(0);
 
   useEffect(() => {
     if (selectedStoreId && currentSnapIndexRef.current === 0) {
-      // Start bouncing after a brief delay (let card animate in first)
-      pullHintOpacity.value = withDelay(400, withTiming(1, { duration: 300 }));
-      pullHintY.value = withDelay(
-        600,
-        withRepeat(
-          withSequence(
-            withTiming(-6, { duration: 600, easing: Easing.inOut(Easing.ease) }),
-            withTiming(0, { duration: 600, easing: Easing.inOut(Easing.ease) }),
-          ),
-          -1, // infinite
-          true,
+      // Wait for the store card to render and settle, then do a single gentle bounce
+      sheetBounceY.value = withDelay(
+        700,
+        withSequence(
+          // Lift up 18px over 350ms with gentle ease-out (feels like a physical nudge)
+          withTiming(-18, { duration: 350, easing: Easing.out(Easing.cubic) }),
+          // Hold briefly at peak for the user to notice
+          withDelay(80, withTiming(0, { duration: 500, easing: Easing.bezierFn(0.25, 0.1, 0.25, 1) })),
+          // Subtle second micro-bounce (premium feel — like a physical object settling)
+          withDelay(50, withTiming(-5, { duration: 200, easing: Easing.out(Easing.quad) })),
+          withTiming(0, { duration: 300, easing: Easing.inOut(Easing.ease) }),
         ),
       );
     } else {
-      pullHintOpacity.value = withTiming(0, { duration: 200 });
-      pullHintY.value = 0;
+      sheetBounceY.value = 0;
     }
-  }, [selectedStoreId, pullHintY, pullHintOpacity]);
+  }, [selectedStoreId, sheetBounceY]);
 
-  const pullHintStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: pullHintY.value }],
-    opacity: pullHintOpacity.value,
+  const sheetBounceStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: sheetBounceY.value }],
   }));
 
   // Selected store data
@@ -742,6 +739,7 @@ export default function MapScreen() {
       />
 
       {/* Bottom Sheet — gesture-driven, Google Maps style */}
+      <Animated.View style={[{ flex: 0 }, sheetBounceStyle]}>
       <BottomSheet
         ref={bottomSheetRef}
         index={0}
@@ -762,10 +760,9 @@ export default function MapScreen() {
         onChange={(index) => {
           currentSnapIndexRef.current = index;
           impact();
-          // Hide pull-up hint once user has expanded the sheet
+          // Cancel any remaining bounce once user interacts with the sheet
           if (index > 0) {
-            pullHintOpacity.value = withTiming(0, { duration: 200 });
-            pullHintY.value = 0;
+            sheetBounceY.value = 0;
           }
         }}
         style={{
@@ -778,38 +775,26 @@ export default function MapScreen() {
       >
         <BottomSheetView style={{ flex: 1 }}>
           {selectedStore ? (
-            /* Store Detail + pull-up hint */
-            <>
-              <StoreDetailCard
-                store={selectedStore as StoreFeatureProperties}
-                onDirections={() => {
-                  trackEvent("map_get_directions", { store_id: selectedStore.id });
-                  openDirections(selectedStore.latitude, selectedStore.longitude, selectedStore.name);
-                }}
-                onCall={() => {
-                  trackEvent("map_call_store", { store_id: selectedStore.id });
-                  selectedStore.phone && callStore(selectedStore.phone);
-                }}
-                onShare={() => {
-                  trackEvent("map_share_store", { store_id: selectedStore.id });
-                  const certInfo = selectedStore.halalCertified ? " (Halal Certifié)" : "";
-                  Share.share({
-                    message: `${selectedStore.name}${certInfo}\n${selectedStore.address}, ${selectedStore.city}\n\nDécouvert sur Optimus Halal`,
-                  });
-                }}
-                onClose={handleCloseDetail}
-                colors={colors}
-              />
-              {/* Pull-up hint — bouncing chevron to invite expansion */}
-              <Animated.View
-                style={[pullHintStyle, { alignItems: "center", paddingTop: 8, paddingBottom: 4 }]}
-              >
-                <MaterialIcons name="expand-less" size={20} color={colors.textMuted} />
-                <Text className="text-[10px] font-medium" style={{ color: colors.textMuted, marginTop: -2 }}>
-                  Plus de détails
-                </Text>
-              </Animated.View>
-            </>
+            <StoreDetailCard
+              store={selectedStore as StoreFeatureProperties}
+              onDirections={() => {
+                trackEvent("map_get_directions", { store_id: selectedStore.id });
+                openDirections(selectedStore.latitude, selectedStore.longitude, selectedStore.name);
+              }}
+              onCall={() => {
+                trackEvent("map_call_store", { store_id: selectedStore.id });
+                selectedStore.phone && callStore(selectedStore.phone);
+              }}
+              onShare={() => {
+                trackEvent("map_share_store", { store_id: selectedStore.id });
+                const certInfo = selectedStore.halalCertified ? " (Halal Certifié)" : "";
+                Share.share({
+                  message: `${selectedStore.name}${certInfo}\n${selectedStore.address}, ${selectedStore.city}\n\nDécouvert sur Optimus Halal`,
+                });
+              }}
+              onClose={handleCloseDetail}
+              colors={colors}
+            />
           ) : (
             /* Store List */
             <View className="flex-1 pb-4">
@@ -880,6 +865,7 @@ export default function MapScreen() {
           )}
         </BottomSheetView>
       </BottomSheet>
+      </Animated.View>
 
       {/* Location denied banner */}
       {permission === "denied" && (
