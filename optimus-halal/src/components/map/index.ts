@@ -1,5 +1,7 @@
 export { StoreCard } from "./StoreCard";
 export { StoreDetailCard } from "./StoreDetailCard";
+export { MapMarkerLayer } from "./MapMarkerLayer";
+export { MapControls } from "./MapControls";
 export {
   type StoreFeatureProperties,
   type ThemeColors,

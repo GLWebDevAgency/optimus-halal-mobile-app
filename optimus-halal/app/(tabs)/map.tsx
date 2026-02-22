@@ -35,6 +35,8 @@ import { storeTypeColors, glass } from "@/theme/colors";
 import {
   StoreCard,
   StoreDetailCard,
+  MapMarkerLayer,
+  MapControls,
   STORE_TYPE_ICON,
   CARD_WIDTH,
 } from "@/components/map";
@@ -609,111 +611,18 @@ export default function MapScreen() {
           />
         )}
 
-        {/* Store markers with clustering — wait for style to load to avoid
-            "Layer store-markers is not in style" race condition */}
+        {/* Store markers with clustering — wait for style to load */}
         {isStyleLoaded && (
-          <ShapeSource
-            id="stores-source"
-            shape={storesGeoJSON}
-            cluster
-            clusterRadius={50}
-            clusterMaxZoomLevel={14}
+          <MapMarkerLayer
+            ShapeSource={ShapeSource}
+            CircleLayer={CircleLayer}
+            SymbolLayer={SymbolLayer}
+            geoJSON={storesGeoJSON}
+            selectedStoreId={selectedStoreId}
+            isDark={isDark}
+            primaryColor={colors.primary}
             onPress={handleMarkerPress}
-          >
-            {/* Cluster circles */}
-            <CircleLayer
-              id="clusters"
-              filter={["has", "point_count"]}
-              style={{
-                circleColor: colors.primary,
-                circleRadius: [
-                  "step",
-                  ["get", "point_count"],
-                  18,  // default
-                  10, 24, // 10+ stores
-                  50, 32, // 50+ stores
-                ],
-                circleOpacity: 0.85,
-                circleStrokeWidth: 2,
-                circleStrokeColor: "#ffffff",
-              }}
-            />
-
-            {/* Cluster count text */}
-            <SymbolLayer
-              id="cluster-count"
-              filter={["has", "point_count"]}
-              style={{
-                textField: ["get", "point_count_abbreviated"],
-                textSize: 13,
-                textColor: "#ffffff",
-                textFont: ["DIN Pro Medium"],
-                textAllowOverlap: true,
-              }}
-            />
-
-            {/* Individual store markers — color-coded by type, sized by open status */}
-            <CircleLayer
-              id="store-markers"
-              filter={["!", ["has", "point_count"]]}
-              style={{
-                circleColor: [
-                  "match", ["get", "storeType"],
-                  "butcher", storeTypeColors.butcher.base,
-                  "restaurant", storeTypeColors.restaurant.base,
-                  "supermarket", storeTypeColors.supermarket.base,
-                  "bakery", storeTypeColors.bakery.base,
-                  "abattoir", storeTypeColors.abattoir.base,
-                  "wholesaler", storeTypeColors.wholesaler.base,
-                  "online", storeTypeColors.online.base,
-                  storeTypeColors.other.base,
-                ],
-                circleRadius: [
-                  "case",
-                  ["==", ["get", "id"], selectedStoreId ?? ""],
-                  12,
-                  // Open stores slightly larger than closed (visual hierarchy)
-                  ["any",
-                    ["==", ["get", "openStatus"], "open"],
-                    ["==", ["get", "openStatus"], "closing_soon"],
-                  ],
-                  8,
-                  6.5,
-                ],
-                circleStrokeWidth: [
-                  "case",
-                  ["==", ["get", "id"], selectedStoreId ?? ""],
-                  3,
-                  2,
-                ],
-                circleStrokeColor: isDark ? "rgba(255,255,255,0.9)" : "#ffffff",
-                circleStrokeOpacity: isDark ? 0.8 : 1,
-                // Closed stores visually recede (0.5 opacity vs 0.95)
-                circleOpacity: [
-                  "case",
-                  ["==", ["get", "openStatus"], "closed"],
-                  0.5,
-                  0.95,
-                ],
-              }}
-            />
-
-            {/* Selected marker highlight ring — rendered AFTER markers for correct z-order */}
-            <CircleLayer
-              id="store-markers-ring"
-              filter={["all",
-                ["!", ["has", "point_count"]],
-                ["==", ["get", "id"], selectedStoreId ?? ""],
-              ]}
-              style={{
-                circleColor: "transparent",
-                circleRadius: 22,
-                circleStrokeWidth: 2.5,
-                circleStrokeColor: colors.primary,
-                circleStrokeOpacity: isDark ? 0.8 : 0.6,
-              }}
-            />
-          </ShapeSource>
+          />
         )}
       </MapView>
 
@@ -953,86 +862,26 @@ export default function MapScreen() {
         </Animated.View>
       )}
 
-      {/* Map Controls (right side) */}
-      <View
-        className="absolute right-4 gap-2"
-        style={{ top: insets.top + 140, zIndex: 5 }}
-      >
-        {/* My Location FAB */}
-        <TouchableOpacity
-          onPress={handleMyLocation}
-          className="w-12 h-12 rounded-2xl items-center justify-center"
-          style={{
-            backgroundColor: isDark ? "rgba(30,41,59,0.92)" : "rgba(255,255,255,0.97)",
-            borderWidth: 1,
-            borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 3 },
-            shadowOpacity: 0.2,
-            shadowRadius: 6,
-            elevation: 4,
-          }}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel={t.map.myLocation}
-        >
-          <MaterialIcons
-            name={userLocation ? "my-location" : "location-searching"}
-            size={22}
-            color={userLocation ? colors.primary : colors.textMuted}
-          />
-        </TouchableOpacity>
-      </View>
-
-      {/* Results count badge */}
-      {stores.length > 0 && !selectedStore && (
-        <Animated.View
-          entering={FadeIn.delay(400).duration(400)}
-          className="absolute right-4"
-          style={{ bottom: 260 + insets.bottom, zIndex: 5 }}
-        >
-          <View
-            className="flex-row items-center gap-2 h-10 px-4 rounded-full"
-            style={{
-              backgroundColor: isDark ? "rgba(30,41,59,0.9)" : "rgba(255,255,255,0.95)",
-              borderWidth: 1,
-              borderColor: colors.border,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.15,
-              shadowRadius: 4,
-              elevation: 3,
-            }}
-          >
-            <MaterialIcons name="place" size={16} color={colors.primary} />
-            <Text className="font-semibold text-sm" style={{ color: colors.textPrimary }}>
-              {stores.length} {stores.length > 1 ? t.map.stores : t.map.store}
-            </Text>
-          </View>
-        </Animated.View>
-      )}
-
-      {/* Loading indicator */}
-      {(storesQuery.isFetching || locationLoading) && (
-        <View
-          className="absolute left-4"
-          style={{ bottom: 260 + insets.bottom, zIndex: 5 }}
-        >
-          <View
-            className="h-10 px-4 rounded-full flex-row items-center gap-2"
-            style={{
-              backgroundColor: isDark ? "rgba(30,41,59,0.9)" : "rgba(255,255,255,0.95)",
-              borderWidth: 1,
-              borderColor: colors.border,
-            }}
-          >
-            <ActivityIndicator size="small" color={colors.primary} />
-            <Text className="text-xs" style={{ color: colors.textMuted }}>
-              {locationLoading ? t.map.locating : t.map.searchResults}
-            </Text>
-          </View>
-        </View>
-      )}
+      {/* Map Controls — FAB, results badge, loading indicator */}
+      <MapControls
+        colors={colors}
+        isDark={isDark}
+        userLocation={userLocation}
+        storeCount={stores.length}
+        isSelectedStore={!!selectedStore}
+        isFetching={storesQuery.isFetching}
+        isLocationLoading={locationLoading}
+        insetTop={insets.top}
+        insetBottom={insets.bottom}
+        onMyLocation={handleMyLocation}
+        t={{
+          myLocation: t.map.myLocation,
+          stores: t.map.stores,
+          store: t.map.store,
+          locating: t.map.locating,
+          searchResults: t.map.searchResults,
+        }}
+      />
 
       {/* Bottom Sheet — gesture-driven, Google Maps style */}
       <BottomSheet
