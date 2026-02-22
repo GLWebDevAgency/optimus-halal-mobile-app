@@ -463,7 +463,7 @@ export const ar: TranslationKeys = {
   map: {
     title: "الخريطة",
     searchPlaceholder: "ابحث عن كباب، واغيو...",
-    filters: { butchers: "جزارون", restaurants: "مطاعم", grocery: "بقالة", certified: "معتمد", rating: "تقييم 4.0+" },
+    filters: { butchers: "جزارون", restaurants: "مطاعم", grocery: "بقالة", certified: "معتمد", rating: "تقييم 4.0+", bakery: "مخابز", openNow: "مفتوح" },
     nearYou: "بالقرب منك",
     distance: "{{distance}} كم",
     open: "مفتوح",

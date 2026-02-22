@@ -562,6 +562,8 @@ export const en: TranslationKeys = {
       grocery: "Grocery",
       certified: "Certified",
       rating: "Rating 4.0+",
+      bakery: "Bakeries",
+      openNow: "Open",
     },
     nearYou: "Near you",
     distance: "{{distance}} km",

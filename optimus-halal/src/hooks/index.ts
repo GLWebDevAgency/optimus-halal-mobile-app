@@ -112,6 +112,8 @@ export { useUserLocation } from './useUserLocation';
 export { useMapStores } from './useMapStores';
 export { useGeocode } from './useGeocode';
 export type { GeocodeSuggestion } from './useGeocode';
+export { useMapSearch } from './useMapSearch';
+export type { StoreSearchResult, AddressSearchResult, SearchResult } from './useMapSearch';
 
 // ============================================
 // PREMIUM HOOK

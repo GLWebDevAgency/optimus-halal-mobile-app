@@ -23,6 +23,9 @@ interface MapRegion {
 interface UseMapStoresOptions {
   storeType?: "supermarket" | "butcher" | "restaurant" | "bakery" | "abattoir" | "wholesaler" | "online" | "other";
   halalCertifiedOnly?: boolean;
+  openNow?: boolean;
+  minRating?: number;
+  query?: string;
   limit?: number;
 }
 
@@ -30,24 +33,28 @@ export function useMapStores(
   region: MapRegion | null,
   options: UseMapStoresOptions = {},
 ) {
-  const { storeType, halalCertifiedOnly = false, limit = 50 } = options;
+  const { storeType, halalCertifiedOnly = false, openNow = false, minRating, query: searchQuery, limit = 50 } = options;
 
-  const query = trpc.store.nearby.useQuery(
+  const result = trpc.store.nearby.useQuery(
     {
       latitude: region?.latitude ?? 0,
       longitude: region?.longitude ?? 0,
       radiusKm: region?.radiusKm ?? 5,
       storeType,
       halalCertifiedOnly,
+      openNow,
+      minRating,
+      query: searchQuery,
       limit,
     },
     {
       enabled: region !== null,
-      staleTime: 30_000,
+      // When openNow is active, reduce staleTime since status changes in real-time
+      staleTime: openNow ? 15_000 : 30_000,
       placeholderData: (prev) => prev,
-      refetchOnWindowFocus: true,
+      refetchOnWindowFocus: false,
     },
   );
 
-  return query;
+  return result;
 }

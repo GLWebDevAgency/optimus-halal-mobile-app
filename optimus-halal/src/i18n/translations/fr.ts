@@ -560,6 +560,8 @@ export const fr = {
       grocery: "Épiceries",
       certified: "Certifié",
       rating: "Note 4.0+",
+      bakery: "Boulangeries",
+      openNow: "Ouvert",
     },
     nearYou: "Autour de vous",
     distance: "{{distance}} km",

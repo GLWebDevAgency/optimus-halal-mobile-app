@@ -50,20 +50,22 @@ export const storeRouter = router({
       if (input.city) conditions.push(ilike(stores.city, `%${escapeLike(input.city)}%`));
       if (input.halalCertifiedOnly) conditions.push(eq(stores.halalCertified, true));
 
-      const items = await ctx.db
-        .select()
+      // Single query: COUNT(*) OVER() piggybacks total onto each row
+      const rows = await ctx.db
+        .select({
+          store: stores,
+          total: sql<number>`count(*)::int OVER()`.as("total"),
+        })
         .from(stores)
         .where(and(...conditions))
         .orderBy(desc(stores.averageRating))
         .limit(input.limit)
         .offset(input.offset);
 
-      const [{ count }] = await ctx.db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(stores)
-        .where(and(...conditions));
-
-      return { items, total: count };
+      return {
+        items: rows.map((r) => r.store),
+        total: rows[0]?.total ?? 0,
+      };
     }),
 
   nearby: publicProcedure
@@ -79,63 +81,113 @@ export const storeRouter = router({
           ])
           .optional(),
         halalCertifiedOnly: z.boolean().default(false),
+        openNow: z.boolean().default(false),
+        minRating: z.number().min(0).max(5).optional(),
+        query: z.string().max(200).optional(),
         limit: z.number().min(1).max(100).default(20),
       })
     )
     .query(async ({ ctx, input }) => {
       // Dynamic geohash precision: coarser at wide radius, finer at urban zoom
-      // p4=~39km (country), p5=~5km (city), p6=~1.2km (neighborhood)
       const ghPrecision = input.radiusKm <= 2 ? 6 : input.radiusKm <= 10 ? 5 : 4;
       const gh = ngeohash.encode(input.latitude, input.longitude, ghPrecision);
-      // Bucket radiusKm to nearest 0.5km for better cache hit rate
-      // (zoom jitter produces 4.88km vs 4.55km → same bucket = cache hit)
       const rBucket = Math.round(input.radiusKm * 2) / 2;
-      const cacheKey = `stores:v5:nearby:${gh}:r${rBucket}:l${input.limit}:t${input.storeType ?? "all"}:h${input.halalCertifiedOnly ? "1" : "0"}`;
+      const cacheKey = `stores:v7:nearby:${gh}:r${rBucket}:l${input.limit}:t${input.storeType ?? "all"}:h${input.halalCertifiedOnly ? "1" : "0"}:o${input.openNow ? "1" : "0"}:mr${input.minRating ?? "x"}:q${input.query ?? ""}`;
 
-      return withCache(ctx.redis, cacheKey, 300, async () => {
-        const radiusMeters = Math.max(input.radiusKm * 1000, 100); // Guard: minimum 100m
+      // Reduce TTL when openNow filter is active (status changes in real-time)
+      const ttl = input.openNow ? 60 : 300;
+
+      return withCache(ctx.redis, cacheKey, ttl, async () => {
+        const radiusMeters = Math.max(input.radiusKm * 1000, 100);
         const point = sql`ST_SetSRID(ST_MakePoint(${input.longitude}, ${input.latitude}), 4326)::geography`;
 
-        // Relevance scoring formula — single source of truth (used in SELECT + ORDER BY)
-        const relevanceExpr = sql`(
-          0.35 * (1.0 - LEAST(ST_Distance("stores"."location", ${point}) / ${radiusMeters}, 1.0))
-          + 0.25 * CASE WHEN "stores"."halal_certified" THEN COALESCE("stores"."average_rating", 2.5) / 5.0 ELSE 0 END
-          + 0.20 * (ln(1 + COALESCE("stores"."review_count", 0)) / ln(501.0))
-          + 0.15 * CASE WHEN COALESCE("stores"."review_count", 0) > 0 THEN (COALESCE("stores"."average_rating", 2.5) - 1.0) / 4.0 ELSE 0.5 END
-          + 0.05 * (1.0 / (1 + EXTRACT(EPOCH FROM NOW() - COALESCE("stores"."updated_at", "stores"."created_at")) / 7776000.0))
-        )`;
-
         const conditions = [
-          eq(stores.isActive, true),
+          sql`"stores"."is_active" = true`,
           sql`ST_DWithin("stores"."location", ${point}, ${radiusMeters})`,
         ];
 
-        if (input.storeType) conditions.push(eq(stores.storeType, input.storeType));
-        if (input.halalCertifiedOnly) conditions.push(eq(stores.halalCertified, true));
+        if (input.storeType) conditions.push(sql`"stores"."store_type" = ${input.storeType}`);
+        if (input.halalCertifiedOnly) conditions.push(sql`"stores"."halal_certified" = true`);
+        if (input.minRating) conditions.push(sql`"stores"."average_rating" >= ${input.minRating}`);
+        if (input.query) {
+          const q = escapeLike(input.query);
+          conditions.push(sql`("stores"."name" ILIKE ${"%" + q + "%"} OR "stores"."address" ILIKE ${"%" + q + "%"})`);
+        }
 
-        return ctx.db
-          .select({
-            id: stores.id,
-            name: stores.name,
-            storeType: stores.storeType,
-            imageUrl: stores.imageUrl,
-            address: stores.address,
-            city: stores.city,
-            phone: stores.phone,
-            latitude: stores.latitude,
-            longitude: stores.longitude,
-            halalCertified: stores.halalCertified,
-            certifier: stores.certifier,
-            certifierName: stores.certifierName,
-            averageRating: stores.averageRating,
-            reviewCount: stores.reviewCount,
-            distance: sql<number>`round(ST_Distance("stores"."location", ${point}))::float8`.as("distance"),
-            relevanceScore: sql<number>`round((${relevanceExpr})::numeric, 3)::float8`.as("relevance_score"),
-          })
-          .from(stores)
-          .where(and(...conditions))
-          .orderBy(sql`${relevanceExpr} DESC`)
-          .limit(input.limit);
+        // CTE: compute ST_Distance ONCE + LEFT JOIN store_hours for open status
+        // Timezone: Europe/Paris (G2 fix — UTC would be wrong at 1am Paris)
+        const rows = await ctx.db.execute(sql`
+          WITH ranked AS (
+            SELECT
+              s."id", s."name", s."store_type", s."image_url",
+              s."address", s."city", s."phone",
+              s."latitude", s."longitude",
+              s."halal_certified", s."certifier", s."certifier_name",
+              s."average_rating", s."review_count",
+              round(ST_Distance(s."location", ${point}))::float8 AS distance,
+              EXTRACT(EPOCH FROM NOW() - COALESCE(s."updated_at", s."created_at")) AS age_seconds,
+              sh."open_time", sh."close_time", sh."is_closed",
+              CASE
+                WHEN sh."id" IS NULL THEN 'unknown'
+                WHEN sh."is_closed" THEN 'closed'
+                WHEN to_char(NOW() AT TIME ZONE 'Europe/Paris', 'HH24:MI') >= sh."open_time"
+                     AND to_char(NOW() AT TIME ZONE 'Europe/Paris', 'HH24:MI') < sh."close_time"
+                THEN
+                  CASE
+                    WHEN sh."close_time" IS NOT NULL
+                         AND (sh."close_time"::time - (NOW() AT TIME ZONE 'Europe/Paris')::time) < interval '30 minutes'
+                         AND (sh."close_time"::time - (NOW() AT TIME ZONE 'Europe/Paris')::time) > interval '0 minutes'
+                    THEN 'closing_soon'
+                    ELSE 'open'
+                  END
+                WHEN sh."open_time" IS NOT NULL
+                     AND ((sh."open_time"::time - (NOW() AT TIME ZONE 'Europe/Paris')::time) < interval '30 minutes')
+                     AND ((sh."open_time"::time - (NOW() AT TIME ZONE 'Europe/Paris')::time) > interval '0 minutes')
+                THEN 'opening_soon'
+                ELSE 'closed'
+              END AS open_status
+            FROM "stores" s
+            LEFT JOIN "store_hours" sh
+              ON sh."store_id" = s."id"
+              AND sh."day_of_week" = EXTRACT(DOW FROM NOW() AT TIME ZONE 'Europe/Paris')::int
+            WHERE ${sql.join(conditions, sql` AND `)}
+          )
+          SELECT
+            *,
+            round((
+              0.35 * (1.0 - LEAST(distance / GREATEST(${radiusMeters}::float8, 1.0), 1.0))
+              + 0.25 * CASE WHEN halal_certified THEN COALESCE(average_rating, 2.5) / 5.0 ELSE 0 END
+              + 0.20 * (ln(1 + COALESCE(review_count, 0)) / ln(501.0))
+              + 0.15 * CASE WHEN COALESCE(review_count, 0) > 0 THEN (COALESCE(average_rating, 2.5) - 1.0) / 4.0 ELSE 0.5 END
+              + 0.05 * (1.0 / (1 + COALESCE(age_seconds, 0) / 7776000.0))
+            )::numeric, 3)::float8 AS relevance_score
+          FROM ranked
+          ${input.openNow ? sql`WHERE open_status IN ('open', 'closing_soon')` : sql``}
+          ORDER BY relevance_score DESC
+          LIMIT ${input.limit}
+        `);
+
+        return (rows as Record<string, unknown>[]).map((row) => ({
+          id: row.id as string,
+          name: row.name as string,
+          storeType: row.store_type as string,
+          imageUrl: row.image_url as string | null,
+          address: row.address as string,
+          city: row.city as string,
+          phone: row.phone as string | null,
+          latitude: row.latitude as number,
+          longitude: row.longitude as number,
+          halalCertified: row.halal_certified as boolean,
+          certifier: row.certifier as string,
+          certifierName: row.certifier_name as string | null,
+          averageRating: row.average_rating as number,
+          reviewCount: row.review_count as number,
+          distance: row.distance as number,
+          relevanceScore: row.relevance_score as number,
+          openStatus: row.open_status as string,
+          openTime: row.open_time as string | null,
+          closeTime: row.close_time as string | null,
+        }));
       }, undefined, { skipEmpty: true });
     }),
 
