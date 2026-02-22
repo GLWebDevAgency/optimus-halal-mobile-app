@@ -1,9 +1,10 @@
 import React from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator, Linking, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator, Linking } from "react-native";
 import { Image } from "expo-image";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeInUp, FadeIn } from "react-native-reanimated";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTheme } from "@/hooks/useTheme";
 import { storeTypeColors } from "@/theme/colors";
@@ -14,6 +15,7 @@ import {
   formatDistance,
   openStatusColor,
   openStatusBg,
+  openStatusLabel,
 } from "./types";
 
 // Day names indexed by storeHours.dayOfWeek (0=Sunday, 6=Saturday)
@@ -79,7 +81,7 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
   const today = new Date().getDay();
 
   return (
-    <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
+    <BottomSheetScrollView bounces={false} showsVerticalScrollIndicator={false}>
       <Animated.View entering={FadeInUp.duration(300)} className="px-5 pb-4">
         {/* Store image hero */}
         {store.imageUrl && (
@@ -149,10 +151,7 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                 backgroundColor: openStatusColor(store.openStatus, isDark),
               }} />
               <Text className="text-[11px] font-bold" style={{ color: openStatusColor(store.openStatus, isDark) }}>
-                {store.openStatus === "open" ? t.map.open
-                  : store.openStatus === "closing_soon" ? t.map.closingSoon.replace("{{minutes}}", "30")
-                  : store.openStatus === "opening_soon" ? t.map.openingSoon.replace("{{minutes}}", "30")
-                  : t.map.closed}
+                {openStatusLabel(store.openStatus, t)}
               </Text>
             </View>
           )}
@@ -402,6 +401,6 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
           </Animated.View>
         )}
       </Animated.View>
-    </ScrollView>
+    </BottomSheetScrollView>
   );
 });

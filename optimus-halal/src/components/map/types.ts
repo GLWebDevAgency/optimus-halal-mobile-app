@@ -52,3 +52,14 @@ export function openStatusBg(status: string, isDark = false): string {
   if (status === "closing_soon") return isDark ? "rgba(251,191,36,0.12)" : "rgba(217,119,6,0.10)";
   return isDark ? "rgba(248,113,113,0.12)" : "rgba(220,38,38,0.10)";
 }
+
+// i18n-safe open status label — eliminates hardcoded French strings
+export function openStatusLabel(
+  status: string,
+  t: { map: { open: string; closed: string; closingSoon: string; openingSoon: string } },
+): string {
+  if (status === "open") return t.map.open;
+  if (status === "closing_soon") return t.map.closingSoon.replace("{{minutes}}", "30");
+  if (status === "opening_soon") return t.map.openingSoon.replace("{{minutes}}", "30");
+  return t.map.closed;
+}

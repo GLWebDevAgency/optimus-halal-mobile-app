@@ -49,7 +49,7 @@ import Animated, {
   interpolate,
   Extrapolation,
 } from "react-native-reanimated";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet from "@gorhom/bottom-sheet";
 // Guard native Mapbox import — fails gracefully if dev client not rebuilt
 let MapView: any, Camera: any, LocationPuck: any, ShapeSource: any, CircleLayer: any, SymbolLayer: any;
 let MAPBOX_AVAILABLE = false;
@@ -222,6 +222,26 @@ export default function MapScreen() {
       if (bounceTimerRef.current) clearTimeout(bounceTimerRef.current);
     };
   }, []);
+
+  // Sheet snap handler — only haptic on user-initiated snaps (not bounce)
+  const handleSheetChange = useCallback((index: number) => {
+    const prev = currentSnapIndexRef.current;
+    currentSnapIndexRef.current = index;
+    // Haptic only when user actively changes snap (not programmatic bounce)
+    if (!bounceTimerRef.current) impact();
+    // Toggle overlay interactivity
+    setOverlayInteractive(index === 0);
+    if (index > 0) {
+      setSheetExpanded(true);
+      if (bounceTimerRef.current) {
+        clearTimeout(bounceTimerRef.current);
+        bounceTimerRef.current = null;
+      }
+    } else if (prev > 0) {
+      // User pulled sheet back down → reset expanded state
+      setSheetExpanded(false);
+    }
+  }, [impact]);
 
   // Selected store data
   const selectedStore = useMemo(() => {
@@ -456,6 +476,12 @@ export default function MapScreen() {
     hybridSearch(text);
   }, [hybridSearch]);
 
+  const handleClearSearch = useCallback(() => {
+    setSearchText("");
+    clearSearch();
+    setShowSuggestions(false);
+  }, [clearSearch]);
+
   const handleSearchResultPress = useCallback((result: SearchResult) => {
     impact();
     setShowSuggestions(false);
@@ -519,6 +545,37 @@ export default function MapScreen() {
 
   const handleCloseDetail = useCallback(() => {
     setSelectedStoreId(null);
+    setSheetExpanded(false);
+    bottomSheetRef.current?.snapToIndex(0);
+  }, []);
+
+  // Stable callbacks for StoreDetailCard actions — use selectedStore via ref
+  // to avoid re-creating on every store change (React.memo stays effective)
+  const selectedStoreRef = useRef(selectedStore);
+  selectedStoreRef.current = selectedStore;
+
+  const handleDirections = useCallback(() => {
+    const s = selectedStoreRef.current;
+    if (!s) return;
+    trackEvent("map_get_directions", { store_id: s.id });
+    openDirections(s.latitude, s.longitude, s.name);
+  }, []);
+
+  const handleCallStore = useCallback(() => {
+    const s = selectedStoreRef.current;
+    if (!s?.phone) return;
+    trackEvent("map_call_store", { store_id: s.id });
+    callStore(s.phone);
+  }, []);
+
+  const handleShareStore = useCallback(() => {
+    const s = selectedStoreRef.current;
+    if (!s) return;
+    trackEvent("map_share_store", { store_id: s.id });
+    const certInfo = s.halalCertified ? " (Halal Certifié)" : "";
+    Share.share({
+      message: `${s.name}${certInfo}\n${s.address}, ${s.city}\n\nDécouvert sur Optimus Halal`,
+    });
   }, []);
 
   // Progressive zoom: fly to user on first load only.
@@ -680,7 +737,7 @@ export default function MapScreen() {
 
       {/* Search overlay + "Search this area" — fades out as sheet rises */}
       <Animated.View
-        style={[{ position: "absolute" as const, top: 0, left: 0, right: 0, zIndex: 10 }, overlayFadeStyle]}
+        style={[{ position: "absolute" as const, top: 0, left: 0, right: 0, bottom: 0, zIndex: 10 }, overlayFadeStyle]}
         pointerEvents={overlayInteractive ? "box-none" : "none"}
       >
         <MapSearchOverlay
@@ -694,11 +751,7 @@ export default function MapScreen() {
           activeFilters={activeFilters}
           filters={FILTER_IDS}
           onSearchTextChange={handleSearchTextChange}
-          onClearSearch={() => {
-            setSearchText("");
-            clearSearch();
-            setShowSuggestions(false);
-          }}
+          onClearSearch={handleClearSearch}
           onShowSuggestions={setShowSuggestions}
           onSearchResultPress={handleSearchResultPress}
           onToggleFilter={toggleFilter}
@@ -736,28 +789,27 @@ export default function MapScreen() {
             </TouchableOpacity>
           </Animated.View>
         )}
+        {/* Map Controls — FAB, results badge, loading indicator */}
+        <MapControls
+          colors={colors}
+          isDark={isDark}
+          userLocation={userLocation}
+          storeCount={stores.length}
+          isSelectedStore={!!selectedStore}
+          isFetching={storesQuery.isFetching}
+          isLocationLoading={locationLoading}
+          insetTop={insets.top}
+          insetBottom={insets.bottom}
+          onMyLocation={handleMyLocation}
+          t={{
+            myLocation: t.map.myLocation,
+            stores: t.map.stores,
+            store: t.map.store,
+            locating: t.map.locating,
+            searchResults: t.map.searchResults,
+          }}
+        />
       </Animated.View>
-
-      {/* Map Controls — FAB, results badge, loading indicator */}
-      <MapControls
-        colors={colors}
-        isDark={isDark}
-        userLocation={userLocation}
-        storeCount={stores.length}
-        isSelectedStore={!!selectedStore}
-        isFetching={storesQuery.isFetching}
-        isLocationLoading={locationLoading}
-        insetTop={insets.top}
-        insetBottom={insets.bottom}
-        onMyLocation={handleMyLocation}
-        t={{
-          myLocation: t.map.myLocation,
-          stores: t.map.stores,
-          store: t.map.store,
-          locating: t.map.locating,
-          searchResults: t.map.searchResults,
-        }}
-      />
 
       {/* Bottom Sheet — gesture-driven, Google Maps style */}
       <BottomSheet
@@ -778,19 +830,7 @@ export default function MapScreen() {
         }}
         enableDynamicSizing={false}
         animateOnMount
-        onChange={(index) => {
-          currentSnapIndexRef.current = index;
-          impact();
-          // Toggle overlay touch & fetch detail on expand
-          setOverlayInteractive(index === 0);
-          if (index > 0) {
-            setSheetExpanded(true);
-            if (bounceTimerRef.current) {
-              clearTimeout(bounceTimerRef.current);
-              bounceTimerRef.current = null;
-            }
-          }
-        }}
+        onChange={handleSheetChange}
         style={{
           shadowColor: "#000",
           shadowOffset: { width: 0, height: -6 },
@@ -799,28 +839,16 @@ export default function MapScreen() {
           elevation: 12,
         }}
       >
-        <BottomSheetView style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
           {selectedStore ? (
             <StoreDetailCard
               store={selectedStore as StoreFeatureProperties}
               detail={storeDetailQuery.data}
               isDetailLoading={storeDetailQuery.isLoading && sheetExpanded}
               isExpanded={sheetExpanded}
-              onDirections={() => {
-                trackEvent("map_get_directions", { store_id: selectedStore.id });
-                openDirections(selectedStore.latitude, selectedStore.longitude, selectedStore.name);
-              }}
-              onCall={() => {
-                trackEvent("map_call_store", { store_id: selectedStore.id });
-                selectedStore.phone && callStore(selectedStore.phone);
-              }}
-              onShare={() => {
-                trackEvent("map_share_store", { store_id: selectedStore.id });
-                const certInfo = selectedStore.halalCertified ? " (Halal Certifié)" : "";
-                Share.share({
-                  message: `${selectedStore.name}${certInfo}\n${selectedStore.address}, ${selectedStore.city}\n\nDécouvert sur Optimus Halal`,
-                });
-              }}
+              onDirections={handleDirections}
+              onCall={handleCallStore}
+              onShare={handleShareStore}
               onClose={handleCloseDetail}
               colors={colors}
             />
@@ -892,7 +920,7 @@ export default function MapScreen() {
               )}
             </View>
           )}
-        </BottomSheetView>
+        </View>
       </BottomSheet>
 
       {/* Location denied banner */}

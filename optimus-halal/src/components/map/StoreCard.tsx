@@ -2,6 +2,7 @@ import React, { useCallback } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Image } from "expo-image";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
   StoreFeatureProperties,
   ThemeColors,
@@ -9,6 +10,7 @@ import {
   CARD_WIDTH,
   formatDistance,
   openStatusColor,
+  openStatusLabel,
 } from "./types";
 
 interface Props {
@@ -26,6 +28,7 @@ export const StoreCard = React.memo(function StoreCard({
   onPressId,
   colors,
 }: Props) {
+  const { t } = useTranslation();
   const certLabel = store.certifier !== "none" ? store.certifier.toUpperCase() : null;
   const handlePress = useCallback(() => onPressId(store.id), [onPressId, store.id]);
 
@@ -106,9 +109,7 @@ export const StoreCard = React.memo(function StoreCard({
                   <Text className="text-[11px] font-semibold" style={{
                     color: openStatusColor(store.openStatus, isDark),
                   }}>
-                    {store.openStatus === "open" ? "Ouvert"
-                      : store.openStatus === "closing_soon" ? "Ferme bientôt"
-                      : "Fermé"}
+                    {openStatusLabel(store.openStatus, t)}
                   </Text>
                 </View>
               )}

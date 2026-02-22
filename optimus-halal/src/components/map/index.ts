@@ -11,4 +11,5 @@ export {
   formatDistance,
   openStatusColor,
   openStatusBg,
+  openStatusLabel,
 } from "./types";
