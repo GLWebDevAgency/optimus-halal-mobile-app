@@ -11,7 +11,7 @@ import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   StyleSheet,
   TextInput,
   KeyboardAvoidingView,
@@ -35,6 +35,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 
+import { PressableScale } from "@/components/ui/PressableScale";
 import { brand } from "@/theme/colors";
 
 type PasswordStrength = "weak" | "medium" | "strong" | "very-strong";
@@ -201,20 +202,18 @@ export default function SetNewPasswordScreen() {
           }
         ]}
       >
-        <TouchableOpacity
+        <PressableScale
           onPress={handleGoBack}
           style={styles.backButton}
-          activeOpacity={0.7}
           accessibilityRole="button"
           accessibilityLabel={t.common.back}
-          accessibilityHint={t.common.back}
         >
           <MaterialIcons
             name="arrow-back-ios-new"
             size={24}
             color={isDark ? "#ffffff" : "#1f2937"}
           />
-        </TouchableOpacity>
+        </PressableScale>
         
         <Text
           style={[
@@ -312,7 +311,7 @@ export default function SetNewPasswordScreen() {
                   accessibilityLabel={t.auth.setNewPassword.newPassword}
                   accessibilityHint={t.auth.setNewPassword.newPasswordPlaceholder}
                 />
-                <TouchableOpacity
+                <Pressable
                   onPress={() => setShowNewPassword(!showNewPassword)}
                   style={styles.toggleButton}
                   accessibilityRole="button"
@@ -323,7 +322,7 @@ export default function SetNewPasswordScreen() {
                     size={24}
                     color={isDark ? "#92c9a8" : "#9ca3af"}
                   />
-                </TouchableOpacity>
+                </Pressable>
               </View>
 
               {/* Password Strength Indicator */}
@@ -396,7 +395,7 @@ export default function SetNewPasswordScreen() {
                   accessibilityLabel={t.auth.setNewPassword.confirmPassword}
                   accessibilityHint={t.auth.setNewPassword.confirmPasswordPlaceholder}
                 />
-                <TouchableOpacity
+                <Pressable
                   onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                   style={styles.toggleButton}
                   accessibilityRole="button"
@@ -407,7 +406,7 @@ export default function SetNewPasswordScreen() {
                     size={24}
                     color={isDark ? "#92c9a8" : "#9ca3af"}
                   />
-                </TouchableOpacity>
+                </Pressable>
               </View>
 
               {/* Passwords match indicator */}
@@ -469,14 +468,11 @@ export default function SetNewPasswordScreen() {
 
             {/* Submit Button */}
             <Animated.View style={[styles.buttonContainer, animatedButtonStyle]}>
-              <TouchableOpacity
+              <PressableScale
                 onPress={handleSubmit}
                 disabled={!isFormValid || isLoading}
-                activeOpacity={0.9}
                 accessibilityRole="button"
                 accessibilityLabel={t.auth.setNewPassword.submit}
-                accessibilityHint={t.auth.setNewPassword.submit}
-                accessibilityState={{ disabled: !isFormValid || isLoading }}
                 style={[
                   styles.submitButton,
                   { shadowColor: colors.primary },
@@ -484,7 +480,7 @@ export default function SetNewPasswordScreen() {
                 ]}
               >
                 <LinearGradient
-                  colors={isFormValid 
+                  colors={isFormValid
                     ? [brand.primary, "#0fd660"]
                     : ["#6b7280", "#4b5563"]
                   }
@@ -499,7 +495,7 @@ export default function SetNewPasswordScreen() {
                       <View style={[styles.dot, { backgroundColor: "#102217", opacity: 0.4 }]} />
                     </View>
                   ) : (
-                    <Text 
+                    <Text
                       style={[
                         styles.submitButtonText,
                         { color: isFormValid ? "#102217" : "#ffffff" }
@@ -509,7 +505,7 @@ export default function SetNewPasswordScreen() {
                     </Text>
                   )}
                 </LinearGradient>
-              </TouchableOpacity>
+              </PressableScale>
             </Animated.View>
           </Animated.View>
         </ScrollView>

@@ -6,7 +6,6 @@ import React, { useState, useCallback, useEffect, useMemo } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
   ScrollView,
   TextInput,
   Alert,
@@ -21,6 +20,7 @@ import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown, SlideInDown } from "react-native-reanimated";
 import * as ImagePicker from "expo-image-picker";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { useMe } from "@/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { useTheme } from "@/hooks/useTheme";
@@ -277,7 +277,7 @@ export default function EditProfileScreen() {
         }}>
           {meQuery.error?.message ?? t.editProfile.saveFailed}
         </Text>
-        <TouchableOpacity
+        <PressableScale
           onPress={() => meQuery.refetch()}
           style={{
             backgroundColor: colors.primary,
@@ -287,11 +287,10 @@ export default function EditProfileScreen() {
           }}
           accessibilityRole="button"
           accessibilityLabel={t.common.retry}
-          accessibilityHint={t.editProfile.retryHint}
         >
           <Text style={{ color: "#0d1b13", fontWeight: "600" }}>{t.common.retry}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+        </PressableScale>
+        <PressableScale
           onPress={safeGoBack}
           style={{
             marginTop: 16,
@@ -299,10 +298,9 @@ export default function EditProfileScreen() {
           }}
           accessibilityRole="button"
           accessibilityLabel={t.common.back}
-          accessibilityHint={t.editProfile.backHint}
         >
           <Text style={{ color: colors.textSecondary }}>{t.common.back}</Text>
-        </TouchableOpacity>
+        </PressableScale>
       </SafeAreaView>
     );
   }
@@ -328,9 +326,8 @@ export default function EditProfileScreen() {
           }}
         >
           {/* Back Button */}
-          <TouchableOpacity
+          <PressableScale
             onPress={safeGoBack}
-            activeOpacity={0.7}
             style={{
               width: 44,
               height: 44,
@@ -348,10 +345,9 @@ export default function EditProfileScreen() {
             }}
             accessibilityRole="button"
             accessibilityLabel={t.common.back}
-            accessibilityHint={t.editProfile.backHint}
           >
             <MaterialIcons name="arrow-back" size={22} color={colors.textPrimary} />
-          </TouchableOpacity>
+          </PressableScale>
 
           {/* Title */}
           <Text
@@ -432,9 +428,8 @@ export default function EditProfileScreen() {
               </View>
 
               {/* Camera Button */}
-              <TouchableOpacity
+              <PressableScale
                 onPress={handleChangePhoto}
-                activeOpacity={0.8}
                 style={{
                   position: "absolute",
                   bottom: -4,
@@ -455,14 +450,13 @@ export default function EditProfileScreen() {
                 }}
                 accessibilityRole="button"
                 accessibilityLabel={t.editProfile.changePhotoLabel}
-                accessibilityHint={t.editProfile.changePhotoHint}
               >
                 <MaterialIcons name="photo-camera" size={18} color="#ffffff" />
-              </TouchableOpacity>
+              </PressableScale>
             </View>
 
             {/* Change Photo Text */}
-            <TouchableOpacity
+            <PressableScale
               onPress={handleChangePhoto}
               style={{ marginTop: 12 }}
               accessibilityRole="button"
@@ -477,7 +471,7 @@ export default function EditProfileScreen() {
               >
                 {t.editProfile.changePhoto}
               </Text>
-            </TouchableOpacity>
+            </PressableScale>
           </Animated.View>
 
           {/* Form Fields */}
@@ -588,9 +582,8 @@ export default function EditProfileScreen() {
             borderTopColor: colors.cardBorder,
           }}
         >
-          <TouchableOpacity
+          <PressableScale
             onPress={handleSave}
-            activeOpacity={0.9}
             disabled={isSaving || isUploadingAvatar || !hasChanges}
             style={{
               backgroundColor: hasChanges ? colors.primary : (isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"),
@@ -609,7 +602,6 @@ export default function EditProfileScreen() {
             }}
             accessibilityRole="button"
             accessibilityLabel={isSaving ? t.editProfile.saving : hasChanges ? t.common.saveChanges : t.common.noChanges}
-            accessibilityState={{ disabled: isSaving || !hasChanges, busy: isSaving }}
           >
             {isSaving ? (
               <>
@@ -635,7 +627,7 @@ export default function EditProfileScreen() {
                 {hasChanges ? t.common.saveChanges : t.common.noChanges}
               </Text>
             )}
-          </TouchableOpacity>
+          </PressableScale>
         </Animated.View>
       </KeyboardAvoidingView>
     </SafeAreaView>

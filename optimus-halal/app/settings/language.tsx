@@ -3,7 +3,8 @@
  */
 
 import React from "react";
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, Pressable, ScrollView } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -47,15 +48,16 @@ export default function LanguageScreen() {
           borderBottomColor: colors.borderLight,
         }}
       >
-        <TouchableOpacity
+        <Pressable
           onPress={() => router.back()}
           style={{ padding: 8, marginLeft: -8 }}
           accessibilityRole="button"
           accessibilityLabel="Retour"
           accessibilityHint="Revenir à l'écran précédent"
+          hitSlop={8}
         >
           <MaterialIcons name="arrow-back" size={24} color={colors.textPrimary} />
-        </TouchableOpacity>
+        </Pressable>
         <Text
           style={{ fontSize: 20, fontWeight: "700", color: colors.textPrimary, marginLeft: 8 }}
           accessibilityRole="header"
@@ -88,31 +90,34 @@ export default function LanguageScreen() {
           accessibilityLabel="Sélection de la langue"
         >
           {LANGUAGES.map((lang, index) => (
-            <TouchableOpacity
+            <PressableScale
               key={lang.code}
               onPress={() => handleSelect(lang.code)}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                paddingHorizontal: 16,
-                paddingVertical: 16,
-                borderBottomWidth: index !== LANGUAGES.length - 1 ? 1 : 0,
-                borderBottomColor: colors.borderLight,
-              }}
               accessibilityRole="radio"
               accessibilityLabel={lang.native}
               accessibilityState={{ selected: language === lang.code }}
               accessibilityHint={`Sélectionner ${lang.native} comme langue`}
             >
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Text style={{ fontSize: 24, marginRight: 12 }} accessible={false}>{lang.flag}</Text>
-                <Text style={{ color: colors.textPrimary, fontSize: 16 }}>{lang.native}</Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  paddingHorizontal: 16,
+                  paddingVertical: 16,
+                  borderBottomWidth: index !== LANGUAGES.length - 1 ? 1 : 0,
+                  borderBottomColor: colors.borderLight,
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <Text style={{ fontSize: 24, marginRight: 12 }} accessible={false}>{lang.flag}</Text>
+                  <Text style={{ color: colors.textPrimary, fontSize: 16 }}>{lang.native}</Text>
+                </View>
+                {language === lang.code && (
+                  <MaterialIcons name="check-circle" size={24} color={colors.primary} />
+                )}
               </View>
-              {language === lang.code && (
-                <MaterialIcons name="check-circle" size={24} color={colors.primary} />
-              )}
-            </TouchableOpacity>
+            </PressableScale>
           ))}
         </Animated.View>
       </ScrollView>

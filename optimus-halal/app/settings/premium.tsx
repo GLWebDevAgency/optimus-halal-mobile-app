@@ -11,7 +11,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   ScrollView,
   Alert,
 } from "react-native";
@@ -19,6 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -91,14 +92,14 @@ export default function PremiumPaywallScreen() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
         <View style={{ padding: 16, flexDirection: "row", alignItems: "center" }}>
-          <TouchableOpacity
+          <Pressable
             onPress={handleClose}
             hitSlop={16}
             accessibilityRole="button"
             accessibilityLabel={t.common.close}
           >
             <MaterialIcons name="close" size={24} color={colors.textPrimary} />
-          </TouchableOpacity>
+          </Pressable>
         </View>
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 32 }}>
           <MaterialIcons name="workspace-premium" size={64} color={colors.primary} />
@@ -118,14 +119,14 @@ export default function PremiumPaywallScreen() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
         <View style={{ padding: 16, flexDirection: "row", alignItems: "center" }}>
-          <TouchableOpacity
+          <Pressable
             onPress={handleClose}
             hitSlop={16}
             accessibilityRole="button"
             accessibilityLabel={t.common.close}
           >
             <MaterialIcons name="close" size={24} color={colors.textPrimary} />
-          </TouchableOpacity>
+          </Pressable>
         </View>
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 32 }}>
           <MaterialIcons name="verified" size={64} color={colors.primary} />
@@ -156,14 +157,14 @@ export default function PremiumPaywallScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Close button */}
       <View style={{ padding: 16, flexDirection: "row", alignItems: "center" }}>
-        <TouchableOpacity
+        <Pressable
           onPress={handleClose}
           hitSlop={16}
           accessibilityRole="button"
           accessibilityLabel={t.common.close}
         >
           <MaterialIcons name="close" size={24} color={colors.textPrimary} />
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
@@ -207,7 +208,7 @@ export default function PremiumPaywallScreen() {
           {plans.map((plan) => {
             const isSelected = selectedPlan === plan.id;
             return (
-              <TouchableOpacity
+              <PressableScale
                 key={plan.id}
                 onPress={() => {
                   impact();
@@ -215,71 +216,77 @@ export default function PremiumPaywallScreen() {
                 }}
                 accessibilityRole="radio"
                 accessibilityState={{ selected: isSelected }}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  padding: 16,
-                  borderRadius: 14,
-                  borderWidth: 2,
-                  borderColor: isSelected ? colors.primary : isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
-                  backgroundColor: isSelected
-                    ? isDark ? "rgba(19,236,106,0.08)" : "rgba(19,236,106,0.04)"
-                    : "transparent",
-                }}
               >
-                <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                    <Text style={{ color: colors.textPrimary, fontSize: 18, fontWeight: "700" }}>
-                      {plan.price}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    padding: 16,
+                    borderRadius: 14,
+                    borderWidth: 2,
+                    borderColor: isSelected ? colors.primary : isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
+                    backgroundColor: isSelected
+                      ? isDark ? "rgba(19,236,106,0.08)" : "rgba(19,236,106,0.04)"
+                      : "transparent",
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                      <Text style={{ color: colors.textPrimary, fontSize: 18, fontWeight: "700" }}>
+                        {plan.price}
+                      </Text>
+                      {plan.badge && (
+                        <View style={{ backgroundColor: colors.primary, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
+                          <Text style={{ color: "#0d1b13", fontSize: 11, fontWeight: "800" }}>
+                            {plan.badge}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 2 }}>
+                      {plan.period}
+                      {plan.savings ? ` \u00b7 ${plan.savings}` : ""}
                     </Text>
-                    {plan.badge && (
-                      <View style={{ backgroundColor: colors.primary, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
-                        <Text style={{ color: "#0d1b13", fontSize: 11, fontWeight: "800" }}>
-                          {plan.badge}
-                        </Text>
-                      </View>
-                    )}
                   </View>
-                  <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 2 }}>
-                    {plan.period}
-                    {plan.savings ? ` \u00b7 ${plan.savings}` : ""}
-                  </Text>
+                  <MaterialIcons
+                    name={isSelected ? "radio-button-checked" : "radio-button-unchecked"}
+                    size={24}
+                    color={isSelected ? colors.primary : colors.textSecondary}
+                  />
                 </View>
-                <MaterialIcons
-                  name={isSelected ? "radio-button-checked" : "radio-button-unchecked"}
-                  size={24}
-                  color={isSelected ? colors.primary : colors.textSecondary}
-                />
-              </TouchableOpacity>
+              </PressableScale>
             );
           })}
         </Animated.View>
 
         {/* CTA */}
         <Animated.View entering={FadeInDown.delay(300).duration(400)} style={{ paddingHorizontal: 20, marginTop: 24 }}>
-          <TouchableOpacity
+          <PressableScale
             onPress={handlePurchase}
             accessibilityRole="button"
             accessibilityLabel={t.premium.subscribe}
-            style={{
-              backgroundColor: colors.primary,
-              paddingVertical: 16,
-              borderRadius: 14,
-              alignItems: "center",
-            }}
           >
-            <Text style={{ color: "#0d1b13", fontSize: 17, fontWeight: "800" }}>
-              {t.premium.subscribe}
-            </Text>
-          </TouchableOpacity>
+            <View
+              style={{
+                backgroundColor: colors.primary,
+                paddingVertical: 16,
+                borderRadius: 14,
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ color: "#0d1b13", fontSize: 17, fontWeight: "800" }}>
+                {t.premium.subscribe}
+              </Text>
+            </View>
+          </PressableScale>
         </Animated.View>
 
         {/* Restore */}
-        <TouchableOpacity onPress={handleRestore} style={{ alignItems: "center", marginTop: 16 }}>
+        <PressableScale onPress={handleRestore} style={{ alignItems: "center", marginTop: 16 }}>
           <Text style={{ color: colors.textSecondary, fontSize: 13, textDecorationLine: "underline" }}>
             {t.premium.restorePurchases}
           </Text>
-        </TouchableOpacity>
+        </PressableScale>
 
         {/* Legal */}
         <View style={{ alignItems: "center", marginTop: 16, paddingHorizontal: 32 }}>

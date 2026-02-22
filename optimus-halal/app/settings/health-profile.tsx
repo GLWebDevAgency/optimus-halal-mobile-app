@@ -11,9 +11,10 @@ import {
   View,
   Text,
   Switch,
-  TouchableOpacity,
+  Pressable,
   ScrollView,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -50,20 +51,23 @@ export default function HealthProfileScreen() {
         entering={FadeIn.duration(400)}
         className="flex-row items-center px-4 pb-4 pt-2"
       >
-        <TouchableOpacity
+        <Pressable
           onPress={() => router.back()}
-          activeOpacity={0.7}
           accessibilityRole="button"
           accessibilityLabel={t.common.back}
-          className="w-10 h-10 items-center justify-center rounded-xl"
-          style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#f1f5f9" }}
+          hitSlop={8}
         >
-          <MaterialIcons
-            name="arrow-back"
-            size={22}
-            color={isDark ? "#e2e8f0" : "#334155"}
-          />
-        </TouchableOpacity>
+          <View
+            className="w-10 h-10 items-center justify-center rounded-xl"
+            style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#f1f5f9" }}
+          >
+            <MaterialIcons
+              name="arrow-back"
+              size={22}
+              color={isDark ? "#e2e8f0" : "#334155"}
+            />
+          </View>
+        </Pressable>
         <Text
           className="flex-1 text-center text-lg font-bold text-slate-900 dark:text-white"
           accessibilityRole="header"
@@ -216,48 +220,50 @@ export default function HealthProfileScreen() {
           entering={FadeInDown.delay(300).duration(400)}
           className="px-4 mb-4"
         >
-          <TouchableOpacity
+          <PressableScale
             onPress={() => router.push("/settings/exclusions" as any)}
-            activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel={t.healthProfile.allergens.description}
-            className="rounded-xl p-4 flex-row items-center justify-between"
-            style={{
-              backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#ffffff",
-              borderWidth: 1,
-              borderColor: isDark ? "rgba(255,255,255,0.05)" : "#e2e8f0",
-            }}
           >
-            <View className="flex-row items-center gap-3">
-              <View
-                className="w-10 h-10 rounded-full items-center justify-center"
-                style={{
-                  backgroundColor: isDark
-                    ? "rgba(251,191,36,0.15)"
-                    : "rgba(251,191,36,0.1)",
-                }}
-              >
-                <MaterialIcons
-                  name="no-food"
-                  size={20}
-                  color={isDark ? "#fbbf24" : "#d97706"}
-                />
+            <View
+              className="rounded-xl p-4 flex-row items-center justify-between"
+              style={{
+                backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#ffffff",
+                borderWidth: 1,
+                borderColor: isDark ? "rgba(255,255,255,0.05)" : "#e2e8f0",
+              }}
+            >
+              <View className="flex-row items-center gap-3">
+                <View
+                  className="w-10 h-10 rounded-full items-center justify-center"
+                  style={{
+                    backgroundColor: isDark
+                      ? "rgba(251,191,36,0.15)"
+                      : "rgba(251,191,36,0.1)",
+                  }}
+                >
+                  <MaterialIcons
+                    name="no-food"
+                    size={20}
+                    color={isDark ? "#fbbf24" : "#d97706"}
+                  />
+                </View>
+                <View>
+                  <Text className="text-sm font-semibold text-slate-900 dark:text-white">
+                    {t.healthProfile.allergens.title}
+                  </Text>
+                  <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    {t.healthProfile.allergens.description}
+                  </Text>
+                </View>
               </View>
-              <View>
-                <Text className="text-sm font-semibold text-slate-900 dark:text-white">
-                  {t.healthProfile.allergens.title}
-                </Text>
-                <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  {t.healthProfile.allergens.description}
-                </Text>
-              </View>
+              <MaterialIcons
+                name="chevron-right"
+                size={22}
+                color={isDark ? "#475569" : "#94a3b8"}
+              />
             </View>
-            <MaterialIcons
-              name="chevron-right"
-              size={22}
-              color={isDark ? "#475569" : "#94a3b8"}
-            />
-          </TouchableOpacity>
+          </PressableScale>
         </Animated.View>
 
         {/* Saving indicator */}

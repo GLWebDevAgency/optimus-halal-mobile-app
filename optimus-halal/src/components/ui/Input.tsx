@@ -10,7 +10,7 @@ import {
   TextInputProps,
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { neutral } from "@/theme/colors";
@@ -87,7 +87,7 @@ export function Input({
           />
 
           {(rightIcon || isPassword) && (
-            <TouchableOpacity
+            <Pressable
               onPress={isPassword ? togglePasswordVisibility : onRightIconPress}
               className="absolute right-4 top-0 bottom-0 justify-center"
             >
@@ -102,7 +102,7 @@ export function Input({
                 size={20}
                 color={neutral[400]}
               />
-            </TouchableOpacity>
+            </Pressable>
           )}
         </View>
 

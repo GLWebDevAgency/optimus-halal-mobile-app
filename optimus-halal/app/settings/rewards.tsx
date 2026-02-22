@@ -10,13 +10,14 @@ import React, { useCallback, useMemo } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   FlatList,
   Alert,
   ActivityIndicator,
   StyleSheet,
   Clipboard,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -211,24 +212,27 @@ const RewardCard = React.memo(function RewardCard({
             </Text>
           </View>
         ) : canAfford ? (
-          <TouchableOpacity
+          <PressableScale
             onPress={() => onClaim(reward)}
             disabled={isClaiming}
-            style={[
-              styles.claimButton,
-              {
-                backgroundColor: isDark ? "#22c55e" : "#16a34a",
-              },
-            ]}
             accessibilityRole="button"
             accessibilityLabel={`${t.rewards.claim} ${reward.nameFr ?? reward.name}`}
           >
-            {isClaiming ? (
-              <ActivityIndicator size="small" color="#ffffff" />
-            ) : (
-              <Text style={styles.claimButtonText}>{t.rewards.claim}</Text>
-            )}
-          </TouchableOpacity>
+            <View
+              style={[
+                styles.claimButton,
+                {
+                  backgroundColor: isDark ? "#22c55e" : "#16a34a",
+                },
+              ]}
+            >
+              {isClaiming ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <Text style={styles.claimButtonText}>{t.rewards.claim}</Text>
+              )}
+            </View>
+          </PressableScale>
         ) : (
           <View style={styles.missingPointsContainer}>
             <Text
@@ -329,36 +333,39 @@ const ClaimedRewardCard = React.memo(function ClaimedRewardCard({
 
       {/* Redemption Code */}
       {item.userReward.redemptionCode && (
-        <TouchableOpacity
+        <PressableScale
           onPress={handleCopyCode}
-          style={[
-            styles.codeContainer,
-            {
-              backgroundColor: isDark
-                ? "rgba(255,255,255,0.04)"
-                : "rgba(0,0,0,0.03)",
-              borderColor: colors.borderLight,
-            },
-          ]}
           accessibilityRole="button"
           accessibilityLabel={`${t.rewards.redemptionCode}: ${item.userReward.redemptionCode}`}
           accessibilityHint="Appuyez pour copier le code"
         >
-          <View style={styles.codeRow}>
-            <Text style={[styles.codeLabel, { color: colors.textMuted }]}>
-              {t.rewards.redemptionCode}
-            </Text>
-            <MaterialIcons name="content-copy" size={14} color={colors.textMuted} />
-          </View>
-          <Text
+          <View
             style={[
-              styles.codeValue,
-              { color: isDark ? "#4ade80" : "#15803d" },
+              styles.codeContainer,
+              {
+                backgroundColor: isDark
+                  ? "rgba(255,255,255,0.04)"
+                  : "rgba(0,0,0,0.03)",
+                borderColor: colors.borderLight,
+              },
             ]}
           >
-            {item.userReward.redemptionCode}
-          </Text>
-        </TouchableOpacity>
+            <View style={styles.codeRow}>
+              <Text style={[styles.codeLabel, { color: colors.textMuted }]}>
+                {t.rewards.redemptionCode}
+              </Text>
+              <MaterialIcons name="content-copy" size={14} color={colors.textMuted} />
+            </View>
+            <Text
+              style={[
+                styles.codeValue,
+                { color: isDark ? "#4ade80" : "#15803d" },
+              ]}
+            >
+              {item.userReward.redemptionCode}
+            </Text>
+          </View>
+        </PressableScale>
       )}
     </Animated.View>
   );
@@ -495,7 +502,7 @@ export default function RewardsScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
+          <Pressable
             onPress={() => router.back()}
             style={[
               styles.backButton,
@@ -512,7 +519,7 @@ export default function RewardsScreen() {
               size={20}
               color={colors.textPrimary}
             />
-          </TouchableOpacity>
+          </Pressable>
           <Text
             style={[styles.headerTitle, { color: colors.textPrimary }]}
             accessibilityRole="header"
@@ -686,7 +693,7 @@ export default function RewardsScreen() {
     >
       {/* Header */}
       <Animated.View entering={FadeIn.duration(400)} style={styles.header}>
-        <TouchableOpacity
+        <Pressable
           onPress={() => router.back()}
           style={[
             styles.backButton,
@@ -704,7 +711,7 @@ export default function RewardsScreen() {
             size={20}
             color={colors.textPrimary}
           />
-        </TouchableOpacity>
+        </Pressable>
         <Text
           style={[styles.headerTitle, { color: colors.textPrimary }]}
           accessibilityRole="header"

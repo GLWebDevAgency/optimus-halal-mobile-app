@@ -19,7 +19,7 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   Dimensions,
   StyleSheet,
   Platform,
@@ -49,6 +49,7 @@ import Animated, {
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import { IconButton, ArabicCalligraphy, StatusPill, LevelUpCelebration } from "@/components/ui";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { PersonalAlerts, type PersonalAlert } from "@/components/scan/PersonalAlerts";
 import { MadhabBottomSheet } from "@/components/scan/MadhabBottomSheet";
 import { ShareCardView, captureAndShareCard } from "@/components/scan/ShareCard";
@@ -386,12 +387,10 @@ const CollapsibleSection = React.memo(function CollapsibleSection({
         },
       ]}
     >
-      <TouchableOpacity
+      <PressableScale
         onPress={toggle}
         style={styles.collapsibleHeader}
-        activeOpacity={0.7}
         accessibilityRole="button"
-        accessibilityState={{ expanded: isOpen }}
         accessibilityLabel={title}
       >
         <View style={styles.collapsibleHeaderLeft}>
@@ -427,7 +426,7 @@ const CollapsibleSection = React.memo(function CollapsibleSection({
           size={24}
           color={colors.textSecondary}
         />
-      </TouchableOpacity>
+      </PressableScale>
       {isOpen && <View style={styles.collapsibleContent}>{children}</View>}
     </View>
   );
@@ -477,12 +476,10 @@ const IngredientRow = React.memo(function IngredientRow({
       : t.scanResult.ingredientDoubtful;
 
   return (
-    <TouchableOpacity
-      activeOpacity={isProblematic ? 0.7 : 1}
+    <PressableScale
       onPress={toggleExpand}
       disabled={!isProblematic || !explanation}
       accessibilityRole={isProblematic && explanation ? "button" : "text"}
-      accessibilityState={isProblematic ? { expanded } : undefined}
       accessibilityLabel={name}
       accessibilityHint={isProblematic && explanation ? t.scanResult.tapForDetail : undefined}
       style={[
@@ -573,7 +570,7 @@ const IngredientRow = React.memo(function IngredientRow({
           </Text>
         </Animated.View>
       )}
-    </TouchableOpacity>
+    </PressableScale>
   );
 });
 
@@ -768,7 +765,7 @@ const ScanErrorState = React.memo(function ScanErrorState({
           {t.scanResult.analysisErrorDesc}
         </Text>
         <View style={styles.stateButtons}>
-          <TouchableOpacity
+          <PressableScale
             onPress={onGoBack}
             style={[
               styles.stateButton,
@@ -784,8 +781,8 @@ const ScanErrorState = React.memo(function ScanErrorState({
             <Text style={[styles.stateButtonText, { color: colors.textPrimary }]}>
               {t.common.back}
             </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+          </PressableScale>
+          <PressableScale
             onPress={onRetry}
             style={[styles.stateButton, { backgroundColor: colors.primary }]}
             accessibilityRole="button"
@@ -794,7 +791,7 @@ const ScanErrorState = React.memo(function ScanErrorState({
             <Text style={[styles.stateButtonText, { color: "#0d1b13" }]}>
               {t.common.retry}
             </Text>
-          </TouchableOpacity>
+          </PressableScale>
         </View>
       </Animated.View>
     </View>
@@ -836,7 +833,7 @@ const ScanNotFoundState = React.memo(function ScanNotFoundState({
         <Text style={[styles.stateDesc, { color: colors.textSecondary }]}>
           {t.scanResult.productNotFoundDesc}
         </Text>
-        <TouchableOpacity
+        <PressableScale
           onPress={onGoBack}
           style={[styles.stateButton, { backgroundColor: colors.primary, marginTop: 16 }]}
           accessibilityRole="button"
@@ -845,7 +842,7 @@ const ScanNotFoundState = React.memo(function ScanNotFoundState({
           <Text style={[styles.stateButtonText, { color: "#0d1b13" }]}>
             {t.scanResult.scanAnother}
           </Text>
-        </TouchableOpacity>
+        </PressableScale>
       </Animated.View>
     </View>
   );
@@ -1293,7 +1290,7 @@ export default function ScanResultScreen() {
                 const badgeColor = halalStatusTokens[v.status as keyof typeof halalStatusTokens]?.base ?? halalStatusTokens.unknown.base;
                 const badgeIcon = v.status === "halal" ? "check-circle" : v.status === "doubtful" ? "help" : "cancel";
                 return (
-                  <TouchableOpacity
+                  <PressableScale
                     key={v.madhab}
                     onPress={() => {
                       if (v.status !== "halal") {
@@ -1302,7 +1299,6 @@ export default function ScanResultScreen() {
                       }
                     }}
                     disabled={v.status === "halal"}
-                    activeOpacity={v.status === "halal" ? 1 : 0.7}
                     style={[
                       styles.madhabBadge,
                       {
@@ -1319,7 +1315,7 @@ export default function ScanResultScreen() {
                     <Text style={[styles.madhabBadgeLabel, { color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.7)" }]}>
                       {label}
                     </Text>
-                  </TouchableOpacity>
+                  </PressableScale>
                 );
               })}
             </Animated.View>
@@ -1435,7 +1431,7 @@ export default function ScanResultScreen() {
                 {alternativesQuery.data.slice(0, 3).map((alt: any, index: number) => {
                   const isPremiumLocked = index === 2 && !isPremium;
                   return (
-                    <TouchableOpacity
+                    <PressableScale
                       key={alt.id}
                       onPress={() => {
                         if (isPremiumLocked) {
@@ -1448,7 +1444,6 @@ export default function ScanResultScreen() {
                           router.navigate({ pathname: "/scan-result", params: { barcode: alt.barcode } });
                         }
                       }}
-                      activeOpacity={0.8}
                     >
                       <GlowCard
                         glowColor={brandTokens.gold}
@@ -1488,16 +1483,15 @@ export default function ScanResultScreen() {
                           )}
                         </View>
                       </GlowCard>
-                    </TouchableOpacity>
+                    </PressableScale>
                   );
                 })}
               </ScrollView>
               {/* ── "Explore marketplace" CTA — shop halal alternatives by category ── */}
-              <TouchableOpacity
+              <PressableScale
                 onPress={() => {
                   impact();
                   if (marketplaceEnabled) {
-                    // Navigate to marketplace catalog with product category pre-filtered
                     router.navigate({
                       pathname: "/(marketplace)/catalog",
                       params: {
@@ -1505,11 +1499,9 @@ export default function ScanResultScreen() {
                       },
                     } as any);
                   } else {
-                    // Marketplace not yet enabled — go to coming-soon / marketplace index
                     router.navigate("/(marketplace)/" as any);
                   }
                 }}
-                activeOpacity={0.8}
                 accessibilityRole="button"
                 accessibilityLabel={t.scanResult.shopHalalAlternatives}
                 style={{
@@ -1531,7 +1523,7 @@ export default function ScanResultScreen() {
                   {marketplaceEnabled ? t.scanResult.shopHalalAlternatives : t.scanResult.shopOnMarketplace}
                 </Text>
                 <MaterialIcons name="arrow-forward" size={16} color={brandTokens.primary} />
-              </TouchableOpacity>
+              </PressableScale>
             </Animated.View>
           )}
 
@@ -2028,7 +2020,7 @@ export default function ScanResultScreen() {
                   {t.scanResult.isThisResultAccurate}
                 </Text>
                 <View style={{ flexDirection: "row", gap: 16, marginTop: 4 }}>
-                  <TouchableOpacity
+                  <PressableScale
                     onPress={() => {
                       impact();
                       const newVote = userVote === "up" ? null : "up";
@@ -2047,8 +2039,8 @@ export default function ScanResultScreen() {
                     accessibilityLabel={t.scanResult.accurateResult}
                   >
                     <MaterialIcons name="thumb-up" size={24} color={userVote === "up" ? colors.primary : colors.textSecondary} />
-                  </TouchableOpacity>
-                  <TouchableOpacity
+                  </PressableScale>
+                  <PressableScale
                     onPress={() => {
                       impact();
                       const newVote = userVote === "down" ? null : "down";
@@ -2067,7 +2059,7 @@ export default function ScanResultScreen() {
                     accessibilityLabel={t.scanResult.inaccurateResult}
                   >
                     <MaterialIcons name="thumb-down" size={24} color={userVote === "down" ? "#ef4444" : colors.textSecondary} />
-                  </TouchableOpacity>
+                  </PressableScale>
                 </View>
                 {userVote && (
                   <Animated.View entering={FadeIn.duration(300)}>
@@ -2159,7 +2151,7 @@ export default function ScanResultScreen() {
               ]}
             >
               {/* Favorite */}
-              <TouchableOpacity
+              <Pressable
                 onPress={handleFavAnimated}
                 disabled={isFavMutating}
                 style={[
@@ -2171,7 +2163,6 @@ export default function ScanResultScreen() {
                     opacity: isFavMutating ? 0.5 : 1,
                   },
                 ]}
-                activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel={
                   productIsFavorite
@@ -2187,10 +2178,10 @@ export default function ScanResultScreen() {
                     color={productIsFavorite ? "#ef4444" : colors.textSecondary}
                   />
                 </Animated.View>
-              </TouchableOpacity>
+              </Pressable>
 
               {/* Share */}
-              <TouchableOpacity
+              <Pressable
                 onPress={handleShare}
                 style={[
                   styles.actionButton,
@@ -2200,7 +2191,6 @@ export default function ScanResultScreen() {
                       : "rgba(0,0,0,0.04)",
                   },
                 ]}
-                activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel={t.scanResult.shareProduct}
               >
@@ -2209,23 +2199,22 @@ export default function ScanResultScreen() {
                   size={22}
                   color={colors.textSecondary}
                 />
-              </TouchableOpacity>
+              </Pressable>
 
               {/* Where to Buy (primary CTA) */}
-              <TouchableOpacity
+              <PressableScale
                 onPress={handleFindStores}
                 style={[styles.ctaButton, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
-                activeOpacity={0.85}
                 accessibilityRole="button"
                 accessibilityLabel={t.scanResult.whereToBuy}
                 accessibilityHint={t.scanResult.findStores}
               >
                 <MaterialIcons name={marketplaceEnabled ? "shopping-cart" : "location-on"} size={20} color="#0d1b13" />
                 <Text style={styles.ctaText}>{marketplaceEnabled ? t.scanResult.viewOnMarketplace : t.scanResult.whereToBuy}</Text>
-              </TouchableOpacity>
+              </PressableScale>
 
               {/* Report */}
-              <TouchableOpacity
+              <Pressable
                 onPress={handleReport}
                 style={[
                   styles.actionButton,
@@ -2235,7 +2224,6 @@ export default function ScanResultScreen() {
                       : "rgba(0,0,0,0.04)",
                   },
                 ]}
-                activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel={t.scanResult.report}
               >
@@ -2244,7 +2232,7 @@ export default function ScanResultScreen() {
                   size={22}
                   color={colors.textSecondary}
                 />
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </BlurView>
         ) : (
@@ -2269,7 +2257,7 @@ export default function ScanResultScreen() {
               ]}
             >
               {/* Favorite */}
-              <TouchableOpacity
+              <Pressable
                 onPress={handleFavAnimated}
                 disabled={isFavMutating}
                 style={[
@@ -2281,7 +2269,6 @@ export default function ScanResultScreen() {
                     opacity: isFavMutating ? 0.5 : 1,
                   },
                 ]}
-                activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel={
                   productIsFavorite
@@ -2297,10 +2284,10 @@ export default function ScanResultScreen() {
                     color={productIsFavorite ? "#ef4444" : colors.textSecondary}
                   />
                 </Animated.View>
-              </TouchableOpacity>
+              </Pressable>
 
               {/* Share */}
-              <TouchableOpacity
+              <Pressable
                 onPress={handleShare}
                 style={[
                   styles.actionButton,
@@ -2310,7 +2297,6 @@ export default function ScanResultScreen() {
                       : "rgba(0,0,0,0.04)",
                   },
                 ]}
-                activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel={t.scanResult.shareProduct}
               >
@@ -2319,23 +2305,22 @@ export default function ScanResultScreen() {
                   size={22}
                   color={colors.textSecondary}
                 />
-              </TouchableOpacity>
+              </Pressable>
 
               {/* Where to Buy (primary CTA) */}
-              <TouchableOpacity
+              <PressableScale
                 onPress={handleFindStores}
                 style={[styles.ctaButton, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
-                activeOpacity={0.85}
                 accessibilityRole="button"
                 accessibilityLabel={t.scanResult.whereToBuy}
                 accessibilityHint={t.scanResult.findStores}
               >
                 <MaterialIcons name={marketplaceEnabled ? "shopping-cart" : "location-on"} size={20} color="#0d1b13" />
                 <Text style={styles.ctaText}>{marketplaceEnabled ? t.scanResult.viewOnMarketplace : t.scanResult.whereToBuy}</Text>
-              </TouchableOpacity>
+              </PressableScale>
 
               {/* Report */}
-              <TouchableOpacity
+              <Pressable
                 onPress={handleReport}
                 style={[
                   styles.actionButton,
@@ -2345,7 +2330,6 @@ export default function ScanResultScreen() {
                       : "rgba(0,0,0,0.04)",
                   },
                 ]}
-                activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel={t.scanResult.report}
               >
@@ -2354,7 +2338,7 @@ export default function ScanResultScreen() {
                   size={22}
                   color={colors.textSecondary}
                 />
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </View>
         )}

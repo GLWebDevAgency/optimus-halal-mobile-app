@@ -7,11 +7,12 @@
  */
 
 import React, { Component, type ErrorInfo, type ReactNode } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { useTheme, useTranslation } from "@/hooks";
 import { semantic, darkTheme, lightTheme } from "@/theme/colors";
+import { PressableScale } from "./ui/PressableScale";
 
 // ---------------------------------------------------------------------------
 // Error Fallback (functional component — supports hooks / dark mode)
@@ -46,16 +47,16 @@ function ErrorFallback({ onRetry }: { onRetry: () => void }) {
       <Text className="text-sm text-slate-500 dark:text-slate-400 text-center mb-8">
         {t.common.loadingErrorDesc}
       </Text>
-      <TouchableOpacity
+      <PressableScale
         onPress={onRetry}
-        activeOpacity={0.8}
         accessibilityRole="button"
         accessibilityLabel={t.common.retry}
-        className="bg-primary px-8 py-3 rounded-xl flex-row items-center gap-2"
       >
-        <MaterialIcons name="refresh" size={20} color={lightTheme.textInverse} />
-        <Text className="font-bold text-sm text-white">{t.common.retry}</Text>
-      </TouchableOpacity>
+        <View className="bg-primary px-8 py-3 rounded-xl flex-row items-center gap-2">
+          <MaterialIcons name="refresh" size={20} color={lightTheme.textInverse} />
+          <Text className="font-bold text-sm text-white">{t.common.retry}</Text>
+        </View>
+      </PressableScale>
     </View>
   );
 }

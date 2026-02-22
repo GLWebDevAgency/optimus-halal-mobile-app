@@ -1,8 +1,9 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { usePremium, useTranslation, useTheme, useHaptics } from "@/hooks";
 import { useFeatureFlagsStore } from "@/store";
+import { PressableScale } from "./PressableScale";
 
 interface PremiumGateProps {
   feature: string;
@@ -64,7 +65,7 @@ export function PremiumGate({ feature, children, fallback }: PremiumGateProps) {
       >
         {t.common.premiumRequired}
       </Text>
-      <TouchableOpacity
+      <PressableScale
         onPress={() => {
           impact();
           showPaywall();
@@ -82,7 +83,7 @@ export function PremiumGate({ feature, children, fallback }: PremiumGateProps) {
         <Text style={{ color: isDark ? "#e8f5e9" : "#0d1b13", fontWeight: "700", fontSize: 14 }}>
           {t.common.upgrade}
         </Text>
-      </TouchableOpacity>
+      </PressableScale>
     </View>
   );
 }

@@ -10,7 +10,7 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   Share,
   Platform,
   StyleSheet,
@@ -29,6 +29,7 @@ import Svg, { Path } from "react-native-svg";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useHaptics } from "@/hooks";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { trpc } from "@/lib/trpc";
 import { brand, gold } from "@/theme/colors";
 
@@ -115,12 +116,14 @@ export default function ArticleDetailScreen() {
         <Text style={[styles.errorText, { color: colors.textSecondary }]}>
           {t.articles.notFound}
         </Text>
-        <TouchableOpacity
+        <PressableScale
           onPress={handleBack}
           style={[styles.backButton, { backgroundColor: brand.primary }]}
+          accessibilityRole="button"
+          accessibilityLabel={t.common.back}
         >
           <Text style={styles.backButtonText}>{t.common.back}</Text>
-        </TouchableOpacity>
+        </PressableScale>
       </View>
     );
   }
@@ -165,23 +168,23 @@ export default function ArticleDetailScreen() {
 
           {/* Top bar */}
           <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-            <TouchableOpacity
+            <Pressable
               onPress={handleBack}
               style={styles.iconBtn}
               accessibilityRole="button"
               accessibilityLabel={t.common.back}
             >
               <MaterialIcons name="arrow-back" size={22} color="#fff" />
-            </TouchableOpacity>
+            </Pressable>
 
-            <TouchableOpacity
+            <Pressable
               onPress={handleShare}
               style={styles.iconBtn}
               accessibilityRole="button"
               accessibilityLabel={t.articles.share}
             >
               <MaterialIcons name="share" size={22} color="#fff" />
-            </TouchableOpacity>
+            </Pressable>
           </View>
 
           {/* Badge */}
@@ -298,16 +301,15 @@ export default function ArticleDetailScreen() {
           {/* External link CTA */}
           {article.externalLink && (
             <Animated.View entering={FadeInDown.delay(500).duration(500)}>
-              <TouchableOpacity
+              <PressableScale
                 onPress={handleOpenSource}
                 style={[styles.ctaButton, { backgroundColor: brand.primary }]}
-                activeOpacity={0.85}
                 accessibilityRole="link"
                 accessibilityLabel={t.home.readOnSource}
               >
                 <MaterialIcons name="open-in-new" size={18} color="#fff" />
                 <Text style={styles.ctaText}>{t.home.readOnSource}</Text>
-              </TouchableOpacity>
+              </PressableScale>
             </Animated.View>
           )}
         </View>

@@ -16,10 +16,11 @@ import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   ScrollView,
   Dimensions,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -196,36 +197,38 @@ export default function ProductDetailScreen() {
         className="absolute top-0 left-0 right-0 z-50 flex-row items-center justify-between bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md p-4"
         style={{ paddingTop: insets.top + 8 }}
       >
-        <TouchableOpacity
+        <Pressable
           onPress={handleBack}
-          className="h-10 w-10 items-center justify-center rounded-full"
-          activeOpacity={0.7}
+          hitSlop={8}
         >
-          <MaterialIcons
-            name="arrow-back"
-            size={24}
-            color={isDark ? "#ffffff" : "#0d1b12"}
-          />
-        </TouchableOpacity>
+          <View className="h-10 w-10 items-center justify-center rounded-full">
+            <MaterialIcons
+              name="arrow-back"
+              size={24}
+              color={isDark ? "#ffffff" : "#0d1b12"}
+            />
+          </View>
+        </Pressable>
 
         <Text className="text-base font-semibold text-slate-800 dark:text-white opacity-0">
           Détail Produit
         </Text>
 
-        <TouchableOpacity
+        <Pressable
           onPress={handleCartPress}
-          className="relative h-10 w-10 items-center justify-center rounded-full"
-          activeOpacity={0.7}
+          hitSlop={8}
         >
-          <MaterialIcons
-            name="shopping-cart"
-            size={24}
-            color={isDark ? "#ffffff" : "#0d1b12"}
-          />
-          {itemCount > 0 && (
-            <View className="absolute top-2 right-2 h-2 w-2 bg-primary rounded-full" />
-          )}
-        </TouchableOpacity>
+          <View className="relative h-10 w-10 items-center justify-center rounded-full">
+            <MaterialIcons
+              name="shopping-cart"
+              size={24}
+              color={isDark ? "#ffffff" : "#0d1b12"}
+            />
+            {itemCount > 0 && (
+              <View className="absolute top-2 right-2 h-2 w-2 bg-primary rounded-full" />
+            )}
+          </View>
+        </Pressable>
       </Animated.View>
 
       <ScrollView
@@ -307,13 +310,13 @@ export default function ProductDetailScreen() {
                 Excellente transparence. Provenance durable, sans cruauté avec traçabilité complète.
               </Text>
             </View>
-            <TouchableOpacity>
+            <Pressable hitSlop={8}>
               <MaterialIcons
                 name="chevron-right"
                 size={24}
                 color={isDark ? "#6b7280" : "#9ca3af"}
               />
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </Animated.View>
 
@@ -358,33 +361,31 @@ export default function ProductDetailScreen() {
 
           {/* Accordion Items */}
           <View className="mt-4 border-t border-slate-100 dark:border-slate-800">
-            <TouchableOpacity
-              onPress={() => toggleSection("ingredients")}
-              className="flex-row items-center justify-between py-3"
-            >
-              <Text className="text-sm font-semibold text-slate-800 dark:text-white">
-                Ingrédients & Nutrition
-              </Text>
-              <MaterialIcons
-                name={expandedSection === "ingredients" ? "expand-less" : "expand-more"}
-                size={24}
-                color={isDark ? "#9ca3af" : "#6b7280"}
-              />
-            </TouchableOpacity>
+            <PressableScale onPress={() => toggleSection("ingredients")}>
+              <View className="flex-row items-center justify-between py-3">
+                <Text className="text-sm font-semibold text-slate-800 dark:text-white">
+                  Ingrédients & Nutrition
+                </Text>
+                <MaterialIcons
+                  name={expandedSection === "ingredients" ? "expand-less" : "expand-more"}
+                  size={24}
+                  color={isDark ? "#9ca3af" : "#6b7280"}
+                />
+              </View>
+            </PressableScale>
             
-            <TouchableOpacity
-              onPress={() => toggleSection("traceability")}
-              className="flex-row items-center justify-between py-3 border-t border-slate-100 dark:border-slate-800"
-            >
-              <Text className="text-sm font-semibold text-slate-800 dark:text-white">
-                Rapport de Traçabilité
-              </Text>
-              <MaterialIcons
-                name={expandedSection === "traceability" ? "expand-less" : "expand-more"}
-                size={24}
-                color={isDark ? "#9ca3af" : "#6b7280"}
-              />
-            </TouchableOpacity>
+            <PressableScale onPress={() => toggleSection("traceability")}>
+              <View className="flex-row items-center justify-between py-3 border-t border-slate-100 dark:border-slate-800">
+                <Text className="text-sm font-semibold text-slate-800 dark:text-white">
+                  Rapport de Traçabilité
+                </Text>
+                <MaterialIcons
+                  name={expandedSection === "traceability" ? "expand-less" : "expand-more"}
+                  size={24}
+                  color={isDark ? "#9ca3af" : "#6b7280"}
+                />
+              </View>
+            </PressableScale>
           </View>
         </Animated.View>
 
@@ -398,27 +399,25 @@ export default function ProductDetailScreen() {
           </Text>
           <View className="flex-row items-center gap-4">
             <View className="flex-row items-center rounded-lg border border-slate-200 dark:border-slate-700 p-1 bg-white dark:bg-slate-800">
-              <TouchableOpacity
-                onPress={() => handleQuantityChange(-1)}
-                className="h-10 w-10 items-center justify-center rounded-md"
-              >
-                <MaterialIcons
-                  name="remove"
-                  size={24}
-                  color={isDark ? "#ffffff" : "#0d1b12"}
-                />
-              </TouchableOpacity>
+              <Pressable onPress={() => handleQuantityChange(-1)}>
+                <View className="h-10 w-10 items-center justify-center rounded-md">
+                  <MaterialIcons
+                    name="remove"
+                    size={24}
+                    color={isDark ? "#ffffff" : "#0d1b12"}
+                  />
+                </View>
+              </Pressable>
               <View className="w-12 items-center">
                 <Text className="text-lg font-bold text-slate-800 dark:text-white">
                   {quantity}
                 </Text>
               </View>
-              <TouchableOpacity
-                onPress={() => handleQuantityChange(1)}
-                className="h-10 w-10 items-center justify-center rounded-md bg-primary"
-              >
-                <MaterialIcons name="add" size={24} color="#0d1b12" />
-              </TouchableOpacity>
+              <Pressable onPress={() => handleQuantityChange(1)}>
+                <View className="h-10 w-10 items-center justify-center rounded-md bg-primary">
+                  <MaterialIcons name="add" size={24} color="#0d1b12" />
+                </View>
+              </Pressable>
             </View>
             <View>
               <Text className="text-sm text-green-600 dark:text-green-400 font-medium">
@@ -440,11 +439,11 @@ export default function ProductDetailScreen() {
             <Text className="text-lg font-bold text-slate-800 dark:text-white">
               Vous aimerez aussi
             </Text>
-            <TouchableOpacity>
+            <PressableScale>
               <Text className="text-sm font-semibold text-primary">
                 Voir tout
               </Text>
-            </TouchableOpacity>
+            </PressableScale>
           </View>
 
           <ScrollView
@@ -453,42 +452,43 @@ export default function ProductDetailScreen() {
             contentContainerStyle={{ paddingHorizontal: 16, gap: 16 }}
           >
             {RELATED_PRODUCTS.map((relatedProduct) => (
-              <TouchableOpacity
+              <PressableScale
                 key={relatedProduct.id}
-                className="w-40"
-                activeOpacity={0.9}
+                style={{ width: 160 }}
               >
-                <View className="relative w-full aspect-square rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 mb-2">
-                  <Image
-                    source={{ uri: relatedProduct.image }}
-                    className="w-full h-full"
-                    contentFit="cover"
-                    transition={200}
-                  />
-                  <View className="absolute top-2 right-2 bg-white/90 dark:bg-black/60 rounded-full p-1">
-                    <MaterialIcons name="eco" size={16} color={colors.primary} />
+                <View>
+                  <View className="relative w-full aspect-square rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 mb-2">
+                    <Image
+                      source={{ uri: relatedProduct.image }}
+                      className="w-full h-full"
+                      contentFit="cover"
+                      transition={200}
+                    />
+                    <View className="absolute top-2 right-2 bg-white/90 dark:bg-black/60 rounded-full p-1">
+                      <MaterialIcons name="eco" size={16} color={colors.primary} />
+                    </View>
                   </View>
-                </View>
-                <Text
-                  className="text-sm font-semibold text-slate-800 dark:text-white"
-                  numberOfLines={1}
-                >
-                  {relatedProduct.name}
-                </Text>
-                <Text className="text-xs text-slate-500 dark:text-slate-400">
-                  {relatedProduct.brand}
-                </Text>
-                <View className="flex-row items-center justify-between mt-1">
-                  <Text className="text-sm font-bold text-slate-800 dark:text-white">
-                    €{relatedProduct.price.toFixed(2)}
+                  <Text
+                    className="text-sm font-semibold text-slate-800 dark:text-white"
+                    numberOfLines={1}
+                  >
+                    {relatedProduct.name}
                   </Text>
-                  <View className="bg-green-100 dark:bg-green-900 px-1.5 py-0.5 rounded">
-                    <Text className="text-[10px] font-bold text-green-800 dark:text-green-200">
-                      {relatedProduct.grade}
+                  <Text className="text-xs text-slate-500 dark:text-slate-400">
+                    {relatedProduct.brand}
+                  </Text>
+                  <View className="flex-row items-center justify-between mt-1">
+                    <Text className="text-sm font-bold text-slate-800 dark:text-white">
+                      €{relatedProduct.price.toFixed(2)}
                     </Text>
+                    <View className="bg-green-100 dark:bg-green-900 px-1.5 py-0.5 rounded">
+                      <Text className="text-[10px] font-bold text-green-800 dark:text-green-200">
+                        {relatedProduct.grade}
+                      </Text>
+                    </View>
                   </View>
                 </View>
-              </TouchableOpacity>
+              </PressableScale>
             ))}
           </ScrollView>
         </Animated.View>
@@ -507,22 +507,23 @@ export default function ProductDetailScreen() {
               €{(product.price * quantity).toFixed(2)}
             </Text>
           </View>
-          <TouchableOpacity
+          <PressableScale
             onPress={handleAddToCart}
-            className="flex-1 bg-primary py-4 rounded-xl flex-row items-center justify-center gap-2"
-            activeOpacity={0.9}
             style={{
+              flex: 1,
               shadowColor: colors.primary,
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.3,
               shadowRadius: 8,
             }}
           >
-            <MaterialIcons name="add-shopping-cart" size={20} color="#0d1b12" />
-            <Text className="text-base font-bold text-slate-900">
-              Ajouter
-            </Text>
-          </TouchableOpacity>
+            <View className="bg-primary py-4 rounded-xl flex-row items-center justify-center gap-2">
+              <MaterialIcons name="add-shopping-cart" size={20} color="#0d1b12" />
+              <Text className="text-base font-bold text-slate-900">
+                Ajouter
+              </Text>
+            </View>
+          </PressableScale>
         </View>
       </Animated.View>
     </View>

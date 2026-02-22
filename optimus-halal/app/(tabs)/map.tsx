@@ -14,7 +14,6 @@ import React, { useState, useCallback, useMemo, useRef, useEffect } from "react"
 import {
   View,
   Text,
-  TouchableOpacity,
   FlatList,
   Dimensions,
   ActivityIndicator,
@@ -23,6 +22,7 @@ import {
   Keyboard,
   Share,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -775,29 +775,30 @@ export default function MapScreen() {
           }}
         />
 
-        {/* "Search this area" floating button */}
+        {/* "Search this area" floating pill */}
         {showSearchThisArea && (
           <Animated.View
-            entering={FadeIn.duration(200)}
+            entering={FadeInUp.duration(250)}
+            exiting={FadeOut.duration(150)}
             className="absolute self-center"
-            style={{ top: insets.top + 130, zIndex: 15 }}
+            style={{ top: insets.top + 120, zIndex: 15 }}
           >
-            <TouchableOpacity
-              onPress={handleSearchThisArea}
-              className="flex-row items-center gap-2 h-10 px-5 rounded-full"
-              style={{
-                backgroundColor: colors.primary,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.2,
-                shadowRadius: 4,
-                elevation: 4,
-              }}
-              activeOpacity={0.8}
-            >
-              <MaterialIcons name="refresh" size={16} color="#fff" />
-              <Text className="text-sm font-semibold text-white">{t.map.searchThisArea}</Text>
-            </TouchableOpacity>
+            <PressableScale onPress={handleSearchThisArea}>
+              <View
+                className="flex-row items-center gap-1.5 h-9 px-4 rounded-full"
+                style={{
+                  backgroundColor: colors.primary,
+                  shadowColor: colors.primary,
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  elevation: 4,
+                }}
+              >
+                <MaterialIcons name="refresh" size={14} color="#fff" />
+                <Text className="text-xs font-semibold text-white">{t.map.searchThisArea}</Text>
+              </View>
+            </PressableScale>
           </Animated.View>
         )}
         {/* Map Controls — FAB, results badge, loading indicator */}
@@ -977,15 +978,16 @@ export default function MapScreen() {
           <Text className="text-xs mt-1" style={{ color: colors.textSecondary }}>
             {t.map.locationDeniedDesc}
           </Text>
-          <TouchableOpacity
-            onPress={() => Linking.openSettings()}
-            className="mt-2 self-start px-3 py-1.5 rounded-lg"
-            style={{ backgroundColor: "rgba(239,68,68,0.2)" }}
-          >
-            <Text className="text-xs font-semibold" style={{ color: "#ef4444" }}>
-              {t.map.openSettings}
-            </Text>
-          </TouchableOpacity>
+          <PressableScale onPress={() => Linking.openSettings()}>
+            <View
+              className="mt-2 self-start px-3 py-1.5 rounded-lg"
+              style={{ backgroundColor: "rgba(239,68,68,0.2)" }}
+            >
+              <Text className="text-xs font-semibold" style={{ color: "#ef4444" }}>
+                {t.map.openSettings}
+              </Text>
+            </View>
+          </PressableScale>
         </Animated.View>
       )}
     </View>

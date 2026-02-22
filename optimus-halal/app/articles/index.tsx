@@ -10,7 +10,7 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   TextInput,
   FlatList,
   StyleSheet,
@@ -26,6 +26,7 @@ import Animated, { FadeIn, FadeInDown, FadeInRight } from "react-native-reanimat
 import Svg, { Path } from "react-native-svg";
 
 import { PremiumBackground, EmptyState } from "@/components/ui";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useHaptics } from "@/hooks";
@@ -135,9 +136,8 @@ export default function ArticlesListScreen() {
           entering={FadeInDown.delay(index * 60).duration(400)}
           style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
         >
-          <TouchableOpacity
+          <PressableScale
             onPress={() => handleArticlePress(item.id)}
-            activeOpacity={0.88}
             accessibilityRole="button"
             accessibilityLabel={item.title}
             style={styles.cardInner}
@@ -201,7 +201,7 @@ export default function ArticlesListScreen() {
                 </View>
               )}
             </View>
-          </TouchableOpacity>
+          </PressableScale>
         </Animated.View>
       );
     },
@@ -215,14 +215,14 @@ export default function ArticlesListScreen() {
       {/* ---- Header ---- */}
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <View style={styles.headerRow}>
-          <TouchableOpacity
+          <Pressable
             onPress={handleBack}
             style={[styles.headerIcon, { backgroundColor: colors.buttonSecondary }]}
             accessibilityRole="button"
             accessibilityLabel={t.common.back}
           >
             <MaterialIcons name="arrow-back" size={20} color={colors.iconPrimary} />
-          </TouchableOpacity>
+          </Pressable>
 
           <View style={styles.headerTitleWrap}>
             <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
@@ -261,9 +261,9 @@ export default function ArticlesListScreen() {
             style={[styles.searchInput, { color: colors.textPrimary }]}
           />
           {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery("")}>
+            <Pressable onPress={() => setSearchQuery("")}>
               <MaterialIcons name="close" size={18} color={colors.textMuted} />
-            </TouchableOpacity>
+            </Pressable>
           )}
         </View>
 
@@ -276,10 +276,9 @@ export default function ArticlesListScreen() {
           {TYPE_FILTERS.map((filter) => {
             const isActive = filter.key === selectedType;
             return (
-              <TouchableOpacity
+              <PressableScale
                 key={filter.key}
                 onPress={() => handleFilterPress(filter.key)}
-                activeOpacity={0.8}
                 style={[
                   styles.filterChip,
                   {
@@ -292,7 +291,7 @@ export default function ArticlesListScreen() {
                   },
                 ]}
                 accessibilityRole="button"
-                accessibilityState={{ selected: isActive }}
+                accessibilityLabel={filter.key === "all" ? t.common.all : getTypeLabel(filter.key)}
               >
                 <MaterialIcons
                   name={filter.icon as any}
@@ -309,7 +308,7 @@ export default function ArticlesListScreen() {
                     ? t.common.all
                     : getTypeLabel(filter.key)}
                 </Text>
-              </TouchableOpacity>
+              </PressableScale>
             );
           })}
         </ScrollView>

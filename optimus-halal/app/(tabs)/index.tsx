@@ -13,7 +13,7 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   RefreshControl,
   Platform,
   Dimensions,
@@ -38,6 +38,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import Svg, { Path } from "react-native-svg";
 
 import { Avatar, PremiumBackground } from "@/components/ui";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { HomeSkeleton } from "@/components/skeletons";
 import { useMe } from "@/hooks/useAuth";
 import { useFavoritesList } from "@/hooks/useFavorites";
@@ -141,41 +142,41 @@ const QuickActionCard = React.memo(function QuickActionCard({
         style={[styles.quickActionHalf]}
       >
         <Shadow distance={12} startColor={isDark ? "#CFA53340" : "#13ec6a25"} offset={[0, 0]} style={{ borderRadius: 20, width: "100%" }}>
-          <TouchableOpacity
+          <PressableScale
             onPress={handlePress}
-            activeOpacity={0.85}
             accessibilityRole="button"
             accessibilityLabel={title}
             accessibilityHint={subtitle}
-            style={styles.quickActionPrimary}
           >
-          <LinearGradient
-            colors={isDark ? ["#FDE08B", "#CFA533"] : ["#13ec6a", "#0ea64b"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-          {/* Glow overlay */}
-          <View
-            style={[
-              StyleSheet.absoluteFill,
-              {
-                backgroundColor: "rgba(255,255,255,0.08)",
-                borderRadius: 20,
-              },
-            ]}
-          />
-          <View style={styles.quickActionContent}>
-            <View style={styles.quickActionIconWrapPrimary}>
-              <MaterialIcons name={icon} size={24} color={isDark ? "#1A1A1A" : "#ffffff"} />
+            <View style={styles.quickActionPrimary}>
+              <LinearGradient
+                colors={isDark ? ["#FDE08B", "#CFA533"] : ["#13ec6a", "#0ea64b"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+              {/* Glow overlay */}
+              <View
+                style={[
+                  StyleSheet.absoluteFill,
+                  {
+                    backgroundColor: "rgba(255,255,255,0.08)",
+                    borderRadius: 20,
+                  },
+                ]}
+              />
+              <View style={styles.quickActionContent}>
+                <View style={styles.quickActionIconWrapPrimary}>
+                  <MaterialIcons name={icon} size={24} color={isDark ? "#1A1A1A" : "#ffffff"} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.quickActionTitlePrimary, isDark && { color: "#1A1A1A" }]}>{title}</Text>
+                  <Text style={[styles.quickActionSubPrimary, isDark && { color: "rgba(26,26,26,0.7)" }]}>{subtitle}</Text>
+                </View>
+                <MaterialIcons name="arrow-forward" size={18} color={isDark ? "rgba(26,26,26,0.5)" : "rgba(255,255,255,0.6)"} />
+              </View>
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.quickActionTitlePrimary, isDark && { color: "#1A1A1A" }]}>{title}</Text>
-              <Text style={[styles.quickActionSubPrimary, isDark && { color: "rgba(26,26,26,0.7)" }]}>{subtitle}</Text>
-            </View>
-            <MaterialIcons name="arrow-forward" size={18} color={isDark ? "rgba(26,26,26,0.5)" : "rgba(255,255,255,0.6)"} />
-          </View>
-          </TouchableOpacity>
+          </PressableScale>
         </Shadow>
       </Animated.View>
     );
@@ -196,69 +197,71 @@ const QuickActionCard = React.memo(function QuickActionCard({
       style={[styles.quickActionHalf]}
     >
       <Shadow distance={4} startColor={isDark ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.04)"} offset={[0, 1]} style={{ borderRadius: 20, width: "100%" }}>
-        <TouchableOpacity
+        <PressableScale
           onPress={handlePress}
-          activeOpacity={0.85}
           accessibilityRole="button"
           accessibilityLabel={title}
           accessibilityHint={subtitle}
-          style={[
-            styles.quickActionGlass,
-            {
-              backgroundColor: isDark ? glass.dark.bg : glass.light.bg,
-              borderColor: isDark
-                ? glass.dark.border
-                : glass.light.border,
-            },
-          ]}
         >
-        {/* Directional gold halo — radiates from scanner card, covers ~50% */}
-        {isDark && (
-          <LinearGradient
-            colors={["rgba(207,165,51,0.18)", "rgba(207,165,51,0.07)", "transparent"]}
-            start={glowStart}
-            end={glowEnd}
-            style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
-            pointerEvents="none"
-          />
-        )}
-        <View style={styles.quickActionContent}>
           <View
             style={[
-              styles.quickActionIconWrap,
+              styles.quickActionGlass,
               {
-                backgroundColor:
-                  iconBgColor ??
-                  (isDark ? "rgba(19,236,106,0.12)" : "rgba(19,236,106,0.08)"),
+                backgroundColor: isDark ? glass.dark.bg : glass.light.bg,
+                borderColor: isDark
+                  ? glass.dark.border
+                  : glass.light.border,
               },
             ]}
           >
-            <MaterialIcons
-              name={icon}
-              size={22}
-              color={iconColor ?? brand.primary}
-            />
+            {/* Directional gold halo — radiates from scanner card, covers ~50% */}
+            {isDark && (
+              <LinearGradient
+                colors={["rgba(207,165,51,0.18)", "rgba(207,165,51,0.07)", "transparent"]}
+                start={glowStart}
+                end={glowEnd}
+                style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
+                pointerEvents="none"
+              />
+            )}
+            <View style={styles.quickActionContent}>
+              <View
+                style={[
+                  styles.quickActionIconWrap,
+                  {
+                    backgroundColor:
+                      iconBgColor ??
+                      (isDark ? "rgba(19,236,106,0.12)" : "rgba(19,236,106,0.08)"),
+                  },
+                ]}
+              >
+                <MaterialIcons
+                  name={icon}
+                  size={22}
+                  color={iconColor ?? brand.primary}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={[
+                    styles.quickActionTitle,
+                    { color: isDark ? darkTheme.textPrimary : lightTheme.textPrimary },
+                  ]}
+                >
+                  {title}
+                </Text>
+                <Text
+                  style={[
+                    styles.quickActionSub,
+                    { color: isDark ? darkTheme.textSecondary : lightTheme.textSecondary },
+                  ]}
+                >
+                  {subtitle}
+                </Text>
+              </View>
+            </View>
           </View>
-          <View style={{ flex: 1 }}>
-            <Text
-              style={[
-                styles.quickActionTitle,
-                { color: isDark ? darkTheme.textPrimary : lightTheme.textPrimary },
-              ]}
-            >
-              {title}
-            </Text>
-            <Text
-              style={[
-                styles.quickActionSub,
-                { color: isDark ? darkTheme.textSecondary : lightTheme.textSecondary },
-              ]}
-            >
-              {subtitle}
-            </Text>
-          </View>
-        </View>
-      </TouchableOpacity>
+        </PressableScale>
       </Shadow>
     </Animated.View>
   );
@@ -297,75 +300,75 @@ const FeaturedCard = React.memo(function FeaturedCard({
       entering={FadeInRight.delay(420 + index * 80).duration(500)}
     >
       <Shadow distance={8} startColor={isDark ? "rgba(19,236,106,0.15)" : "rgba(0,0,0,0.06)"} offset={[0, 2]} style={{ borderRadius: 24, width: "100%", marginBottom: 16 }}>
-        <TouchableOpacity
+        <PressableScale
           onPress={onPress}
-          activeOpacity={0.88}
           accessibilityRole="button"
           accessibilityLabel={item.title}
           accessibilityHint={item.subtitle}
-          style={styles.featuredCard}
         >
-        {/* Background */}
-        {item.coverImage ? (
-          <Image
-            source={{ uri: item.coverImage }}
-            style={StyleSheet.absoluteFill}
-            contentFit="cover"
-            transition={200}
-            accessible={false}
-          />
-        ) : (
-          <LinearGradient
-            colors={
-              isDark
-                ? [darkTheme.card, darkTheme.background]
-                : ["#f0fdf4", "#ecfdf5"]
-            }
-            style={StyleSheet.absoluteFill}
-          />
-        )}
+          <View style={styles.featuredCard}>
+            {/* Background */}
+            {item.coverImage ? (
+              <Image
+                source={{ uri: item.coverImage }}
+                style={StyleSheet.absoluteFill}
+                contentFit="cover"
+                transition={200}
+                accessible={false}
+              />
+            ) : (
+              <LinearGradient
+                colors={
+                  isDark
+                    ? [darkTheme.card, darkTheme.background]
+                    : ["#f0fdf4", "#ecfdf5"]
+                }
+                style={StyleSheet.absoluteFill}
+              />
+            )}
 
-        {/* Scrim overlay */}
-        <LinearGradient
-          colors={[
-            "transparent",
-            "rgba(0,0,0,0.35)",
-            "rgba(0,0,0,0.85)",
-          ]}
-          locations={[0, 0.5, 1]}
-          style={StyleSheet.absoluteFill}
-        />
+            {/* Scrim overlay */}
+            <LinearGradient
+              colors={[
+                "transparent",
+                "rgba(0,0,0,0.35)",
+                "rgba(0,0,0,0.85)",
+              ]}
+              locations={[0, 0.5, 1]}
+              style={StyleSheet.absoluteFill}
+            />
 
-        {/* Badge top-left */}
-        <View style={styles.featuredBadgeWrap}>
-          <View
-            style={[
-              styles.featuredBadge,
-              { backgroundColor: item.badgeColor },
-            ]}
-          >
-            <Text style={styles.featuredBadgeText}>{item.badgeLabel}</Text>
+            {/* Badge top-left */}
+            <View style={styles.featuredBadgeWrap}>
+              <View
+                style={[
+                  styles.featuredBadge,
+                  { backgroundColor: item.badgeColor },
+                ]}
+              >
+                <Text style={styles.featuredBadgeText}>{item.badgeLabel}</Text>
+              </View>
+            </View>
+
+            {/* Content bottom */}
+            <View style={styles.featuredContent}>
+              <Text style={styles.featuredTitle} numberOfLines={2}>
+                {item.title}
+              </Text>
+              <Text style={styles.featuredSubtitle} numberOfLines={1}>
+                {item.subtitle}
+              </Text>
+            </View>
+
+            {/* Accent left border */}
+            <View
+              style={[
+                styles.featuredAccent,
+                { backgroundColor: item.accentColor },
+              ]}
+            />
           </View>
-        </View>
-
-        {/* Content bottom */}
-        <View style={styles.featuredContent}>
-          <Text style={styles.featuredTitle} numberOfLines={2}>
-            {item.title}
-          </Text>
-          <Text style={styles.featuredSubtitle} numberOfLines={1}>
-            {item.subtitle}
-          </Text>
-        </View>
-
-        {/* Accent left border */}
-        <View
-          style={[
-            styles.featuredAccent,
-            { backgroundColor: item.accentColor },
-          ]}
-        />
-      </TouchableOpacity>
+        </PressableScale>
       </Shadow>
     </Animated.View>
   );
@@ -396,42 +399,46 @@ const DiscoverStoreCard = React.memo(function DiscoverStoreCard({
 
   return (
     <Animated.View entering={FadeInRight.delay(400 + index * 80).duration(500)}>
-      <TouchableOpacity
+      <PressableScale
         onPress={handlePress}
-        activeOpacity={0.88}
-        className="w-[200px] h-[120px] rounded-[18px] overflow-hidden p-3 justify-end"
-        style={{
-          backgroundColor: isDark ? glass.dark.bg : glass.light.bg,
-          borderWidth: 1,
-          borderColor: isDark ? glass.dark.border : glass.light.border,
-        }}
+        accessibilityRole="button"
+        accessibilityLabel={store.name}
       >
-        {store.imageUrl ? (
-          <Image
-            source={{ uri: store.imageUrl }}
-            style={[StyleSheet.absoluteFill, { opacity: 0.65 }]}
-            contentFit="cover"
-            transition={200}
+        <View
+          className="w-[200px] h-[120px] rounded-[18px] overflow-hidden p-3 justify-end"
+          style={{
+            backgroundColor: isDark ? glass.dark.bg : glass.light.bg,
+            borderWidth: 1,
+            borderColor: isDark ? glass.dark.border : glass.light.border,
+          }}
+        >
+          {store.imageUrl ? (
+            <Image
+              source={{ uri: store.imageUrl }}
+              style={[StyleSheet.absoluteFill, { opacity: 0.65 }]}
+              contentFit="cover"
+              transition={200}
+            />
+          ) : (
+            <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', opacity: 0.1 }]}>
+               <MaterialIcons name="fastfood" size={48} color={isDark ? "#fff" : "#000"} />
+            </View>
+          )}
+          <LinearGradient
+            colors={["transparent", isDark ? "rgba(15,23,42,0.9)" : "rgba(255,255,255,0.95)"]}
+            locations={[0, 0.8]}
+            style={StyleSheet.absoluteFill}
           />
-        ) : (
-          <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', opacity: 0.1 }]}>
-             <MaterialIcons name="fastfood" size={48} color={isDark ? "#fff" : "#000"} />
+          <View className="relative z-10">
+            <Text className="text-sm font-bold mb-0.5" style={{ color: colors.textPrimary }} numberOfLines={1}>
+              {store.name}
+            </Text>
+            <Text className="text-[10px] font-medium" style={{ color: brand.gold }} numberOfLines={1}>
+              {store.storeType.toUpperCase()} {store.halalCertified ? "• CERTIFIÉ" : ""}
+            </Text>
           </View>
-        )}
-        <LinearGradient
-          colors={["transparent", isDark ? "rgba(15,23,42,0.9)" : "rgba(255,255,255,0.95)"]}
-          locations={[0, 0.8]}
-          style={StyleSheet.absoluteFill}
-        />
-        <View className="relative z-10">
-          <Text className="text-sm font-bold mb-0.5" style={{ color: colors.textPrimary }} numberOfLines={1}>
-            {store.name}
-          </Text>
-          <Text className="text-[10px] font-medium" style={{ color: brand.gold }} numberOfLines={1}>
-            {store.storeType.toUpperCase()} {store.halalCertified ? "• CERTIFIÉ" : ""}
-          </Text>
         </View>
-      </TouchableOpacity>
+      </PressableScale>
     </Animated.View>
   );
 });
@@ -460,8 +467,7 @@ const FavoriteCircle = React.memo(function FavoriteCircle({
     <Animated.View
       entering={FadeInRight.delay(540 + index * 70).duration(400)}
     >
-      <TouchableOpacity
-        activeOpacity={0.8}
+      <PressableScale
         accessibilityRole="button"
         accessibilityLabel={name}
         onPress={onPress}
@@ -519,7 +525,7 @@ const FavoriteCircle = React.memo(function FavoriteCircle({
         >
           {name.length > 12 ? name.split(" ")[0] : name}
         </Text>
-      </TouchableOpacity>
+      </PressableScale>
     </Animated.View>
   );
 });
@@ -801,9 +807,8 @@ export default function HomeScreen() {
             </View>
 
             {/* Notification Bell */}
-            <TouchableOpacity
+            <Pressable
               onPress={() => router.navigate("/(tabs)/alerts")}
-              activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel={t.common.notifications}
               accessibilityHint={t.common.viewAlerts}
@@ -831,7 +836,7 @@ export default function HomeScreen() {
                   </Text>
                 </View>
               )}
-            </TouchableOpacity>
+            </Pressable>
           </Animated.View>
 
           {/* Impact Stats Pill */}
@@ -1044,14 +1049,13 @@ export default function HomeScreen() {
                   <Path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke={brand.gold} strokeWidth={1.5} fill="none" opacity={0.8} />
                 </Svg>
               </View>
-              <TouchableOpacity
+              <Pressable
                 onPress={() => router.push("/(tabs)/map")}
-                activeOpacity={0.7}
               >
                 <Text style={[styles.seeAllText, { color: brand.gold }]}>
                   Ouvrir la Map
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
 
             <ScrollView
@@ -1113,16 +1117,15 @@ export default function HomeScreen() {
                   <Path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke={colors.primary} strokeWidth={1.5} fill="none" opacity={0.5} />
                 </Svg>
               </View>
-              <TouchableOpacity
+              <Pressable
                 onPress={() => router.push("/articles")}
-                activeOpacity={0.7}
                 accessibilityRole="link"
                 accessibilityLabel={t.home.viewAll}
               >
                 <Text style={[styles.seeAllText, { color: colors.primary }]}>
                   {t.home.viewAll}
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
 
             <ScrollView
@@ -1173,8 +1176,7 @@ export default function HomeScreen() {
               </Svg>
             </View>
             {favoriteProducts.length > 0 && (
-              <TouchableOpacity
-                activeOpacity={0.7}
+              <Pressable
                 onPress={() => handleNavigate("favorites")}
                 accessibilityRole="link"
                 accessibilityLabel={`${t.home.viewAll} ${t.home.favorites}`}
@@ -1184,7 +1186,7 @@ export default function HomeScreen() {
                 >
                   {t.home.viewAll} ({favoriteProducts.length})
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             )}
           </View>
 
@@ -1198,8 +1200,7 @@ export default function HomeScreen() {
           >
             {favoriteProducts.length === 0 ? (
               <Animated.View entering={FadeInRight.delay(540).duration(400)}>
-                <TouchableOpacity
-                  activeOpacity={0.8}
+                <PressableScale
                   accessibilityRole="button"
                   accessibilityLabel={t.home.addFavorite}
                   accessibilityHint={t.home.emptyFavorites}
@@ -1231,7 +1232,7 @@ export default function HomeScreen() {
                   >
                     {t.home.emptyFavorites}
                   </Text>
-                </TouchableOpacity>
+                </PressableScale>
               </Animated.View>
             ) : (
               favoriteProducts.slice(0, 8).map((item, index) => (
@@ -1253,8 +1254,7 @@ export default function HomeScreen() {
                 540 + favoriteProducts.length * 70,
               ).duration(400)}
             >
-              <TouchableOpacity
-                activeOpacity={0.7}
+              <PressableScale
                 accessibilityRole="button"
                 accessibilityLabel={t.home.addFavorite}
                 onPress={() => router.navigate("/(tabs)/scanner")}
@@ -1289,7 +1289,7 @@ export default function HomeScreen() {
                 >
                   {t.home.add}
                 </Text>
-              </TouchableOpacity>
+              </PressableScale>
             </Animated.View>
           </ScrollView>
         </Animated.View>

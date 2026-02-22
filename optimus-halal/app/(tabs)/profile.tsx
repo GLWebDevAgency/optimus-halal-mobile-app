@@ -13,7 +13,7 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   Alert,
 } from "react-native";
 import { router } from "expo-router";
@@ -28,6 +28,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { Card, Avatar, PremiumBackground } from "@/components/ui";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { ProfileSkeleton } from "@/components/skeletons";
 import { useThemeStore, usePreferencesStore } from "@/store";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -56,41 +57,43 @@ const MenuItem = React.memo(function MenuItem({
   const { colors } = useTheme();
 
   return (
-    <TouchableOpacity
+    <PressableScale
       onPress={onPress}
-      activeOpacity={0.7}
       accessibilityRole="button"
       accessibilityLabel={title}
       accessibilityHint={subtitle ? subtitle : undefined}
-      className="flex-row items-center justify-between p-4"
-      style={!isLast ? { borderBottomWidth: 1, borderBottomColor: colors.border } : undefined}
     >
-      <View className="flex-row items-center gap-3">
-        <View
-          className="w-8 h-8 rounded-lg items-center justify-center"
-          style={{ backgroundColor: iconBgColor }}
-        >
-          <MaterialIcons name={icon} size={18} color={iconColor} />
+      <View
+        className="flex-row items-center justify-between p-4"
+        style={!isLast ? { borderBottomWidth: 1, borderBottomColor: colors.border } : undefined}
+      >
+        <View className="flex-row items-center gap-3">
+          <View
+            className="w-8 h-8 rounded-lg items-center justify-center"
+            style={{ backgroundColor: iconBgColor }}
+          >
+            <MaterialIcons name={icon} size={18} color={iconColor} />
+          </View>
+          <Text className="font-medium text-sm" style={{ color: colors.textPrimary }}>
+            {title}
+          </Text>
         </View>
-        <Text className="font-medium text-sm" style={{ color: colors.textPrimary }}>
-          {title}
-        </Text>
+        {rightElement || (
+          <View className="flex-row items-center gap-2">
+            {subtitle && (
+              <Text className="text-xs" style={{ color: colors.textSecondary }}>
+                {subtitle}
+              </Text>
+            )}
+            <MaterialIcons
+              name="chevron-right"
+              size={20}
+              color={colors.iconSecondary}
+            />
+          </View>
+        )}
       </View>
-      {rightElement || (
-        <View className="flex-row items-center gap-2">
-          {subtitle && (
-            <Text className="text-xs" style={{ color: colors.textSecondary }}>
-              {subtitle}
-            </Text>
-          )}
-          <MaterialIcons
-            name="chevron-right"
-            size={20}
-            color={colors.iconSecondary}
-          />
-        </View>
-      )}
-    </TouchableOpacity>
+    </PressableScale>
   );
 });
 
@@ -114,31 +117,34 @@ const StatsCard = React.memo(function StatsCard({
   const { colors } = useTheme();
 
   return (
-    <TouchableOpacity
+    <PressableScale
       onPress={onPress}
-      activeOpacity={0.9}
       accessibilityRole="button"
       accessibilityLabel={`${title}, ${subtitle}`}
-      className="flex-1 p-4 rounded-2xl"
-      style={{
-        backgroundColor: colors.card,
-        borderWidth: 1,
-        borderColor: colors.cardBorder,
-      }}
+      style={{ flex: 1 }}
     >
       <View
-        className="w-10 h-10 rounded-full items-center justify-center mb-3"
-        style={{ backgroundColor: iconBgColor }}
+        className="p-4 rounded-2xl"
+        style={{
+          backgroundColor: colors.card,
+          borderWidth: 1,
+          borderColor: colors.cardBorder,
+        }}
       >
-        <MaterialIcons name={icon} size={20} color={iconColor} />
+        <View
+          className="w-10 h-10 rounded-full items-center justify-center mb-3"
+          style={{ backgroundColor: iconBgColor }}
+        >
+          <MaterialIcons name={icon} size={20} color={iconColor} />
+        </View>
+        <Text className="font-bold text-sm" style={{ color: colors.textPrimary }}>
+          {title}
+        </Text>
+        <Text className="text-xs mt-1" style={{ color: colors.textSecondary }}>
+          {subtitle}
+        </Text>
       </View>
-      <Text className="font-bold text-sm" style={{ color: colors.textPrimary }}>
-        {title}
-      </Text>
-      <Text className="text-xs mt-1" style={{ color: colors.textSecondary }}>
-        {subtitle}
-      </Text>
-    </TouchableOpacity>
+    </PressableScale>
   );
 });
 
@@ -248,9 +254,8 @@ export default function ProfileScreen() {
         style={{ paddingTop: insets.top }}
       >
         <View className="flex-row items-center justify-between p-4">
-          <TouchableOpacity
+          <Pressable
             onPress={() => router.navigate("/(tabs)/alerts" as any)}
-            activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel={t.common.notifications}
             accessibilityHint={t.common.viewAlerts}
@@ -261,17 +266,17 @@ export default function ProfileScreen() {
               size={24}
               color={colors.iconSecondary}
             />
-          </TouchableOpacity>
+          </Pressable>
           <Text accessibilityRole="header" className="text-lg font-bold tracking-tight" style={{ color: colors.textPrimary }}>
             {t.profile.title}
           </Text>
-          <TouchableOpacity onPress={handleSettings} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel={t.common.settings} accessibilityHint={t.common.openSettings}>
+          <Pressable onPress={handleSettings} accessibilityRole="button" accessibilityLabel={t.common.settings} accessibilityHint={t.common.openSettings}>
             <MaterialIcons
               name="settings"
               size={24}
               color={colors.iconSecondary}
             />
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </Animated.View>
 
@@ -285,35 +290,35 @@ export default function ProfileScreen() {
           className="items-center pt-4 pb-6 px-6"
         >
           {/* Avatar */}
-          <TouchableOpacity
+          <PressableScale
             onPress={handleEditProfile}
-            activeOpacity={0.9}
             accessibilityRole="button"
             accessibilityLabel={t.common.profilePhoto}
             accessibilityHint={t.profile.editProfile}
-            className="relative mb-5"
           >
-            <View
-              className="w-28 h-28 rounded-full overflow-hidden"
-              style={{
-                borderWidth: 4,
-                borderColor: colors.card,
-                shadowColor: colors.primary,
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: isDark ? 0.15 : 0,
-                shadowRadius: 15,
-              }}
-            >
-              <Avatar
-                size="2xl"
-                source={profile?.avatarUrl ?? undefined}
-                fallback={userName}
-              />
+            <View className="relative mb-5">
+              <View
+                className="w-28 h-28 rounded-full overflow-hidden"
+                style={{
+                  borderWidth: 4,
+                  borderColor: colors.card,
+                  shadowColor: colors.primary,
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: isDark ? 0.15 : 0,
+                  shadowRadius: 15,
+                }}
+              >
+                <Avatar
+                  size="2xl"
+                  source={profile?.avatarUrl ?? undefined}
+                  fallback={userName}
+                />
+              </View>
+              <View className="absolute bottom-0 right-0 rounded-full p-2" style={{ backgroundColor: colors.primary, borderWidth: 4, borderColor: colors.background }}>
+                <MaterialIcons name="edit" size={14} color="#ffffff" />
+              </View>
             </View>
-            <View className="absolute bottom-0 right-0 rounded-full p-2" style={{ backgroundColor: colors.primary, borderWidth: 4, borderColor: colors.background }}>
-              <MaterialIcons name="edit" size={14} color="#ffffff" />
-            </View>
-          </TouchableOpacity>
+          </PressableScale>
 
           {/* Name */}
           <Text className="text-2xl font-bold mb-1" style={{ color: colors.textPrimary }}>
@@ -332,22 +337,24 @@ export default function ProfileScreen() {
           </View>
 
           {/* Edit Profile Button */}
-          <TouchableOpacity
+          <PressableScale
             onPress={handleEditProfile}
-            activeOpacity={0.9}
             accessibilityRole="button"
             accessibilityLabel={t.profile.editProfile}
-            className="h-11 px-8 rounded-full items-center justify-center w-full max-w-[240px]"
-            style={{
-              backgroundColor: isDark ? "rgba(212, 175, 55, 0.12)" : "#0f172a",
-              borderWidth: 1,
-              borderColor: isDark ? "rgba(212, 175, 55, 0.25)" : "transparent",
-            }}
           >
-            <Text className="font-semibold text-sm" style={{ color: isDark ? colors.primary : "#ffffff" }}>
-              {t.profile.editProfile}
-            </Text>
-          </TouchableOpacity>
+            <View
+              className="h-11 px-8 rounded-full items-center justify-center w-full max-w-[240px]"
+              style={{
+                backgroundColor: isDark ? "rgba(212, 175, 55, 0.12)" : "#0f172a",
+                borderWidth: 1,
+                borderColor: isDark ? "rgba(212, 175, 55, 0.25)" : "transparent",
+              }}
+            >
+              <Text className="font-semibold text-sm" style={{ color: isDark ? colors.primary : "#ffffff" }}>
+                {t.profile.editProfile}
+              </Text>
+            </View>
+          </PressableScale>
         </Animated.View>
 
         {/* Gamification Card */}
@@ -441,35 +448,37 @@ export default function ProfileScreen() {
 
         {/* Optimus+ Premium Entry */}
         <Animated.View entering={FadeInUp.delay(200).duration(500)} className="px-4 mb-6">
-          <TouchableOpacity
+          <PressableScale
             onPress={() => {
               impact();
               router.push("/settings/premium" as any);
             }}
-            activeOpacity={0.8}
             accessibilityRole="button"
             accessibilityLabel="Optimus+"
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              padding: 16,
-              borderRadius: 16,
-              backgroundColor: isDark ? "rgba(212, 175, 55, 0.08)" : "rgba(212, 175, 55, 0.05)",
-              borderWidth: 1,
-              borderColor: isDark ? "rgba(212, 175, 55, 0.18)" : "rgba(212, 175, 55, 0.12)",
-            }}
           >
-            <MaterialIcons name="workspace-premium" size={24} color={colors.primary} />
-            <View style={{ flex: 1, marginStart: 12 }}>
-              <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: "700" }}>
-                Optimus+
-              </Text>
-              <Text style={{ color: colors.textSecondary, fontSize: 12 }} numberOfLines={1}>
-                {isPremium ? t.premium.enjoyFeatures : t.premium.subtitle}
-              </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                padding: 16,
+                borderRadius: 16,
+                backgroundColor: isDark ? "rgba(212, 175, 55, 0.08)" : "rgba(212, 175, 55, 0.05)",
+                borderWidth: 1,
+                borderColor: isDark ? "rgba(212, 175, 55, 0.18)" : "rgba(212, 175, 55, 0.12)",
+              }}
+            >
+              <MaterialIcons name="workspace-premium" size={24} color={colors.primary} />
+              <View style={{ flex: 1, marginStart: 12 }}>
+                <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: "700" }}>
+                  Optimus+
+                </Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 12 }} numberOfLines={1}>
+                  {isPremium ? t.premium.enjoyFeatures : t.premium.subtitle}
+                </Text>
+              </View>
+              <MaterialIcons name="chevron-right" size={20} color={colors.textSecondary} />
             </View>
-            <MaterialIcons name="chevron-right" size={20} color={colors.textSecondary} />
-          </TouchableOpacity>
+          </PressableScale>
         </Animated.View>
 
         {/* Preferences Section */}
@@ -604,23 +613,25 @@ export default function ProfileScreen() {
           entering={FadeInUp.delay(350).duration(500)}
           className="px-4 mb-8"
         >
-          <TouchableOpacity
+          <PressableScale
             onPress={handleLogout}
-            activeOpacity={0.9}
             accessibilityRole="button"
             accessibilityLabel={t.profile.logout}
-            className="w-full rounded-2xl p-3.5 flex-row items-center justify-center gap-2"
-            style={{
-              backgroundColor: colors.card,
-              borderWidth: 1,
-              borderColor: isDark ? "rgba(239,68,68,0.15)" : "#fee2e2",
-            }}
           >
-            <MaterialIcons name="logout" size={18} color="#ef4444" />
-            <Text className="font-bold text-sm" style={{ color: isDark ? "#f87171" : "#dc2626" }}>
-              {t.profile.logout}
-            </Text>
-          </TouchableOpacity>
+            <View
+              className="w-full rounded-2xl p-3.5 flex-row items-center justify-center gap-2"
+              style={{
+                backgroundColor: colors.card,
+                borderWidth: 1,
+                borderColor: isDark ? "rgba(239,68,68,0.15)" : "#fee2e2",
+              }}
+            >
+              <MaterialIcons name="logout" size={18} color="#ef4444" />
+              <Text className="font-bold text-sm" style={{ color: isDark ? "#f87171" : "#dc2626" }}>
+                {t.profile.logout}
+              </Text>
+            </View>
+          </PressableScale>
 
           <Text className="text-center text-xs mt-6" style={{ color: colors.textMuted }}>
             {t.common.version} 2.1.0

@@ -11,7 +11,6 @@ import React, { useCallback, useEffect } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
   Linking,
   Platform,
@@ -36,6 +35,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 
+import { PressableScale } from "@/components/ui/PressableScale";
 import { brand } from "@/theme/colors";
 
 export default function ResetConfirmationScreen() {
@@ -130,20 +130,18 @@ export default function ResetConfirmationScreen() {
         entering={FadeIn.delay(100).duration(400)}
         style={[styles.header, { paddingTop: insets.top + 16 }]}
       >
-        <TouchableOpacity
+        <PressableScale
           onPress={handleGoBack}
           style={styles.backButton}
-          activeOpacity={0.7}
           accessibilityRole="button"
           accessibilityLabel={t.common.back}
-          accessibilityHint={t.common.back}
         >
           <MaterialIcons
             name="arrow-back"
             size={24}
             color={isDark ? "#ffffff" : "#1f2937"}
           />
-        </TouchableOpacity>
+        </PressableScale>
         
         <Text
           style={[
@@ -250,13 +248,11 @@ export default function ResetConfirmationScreen() {
         >
           {/* Back to Login Button */}
           <View style={[styles.primaryButtonShadow, { shadowColor: colors.primary }]}>
-            <TouchableOpacity
+            <PressableScale
               onPress={handleBackToLogin}
-              activeOpacity={0.9}
               style={styles.primaryButton}
               accessibilityRole="button"
               accessibilityLabel={t.auth.resetConfirmation.backToLogin}
-              accessibilityHint={t.auth.resetConfirmation.backToLogin}
             >
               <LinearGradient
                 colors={[brand.primary, "#10d65f"]}
@@ -268,16 +264,14 @@ export default function ResetConfirmationScreen() {
                   {t.auth.resetConfirmation.backToLogin}
                 </Text>
               </LinearGradient>
-            </TouchableOpacity>
+            </PressableScale>
           </View>
 
           {/* Open Email App Button */}
-          <TouchableOpacity
+          <PressableScale
             onPress={handleOpenEmailApp}
-            activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel={t.auth.resetConfirmation.openEmailApp}
-            accessibilityHint={t.auth.resetConfirmation.openEmailApp}
             style={[
               styles.secondaryButton,
               {
@@ -285,7 +279,7 @@ export default function ResetConfirmationScreen() {
               }
             ]}
           >
-            <Text 
+            <Text
               style={[
                 styles.secondaryButtonText,
                 { color: isDark ? "#ffffff" : "#1f2937" }
@@ -293,7 +287,7 @@ export default function ResetConfirmationScreen() {
             >
               {t.auth.resetConfirmation.openEmailApp}
             </Text>
-          </TouchableOpacity>
+          </PressableScale>
         </Animated.View>
 
         {/* Resend Link */}
@@ -309,16 +303,15 @@ export default function ResetConfirmationScreen() {
           >
             {t.auth.resetConfirmation.noEmail}
           </Text>
-          <TouchableOpacity
+          <PressableScale
             onPress={handleResendLink}
             accessibilityRole="button"
             accessibilityLabel={t.auth.resetConfirmation.resendLink}
-            accessibilityHint={t.auth.resetConfirmation.resendLink}
           >
             <Text style={[styles.resendLink, { color: colors.primary }]}>
               {t.auth.resetConfirmation.resendLink}
             </Text>
-          </TouchableOpacity>
+          </PressableScale>
         </Animated.View>
       </View>
 
@@ -327,19 +320,18 @@ export default function ResetConfirmationScreen() {
         entering={FadeIn.delay(700).duration(400)}
         style={[styles.footer, { paddingBottom: insets.bottom + 24 }]}
       >
-        <TouchableOpacity
+        <PressableScale
           onPress={handleContactSupport}
           style={[styles.supportButton, { flexDirection: isRTL ? "row-reverse" : "row" }]}
           accessibilityRole="link"
           accessibilityLabel={t.auth.resetConfirmation.contactSupport}
-          accessibilityHint={t.auth.resetConfirmation.contactSupport}
         >
-          <MaterialIcons 
-            name="help" 
-            size={18} 
-            color={isDark ? "#6b7280" : "#9ca3af"} 
+          <MaterialIcons
+            name="help"
+            size={18}
+            color={isDark ? "#6b7280" : "#9ca3af"}
           />
-          <Text 
+          <Text
             style={[
               styles.supportText,
               { color: isDark ? "#6b7280" : "#9ca3af" }
@@ -347,7 +339,7 @@ export default function ResetConfirmationScreen() {
           >
             {t.auth.resetConfirmation.contactSupport}
           </Text>
-        </TouchableOpacity>
+        </PressableScale>
       </Animated.View>
     </View>
   );

@@ -12,12 +12,13 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
+  Pressable,
   ScrollView,
   Alert,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -86,17 +87,18 @@ export default function MarketplaceComingSoonScreen() {
         entering={FadeIn.duration(400)}
         className="flex-row items-center justify-between px-4 py-4"
       >
-        <TouchableOpacity
+        <Pressable
           onPress={handleBack}
-          className="h-10 w-10 items-center justify-center rounded-full"
-          activeOpacity={0.7}
+          hitSlop={8}
         >
-          <MaterialIcons
-            name="arrow-back-ios"
-            size={22}
-            color={isDark ? "#ffffff" : "#1e293b"}
-          />
-        </TouchableOpacity>
+          <View className="h-10 w-10 items-center justify-center rounded-full">
+            <MaterialIcons
+              name="arrow-back-ios"
+              size={22}
+              color={isDark ? "#ffffff" : "#1e293b"}
+            />
+          </View>
+        </Pressable>
 
         {/* Logo */}
         <View className="flex-row items-center gap-2">
@@ -219,13 +221,9 @@ export default function MarketplaceComingSoonScreen() {
             </View>
 
             {/* Submit Button */}
-            <TouchableOpacity
+            <PressableScale
               onPress={handleSubmit}
               disabled={isSubmitting}
-              className={`w-full bg-primary py-4 rounded-xl flex-row items-center justify-center gap-2 shadow-lg ${
-                isSubmitting ? "opacity-70" : ""
-              }`}
-              activeOpacity={0.9}
               style={{
                 shadowColor: colors.primary,
                 shadowOffset: { width: 0, height: 4 },
@@ -233,13 +231,19 @@ export default function MarketplaceComingSoonScreen() {
                 shadowRadius: 8,
               }}
             >
-              <Text className="text-background-dark font-bold text-lg">
-                {isSubmitting ? "Inscription..." : "Me Notifier"}
-              </Text>
-              {!isSubmitting && (
-                <MaterialIcons name="arrow-forward" size={20} color="#102216" />
-              )}
-            </TouchableOpacity>
+              <View
+                className={`w-full bg-primary py-4 rounded-xl flex-row items-center justify-center gap-2 shadow-lg ${
+                  isSubmitting ? "opacity-70" : ""
+                }`}
+              >
+                <Text className="text-background-dark font-bold text-lg">
+                  {isSubmitting ? "Inscription..." : "Me Notifier"}
+                </Text>
+                {!isSubmitting && (
+                  <MaterialIcons name="arrow-forward" size={20} color="#102216" />
+                )}
+              </View>
+            </PressableScale>
           </Animated.View>
 
           {/* Social Proof */}

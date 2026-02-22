@@ -7,7 +7,6 @@ import React, { useMemo, useCallback } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,6 +19,7 @@ import { useScanHistory } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { EmptyState } from "@/components/ui";
+import { PressableScale } from "@/components/ui/PressableScale";
 
 const LOCALE_MAP: Record<string, string> = { fr: "fr-FR", en: "en-US", ar: "ar-SA" };
 
@@ -121,9 +121,8 @@ const ScanRow = React.memo(function ScanRow({ item, index, isDark, colors, t, la
 
   return (
     <Animated.View entering={FadeInDown.delay(index * 60).duration(300)}>
-      <TouchableOpacity
+      <PressableScale
         onPress={() => router.push(`/scan-result?barcode=${item.barcode}`)}
-        activeOpacity={0.7}
         accessibilityRole="button"
         accessibilityLabel={`${item.product?.name ?? item.barcode}, ${status.label}`}
         style={{
@@ -197,7 +196,7 @@ const ScanRow = React.memo(function ScanRow({ item, index, isDark, colors, t, la
             {status.label}
           </Text>
         </View>
-      </TouchableOpacity>
+      </PressableScale>
     </Animated.View>
   );
 });
@@ -243,14 +242,14 @@ export default function ScanHistoryScreen() {
           <Text style={{ color: colors.textSecondary, fontSize: 16, marginTop: 16, textAlign: "center" }}>
             {t.scanHistory.loadError}
           </Text>
-          <TouchableOpacity
+          <PressableScale
             onPress={() => refetch()}
             style={{ marginTop: 20, backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 }}
             accessibilityRole="button"
             accessibilityLabel={t.common.retry}
           >
             <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>{t.common.retry}</Text>
-          </TouchableOpacity>
+          </PressableScale>
         </View>
       </SafeAreaView>
     );
@@ -287,7 +286,7 @@ function Header({ colors, t, count }: { colors: any; t: any; count?: number }) {
   return (
     <Animated.View entering={FadeIn.duration(400)} style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 }}>
       <View style={{ flexDirection: "row", alignItems: "center" }}>
-        <TouchableOpacity
+        <PressableScale
           onPress={() => router.back()}
           style={{
             marginEnd: 12,
@@ -304,7 +303,7 @@ function Header({ colors, t, count }: { colors: any; t: any; count?: number }) {
           accessibilityLabel={t.common.back}
         >
           <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
-        </TouchableOpacity>
+        </PressableScale>
         <View>
           <Text
             style={{ fontSize: 24, fontWeight: "700", letterSpacing: -0.5, color: colors.textPrimary }}

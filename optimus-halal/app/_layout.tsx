@@ -18,9 +18,9 @@ import {
   ActivityIndicator,
   Text,
   ScrollView,
-  TouchableOpacity,
   Pressable,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { useLanguageStore } from "@/store";
 import { useTheme, useTranslation } from "@/hooks";
 import { initializeTokens, isAuthenticated as hasStoredTokens, clearTokens, setApiLanguage, setOnAuthFailure } from "@/services/api";
@@ -103,9 +103,9 @@ function DebugOverlay({ onClose }: { onClose: () => void }) {
         <Text style={{ color: "#16a34a", fontSize: 16, fontWeight: "bold" }}>
           Debug Logs
         </Text>
-        <TouchableOpacity onPress={onClose}>
+        <Pressable onPress={onClose}>
           <Text style={{ color: "#fff", fontSize: 16 }}>{t.common.close}</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
       <ScrollView style={{ flex: 1 }}>
         <Text style={{ color: "#e0e0e0", fontSize: 11, fontFamily: "monospace" }}>
@@ -218,25 +218,27 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
         <Text style={{ color: "#888", fontSize: 14, marginBottom: 16 }}>
           {t.common.initTooLongDesc.replace("{{seconds}}", String(INIT_TIMEOUT_MS / 1000))}
         </Text>
-        <TouchableOpacity
+        <PressableScale
           onPress={() => setShowDebug(true)}
-          style={{ backgroundColor: "#16a34a", padding: 12, borderRadius: 8, marginBottom: 12 }}
         >
-          <Text style={{ color: "#fff", textAlign: "center", fontWeight: "bold" }}>
-            {t.common.viewLogs}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+          <View style={{ backgroundColor: "#16a34a", padding: 12, borderRadius: 8, marginBottom: 12 }}>
+            <Text style={{ color: "#fff", textAlign: "center", fontWeight: "bold" }}>
+              {t.common.viewLogs}
+            </Text>
+          </View>
+        </PressableScale>
+        <PressableScale
           onPress={() => {
             setForceReady(true);
             setTimedOut(false);
           }}
-          style={{ backgroundColor: "#333", padding: 12, borderRadius: 8 }}
         >
-          <Text style={{ color: "#fff", textAlign: "center" }}>
-            {t.common.continueAnyway}
-          </Text>
-        </TouchableOpacity>
+          <View style={{ backgroundColor: "#333", padding: 12, borderRadius: 8 }}>
+            <Text style={{ color: "#fff", textAlign: "center" }}>
+              {t.common.continueAnyway}
+            </Text>
+          </View>
+        </PressableScale>
       </View>
     );
   }

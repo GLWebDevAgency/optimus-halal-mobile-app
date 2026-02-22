@@ -7,9 +7,10 @@ import React, { useState, useMemo, useCallback } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   ActivityIndicator,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
@@ -213,7 +214,7 @@ export default function BoycottListScreen() {
       {/* Header */}
       <Animated.View entering={FadeIn.duration(400)} style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 }}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <TouchableOpacity
+          <Pressable
             onPress={() => router.back()}
             style={{
               marginEnd: 12, height: 44, width: 44, alignItems: "center", justifyContent: "center",
@@ -223,7 +224,7 @@ export default function BoycottListScreen() {
             accessibilityLabel={t.common.back}
           >
             <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
-          </TouchableOpacity>
+          </Pressable>
           <View>
             <Text style={{ fontSize: 24, fontWeight: "700", letterSpacing: -0.5, color: colors.textPrimary }} accessibilityRole="header">
               {t.boycott.title}
@@ -244,23 +245,24 @@ export default function BoycottListScreen() {
           renderItem={({ item: filter }) => {
             const isSelected = selectedLevel === filter.id;
             return (
-              <TouchableOpacity
+              <PressableScale
                 onPress={() => setSelectedLevel(filter.id)}
-                style={{
-                  paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, marginRight: 8,
-                  backgroundColor: isSelected ? colors.primary : colors.card,
-                  borderColor: isSelected ? colors.primary : colors.borderLight, borderWidth: 1,
-                }}
                 accessibilityRole="button"
                 accessibilityState={{ selected: isSelected }}
               >
-                <Text style={{
-                  fontSize: 12, fontWeight: isSelected ? "700" : "500",
-                  color: isSelected ? (isDark ? "#102217" : "#0d1b13") : colors.textSecondary,
+                <View style={{
+                  paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, marginRight: 8,
+                  backgroundColor: isSelected ? colors.primary : colors.card,
+                  borderColor: isSelected ? colors.primary : colors.borderLight, borderWidth: 1,
                 }}>
-                  {filter.label}
-                </Text>
-              </TouchableOpacity>
+                  <Text style={{
+                    fontSize: 12, fontWeight: isSelected ? "700" : "500",
+                    color: isSelected ? (isDark ? "#102217" : "#0d1b13") : colors.textSecondary,
+                  }}>
+                    {filter.label}
+                  </Text>
+                </View>
+              </PressableScale>
             );
           }}
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 12 }}
@@ -277,9 +279,11 @@ export default function BoycottListScreen() {
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
           <MaterialIcons name="cloud-off" size={64} color={colors.textMuted} />
           <Text style={{ color: colors.textSecondary, fontSize: 16, marginTop: 16 }}>{t.boycott.loadError}</Text>
-          <TouchableOpacity onPress={() => refetch()} style={{ marginTop: 20, backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 }}>
-            <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>{t.common.retry}</Text>
-          </TouchableOpacity>
+          <PressableScale onPress={() => refetch()} accessibilityRole="button">
+            <View style={{ marginTop: 20, backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 }}>
+              <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>{t.common.retry}</Text>
+            </View>
+          </PressableScale>
         </View>
       ) : items.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 80 }}>

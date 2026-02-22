@@ -5,17 +5,22 @@
  */
 
 import React from "react";
-import { TouchableOpacity, Text, View, TouchableOpacityProps } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useHaptics } from "@/hooks";
 import { lightTheme, brand, neutral } from "@/theme/colors";
+import { PressableScale } from "./PressableScale";
 
-export interface ChipProps extends TouchableOpacityProps {
+export interface ChipProps {
   label: string;
   selected?: boolean;
   icon?: keyof typeof MaterialIcons.glyphMap;
   onClose?: () => void;
   variant?: "default" | "primary";
+  onPress?: () => void;
+  className?: string;
+  testID?: string;
+  disabled?: boolean;
 }
 
 export const Chip: React.FC<ChipProps> = ({
@@ -26,12 +31,13 @@ export const Chip: React.FC<ChipProps> = ({
   variant = "default",
   onPress,
   className = "",
-  ...props
+  testID,
+  disabled,
 }) => {
   const { impact } = useHaptics();
-  const handlePress = async (e: any) => {
+  const handlePress = () => {
     impact();
-    onPress?.(e);
+    onPress?.();
   };
 
   const baseStyles = `
@@ -53,32 +59,34 @@ export const Chip: React.FC<ChipProps> = ({
     : "text-slate-600 dark:text-slate-300 font-medium";
 
   return (
-    <TouchableOpacity
+    <PressableScale
       onPress={handlePress}
-      className={`${baseStyles} ${selectedStyles} ${className}`}
-      {...props}
+      disabled={disabled}
+      testID={testID}
     >
-      {icon && (
-        <MaterialIcons
-          name={icon}
-          size={16}
-          color={selected ? (variant === "primary" ? lightTheme.textPrimary : brand.white) : neutral[600]}
-        />
-      )}
-      <Text className={`text-sm ${textStyles}`}>{label}</Text>
-      {onClose && (
-        <TouchableOpacity
-          onPress={onClose}
-          hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
-        >
+      <View className={`${baseStyles} ${selectedStyles} ${className}`}>
+        {icon && (
           <MaterialIcons
-            name="close"
+            name={icon}
             size={16}
             color={selected ? (variant === "primary" ? lightTheme.textPrimary : brand.white) : neutral[600]}
           />
-        </TouchableOpacity>
-      )}
-    </TouchableOpacity>
+        )}
+        <Text className={`text-sm ${textStyles}`}>{label}</Text>
+        {onClose && (
+          <Pressable
+            onPress={onClose}
+            hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
+          >
+            <MaterialIcons
+              name="close"
+              size={16}
+              color={selected ? (variant === "primary" ? lightTheme.textPrimary : brand.white) : neutral[600]}
+            />
+          </Pressable>
+        )}
+      </View>
+    </PressableScale>
   );
 };
 

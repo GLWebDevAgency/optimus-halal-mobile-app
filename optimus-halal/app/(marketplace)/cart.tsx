@@ -12,9 +12,10 @@ import React, { useCallback } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   ScrollView,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -158,12 +159,12 @@ function CartItem({
                 </Text>
               </View>
             </View>
-            <TouchableOpacity
+            <Pressable
               onPress={onRemove}
-              className="p-1"
+              hitSlop={8}
             >
               <MaterialIcons name="delete" size={18} color="#9ca3af" />
-            </TouchableOpacity>
+            </Pressable>
           </View>
 
           {/* Badges */}
@@ -201,21 +202,19 @@ function CartItem({
           </View>
 
           <View className="flex-row items-center gap-2 bg-slate-50 dark:bg-white/5 rounded-lg p-1 border border-slate-100 dark:border-white/5">
-            <TouchableOpacity
-              onPress={() => onUpdateQuantity(-1)}
-              className="w-7 h-7 items-center justify-center rounded-md bg-white dark:bg-white/10 shadow-sm"
-            >
-              <MaterialIcons name="remove" size={14} color={isDark ? "#ffffff" : "#475569"} />
-            </TouchableOpacity>
+            <Pressable onPress={() => onUpdateQuantity(-1)}>
+              <View className="w-7 h-7 items-center justify-center rounded-md bg-white dark:bg-white/10 shadow-sm">
+                <MaterialIcons name="remove" size={14} color={isDark ? "#ffffff" : "#475569"} />
+              </View>
+            </Pressable>
             <Text className="w-4 text-center text-sm font-semibold text-slate-900 dark:text-white">
               {item.quantity}
             </Text>
-            <TouchableOpacity
-              onPress={() => onUpdateQuantity(1)}
-              className="w-7 h-7 items-center justify-center rounded-md bg-primary shadow-sm"
-            >
-              <MaterialIcons name="add" size={14} color="#0d1b12" />
-            </TouchableOpacity>
+            <Pressable onPress={() => onUpdateQuantity(1)}>
+              <View className="w-7 h-7 items-center justify-center rounded-md bg-primary shadow-sm">
+                <MaterialIcons name="add" size={14} color="#0d1b12" />
+              </View>
+            </Pressable>
           </View>
         </View>
       </View>
@@ -272,16 +271,18 @@ export default function CartScreen() {
         style={{ paddingTop: insets.top + 8 }}
       >
         <View className="flex-row items-center justify-between">
-          <TouchableOpacity
+          <Pressable
             onPress={handleBack}
-            className="h-10 w-10 items-center justify-center rounded-full"
+            hitSlop={8}
           >
-            <MaterialIcons
-              name="arrow-back"
-              size={24}
-              color={isDark ? "#ffffff" : "#0d1b12"}
-            />
-          </TouchableOpacity>
+            <View className="h-10 w-10 items-center justify-center rounded-full">
+              <MaterialIcons
+                name="arrow-back"
+                size={24}
+                color={isDark ? "#ffffff" : "#0d1b12"}
+              />
+            </View>
+          </Pressable>
 
           <Text className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
             Panier ({itemCount} {itemCount === 1 ? "article" : "articles"})
@@ -306,13 +307,12 @@ export default function CartScreen() {
           <Text className="text-sm text-slate-500 dark:text-slate-400 text-center mb-8">
             Découvrez nos produits éthiques et certifiés halal
           </Text>
-          <TouchableOpacity
-            onPress={() => router.navigate("/(marketplace)/catalog" as any)}
-            className="bg-primary px-6 py-3 rounded-xl flex-row items-center gap-2"
-          >
-            <MaterialIcons name="storefront" size={20} color="#0d1b12" />
-            <Text className="font-bold text-slate-900">Explorer le catalogue</Text>
-          </TouchableOpacity>
+          <PressableScale onPress={() => router.navigate("/(marketplace)/catalog" as any)}>
+            <View className="bg-primary px-6 py-3 rounded-xl flex-row items-center gap-2">
+              <MaterialIcons name="storefront" size={20} color="#0d1b12" />
+              <Text className="font-bold text-slate-900">Explorer le catalogue</Text>
+            </View>
+          </PressableScale>
         </Animated.View>
       ) : (
         <>
@@ -393,10 +393,8 @@ export default function CartScreen() {
               </View>
             </View>
 
-            <TouchableOpacity
+            <PressableScale
               onPress={handleCheckout}
-              className="w-full bg-primary py-4 rounded-xl flex-row items-center justify-center gap-2 shadow-lg"
-              activeOpacity={0.9}
               style={{
                 shadowColor: colors.primary,
                 shadowOffset: { width: 0, height: 4 },
@@ -404,11 +402,13 @@ export default function CartScreen() {
                 shadowRadius: 8,
               }}
             >
-              <Text className="text-base font-bold text-[#0d1b12]">
-                Passer la commande
-              </Text>
-              <MaterialIcons name="arrow-forward" size={20} color="#0d1b12" />
-            </TouchableOpacity>
+              <View className="w-full bg-primary py-4 rounded-xl flex-row items-center justify-center gap-2 shadow-lg">
+                <Text className="text-base font-bold text-[#0d1b12]">
+                  Passer la commande
+                </Text>
+                <MaterialIcons name="arrow-forward" size={20} color="#0d1b12" />
+              </View>
+            </PressableScale>
           </Animated.View>
         </>
       )}

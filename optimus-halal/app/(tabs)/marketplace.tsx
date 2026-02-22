@@ -10,7 +10,7 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   RefreshControl,
 } from "react-native";
 import { Image } from "expo-image";
@@ -26,6 +26,7 @@ import Animated, {
 import { LinearGradient } from "expo-linear-gradient";
 
 import { PremiumBackground } from "@/components/ui";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { useFeatureFlagsStore, useLocalCartStore } from "@/store";
 import { trpc } from "@/lib/trpc";
 import { brand, gold, halalStatus } from "@/theme/colors";
@@ -83,9 +84,8 @@ const ProductCard = React.memo(function ProductCard({ product, index }: { produc
       className="w-44 mr-4"
     >
       {/* Outer view: elevation + no overflow clipping */}
-      <TouchableOpacity
+      <PressableScale
         onPress={handlePress}
-        activeOpacity={0.8}
         accessibilityRole="button"
         accessibilityLabel={`${product.name}, ${product.brand ?? ""}, ${product.halalStatus}`}
         style={{
@@ -163,20 +163,18 @@ const ProductCard = React.memo(function ProductCard({ product, index }: { produc
                   Prix N/A
                 </Text>
               )}
-              <TouchableOpacity
+              <Pressable
                 onPress={handleAddToCart}
-                className="p-2 rounded-full"
-                style={{ backgroundColor: colors.primaryLight }}
-                activeOpacity={0.7}
+                style={{ backgroundColor: colors.primaryLight, padding: 8, borderRadius: 9999 }}
                 accessibilityRole="button"
                 accessibilityLabel={`${t.marketplace.addToCart} ${product.name}`}
               >
                 <MaterialIcons name="add-shopping-cart" size={16} color={colors.primary} />
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </View>
         </View>
-      </TouchableOpacity>
+      </PressableScale>
     </Animated.View>
   );
 });
@@ -269,27 +267,29 @@ export default function MarketplaceTab() {
                   {t.common.comingSoon}
                 </Text>
               </View>
-              <TouchableOpacity
+              <Pressable
                 onPress={handleAlertsPress}
-                className="relative h-10 w-10 items-center justify-center rounded-full"
-                style={{ backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1 }}
-                activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel={t.common.notifications}
                 accessibilityHint={t.common.viewAlerts}
               >
-                <MaterialIcons
-                  name="notifications"
-                  size={22}
-                  color={colors.iconPrimary}
-                />
-                {unreadCount > 0 && (
-                  <View
-                    className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full"
-                    style={{ backgroundColor: gold[500], borderColor: colors.card, borderWidth: 2 }}
+                <View
+                  className="relative h-10 w-10 items-center justify-center rounded-full"
+                  style={{ backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1 }}
+                >
+                  <MaterialIcons
+                    name="notifications"
+                    size={22}
+                    color={colors.iconPrimary}
                   />
-                )}
-              </TouchableOpacity>
+                  {unreadCount > 0 && (
+                    <View
+                      className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: gold[500], borderColor: colors.card, borderWidth: 2 }}
+                    />
+                  )}
+                </View>
+              </Pressable>
             </View>
           </Animated.View>
 
@@ -320,18 +320,20 @@ export default function MarketplaceTab() {
               <Text className="text-sm text-center mb-6" style={{ color: colors.textSecondary }}>
                 {t.marketplace.comingSoonDesc}
               </Text>
-              <TouchableOpacity
+              <PressableScale
                 onPress={() => router.push("/(marketplace)/coming-soon" as any)}
-                className="px-6 py-3 rounded-xl flex-row items-center gap-2"
-                style={{ backgroundColor: colors.primary }}
-                activeOpacity={0.8}
                 accessibilityRole="button"
                 accessibilityLabel={t.marketplace.joinWaitlist}
                 accessibilityHint={t.marketplace.joinWaitlist}
               >
-                <MaterialIcons name="notifications-active" size={20} color="#0d1b12" />
-                <Text className="font-bold" style={{ color: colors.textPrimary }}>{t.marketplace.joinWaitlist}</Text>
-              </TouchableOpacity>
+                <View
+                  className="px-6 py-3 rounded-xl flex-row items-center gap-2"
+                  style={{ backgroundColor: colors.primary }}
+                >
+                  <MaterialIcons name="notifications-active" size={20} color="#0d1b12" />
+                  <Text className="font-bold" style={{ color: colors.textPrimary }}>{t.marketplace.joinWaitlist}</Text>
+                </View>
+              </PressableScale>
             </LinearGradient>
           </Animated.View>
         </ScrollView>
@@ -371,53 +373,57 @@ export default function MarketplaceTab() {
           </View>
 
           <View className="flex-row items-center gap-3">
-            <TouchableOpacity
+            <Pressable
               onPress={handleAlertsPress}
-              className="relative h-10 w-10 items-center justify-center rounded-full"
-              style={{ backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1 }}
-              activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel={t.common.notifications}
               accessibilityHint={t.common.viewAlerts}
             >
-              <MaterialIcons
-                name="notifications"
-                size={22}
-                color={colors.iconPrimary}
-              />
-              {unreadCount > 0 && (
-                <View
-                  className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full"
-                  style={{ backgroundColor: gold[500], borderColor: colors.card, borderWidth: 2 }}
+              <View
+                className="relative h-10 w-10 items-center justify-center rounded-full"
+                style={{ backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1 }}
+              >
+                <MaterialIcons
+                  name="notifications"
+                  size={22}
+                  color={colors.iconPrimary}
                 />
-              )}
-            </TouchableOpacity>
+                {unreadCount > 0 && (
+                  <View
+                    className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full"
+                    style={{ backgroundColor: gold[500], borderColor: colors.card, borderWidth: 2 }}
+                  />
+                )}
+              </View>
+            </Pressable>
 
-            <TouchableOpacity
+            <Pressable
               onPress={handleCartPress}
-              className="relative h-10 w-10 items-center justify-center rounded-full"
-              style={{ backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1 }}
-              activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel={t.marketplace.viewCart}
               accessibilityHint={t.marketplace.viewCart}
             >
-              <MaterialIcons
-                name="shopping-cart"
-                size={22}
-                color={colors.iconPrimary}
-              />
-              {itemCount > 0 && (
-                <View
-                  className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full items-center justify-center px-1"
-                  style={{ backgroundColor: colors.primary }}
-                >
-                  <Text className="text-[10px] font-bold text-white">
-                    {itemCount > 99 ? "99+" : itemCount}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
+              <View
+                className="relative h-10 w-10 items-center justify-center rounded-full"
+                style={{ backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1 }}
+              >
+                <MaterialIcons
+                  name="shopping-cart"
+                  size={22}
+                  color={colors.iconPrimary}
+                />
+                {itemCount > 0 && (
+                  <View
+                    className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full items-center justify-center px-1"
+                    style={{ backgroundColor: colors.primary }}
+                  >
+                    <Text className="text-[10px] font-bold text-white">
+                      {itemCount > 99 ? "99+" : itemCount}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </Pressable>
           </View>
         </Animated.View>
 
@@ -434,31 +440,33 @@ export default function MarketplaceTab() {
               const categoryLabel = t.marketplace.categories[category.id];
               const isSelected = selectedCategory === category.id;
               return (
-                <TouchableOpacity
+                <PressableScale
                   key={category.id}
                   onPress={() => handleCategoryPress(category.id)}
-                  className="flex-row items-center px-4 py-2 rounded-full mr-3"
-                  style={
-                    isSelected
-                      ? { backgroundColor: colors.primary }
-                      : { backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1 }
-                  }
-                  activeOpacity={0.7}
                   accessibilityRole="button"
                   accessibilityLabel={`${categoryLabel}${isSelected ? `, ${t.common.selected}` : ""}`}
                 >
-                  <MaterialIcons
-                    name={category.icon}
-                    size={18}
-                    color={isSelected ? "#fff" : colors.iconSecondary}
-                  />
-                  <Text
-                    className="ml-2 text-sm font-medium"
-                    style={{ color: isSelected ? "#fff" : colors.textSecondary }}
+                  <View
+                    className="flex-row items-center px-4 py-2 rounded-full mr-3"
+                    style={
+                      isSelected
+                        ? { backgroundColor: colors.primary }
+                        : { backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1 }
+                    }
                   >
-                    {categoryLabel}
-                  </Text>
-                </TouchableOpacity>
+                    <MaterialIcons
+                      name={category.icon}
+                      size={18}
+                      color={isSelected ? "#fff" : colors.iconSecondary}
+                    />
+                    <Text
+                      className="ml-2 text-sm font-medium"
+                      style={{ color: isSelected ? "#fff" : colors.textSecondary }}
+                    >
+                      {categoryLabel}
+                    </Text>
+                  </View>
+                </PressableScale>
               );
             })}
           </ScrollView>
@@ -472,11 +480,11 @@ export default function MarketplaceTab() {
             <Text accessibilityRole="header" className="text-lg font-bold" style={{ color: colors.textPrimary }}>
               {t.marketplace.featured}
             </Text>
-            <TouchableOpacity onPress={handleViewAllPress} activeOpacity={0.7} accessibilityRole="link" accessibilityLabel={`${t.home.viewAll} ${t.marketplace.featured}`}>
+            <Pressable onPress={handleViewAllPress} accessibilityRole="link" accessibilityLabel={`${t.home.viewAll} ${t.marketplace.featured}`}>
               <Text className="text-sm font-medium" style={{ color: colors.primary }}>
                 {t.home.viewAll}
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
 
           {productsQuery.isLoading ? (
@@ -527,19 +535,19 @@ export default function MarketplaceTab() {
               <Text className="text-sm mb-3" style={{ color: colors.textSecondary }}>
                 {t.marketplace.freeShippingDesc}
               </Text>
-              <TouchableOpacity
+              <Pressable
                 onPress={handleViewAllPress}
-                className="flex-row items-center"
-                activeOpacity={0.7}
                 accessibilityRole="link"
                 accessibilityLabel={t.marketplace.discoverOffers}
                 accessibilityHint={t.marketplace.freeShipping}
               >
-                <Text className="text-sm font-semibold" style={{ color: gold[500] }}>
-                  {t.marketplace.discoverOffers}
-                </Text>
-                <MaterialIcons name="arrow-forward" size={16} color={gold[500]} />
-              </TouchableOpacity>
+                <View className="flex-row items-center">
+                  <Text className="text-sm font-semibold" style={{ color: gold[500] }}>
+                    {t.marketplace.discoverOffers}
+                  </Text>
+                  <MaterialIcons name="arrow-forward" size={16} color={gold[500]} />
+                </View>
+              </Pressable>
             </View>
             <View
               className="w-16 h-16 rounded-full items-center justify-center"

@@ -13,7 +13,6 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   StyleSheet,
   Dimensions,
   Pressable,
@@ -170,7 +169,7 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
               </Text>
             </View>
           </View>
-          <TouchableOpacity
+          <Pressable
             onPress={onClose}
             style={[
               styles.closeButton,
@@ -188,7 +187,7 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
               size={20}
               color={colors.textSecondary}
             />
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         {/* Additive list — scrollable for many items */}

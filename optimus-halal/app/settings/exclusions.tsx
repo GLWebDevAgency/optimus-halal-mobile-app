@@ -7,7 +7,7 @@ import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   ScrollView,
   TextInput,
   StatusBar,
@@ -19,6 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown, SlideInDown } from "react-native-reanimated";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { usePreferencesStore } from "@/store";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
@@ -273,9 +274,8 @@ export default function ExclusionsScreen() {
     const selected = isSelected(allergen.id);
     
     return (
-      <TouchableOpacity
+      <PressableScale
         onPress={() => toggleExclusion(allergen.id)}
-        activeOpacity={0.7}
         style={{
           width: "100%",
           aspectRatio: 1,
@@ -295,8 +295,6 @@ export default function ExclusionsScreen() {
         }}
         accessibilityRole="button"
         accessibilityLabel={`${allergen.name} - ${allergen.description}`}
-        accessibilityState={{ selected }}
-        accessibilityHint={selected ? `Retirer ${allergen.name} des exclusions` : `Ajouter ${allergen.name} aux exclusions`}
       >
         {/* Selection indicator dot */}
         {selected && (
@@ -312,7 +310,7 @@ export default function ExclusionsScreen() {
             }}
           />
         )}
-        
+
         <MaterialIcons
           name={allergen.icon}
           size={28}
@@ -329,7 +327,7 @@ export default function ExclusionsScreen() {
         >
           {allergen.name}
         </Text>
-      </TouchableOpacity>
+      </PressableScale>
     );
   };
 
@@ -388,7 +386,7 @@ export default function ExclusionsScreen() {
           </View>
         </View>
         
-        <TouchableOpacity
+        <Pressable
           onPress={() => toggleExclusion(item.id)}
           style={{
             width: 44,
@@ -399,14 +397,13 @@ export default function ExclusionsScreen() {
           }}
           accessibilityRole="button"
           accessibilityLabel={`Retirer ${item.name}`}
-          accessibilityHint="Supprimer cette exclusion de la liste"
         >
           <MaterialIcons
             name="close"
             size={20}
             color={themeColors.textSecondary}
           />
-        </TouchableOpacity>
+        </Pressable>
       </Animated.View>
     );
   };
@@ -428,9 +425,8 @@ export default function ExclusionsScreen() {
         }}
       >
         {/* Back Button */}
-        <TouchableOpacity
+        <PressableScale
           onPress={() => router.back()}
-          activeOpacity={0.7}
           style={{
             width: 40,
             height: 40,
@@ -443,10 +439,9 @@ export default function ExclusionsScreen() {
           }}
           accessibilityRole="button"
           accessibilityLabel={t.common.back}
-          accessibilityHint={t.common.back}
         >
           <MaterialIcons name="arrow-back" size={22} color={themeColors.textPrimary} />
-        </TouchableOpacity>
+        </PressableScale>
 
         {/* Title */}
         <Text
@@ -461,9 +456,8 @@ export default function ExclusionsScreen() {
         </Text>
 
         {/* Finish Button */}
-        <TouchableOpacity
+        <PressableScale
           onPress={handleSave}
-          activeOpacity={0.7}
           style={{
             width: 40,
             height: 40,
@@ -473,7 +467,6 @@ export default function ExclusionsScreen() {
           }}
           accessibilityRole="button"
           accessibilityLabel="Terminer"
-          accessibilityHint="Enregistrer et revenir"
         >
           <Text
             style={{
@@ -484,7 +477,7 @@ export default function ExclusionsScreen() {
           >
             {t.exclusions.done}
           </Text>
-        </TouchableOpacity>
+        </PressableScale>
       </Animated.View>
 
       <KeyboardAvoidingView
@@ -588,7 +581,7 @@ export default function ExclusionsScreen() {
               accessibilityHint="Saisissez le nom d'un ingrédient ou additif à exclure"
             />
             {searchQuery.length > 0 && (
-              <TouchableOpacity
+              <Pressable
                 onPress={() => {
                   setSearchQuery("");
                   setShowSuggestions(false);
@@ -597,7 +590,7 @@ export default function ExclusionsScreen() {
                 accessibilityLabel="Effacer la recherche"
               >
                 <MaterialIcons name="close" size={20} color={themeColors.textSecondary} />
-              </TouchableOpacity>
+              </Pressable>
             )}
           </View>
 
@@ -627,7 +620,7 @@ export default function ExclusionsScreen() {
                 overflow: "hidden",
               }}>
               {filteredSuggestions.slice(0, 4).map((suggestion, index) => (
-                <TouchableOpacity
+                <PressableScale
                   key={suggestion.id}
                   onPress={() => addFromSearch(suggestion.id)}
                   style={{
@@ -639,7 +632,6 @@ export default function ExclusionsScreen() {
                   }}
                   accessibilityRole="button"
                   accessibilityLabel={`Ajouter ${suggestion.name}`}
-                  accessibilityHint={suggestion.description}
                 >
                   <MaterialIcons name="add" size={20} color={themeColors.primary} />
                   <View style={{ marginLeft: 12 }}>
@@ -650,7 +642,7 @@ export default function ExclusionsScreen() {
                       {suggestion.description}
                     </Text>
                   </View>
-                </TouchableOpacity>
+                </PressableScale>
               ))}
               </View>
             </Animated.View>
@@ -772,12 +764,11 @@ export default function ExclusionsScreen() {
           )}
 
           {/* Add another exclusion button */}
-          <TouchableOpacity
+          <PressableScale
             onPress={() => {
               // Focus search input or show modal for adding
               setShowSuggestions(true);
             }}
-            activeOpacity={0.7}
             style={{
               marginTop: 16,
               padding: 14,
@@ -791,7 +782,6 @@ export default function ExclusionsScreen() {
             }}
             accessibilityRole="button"
             accessibilityLabel={t.exclusions.addAnother}
-            accessibilityHint="Ouvrir les suggestions pour ajouter une exclusion"
           >
             <MaterialIcons name="add" size={18} color={themeColors.textSecondary} />
             <Text
@@ -804,7 +794,7 @@ export default function ExclusionsScreen() {
             >
               {t.exclusions.addAnother}
             </Text>
-          </TouchableOpacity>
+          </PressableScale>
         </Animated.View>
       </ScrollView>
       </KeyboardAvoidingView>
@@ -825,9 +815,8 @@ export default function ExclusionsScreen() {
           borderTopColor: themeColors.cardBorder,
         }}
       >
-        <TouchableOpacity
+        <PressableScale
           onPress={handleSave}
-          activeOpacity={0.9}
           style={{
             backgroundColor: themeColors.primary,
             borderRadius: 16,
@@ -842,7 +831,6 @@ export default function ExclusionsScreen() {
           }}
           accessibilityRole="button"
           accessibilityLabel={t.exclusions.savePreferences}
-          accessibilityHint="Sauvegarder vos exclusions et revenir"
         >
           <Text
             style={{
@@ -853,7 +841,7 @@ export default function ExclusionsScreen() {
           >
             {t.exclusions.savePreferences}
           </Text>
-        </TouchableOpacity>
+        </PressableScale>
       </Animated.View>
     </SafeAreaView>
   );

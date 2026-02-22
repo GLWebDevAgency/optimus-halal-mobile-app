@@ -14,7 +14,7 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
+  Pressable,
   ScrollView,
 } from "react-native";
 import { Image } from "expo-image";
@@ -29,6 +29,7 @@ import Animated, {
   FadeInRight,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
+import { PressableScale } from "@/components/ui/PressableScale";
 
 import { useLocalAuthStore, useLocalCartStore } from "@/store";
 
@@ -126,10 +127,8 @@ const ProductCard = React.memo(function ProductCard({ product, onPress, onAddToC
   const { isDark, colors } = useTheme();
 
   return (
-    <TouchableOpacity
+    <PressableScale
       onPress={onPress}
-      className="flex-1 bg-white dark:bg-slate-800 rounded-xl overflow-hidden border border-slate-100 dark:border-slate-700"
-      activeOpacity={0.9}
       style={{
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
@@ -138,76 +137,77 @@ const ProductCard = React.memo(function ProductCard({ product, onPress, onAddToC
         elevation: 2,
       }}
     >
-      {/* Image */}
-      <View className="relative aspect-[4/5] bg-slate-100 dark:bg-slate-700">
-        <Image
-          source={{ uri: product.image }}
-          className="w-full h-full"
-          contentFit="cover"
-          transition={200}
-        />
-
-        {/* Certification Badge */}
-        <View className="absolute top-2 left-2 flex-row items-center gap-1 bg-white/95 dark:bg-slate-900/90 px-2 py-1 rounded-md">
-          <MaterialIcons name="verified" size={12} color="#059669" />
-          <Text className="text-[10px] font-bold text-green-700 dark:text-primary">
-            {product.certification}
-          </Text>
-        </View>
-
-        {/* Favorite Button */}
-        <TouchableOpacity
-          onPress={onToggleFavorite}
-          className="absolute top-2 right-2 h-8 w-8 rounded-full bg-white/60 dark:bg-black/40 items-center justify-center"
-          activeOpacity={0.7}
-        >
-          <MaterialIcons
-            name={product.isFavorite ? "favorite" : "favorite-border"}
-            size={18}
-            color={product.isFavorite ? "#ef4444" : isDark ? "#ffffff" : "#475569"}
+      <View className="flex-1 bg-white dark:bg-slate-800 rounded-xl overflow-hidden border border-slate-100 dark:border-slate-700">
+        {/* Image */}
+        <View className="relative aspect-[4/5] bg-slate-100 dark:bg-slate-700">
+          <Image
+            source={{ uri: product.image }}
+            className="w-full h-full"
+            contentFit="cover"
+            transition={200}
           />
-        </TouchableOpacity>
-      </View>
 
-      {/* Content */}
-      <View className="p-3 flex-1">
-        {/* Rating */}
-        <View className="flex-row items-center gap-1 mb-1">
-          <MaterialIcons name="star" size={14} color="#fbbf24" />
-          <Text className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-            {product.rating} ({product.reviews})
-          </Text>
-        </View>
+          {/* Certification Badge */}
+          <View className="absolute top-2 left-2 flex-row items-center gap-1 bg-white/95 dark:bg-slate-900/90 px-2 py-1 rounded-md">
+            <MaterialIcons name="verified" size={12} color="#059669" />
+            <Text className="text-[10px] font-bold text-green-700 dark:text-primary">
+              {product.certification}
+            </Text>
+          </View>
 
-        {/* Name */}
-        <Text
-          className="text-sm font-semibold text-slate-800 dark:text-white leading-snug mb-2"
-          numberOfLines={2}
-        >
-          {product.name}
-        </Text>
-
-        {/* Price & Add Button */}
-        <View className="flex-row items-center justify-between mt-auto">
-          <Text className="text-base font-bold text-slate-800 dark:text-white">
-            €{product.price.toFixed(2)}
-          </Text>
-          <TouchableOpacity
-            onPress={onAddToCart}
-            className="h-8 w-8 rounded-lg bg-primary items-center justify-center"
-            activeOpacity={0.8}
-            style={{
-              shadowColor: colors.primary,
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.3,
-              shadowRadius: 4,
-            }}
+          {/* Favorite Button */}
+          <Pressable
+            onPress={onToggleFavorite}
+            className="absolute top-2 right-2 h-8 w-8 rounded-full bg-white/60 dark:bg-black/40 items-center justify-center"
           >
-            <MaterialIcons name="add" size={20} color="#102216" />
-          </TouchableOpacity>
+            <MaterialIcons
+              name={product.isFavorite ? "favorite" : "favorite-border"}
+              size={18}
+              color={product.isFavorite ? "#ef4444" : isDark ? "#ffffff" : "#475569"}
+            />
+          </Pressable>
+        </View>
+
+        {/* Content */}
+        <View className="p-3 flex-1">
+          {/* Rating */}
+          <View className="flex-row items-center gap-1 mb-1">
+            <MaterialIcons name="star" size={14} color="#fbbf24" />
+            <Text className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              {product.rating} ({product.reviews})
+            </Text>
+          </View>
+
+          {/* Name */}
+          <Text
+            className="text-sm font-semibold text-slate-800 dark:text-white leading-snug mb-2"
+            numberOfLines={2}
+          >
+            {product.name}
+          </Text>
+
+          {/* Price & Add Button */}
+          <View className="flex-row items-center justify-between mt-auto">
+            <Text className="text-base font-bold text-slate-800 dark:text-white">
+              €{product.price.toFixed(2)}
+            </Text>
+            <PressableScale
+              onPress={onAddToCart}
+              style={{
+                shadowColor: colors.primary,
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+              }}
+            >
+              <View className="h-8 w-8 rounded-lg bg-primary items-center justify-center">
+                <MaterialIcons name="add" size={20} color="#102216" />
+              </View>
+            </PressableScale>
+          </View>
         </View>
       </View>
-    </TouchableOpacity>
+    </PressableScale>
   );
 });
 
@@ -304,10 +304,9 @@ export default function MarketplaceCatalogScreen() {
           </View>
 
           {/* Cart Button */}
-          <TouchableOpacity
+          <Pressable
             onPress={handleCartPress}
             className="relative p-2 rounded-full"
-            activeOpacity={0.7}
           >
             <MaterialIcons
               name="shopping-bag"
@@ -317,7 +316,7 @@ export default function MarketplaceCatalogScreen() {
             {itemCount > 0 && (
               <View className="absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-primary rounded-full border-2 border-background-light dark:border-background-dark" />
             )}
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         {/* Search Bar */}
@@ -364,26 +363,28 @@ export default function MarketplaceCatalogScreen() {
                 contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
               >
                 {categories.map((category) => (
-                  <TouchableOpacity
+                  <PressableScale
                     key={category.id}
                     onPress={() => handleCategoryPress(category.id)}
-                    className={`px-5 py-2 rounded-full ${
-                      selectedCategory === category.id
-                        ? "bg-primary"
-                        : "bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700"
-                    }`}
-                    activeOpacity={0.8}
                   >
-                    <Text
-                      className={`text-sm font-semibold ${
+                    <View
+                      className={`px-5 py-2 rounded-full ${
                         selectedCategory === category.id
-                          ? "text-slate-900"
-                          : "text-slate-800 dark:text-slate-300"
+                          ? "bg-primary"
+                          : "bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700"
                       }`}
                     >
-                      {category.label}
-                    </Text>
-                  </TouchableOpacity>
+                      <Text
+                        className={`text-sm font-semibold ${
+                          selectedCategory === category.id
+                            ? "text-slate-900"
+                            : "text-slate-800 dark:text-slate-300"
+                        }`}
+                      >
+                        {category.label}
+                      </Text>
+                    </View>
+                  </PressableScale>
                 ))}
               </ScrollView>
             </Animated.View>
@@ -418,20 +419,21 @@ export default function MarketplaceCatalogScreen() {
                   <Text className="text-slate-200 text-xs font-medium mb-4 max-w-[200px]">
                     {FEATURED_PRODUCTS[0].subtitle}
                   </Text>
-                  <TouchableOpacity
-                    className="bg-primary px-4 py-2.5 rounded-lg self-start"
-                    activeOpacity={0.9}
+                  <PressableScale
                     style={{
+                      alignSelf: "flex-start",
                       shadowColor: colors.primary,
                       shadowOffset: { width: 0, height: 4 },
                       shadowOpacity: 0.3,
                       shadowRadius: 8,
                     }}
                   >
-                    <Text className="text-slate-900 text-xs font-bold">
-                      {t.catalog.viewCollection}
-                    </Text>
-                  </TouchableOpacity>
+                    <View className="bg-primary px-4 py-2.5 rounded-lg">
+                      <Text className="text-slate-900 text-xs font-bold">
+                        {t.catalog.viewCollection}
+                      </Text>
+                    </View>
+                  </PressableScale>
                 </View>
               </View>
             </Animated.View>
@@ -444,9 +446,9 @@ export default function MarketplaceCatalogScreen() {
               <Text className="text-lg font-bold text-slate-800 dark:text-white">
                 {t.catalog.popularSelection}
               </Text>
-              <TouchableOpacity activeOpacity={0.7}>
+              <PressableScale>
                 <Text className="text-sm font-medium text-primary">{t.home.viewAll}</Text>
-              </TouchableOpacity>
+              </PressableScale>
             </Animated.View>
           </>
         }

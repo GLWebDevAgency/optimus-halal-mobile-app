@@ -11,17 +11,20 @@ import React, { useCallback, useEffect } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
   ScrollView,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
 import { AUTH_CONFIG } from "@/constants/config";
 import { PremiumBackground } from "@/components/ui";
 import { useTranslation, useHaptics, useTheme } from "@/hooks";
+
+const logoSource = require("@assets/images/logo_naqiy.webp");
 
 export default function AuthWelcomeScreen() {
   const insets = useSafeAreaInsets();
@@ -71,13 +74,22 @@ export default function AuthWelcomeScreen() {
           entering={FadeIn.delay(100).duration(600)}
           className="items-center mb-8"
         >
-          <View className="w-24 h-24 rounded-3xl bg-primary-500 items-center justify-center mb-4" accessible={false}>
-            <MaterialIcons name="verified" size={48} color="white" />
+          <View
+            className="w-20 h-20 rounded-2xl items-center justify-center mb-4"
+            style={{ backgroundColor: colors.card }}
+            accessible={false}
+          >
+            <Image
+              source={logoSource}
+              style={{ width: 52, height: 52 }}
+              contentFit="contain"
+              cachePolicy="memory-disk"
+            />
           </View>
-          <Text className="text-slate-900 dark:text-white text-3xl font-bold" accessibilityRole="header">
+          <Text style={{ color: colors.textPrimary }} className="text-3xl font-bold" accessibilityRole="header">
             {t.auth.welcome.appName}
           </Text>
-          <Text className="text-slate-500 dark:text-slate-400 mt-2 text-center">
+          <Text style={{ color: colors.textSecondary }} className="mt-2 text-center">
             {t.auth.welcome.tagline}
           </Text>
         </Animated.View>
@@ -103,48 +115,50 @@ export default function AuthWelcomeScreen() {
           entering={FadeInUp.delay(300).duration(600)}
           className="mb-6"
         >
-          <TouchableOpacity
+          <PressableScale
             onPress={handleMagicLink}
-            activeOpacity={0.9}
             accessibilityRole="button"
             accessibilityLabel={t.auth.welcome.emailLogin}
             accessibilityHint={t.auth.welcome.emailLoginDesc}
-            className="bg-primary-500 rounded-2xl p-6 border-2 border-primary-600"
-            style={{
-              shadowColor: colors.primary,
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.3,
-              shadowRadius: 16,
-              elevation: 8,
-            }}
           >
-            <View className="flex-row items-center justify-between mb-3">
-              <View className="flex-row items-center">
-                <View className="w-10 h-10 rounded-full bg-white/20 items-center justify-center mr-3">
-                  <MaterialIcons name="mail-outline" size={24} color="white" />
-                </View>
-                <Text className="text-white text-lg font-bold">
-                  {t.auth.welcome.emailLogin}
-                </Text>
-              </View>
-              {authMode === "hybrid" && (
-                <View className="bg-white/20 px-2 py-1 rounded-full">
-                  <Text className="text-white text-xs font-semibold">
-                    {t.auth.welcome.recommended}
+            <View
+              className="bg-primary-500 rounded-2xl p-6 border-2 border-primary-600"
+              style={{
+                shadowColor: colors.primary,
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.3,
+                shadowRadius: 16,
+                elevation: 8,
+              }}
+            >
+              <View className="flex-row items-center justify-between mb-3">
+                <View className="flex-row items-center">
+                  <View className="w-10 h-10 rounded-full bg-white/20 items-center justify-center mr-3">
+                    <MaterialIcons name="mail-outline" size={24} color="white" />
+                  </View>
+                  <Text className="text-white text-lg font-bold">
+                    {t.auth.welcome.emailLogin}
                   </Text>
                 </View>
-              )}
-            </View>
-            <Text className="text-white/90 text-sm leading-relaxed">
-              {t.auth.welcome.emailLoginDesc}
-            </Text>
-            <View className="flex-row items-center mt-3">
-              <MaterialIcons name="check-circle" size={16} color="white" />
-              <Text className="text-white/90 text-xs ml-2">
-                {t.auth.welcome.noPasswordNeeded}
+                {authMode === "hybrid" && (
+                  <View className="bg-white/20 px-2 py-1 rounded-full">
+                    <Text className="text-white text-xs font-semibold">
+                      {t.auth.welcome.recommended}
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <Text className="text-white/90 text-sm leading-relaxed">
+                {t.auth.welcome.emailLoginDesc}
               </Text>
+              <View className="flex-row items-center mt-3">
+                <MaterialIcons name="check-circle" size={16} color="white" />
+                <Text className="text-white/90 text-xs ml-2">
+                  {t.auth.welcome.noPasswordNeeded}
+                </Text>
+              </View>
             </View>
-          </TouchableOpacity>
+          </PressableScale>
         </Animated.View>
 
         {/* Divider + Traditional Login - Only in Hybrid mode */}
@@ -163,37 +177,37 @@ export default function AuthWelcomeScreen() {
             </Animated.View>
 
             <Animated.View entering={FadeInUp.delay(500).duration(600)}>
-              <TouchableOpacity
+              <PressableScale
                 onPress={handleTraditionalLogin}
-                activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel={t.auth.welcome.classicLogin}
                 accessibilityHint={t.auth.welcome.classicLoginDesc}
-                className="bg-white dark:bg-surface-dark rounded-2xl p-5 border border-slate-200 dark:border-slate-700"
               >
-                <View className="flex-row items-center">
-                  <View className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 items-center justify-center mr-3">
+                <View className="bg-white dark:bg-surface-dark rounded-2xl p-5 border border-slate-200 dark:border-slate-700">
+                  <View className="flex-row items-center">
+                    <View className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 items-center justify-center mr-3">
+                      <MaterialIcons
+                        name="lock-outline"
+                        size={24}
+                        color={isDark ? "#94a3b8" : "#64748b"}
+                      />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-slate-900 dark:text-white font-semibold">
+                        {t.auth.welcome.classicLogin}
+                      </Text>
+                      <Text className="text-slate-500 dark:text-slate-400 text-sm">
+                        {t.auth.welcome.classicLoginDesc}
+                      </Text>
+                    </View>
                     <MaterialIcons
-                      name="lock-outline"
+                      name="chevron-right"
                       size={24}
-                      color={isDark ? "#94a3b8" : "#64748b"}
+                      color={isDark ? "#64748b" : "#94a3b8"}
                     />
                   </View>
-                  <View className="flex-1">
-                    <Text className="text-slate-900 dark:text-white font-semibold">
-                      {t.auth.welcome.classicLogin}
-                    </Text>
-                    <Text className="text-slate-500 dark:text-slate-400 text-sm">
-                      {t.auth.welcome.classicLoginDesc}
-                    </Text>
-                  </View>
-                  <MaterialIcons
-                    name="chevron-right"
-                    size={24}
-                    color={isDark ? "#64748b" : "#94a3b8"}
-                  />
                 </View>
-              </TouchableOpacity>
+              </PressableScale>
             </Animated.View>
           </>
         )}

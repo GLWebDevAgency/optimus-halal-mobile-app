@@ -9,7 +9,6 @@ import React, { useMemo, useCallback } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
   FlatList,
   StyleSheet,
   ActivityIndicator,
@@ -22,6 +21,7 @@ import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation, useMe, useLeaderboard, useHaptics } from "@/hooks";
+import { PressableScale } from "@/components/ui/PressableScale";
 
 // -- Types ------------------------------------------------------------------
 
@@ -449,14 +449,14 @@ export default function LeaderboardScreen() {
           <Text style={[styles.errorText, { color: colors.textSecondary }]}>
             {t.common.loadingError}
           </Text>
-          <TouchableOpacity
+          <PressableScale
             onPress={handleRetry}
             style={[styles.retryButton, { backgroundColor: colors.primary }]}
             accessibilityRole="button"
             accessibilityLabel={t.common.retry}
           >
             <Text style={styles.retryButtonText}>{t.common.retry}</Text>
-          </TouchableOpacity>
+          </PressableScale>
         </View>
       </SafeAreaView>
     );
@@ -584,7 +584,7 @@ function Header({
 }) {
   return (
     <Animated.View entering={FadeIn.duration(400)} style={styles.header}>
-      <TouchableOpacity
+      <PressableScale
         onPress={onBack}
         style={[
           styles.backButton,
@@ -597,7 +597,7 @@ function Header({
         accessibilityLabel={t.common.back}
       >
         <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
-      </TouchableOpacity>
+      </PressableScale>
 
       <View style={styles.headerTitleWrap}>
         <Text

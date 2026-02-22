@@ -14,8 +14,9 @@
  */
 
 import React from "react";
-import { View, ViewProps, TouchableOpacity, Platform, StyleSheet } from "react-native";
+import { View, ViewProps, Platform, StyleSheet } from "react-native";
 import { useTheme } from "@/hooks/useTheme";
+import { PressableScale } from "./PressableScale";
 
 export interface CardProps extends Omit<ViewProps, 'onBlur' | 'onFocus'> {
   variant?: "elevated" | "outlined" | "filled";
@@ -87,34 +88,32 @@ export const Card: React.FC<CardProps> = ({
 
     if (useNestedShadow) {
       return (
-        <TouchableOpacity
+        <PressableScale
           onPress={onPress}
-          activeOpacity={0.8}
-          className={`${baseStyles} ${className}`}
-          style={[variantColors, style, androidElevatedOuter.container]}
+          style={[variantColors, style, androidElevatedOuter.container, { borderRadius: BORDER_RADIUS }]}
           testID={testID}
           accessibilityLabel={accessibilityLabel}
           accessibilityHint={accessibilityHint}
+          accessibilityRole="button"
         >
           <View style={androidInnerClip.container}>
             {children}
           </View>
-        </TouchableOpacity>
+        </PressableScale>
       );
     }
 
     return (
-      <TouchableOpacity
+      <PressableScale
         onPress={onPress}
-        activeOpacity={0.8}
-        className={`${baseStyles} ${className}`}
-        style={[variantColors, style]}
+        style={[variantColors, style, { borderRadius: BORDER_RADIUS, overflow: "hidden" as const }]}
         testID={testID}
         accessibilityLabel={accessibilityLabel}
         accessibilityHint={accessibilityHint}
+        accessibilityRole="button"
       >
         {children}
-      </TouchableOpacity>
+      </PressableScale>
     );
   }
 

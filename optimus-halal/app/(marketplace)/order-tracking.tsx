@@ -13,9 +13,10 @@ import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   ScrollView,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -64,11 +65,13 @@ function PastOrderItem({
           </Text>
         </View>
       </View>
-      <TouchableOpacity className="px-2 py-1">
-        <Text className="text-sm font-semibold text-primary">
-          Recommander
-        </Text>
-      </TouchableOpacity>
+      <PressableScale>
+        <View className="px-2 py-1">
+          <Text className="text-sm font-semibold text-primary">
+            Recommander
+          </Text>
+        </View>
+      </PressableScale>
     </View>
   );
 }
@@ -109,12 +112,16 @@ export default function OrderTrackingScreen() {
             Mes Commandes
           </Text>
           <View className="flex-row items-center gap-2">
-            <TouchableOpacity className="w-10 h-10 items-center justify-center rounded-full">
-              <MaterialIcons name="search" size={24} color={isDark ? "#ffffff" : "#0f172a"} />
-            </TouchableOpacity>
-            <TouchableOpacity className="w-10 h-10 items-center justify-center rounded-full">
-              <MaterialIcons name="tune" size={24} color={isDark ? "#ffffff" : "#0f172a"} />
-            </TouchableOpacity>
+            <Pressable hitSlop={8}>
+              <View className="w-10 h-10 items-center justify-center rounded-full">
+                <MaterialIcons name="search" size={24} color={isDark ? "#ffffff" : "#0f172a"} />
+              </View>
+            </Pressable>
+            <Pressable hitSlop={8}>
+              <View className="w-10 h-10 items-center justify-center rounded-full">
+                <MaterialIcons name="tune" size={24} color={isDark ? "#ffffff" : "#0f172a"} />
+              </View>
+            </Pressable>
           </View>
         </View>
 
@@ -125,25 +132,28 @@ export default function OrderTrackingScreen() {
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16, gap: 12 }}
         >
           {filters.map((filter) => (
-            <TouchableOpacity
+            <PressableScale
               key={filter.id}
               onPress={() => setActiveFilter(filter.id)}
-              className={`h-9 px-5 rounded-full items-center justify-center shadow-sm ${
-                activeFilter === filter.id
-                  ? "bg-primary"
-                  : "bg-white dark:bg-[#1a2e22] border border-gray-200 dark:border-gray-700"
-              }`}
             >
-              <Text
-                className={`text-sm font-semibold ${
+              <View
+                className={`h-9 px-5 rounded-full items-center justify-center shadow-sm ${
                   activeFilter === filter.id
-                    ? "text-[#102216]"
-                    : "text-slate-600 dark:text-gray-300"
+                    ? "bg-primary"
+                    : "bg-white dark:bg-[#1a2e22] border border-gray-200 dark:border-gray-700"
                 }`}
               >
-                {filter.label}
-              </Text>
-            </TouchableOpacity>
+                <Text
+                  className={`text-sm font-semibold ${
+                    activeFilter === filter.id
+                      ? "text-[#102216]"
+                      : "text-slate-600 dark:text-gray-300"
+                  }`}
+                >
+                  {filter.label}
+                </Text>
+              </View>
+            </PressableScale>
           ))}
         </ScrollView>
       </Animated.View>
@@ -205,12 +215,14 @@ export default function OrderTrackingScreen() {
                     Livreur • 4.9 ★
                   </Text>
                 </View>
-                <TouchableOpacity
+                <Pressable
                   onPress={handleCallDriver}
-                  className="h-8 w-8 rounded-full bg-primary items-center justify-center shadow-sm"
+                  hitSlop={8}
                 >
-                  <MaterialIcons name="call" size={18} color="#102216" />
-                </TouchableOpacity>
+                  <View className="h-8 w-8 rounded-full bg-primary items-center justify-center shadow-sm">
+                    <MaterialIcons name="call" size={18} color="#102216" />
+                  </View>
+                </Pressable>
               </View>
             </View>
 
@@ -356,19 +368,23 @@ export default function OrderTrackingScreen() {
 
             {/* Actions */}
             <View className="p-4 flex-row gap-3">
-              <TouchableOpacity className="flex-1 bg-primary h-12 rounded-lg flex-row items-center justify-center gap-2">
-                <MaterialIcons name="near-me" size={20} color="#102216" />
-                <Text className="font-bold text-[#102216]">
-                  Suivre Livreur
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity className="w-12 h-12 rounded-lg border border-gray-200 dark:border-gray-700 items-center justify-center">
-                <MaterialIcons
-                  name="support-agent"
-                  size={20}
-                  color={isDark ? "#d1d5db" : "#475569"}
-                />
-              </TouchableOpacity>
+              <PressableScale style={{ flex: 1 }}>
+                <View className="flex-1 bg-primary h-12 rounded-lg flex-row items-center justify-center gap-2">
+                  <MaterialIcons name="near-me" size={20} color="#102216" />
+                  <Text className="font-bold text-[#102216]">
+                    Suivre Livreur
+                  </Text>
+                </View>
+              </PressableScale>
+              <Pressable>
+                <View className="w-12 h-12 rounded-lg border border-gray-200 dark:border-gray-700 items-center justify-center">
+                  <MaterialIcons
+                    name="support-agent"
+                    size={20}
+                    color={isDark ? "#d1d5db" : "#475569"}
+                  />
+                </View>
+              </Pressable>
             </View>
           </View>
         </Animated.View>
@@ -397,14 +413,13 @@ export default function OrderTrackingScreen() {
         </Animated.View>
 
         {/* Back to Home Button */}
-        <TouchableOpacity
-          onPress={handleBackToHome}
-          className="mt-4 py-3 items-center"
-        >
-          <Text className="text-sm font-medium text-primary">
-            Retour à l&apos;accueil
-          </Text>
-        </TouchableOpacity>
+        <PressableScale onPress={handleBackToHome}>
+          <View className="mt-4 py-3 items-center">
+            <Text className="text-sm font-medium text-primary">
+              Retour à l&apos;accueil
+            </Text>
+          </View>
+        </PressableScale>
       </ScrollView>
     </View>
   );

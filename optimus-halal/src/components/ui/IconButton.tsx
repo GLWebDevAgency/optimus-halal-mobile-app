@@ -1,16 +1,17 @@
 /**
  * IconButton Component
- * 
- * Bouton avec icône uniquement
+ *
+ * Bouton avec icône uniquement + spring press scale.
  */
 
 import React from "react";
-import { TouchableOpacity, TouchableOpacityProps, View, Text } from "react-native";
+import { View, Text } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useHaptics } from "@/hooks";
 import { neutral } from "@/theme/colors";
+import { PressableScale } from "./PressableScale";
 
-export interface IconButtonProps extends TouchableOpacityProps {
+export interface IconButtonProps {
   icon: keyof typeof MaterialIcons.glyphMap;
   size?: "sm" | "md" | "lg";
   variant?: "default" | "filled" | "outline";
@@ -18,6 +19,10 @@ export interface IconButtonProps extends TouchableOpacityProps {
   badge?: number;
   /** Required for screen readers since icon-only buttons have no visible text */
   accessibilityLabel: string;
+  onPress?: () => void;
+  disabled?: boolean;
+  className?: string;
+  testID?: string;
 }
 
 const sizeConfig = {
@@ -39,52 +44,59 @@ export const IconButton: React.FC<IconButtonProps> = ({
   color,
   badge,
   onPress,
+  disabled,
   className = "",
-  ...props
+  testID,
+  accessibilityLabel,
 }) => {
   const { impact } = useHaptics();
   const sizeStyles = sizeConfig[size];
 
-  const handlePress = async (e: any) => {
+  const handlePress = () => {
     impact();
-    onPress?.(e);
+    onPress?.();
   };
 
   return (
-    <TouchableOpacity
+    <PressableScale
       onPress={handlePress}
+      disabled={disabled}
       accessibilityRole="button"
-      className={`
-        items-center justify-center rounded-full
-        ${variantStyles[variant]}
-        ${className}
-      `}
-      style={{
-        width: sizeStyles.button,
-        height: sizeStyles.button,
-      }}
-      {...props}
+      accessibilityLabel={accessibilityLabel}
+      testID={testID}
     >
-      <MaterialIcons
-        name={icon}
-        size={sizeStyles.icon}
-        color={color || neutral[600]}
-      />
-      {badge !== undefined && badge > 0 && (
-        <View
-          className="absolute -top-1 -right-1 bg-danger rounded-full items-center justify-center"
-          style={{
-            minWidth: sizeStyles.badge,
-            height: sizeStyles.badge,
-            paddingHorizontal: 4,
-          }}
-        >
-          <Text className="text-white text-[10px] font-bold">
-            {badge > 99 ? "99+" : badge}
-          </Text>
-        </View>
-      )}
-    </TouchableOpacity>
+      <View
+        className={`
+          items-center justify-center rounded-full
+          ${variantStyles[variant]}
+          ${className}
+        `}
+        style={{
+          width: sizeStyles.button,
+          height: sizeStyles.button,
+        }}
+      >
+        <MaterialIcons
+          name={icon}
+          size={sizeStyles.icon}
+          color={color || neutral[600]}
+        />
+        {badge !== undefined && badge > 0 && (
+          <View
+            className="absolute -top-1 -right-1 bg-danger rounded-full items-center justify-center"
+            style={{
+              minWidth: sizeStyles.badge,
+              height: sizeStyles.badge,
+              paddingHorizontal: 4,
+            }}
+          >
+            <Text className="text-white text-[10px] font-bold">
+              {badge > 99 ? "99+" : badge}
+            </Text>
+          </View>
+        )}
+      </View>
+    </PressableScale>
   );
 };
 

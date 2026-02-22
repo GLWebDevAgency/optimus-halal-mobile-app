@@ -16,10 +16,11 @@ import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   ScrollView,
   TextInput,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -71,16 +72,18 @@ export default function CheckoutScreen() {
         className="sticky top-0 z-50 flex-row items-center bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md px-4 py-2 justify-between border-b border-gray-100 dark:border-gray-800"
         style={{ paddingTop: insets.top + 4 }}
       >
-        <TouchableOpacity
+        <Pressable
           onPress={handleBack}
-          className="p-2 -ml-2 rounded-full"
+          hitSlop={8}
         >
-          <MaterialIcons
-            name="arrow-back"
-            size={24}
-            color={isDark ? "#ffffff" : "#0d1b12"}
-          />
-        </TouchableOpacity>
+          <View className="p-2 -ml-2 rounded-full">
+            <MaterialIcons
+              name="arrow-back"
+              size={24}
+              color={isDark ? "#ffffff" : "#0d1b12"}
+            />
+          </View>
+        </Pressable>
 
         <Text className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
           Paiement
@@ -132,11 +135,13 @@ export default function CheckoutScreen() {
                   </Text>
                 </View>
               </View>
-              <TouchableOpacity className="px-3 py-1.5">
-                <Text className="text-sm font-medium text-primary">
-                  Modifier
-                </Text>
-              </TouchableOpacity>
+              <PressableScale>
+                <View className="px-3 py-1.5">
+                  <Text className="text-sm font-medium text-primary">
+                    Modifier
+                  </Text>
+                </View>
+              </PressableScale>
             </View>
           </View>
         </Animated.View>
@@ -151,64 +156,64 @@ export default function CheckoutScreen() {
 
           <View className="px-4 gap-3">
             {/* Standard Delivery */}
-            <TouchableOpacity
-              onPress={() => setSelectedShipping("standard")}
-              className={`flex-row items-center gap-4 bg-white dark:bg-[#1c3024] p-4 rounded-xl border-2 ${
-                selectedShipping === "standard"
-                  ? "border-primary"
-                  : "border-gray-100 dark:border-gray-800"
-              } shadow-sm`}
-              activeOpacity={0.8}
-            >
-              <MaterialIcons
-                name={selectedShipping === "standard" ? "radio-button-checked" : "radio-button-unchecked"}
-                size={24}
-                color={selectedShipping === "standard" ? colors.primary : "#9ca3af"}
-              />
-              <View className="flex-1">
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-base font-medium text-slate-900 dark:text-white">
-                    Livraison Standard
-                  </Text>
-                  <Text className="font-bold text-slate-900 dark:text-white">
-                    Gratuit
+            <PressableScale onPress={() => setSelectedShipping("standard")}>
+              <View
+                className={`flex-row items-center gap-4 bg-white dark:bg-[#1c3024] p-4 rounded-xl border-2 ${
+                  selectedShipping === "standard"
+                    ? "border-primary"
+                    : "border-gray-100 dark:border-gray-800"
+                } shadow-sm`}
+              >
+                <MaterialIcons
+                  name={selectedShipping === "standard" ? "radio-button-checked" : "radio-button-unchecked"}
+                  size={24}
+                  color={selectedShipping === "standard" ? colors.primary : "#9ca3af"}
+                />
+                <View className="flex-1">
+                  <View className="flex-row justify-between items-center">
+                    <Text className="text-base font-medium text-slate-900 dark:text-white">
+                      Livraison Standard
+                    </Text>
+                    <Text className="font-bold text-slate-900 dark:text-white">
+                      Gratuit
+                    </Text>
+                  </View>
+                  <Text className="text-sm text-gray-500 dark:text-gray-400">
+                    3-5 jours ouvrés
                   </Text>
                 </View>
-                <Text className="text-sm text-gray-500 dark:text-gray-400">
-                  3-5 jours ouvrés
-                </Text>
               </View>
-            </TouchableOpacity>
+            </PressableScale>
 
             {/* Express Delivery */}
-            <TouchableOpacity
-              onPress={() => setSelectedShipping("express")}
-              className={`flex-row items-center gap-4 bg-white dark:bg-[#1c3024] p-4 rounded-xl border-2 ${
-                selectedShipping === "express"
-                  ? "border-primary"
-                  : "border-gray-100 dark:border-gray-800"
-              } shadow-sm`}
-              activeOpacity={0.8}
-            >
-              <MaterialIcons
-                name={selectedShipping === "express" ? "radio-button-checked" : "radio-button-unchecked"}
-                size={24}
-                color={selectedShipping === "express" ? colors.primary : "#9ca3af"}
-              />
-              <View className="flex-1">
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-base font-medium text-slate-900 dark:text-white">
-                    Express Éco
-                  </Text>
-                  <Text className="font-bold text-slate-900 dark:text-white">
-                    €15.00
+            <PressableScale onPress={() => setSelectedShipping("express")}>
+              <View
+                className={`flex-row items-center gap-4 bg-white dark:bg-[#1c3024] p-4 rounded-xl border-2 ${
+                  selectedShipping === "express"
+                    ? "border-primary"
+                    : "border-gray-100 dark:border-gray-800"
+                } shadow-sm`}
+              >
+                <MaterialIcons
+                  name={selectedShipping === "express" ? "radio-button-checked" : "radio-button-unchecked"}
+                  size={24}
+                  color={selectedShipping === "express" ? colors.primary : "#9ca3af"}
+                />
+                <View className="flex-1">
+                  <View className="flex-row justify-between items-center">
+                    <Text className="text-base font-medium text-slate-900 dark:text-white">
+                      Express Éco
+                    </Text>
+                    <Text className="font-bold text-slate-900 dark:text-white">
+                      €15.00
+                    </Text>
+                  </View>
+                  <Text className="text-sm text-gray-500 dark:text-gray-400">
+                    1-2 jours ouvrés • Neutre en carbone
                   </Text>
                 </View>
-                <Text className="text-sm text-gray-500 dark:text-gray-400">
-                  1-2 jours ouvrés • Neutre en carbone
-                </Text>
               </View>
-            </TouchableOpacity>
+            </PressableScale>
           </View>
         </Animated.View>
 
@@ -224,42 +229,50 @@ export default function CheckoutScreen() {
             <View className="bg-white dark:bg-[#1c3024] p-4 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
               {/* Tab Switcher */}
               <View className="flex-row p-1 bg-gray-100 dark:bg-white/5 rounded-lg mb-4">
-                <TouchableOpacity
+                <PressableScale
                   onPress={() => setPaymentTab("card")}
-                  className={`flex-1 py-1.5 rounded-md items-center ${
-                    paymentTab === "card"
-                      ? "bg-white dark:bg-gray-700 shadow-sm"
-                      : ""
-                  }`}
+                  style={{ flex: 1 }}
                 >
-                  <Text
-                    className={`text-sm font-medium ${
+                  <View
+                    className={`py-1.5 rounded-md items-center ${
                       paymentTab === "card"
-                        ? "text-slate-900 dark:text-white"
-                        : "text-gray-500 dark:text-gray-400"
+                        ? "bg-white dark:bg-gray-700 shadow-sm"
+                        : ""
                     }`}
                   >
-                    Carte
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
+                    <Text
+                      className={`text-sm font-medium ${
+                        paymentTab === "card"
+                          ? "text-slate-900 dark:text-white"
+                          : "text-gray-500 dark:text-gray-400"
+                      }`}
+                    >
+                      Carte
+                    </Text>
+                  </View>
+                </PressableScale>
+                <PressableScale
                   onPress={() => setPaymentTab("apple")}
-                  className={`flex-1 py-1.5 rounded-md items-center ${
-                    paymentTab === "apple"
-                      ? "bg-white dark:bg-gray-700 shadow-sm"
-                      : ""
-                  }`}
+                  style={{ flex: 1 }}
                 >
-                  <Text
-                    className={`text-sm font-medium ${
+                  <View
+                    className={`py-1.5 rounded-md items-center ${
                       paymentTab === "apple"
-                        ? "text-slate-900 dark:text-white"
-                        : "text-gray-500 dark:text-gray-400"
+                        ? "bg-white dark:bg-gray-700 shadow-sm"
+                        : ""
                     }`}
                   >
-                    Apple Pay
-                  </Text>
-                </TouchableOpacity>
+                    <Text
+                      className={`text-sm font-medium ${
+                        paymentTab === "apple"
+                          ? "text-slate-900 dark:text-white"
+                          : "text-gray-500 dark:text-gray-400"
+                      }`}
+                    >
+                      Apple Pay
+                    </Text>
+                  </View>
+                </PressableScale>
               </View>
 
               {/* Card Details */}
@@ -307,12 +320,14 @@ export default function CheckoutScreen() {
               )}
 
               {paymentTab === "apple" && (
-                <TouchableOpacity className="bg-black py-3.5 rounded-lg flex-row items-center justify-center gap-2">
-                  <MaterialIcons name="apple" size={24} color="#ffffff" />
-                  <Text className="text-white font-semibold">
-                    Payer avec Apple Pay
-                  </Text>
-                </TouchableOpacity>
+                <PressableScale>
+                  <View className="bg-black py-3.5 rounded-lg flex-row items-center justify-center gap-2">
+                    <MaterialIcons name="apple" size={24} color="#ffffff" />
+                    <Text className="text-white font-semibold">
+                      Payer avec Apple Pay
+                    </Text>
+                  </View>
+                </PressableScale>
               )}
             </View>
           </View>
@@ -444,10 +459,8 @@ export default function CheckoutScreen() {
           </View>
         </View>
 
-        <TouchableOpacity
+        <PressableScale
           onPress={handlePlaceOrder}
-          className="w-full bg-primary py-3.5 rounded-xl flex-row items-center justify-center gap-2 shadow-lg"
-          activeOpacity={0.9}
           style={{
             shadowColor: colors.primary,
             shadowOffset: { width: 0, height: 4 },
@@ -455,11 +468,13 @@ export default function CheckoutScreen() {
             shadowRadius: 8,
           }}
         >
-          <Text className="font-bold text-base text-[#0d1b12]">
-            Passer la commande
-          </Text>
-          <MaterialIcons name="arrow-forward" size={18} color="#0d1b12" />
-        </TouchableOpacity>
+          <View className="w-full bg-primary py-3.5 rounded-xl flex-row items-center justify-center gap-2 shadow-lg">
+            <Text className="font-bold text-base text-[#0d1b12]">
+              Passer la commande
+            </Text>
+            <MaterialIcons name="arrow-forward" size={18} color="#0d1b12" />
+          </View>
+        </PressableScale>
       </Animated.View>
     </View>
   );

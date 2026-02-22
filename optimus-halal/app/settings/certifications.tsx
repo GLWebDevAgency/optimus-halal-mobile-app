@@ -7,7 +7,6 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
   ScrollView,
   Switch,
   Modal,
@@ -17,6 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { usePreferencesStore } from "@/store";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
@@ -188,43 +188,49 @@ export default function CertificationsScreen() {
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <TouchableOpacity
+          <PressableScale
             onPress={() => router.back()}
-            style={{
-              height: 44,
-              width: 44,
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: 22,
-              backgroundColor: isDark ? "rgba(255,255,255,0.05)" : colors.card,
-            }}
             accessibilityRole="button"
             accessibilityLabel="Retour"
             accessibilityHint="Revenir à l'écran précédent"
           >
-            <MaterialIcons name="arrow-back" size={22} color={colors.textPrimary} />
-          </TouchableOpacity>
+            <View
+              style={{
+                height: 44,
+                width: 44,
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 22,
+                backgroundColor: isDark ? "rgba(255,255,255,0.05)" : colors.card,
+              }}
+            >
+              <MaterialIcons name="arrow-back" size={22} color={colors.textPrimary} />
+            </View>
+          </PressableScale>
           <Text
             style={{ fontSize: 18, fontWeight: "700", color: colors.textPrimary, flex: 1, textAlign: "center" }}
             accessibilityRole="header"
           >
             {t.certifications.title}
           </Text>
-          <TouchableOpacity
-            style={{
-              height: 44,
-              width: 44,
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: 22,
-              backgroundColor: isDark ? "rgba(255,255,255,0.05)" : colors.card,
-            }}
+          <PressableScale
             accessibilityRole="button"
             accessibilityLabel="Aide"
             accessibilityHint="Afficher l'aide sur les certifications"
           >
-            <MaterialIcons name="help-outline" size={22} color={colors.primary} />
-          </TouchableOpacity>
+            <View
+              style={{
+                height: 44,
+                width: 44,
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 22,
+                backgroundColor: isDark ? "rgba(255,255,255,0.05)" : colors.card,
+              }}
+            >
+              <MaterialIcons name="help-outline" size={22} color={colors.primary} />
+            </View>
+          </PressableScale>
         </View>
       </Animated.View>
 
@@ -367,28 +373,29 @@ export default function CertificationsScreen() {
                           </Text>
                         </View>
                       )}
-                      <TouchableOpacity
+                      <PressableScale
                         onPress={() => openDetails(cert)}
-                        style={{ flexDirection: "row", alignItems: "center", gap: 2 }}
                         accessibilityRole="button"
                         accessibilityLabel={`Détails de ${cert.name}`}
                         accessibilityHint="Afficher les détails de cette certification"
                       >
-                        <Text
-                          style={{
-                            fontSize: 12,
-                            fontWeight: "600",
-                            color: isEnabled ? colors.primary : colors.textSecondary,
-                          }}
-                        >
-                          Détails
-                        </Text>
-                        <MaterialIcons
-                          name="chevron-right"
-                          size={14}
-                          color={isEnabled ? colors.primary : colors.textSecondary}
-                        />
-                      </TouchableOpacity>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+                          <Text
+                            style={{
+                              fontSize: 12,
+                              fontWeight: "600",
+                              color: isEnabled ? colors.primary : colors.textSecondary,
+                            }}
+                          >
+                            Détails
+                          </Text>
+                          <MaterialIcons
+                            name="chevron-right"
+                            size={14}
+                            color={isEnabled ? colors.primary : colors.textSecondary}
+                          />
+                        </View>
+                      </PressableScale>
                     </View>
                   </View>
                 </View>
@@ -682,39 +689,42 @@ export default function CertificationsScreen() {
                 )}
 
                 {/* Toggle Button */}
-                <TouchableOpacity
+                <PressableScale
                   onPress={() => {
                     handleToggle(selectedCert.id);
                     setShowDetails(false);
                   }}
-                  style={{
-                    marginTop: 32,
-                    backgroundColor: isCertEnabled(selectedCert.id) ? colors.buttonSecondary : colors.primary,
-                    paddingVertical: 16,
-                    borderRadius: 12,
-                    alignItems: "center",
-                    flexDirection: "row",
-                    justifyContent: "center",
-                    gap: 8,
-                  }}
                   accessibilityRole="button"
                   accessibilityLabel={isCertEnabled(selectedCert.id) ? `Retirer ${selectedCert.name} des préférences` : `Ajouter ${selectedCert.name} aux préférences`}
                 >
-                  <MaterialIcons
-                    name={isCertEnabled(selectedCert.id) ? "remove-circle-outline" : "add-circle-outline"}
-                    size={20}
-                    color={isCertEnabled(selectedCert.id) ? colors.textPrimary : (isDark ? "#102217" : "#0d1b13")}
-                  />
-                  <Text
+                  <View
                     style={{
-                      fontSize: 16,
-                      fontWeight: "700",
-                      color: isCertEnabled(selectedCert.id) ? colors.textPrimary : (isDark ? "#102217" : "#0d1b13"),
+                      marginTop: 32,
+                      backgroundColor: isCertEnabled(selectedCert.id) ? colors.buttonSecondary : colors.primary,
+                      paddingVertical: 16,
+                      borderRadius: 12,
+                      alignItems: "center",
+                      flexDirection: "row",
+                      justifyContent: "center",
+                      gap: 8,
                     }}
                   >
-                    {isCertEnabled(selectedCert.id) ? "Retirer des préférences" : "Ajouter aux préférences"}
-                  </Text>
-                </TouchableOpacity>
+                    <MaterialIcons
+                      name={isCertEnabled(selectedCert.id) ? "remove-circle-outline" : "add-circle-outline"}
+                      size={20}
+                      color={isCertEnabled(selectedCert.id) ? colors.textPrimary : (isDark ? "#102217" : "#0d1b13")}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "700",
+                        color: isCertEnabled(selectedCert.id) ? colors.textPrimary : (isDark ? "#102217" : "#0d1b13"),
+                      }}
+                    >
+                      {isCertEnabled(selectedCert.id) ? "Retirer des préférences" : "Ajouter aux préférences"}
+                    </Text>
+                  </View>
+                </PressableScale>
               </ScrollView>
             )}
           </Pressable>

@@ -8,9 +8,10 @@ import React from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   ScrollView,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -61,16 +62,20 @@ export default function AppearanceScreen() {
         className="px-5 pt-4 pb-4"
       >
         <View className="flex-row items-center gap-3">
-          <TouchableOpacity
+          <Pressable
             onPress={() => router.back()}
-            className="h-10 w-10 items-center justify-center rounded-full"
-            style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }}
             accessibilityRole="button"
             accessibilityLabel={t.common.back}
             accessibilityHint={t.common.back}
+            hitSlop={8}
           >
-            <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
-          </TouchableOpacity>
+            <View
+              className="h-10 w-10 items-center justify-center rounded-full"
+              style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }}
+            >
+              <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
+            </View>
+          </Pressable>
           <Text
             style={{ color: colors.textPrimary }}
             className="text-xl font-bold tracking-tight"
@@ -128,60 +133,62 @@ export default function AppearanceScreen() {
             const isLast = index === THEME_OPTIONS.length - 1;
 
             return (
-              <TouchableOpacity
+              <PressableScale
                 key={option.id}
                 onPress={() => handleSelectTheme(option.id)}
-                className={`flex-row items-center p-4 ${!isLast ? "border-b" : ""}`}
-                style={{ borderColor: colors.borderLight }}
-                activeOpacity={0.7}
                 accessibilityRole="radio"
                 accessibilityLabel={themeLabels[option.labelKey].label}
                 accessibilityHint={themeLabels[option.labelKey].desc}
                 accessibilityState={{ selected: isSelected }}
               >
-                {/* Icon */}
-                <View 
-                  className="w-12 h-12 rounded-xl items-center justify-center mr-4"
-                  style={{ 
-                    backgroundColor: isSelected ? colors.primaryLight : colors.buttonSecondary,
-                  }}
+                <View
+                  className={`flex-row items-center p-4 ${!isLast ? "border-b" : ""}`}
+                  style={{ borderColor: colors.borderLight }}
                 >
-                  <MaterialIcons 
-                    name={option.icon} 
-                    size={24} 
-                    color={isSelected ? colors.primary : colors.textSecondary} 
-                  />
-                </View>
-
-                {/* Text Content */}
-                <View className="flex-1">
-                  <Text
-                    className="font-semibold text-base mb-0.5"
-                    style={{ color: isSelected ? colors.primary : colors.textPrimary }}
+                  {/* Icon */}
+                  <View
+                    className="w-12 h-12 rounded-xl items-center justify-center mr-4"
+                    style={{
+                      backgroundColor: isSelected ? colors.primaryLight : colors.buttonSecondary,
+                    }}
                   >
-                    {themeLabels[option.labelKey].label}
-                  </Text>
-                  <Text
-                    className="text-xs"
-                    style={{ color: colors.textSecondary }}
-                  >
-                    {themeLabels[option.labelKey].desc}
-                  </Text>
-                </View>
+                    <MaterialIcons
+                      name={option.icon}
+                      size={24}
+                      color={isSelected ? colors.primary : colors.textSecondary}
+                    />
+                  </View>
 
-                {/* Selection Indicator */}
-                <View 
-                  className="w-6 h-6 rounded-full items-center justify-center border-2"
-                  style={{ 
-                    borderColor: isSelected ? colors.primary : colors.borderLight,
-                    backgroundColor: isSelected ? colors.primary : "transparent",
-                  }}
-                >
-                  {isSelected && (
-                    <MaterialIcons name="check" size={16} color="#ffffff" />
-                  )}
+                  {/* Text Content */}
+                  <View className="flex-1">
+                    <Text
+                      className="font-semibold text-base mb-0.5"
+                      style={{ color: isSelected ? colors.primary : colors.textPrimary }}
+                    >
+                      {themeLabels[option.labelKey].label}
+                    </Text>
+                    <Text
+                      className="text-xs"
+                      style={{ color: colors.textSecondary }}
+                    >
+                      {themeLabels[option.labelKey].desc}
+                    </Text>
+                  </View>
+
+                  {/* Selection Indicator */}
+                  <View
+                    className="w-6 h-6 rounded-full items-center justify-center border-2"
+                    style={{
+                      borderColor: isSelected ? colors.primary : colors.borderLight,
+                      backgroundColor: isSelected ? colors.primary : "transparent",
+                    }}
+                  >
+                    {isSelected && (
+                      <MaterialIcons name="check" size={16} color="#ffffff" />
+                    )}
+                  </View>
                 </View>
-              </TouchableOpacity>
+              </PressableScale>
             );
           })}
         </Animated.View>

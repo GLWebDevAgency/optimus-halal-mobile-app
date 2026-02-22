@@ -7,7 +7,6 @@ import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
   ScrollView,
   Switch,
   StatusBar,
@@ -17,6 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { trpc } from "@/lib/trpc";
@@ -332,35 +332,37 @@ export default function NotificationsScreen() {
     const isSelected = frequency === option.id;
 
     return (
-      <TouchableOpacity
+      <PressableScale
         key={option.id}
         onPress={() => setFrequency(option.id)}
-        activeOpacity={0.7}
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: 16,
-          borderBottomWidth: isLast ? 0 : 1,
-          borderBottomColor: themeColors.cardBorder,
-        }}
         accessibilityRole="radio"
         accessibilityLabel={(t.notifications as any)[option.nameKey]}
         accessibilityState={{ selected: isSelected }}
       >
-        <Text
+        <View
           style={{
-            fontSize: 14,
-            fontWeight: "500",
-            color: isSelected ? themeColors.textPrimary : themeColors.textSecondary,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: 16,
+            borderBottomWidth: isLast ? 0 : 1,
+            borderBottomColor: themeColors.cardBorder,
           }}
         >
-          {(t.notifications as any)[option.nameKey]}
-        </Text>
-        {isSelected && (
-          <MaterialIcons name="check" size={20} color={themeColors.primary} />
-        )}
-      </TouchableOpacity>
+          <Text
+            style={{
+              fontSize: 14,
+              fontWeight: "500",
+              color: isSelected ? themeColors.textPrimary : themeColors.textSecondary,
+            }}
+          >
+            {(t.notifications as any)[option.nameKey]}
+          </Text>
+          {isSelected && (
+            <MaterialIcons name="check" size={20} color={themeColors.primary} />
+          )}
+        </View>
+      </PressableScale>
     );
   };
 
@@ -390,23 +392,25 @@ export default function NotificationsScreen() {
         }}
       >
         {/* Back Button */}
-        <TouchableOpacity
+        <PressableScale
           onPress={() => router.back()}
-          activeOpacity={0.7}
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: themeColors.card,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
           accessibilityRole="button"
           accessibilityLabel={t.common.back}
           accessibilityHint={t.editProfile.backHint}
         >
-          <MaterialIcons name="arrow-back" size={22} color={themeColors.textPrimary} />
-        </TouchableOpacity>
+          <View
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: themeColors.card,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <MaterialIcons name="arrow-back" size={22} color={themeColors.textPrimary} />
+          </View>
+        </PressableScale>
 
         {/* Title Section */}
         <View style={{ flex: 1, marginLeft: 16 }}>
@@ -433,22 +437,24 @@ export default function NotificationsScreen() {
         </View>
 
         {/* More Options Button */}
-        <TouchableOpacity
-          activeOpacity={0.7}
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: themeColors.card,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+        <PressableScale
           accessibilityRole="button"
           accessibilityLabel={t.notifications.moreOptions}
           accessibilityHint={t.notifications.moreOptionsHint}
         >
-          <MaterialIcons name="more-vert" size={22} color={themeColors.textSecondary} />
-        </TouchableOpacity>
+          <View
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: themeColors.card,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <MaterialIcons name="more-vert" size={22} color={themeColors.textSecondary} />
+          </View>
+        </PressableScale>
       </Animated.View>
 
       <ScrollView

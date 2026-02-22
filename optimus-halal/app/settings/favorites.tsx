@@ -7,7 +7,7 @@ import React, { useState, useMemo, useCallback } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   ScrollView,
   Dimensions,
   ActivityIndicator,
@@ -19,6 +19,7 @@ import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useFavoritesList, useRemoveFavorite } from "@/hooks/useFavorites";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 
@@ -164,7 +165,7 @@ const ProductCard = React.memo(function ProductCard({ product, index, onRemove, 
       }}
     >
       {/* Favorite Button */}
-      <TouchableOpacity
+      <Pressable
         onPress={onRemove}
         style={{
           position: "absolute",
@@ -182,7 +183,7 @@ const ProductCard = React.memo(function ProductCard({ product, index, onRemove, 
         accessibilityLabel={`${t.favorites.removeConfirm} ${product.name}`}
       >
         <MaterialIcons name="favorite" size={18} color={colors.primary} />
-      </TouchableOpacity>
+      </Pressable>
 
       {/* Product Image */}
       <View
@@ -240,7 +241,7 @@ const ProductCard = React.memo(function ProductCard({ product, index, onRemove, 
 
         {/* Action Buttons */}
         <View style={{ flexDirection: "row", gap: 8 }}>
-          <TouchableOpacity
+          <PressableScale
             onPress={onView}
             style={{
               flex: 1,
@@ -252,11 +253,10 @@ const ProductCard = React.memo(function ProductCard({ product, index, onRemove, 
             }}
             accessibilityRole="button"
             accessibilityLabel={`Voir ${product.name}`}
-            accessibilityHint="Afficher les détails du produit"
           >
             <MaterialIcons name="visibility" size={18} color={colors.textPrimary} />
-          </TouchableOpacity>
-          <TouchableOpacity
+          </PressableScale>
+          <PressableScale
             onPress={onScan}
             style={{
               flex: 1,
@@ -268,10 +268,9 @@ const ProductCard = React.memo(function ProductCard({ product, index, onRemove, 
             }}
             accessibilityRole="button"
             accessibilityLabel={`Re-scanner ${product.name}`}
-            accessibilityHint="Ouvrir le scanner"
           >
             <MaterialIcons name="qr-code-scanner" size={18} color={colors.primary} />
-          </TouchableOpacity>
+          </PressableScale>
         </View>
       </View>
     </Animated.View>
@@ -326,7 +325,7 @@ export default function FavoritesScreen() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
         <View style={{ paddingHorizontal: 20, paddingTop: 16, flexDirection: "row", alignItems: "center" }}>
-          <TouchableOpacity
+          <PressableScale
             onPress={() => router.back()}
             style={{
               marginRight: 12,
@@ -343,7 +342,7 @@ export default function FavoritesScreen() {
             accessibilityLabel={t.common.back}
           >
             <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
-          </TouchableOpacity>
+          </PressableScale>
           <Text style={{ fontSize: 24, fontWeight: "700", color: colors.textPrimary }}>
             {t.favorites.title}
           </Text>
@@ -363,7 +362,7 @@ export default function FavoritesScreen() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
         <View style={{ paddingHorizontal: 20, paddingTop: 16, flexDirection: "row", alignItems: "center" }}>
-          <TouchableOpacity
+          <PressableScale
             onPress={() => router.back()}
             style={{
               marginRight: 12,
@@ -380,7 +379,7 @@ export default function FavoritesScreen() {
             accessibilityLabel={t.common.back}
           >
             <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
-          </TouchableOpacity>
+          </PressableScale>
           <Text style={{ fontSize: 24, fontWeight: "700", color: colors.textPrimary }}>
             {t.favorites.title}
           </Text>
@@ -390,7 +389,7 @@ export default function FavoritesScreen() {
           <Text style={{ color: colors.textSecondary, fontSize: 16, marginTop: 16, textAlign: "center" }}>
             {t.favorites.loadError}
           </Text>
-          <TouchableOpacity
+          <PressableScale
             onPress={() => refetch()}
             style={{
               marginTop: 20,
@@ -405,7 +404,7 @@ export default function FavoritesScreen() {
             <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
               {t.common.retry}
             </Text>
-          </TouchableOpacity>
+          </PressableScale>
         </View>
       </SafeAreaView>
     );
@@ -420,7 +419,7 @@ export default function FavoritesScreen() {
       >
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <TouchableOpacity
+            <PressableScale
               onPress={() => router.back()}
               style={{
                 marginRight: 12,
@@ -435,10 +434,9 @@ export default function FavoritesScreen() {
               }}
               accessibilityRole="button"
               accessibilityLabel={t.common.back}
-              accessibilityHint={t.common.back}
             >
               <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
-            </TouchableOpacity>
+            </PressableScale>
             <View>
               <Text
                 style={{ fontSize: 24, fontWeight: "700", letterSpacing: -0.5, color: colors.textPrimary }}
@@ -452,7 +450,7 @@ export default function FavoritesScreen() {
             </View>
           </View>
           <View style={{ flexDirection: "row", gap: 8 }}>
-            <TouchableOpacity
+            <Pressable
               style={{
                 height: 40,
                 width: 40,
@@ -465,11 +463,10 @@ export default function FavoritesScreen() {
               }}
               accessibilityRole="button"
               accessibilityLabel={t.common.search}
-              accessibilityHint={t.common.search}
             >
               <MaterialIcons name="search" size={22} color={colors.textPrimary} />
-            </TouchableOpacity>
-            <TouchableOpacity
+            </Pressable>
+            <Pressable
               style={{
                 height: 40,
                 width: 40,
@@ -482,10 +479,9 @@ export default function FavoritesScreen() {
               }}
               accessibilityRole="button"
               accessibilityLabel="Filtrer"
-              accessibilityHint="Filtrer les favoris"
             >
               <MaterialIcons name="filter-list" size={22} color={colors.textPrimary} />
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
       </Animated.View>
@@ -501,7 +497,7 @@ export default function FavoritesScreen() {
           {getCategories(t).map((cat) => {
             const isSelected = selectedCategory === cat.id;
             return (
-              <TouchableOpacity
+              <PressableScale
                 key={cat.id}
                 onPress={() => setSelectedCategory(cat.id)}
                 style={{
@@ -518,7 +514,6 @@ export default function FavoritesScreen() {
                 }}
                 accessibilityRole="button"
                 accessibilityLabel={`Filtre ${cat.label}`}
-                accessibilityState={{ selected: isSelected }}
               >
                 <Text
                   style={{
@@ -529,7 +524,7 @@ export default function FavoritesScreen() {
                 >
                   {cat.label}
                 </Text>
-              </TouchableOpacity>
+              </PressableScale>
             );
           })}
         </ScrollView>
@@ -545,7 +540,7 @@ export default function FavoritesScreen() {
           <Text style={{ color: colors.textMuted, fontSize: 14, marginTop: 8, textAlign: "center", paddingHorizontal: 32 }}>
             {t.favorites.emptyHint}
           </Text>
-          <TouchableOpacity
+          <PressableScale
             onPress={() => router.navigate("/(tabs)/scanner")}
             style={{
               marginTop: 24,
@@ -563,13 +558,12 @@ export default function FavoritesScreen() {
             }}
             accessibilityRole="button"
             accessibilityLabel={t.favorites.scanProduct}
-            accessibilityHint={t.favorites.scanProduct}
           >
             <MaterialIcons name="qr-code-scanner" size={18} color={isDark ? "#102217" : "#0d1b13"} />
             <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
               {t.favorites.scanProduct}
             </Text>
-          </TouchableOpacity>
+          </PressableScale>
         </View>
       ) : (
         <FlashList
@@ -625,7 +619,7 @@ export default function FavoritesScreen() {
               <Text style={{ marginTop: 4, fontSize: 12, color: colors.textSecondary, textAlign: "center" }}>
                 {t.favorites.incompleteListHint}
               </Text>
-              <TouchableOpacity
+              <PressableScale
                 onPress={() => router.navigate("/(tabs)/scanner")}
                 style={{
                   marginTop: 16,
@@ -643,13 +637,12 @@ export default function FavoritesScreen() {
                 }}
                 accessibilityRole="button"
                 accessibilityLabel={t.favorites.scanProduct}
-                accessibilityHint={t.favorites.scanProduct}
               >
                 <MaterialIcons name="qr-code-scanner" size={18} color={isDark ? "#102217" : "#0d1b13"} />
                 <Text style={{ fontSize: 12, fontWeight: "700", color: isDark ? "#102217" : "#0d1b13" }}>
                   {t.favorites.scanProduct}
                 </Text>
-              </TouchableOpacity>
+              </PressableScale>
             </Animated.View>
           }
         />

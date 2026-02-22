@@ -1,7 +1,8 @@
 import React, { useCallback } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { Image } from "expo-image";
 import { MaterialIcons } from "@expo/vector-icons";
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   StoreFeatureProperties,
@@ -32,30 +33,50 @@ export const StoreCard = React.memo(function StoreCard({
   const certLabel = store.certifier !== "none" ? store.certifier.toUpperCase() : null;
   const handlePress = useCallback(() => onPressId(store.id), [onPressId, store.id]);
 
+  // Press scale animation — subtle 0.97 scale for tactile feedback
+  const pressed = useSharedValue(1);
+  const scaleStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pressed.value }],
+  }));
+
+  const handlePressIn = useCallback(() => {
+    pressed.value = withSpring(0.97, { damping: 15, stiffness: 300 });
+  }, [pressed]);
+
+  const handlePressOut = useCallback(() => {
+    pressed.value = withSpring(1, { damping: 12, stiffness: 200 });
+  }, [pressed]);
+
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={handlePress}
-      activeOpacity={0.9}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
       accessibilityRole="button"
       accessibilityLabel={`${store.name}, ${store.city}, ${formatDistance(store.distance)}`}
-      style={{
-        width: CARD_WIDTH,
-        shadowColor: isSelected ? colors.primary : "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: isSelected ? 0.3 : 0.15,
-        shadowRadius: 8,
-        elevation: 4,
-      }}
     >
-      <View
-        className="rounded-xl p-3"
-        style={{
-          backgroundColor: colors.card,
-          borderWidth: 1,
-          borderColor: isSelected ? colors.primary : colors.cardBorder,
-          overflow: "hidden",
-        }}
+      <Animated.View
+        style={[
+          scaleStyle,
+          {
+            width: CARD_WIDTH,
+            shadowColor: isSelected ? colors.primary : "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: isSelected ? 0.3 : 0.15,
+            shadowRadius: 8,
+            elevation: 4,
+          },
+        ]}
       >
+        <View
+          className="rounded-xl p-3"
+          style={{
+            backgroundColor: colors.card,
+            borderWidth: 1,
+            borderColor: isSelected ? colors.primary : colors.cardBorder,
+            overflow: "hidden",
+          }}
+        >
         <View className="flex-row gap-3">
           {/* Image */}
           <View
@@ -125,6 +146,7 @@ export const StoreCard = React.memo(function StoreCard({
           </View>
         </View>
       </View>
-    </TouchableOpacity>
+      </Animated.View>
+    </Pressable>
   );
 });

@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useCallback } from "react";
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, Pressable, ActivityIndicator } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, {
   FadeIn,
@@ -17,6 +17,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { storeTypeColors } from "@/theme/colors";
 import type { SearchResult } from "@/hooks";
 import { STORE_TYPE_ICON, type ThemeColors } from "./types";
+import { PressableScale } from "../ui/PressableScale";
 
 interface FilterConfig {
   id: string;
@@ -171,9 +172,9 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
                 {isSearchActive ? (
                   <ActivityIndicator size="small" color={colors.primary} />
                 ) : (
-                  <TouchableOpacity onPress={onClearSearch} hitSlop={8}>
+                  <Pressable onPress={onClearSearch} hitSlop={8}>
                     <MaterialIcons name="close" size={16} color={colors.textMuted} />
-                  </TouchableOpacity>
+                  </Pressable>
                 )}
               </Animated.View>
             )}
@@ -203,39 +204,42 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
                 {groupedStores.map((r) => {
                   const typeColor = storeTypeColors[r.storeType as keyof typeof storeTypeColors]?.base ?? colors.primary;
                   return (
-                    <TouchableOpacity
+                    <PressableScale
                       key={r.id}
                       onPress={() => handleResultPress(r)}
-                      className="flex-row items-center px-4 py-3"
-                      style={{ borderBottomWidth: 1, borderBottomColor: colors.borderLight }}
                     >
                       <View
-                        className="w-8 h-8 rounded-lg items-center justify-center"
-                        style={{ backgroundColor: `${typeColor}18` }}
+                        className="flex-row items-center px-4 py-3"
+                        style={{ borderBottomWidth: 1, borderBottomColor: colors.borderLight }}
                       >
-                        <MaterialIcons
-                          name={STORE_TYPE_ICON[r.storeType] ?? "store"}
-                          size={16}
-                          color={typeColor}
-                        />
-                      </View>
-                      <View className="flex-1 ml-3">
-                        <Text className="text-sm font-semibold" style={{ color: colors.textPrimary }} numberOfLines={1}>
-                          {r.name}
-                        </Text>
-                        <Text className="text-xs" style={{ color: colors.textMuted }} numberOfLines={1}>
-                          {r.city}{r.halalCertified ? " · Halal certifié" : ""}
-                        </Text>
-                      </View>
-                      {r.averageRating > 0 && (
-                        <View className="flex-row items-center gap-0.5 ml-2">
-                          <MaterialIcons name="star" size={12} color="#fbbf24" />
-                          <Text className="text-xs font-bold" style={{ color: colors.textPrimary }}>
-                            {r.averageRating.toFixed(1)}
+                        <View
+                          className="w-8 h-8 rounded-lg items-center justify-center"
+                          style={{ backgroundColor: `${typeColor}18` }}
+                        >
+                          <MaterialIcons
+                            name={STORE_TYPE_ICON[r.storeType] ?? "store"}
+                            size={16}
+                            color={typeColor}
+                          />
+                        </View>
+                        <View className="flex-1 ml-3">
+                          <Text className="text-sm font-semibold" style={{ color: colors.textPrimary }} numberOfLines={1}>
+                            {r.name}
+                          </Text>
+                          <Text className="text-xs" style={{ color: colors.textMuted }} numberOfLines={1}>
+                            {r.city}{r.halalCertified ? " · Halal certifié" : ""}
                           </Text>
                         </View>
-                      )}
-                    </TouchableOpacity>
+                        {r.averageRating > 0 && (
+                          <View className="flex-row items-center gap-0.5 ml-2">
+                            <MaterialIcons name="star" size={12} color="#fbbf24" />
+                            <Text className="text-xs font-bold" style={{ color: colors.textPrimary }}>
+                              {r.averageRating.toFixed(1)}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    </PressableScale>
                   );
                 })}
               </>
@@ -249,25 +253,28 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
                   </Text>
                 </View>
                 {groupedAddresses.map((r, i) => (
-                    <TouchableOpacity
+                    <PressableScale
                       key={r.banId}
                       onPress={() => handleResultPress(r)}
-                      className="flex-row items-center px-4 py-3"
-                      style={{
-                        borderBottomWidth: i < groupedAddresses.length - 1 ? 1 : 0,
-                        borderBottomColor: colors.borderLight,
-                      }}
                     >
-                      <MaterialIcons name="place" size={18} color={colors.textMuted} />
-                      <View className="flex-1 ml-3">
-                        <Text className="text-sm" style={{ color: colors.textPrimary }} numberOfLines={1}>
-                          {r.label}
-                        </Text>
-                        <Text className="text-xs" style={{ color: colors.textMuted }}>
-                          {r.postcode} {r.city}
-                        </Text>
+                      <View
+                        className="flex-row items-center px-4 py-3"
+                        style={{
+                          borderBottomWidth: i < groupedAddresses.length - 1 ? 1 : 0,
+                          borderBottomColor: colors.borderLight,
+                        }}
+                      >
+                        <MaterialIcons name="place" size={18} color={colors.textMuted} />
+                        <View className="flex-1 ml-3">
+                          <Text className="text-sm" style={{ color: colors.textPrimary }} numberOfLines={1}>
+                            {r.label}
+                          </Text>
+                          <Text className="text-xs" style={{ color: colors.textMuted }}>
+                            {r.postcode} {r.city}
+                          </Text>
+                        </View>
                       </View>
-                    </TouchableOpacity>
+                    </PressableScale>
                 ))}
               </>
             )}
@@ -285,47 +292,49 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
             const isActive = activeFilters.includes(filter.id);
             const filterLabel = t.filters[filter.filterKey];
             return (
-              <TouchableOpacity
+              <PressableScale
                 key={filter.id}
                 onPress={() => onToggleFilter(filter.id)}
-                className="h-7 flex-row items-center gap-1 px-3 rounded-full"
-                style={{
-                  backgroundColor: isActive
-                    ? colors.primary
-                    : isDark
-                      ? "rgba(30,41,59,0.8)"
-                      : "rgba(255,255,255,0.9)",
-                  borderWidth: isActive ? 0 : 1,
-                  borderColor: colors.border,
-                }}
-                activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel={`${filterLabel}${isActive ? `, ${t.selected}` : ""}`}
               >
-                {'storeType' in filter && filter.storeType ? (
-                  <View
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: 3,
-                      backgroundColor: isActive ? "#ffffff" : (storeTypeColors[filter.storeType as keyof typeof storeTypeColors]?.base ?? colors.textMuted),
-                    }}
-                  />
-                ) : 'openNow' in filter ? (
-                  <MaterialIcons name="schedule" size={12} color={isActive ? "#ffffff" : "#22c55e"} />
-                ) : 'minRating' in filter ? (
-                  <MaterialIcons name="star" size={12} color={isActive ? "#ffffff" : "#fbbf24"} />
-                ) : null}
-                <Text
-                  className={`text-xs ${isActive ? "font-semibold" : "font-medium"}`}
-                  style={{ color: isActive ? "#ffffff" : colors.textPrimary }}
+                <View
+                  className="h-7 flex-row items-center gap-1 px-3 rounded-full"
+                  style={{
+                    backgroundColor: isActive
+                      ? colors.primary
+                      : isDark
+                        ? "rgba(30,41,59,0.8)"
+                        : "rgba(255,255,255,0.9)",
+                    borderWidth: isActive ? 0 : 1,
+                    borderColor: colors.border,
+                  }}
                 >
-                  {filterLabel}
-                </Text>
-                {isActive && (
-                  <MaterialIcons name="close" size={12} color="#ffffff" />
-                )}
-              </TouchableOpacity>
+                  {'storeType' in filter && filter.storeType ? (
+                    <View
+                      style={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: 3,
+                        backgroundColor: isActive ? "#ffffff" : (storeTypeColors[filter.storeType as keyof typeof storeTypeColors]?.base ?? colors.textMuted),
+                      }}
+                    />
+                  ) : 'openNow' in filter ? (
+                    <MaterialIcons name="schedule" size={12} color={isActive ? "#ffffff" : "#22c55e"} />
+                  ) : 'minRating' in filter ? (
+                    <MaterialIcons name="star" size={12} color={isActive ? "#ffffff" : "#fbbf24"} />
+                  ) : null}
+                  <Text
+                    className={`text-xs ${isActive ? "font-semibold" : "font-medium"}`}
+                    style={{ color: isActive ? "#ffffff" : colors.textPrimary }}
+                  >
+                    {filterLabel}
+                  </Text>
+                  {isActive && (
+                    <MaterialIcons name="close" size={12} color="#ffffff" />
+                  )}
+                </View>
+              </PressableScale>
             );
           })}
         </Animated.ScrollView>

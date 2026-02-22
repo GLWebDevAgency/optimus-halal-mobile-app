@@ -12,7 +12,6 @@ import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -30,6 +29,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { Input, IconButton, Button } from "@/components/ui";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { useLocalAuthStore } from "@/store";
 import { useTranslation, useHaptics, useTheme } from "@/hooks";
 import {
@@ -260,37 +260,36 @@ export default function MagicLinkLoginScreen() {
           loading={isLoading}
           onPress={handleSendMagicLink}
           className="mt-4"
-          accessibilityRole="button"
           accessibilityLabel={isNewUser ? t.auth.signup.submit : t.auth.magicLink.receiveLinkButton}
           accessibilityHint={t.auth.magicLink.receiveLinkButton}
-          accessibilityState={{ disabled: isLoading }}
         >
           {isNewUser ? t.auth.signup.submit : t.auth.magicLink.receiveLinkButton}
         </Button>
 
-        <TouchableOpacity
+        <PressableScale
           onPress={() => setIsNewUser(!isNewUser)}
-          className="items-center py-2"
           accessibilityRole="button"
           accessibilityLabel={isNewUser ? t.auth.signup.loginLink : t.auth.signup.submit}
           accessibilityHint={isNewUser ? t.auth.signup.loginLink : t.auth.signup.submit}
         >
-          <Text className="text-sm text-slate-600 dark:text-slate-400">
-            {isNewUser ? (
-              <>
-                {t.auth.signup.hasAccount}{" "}
-                <Text className="font-bold text-primary-600">
-                  {t.auth.signup.loginLink}
-                </Text>
-              </>
-            ) : (
-              <>
-                {t.auth.login.noAccount}{" "}
-                <Text className="font-bold text-primary-600">{t.auth.signup.submit}</Text>
-              </>
-            )}
-          </Text>
-        </TouchableOpacity>
+          <View className="items-center py-2">
+            <Text className="text-sm text-slate-600 dark:text-slate-400">
+              {isNewUser ? (
+                <>
+                  {t.auth.signup.hasAccount}{" "}
+                  <Text className="font-bold text-primary-600">
+                    {t.auth.signup.loginLink}
+                  </Text>
+                </>
+              ) : (
+                <>
+                  {t.auth.login.noAccount}{" "}
+                  <Text className="font-bold text-primary-600">{t.auth.signup.submit}</Text>
+                </>
+              )}
+            </Text>
+          </View>
+        </PressableScale>
       </Animated.View>
     </>
   );
@@ -359,45 +358,48 @@ export default function MagicLinkLoginScreen() {
       </Text>
 
       {/* Resend Button */}
-      <TouchableOpacity
+      <PressableScale
         onPress={handleResend}
-        disabled={expiresIn > 840} // Can resend after 1 minute
+        disabled={expiresIn > 840}
         accessibilityRole="button"
         accessibilityLabel={t.auth.magicLink.resendLink}
         accessibilityHint={t.auth.magicLink.resendLink}
-        accessibilityState={{ disabled: expiresIn > 840 }}
-        className={`py-3 px-6 rounded-xl ${
-          expiresIn > 840
-            ? "bg-slate-100 dark:bg-slate-800"
-            : "bg-primary-50 dark:bg-primary-900/30"
-        }`}
       >
-        <Text
-          className={`font-semibold ${
+        <View
+          className={`py-3 px-6 rounded-xl ${
             expiresIn > 840
-              ? "text-slate-400 dark:text-slate-600"
-              : "text-primary-600 dark:text-primary-400"
+              ? "bg-slate-100 dark:bg-slate-800"
+              : "bg-primary-50 dark:bg-primary-900/30"
           }`}
         >
-          {expiresIn > 840
-            ? t.auth.magicLink.resendIn.replace("{{time}}", String(Math.floor((expiresIn - 840) / 60)))
-            : t.auth.magicLink.resendLink}
-        </Text>
-      </TouchableOpacity>
+          <Text
+            className={`font-semibold ${
+              expiresIn > 840
+                ? "text-slate-400 dark:text-slate-600"
+                : "text-primary-600 dark:text-primary-400"
+            }`}
+          >
+            {expiresIn > 840
+              ? t.auth.magicLink.resendIn.replace("{{time}}", String(Math.floor((expiresIn - 840) / 60)))
+              : t.auth.magicLink.resendLink}
+          </Text>
+        </View>
+      </PressableScale>
 
       {/* Change Email */}
-      <TouchableOpacity
+      <PressableScale
         onPress={() => setAuthState("input")}
-        className="mt-6"
         accessibilityRole="button"
         accessibilityLabel={t.auth.magicLink.changeEmail}
         accessibilityHint={t.auth.magicLink.changeEmail}
       >
-        <Text className="text-slate-600 dark:text-slate-400 text-sm">
-          {t.auth.magicLink.wrongEmail}{" "}
-          <Text className="font-semibold text-primary-600">{t.auth.magicLink.changeEmail}</Text>
-        </Text>
-      </TouchableOpacity>
+        <View className="mt-6">
+          <Text className="text-slate-600 dark:text-slate-400 text-sm">
+            {t.auth.magicLink.wrongEmail}{" "}
+            <Text className="font-semibold text-primary-600">{t.auth.magicLink.changeEmail}</Text>
+          </Text>
+        </View>
+      </PressableScale>
     </Animated.View>
   );
 

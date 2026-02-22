@@ -8,12 +8,13 @@ import React, { useRef, useState, useCallback } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   Dimensions,
   FlatList,
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -94,15 +95,13 @@ export default function OnboardingScreen() {
         className="absolute z-10 right-0"
         style={{ top: insets.top + 12, right: 16 }}
       >
-        <TouchableOpacity
-          onPress={handleSkip}
-          className="flex-row items-center gap-1 py-2 px-3 rounded-full"
-          activeOpacity={0.7}
-        >
-          <Text className="text-slate-600 dark:text-slate-400 text-sm font-semibold tracking-wide">
-            {t.onboarding.skip}
-          </Text>
-        </TouchableOpacity>
+        <Pressable onPress={handleSkip} hitSlop={8}>
+          <View className="flex-row items-center gap-1 py-2 px-3 rounded-full">
+            <Text className="text-slate-600 dark:text-slate-400 text-sm font-semibold tracking-wide">
+              {t.onboarding.skip}
+            </Text>
+          </View>
+        </Pressable>
       </Animated.View>
 
       {/* Slides */}
@@ -142,14 +141,8 @@ export default function OnboardingScreen() {
 
         {/* Action Button */}
         <Animated.View style={buttonScale}>
-          <TouchableOpacity
+          <PressableScale
             onPress={handleNext}
-            activeOpacity={0.9}
-            className={`
-              w-full h-14 rounded-2xl items-center justify-center flex-row gap-2
-              ${isDark ? "bg-primary-500" : "bg-slate-900"}
-              shadow-lg
-            `}
             style={{
               shadowColor: colors.primary,
               shadowOffset: { width: 0, height: 4 },
@@ -158,19 +151,27 @@ export default function OnboardingScreen() {
               elevation: 8,
             }}
           >
-            <Text
-              className={`text-lg font-bold tracking-wide ${
-                isDark ? "text-slate-900" : "text-white"
-              }`}
+            <View
+              className={`
+                w-full h-14 rounded-2xl items-center justify-center flex-row gap-2
+                ${isDark ? "bg-primary-500" : "bg-slate-900"}
+                shadow-lg
+              `}
             >
-              {isLastSlide ? t.onboarding.start : t.onboarding.next}
-            </Text>
-            <MaterialIcons
-              name={isLastSlide ? "check" : "arrow-forward"}
-              size={20}
-              color={isDark ? "#0d1b13" : colors.primary}
-            />
-          </TouchableOpacity>
+              <Text
+                className={`text-lg font-bold tracking-wide ${
+                  isDark ? "text-slate-900" : "text-white"
+                }`}
+              >
+                {isLastSlide ? t.onboarding.start : t.onboarding.next}
+              </Text>
+              <MaterialIcons
+                name={isLastSlide ? "check" : "arrow-forward"}
+                size={20}
+                color={isDark ? "#0d1b13" : colors.primary}
+              />
+            </View>
+          </PressableScale>
         </Animated.View>
       </Animated.View>
     </View>

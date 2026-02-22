@@ -7,11 +7,12 @@ import React, { useCallback, useMemo } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   FlatList,
   StyleSheet,
   Dimensions,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -264,7 +265,7 @@ export default function AchievementsScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
+          <Pressable
             onPress={handleBack}
             style={[
               styles.backButton,
@@ -277,7 +278,7 @@ export default function AchievementsScreen() {
             accessibilityLabel={t.common.back}
           >
             <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
-          </TouchableOpacity>
+          </Pressable>
           <Text
             style={[styles.headerTitle, { color: colors.textPrimary }]}
             accessibilityRole="header"
@@ -305,7 +306,7 @@ export default function AchievementsScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.header}>
-          <TouchableOpacity
+          <Pressable
             onPress={handleBack}
             style={[
               styles.backButton,
@@ -318,7 +319,7 @@ export default function AchievementsScreen() {
             accessibilityLabel={t.common.back}
           >
             <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
-          </TouchableOpacity>
+          </Pressable>
           <Text
             style={[styles.headerTitle, { color: colors.textPrimary }]}
             accessibilityRole="header"
@@ -332,16 +333,17 @@ export default function AchievementsScreen() {
           <Text style={[styles.errorText, { color: colors.textSecondary }]}>
             {t.common.loadingError}
           </Text>
-          <TouchableOpacity
+          <PressableScale
             onPress={() => refetch()}
-            style={[styles.retryButton, { backgroundColor: colors.primary }]}
             accessibilityRole="button"
             accessibilityLabel={t.common.retry}
           >
-            <Text style={[styles.retryText, { color: isDark ? "#102217" : "#0d1b13" }]}>
-              {t.common.retry}
-            </Text>
-          </TouchableOpacity>
+            <View style={[styles.retryButton, { backgroundColor: colors.primary }]}>
+              <Text style={[styles.retryText, { color: isDark ? "#102217" : "#0d1b13" }]}>
+                {t.common.retry}
+              </Text>
+            </View>
+          </PressableScale>
         </View>
       </SafeAreaView>
     );
@@ -353,7 +355,7 @@ export default function AchievementsScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.header}>
-          <TouchableOpacity
+          <Pressable
             onPress={handleBack}
             style={[
               styles.backButton,
@@ -366,7 +368,7 @@ export default function AchievementsScreen() {
             accessibilityLabel={t.common.back}
           >
             <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
-          </TouchableOpacity>
+          </Pressable>
           <Text
             style={[styles.headerTitle, { color: colors.textPrimary }]}
             accessibilityRole="header"
@@ -404,7 +406,7 @@ export default function AchievementsScreen() {
           <>
             {/* Header */}
             <Animated.View entering={FadeIn.duration(400)} style={styles.header}>
-              <TouchableOpacity
+              <Pressable
                 onPress={handleBack}
                 style={[
                   styles.backButton,
@@ -417,7 +419,7 @@ export default function AchievementsScreen() {
                 accessibilityLabel={t.common.back}
               >
                 <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
-              </TouchableOpacity>
+              </Pressable>
               <Text
                 style={[styles.headerTitle, { color: colors.textPrimary }]}
                 accessibilityRole="header"

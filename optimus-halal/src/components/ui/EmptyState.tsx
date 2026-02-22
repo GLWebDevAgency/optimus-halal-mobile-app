@@ -6,10 +6,11 @@
  */
 
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
 import { useTheme } from "@/hooks";
+import { PressableScale } from "./PressableScale";
 
 export interface EmptyStateProps {
   /** MaterialIcons icon name */
@@ -65,15 +66,15 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         </Text>
       ) : null}
       {actionLabel && onAction ? (
-        <TouchableOpacity
+        <PressableScale
           onPress={onAction}
-          activeOpacity={0.8}
           accessibilityRole="button"
           accessibilityLabel={actionLabel}
-          className="bg-primary px-6 py-3 rounded-xl"
         >
-          <Text className="font-bold text-sm text-white">{actionLabel}</Text>
-        </TouchableOpacity>
+          <View className="bg-primary px-6 py-3 rounded-xl">
+            <Text className="font-bold text-sm text-white">{actionLabel}</Text>
+          </View>
+        </PressableScale>
       ) : null}
     </Animated.View>
   );

@@ -7,10 +7,11 @@ import React, { useMemo, useCallback } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   ActivityIndicator,
   Linking,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
@@ -187,17 +188,18 @@ const CertifierCard = React.memo(function CertifierCard({
 
         {/* Website link */}
         {item.website && (
-          <TouchableOpacity
+          <PressableScale
             onPress={() => Linking.openURL(item.website!)}
-            style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 12 }}
             accessibilityRole="link"
             accessibilityLabel={`Visiter le site de ${item.name}`}
           >
-            <MaterialIcons name="open-in-new" size={12} color={colors.primary} />
-            <Text style={{ fontSize: 11, color: colors.primary, fontWeight: "600" }}>
-              {t.certifierRanking.officialWebsite}
-            </Text>
-          </TouchableOpacity>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 12 }}>
+              <MaterialIcons name="open-in-new" size={12} color={colors.primary} />
+              <Text style={{ fontSize: 11, color: colors.primary, fontWeight: "600" }}>
+                {t.certifierRanking.officialWebsite}
+              </Text>
+            </View>
+          </PressableScale>
         )}
       </View>
     </Animated.View>
@@ -288,7 +290,7 @@ export default function CertifierRankingScreen() {
         style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 }}
       >
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <TouchableOpacity
+          <Pressable
             onPress={() => router.back()}
             style={{
               marginEnd: 12,
@@ -305,7 +307,7 @@ export default function CertifierRankingScreen() {
             accessibilityLabel={t.common.back}
           >
             <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
-          </TouchableOpacity>
+          </Pressable>
           <View>
             <Text
               style={{ fontSize: 24, fontWeight: "700", letterSpacing: -0.5, color: colors.textPrimary }}
@@ -331,20 +333,22 @@ export default function CertifierRankingScreen() {
           <Text style={{ color: colors.textSecondary, fontSize: 16, marginTop: 16 }}>
             {t.certifierRanking.loadError}
           </Text>
-          <TouchableOpacity
+          <PressableScale
             onPress={() => refetch()}
-            style={{
+            accessibilityRole="button"
+          >
+            <View style={{
               marginTop: 20,
               backgroundColor: colors.primary,
               paddingHorizontal: 24,
               paddingVertical: 12,
               borderRadius: 12,
-            }}
-          >
-            <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
-              {t.common.retry}
-            </Text>
-          </TouchableOpacity>
+            }}>
+              <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
+                {t.common.retry}
+              </Text>
+            </View>
+          </PressableScale>
         </View>
       ) : items.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 80 }}>

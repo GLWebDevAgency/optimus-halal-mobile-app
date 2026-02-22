@@ -14,7 +14,7 @@ import React, { useState, useCallback, useEffect, useRef } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   StyleSheet,
   Dimensions,
   Alert,
@@ -47,6 +47,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 
 import { useTranslation } from "@/hooks/useTranslation";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { brand, darkTheme } from "@/theme/colors";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -265,18 +266,17 @@ export default function ScannerScreen() {
               {t.scanner.cameraPermissionDesc}
             </Text>
           </View>
-          <TouchableOpacity
+          <PressableScale
             onPress={requestPermission}
             style={styles.permissionButton}
-            activeOpacity={0.9}
             accessibilityRole="button"
             accessibilityLabel={t.scanner.allowCamera}
           >
             <Text style={styles.permissionButtonText}>{t.scanner.enableCamera}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleClose} style={styles.cancelButton} accessibilityRole="button" accessibilityLabel={t.common.cancel}>
+          </PressableScale>
+          <PressableScale onPress={handleClose} style={styles.cancelButton} accessibilityRole="button" accessibilityLabel={t.common.cancel}>
             <Text style={styles.cancelButtonText}>{t.common.cancel}</Text>
-          </TouchableOpacity>
+          </PressableScale>
         </Animated.View>
       </View>
     );
@@ -376,15 +376,14 @@ export default function ScannerScreen() {
         >
           {/* Close Button */}
           <Animated.View entering={FadeIn.delay(200).duration(400)}>
-            <TouchableOpacity
+            <Pressable
               onPress={handleClose}
               style={styles.headerButton}
-              activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel={t.common.close}
             >
               <MaterialIcons name="close" size={20} color="#ffffff" />
-            </TouchableOpacity>
+            </Pressable>
           </Animated.View>
 
           {/* App Title Badge */}
@@ -395,10 +394,9 @@ export default function ScannerScreen() {
 
           {/* Flash Toggle */}
           <Animated.View entering={FadeIn.delay(200).duration(400)}>
-            <TouchableOpacity
+            <Pressable
               onPress={handleToggleFlash}
               style={[styles.headerButton, isFlashOn && styles.headerButtonActive]}
-              activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel={t.scanner.flash}
             >
@@ -407,7 +405,7 @@ export default function ScannerScreen() {
                 size={20}
                 color={isFlashOn ? colors.primary : "#ffffff"}
               />
-            </TouchableOpacity>
+            </Pressable>
           </Animated.View>
         </LinearGradient>
 
@@ -436,16 +434,14 @@ export default function ScannerScreen() {
           <View style={styles.controlsRow}>
             {/* Gallery Button */}
             <Animated.View entering={FadeInUp.delay(400).duration(400)} style={styles.sideButtonContainer}>
-              <TouchableOpacity
+              <PressableScale
                 onPress={handleOpenGallery}
                 style={styles.sideButton}
-                activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel={t.scanner.gallery}
-                accessibilityHint={t.scanner.gallery}
               >
                 <MaterialIcons name="photo-library" size={26} color="#ffffff" />
-              </TouchableOpacity>
+              </PressableScale>
               <Text style={styles.sideButtonLabel}>{t.scanner.gallery.toUpperCase()}</Text>
             </Animated.View>
 
@@ -463,32 +459,28 @@ export default function ScannerScreen() {
               <View style={styles.captureOuterRing}>
                 {/* Inner Button */}
                 <Animated.View style={animatedButtonStyle}>
-                  <TouchableOpacity
+                  <PressableScale
                     onPress={handleCapture}
                     style={styles.captureButton}
-                    activeOpacity={0.9}
                     accessibilityRole="button"
                     accessibilityLabel={t.scanner.title}
-                    accessibilityHint={t.scanner.instruction}
                   >
                     <MaterialIcons name="qr-code-scanner" size={36} color={colors.textPrimary} />
-                  </TouchableOpacity>
+                  </PressableScale>
                 </Animated.View>
               </View>
             </Animated.View>
 
             {/* History Button */}
             <Animated.View entering={FadeInUp.delay(400).duration(400)} style={styles.sideButtonContainer}>
-              <TouchableOpacity
+              <PressableScale
                 onPress={handleOpenHistory}
                 style={styles.sideButton}
-                activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel={t.scanner.history}
-                accessibilityHint={t.scanner.history}
               >
                 <MaterialIcons name="history" size={26} color="#FFD700" />
-              </TouchableOpacity>
+              </PressableScale>
               <Text style={styles.sideButtonLabel}>{t.scanner.history.toUpperCase()}</Text>
             </Animated.View>
           </View>

@@ -1,7 +1,8 @@
 import React from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, ActivityIndicator } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn } from "react-native-reanimated";
+import { PressableScale } from "../ui/PressableScale";
 import type { ThemeColors } from "./types";
 
 interface Props {
@@ -44,29 +45,32 @@ export const MapControls = React.memo(function MapControls({
         className="absolute right-4 gap-2"
         style={{ top: insetTop + 140, zIndex: 5 }}
       >
-        <TouchableOpacity
+        <PressableScale
           onPress={onMyLocation}
-          className="w-12 h-12 rounded-2xl items-center justify-center"
-          style={{
-            backgroundColor: isDark ? "rgba(30,41,59,0.92)" : "rgba(255,255,255,0.97)",
-            borderWidth: 1,
-            borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 3 },
-            shadowOpacity: 0.2,
-            shadowRadius: 6,
-            elevation: 4,
-          }}
-          activeOpacity={0.7}
           accessibilityRole="button"
           accessibilityLabel={t.myLocation}
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: isDark ? "rgba(30,41,59,0.8)" : "rgba(255,255,255,0.9)",
+            borderWidth: 1,
+            borderColor: colors.border,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.12,
+            shadowRadius: 6,
+            elevation: 3,
+          }}
         >
           <MaterialIcons
             name={userLocation ? "my-location" : "location-searching"}
-            size={22}
+            size={20}
             color={userLocation ? colors.primary : colors.textMuted}
           />
-        </TouchableOpacity>
+        </PressableScale>
       </View>
 
       {/* Results count badge */}
@@ -77,20 +81,20 @@ export const MapControls = React.memo(function MapControls({
           style={{ bottom: 260 + insetBottom, zIndex: 5 }}
         >
           <View
-            className="flex-row items-center gap-2 h-10 px-4 rounded-full"
+            className="flex-row items-center gap-1.5 h-8 px-3 rounded-full"
             style={{
-              backgroundColor: isDark ? "rgba(30,41,59,0.9)" : "rgba(255,255,255,0.95)",
+              backgroundColor: isDark ? "rgba(30,41,59,0.8)" : "rgba(255,255,255,0.9)",
               borderWidth: 1,
               borderColor: colors.border,
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.15,
+              shadowOpacity: 0.1,
               shadowRadius: 4,
-              elevation: 3,
+              elevation: 2,
             }}
           >
-            <MaterialIcons name="place" size={16} color={colors.primary} />
-            <Text className="font-semibold text-sm" style={{ color: colors.textPrimary }}>
+            <MaterialIcons name="place" size={14} color={colors.primary} />
+            <Text className="font-semibold text-xs" style={{ color: colors.textPrimary }}>
               {storeCount} {storeCount > 1 ? t.stores : t.store}
             </Text>
           </View>
@@ -99,16 +103,22 @@ export const MapControls = React.memo(function MapControls({
 
       {/* Loading indicator */}
       {(isFetching || isLocationLoading) && (
-        <View
+        <Animated.View
+          entering={FadeIn.duration(200)}
           className="absolute left-4"
           style={{ bottom: 260 + insetBottom, zIndex: 5 }}
         >
           <View
-            className="h-10 px-4 rounded-full flex-row items-center gap-2"
+            className="h-8 px-3 rounded-full flex-row items-center gap-1.5"
             style={{
-              backgroundColor: isDark ? "rgba(30,41,59,0.9)" : "rgba(255,255,255,0.95)",
+              backgroundColor: isDark ? "rgba(30,41,59,0.8)" : "rgba(255,255,255,0.9)",
               borderWidth: 1,
               borderColor: colors.border,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              elevation: 2,
             }}
           >
             <ActivityIndicator size="small" color={colors.primary} />
@@ -116,7 +126,7 @@ export const MapControls = React.memo(function MapControls({
               {isLocationLoading ? t.locating : t.searchResults}
             </Text>
           </View>
-        </View>
+        </Animated.View>
       )}
     </>
   );

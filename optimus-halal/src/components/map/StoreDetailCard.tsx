@@ -1,12 +1,13 @@
 import React from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator, Linking } from "react-native";
+import { View, Text, Pressable, ActivityIndicator, Linking } from "react-native";
 import { Image } from "expo-image";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import Animated, { FadeInUp, FadeIn } from "react-native-reanimated";
+import Animated, { FadeInUp, FadeIn, FadeInDown } from "react-native-reanimated";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTheme } from "@/hooks/useTheme";
+import { PressableScale } from "../ui/PressableScale";
 import { storeTypeColors } from "@/theme/colors";
 import {
   StoreFeatureProperties,
@@ -118,7 +119,7 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
             </View>
           </View>
           <View className="flex-row items-center gap-1.5">
-            <TouchableOpacity
+            <Pressable
               onPress={onShare}
               className="w-8 h-8 rounded-full items-center justify-center"
               style={{ backgroundColor: colors.buttonSecondary }}
@@ -126,8 +127,8 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
               accessibilityLabel="Partager"
             >
               <MaterialIcons name="share" size={16} color={colors.textSecondary} />
-            </TouchableOpacity>
-            <TouchableOpacity
+            </Pressable>
+            <Pressable
               onPress={onClose}
               className="w-8 h-8 rounded-full items-center justify-center"
               style={{ backgroundColor: colors.buttonSecondary }}
@@ -135,7 +136,7 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
               accessibilityLabel="Fermer"
             >
               <MaterialIcons name="close" size={18} color={colors.textSecondary} />
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
 
@@ -194,41 +195,46 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
 
         {/* Action buttons */}
         <View className="flex-row gap-3">
-          <TouchableOpacity
+          <PressableScale
             onPress={onDirections}
-            className="flex-1 flex-row items-center justify-center gap-2 py-3.5 rounded-2xl"
-            style={{
-              backgroundColor: colors.primary,
-              shadowColor: colors.primary,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 4,
-            }}
-            activeOpacity={0.8}
+            style={{ flex: 1 }}
             accessibilityRole="button"
             accessibilityLabel={`${t.map.getDirections} ${store.name}`}
           >
-            <MaterialIcons name="directions" size={20} color="#fff" />
-            <Text className="text-sm font-bold text-white">{t.map.getDirections}</Text>
-          </TouchableOpacity>
+            <View
+              className="flex-row items-center justify-center gap-2 py-3.5 rounded-2xl"
+              style={{
+                backgroundColor: colors.primary,
+                shadowColor: colors.primary,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 4,
+              }}
+            >
+              <MaterialIcons name="directions" size={20} color="#fff" />
+              <Text className="text-sm font-bold text-white">{t.map.getDirections}</Text>
+            </View>
+          </PressableScale>
 
           {store.phone && (
-            <TouchableOpacity
+            <PressableScale
               onPress={onCall}
-              className="flex-row items-center justify-center gap-2 py-3.5 px-5 rounded-2xl"
-              style={{
-                backgroundColor: colors.buttonSecondary,
-                borderWidth: 1,
-                borderColor: colors.border,
-              }}
-              activeOpacity={0.8}
               accessibilityRole="button"
               accessibilityLabel={`${t.map.callStore} ${store.name}`}
             >
-              <MaterialIcons name="phone" size={20} color={colors.primary} />
-              <Text className="text-sm font-bold" style={{ color: colors.textPrimary }}>{t.map.callStore}</Text>
-            </TouchableOpacity>
+              <View
+                className="flex-row items-center justify-center gap-2 py-3.5 px-5 rounded-2xl"
+                style={{
+                  backgroundColor: colors.buttonSecondary,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}
+              >
+                <MaterialIcons name="phone" size={20} color={colors.primary} />
+                <Text className="text-sm font-bold" style={{ color: colors.textPrimary }}>{t.map.callStore}</Text>
+              </View>
+            </PressableScale>
           )}
         </View>
 
@@ -243,19 +249,19 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
               <>
                 {/* Description */}
                 {detail.description && (
-                  <View className="mt-4">
+                  <Animated.View entering={FadeInDown.delay(50).duration(250)} className="mt-4">
                     <Text className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: colors.textMuted }}>
                       {t.map.storeDetail}
                     </Text>
                     <Text className="text-sm leading-5" style={{ color: colors.textSecondary }}>
                       {detail.description}
                     </Text>
-                  </View>
+                  </Animated.View>
                 )}
 
                 {/* Weekly hours */}
                 {detail.hours.length > 0 && (
-                  <View className="mt-4">
+                  <Animated.View entering={FadeInDown.delay(120).duration(250)} className="mt-4">
                     <Text className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: colors.textMuted }}>
                       {t.map.hours}
                     </Text>
@@ -289,12 +295,12 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                         );
                       })}
                     </View>
-                  </View>
+                  </Animated.View>
                 )}
 
                 {/* Rating distribution + reviews */}
                 {store.reviewCount > 0 && (
-                  <View className="mt-4">
+                  <Animated.View entering={FadeInDown.delay(190).duration(250)} className="mt-4">
                     <Text className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: colors.textMuted }}>
                       {t.map.reviews.replace("{{count}}", String(store.reviewCount))}
                     </Text>
@@ -377,24 +383,29 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                         )}
                       </View>
                     ))}
-                  </View>
+                  </Animated.View>
                 )}
 
                 {/* Website link */}
                 {detail.website && (
-                  <TouchableOpacity
-                    onPress={() => Linking.openURL(detail.website!)}
-                    className="mt-3 flex-row items-center gap-2 px-3 py-2.5 rounded-xl"
-                    style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)" }}
-                    accessibilityRole="link"
-                    accessibilityLabel={t.map.website}
-                  >
-                    <MaterialIcons name="language" size={16} color={colors.primary} />
-                    <Text className="text-sm font-medium" style={{ color: colors.primary }} numberOfLines={1}>
-                      {t.map.website}
-                    </Text>
-                    <MaterialIcons name="open-in-new" size={12} color={colors.textMuted} />
-                  </TouchableOpacity>
+                  <Animated.View entering={FadeInDown.delay(260).duration(250)}>
+                    <PressableScale
+                      onPress={() => Linking.openURL(detail.website!)}
+                      accessibilityRole="link"
+                      accessibilityLabel={t.map.website}
+                    >
+                      <View
+                        className="mt-3 flex-row items-center gap-2 px-3 py-2.5 rounded-xl"
+                        style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)" }}
+                      >
+                        <MaterialIcons name="language" size={16} color={colors.primary} />
+                        <Text className="text-sm font-medium" style={{ color: colors.primary }} numberOfLines={1}>
+                          {t.map.website}
+                        </Text>
+                        <MaterialIcons name="open-in-new" size={12} color={colors.textMuted} />
+                      </View>
+                    </PressableScale>
+                  </Animated.View>
                 )}
               </>
             ) : null}

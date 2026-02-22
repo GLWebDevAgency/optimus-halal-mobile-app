@@ -11,7 +11,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   Modal,
   FlatList,
   TextInput,
@@ -22,6 +22,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useHaptics, useTheme, useTranslation } from "@/hooks";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import { PressableScale } from "./PressableScale";
 
 import { City, FRENCH_CITIES, searchCities, findNearestCity } from "@/constants/locations";
 
@@ -147,62 +148,67 @@ export function LocationPicker({
 
         <View className="flex-row gap-2">
           {/* Location Button */}
-          <TouchableOpacity
+          <PressableScale
             onPress={handleOpen}
-            activeOpacity={0.7}
-            className={`
-              flex-1 h-14 px-4 flex-row items-center justify-between
-              bg-white dark:bg-surface-dark
-              border rounded-xl
-              ${error
-                ? "border-danger"
-                : "border-slate-200 dark:border-slate-700"
-              }
-            `}
+            style={{ flex: 1 }}
           >
-            <View className="flex-row items-center flex-1">
+            <View
+              className={`
+                h-14 px-4 flex-row items-center justify-between
+                bg-white dark:bg-surface-dark
+                border rounded-xl
+                ${error
+                  ? "border-danger"
+                  : "border-slate-200 dark:border-slate-700"
+                }
+              `}
+            >
+              <View className="flex-row items-center flex-1">
+                <MaterialIcons
+                  name="location-on"
+                  size={20}
+                  color={value ? colors.primary : "#94a3b8"}
+                />
+                <Text
+                  className={`ml-2 text-base ${
+                    value
+                      ? "text-slate-900 dark:text-white"
+                      : "text-slate-400 dark:text-slate-500"
+                  }`}
+                  numberOfLines={1}
+                >
+                  {value || resolvedPlaceholder}
+                </Text>
+              </View>
               <MaterialIcons
-                name="location-on"
-                size={20}
-                color={value ? colors.primary : "#94a3b8"}
+                name="arrow-drop-down"
+                size={24}
+                color="#94a3b8"
               />
-              <Text
-                className={`ml-2 text-base ${
-                  value
-                    ? "text-slate-900 dark:text-white"
-                    : "text-slate-400 dark:text-slate-500"
-                }`}
-                numberOfLines={1}
-              >
-                {value || resolvedPlaceholder}
-              </Text>
             </View>
-            <MaterialIcons
-              name="arrow-drop-down"
-              size={24}
-              color="#94a3b8"
-            />
-          </TouchableOpacity>
+          </PressableScale>
 
           {/* Geolocation Button */}
           {showGeolocation && (
-            <TouchableOpacity
+            <PressableScale
               onPress={handleGeolocation}
               disabled={isLocating}
-              activeOpacity={0.7}
-              className={`
-                h-14 w-14 items-center justify-center
-                bg-primary-50 dark:bg-primary-900/30
-                border border-primary-200 dark:border-primary-800
-                rounded-xl
-              `}
             >
-              {isLocating ? (
-                <ActivityIndicator size="small" color={colors.primary} />
-              ) : (
-                <MaterialIcons name="my-location" size={22} color={colors.primary} />
-              )}
-            </TouchableOpacity>
+              <View
+                className={`
+                  h-14 w-14 items-center justify-center
+                  bg-primary-50 dark:bg-primary-900/30
+                  border border-primary-200 dark:border-primary-800
+                  rounded-xl
+                `}
+              >
+                {isLocating ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                  <MaterialIcons name="my-location" size={22} color={colors.primary} />
+                )}
+              </View>
+            </PressableScale>
           )}
         </View>
 
@@ -243,7 +249,7 @@ export function LocationPicker({
                   {t.location.searchOrGeolocate}
                 </Text>
               </View>
-              <TouchableOpacity
+              <Pressable
                 onPress={() => {
                   setIsPickerVisible(false);
                   setSearchQuery("");
@@ -255,44 +261,46 @@ export function LocationPicker({
                   size={24}
                   color={isDark ? "#ffffff" : "#0f172a"}
                 />
-              </TouchableOpacity>
+              </Pressable>
             </View>
 
             {/* Search & Geolocation */}
             <View className={`p-4 ${isDark ? "bg-surface-dark" : "bg-white"}`}>
               {/* Geolocation Banner */}
               <Animated.View entering={FadeIn.duration(300)}>
-                <TouchableOpacity
+                <PressableScale
                   onPress={handleGeolocation}
                   disabled={isLocating}
-                  activeOpacity={0.8}
-                  className={`
-                    flex-row items-center p-4 mb-4 rounded-xl
-                    ${isDark 
-                      ? "bg-primary-900/30 border border-primary-800" 
-                      : "bg-primary-50 border border-primary-200"
-                    }
-                  `}
                 >
-                  {isLocating ? (
-                    <ActivityIndicator size="small" color={colors.primary} />
-                  ) : (
-                    <MaterialIcons name="my-location" size={24} color={colors.primary} />
-                  )}
-                  <View className="flex-1 ml-3">
-                    <Text className="text-primary-700 dark:text-primary-400 font-semibold">
-                      {t.location.useMyLocation}
-                    </Text>
-                    <Text className="text-primary-600/70 dark:text-primary-400/70 text-xs mt-0.5">
-                      {t.location.autoDetectCity}
-                    </Text>
+                  <View
+                    className={`
+                      flex-row items-center p-4 mb-4 rounded-xl
+                      ${isDark
+                        ? "bg-primary-900/30 border border-primary-800"
+                        : "bg-primary-50 border border-primary-200"
+                      }
+                    `}
+                  >
+                    {isLocating ? (
+                      <ActivityIndicator size="small" color={colors.primary} />
+                    ) : (
+                      <MaterialIcons name="my-location" size={24} color={colors.primary} />
+                    )}
+                    <View className="flex-1 ml-3">
+                      <Text className="text-primary-700 dark:text-primary-400 font-semibold">
+                        {t.location.useMyLocation}
+                      </Text>
+                      <Text className="text-primary-600/70 dark:text-primary-400/70 text-xs mt-0.5">
+                        {t.location.autoDetectCity}
+                      </Text>
+                    </View>
+                    <MaterialIcons
+                      name="chevron-right"
+                      size={24}
+                      color={colors.primary}
+                    />
                   </View>
-                  <MaterialIcons
-                    name="chevron-right"
-                    size={24}
-                    color={colors.primary}
-                  />
-                </TouchableOpacity>
+                </PressableScale>
               </Animated.View>
 
               {/* Search Input */}
@@ -333,37 +341,39 @@ export function LocationPicker({
               keyExtractor={(item) => `${item.name}-${item.postalCode}`}
               renderItem={({ item, index }) => (
                 <Animated.View entering={FadeInDown.delay(index * 30).duration(200)}>
-                  <TouchableOpacity
+                  <PressableScale
                     onPress={() => handleCitySelect(item)}
-                    activeOpacity={0.7}
-                    className={`
-                      flex-row items-center px-4 py-3.5 mx-4 mb-2 rounded-xl
-                      ${isDark ? "bg-surface-dark" : "bg-white"}
-                      border border-slate-100 dark:border-slate-800
-                    `}
                   >
                     <View
                       className={`
-                        w-10 h-10 rounded-full items-center justify-center mr-3
-                        ${isDark ? "bg-primary-900/30" : "bg-primary-50"}
+                        flex-row items-center px-4 py-3.5 mx-4 mb-2 rounded-xl
+                        ${isDark ? "bg-surface-dark" : "bg-white"}
+                        border border-slate-100 dark:border-slate-800
                       `}
                     >
-                      <MaterialIcons name="location-city" size={20} color={colors.primary} />
+                      <View
+                        className={`
+                          w-10 h-10 rounded-full items-center justify-center mr-3
+                          ${isDark ? "bg-primary-900/30" : "bg-primary-50"}
+                        `}
+                      >
+                        <MaterialIcons name="location-city" size={20} color={colors.primary} />
+                      </View>
+                      <View className="flex-1">
+                        <Text className="text-slate-900 dark:text-white font-medium">
+                          {item.name}
+                        </Text>
+                        <Text className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">
+                          {item.postalCode} • {item.region}
+                        </Text>
+                      </View>
+                      <MaterialIcons
+                        name="chevron-right"
+                        size={20}
+                        color="#94a3b8"
+                      />
                     </View>
-                    <View className="flex-1">
-                      <Text className="text-slate-900 dark:text-white font-medium">
-                        {item.name}
-                      </Text>
-                      <Text className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">
-                        {item.postalCode} • {item.region}
-                      </Text>
-                    </View>
-                    <MaterialIcons
-                      name="chevron-right"
-                      size={20}
-                      color="#94a3b8"
-                    />
-                  </TouchableOpacity>
+                  </PressableScale>
                 </Animated.View>
               )}
               contentContainerStyle={{ paddingTop: 8, paddingBottom: 40 }}

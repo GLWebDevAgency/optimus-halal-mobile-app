@@ -1,22 +1,24 @@
 /**
  * Button Component
- * 
- * Composant bouton réutilisable avec variantes enterprise-grade
+ *
+ * Composant bouton réutilisable avec variantes enterprise-grade.
+ * Uses PressableScale for spring-animated press feedback.
  */
 
 import React from "react";
 import {
-  TouchableOpacity,
   Text,
   ActivityIndicator,
   View,
-  TouchableOpacityProps,
+  type ViewStyle,
+  type StyleProp,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useHaptics, useTheme } from "@/hooks";
 import { semantic, darkTheme, brand, primary } from "@/theme/colors";
+import { PressableScale } from "./PressableScale";
 
-export interface ButtonProps extends TouchableOpacityProps {
+export interface ButtonProps {
   variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
   size?: "sm" | "md" | "lg";
   loading?: boolean;
@@ -26,6 +28,12 @@ export interface ButtonProps extends TouchableOpacityProps {
   fullWidth?: boolean;
   haptic?: boolean;
   children: React.ReactNode;
+  onPress?: (e?: any) => void;
+  className?: string;
+  style?: StyleProp<ViewStyle>;
+  testID?: string;
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
 }
 
 const variantStyles = {
@@ -83,18 +91,19 @@ export const Button: React.FC<ButtonProps> = ({
   children,
   onPress,
   className = "",
-  ...props
+  style,
+  testID,
+  accessibilityLabel,
+  accessibilityHint,
 }) => {
   const { impact } = useHaptics();
   const { isDark } = useTheme();
   const variantStyle = variantStyles[variant];
   const sizeStyle = sizeStyles[size];
 
-  const handlePress = async (e: any) => {
-    if (haptic) {
-      impact();
-    }
-    onPress?.(e);
+  const handlePress = () => {
+    if (haptic) impact();
+    onPress?.();
   };
 
   const content = (
@@ -117,7 +126,7 @@ export const Button: React.FC<ButtonProps> = ({
   const containerClassName = `
     ${sizeStyle.container}
     ${fullWidth ? "w-full" : ""}
-    ${disabled || loading ? "opacity-50" : "active:scale-[0.98]"}
+    ${disabled || loading ? "opacity-50" : ""}
     flex items-center justify-center
     ${className}
   `;
@@ -125,6 +134,8 @@ export const Button: React.FC<ButtonProps> = ({
   const a11yProps = {
     accessibilityRole: "button" as const,
     accessibilityState: { disabled: disabled || loading, busy: loading },
+    accessibilityLabel,
+    accessibilityHint,
   };
 
   const resolvedGradient = variant === "primary" && isDark
@@ -133,34 +144,40 @@ export const Button: React.FC<ButtonProps> = ({
 
   if (resolvedGradient && !disabled) {
     return (
-      <TouchableOpacity
+      <PressableScale
         onPress={handlePress}
         disabled={disabled || loading}
-        className={containerClassName}
+        activeScale={disabled ? 1 : 0.97}
+        style={style}
+        testID={testID}
         {...a11yProps}
-        {...props}
       >
-        <LinearGradient
-          colors={resolvedGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          className="absolute inset-0 rounded-2xl"
-        />
-        {content}
-      </TouchableOpacity>
+        <View className={containerClassName} style={{ overflow: "hidden" }}>
+          <LinearGradient
+            colors={resolvedGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            className="absolute inset-0 rounded-2xl"
+          />
+          {content}
+        </View>
+      </PressableScale>
     );
   }
 
   return (
-    <TouchableOpacity
+    <PressableScale
       onPress={handlePress}
       disabled={disabled || loading}
-      className={`${containerClassName} ${variantStyle.container}`}
+      activeScale={disabled ? 1 : 0.97}
+      style={style}
+      testID={testID}
       {...a11yProps}
-      {...props}
     >
-      {content}
-    </TouchableOpacity>
+      <View className={`${containerClassName} ${variantStyle.container}`}>
+        {content}
+      </View>
+    </PressableScale>
   );
 };
 

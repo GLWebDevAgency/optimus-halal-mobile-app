@@ -12,7 +12,7 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   RefreshControl,
   Linking,
 } from "react-native";
@@ -27,6 +27,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { Card, EmptyState, PremiumBackground } from "@/components/ui";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { AlertsSkeleton } from "@/components/skeletons";
 import { useTranslation, useHaptics, useTheme } from "@/hooks";
 import type { TranslationKeys } from "@/hooks/useTranslation";
@@ -252,22 +253,23 @@ const AlertCard = React.memo(function AlertCard({ alert, index, isDark, colors, 
                     {t.alerts.source}
                   </Text>
                 </View>
-                <TouchableOpacity
-                  className="flex-row items-center gap-1"
+                <PressableScale
                   accessibilityRole="link"
                   accessibilityLabel={`${t.alerts.viewSource} - ${alert.title}`}
                   onPress={() => {
                     if (alert.sourceUrl) Linking.openURL(alert.sourceUrl);
                   }}
                 >
-                  <Text
-                    className="text-xs font-bold"
-                    style={{ color: config.color }}
-                  >
-                    {t.alerts.viewSource}
-                  </Text>
-                  <MaterialIcons name="arrow-forward" size={14} color={config.color} />
-                </TouchableOpacity>
+                  <View className="flex-row items-center gap-1">
+                    <Text
+                      className="text-xs font-bold"
+                      style={{ color: config.color }}
+                    >
+                      {t.alerts.viewSource}
+                    </Text>
+                    <MaterialIcons name="arrow-forward" size={14} color={config.color} />
+                  </View>
+                </PressableScale>
               </View>
             )}
           </View>
@@ -369,10 +371,9 @@ export default function AlertsScreen() {
               {t.alerts.title}
             </Text>
           </View>
-          <TouchableOpacity
+          <Pressable
             onPress={() => router.push("/settings/notifications")}
-            className="relative p-2 rounded-full"
-            activeOpacity={0.7}
+            style={{ padding: 8 }}
             accessibilityRole="button"
             accessibilityLabel={t.common.settings}
             accessibilityHint={t.common.notifications}
@@ -382,7 +383,7 @@ export default function AlertsScreen() {
               size={24}
               color={isDark ? "#d1d5db" : "#475569"}
             />
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         {/* Filter Chips */}
@@ -394,21 +395,18 @@ export default function AlertsScreen() {
           {FILTERS.map((filter) => {
             const isActive = activeFilter === filter.id;
             return (
-              <TouchableOpacity
+              <PressableScale
                 key={filter.id}
                 onPress={() => handleFilterChange(filter.id)}
-                className="h-9 px-5 rounded-full items-center justify-center"
                 style={
                   isActive
-                    ? { backgroundColor: isDark ? "#ffffff" : "#0f172a" }
-                    : { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.borderLight }
+                    ? { height: 36, paddingHorizontal: 20, borderRadius: 9999, alignItems: "center", justifyContent: "center", backgroundColor: isDark ? "#ffffff" : "#0f172a" }
+                    : { height: 36, paddingHorizontal: 20, borderRadius: 9999, alignItems: "center", justifyContent: "center", backgroundColor: colors.card, borderWidth: 1, borderColor: colors.borderLight }
                 }
-                activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel={`${filterLabels[filter.id]}${
                   isActive ? `, ${t.common.selected}` : ""
                 }`}
-                accessibilityHint={filterLabels[filter.id]}
               >
                 <Text
                   className={`text-sm ${isActive ? "font-semibold" : "font-medium"}`}
@@ -420,7 +418,7 @@ export default function AlertsScreen() {
                 >
                   {filterLabels[filter.id]}
                 </Text>
-              </TouchableOpacity>
+              </PressableScale>
             );
           })}
         </ScrollView>
@@ -441,14 +439,12 @@ export default function AlertsScreen() {
           >
             {t.alerts.loadError}
           </Text>
-          <TouchableOpacity
+          <PressableScale
             onPress={() => alertsQuery.refetch()}
-            className="mt-4 px-6 py-2.5 rounded-full"
-            style={{ backgroundColor: colors.primary }}
-            activeOpacity={0.8}
+            style={{ marginTop: 16, paddingHorizontal: 24, paddingVertical: 10, borderRadius: 9999, backgroundColor: colors.primary }}
           >
             <Text className="font-bold text-sm" style={{ color: "#0d1b13" }}>{t.common.retry}</Text>
-          </TouchableOpacity>
+          </PressableScale>
         </View>
       )}
 

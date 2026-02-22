@@ -13,12 +13,12 @@ import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Pressable,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { router, Link } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -35,10 +35,13 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
+import { Image } from "expo-image";
 import { Button, Input, PremiumBackground } from "@/components/ui";
 import { useLogin } from "@/hooks/useAuth";
 import { useTranslation, useHaptics, useTheme } from "@/hooks";
 import type { TranslationKeys } from "@/i18n";
+
+const logoSource = require("@assets/images/logo_naqiy.webp");
 
 // ── Error Classification ────────────────────────────────────
 
@@ -229,16 +232,23 @@ export default function LoginScreen() {
             className="items-center mb-10 mt-8"
           >
             {/* Logo */}
-            <View className="relative w-24 h-24 rounded-2xl shadow-2xl overflow-hidden mb-6 bg-primary-500/10" accessible={false}>
-              <View className="w-full h-full items-center justify-center">
-                <MaterialIcons name="verified-user" size={48} color={colors.primary} />
-              </View>
+            <View
+              className="w-20 h-20 rounded-2xl items-center justify-center mb-6"
+              style={{ backgroundColor: colors.card }}
+              accessible={false}
+            >
+              <Image
+                source={logoSource}
+                style={{ width: 52, height: 52 }}
+                contentFit="contain"
+                cachePolicy="memory-disk"
+              />
             </View>
 
-            <Text className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white mb-2" accessibilityRole="header">
+            <Text className="text-3xl font-bold tracking-tight mb-2" style={{ color: colors.textPrimary }} accessibilityRole="header">
               {t.auth.login.title}
             </Text>
-            <Text className="text-slate-500 dark:text-slate-400 text-base font-normal leading-relaxed text-center max-w-[280px]">
+            <Text className="text-base font-normal leading-relaxed text-center max-w-[280px]" style={{ color: colors.textSecondary }}>
               {t.auth.login.subtitle}
             </Text>
           </Animated.View>
@@ -303,7 +313,7 @@ export default function LoginScreen() {
             {/* Forgot Password */}
             <View className="items-end -mt-2">
               <Link href="/(auth)/forgot-password" asChild>
-                <TouchableOpacity
+                <PressableScale
                   accessibilityRole="link"
                   accessibilityLabel={t.auth.login.forgotPassword}
                   accessibilityHint={t.auth.login.forgotPassword}
@@ -311,7 +321,7 @@ export default function LoginScreen() {
                   <Text className="text-sm font-medium text-gold-500">
                     {t.auth.login.forgotPassword}
                   </Text>
-                </TouchableOpacity>
+                </PressableScale>
               </Link>
             </View>
 
@@ -323,10 +333,8 @@ export default function LoginScreen() {
                 fullWidth
                 loading={isLoading}
                 onPress={handleLogin}
-                accessibilityRole="button"
                 accessibilityLabel={t.auth.login.submit}
                 accessibilityHint={t.auth.login.submit}
-                accessibilityState={{ disabled: isLoading }}
                 icon={
                   <MaterialIcons
                     name="arrow-forward"
@@ -338,23 +346,23 @@ export default function LoginScreen() {
                 {t.auth.login.submit}
               </Button>
 
-              <TouchableOpacity
+              <PressableScale
                 onPress={handleBiometricLogin}
-                className="flex-row items-center justify-center gap-2 h-14 rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent"
-                activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel={t.auth.login.biometric}
                 accessibilityHint={t.auth.login.biometric}
               >
-                <MaterialIcons
-                  name="face"
-                  size={24}
-                  color={colors.primary}
-                />
-                <Text className="text-base font-medium text-slate-700 dark:text-slate-300">
-                  {t.auth.login.biometric}
-                </Text>
-              </TouchableOpacity>
+                <View className="flex-row items-center justify-center gap-2 h-14 rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent">
+                  <MaterialIcons
+                    name="face"
+                    size={24}
+                    color={colors.primary}
+                  />
+                  <Text className="text-base font-medium text-slate-700 dark:text-slate-300">
+                    {t.auth.login.biometric}
+                  </Text>
+                </View>
+              </PressableScale>
             </View>
           </Animated.View>
 

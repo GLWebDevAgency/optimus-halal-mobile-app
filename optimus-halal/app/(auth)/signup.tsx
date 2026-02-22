@@ -13,7 +13,6 @@ import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -25,6 +24,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
 import { Button, Input, IconButton, PhoneInput, LocationPicker, validateFrenchPhone, PremiumBackground } from "@/components/ui";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { useLocalAuthStore } from "@/store";
 import { authService } from "@/services/api/auth.service";
 import { City } from "@/constants/locations";
@@ -263,10 +263,8 @@ export default function SignUpScreen() {
               loading={isLoading}
               onPress={handleSignUp}
               className="mt-4"
-              accessibilityRole="button"
               accessibilityLabel={t.auth.signup.submit}
               accessibilityHint={t.auth.signup.submit}
-              accessibilityState={{ disabled: isLoading }}
             >
               {t.auth.signup.submit}
             </Button>
@@ -303,37 +301,39 @@ export default function SignUpScreen() {
             entering={FadeInUp.delay(500).duration(600)}
             className="flex-row gap-4"
           >
-            <TouchableOpacity
+            <PressableScale
               onPress={() => handleSocialAuth("google")}
-              className="flex-1 flex-row items-center justify-center gap-2 h-14 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark"
-              activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel={`${t.auth.signup.submit} Google`}
               accessibilityHint={`${t.auth.signup.submit} Google`}
+              style={{ flex: 1 }}
             >
-              <MaterialIcons name="g-mobiledata" size={24} color="#4285F4" />
-              <Text className="text-sm font-semibold text-slate-700 dark:text-white">
-                Google
-              </Text>
-            </TouchableOpacity>
+              <View className="flex-row items-center justify-center gap-2 h-14 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark">
+                <MaterialIcons name="g-mobiledata" size={24} color="#4285F4" />
+                <Text className="text-sm font-semibold text-slate-700 dark:text-white">
+                  Google
+                </Text>
+              </View>
+            </PressableScale>
 
-            <TouchableOpacity
+            <PressableScale
               onPress={() => handleSocialAuth("apple")}
-              className="flex-1 flex-row items-center justify-center gap-2 h-14 rounded-xl bg-slate-900 dark:bg-white"
-              activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel={`${t.auth.signup.submit} Apple`}
               accessibilityHint={`${t.auth.signup.submit} Apple`}
+              style={{ flex: 1 }}
             >
-              <MaterialIcons
-                name="apple"
-                size={24}
-                color={isDark ? "#0f172a" : "#ffffff"}
-              />
-              <Text className="text-sm font-semibold text-white dark:text-slate-900">
-                Apple
-              </Text>
-            </TouchableOpacity>
+              <View className="flex-row items-center justify-center gap-2 h-14 rounded-xl bg-slate-900 dark:bg-white">
+                <MaterialIcons
+                  name="apple"
+                  size={24}
+                  color={isDark ? "#0f172a" : "#ffffff"}
+                />
+                <Text className="text-sm font-semibold text-white dark:text-slate-900">
+                  Apple
+                </Text>
+              </View>
+            </PressableScale>
           </Animated.View>
 
           {/* Login Link */}

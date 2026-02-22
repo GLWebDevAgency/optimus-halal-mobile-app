@@ -11,7 +11,6 @@ import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -34,6 +33,7 @@ import Animated, {
   withSequence,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { brand } from "@/theme/colors";
 
 export default function ForgotPasswordScreen() {
@@ -159,20 +159,18 @@ export default function ForgotPasswordScreen() {
             entering={FadeIn.delay(100).duration(400)}
             style={styles.header}
           >
-            <TouchableOpacity
+            <PressableScale
               onPress={handleGoBack}
               style={styles.backButton}
-              activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel={t.common.back}
-              accessibilityHint={t.common.back}
             >
               <MaterialIcons
                 name="arrow-back-ios-new"
                 size={24}
                 color={brand.primary}
               />
-            </TouchableOpacity>
+            </PressableScale>
             
             <View style={styles.headerSpacer} />
             
@@ -301,14 +299,11 @@ export default function ForgotPasswordScreen() {
 
               {/* Submit Button */}
               <Animated.View style={[styles.buttonContainer, animatedButtonStyle]}>
-                <TouchableOpacity
+                <PressableScale
                   onPress={handleSubmit}
                   disabled={isLoading}
-                  activeOpacity={0.9}
                   accessibilityRole="button"
                   accessibilityLabel={t.auth.forgotPassword.submit}
-                  accessibilityHint={t.auth.forgotPassword.submit}
-                  accessibilityState={{ disabled: isLoading }}
                   style={[
                     styles.submitButton,
                     { shadowColor: colors.primary },
@@ -333,7 +328,7 @@ export default function ForgotPasswordScreen() {
                       </Text>
                     )}
                   </LinearGradient>
-                </TouchableOpacity>
+                </PressableScale>
               </Animated.View>
             </Animated.View>
 
@@ -342,14 +337,13 @@ export default function ForgotPasswordScreen() {
               entering={FadeIn.delay(500).duration(500)}
               style={styles.footerLinks}
             >
-              <TouchableOpacity
+              <PressableScale
                 onPress={() => router.push("/(auth)/login")}
                 style={[styles.footerLinkContainer, { flexDirection: isRTL ? "row-reverse" : "row" }]}
                 accessibilityRole="link"
                 accessibilityLabel={t.auth.resetConfirmation.backToLogin}
-                accessibilityHint={t.auth.resetConfirmation.backToLogin}
               >
-                <Text 
+                <Text
                   style={[
                     styles.footerText,
                     { color: isDark ? "#9ca3af" : "#6b7280" }
@@ -360,7 +354,7 @@ export default function ForgotPasswordScreen() {
                 <Text style={[styles.footerLink, { color: colors.primary }]}>
                   {t.auth.forgotPassword.loginLink}
                 </Text>
-              </TouchableOpacity>
+              </PressableScale>
             </Animated.View>
           </View>
         </ScrollView>

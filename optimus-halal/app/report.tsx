@@ -16,7 +16,7 @@ import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   ScrollView,
   TextInput,
   Switch,
@@ -29,6 +29,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useHaptics, useTranslation, useTheme } from "@/hooks";
 import { PremiumBackground } from "@/components/ui";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { ImpactFeedbackStyle } from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
@@ -175,26 +176,32 @@ export default function ReportingFormScreen() {
         className="flex-row items-center backdrop-blur-md px-4 pt-12 pb-2 justify-between border-b"
         style={{ paddingTop: insets.top + 8, backgroundColor: isDark ? "rgba(10,26,16,0.9)" : "rgba(248,250,249,0.9)", borderBottomColor: colors.borderLight }}
       >
-        <TouchableOpacity
+        <Pressable
           onPress={handleBack}
-          className="w-10 h-10 items-start justify-center rounded-full"
+          style={{ width: 40, height: 40, alignItems: "flex-start", justifyContent: "center", borderRadius: 9999 }}
+          accessibilityRole="button"
+          accessibilityLabel={t.common.back}
         >
           <MaterialIcons
             name="arrow-back"
             size={24}
             color={colors.textPrimary}
           />
-        </TouchableOpacity>
+        </Pressable>
 
         <Text className="text-lg font-bold tracking-tight flex-1 text-center" style={{ color: colors.textPrimary }}>
           {t.report.title}
         </Text>
 
-        <TouchableOpacity onPress={handleCancel}>
+        <Pressable
+          onPress={handleCancel}
+          accessibilityRole="button"
+          accessibilityLabel={t.common.cancel}
+        >
           <Text className="text-base font-medium" style={{ color: colors.textSecondary }}>
             {t.common.cancel}
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       </Animated.View>
 
       <ScrollView
@@ -281,12 +288,14 @@ export default function ReportingFormScreen() {
               onChangeText={setProductSearch}
               style={{ backgroundColor: colors.card, borderColor: colors.borderLight, color: colors.textPrimary }}
             />
-            <TouchableOpacity
+            <Pressable
               onPress={handleScanBarcode}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2"
+              accessibilityRole="button"
+              accessibilityLabel={t.report.identifyProduct}
+              style={{ position: "absolute", right: 14, top: "50%", transform: [{ translateY: -12 }] }}
             >
               <MaterialIcons name="qr-code-scanner" size={24} color={colors.textMuted} />
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </Animated.View>
 
@@ -302,43 +311,50 @@ export default function ReportingFormScreen() {
             {VIOLATION_TYPES.map((type) => {
               const isSelected = selectedViolation === type.id;
               return (
-                <TouchableOpacity
+                <PressableScale
                   key={type.id}
                   onPress={() => handleSelectViolation(type.id)}
-                  className="w-[48%] relative p-4 rounded-xl border-2 shadow-sm"
                   style={{
-                    borderColor: isSelected ? "#10b981" : colors.borderLight,
-                    backgroundColor: isSelected
-                      ? (isDark ? "rgba(16,185,129,0.1)" : "rgba(16,185,129,0.05)")
-                      : colors.card,
+                    width: "48%",
                   }}
-                  activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel={t.report[type.titleKey]}
                 >
-                  {isSelected && (
-                    <View className="absolute top-3 right-3">
-                      <MaterialIcons name="check-circle" size={18} color="#10b981" />
-                    </View>
-                  )}
                   <View
-                    className="w-10 h-10 rounded-full items-center justify-center mb-3 border"
+                    className="relative p-4 rounded-xl border-2 shadow-sm"
                     style={{
-                      backgroundColor: isSelected ? colors.card : colors.backgroundSecondary,
-                      borderColor: colors.borderLight,
+                      borderColor: isSelected ? "#10b981" : colors.borderLight,
+                      backgroundColor: isSelected
+                        ? (isDark ? "rgba(16,185,129,0.1)" : "rgba(16,185,129,0.05)")
+                        : colors.card,
                     }}
                   >
-                    <MaterialIcons
-                      name={type.icon}
-                      size={22}
-                      color={isSelected ? "#fbbf24" : type.iconColor}
-                    />
+                    {isSelected && (
+                      <View className="absolute top-3 right-3">
+                        <MaterialIcons name="check-circle" size={18} color="#10b981" />
+                      </View>
+                    )}
+                    <View
+                      className="w-10 h-10 rounded-full items-center justify-center mb-3 border"
+                      style={{
+                        backgroundColor: isSelected ? colors.card : colors.backgroundSecondary,
+                        borderColor: colors.borderLight,
+                      }}
+                    >
+                      <MaterialIcons
+                        name={type.icon}
+                        size={22}
+                        color={isSelected ? "#fbbf24" : type.iconColor}
+                      />
+                    </View>
+                    <Text className="text-sm font-bold" style={{ color: colors.textPrimary }}>
+                      {t.report[type.titleKey]}
+                    </Text>
+                    <Text className="text-xs mt-0.5" style={{ color: colors.textSecondary }}>
+                      {t.report[type.subtitleKey]}
+                    </Text>
                   </View>
-                  <Text className="text-sm font-bold" style={{ color: colors.textPrimary }}>
-                    {t.report[type.titleKey]}
-                  </Text>
-                  <Text className="text-xs mt-0.5" style={{ color: colors.textSecondary }}>
-                    {t.report[type.subtitleKey]}
-                  </Text>
-                </TouchableOpacity>
+                </PressableScale>
               );
             })}
           </View>
@@ -386,31 +402,35 @@ export default function ReportingFormScreen() {
           </View>
 
           {/* Upload Zone */}
-          <TouchableOpacity
+          <PressableScale
             onPress={handleAddPhoto}
             disabled={photos.length >= MAX_PHOTOS}
-            className="w-full h-36 border-2 border-dashed rounded-xl items-center justify-center gap-2"
-            style={{
-              borderColor: photos.length >= MAX_PHOTOS ? colors.borderLight : colors.border,
-              backgroundColor: photos.length >= MAX_PHOTOS
-                ? (isDark ? "rgba(30,41,59,0.5)" : "rgba(243,244,246,0.5)")
-                : colors.backgroundSecondary,
-              opacity: photos.length >= MAX_PHOTOS ? 0.5 : 1,
-            }}
-            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel={t.report.tapToAdd}
           >
-            <View className="w-12 h-12 rounded-full shadow-sm items-center justify-center" style={{ backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#ffffff" }}>
-              <MaterialIcons name="add-a-photo" size={28} color="#10b981" />
+            <View
+              className="w-full h-36 border-2 border-dashed rounded-xl items-center justify-center gap-2"
+              style={{
+                borderColor: photos.length >= MAX_PHOTOS ? colors.borderLight : colors.border,
+                backgroundColor: photos.length >= MAX_PHOTOS
+                  ? (isDark ? "rgba(30,41,59,0.5)" : "rgba(243,244,246,0.5)")
+                  : colors.backgroundSecondary,
+                opacity: photos.length >= MAX_PHOTOS ? 0.5 : 1,
+              }}
+            >
+              <View className="w-12 h-12 rounded-full shadow-sm items-center justify-center" style={{ backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#ffffff" }}>
+                <MaterialIcons name="add-a-photo" size={28} color="#10b981" />
+              </View>
+              <View className="items-center">
+                <Text className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
+                  {photos.length >= MAX_PHOTOS ? `${MAX_PHOTOS}/${MAX_PHOTOS} photos` : t.report.tapToAdd}
+                </Text>
+                <Text className="text-[11px] mt-0.5" style={{ color: colors.textMuted }}>
+                  {photos.length >= MAX_PHOTOS ? t.report.limitReached : `${photos.length}/${MAX_PHOTOS} — ${t.report.photoFormat}`}
+                </Text>
+              </View>
             </View>
-            <View className="items-center">
-              <Text className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
-                {photos.length >= MAX_PHOTOS ? `${MAX_PHOTOS}/${MAX_PHOTOS} photos` : t.report.tapToAdd}
-              </Text>
-              <Text className="text-[11px] mt-0.5" style={{ color: colors.textMuted }}>
-                {photos.length >= MAX_PHOTOS ? t.report.limitReached : `${photos.length}/${MAX_PHOTOS} — ${t.report.photoFormat}`}
-              </Text>
-            </View>
-          </TouchableOpacity>
+          </PressableScale>
 
           {/* Photo Thumbnails */}
           {photos.length > 0 && (
@@ -420,30 +440,34 @@ export default function ReportingFormScreen() {
               contentContainerStyle={{ gap: 12, paddingBottom: 8, paddingTop: 4 }}
             >
               {photos.map((photo, index) => (
-                <TouchableOpacity
+                <PressableScale
                   key={index}
                   onPress={() => handleRemovePhoto(index)}
-                  className="relative w-20 h-20 rounded-lg overflow-hidden border shadow-sm"
-                  style={{ borderColor: colors.borderLight }}
-                  activeOpacity={0.9}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${t.report.photoEvidence} ${index + 1}`}
                 >
-                  <Image
-                    source={{ uri: photo }}
-                    className="w-full h-full"
-                    contentFit="cover"
-                    transition={200}
-                  />
-                  <View className="absolute inset-0 bg-black/30 items-center justify-center">
-                    <MaterialIcons name="delete" size={20} color="#ffffff" />
-                  </View>
-                  {index === 0 && (
-                    <View className="absolute bottom-1 right-1 bg-black/60 rounded px-1 py-0.5">
-                      <Text className="text-[8px] text-white font-medium uppercase tracking-wider">
-                        {t.report.cover}
-                      </Text>
+                  <View
+                    className="relative w-20 h-20 rounded-lg overflow-hidden border shadow-sm"
+                    style={{ borderColor: colors.borderLight }}
+                  >
+                    <Image
+                      source={{ uri: photo }}
+                      className="w-full h-full"
+                      contentFit="cover"
+                      transition={200}
+                    />
+                    <View className="absolute inset-0 bg-black/30 items-center justify-center">
+                      <MaterialIcons name="delete" size={20} color="#ffffff" />
                     </View>
-                  )}
-                </TouchableOpacity>
+                    {index === 0 && (
+                      <View className="absolute bottom-1 right-1 bg-black/60 rounded px-1 py-0.5">
+                        <Text className="text-[8px] text-white font-medium uppercase tracking-wider">
+                          {t.report.cover}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </PressableScale>
               ))}
             </ScrollView>
           )}
@@ -479,36 +503,40 @@ export default function ReportingFormScreen() {
         className="absolute bottom-0 left-0 right-0 border-t p-5 backdrop-blur-xl z-40"
         style={{ paddingBottom: insets.bottom + 24, backgroundColor: colors.background, borderTopColor: colors.borderLight }}
       >
-        <TouchableOpacity
+        <PressableScale
           onPress={handleSubmit}
           disabled={!isFormValid || createReport.isPending || isUploading}
-          className="w-full py-4 rounded-xl flex-row items-center justify-center gap-2"
-          activeOpacity={0.9}
-          style={{
-            backgroundColor: isFormValid && !createReport.isPending && !isUploading
-              ? "#10b981"
-              : colors.buttonSecondary,
-            ...(isFormValid && !createReport.isPending && !isUploading
-              ? {
-                  shadowColor: "#10b981",
-                  shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: 0.4,
-                  shadowRadius: 20,
-                }
-              : {}),
-          }}
+          accessibilityRole="button"
+          accessibilityLabel={t.report.submitReport}
         >
-          {createReport.isPending || isUploading ? (
-            <ActivityIndicator size="small" color="#ffffff" />
-          ) : (
-            <>
-              <Text className="font-bold text-base text-white">
-                {t.report.submitReport}
-              </Text>
-              <MaterialIcons name="send" size={20} color="#ffffff" />
-            </>
-          )}
-        </TouchableOpacity>
+          <View
+            className="w-full py-4 rounded-xl flex-row items-center justify-center gap-2"
+            style={{
+              backgroundColor: isFormValid && !createReport.isPending && !isUploading
+                ? "#10b981"
+                : colors.buttonSecondary,
+              ...(isFormValid && !createReport.isPending && !isUploading
+                ? {
+                    shadowColor: "#10b981",
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.4,
+                    shadowRadius: 20,
+                  }
+                : {}),
+            }}
+          >
+            {createReport.isPending || isUploading ? (
+              <ActivityIndicator size="small" color="#ffffff" />
+            ) : (
+              <>
+                <Text className="font-bold text-base text-white">
+                  {t.report.submitReport}
+                </Text>
+                <MaterialIcons name="send" size={20} color="#ffffff" />
+              </>
+            )}
+          </View>
+        </PressableScale>
 
         <View className="flex-row items-center justify-center gap-1.5 mt-4 opacity-70">
           <MaterialIcons name="lock" size={12} color={colors.textMuted} />

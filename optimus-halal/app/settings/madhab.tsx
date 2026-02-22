@@ -10,9 +10,10 @@ import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   ScrollView,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -77,20 +78,23 @@ export default function MadhabScreen() {
         entering={FadeIn.duration(400)}
         className="flex-row items-center px-4 pb-4 pt-2"
       >
-        <TouchableOpacity
+        <Pressable
           onPress={() => router.back()}
-          activeOpacity={0.7}
           accessibilityRole="button"
           accessibilityLabel={t.common.back}
-          className="w-10 h-10 items-center justify-center rounded-xl"
-          style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#f1f5f9" }}
+          hitSlop={8}
         >
-          <MaterialIcons
-            name="arrow-back"
-            size={22}
-            color={isDark ? "#e2e8f0" : "#334155"}
-          />
-        </TouchableOpacity>
+          <View
+            className="w-10 h-10 items-center justify-center rounded-xl"
+            style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#f1f5f9" }}
+          >
+            <MaterialIcons
+              name="arrow-back"
+              size={22}
+              color={isDark ? "#e2e8f0" : "#334155"}
+            />
+          </View>
+        </Pressable>
         <Text
           className="flex-1 text-center text-lg font-bold text-slate-900 dark:text-white"
           accessibilityRole="header"
@@ -140,60 +144,62 @@ export default function MadhabScreen() {
             entering={FadeInDown.delay(150 + index * 60).duration(400)}
             className="px-4 mb-3"
           >
-            <TouchableOpacity
+            <PressableScale
               onPress={() => handleSelect(option.value)}
-              activeOpacity={0.7}
               accessibilityRole="radio"
               accessibilityState={{ checked: selected === option.value }}
               accessibilityLabel={option.label}
               accessibilityHint={option.description}
-              className="rounded-xl p-4 flex-row items-center gap-4"
-              style={{
-                backgroundColor: isDark
-                  ? selected === option.value
-                    ? "rgba(19,236,106,0.1)"
-                    : "rgba(255,255,255,0.03)"
-                  : selected === option.value
-                    ? "rgba(19,236,106,0.06)"
-                    : "#ffffff",
-                borderWidth: selected === option.value ? 2 : 1,
-                borderColor: selected === option.value
-                  ? colors.primary
-                  : isDark
-                    ? "rgba(255,255,255,0.05)"
-                    : "#e2e8f0",
-              }}
             >
-              {/* Radio indicator */}
               <View
-                className="w-6 h-6 rounded-full items-center justify-center"
+                className="rounded-xl p-4 flex-row items-center gap-4"
                 style={{
-                  borderWidth: 2,
+                  backgroundColor: isDark
+                    ? selected === option.value
+                      ? "rgba(19,236,106,0.1)"
+                      : "rgba(255,255,255,0.03)"
+                    : selected === option.value
+                      ? "rgba(19,236,106,0.06)"
+                      : "#ffffff",
+                  borderWidth: selected === option.value ? 2 : 1,
                   borderColor: selected === option.value
                     ? colors.primary
                     : isDark
-                      ? "#4b5563"
-                      : "#cbd5e1",
-                  backgroundColor: selected === option.value
-                    ? colors.primary
-                    : "transparent",
+                      ? "rgba(255,255,255,0.05)"
+                      : "#e2e8f0",
                 }}
               >
-                {selected === option.value && (
-                  <MaterialIcons name="check" size={14} color="#fff" />
-                )}
-              </View>
+                {/* Radio indicator */}
+                <View
+                  className="w-6 h-6 rounded-full items-center justify-center"
+                  style={{
+                    borderWidth: 2,
+                    borderColor: selected === option.value
+                      ? colors.primary
+                      : isDark
+                        ? "#4b5563"
+                        : "#cbd5e1",
+                    backgroundColor: selected === option.value
+                      ? colors.primary
+                      : "transparent",
+                  }}
+                >
+                  {selected === option.value && (
+                    <MaterialIcons name="check" size={14} color="#fff" />
+                  )}
+                </View>
 
-              {/* Content */}
-              <View className="flex-1">
-                <Text className="text-base font-bold text-slate-900 dark:text-white">
-                  {option.label}
-                </Text>
-                <Text className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                  {option.description}
-                </Text>
+                {/* Content */}
+                <View className="flex-1">
+                  <Text className="text-base font-bold text-slate-900 dark:text-white">
+                    {option.label}
+                  </Text>
+                  <Text className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                    {option.description}
+                  </Text>
+                </View>
               </View>
-            </TouchableOpacity>
+            </PressableScale>
           </Animated.View>
         ))}
 
