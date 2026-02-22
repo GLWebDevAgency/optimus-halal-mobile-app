@@ -40,7 +40,17 @@ import {
 } from "@/components/map";
 import type { StoreFeatureProperties } from "@/components/map";
 import { trackEvent } from "@/lib/analytics";
-import Animated, { FadeIn, FadeInRight } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeInRight,
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  withDelay,
+  Easing,
+} from "react-native-reanimated";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 // Guard native Mapbox import — fails gracefully if dev client not rebuilt
 let MapView: any, Camera: any, LocationPuck: any, ShapeSource: any, CircleLayer: any, SymbolLayer: any;
@@ -184,6 +194,36 @@ export default function MapScreen() {
 
   // Track bottom sheet snap position (avoid fighting user gestures)
   const currentSnapIndexRef = useRef(0);
+
+  // Pull-up hint animation — gentle bounce to invite expansion
+  const pullHintY = useSharedValue(0);
+  const pullHintOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    if (selectedStoreId && currentSnapIndexRef.current === 0) {
+      // Start bouncing after a brief delay (let card animate in first)
+      pullHintOpacity.value = withDelay(400, withTiming(1, { duration: 300 }));
+      pullHintY.value = withDelay(
+        600,
+        withRepeat(
+          withSequence(
+            withTiming(-6, { duration: 600, easing: Easing.inOut(Easing.ease) }),
+            withTiming(0, { duration: 600, easing: Easing.inOut(Easing.ease) }),
+          ),
+          -1, // infinite
+          true,
+        ),
+      );
+    } else {
+      pullHintOpacity.value = withTiming(0, { duration: 200 });
+      pullHintY.value = 0;
+    }
+  }, [selectedStoreId, pullHintY, pullHintOpacity]);
+
+  const pullHintStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: pullHintY.value }],
+    opacity: pullHintOpacity.value,
+  }));
 
   // Selected store data
   const selectedStore = useMemo(() => {
@@ -509,16 +549,14 @@ export default function MapScreen() {
     }
   }, [storesQuery.isFetching, storesQuery.data?.length, hasAnimatedToUser]);
 
-  // Auto-snap bottom sheet on store selection — respect user gesture
-  // Only snap UP if user is below target; never snap DOWN from 90% to 50%
+  // Auto-snap bottom sheet — keep at peek (index 0) for both states.
+  // Store detail card fits in peek height; user pulls up for more.
   useEffect(() => {
-    if (selectedStoreId) {
-      if (currentSnapIndexRef.current < 1) {
-        bottomSheetRef.current?.snapToIndex(1);
-      }
-    } else {
+    if (!selectedStoreId) {
       bottomSheetRef.current?.snapToIndex(0);
     }
+    // When selecting a store: don't auto-snap up — let the peek show the card
+    // and the pull-up hint animate to invite the user to expand.
   }, [selectedStoreId]);
 
   // Deep-link: fly to store from home carousel "Autour de vous"
@@ -724,6 +762,11 @@ export default function MapScreen() {
         onChange={(index) => {
           currentSnapIndexRef.current = index;
           impact();
+          // Hide pull-up hint once user has expanded the sheet
+          if (index > 0) {
+            pullHintOpacity.value = withTiming(0, { duration: 200 });
+            pullHintY.value = 0;
+          }
         }}
         style={{
           shadowColor: "#000",
@@ -735,27 +778,38 @@ export default function MapScreen() {
       >
         <BottomSheetView style={{ flex: 1 }}>
           {selectedStore ? (
-            /* Store Detail */
-            <StoreDetailCard
-              store={selectedStore as StoreFeatureProperties}
-              onDirections={() => {
-                trackEvent("map_get_directions", { store_id: selectedStore.id });
-                openDirections(selectedStore.latitude, selectedStore.longitude, selectedStore.name);
-              }}
-              onCall={() => {
-                trackEvent("map_call_store", { store_id: selectedStore.id });
-                selectedStore.phone && callStore(selectedStore.phone);
-              }}
-              onShare={() => {
-                trackEvent("map_share_store", { store_id: selectedStore.id });
-                const certInfo = selectedStore.halalCertified ? " (Halal Certifié)" : "";
-                Share.share({
-                  message: `${selectedStore.name}${certInfo}\n${selectedStore.address}, ${selectedStore.city}\n\nDécouvert sur Optimus Halal`,
-                });
-              }}
-              onClose={handleCloseDetail}
-              colors={colors}
-            />
+            /* Store Detail + pull-up hint */
+            <>
+              <StoreDetailCard
+                store={selectedStore as StoreFeatureProperties}
+                onDirections={() => {
+                  trackEvent("map_get_directions", { store_id: selectedStore.id });
+                  openDirections(selectedStore.latitude, selectedStore.longitude, selectedStore.name);
+                }}
+                onCall={() => {
+                  trackEvent("map_call_store", { store_id: selectedStore.id });
+                  selectedStore.phone && callStore(selectedStore.phone);
+                }}
+                onShare={() => {
+                  trackEvent("map_share_store", { store_id: selectedStore.id });
+                  const certInfo = selectedStore.halalCertified ? " (Halal Certifié)" : "";
+                  Share.share({
+                    message: `${selectedStore.name}${certInfo}\n${selectedStore.address}, ${selectedStore.city}\n\nDécouvert sur Optimus Halal`,
+                  });
+                }}
+                onClose={handleCloseDetail}
+                colors={colors}
+              />
+              {/* Pull-up hint — bouncing chevron to invite expansion */}
+              <Animated.View
+                style={[pullHintStyle, { alignItems: "center", paddingTop: 8, paddingBottom: 4 }]}
+              >
+                <MaterialIcons name="expand-less" size={20} color={colors.textMuted} />
+                <Text className="text-[10px] font-medium" style={{ color: colors.textMuted, marginTop: -2 }}>
+                  Plus de détails
+                </Text>
+              </Animated.View>
+            </>
           ) : (
             /* Store List */
             <View className="flex-1 pb-4">
