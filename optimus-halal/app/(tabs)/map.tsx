@@ -44,6 +44,10 @@ import { trackEvent } from "@/lib/analytics";
 import Animated, {
   FadeIn,
   FadeInRight,
+  useSharedValue,
+  useAnimatedStyle,
+  interpolate,
+  Extrapolation,
 } from "react-native-reanimated";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 // Guard native Mapbox import — fails gracefully if dev client not rebuilt
@@ -188,6 +192,15 @@ export default function MapScreen() {
 
   // Track bottom sheet snap position (avoid fighting user gestures)
   const currentSnapIndexRef = useRef(0);
+
+  // Animated index tracks the bottom sheet position on the UI thread (0→1→2)
+  // Used to smoothly fade out the search overlay as the sheet rises
+  const animatedSheetIndex = useSharedValue(0);
+  const overlayFadeStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(animatedSheetIndex.value, [0, 0.8], [1, 0], Extrapolation.CLAMP),
+  }));
+  // Disable touch on overlay when mostly invisible (avoids ghost taps)
+  const [overlayInteractive, setOverlayInteractive] = useState(true);
 
   // Sheet-level bounce — programmatically nudge the sheet upward via snapToPosition
   // then settle back to peek. Creates a physical "hey, pull me up" affordance.
@@ -665,60 +678,62 @@ export default function MapScreen() {
         )}
       </MapView>
 
-      {/* Search bar + suggestions + filter chips */}
-      <MapSearchOverlay
-        colors={colors}
-        isDark={isDark}
-        insetTop={insets.top}
-        searchText={searchText}
-        isSearchActive={isSearchActive}
-        showSuggestions={showSuggestions}
-        searchResults={searchResults}
-        activeFilters={activeFilters}
-        filters={FILTER_IDS}
-        onSearchTextChange={handleSearchTextChange}
-        onClearSearch={() => {
-          setSearchText("");
-          clearSearch();
-          setShowSuggestions(false);
-        }}
-        onShowSuggestions={setShowSuggestions}
-        onSearchResultPress={handleSearchResultPress}
-        onToggleFilter={toggleFilter}
-        t={{
-          searchStores: t.map.searchStores,
-          storeResults: t.map.storeResults,
-          addresses: t.map.addresses,
-          filters: t.map.filters as unknown as Record<string, string>,
-          selected: t.common.selected,
-        }}
-      />
+      {/* Search overlay + "Search this area" — fades out as sheet rises */}
+      <Animated.View style={overlayFadeStyle} pointerEvents={overlayInteractive ? "auto" : "none"}>
+        <MapSearchOverlay
+          colors={colors}
+          isDark={isDark}
+          insetTop={insets.top}
+          searchText={searchText}
+          isSearchActive={isSearchActive}
+          showSuggestions={showSuggestions}
+          searchResults={searchResults}
+          activeFilters={activeFilters}
+          filters={FILTER_IDS}
+          onSearchTextChange={handleSearchTextChange}
+          onClearSearch={() => {
+            setSearchText("");
+            clearSearch();
+            setShowSuggestions(false);
+          }}
+          onShowSuggestions={setShowSuggestions}
+          onSearchResultPress={handleSearchResultPress}
+          onToggleFilter={toggleFilter}
+          t={{
+            searchStores: t.map.searchStores,
+            storeResults: t.map.storeResults,
+            addresses: t.map.addresses,
+            filters: t.map.filters as unknown as Record<string, string>,
+            selected: t.common.selected,
+          }}
+        />
 
-      {/* "Search this area" floating button */}
-      {showSearchThisArea && (
-        <Animated.View
-          entering={FadeIn.duration(200)}
-          className="absolute self-center"
-          style={{ top: insets.top + 130, zIndex: 15 }}
-        >
-          <TouchableOpacity
-            onPress={handleSearchThisArea}
-            className="flex-row items-center gap-2 h-10 px-5 rounded-full"
-            style={{
-              backgroundColor: colors.primary,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 4,
-              elevation: 4,
-            }}
-            activeOpacity={0.8}
+        {/* "Search this area" floating button */}
+        {showSearchThisArea && (
+          <Animated.View
+            entering={FadeIn.duration(200)}
+            className="absolute self-center"
+            style={{ top: insets.top + 130, zIndex: 15 }}
           >
-            <MaterialIcons name="refresh" size={16} color="#fff" />
-            <Text className="text-sm font-semibold text-white">{t.map.searchThisArea}</Text>
-          </TouchableOpacity>
-        </Animated.View>
-      )}
+            <TouchableOpacity
+              onPress={handleSearchThisArea}
+              className="flex-row items-center gap-2 h-10 px-5 rounded-full"
+              style={{
+                backgroundColor: colors.primary,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 4,
+              }}
+              activeOpacity={0.8}
+            >
+              <MaterialIcons name="refresh" size={16} color="#fff" />
+              <Text className="text-sm font-semibold text-white">{t.map.searchThisArea}</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
+      </Animated.View>
 
       {/* Map Controls — FAB, results badge, loading indicator */}
       <MapControls
@@ -746,6 +761,7 @@ export default function MapScreen() {
         ref={bottomSheetRef}
         index={0}
         snapPoints={snapPoints}
+        animatedIndex={animatedSheetIndex}
         backgroundStyle={{
           backgroundColor: colors.card,
           borderTopLeftRadius: 20,
@@ -762,7 +778,8 @@ export default function MapScreen() {
         onChange={(index) => {
           currentSnapIndexRef.current = index;
           impact();
-          // Trigger detail fetch when user expands the sheet
+          // Toggle overlay touch & fetch detail on expand
+          setOverlayInteractive(index === 0);
           if (index > 0) {
             setSheetExpanded(true);
             if (bounceTimerRef.current) {
