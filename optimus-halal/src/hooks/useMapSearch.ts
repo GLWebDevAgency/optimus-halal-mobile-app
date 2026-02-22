@@ -31,6 +31,7 @@ export interface StoreSearchResult {
 
 export interface AddressSearchResult {
   type: "address";
+  banId: string;
   label: string;
   city: string;
   postcode: string;
@@ -95,6 +96,7 @@ export function useMapSearch() {
         for (const f of banResults.value.features) {
           combined.push({
             type: "address",
+            banId: f.properties.id,
             label: f.properties.label,
             city: f.properties.city,
             postcode: f.properties.postcode,

@@ -182,6 +182,9 @@ export default function MapScreen() {
 
   const [isStyleLoaded, setIsStyleLoaded] = useState(false);
 
+  // Track bottom sheet snap position (avoid fighting user gestures)
+  const currentSnapIndexRef = useRef(0);
+
   // Selected store data
   const selectedStore = useMemo(() => {
     if (!selectedStoreId) return null;
@@ -255,19 +258,22 @@ export default function MapScreen() {
     const zoom = state?.properties?.zoom ?? 10;
     const radiusKm = Math.max(0.5, Math.min(50, 40000 / Math.pow(2, zoom)));
 
-    // 2km gate: if the new center is < 2km from last committed center,
-    // show "Search this area" button instead of auto-refetching.
-    // This prevents excessive API calls during small pan adjustments.
+    // Dynamic gate: adapt threshold to zoom level so panning ~1 viewport
+    // width triggers refresh. At zoom 17 (street): ~300m. At zoom 7 (region): ~5km.
+    // Formula: gateKm ≈ visible viewport width / 2
+    const gateKm = Math.max(0.3, 40 / Math.pow(2, zoom - 10));
     if (!force && lastCommittedCenterRef.current) {
       const [cLng, cLat] = lastCommittedCenterRef.current;
       // Fast equirectangular approximation (accurate enough for < 50km)
       const dLat = (lat - cLat) * 111.32;
       const dLng = (lng - cLng) * 111.32 * Math.cos((lat * Math.PI) / 180);
       const distKm = Math.sqrt(dLat * dLat + dLng * dLng);
-      if (distKm < 2) {
+      if (distKm < gateKm) {
         lastCenterRef.current = [lng, lat];
         _lastViewport = { center: [center[0], center[1]], zoom };
-        setShowSearchThisArea(true);
+        if (distKm > gateKm * 0.3) {
+          setShowSearchThisArea(true);
+        }
         return;
       }
     }
@@ -503,12 +509,15 @@ export default function MapScreen() {
     }
   }, [storesQuery.isFetching, storesQuery.data?.length, hasAnimatedToUser]);
 
-  // Auto-snap bottom sheet on store selection
+  // Auto-snap bottom sheet on store selection — respect user gesture
+  // Only snap UP if user is below target; never snap DOWN from 90% to 50%
   useEffect(() => {
     if (selectedStoreId) {
-      bottomSheetRef.current?.snapToIndex(1); // half
+      if (currentSnapIndexRef.current < 1) {
+        bottomSheetRef.current?.snapToIndex(1);
+      }
     } else {
-      bottomSheetRef.current?.snapToIndex(0); // peek
+      bottomSheetRef.current?.snapToIndex(0);
     }
   }, [selectedStoreId]);
 
@@ -713,7 +722,7 @@ export default function MapScreen() {
         enableDynamicSizing={false}
         animateOnMount
         onChange={(index) => {
-          // Haptic feedback on snap position change (Google Maps feel)
+          currentSnapIndexRef.current = index;
           impact();
         }}
         style={{
@@ -793,6 +802,7 @@ export default function MapScreen() {
                       <StoreCard
                         store={item as StoreFeatureProperties}
                         isSelected={item.id === selectedStoreId}
+                        isDark={isDark}
                         onPressId={handleStoreCardPressById}
                         colors={colors}
                       />

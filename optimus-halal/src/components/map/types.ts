@@ -40,14 +40,15 @@ export function formatDistance(meters: number): string {
   return `${(meters / 1000).toFixed(1)}km`;
 }
 
-export function openStatusColor(status: string): string {
-  if (status === "open" || status === "opening_soon") return "#22c55e";
-  if (status === "closing_soon") return "#f59e0b";
-  return "#ef4444";
+// Semantic open-status colors — brighter in dark mode for readability
+export function openStatusColor(status: string, isDark = false): string {
+  if (status === "open" || status === "opening_soon") return isDark ? "#4ade80" : "#16a34a";
+  if (status === "closing_soon") return isDark ? "#fbbf24" : "#d97706";
+  return isDark ? "#f87171" : "#dc2626";
 }
 
-export function openStatusBg(status: string): string {
-  if (status === "open" || status === "opening_soon") return "rgba(34,197,94,0.12)";
-  if (status === "closing_soon") return "rgba(245,158,11,0.12)";
-  return "rgba(239,68,68,0.12)";
+export function openStatusBg(status: string, isDark = false): string {
+  if (status === "open" || status === "opening_soon") return isDark ? "rgba(74,222,128,0.12)" : "rgba(22,163,74,0.10)";
+  if (status === "closing_soon") return isDark ? "rgba(251,191,36,0.12)" : "rgba(217,119,6,0.10)";
+  return isDark ? "rgba(248,113,113,0.12)" : "rgba(220,38,38,0.10)";
 }

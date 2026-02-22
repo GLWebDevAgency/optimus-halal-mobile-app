@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useRef, useCallback } from "react";
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
@@ -58,6 +58,35 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
   onToggleFilter,
   t,
 }: Props) {
+  // Guard: if user is pressing a result, don't hide suggestions on blur
+  const isPressInProgressRef = useRef(false);
+
+  const handleBlur = useCallback(() => {
+    // Delay hide so onPress on a result fires first
+    setTimeout(() => {
+      if (!isPressInProgressRef.current) {
+        onShowSuggestions(false);
+      }
+      isPressInProgressRef.current = false;
+    }, 150);
+  }, [onShowSuggestions]);
+
+  const handleResultPress = useCallback((result: SearchResult) => {
+    isPressInProgressRef.current = true;
+    onSearchResultPress(result);
+  }, [onSearchResultPress]);
+
+  // Pre-group results once instead of calling .filter() 4x in render
+  const { storeResults: groupedStores, addressResults: groupedAddresses } = useMemo(() => {
+    const storeResults: (SearchResult & { type: "store" })[] = [];
+    const addressResults: (SearchResult & { type: "address" })[] = [];
+    for (const r of searchResults) {
+      if (r.type === "store") storeResults.push(r);
+      else addressResults.push(r);
+    }
+    return { storeResults, addressResults };
+  }, [searchResults]);
+
   return (
     <View className="absolute top-0 left-0 right-0" style={{ zIndex: 10 }}>
       <LinearGradient
@@ -92,9 +121,7 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
               style={{ color: colors.textPrimary }}
               returnKeyType="search"
               onFocus={() => onShowSuggestions(true)}
-              onBlur={() => {
-                setTimeout(() => onShowSuggestions(false), 200);
-              }}
+              onBlur={handleBlur}
             />
             {searchText.length > 0 && (
               isSearchActive ? (
@@ -121,20 +148,19 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
             }}
           >
             {/* Store results section */}
-            {searchResults.some((r) => r.type === "store") && (
+            {groupedStores.length > 0 && (
               <>
                 <View className="px-4 pt-2.5 pb-1.5">
                   <Text className="text-[11px] font-bold uppercase tracking-wide" style={{ color: colors.textMuted }}>
                     {t.storeResults}
                   </Text>
                 </View>
-                {searchResults.filter((r) => r.type === "store").map((r) => {
-                  if (r.type !== "store") return null;
+                {groupedStores.map((r) => {
                   const typeColor = storeTypeColors[r.storeType as keyof typeof storeTypeColors]?.base ?? colors.primary;
                   return (
                     <TouchableOpacity
                       key={r.id}
-                      onPress={() => onSearchResultPress(r)}
+                      onPress={() => handleResultPress(r)}
                       className="flex-row items-center px-4 py-3"
                       style={{ borderBottomWidth: 1, borderBottomColor: colors.borderLight }}
                     >
@@ -170,22 +196,20 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
               </>
             )}
             {/* Address results section */}
-            {searchResults.some((r) => r.type === "address") && (
+            {groupedAddresses.length > 0 && (
               <>
                 <View className="px-4 pt-2.5 pb-1.5">
                   <Text className="text-[11px] font-bold uppercase tracking-wide" style={{ color: colors.textMuted }}>
                     {t.addresses}
                   </Text>
                 </View>
-                {searchResults.filter((r) => r.type === "address").map((r, i) => {
-                  if (r.type !== "address") return null;
-                  return (
+                {groupedAddresses.map((r, i) => (
                     <TouchableOpacity
-                      key={`addr-${r.latitude}-${r.longitude}-${i}`}
-                      onPress={() => onSearchResultPress(r)}
+                      key={r.banId}
+                      onPress={() => handleResultPress(r)}
                       className="flex-row items-center px-4 py-3"
                       style={{
-                        borderBottomWidth: i < searchResults.filter((x) => x.type === "address").length - 1 ? 1 : 0,
+                        borderBottomWidth: i < groupedAddresses.length - 1 ? 1 : 0,
                         borderBottomColor: colors.borderLight,
                       }}
                     >
@@ -199,8 +223,7 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
                         </Text>
                       </View>
                     </TouchableOpacity>
-                  );
-                })}
+                ))}
               </>
             )}
           </Animated.View>

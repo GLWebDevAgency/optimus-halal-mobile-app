@@ -14,6 +14,7 @@ import {
 interface Props {
   store: StoreFeatureProperties;
   isSelected: boolean;
+  isDark?: boolean;
   onPressId: (storeId: string) => void;
   colors: ThemeColors;
 }
@@ -21,6 +22,7 @@ interface Props {
 export const StoreCard = React.memo(function StoreCard({
   store,
   isSelected,
+  isDark = false,
   onPressId,
   colors,
 }: Props) {
@@ -99,10 +101,10 @@ export const StoreCard = React.memo(function StoreCard({
                 <View className="flex-row items-center gap-1">
                   <View style={{
                     width: 6, height: 6, borderRadius: 3,
-                    backgroundColor: openStatusColor(store.openStatus),
+                    backgroundColor: openStatusColor(store.openStatus, isDark),
                   }} />
                   <Text className="text-[11px] font-semibold" style={{
-                    color: openStatusColor(store.openStatus),
+                    color: openStatusColor(store.openStatus, isDark),
                   }}>
                     {store.openStatus === "open" ? "Ouvert"
                       : store.openStatus === "closing_soon" ? "Ferme bientôt"

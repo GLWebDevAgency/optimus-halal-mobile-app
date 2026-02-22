@@ -102,13 +102,13 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
         {store.openStatus && store.openStatus !== "unknown" && (
           <View
             className="px-2.5 py-1 rounded-lg flex-row items-center gap-1"
-            style={{ backgroundColor: openStatusBg(store.openStatus) }}
+            style={{ backgroundColor: openStatusBg(store.openStatus, isDark) }}
           >
             <View style={{
               width: 6, height: 6, borderRadius: 3,
-              backgroundColor: openStatusColor(store.openStatus),
+              backgroundColor: openStatusColor(store.openStatus, isDark),
             }} />
-            <Text className="text-[11px] font-bold" style={{ color: openStatusColor(store.openStatus) }}>
+            <Text className="text-[11px] font-bold" style={{ color: openStatusColor(store.openStatus, isDark) }}>
               {store.openStatus === "open" ? t.map.open
                 : store.openStatus === "closing_soon" ? t.map.closingSoon.replace("{{minutes}}", "30")
                 : store.openStatus === "opening_soon" ? t.map.openingSoon.replace("{{minutes}}", "30")
