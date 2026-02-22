@@ -10,7 +10,7 @@
  * Selecting an address → fly-to (existing geocode behavior)
  */
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 
 const BAN_BASE = "https://api-adresse.data.gouv.fr";
@@ -40,19 +40,18 @@ export interface AddressSearchResult {
 
 export type SearchResult = StoreSearchResult | AddressSearchResult;
 
+const DEBOUNCE_MS = 300;
+
 export function useMapSearch() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingQueryRef = useRef<string>("");
   const utils = trpc.useUtils();
 
-  const search = useCallback(async (query: string) => {
-    const trimmed = query.trim();
-    if (trimmed.length < 2) {
-      setResults([]);
-      return;
-    }
-
+  // Core fetch — no debounce, called after timer fires
+  const executeFetch = useCallback(async (trimmed: string) => {
     // Cancel previous in-flight request
     abortRef.current?.abort();
     abortRef.current = new AbortController();
@@ -62,9 +61,7 @@ export function useMapSearch() {
     try {
       // Fire both searches in parallel
       const [storeResults, banResults] = await Promise.allSettled([
-        // tRPC store search
         utils.store.search.fetch({ query: trimmed, limit: 5 }),
-        // BAN geocoding
         fetch(
           `${BAN_BASE}/search/?q=${encodeURIComponent(trimmed)}&limit=4`,
           { signal },
@@ -115,8 +112,44 @@ export function useMapSearch() {
     }
   }, [utils]);
 
+  // Debounced search — waits 300ms after last keystroke
+  const search = useCallback((query: string) => {
+    const trimmed = query.trim();
+    pendingQueryRef.current = trimmed;
+
+    // Clear any pending timer
+    if (timerRef.current) clearTimeout(timerRef.current);
+
+    if (trimmed.length < 2) {
+      setResults([]);
+      setIsSearching(false);
+      abortRef.current?.abort();
+      return;
+    }
+
+    // Show loading immediately (responsive feel)
+    setIsSearching(true);
+
+    timerRef.current = setTimeout(() => {
+      // Only fire if query hasn't changed since timer was set
+      if (pendingQueryRef.current === trimmed) {
+        executeFetch(trimmed);
+      }
+    }, DEBOUNCE_MS);
+  }, [executeFetch]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      abortRef.current?.abort();
+    };
+  }, []);
+
   const clear = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
     abortRef.current?.abort();
+    pendingQueryRef.current = "";
     setResults([]);
     setIsSearching(false);
   }, []);

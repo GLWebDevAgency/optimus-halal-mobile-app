@@ -14,7 +14,6 @@ import React, { useState, useCallback, useMemo, useRef, useEffect } from "react"
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   FlatList,
   Dimensions,
@@ -31,24 +30,17 @@ import { useHaptics, useUserLocation, useMapStores, useMapSearch } from "@/hooks
 import type { SearchResult } from "@/hooks";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTheme } from "@/hooks/useTheme";
-import { storeTypeColors, glass } from "@/theme/colors";
 import {
   StoreCard,
   StoreDetailCard,
   MapMarkerLayer,
   MapControls,
-  STORE_TYPE_ICON,
+  MapSearchOverlay,
   CARD_WIDTH,
 } from "@/components/map";
 import type { StoreFeatureProperties } from "@/components/map";
-import { BlurView } from "expo-blur";
 import { trackEvent } from "@/lib/analytics";
-import Animated, {
-  FadeIn,
-  FadeInDown,
-  FadeInRight,
-} from "react-native-reanimated";
-import { LinearGradient } from "expo-linear-gradient";
+import Animated, { FadeIn, FadeInRight } from "react-native-reanimated";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 // Guard native Mapbox import — fails gracefully if dev client not rebuilt
 let MapView: any, Camera: any, LocationPuck: any, ShapeSource: any, CircleLayer: any, SymbolLayer: any;
@@ -150,8 +142,8 @@ export default function MapScreen() {
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
 
-  // Hybrid search (stores + addresses)
-  const { results: searchResults, search: hybridSearch, clear: clearSearch } = useMapSearch();
+  // Hybrid search (stores + addresses) — 300ms debounce built into hook
+  const { results: searchResults, isSearching: isSearchActive, search: hybridSearch, clear: clearSearch } = useMapSearch();
   const [searchText, setSearchText] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
 
@@ -626,215 +618,34 @@ export default function MapScreen() {
         )}
       </MapView>
 
-      {/* Top Header with gradient */}
-      <View className="absolute top-0 left-0 right-0" style={{ zIndex: 10 }}>
-        <LinearGradient
-          colors={
-            isDark
-              ? ["rgba(16,34,23,0.95)", "rgba(16,34,23,0.6)", "transparent"]
-              : ["rgba(246,248,247,0.95)", "rgba(246,248,247,0.6)", "transparent"]
-          }
-          style={{ paddingTop: insets.top + 8, paddingHorizontal: 16, paddingBottom: 32 }}
-        >
-          {/* Search Bar */}
-          <Animated.View
-            entering={FadeInDown.delay(100).duration(400)}
-            className="flex-row gap-3 mb-3"
-          >
-            <BlurView
-              intensity={isDark ? 40 : 80}
-              tint={isDark ? "dark" : "light"}
-              className="flex-1 h-12 flex-row items-center px-4 rounded-xl overflow-hidden"
-              style={{
-                borderWidth: 1,
-                borderColor: isDark ? glass.dark.border : glass.light.border,
-              }}
-            >
-              <MaterialIcons name="search" size={20} color={colors.textMuted} />
-              <TextInput
-                value={searchText}
-                onChangeText={handleSearchTextChange}
-                placeholder={t.map.searchStores}
-                placeholderTextColor={colors.textMuted}
-                className="flex-1 ml-3 text-base"
-                style={{ color: colors.textPrimary }}
-                returnKeyType="search"
-                onFocus={() => setShowSuggestions(true)}
-                onBlur={() => {
-                  // Delay to allow suggestion press
-                  setTimeout(() => setShowSuggestions(false), 200);
-                }}
-              />
-              {searchText.length > 0 && (
-                <TouchableOpacity
-                  onPress={() => {
-                    setSearchText("");
-                    clearSearch();
-                    setShowSuggestions(false);
-                  }}
-                  hitSlop={8}
-                >
-                  <MaterialIcons name="close" size={18} color={colors.textMuted} />
-                </TouchableOpacity>
-              )}
-            </BlurView>
-          </Animated.View>
-
-          {/* Hybrid Search Results (Stores + Addresses) */}
-          {showSuggestions && searchResults.length > 0 && (
-            <Animated.View
-              entering={FadeIn.duration(200)}
-              className="rounded-xl mb-3 overflow-hidden"
-              style={{
-                backgroundColor: isDark ? "rgba(30,41,59,0.95)" : "rgba(255,255,255,0.98)",
-                borderWidth: 1,
-                borderColor: colors.border,
-                maxHeight: 320,
-              }}
-            >
-              {/* Store results section */}
-              {searchResults.some((r) => r.type === "store") && (
-                <>
-                  <View className="px-4 pt-2.5 pb-1.5">
-                    <Text className="text-[11px] font-bold uppercase tracking-wide" style={{ color: colors.textMuted }}>
-                      {t.map.storeResults}
-                    </Text>
-                  </View>
-                  {searchResults.filter((r) => r.type === "store").map((r) => {
-                    if (r.type !== "store") return null;
-                    const typeColor = storeTypeColors[r.storeType as keyof typeof storeTypeColors]?.base ?? colors.primary;
-                    return (
-                      <TouchableOpacity
-                        key={r.id}
-                        onPress={() => handleSearchResultPress(r)}
-                        className="flex-row items-center px-4 py-3"
-                        style={{ borderBottomWidth: 1, borderBottomColor: colors.borderLight }}
-                      >
-                        <View
-                          className="w-8 h-8 rounded-lg items-center justify-center"
-                          style={{ backgroundColor: `${typeColor}18` }}
-                        >
-                          <MaterialIcons
-                            name={STORE_TYPE_ICON[r.storeType] ?? "store"}
-                            size={16}
-                            color={typeColor}
-                          />
-                        </View>
-                        <View className="flex-1 ml-3">
-                          <Text className="text-sm font-semibold" style={{ color: colors.textPrimary }} numberOfLines={1}>
-                            {r.name}
-                          </Text>
-                          <Text className="text-xs" style={{ color: colors.textMuted }} numberOfLines={1}>
-                            {r.city}{r.halalCertified ? " · Halal certifié" : ""}
-                          </Text>
-                        </View>
-                        {r.averageRating > 0 && (
-                          <View className="flex-row items-center gap-0.5 ml-2">
-                            <MaterialIcons name="star" size={12} color="#fbbf24" />
-                            <Text className="text-xs font-bold" style={{ color: colors.textPrimary }}>
-                              {r.averageRating.toFixed(1)}
-                            </Text>
-                          </View>
-                        )}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </>
-              )}
-              {/* Address results section */}
-              {searchResults.some((r) => r.type === "address") && (
-                <>
-                  <View className="px-4 pt-2.5 pb-1.5">
-                    <Text className="text-[11px] font-bold uppercase tracking-wide" style={{ color: colors.textMuted }}>
-                      {t.map.addresses}
-                    </Text>
-                  </View>
-                  {searchResults.filter((r) => r.type === "address").map((r, i) => {
-                    if (r.type !== "address") return null;
-                    return (
-                      <TouchableOpacity
-                        key={`addr-${r.latitude}-${r.longitude}-${i}`}
-                        onPress={() => handleSearchResultPress(r)}
-                        className="flex-row items-center px-4 py-3"
-                        style={{
-                          borderBottomWidth: i < searchResults.filter((x) => x.type === "address").length - 1 ? 1 : 0,
-                          borderBottomColor: colors.borderLight,
-                        }}
-                      >
-                        <MaterialIcons name="place" size={18} color={colors.textMuted} />
-                        <View className="flex-1 ml-3">
-                          <Text className="text-sm" style={{ color: colors.textPrimary }} numberOfLines={1}>
-                            {r.label}
-                          </Text>
-                          <Text className="text-xs" style={{ color: colors.textMuted }}>
-                            {r.postcode} {r.city}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </>
-              )}
-            </Animated.View>
-          )}
-
-          {/* Filter Chips */}
-          <Animated.ScrollView
-            entering={FadeInRight.delay(200).duration(400)}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 8 }}
-          >
-            {FILTER_IDS.map((filter) => {
-              const isActive = activeFilters.includes(filter.id);
-              const filterLabel = t.map.filters[filter.filterKey];
-              return (
-                <TouchableOpacity
-                  key={filter.id}
-                  onPress={() => toggleFilter(filter.id)}
-                  className="h-9 flex-row items-center gap-1.5 px-4 rounded-full"
-                  style={{
-                    backgroundColor: isActive
-                      ? colors.primary
-                      : isDark
-                        ? "rgba(30,41,59,0.8)"
-                        : "rgba(255,255,255,0.9)",
-                    borderWidth: isActive ? 0 : 1,
-                    borderColor: colors.border,
-                  }}
-                  activeOpacity={0.7}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${filterLabel}${isActive ? `, ${t.common.selected}` : ""}`}
-                >
-                  {'storeType' in filter ? (
-                    <View
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: 4,
-                        backgroundColor: isActive ? "#ffffff" : (storeTypeColors[filter.storeType as keyof typeof storeTypeColors]?.base ?? colors.textMuted),
-                      }}
-                    />
-                  ) : 'openNow' in filter ? (
-                    <MaterialIcons name="schedule" size={14} color={isActive ? "#ffffff" : "#22c55e"} />
-                  ) : 'minRating' in filter ? (
-                    <MaterialIcons name="star" size={14} color={isActive ? "#ffffff" : "#fbbf24"} />
-                  ) : null}
-                  <Text
-                    className={`text-sm ${isActive ? "font-semibold" : "font-medium"}`}
-                    style={{ color: isActive ? "#ffffff" : colors.textPrimary }}
-                  >
-                    {filterLabel}
-                  </Text>
-                  {isActive && (
-                    <MaterialIcons name="close" size={16} color="#ffffff" />
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-          </Animated.ScrollView>
-        </LinearGradient>
-      </View>
+      {/* Search bar + suggestions + filter chips */}
+      <MapSearchOverlay
+        colors={colors}
+        isDark={isDark}
+        insetTop={insets.top}
+        searchText={searchText}
+        isSearchActive={isSearchActive}
+        showSuggestions={showSuggestions}
+        searchResults={searchResults}
+        activeFilters={activeFilters}
+        filters={FILTER_IDS}
+        onSearchTextChange={handleSearchTextChange}
+        onClearSearch={() => {
+          setSearchText("");
+          clearSearch();
+          setShowSuggestions(false);
+        }}
+        onShowSuggestions={setShowSuggestions}
+        onSearchResultPress={handleSearchResultPress}
+        onToggleFilter={toggleFilter}
+        t={{
+          searchStores: t.map.searchStores,
+          storeResults: t.map.storeResults,
+          addresses: t.map.addresses,
+          filters: t.map.filters as unknown as Record<string, string>,
+          selected: t.common.selected,
+        }}
+      />
 
       {/* "Search this area" floating button */}
       {showSearchThisArea && (
