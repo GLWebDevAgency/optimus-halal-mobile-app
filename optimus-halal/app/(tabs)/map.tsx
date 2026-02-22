@@ -679,7 +679,10 @@ export default function MapScreen() {
       </MapView>
 
       {/* Search overlay + "Search this area" — fades out as sheet rises */}
-      <Animated.View style={overlayFadeStyle} pointerEvents={overlayInteractive ? "auto" : "none"}>
+      <Animated.View
+        style={[{ position: "absolute" as const, top: 0, left: 0, right: 0, zIndex: 10 }, overlayFadeStyle]}
+        pointerEvents={overlayInteractive ? "box-none" : "none"}
+      >
         <MapSearchOverlay
           colors={colors}
           isDark={isDark}
