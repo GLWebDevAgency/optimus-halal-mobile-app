@@ -102,16 +102,16 @@ export const storeRouter = router({
         const point = sql`ST_SetSRID(ST_MakePoint(${input.longitude}, ${input.latitude}), 4326)::geography`;
 
         const conditions = [
-          sql`"stores"."is_active" = true`,
-          sql`ST_DWithin("stores"."location", ${point}, ${radiusMeters})`,
+          sql`s."is_active" = true`,
+          sql`ST_DWithin(s."location", ${point}, ${radiusMeters})`,
         ];
 
-        if (input.storeType) conditions.push(sql`"stores"."store_type" = ${input.storeType}`);
-        if (input.halalCertifiedOnly) conditions.push(sql`"stores"."halal_certified" = true`);
-        if (input.minRating) conditions.push(sql`"stores"."average_rating" >= ${input.minRating}`);
+        if (input.storeType) conditions.push(sql`s."store_type" = ${input.storeType}`);
+        if (input.halalCertifiedOnly) conditions.push(sql`s."halal_certified" = true`);
+        if (input.minRating) conditions.push(sql`s."average_rating" >= ${input.minRating}`);
         if (input.query) {
           const q = escapeLike(input.query);
-          conditions.push(sql`("stores"."name" ILIKE ${"%" + q + "%"} OR "stores"."address" ILIKE ${"%" + q + "%"})`);
+          conditions.push(sql`(s."name" ILIKE ${"%" + q + "%"} OR s."address" ILIKE ${"%" + q + "%"})`);
         }
 
         // CTE: compute ST_Distance ONCE + LEFT JOIN store_hours for open status
