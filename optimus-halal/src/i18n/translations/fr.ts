@@ -601,6 +601,16 @@ export const fr = {
     addresses: "Adresses",
     storeResults: "Commerces",
     noResults: "Aucun résultat",
+    anonymousUser: "Anonyme",
+    days: {
+      dim: "Dimanche",
+      lun: "Lundi",
+      mar: "Mardi",
+      mer: "Mercredi",
+      jeu: "Jeudi",
+      ven: "Vendredi",
+      sam: "Samedi",
+    },
   },
 
   // Marketplace

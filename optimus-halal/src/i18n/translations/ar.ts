@@ -502,6 +502,16 @@ export const ar: TranslationKeys = {
     addresses: "العناوين",
     storeResults: "المتاجر",
     noResults: "لا توجد نتائج",
+    anonymousUser: "مجهول",
+    days: {
+      dim: "الأحد",
+      lun: "الاثنين",
+      mar: "الثلاثاء",
+      mer: "الأربعاء",
+      jeu: "الخميس",
+      ven: "الجمعة",
+      sam: "السبت",
+    },
   },
   marketplace: {
     title: "المتجر",

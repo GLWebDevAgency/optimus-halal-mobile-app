@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { eq, and, ilike, or, desc, sql } from "drizzle-orm";
 import { router, publicProcedure, protectedProcedure } from "../trpc.js";
-import { stores, storeHours, storeSubscriptions } from "../../db/schema/index.js";
+import { stores, storeHours, storeSubscriptions, reviews, users } from "../../db/schema/index.js";
 import { notFound, conflict } from "../../lib/errors.js";
 import { withCache } from "../../lib/cache.js";
 import ngeohash from "ngeohash";
@@ -203,12 +203,44 @@ export const storeRouter = router({
       });
       if (!store) throw notFound("Magasin introuvable");
 
-      const hours = await ctx.db.query.storeHours.findMany({
-        where: eq(storeHours.storeId, input.id),
-        orderBy: (h, { asc }) => [asc(h.dayOfWeek)],
-      });
+      // Parallel fetch: hours + top reviews + rating distribution
+      const [hours, topReviews, ratingDist] = await Promise.all([
+        ctx.db.query.storeHours.findMany({
+          where: eq(storeHours.storeId, input.id),
+          orderBy: (h, { asc }) => [asc(h.dayOfWeek)],
+        }),
+        ctx.db
+          .select({
+            id: reviews.id,
+            rating: reviews.rating,
+            comment: reviews.comment,
+            isVerifiedPurchase: reviews.isVerifiedPurchase,
+            helpfulCount: reviews.helpfulCount,
+            createdAt: reviews.createdAt,
+            userName: users.displayName,
+          })
+          .from(reviews)
+          .innerJoin(users, eq(reviews.userId, users.id))
+          .where(and(eq(reviews.storeId, input.id), sql`${reviews.comment} IS NOT NULL`))
+          .orderBy(desc(reviews.helpfulCount), desc(reviews.createdAt))
+          .limit(5),
+        ctx.db
+          .select({
+            rating: reviews.rating,
+            count: sql<number>`count(*)::int`,
+          })
+          .from(reviews)
+          .where(eq(reviews.storeId, input.id))
+          .groupBy(reviews.rating),
+      ]);
 
-      return { ...store, hours };
+      // Build rating histogram { 1: count, 2: count, ... 5: count }
+      const ratingHistogram: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+      for (const row of ratingDist) {
+        ratingHistogram[row.rating] = row.count;
+      }
+
+      return { ...store, hours, topReviews, ratingHistogram };
     }),
 
   subscribe: protectedProcedure

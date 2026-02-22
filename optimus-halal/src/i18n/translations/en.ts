@@ -603,6 +603,16 @@ export const en: TranslationKeys = {
     addresses: "Addresses",
     storeResults: "Stores",
     noResults: "No results",
+    anonymousUser: "Anonymous",
+    days: {
+      dim: "Sunday",
+      lun: "Monday",
+      mar: "Tuesday",
+      mer: "Wednesday",
+      jeu: "Thursday",
+      ven: "Friday",
+      sam: "Saturday",
+    },
   },
 
   // Marketplace

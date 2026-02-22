@@ -30,6 +30,7 @@ import { useHaptics, useUserLocation, useMapStores, useMapSearch } from "@/hooks
 import type { SearchResult } from "@/hooks";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTheme } from "@/hooks/useTheme";
+import { trpc } from "@/lib/trpc";
 import {
   StoreCard,
   StoreDetailCard,
@@ -214,6 +215,19 @@ export default function MapScreen() {
     if (!selectedStoreId) return null;
     return stores.find((s) => s.id === selectedStoreId) ?? null;
   }, [selectedStoreId, stores]);
+
+  // Sheet expanded = user pulled up → fetch full store detail (hours, reviews)
+  const [sheetExpanded, setSheetExpanded] = useState(false);
+
+  const storeDetailQuery = trpc.store.getById.useQuery(
+    { id: selectedStoreId! },
+    { enabled: !!selectedStoreId && sheetExpanded, staleTime: 5 * 60_000 },
+  );
+
+  // Reset expanded state when store changes
+  useEffect(() => {
+    setSheetExpanded(false);
+  }, [selectedStoreId]);
 
   // Build GeoJSON for Mapbox ShapeSource
   const storesGeoJSON = useMemo(() => ({
@@ -748,10 +762,13 @@ export default function MapScreen() {
         onChange={(index) => {
           currentSnapIndexRef.current = index;
           impact();
-          // Cancel any pending bounce if user manually expanded
-          if (index > 0 && bounceTimerRef.current) {
-            clearTimeout(bounceTimerRef.current);
-            bounceTimerRef.current = null;
+          // Trigger detail fetch when user expands the sheet
+          if (index > 0) {
+            setSheetExpanded(true);
+            if (bounceTimerRef.current) {
+              clearTimeout(bounceTimerRef.current);
+              bounceTimerRef.current = null;
+            }
           }
         }}
         style={{
@@ -766,6 +783,9 @@ export default function MapScreen() {
           {selectedStore ? (
             <StoreDetailCard
               store={selectedStore as StoreFeatureProperties}
+              detail={storeDetailQuery.data}
+              isDetailLoading={storeDetailQuery.isLoading && sheetExpanded}
+              isExpanded={sheetExpanded}
               onDirections={() => {
                 trackEvent("map_get_directions", { store_id: selectedStore.id });
                 openDirections(selectedStore.latitude, selectedStore.longitude, selectedStore.name);
