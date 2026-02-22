@@ -8,12 +8,12 @@ describe("auth router", () => {
     it("creates a new user and returns tokens", async () => {
       const caller = createTestCaller();
       const result = await caller.auth.register({
-        email: "new@optimus.fr",
+        email: "new@naqiy.fr",
         password: "SecurePass123!",
         displayName: "New User",
       });
 
-      expect(result.user.email).toBe("new@optimus.fr");
+      expect(result.user.email).toBe("new@naqiy.fr");
       expect(result.user.displayName).toBe("New User");
       expect(result.accessToken).toBeTruthy();
       expect(result.refreshToken).toBeTruthy();
@@ -37,7 +37,7 @@ describe("auth router", () => {
 
       await expect(
         caller.auth.register({
-          email: "weak@optimus.fr",
+          email: "weak@naqiy.fr",
           password: "short",
           displayName: "Weak",
         })
@@ -78,7 +78,7 @@ describe("auth router", () => {
 
       await expect(
         caller.auth.login({
-          email: "nobody@optimus.fr",
+          email: "nobody@naqiy.fr",
           password: "whatever",
         })
       ).rejects.toThrow(TRPCError);
@@ -89,7 +89,7 @@ describe("auth router", () => {
     it("issues new token pair and invalidates old refresh token", async () => {
       const caller = createTestCaller();
       const { refreshToken } = await caller.auth.register({
-        email: "refresh@optimus.fr",
+        email: "refresh@naqiy.fr",
         password: "SecurePass123!",
         displayName: "Refresh Test",
       });

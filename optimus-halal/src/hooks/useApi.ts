@@ -7,7 +7,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
-import { safeApiCall, OptimusApiError } from '@/services/api';
+import { safeApiCall, NaqiyApiError } from '@/services/api';
 
 // ============================================
 // TYPES
@@ -21,14 +21,14 @@ interface UseQueryOptions<T> {
   /** Custom onSuccess callback */
   onSuccess?: (data: T) => void;
   /** Custom onError callback */
-  onError?: (error: OptimusApiError) => void;
+  onError?: (error: NaqiyApiError) => void;
   /** Stale time in milliseconds */
   staleTime?: number;
 }
 
 interface UseQueryResult<T> {
   data: T | null;
-  error: OptimusApiError | null;
+  error: NaqiyApiError | null;
   isLoading: boolean;
   isFetching: boolean;
   refetch: () => Promise<void>;
@@ -36,7 +36,7 @@ interface UseQueryResult<T> {
 
 interface UseMutationOptions<TData, TVariables> {
   onSuccess?: (data: TData, variables: TVariables) => void;
-  onError?: (error: OptimusApiError, variables: TVariables) => void;
+  onError?: (error: NaqiyApiError, variables: TVariables) => void;
   onSettled?: () => void;
 }
 
@@ -44,7 +44,7 @@ interface UseMutationResult<TData, TVariables> {
   mutate: (variables: TVariables) => Promise<TData | null>;
   mutateAsync: (variables: TVariables) => Promise<TData>;
   data: TData | null;
-  error: OptimusApiError | null;
+  error: NaqiyApiError | null;
   isLoading: boolean;
   isSuccess: boolean;
   isError: boolean;
@@ -70,7 +70,7 @@ export function useQuery<T>(
   } = options;
 
   const [data, setData] = useState<T | null>(null);
-  const [error, setError] = useState<OptimusApiError | null>(null);
+  const [error, setError] = useState<NaqiyApiError | null>(null);
   const [isLoading, setIsLoading] = useState(enabled);
   const [isFetching, setIsFetching] = useState(false);
 
@@ -131,7 +131,7 @@ export function useMutation<TData, TVariables = void>(
   const { onSuccess, onError, onSettled } = options;
 
   const [data, setData] = useState<TData | null>(null);
-  const [error, setError] = useState<OptimusApiError | null>(null);
+  const [error, setError] = useState<NaqiyApiError | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isError, setIsError] = useState(false);
@@ -182,7 +182,7 @@ export function useMutation<TData, TVariables = void>(
         onSettled?.();
         return result;
       } catch (err) {
-        const apiError = OptimusApiError.fromTRPCError(err);
+        const apiError = NaqiyApiError.fromTRPCError(err);
         setError(apiError);
         setIsError(true);
         onError?.(apiError, variables);
@@ -226,7 +226,7 @@ interface UseInfiniteQueryOptions<T> {
 
 interface UseInfiniteQueryResult<T> {
   data: T[];
-  error: OptimusApiError | null;
+  error: NaqiyApiError | null;
   isLoading: boolean;
   isFetchingNextPage: boolean;
   hasNextPage: boolean;
@@ -244,7 +244,7 @@ export function useInfiniteQuery<T extends { pagination?: { hasNext?: boolean; p
   const { enabled = true, getNextPageParam } = options;
 
   const [pages, setPages] = useState<T[]>([]);
-  const [error, setError] = useState<OptimusApiError | null>(null);
+  const [error, setError] = useState<NaqiyApiError | null>(null);
   const [isLoading, setIsLoading] = useState(enabled);
   const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);

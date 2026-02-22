@@ -78,7 +78,7 @@ export const useOnboardingStore = create<OnboardingState>()(
 
 /**
  * Theme State
- * Par défaut en mode "light" pour l'application Optimus Halal
+ * Par défaut en mode "light" pour l'application Naqiy
  */
 interface ThemeState {
   theme: "light" | "dark" | "system";

@@ -1,5 +1,5 @@
 /**
- * Optimus Halal Design System — Typography Tokens
+ * Naqiy Design System — Typography Tokens
  *
  * Font family, size, weight, line-height, and letter-spacing presets.
  * Every text style in the application should derive from these tokens.

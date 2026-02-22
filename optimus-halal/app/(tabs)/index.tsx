@@ -1072,7 +1072,17 @@ export default function HomeScreen() {
                   isDark={isDark}
                   colors={colors}
                   index={index}
-                  onPress={() => router.push("/(tabs)/map")}
+                  onPress={() =>
+                    router.navigate({
+                      pathname: "/(tabs)/map",
+                      params: {
+                        storeId: store.id,
+                        storeLat: String(store.latitude),
+                        storeLng: String(store.longitude),
+                        storeName: store.name,
+                      },
+                    })
+                  }
                 />
               ))}
             </ScrollView>

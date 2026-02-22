@@ -52,7 +52,7 @@ export function PremiumGate({ feature, children, fallback }: PremiumGateProps) {
           textAlign: "center",
         }}
       >
-        Optimus+
+        Naqiy+
       </Text>
       <Text
         style={{
@@ -77,7 +77,7 @@ export function PremiumGate({ feature, children, fallback }: PremiumGateProps) {
           borderRadius: 12,
         }}
         accessibilityRole="button"
-        accessibilityLabel="Upgrade to Optimus+"
+        accessibilityLabel="Upgrade to Naqiy+"
       >
         <Text style={{ color: isDark ? "#e8f5e9" : "#0d1b13", fontWeight: "700", fontSize: 14 }}>
           {t.common.upgrade}

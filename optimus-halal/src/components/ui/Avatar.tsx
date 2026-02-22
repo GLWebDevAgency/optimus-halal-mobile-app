@@ -8,6 +8,7 @@ import React from "react";
 import { View, ViewProps, Text } from "react-native";
 import { Image } from "expo-image";
 import { brand } from "@/theme/colors";
+import { useTheme } from "@/hooks/useTheme";
 
 export interface AvatarProps extends ViewProps {
   source?: string;
@@ -44,6 +45,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   className = "",
   ...props
 }) => {
+  const { isDark, colors } = useTheme();
   const config = sizeConfig[size];
   const initials = fallback
     .split(" ")
@@ -78,7 +80,6 @@ export const Avatar: React.FC<AvatarProps> = ({
         <View
           className={`
             items-center justify-center
-            bg-slate-200 dark:bg-slate-700
             ${borderColors[borderColor]}
           `}
           style={{
@@ -86,11 +87,12 @@ export const Avatar: React.FC<AvatarProps> = ({
             height: config.container,
             borderRadius: config.container / 2,
             borderWidth: config.border,
+            backgroundColor: isDark ? "rgba(212, 175, 55, 0.1)" : colors.backgroundSecondary,
           }}
         >
           <Text
-            className="text-slate-600 dark:text-slate-300 font-bold"
-            style={{ fontSize: config.text }}
+            className="font-bold"
+            style={{ fontSize: config.text, color: isDark ? "rgba(212, 175, 55, 0.7)" : colors.textSecondary }}
           >
             {initials}
           </Text>

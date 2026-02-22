@@ -1,7 +1,7 @@
 {
-  "name": "optimus-halal",
+  "name": "naqiy",
   "version": "1.0.0",
-  "description": "Application mobile de référence pour la consommation halal éthique et transparente",
+  "description": "Naqiy — Ton halal, en toute clarté",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",

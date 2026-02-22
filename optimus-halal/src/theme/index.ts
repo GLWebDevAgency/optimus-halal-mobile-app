@@ -1,5 +1,5 @@
 /**
- * Optimus Halal Design System — Barrel Export
+ * Naqiy Design System — Barrel Export
  *
  * Import everything from `@/theme` for full access,
  * or import specific modules for tree-shaking:
@@ -94,7 +94,7 @@ export {
   springConfig,
   springBouncy,
   springStiff,
-  springOptimus,
+  springNaqiy,
   timingNormal,
   timingFast,
   entryAnimations,

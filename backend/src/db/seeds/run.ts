@@ -29,7 +29,7 @@ async function main() {
   await client.connect();
   const db = drizzle(client, { schema });
 
-  console.log("━━━ Optimus Halal — Seed Pipeline ━━━\n");
+  console.log("━━━ Naqiy — Seed Pipeline ━━━\n");
 
   // ── Phase 1: Certifiers ─────────────────────────────────
   console.log("▶ Phase 1: Certifiers (certification-list.json)");

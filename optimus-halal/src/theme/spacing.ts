@@ -1,5 +1,5 @@
 /**
- * Optimus Halal Design System — Spacing & Border Radius Tokens
+ * Naqiy Design System — Spacing & Border Radius Tokens
  *
  * A consistent spatial rhythm makes layouts feel intentional.
  * The scale is based on a 4 px base unit with intermediate 2 px and 6 px

@@ -12,8 +12,8 @@ const envSchema = z.object({
     .enum(["development", "production", "test"])
     .default("development"),
   BREVO_API_KEY: z.string().optional(),
-  BREVO_SENDER_EMAIL: z.string().email().default("noreply-optimus-halal@optimus-os.fr"),
-  BREVO_SENDER_NAME: z.string().default("Optimus Halal"),
+  BREVO_SENDER_EMAIL: z.string().email().default("noreply@naqiy.com"),
+  BREVO_SENDER_NAME: z.string().default("Naqiy"),
   EXPO_ACCESS_TOKEN: z.string().optional(),
   OPENFOODFACTS_API_URL: z
     .string()
@@ -21,7 +21,7 @@ const envSchema = z.object({
     .default("https://world.openfoodfacts.org/api/v2"),
   CORS_ORIGINS: z
     .string()
-    .default("https://optimushalal.com")
+    .default("https://naqiy.com")
     .describe("Comma-separated allowed origins"),
   SENTRY_DSN: z.string().url().optional(),
   SENTRY_ENVIRONMENT: z.string().default("development"),
@@ -29,7 +29,7 @@ const envSchema = z.object({
   R2_ACCOUNT_ID: z.string().min(1).optional(),
   R2_ACCESS_KEY_ID: z.string().min(1).optional(),
   R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),
-  R2_BUCKET_NAME: z.string().default("optimus-halal"),
+  R2_BUCKET_NAME: z.string().default("naqiy"),
   R2_PUBLIC_DOMAIN: z.string().default("pub-f871593571bd4d04a86a25015aac1057.r2.dev"),
 });
 
@@ -40,7 +40,7 @@ function loadEnv(): Env {
   if (process.env.VITEST) {
     const testEnv: Record<string, unknown> = {
       ...process.env,
-      DATABASE_URL: process.env.DATABASE_URL ?? "postgres://postgres:postgres@localhost:5433/optimus_test",
+      DATABASE_URL: process.env.DATABASE_URL ?? "postgres://postgres:postgres@localhost:5433/naqiy_test",
       REDIS_URL: process.env.REDIS_URL ?? "redis://localhost:6379",
       JWT_SECRET: process.env.JWT_SECRET ?? "test-secret-at-least-32-chars-long-for-vitest",
       JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET ?? "test-refresh-secret-at-least-32-chars-long",

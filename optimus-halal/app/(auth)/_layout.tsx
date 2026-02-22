@@ -13,8 +13,11 @@
 
 import { Stack } from "expo-router";
 import { QueryErrorBoundary } from "@/components/QueryErrorBoundary";
+import { useTheme } from "@/hooks/useTheme";
 
 export default function AuthLayout() {
+  const { colors } = useTheme();
+
   return (
     <QueryErrorBoundary>
       <Stack
@@ -24,6 +27,7 @@ export default function AuthLayout() {
           animationDuration: 300,
           gestureEnabled: true,
           gestureDirection: "horizontal",
+          contentStyle: { backgroundColor: colors.background },
         }}
       >
         <Stack.Screen name="welcome" options={{ animation: "fade" }} />

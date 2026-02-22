@@ -1,5 +1,5 @@
 /**
- * Optimus Halal - Design System Theme Configuration
+ * Naqiy — Design System Theme Configuration
  * 
  * Ce fichier centralise toutes les valeurs du design system
  * basé sur les écrans HTML de référence.

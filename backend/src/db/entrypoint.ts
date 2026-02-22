@@ -41,7 +41,7 @@ const db = drizzle(client);
 
 const startTime = Date.now();
 
-console.log("━━━ Optimus Halal — DB Entrypoint ━━━");
+console.log("━━━ Naqiy — DB Entrypoint ━━━");
 console.log(`  Environment: ${nodeEnv}`);
 console.log(`  Migrations:  ${migrationsFolder}`);
 console.log("");

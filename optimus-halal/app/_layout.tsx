@@ -198,7 +198,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
       <Pressable
         onLongPress={handleLongPress}
         delayLongPress={3000}
-        style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: initIsDark ? "#0f1a13" : "#ffffff" }}
+        style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: initIsDark ? "#0C0C0C" : "#f3f1ed" }}
       >
         <ActivityIndicator size="large" color="#16a34a" />
         <Text style={{ color: "#888", fontSize: 12, marginTop: 16 }}>
@@ -211,7 +211,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
   // If timed out, show debug info + option to continue
   if (timedOut && isInitializing) {
     return (
-      <View style={{ flex: 1, backgroundColor: initIsDark ? "#0f1a13" : "#ffffff", padding: 24, paddingTop: 60 }}>
+      <View style={{ flex: 1, backgroundColor: initIsDark ? "#0C0C0C" : "#f3f1ed", padding: 24, paddingTop: 60 }}>
         <Text style={{ color: "#ef4444", fontSize: 18, fontWeight: "bold", marginBottom: 12 }}>
           {t.common.initTooLong}
         </Text>
@@ -281,7 +281,7 @@ export default function RootLayout() {
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
           <SafeAreaProvider>
-            <GestureHandlerRootView style={{ flex: 1, backgroundColor: isDark ? '#0f1a13' : '#ffffff' }}>
+            <GestureHandlerRootView style={{ flex: 1, backgroundColor: isDark ? '#0C0C0C' : '#f3f1ed' }}>
               <AppInitializer>
                 <StatusBar style={isDark ? "light" : "dark"} />
                 <OfflineBanner />
@@ -291,6 +291,7 @@ export default function RootLayout() {
                     animation: "fade",
                     animationDuration: 300,
                     gestureEnabled: true,
+                    contentStyle: { backgroundColor: isDark ? '#0C0C0C' : '#f3f1ed' },
                   }}
                 >
                   <Stack.Screen

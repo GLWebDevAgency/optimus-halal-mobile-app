@@ -1,5 +1,5 @@
 /**
- * tRPC React Query Client — Optimus Halal Mobile App
+ * tRPC React Query Client — Naqiy Mobile App
  *
  * Features:
  * - Automatic token refresh on 401 responses

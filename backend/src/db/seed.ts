@@ -1,10 +1,10 @@
 /**
- * Seed — Alertes & Articles réalistes (données Al-Kanz + Optimus)
+ * Seed — Alertes & Articles réalistes (données Al-Kanz + Naqiy)
  *
  * Usage: npx tsx src/db/seed.ts
  *
  * Données inspirées des flux RSS d'Al-Kanz.org (février 2026)
- * et de contenu éditorial Optimus Halal.
+ * et de contenu éditorial Naqiy.
  */
 
 import { drizzle } from "drizzle-orm/node-postgres";
@@ -144,7 +144,7 @@ const SEED_ALERTS = [
   },
 ];
 
-// ── Articles (Al-Kanz partner_news + Optimus editorial) ────
+// ── Articles (Al-Kanz partner_news + Naqiy editorial) ────
 const SEED_ARTICLES = [
   // --- Al-Kanz partner_news (externalLink → redirection) ---
   {
@@ -209,7 +209,7 @@ const SEED_ARTICLES = [
     publishedAt: new Date("2026-02-05T11:00:00Z"),
   },
 
-  // --- Optimus editorial (content interne) ---
+  // --- Naqiy editorial (content interne) ---
   {
     title: "Calendrier ramadan 2026 : ce que vous devez savoir",
     slug: "calendrier-ramadan-2026-lunaire",
@@ -217,8 +217,8 @@ const SEED_ARTICLES = [
     excerpt:
       "Dates, observation du croissant lunaire, calcul astronomique : tout comprendre sur le calendrier du ramadan 2026.",
     content:
-      "# Calendrier Ramadan 2026\n\nLes mois du calendrier islamique sont lunaires, pas solaires. Cela signifie que le ramadan avance d'environ 10 jours chaque année.\n\n## L'observation du croissant lunaire\nL'astrophysicienne Fatoumata Kebe rappelle que l'observation du croissant lunaire le 17 février 2026 est « astronomiquement impossible ». Le début du ramadan dépendra de l'observation effective ou du calcul astronomique selon les autorités religieuses consultées.\n\n## Les dates clés\n- **Début probable** : 18 ou 19 février 2026 (selon observation)\n- **Nuit du Destin** : autour du 27e jour\n- **Aïd el-Fitr** : vers le 20 mars 2026\n\n## Préparez-vous avec Optimus\nScannez vos produits du ftour dès maintenant pour vérifier leur conformité halal.",
-    author: "Optimus Team",
+      "# Calendrier Ramadan 2026\n\nLes mois du calendrier islamique sont lunaires, pas solaires. Cela signifie que le ramadan avance d'environ 10 jours chaque année.\n\n## L'observation du croissant lunaire\nL'astrophysicienne Fatoumata Kebe rappelle que l'observation du croissant lunaire le 17 février 2026 est « astronomiquement impossible ». Le début du ramadan dépendra de l'observation effective ou du calcul astronomique selon les autorités religieuses consultées.\n\n## Les dates clés\n- **Début probable** : 18 ou 19 février 2026 (selon observation)\n- **Nuit du Destin** : autour du 27e jour\n- **Aïd el-Fitr** : vers le 20 mars 2026\n\n## Préparez-vous avec Naqiy\nScannez vos produits du ftour dès maintenant pour vérifier leur conformité halal.",
+    author: "Naqiy Team",
     type: "educational" as const,
     tags: ["ramadan", "calendrier-lunaire", "2026", "dates"],
     readTimeMinutes: 4,
@@ -232,8 +232,8 @@ const SEED_ARTICLES = [
     excerpt:
       "Sélection de 12 ouvrages pour nourrir l'esprit pendant le mois du jeûne : spiritualité, Coran, éducation.",
     content:
-      "# 12 livres pour le Ramadan\n\nLire pendant le Ramadan est une tradition prophétique. Voici notre sélection de 12 ouvrages pour accompagner votre mois sacré.\n\n## Spiritualité\n1. *Les Secrets du Jeûne* — Abû Hâmid Al-Ghazâlî\n2. *Le Livre de la Patience* — Ibn Qayyim al-Jawziyya\n3. *Revivification des sciences de la religion* — Al-Ghazâlî (extraits)\n\n## Coran & Tafsir\n4. *Le Saint Coran* — traduction Muhammad Hamidullah\n5. *Introduction aux sciences du Coran* — Mustafa Diack\n\n## Éducation & Développement\n6. *Purification du cœur* — Hamza Yusuf\n7. *Al-Bayyinah : la preuve évidente* — Thomas Sibille\n\n## Histoire\n8. *Les Grandes Figures de l'Islam* — Tariq Ramadan\n9. *L'Islam des Lumières* — Malek Chebel\n\nRetrouvez les fiches détaillées dans l'app Optimus Halal, section « Contenus ».",
-    author: "Optimus Team",
+      "# 12 livres pour le Ramadan\n\nLire pendant le Ramadan est une tradition prophétique. Voici notre sélection de 12 ouvrages pour accompagner votre mois sacré.\n\n## Spiritualité\n1. *Les Secrets du Jeûne* — Abû Hâmid Al-Ghazâlî\n2. *Le Livre de la Patience* — Ibn Qayyim al-Jawziyya\n3. *Revivification des sciences de la religion* — Al-Ghazâlî (extraits)\n\n## Coran & Tafsir\n4. *Le Saint Coran* — traduction Muhammad Hamidullah\n5. *Introduction aux sciences du Coran* — Mustafa Diack\n\n## Éducation & Développement\n6. *Purification du cœur* — Hamza Yusuf\n7. *Al-Bayyinah : la preuve évidente* — Thomas Sibille\n\n## Histoire\n8. *Les Grandes Figures de l'Islam* — Tariq Ramadan\n9. *L'Islam des Lumières* — Malek Chebel\n\nRetrouvez les fiches détaillées dans l'app Naqiy Halal, section « Contenus ».",
+    author: "Naqiy Team",
     type: "educational" as const,
     tags: ["ramadan", "livres", "spiritualité", "lecture"],
     readTimeMinutes: 6,
@@ -247,8 +247,8 @@ const SEED_ARTICLES = [
     excerpt:
       "Ne vous fiez jamais à un simple autocollant. Voici les 3 vérifications à faire avant de faire confiance à un certificat halal.",
     content:
-      "# Comment vérifier un certificat halal\n\n## 1. Identifiez l'organisme\nUn vrai certificat mentionne toujours l'organisme de certification (AVS, Achahada, ARGML...). Méfiez-vous des labels génériques sans mention d'organisme.\n\n## 2. Vérifiez sur le site officiel\nChaque organisme publie la liste de ses établissements certifiés. Vérifiez que le restaurant ou la boucherie figure bien dans cette liste.\n\n## 3. Scannez avec Optimus Halal\nNotre app croise les données de tous les organismes reconnus pour vous donner un verdict fiable en un scan.",
-    author: "Optimus Team",
+      "# Comment vérifier un certificat halal\n\n## 1. Identifiez l'organisme\nUn vrai certificat mentionne toujours l'organisme de certification (AVS, Achahada, ARGML...). Méfiez-vous des labels génériques sans mention d'organisme.\n\n## 2. Vérifiez sur le site officiel\nChaque organisme publie la liste de ses établissements certifiés. Vérifiez que le restaurant ou la boucherie figure bien dans cette liste.\n\n## 3. Scannez avec Naqiy Halal\nNotre app croise les données de tous les organismes reconnus pour vous donner un verdict fiable en un scan.",
+    author: "Naqiy Team",
     type: "educational" as const,
     tags: ["guide", "certification", "sécurité"],
     readTimeMinutes: 4,
@@ -263,7 +263,7 @@ const SEED_ARTICLES = [
       "Tous les labels halal ne se valent pas. Décryptage des principaux organismes de certification en France.",
     content:
       "# Les labels halal en France\n\nEn France, plusieurs organismes se partagent la certification halal. Mais tous n'ont pas les mêmes exigences.\n\n## AVS (A Votre Service)\nFondé en 1991, AVS est l'un des organismes les plus stricts. Leurs contrôleurs sont salariés (pas prestataires) et présents lors de chaque abattage.\n\n## Achahada\nOrganisme reconnu, Achahada certifie principalement en Île-de-France.\n\n## ARGML\nLe Rassemblement des Grandes Mosquées de Lyon a ses propres critères de certification.\n\n## Mosquée de Paris\nHistoriquement l'organisme le plus connu, mais contesté pour ses pratiques de sous-traitance via la SFCVH.",
-    author: "Optimus Team",
+    author: "Naqiy Team",
     type: "educational" as const,
     tags: ["labels", "AVS", "ARGML", "certification"],
     readTimeMinutes: 6,
@@ -277,8 +277,8 @@ const SEED_ARTICLES = [
     excerpt:
       "Un audit indépendant sur 500 produits estampillés halal en grande surface révèle des résultats préoccupants.",
     content:
-      "# Audit Halal 2026\n\nUn audit mené par un consortium indépendant sur 500 produits vendus en grande surface a révélé des résultats préoccupants : 23 % des produits analysés présentent au moins une incohérence entre le label affiché et la composition réelle.\n\nParmi les problèmes identifiés :\n- Gélatine d'origine non précisée (12 %)\n- Arômes contenant de l'alcool (8 %)\n- Certificat expiré ou non renouvelé (3 %)\n\nCes chiffres soulignent la nécessité d'outils comme Optimus Halal pour permettre aux consommateurs de vérifier eux-mêmes la fiabilité des produits.",
-    author: "Optimus Team",
+      "# Audit Halal 2026\n\nUn audit mené par un consortium indépendant sur 500 produits vendus en grande surface a révélé des résultats préoccupants : 23 % des produits analysés présentent au moins une incohérence entre le label affiché et la composition réelle.\n\nParmi les problèmes identifiés :\n- Gélatine d'origine non précisée (12 %)\n- Arômes contenant de l'alcool (8 %)\n- Certificat expiré ou non renouvelé (3 %)\n\nCes chiffres soulignent la nécessité d'outils comme Naqiy Halal pour permettre aux consommateurs de vérifier eux-mêmes la fiabilité des produits.",
+    author: "Naqiy Team",
     type: "blog" as const,
     tags: ["audit", "transparence", "grande-surface", "industrie"],
     readTimeMinutes: 5,

@@ -49,10 +49,10 @@ export async function sendPasswordResetEmail(
 ): Promise<boolean> {
   return sendEmail({
     to: email,
-    subject: "Réinitialisation de votre mot de passe - Optimus Halal",
+    subject: "Réinitialisation de votre mot de passe - Naqiy",
     htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2d7a3e;">Optimus Halal</h2>
+        <h2 style="color: #2d7a3e;">Naqiy</h2>
         <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
         <p>Votre code de vérification :</p>
         <div style="background: #f4f4f4; padding: 20px; text-align: center; font-size: 32px; letter-spacing: 8px; font-weight: bold; color: #2d7a3e;">
@@ -71,13 +71,13 @@ export async function sendWelcomeEmail(
 ): Promise<boolean> {
   return sendEmail({
     to: email,
-    subject: "Bienvenue sur Optimus Halal !",
+    subject: "Bienvenue sur Naqiy !",
     htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #2d7a3e;">Bienvenue ${displayName} !</h2>
-        <p>Merci de rejoindre la communauté Optimus Halal.</p>
+        <p>Merci de rejoindre la communauté Naqiy.</p>
         <p>Commencez dès maintenant à scanner vos produits et découvrez leur statut halal en un instant.</p>
-        <p style="color: #2d7a3e; font-weight: bold;">L'équipe Optimus Halal</p>
+        <p style="color: #2d7a3e; font-weight: bold;">L'équipe Naqiy</p>
       </div>
     `,
   });

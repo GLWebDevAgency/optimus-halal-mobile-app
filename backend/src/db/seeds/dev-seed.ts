@@ -4,7 +4,7 @@
  * Usage: pnpm tsx --env-file=.env src/db/seeds/dev-seed.ts
  *
  * Creates:
- * - 1 dev user (dev@optimus.fr / password123)
+ * - 1 dev user (dev@naqiy.fr / password123)
  * - 10 product categories
  * - 20 halal products (mixed statuses)
  * - 5 alert categories + 8 alerts
@@ -68,7 +68,7 @@ async function main() {
   await client.connect();
   const db = drizzle(client, { schema });
 
-  console.log("━━━ Optimus Halal — Dev Seed ━━━\n");
+  console.log("━━━ Naqiy — Dev Seed ━━━\n");
 
   // ── 1. Dev User ───────────────────────────────────────────
   console.log("▶ Phase 1: Dev User");
@@ -78,7 +78,7 @@ async function main() {
     .insert(users)
     .values({
       id: DEV_USER_ID,
-      email: "dev@optimus.fr",
+      email: "dev@naqiy.fr",
       passwordHash,
       displayName: "Mehdi Dev",
       phoneNumber: "+33612345678",
@@ -115,7 +115,7 @@ async function main() {
         updatedAt: new Date(),
       },
     });
-  console.log("  ✓ dev@optimus.fr / password123");
+  console.log("  ✓ dev@naqiy.fr / password123");
 
   // ── 2. Categories ─────────────────────────────────────────
   console.log("\n▶ Phase 2: Product Categories");
@@ -273,21 +273,21 @@ async function main() {
       id: ARTICLE_IDS[0], title: "Guide : Comment vérifier un certificat halal ?", slug: "guide-verifier-certificat-halal",
       excerpt: "Apprenez à distinguer un vrai certificat halal d'un faux en 5 étapes simples.",
       content: "La certification halal est un processus rigoureux qui garantit la conformité d'un produit aux règles islamiques. Voici les 5 étapes pour vérifier l'authenticité d'un certificat...\n\n## 1. Vérifiez l'organisme\nAssurez-vous que l'organisme est reconnu par les autorités compétentes.\n\n## 2. Consultez le site officiel\nChaque organisme maintient une base de données en ligne de ses certifications.\n\n## 3. Vérifiez la date de validité\nLes certificats ont une durée limitée, généralement 1 an.\n\n## 4. Contrôlez le numéro d'agrément\nChaque certificat possède un numéro unique vérifiable.\n\n## 5. En cas de doute, contactez l'organisme\nLes organismes sérieux répondent aux demandes de vérification.",
-      author: "Équipe Optimus", type: "educational" as const, tags: ["guide", "certification", "halal"],
+      author: "Équipe Naqiy", type: "educational" as const, tags: ["guide", "certification", "halal"],
       readTimeMinutes: 5, isPublished: true, publishedAt: daysAgo(2),
     },
     {
       id: ARTICLE_IDS[1], title: "Les 10 marques halal les plus fiables en France", slug: "top-10-marques-halal-france",
       excerpt: "Classement des marques halal les mieux certifiées disponibles en grande surface.",
       content: "Nous avons analysé les pratiques de certification de dizaines de marques pour vous proposer un classement objectif basé sur la rigueur du contrôle...\n\n## Notre méthodologie\nChaque marque est évaluée sur 5 critères : traçabilité, fréquence des contrôles, transparence, organisme certificateur, et retours consommateurs.\n\n## Le classement\n1. **Isla Délice** — Certifiée AVS, contrôles quotidiens\n2. **Reghalal** — Double certification\n3. **Oriental Viandes** — Label Achahada\n...",
-      author: "Équipe Optimus", type: "blog" as const, tags: ["classement", "marques", "confiance"],
+      author: "Équipe Naqiy", type: "blog" as const, tags: ["classement", "marques", "confiance"],
       readTimeMinutes: 8, isPublished: true, publishedAt: daysAgo(5),
     },
     {
-      id: ARTICLE_IDS[2], title: "Partenariat Optimus x AVS : Vérification instantanée", slug: "partenariat-optimus-avs",
-      excerpt: "Optimus Halal s'associe à AVS pour offrir la vérification de certification en temps réel.",
-      content: "Nous sommes fiers d'annoncer notre partenariat avec l'Association de Valorisation des Standards (AVS), le premier organisme de certification halal en France...\n\nGrâce à cette collaboration, les utilisateurs d'Optimus Halal peuvent désormais vérifier instantanément si un produit est certifié AVS en scannant simplement son code-barres.",
-      author: "Équipe Optimus", type: "partner_news" as const, tags: ["partenariat", "AVS", "certification"],
+      id: ARTICLE_IDS[2], title: "Partenariat Naqiy x AVS : Vérification instantanée", slug: "partenariat-naqiy-avs",
+      excerpt: "Naqiy s'associe à AVS pour offrir la vérification de certification en temps réel.",
+      content: "Nous sommes fiers d'annoncer notre partenariat avec l'Association de Valorisation des Standards (AVS), le premier organisme de certification halal en France...\n\nGrâce à cette collaboration, les utilisateurs de Naqiy peuvent désormais vérifier instantanément si un produit est certifié AVS en scannant simplement son code-barres.",
+      author: "Équipe Naqiy", type: "partner_news" as const, tags: ["partenariat", "AVS", "certification"],
       readTimeMinutes: 3, isPublished: true, publishedAt: daysAgo(8),
     },
     {
@@ -301,7 +301,7 @@ async function main() {
       id: ARTICLE_IDS[4], title: "Ramadan 2026 : Préparez vos courses halal", slug: "ramadan-2026-courses-halal",
       excerpt: "Anticipez le Ramadan avec notre guide d'achat halal : promotions, produits essentiels et bons plans.",
       content: "Le Ramadan approche ! Voici notre guide complet pour préparer vos courses halal et profiter des meilleures offres en grande surface et en épicerie halal...\n\n## Les indispensables\n- Dattes Medjool\n- Lait fermenté (lben)\n- Brick et feuilles de filo\n- Viande hachée halal\n- Épices (ras-el-hanout, cumin, paprika)\n\n## Où trouver les meilleures offres ?\nConsultez la section Magasins de l'application pour trouver les boucheries et épiceries halal près de chez vous.",
-      author: "Équipe Optimus", type: "community" as const, tags: ["ramadan", "courses", "guide"],
+      author: "Équipe Naqiy", type: "community" as const, tags: ["ramadan", "courses", "guide"],
       readTimeMinutes: 6, isPublished: true, publishedAt: daysAgo(1),
     },
     {
@@ -428,7 +428,7 @@ async function main() {
   console.log(`  Favorites:     ${counts[5][0].count}`);
   console.log(`  Scans:         ${counts[6][0].count}`);
   console.log(`  Notifications: ${counts[7][0].count}`);
-  console.log("\n  🔑 Login: dev@optimus.fr / password123");
+  console.log("\n  🔑 Login: dev@naqiy.fr / password123");
   console.log("  📍 Stores are seeded by entrypoint.ts (real AVS/Achahada data)");
 
   await client.end();

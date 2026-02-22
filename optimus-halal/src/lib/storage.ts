@@ -5,7 +5,7 @@ let mmkvInstance: any = null;
 
 try {
   const { createMMKV } = require("react-native-mmkv");
-  mmkvInstance = createMMKV({ id: "optimus-halal" });
+  mmkvInstance = createMMKV({ id: "naqiy" });
   logger.info("Storage", "MMKV initialized OK");
 } catch (e) {
   logger.warn("Storage", "MMKV failed, falling back to in-memory", String(e));

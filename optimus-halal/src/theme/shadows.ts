@@ -1,5 +1,5 @@
 /**
- * Optimus Halal Design System — Shadow Tokens
+ * Naqiy Design System — Shadow Tokens
  *
  * React Native compatible shadow presets for iOS and Android.
  * iOS uses `shadowColor`, `shadowOffset`, `shadowOpacity`, `shadowRadius`.

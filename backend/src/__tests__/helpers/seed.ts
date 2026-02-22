@@ -3,7 +3,7 @@ import { users, articles, products, scans } from "../../db/schema/index.js";
 import { hashPassword } from "../../services/auth.service.js";
 
 export const TEST_USER = {
-  email: "test@optimus.fr",
+  email: "test@naqiy.fr",
   password: "Password123!",
   displayName: "Test User",
 };

@@ -1,21 +1,22 @@
 /**
  * Profile Screen Skeleton
  * Mirrors the layout: avatar, name, stats row, menu items
+ * Renders PremiumBackground behind to prevent flash on transition
  */
 
 import React from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { PremiumBackground } from "@/components/ui";
 
 export function ProfileSkeleton() {
   const insets = useSafeAreaInsets();
 
   return (
-    <View
-      className="flex-1 bg-background-light dark:bg-background-dark"
-      style={{ paddingTop: insets.top + 16 }}
-    >
+    <View className="flex-1" style={{ paddingTop: insets.top + 16 }}>
+      <PremiumBackground noOrb />
+
       {/* Header */}
       <View className="items-center px-5 mb-6">
         <Skeleton width={88} height={88} borderRadius={44} />

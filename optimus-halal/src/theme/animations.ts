@@ -1,5 +1,5 @@
 /**
- * Optimus Halal Design System — Animation Tokens
+ * Naqiy Design System — Animation Tokens
  *
  * Pre-configured animation presets compatible with react-native-reanimated v4.
  * These tokens provide consistent motion across the entire application.
@@ -122,11 +122,11 @@ export const springStiff: WithSpringConfig = {
 } as const;
 
 /**
- * The Optimus Spring — our signature motion feel.
+ * The Naqiy Spring — our signature motion feel.
  * Responsive yet soft landing — like placing a product on velvet.
  * Use for: card presses, tab switches, sheet reveals, scroll snap.
  */
-export const springOptimus: WithSpringConfig = {
+export const springNaqiy: WithSpringConfig = {
   damping: 14,
   stiffness: 170,
   mass: 0.9,
@@ -257,7 +257,7 @@ export const exitAnimations = {
 /**
  * Smooth layout transition for list reordering and filter changes.
  * Apply via `layout={layoutTransition}` on Animated.View wrappers.
- * Values match springOptimus (damping:14, stiffness:170, mass:0.9).
+ * Values match springNaqiy (damping:14, stiffness:170, mass:0.9).
  */
 export const layoutTransition = Layout.springify()
   .damping(14)

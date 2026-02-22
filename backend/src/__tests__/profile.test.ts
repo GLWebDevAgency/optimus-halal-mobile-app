@@ -10,7 +10,7 @@ describe("profile router", () => {
       const caller = createAuthenticatedCaller(user.id);
 
       const profile = await caller.profile.getProfile();
-      expect(profile.email).toBe("test@optimus.fr");
+      expect(profile.email).toBe("test@naqiy.fr");
       expect((profile as any).passwordHash).toBeUndefined();
     });
 

@@ -1,5 +1,5 @@
 /**
- * tRPC Client — Optimus Halal Mobile App
+ * tRPC Client — Naqiy Mobile App
  *
  * Type-safe API client connected to the dedicated Mobile BFF
  * (Hono + tRPC v11 + Drizzle + superjson)
@@ -27,7 +27,7 @@ export interface ApiError {
   details?: Record<string, unknown>;
 }
 
-export class OptimusApiError extends Error {
+export class NaqiyApiError extends Error {
   code: string;
   details?: Record<string, unknown>;
   statusCode?: number;
@@ -39,18 +39,18 @@ export class OptimusApiError extends Error {
     statusCode?: number
   ) {
     super(message);
-    this.name = "OptimusApiError";
+    this.name = "NaqiyApiError";
     this.code = code;
     this.details = details;
     this.statusCode = statusCode;
   }
 
-  static fromTRPCError(error: unknown): OptimusApiError {
+  static fromTRPCError(error: unknown): NaqiyApiError {
     if (error && typeof error === "object") {
       // TRPCClientError with a valid server shape (has code + message)
       const shape = (error as any).shape;
       if (shape && typeof shape === "object" && shape.message) {
-        return new OptimusApiError(
+        return new NaqiyApiError(
           shape.code || ERROR_CODES.UNKNOWN_ERROR,
           shape.message,
           shape.data
@@ -64,7 +64,7 @@ export class OptimusApiError extends Error {
           message: string;
           data?: unknown;
         };
-        return new OptimusApiError(
+        return new NaqiyApiError(
           trpcError.code,
           trpcError.message,
           trpcError.data as Record<string, unknown>
@@ -73,24 +73,24 @@ export class OptimusApiError extends Error {
 
       // Generic Error with a message
       if (error instanceof Error) {
-        return new OptimusApiError(ERROR_CODES.UNKNOWN_ERROR, error.message);
+        return new NaqiyApiError(ERROR_CODES.UNKNOWN_ERROR, error.message);
       }
     }
-    return new OptimusApiError(
+    return new NaqiyApiError(
       ERROR_CODES.UNKNOWN_ERROR,
       "An unexpected error occurred"
     );
   }
 
-  static networkError(): OptimusApiError {
-    return new OptimusApiError(
+  static networkError(): NaqiyApiError {
+    return new NaqiyApiError(
       ERROR_CODES.NETWORK_ERROR,
       "Unable to connect to the server. Please check your internet connection."
     );
   }
 
-  static timeoutError(): OptimusApiError {
-    return new OptimusApiError(
+  static timeoutError(): NaqiyApiError {
+    return new NaqiyApiError(
       ERROR_CODES.TIMEOUT_ERROR,
       "Request timed out. Please try again."
     );
@@ -241,10 +241,10 @@ function createApiClient() {
             clearTimeout(timeoutId);
 
             if (error instanceof Error && error.name === "AbortError") {
-              throw OptimusApiError.timeoutError();
+              throw NaqiyApiError.timeoutError();
             }
 
-            throw OptimusApiError.networkError();
+            throw NaqiyApiError.networkError();
           }
         },
 
@@ -340,18 +340,18 @@ export async function safeApiCall<T>(
   apiCall: () => Promise<T>,
   options?: {
     showError?: boolean;
-    onError?: (error: OptimusApiError) => void;
+    onError?: (error: NaqiyApiError) => void;
     suppressLog?: boolean;
   }
-): Promise<{ data: T | null; error: OptimusApiError | null }> {
+): Promise<{ data: T | null; error: NaqiyApiError | null }> {
   try {
     const data = await apiCall();
     return { data, error: null };
   } catch (error) {
     const apiError =
-      error instanceof OptimusApiError
+      error instanceof NaqiyApiError
         ? error
-        : OptimusApiError.fromTRPCError(error);
+        : NaqiyApiError.fromTRPCError(error);
 
     if (API_CONFIG.enableLogging && !options?.suppressLog) {
       if (apiError.code === "UNAUTHORIZED") {

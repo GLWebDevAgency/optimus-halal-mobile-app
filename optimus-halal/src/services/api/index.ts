@@ -37,7 +37,7 @@ export {
   checkApiHealth,
   performTokenRefresh,
   setOnAuthFailure,
-  OptimusApiError,
+  NaqiyApiError,
 } from './client';
 
 export { API_CONFIG, STORAGE_KEYS, HTTP_STATUS, ERROR_CODES } from './config';

@@ -1,5 +1,5 @@
 /**
- * Optimus Halal Design System — Color Tokens
+ * Naqiy Design System — Color Tokens
  *
  * Single source of truth for every color in the application.
  * All screens, components, and hooks MUST reference these tokens.
@@ -135,13 +135,13 @@ export const halalStatus = {
  * "Clean and warm" — off-white backgrounds, deep green text.
  */
 export const lightTheme = {
-  /** Page-level backgrounds */
-  background: "#f8faf9",
-  backgroundSecondary: "#ffffff",
+  /** Page-level backgrounds — synced with PremiumBackground L0 */
+  background: "#f3f1ed",
+  backgroundSecondary: "#faf8f5",
 
   /** Cards and elevated surfaces */
   card: "#ffffff",
-  cardBorder: "rgba(0, 0, 0, 0.05)",
+  cardBorder: "rgba(180, 150, 50, 0.08)",
 
   /** Typography hierarchy */
   textPrimary: "#0d1b13",
@@ -182,12 +182,12 @@ export const lightTheme = {
  * Luxury gold on anthracite — warm neutrals, not green-tinted.
  */
 export const darkTheme = {
-  /** Page-level backgrounds */
-  background: "#121212",
-  backgroundSecondary: "#1A1A1A",
+  /** Page-level backgrounds — synced with PremiumBackground L0 */
+  background: "#0C0C0C",
+  backgroundSecondary: "#141414",
 
   /** Cards and elevated surfaces */
-  card: "#1E1E1E",
+  card: "#1A1A1A",
   cardBorder: "rgba(207, 165, 51, 0.15)",
 
   /** Typography hierarchy */

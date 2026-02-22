@@ -1,7 +1,7 @@
 {
-  "name": "optimus-halal-backend",
+  "name": "naqiy-backend",
   "version": "1.0.0",
-  "description": "Mobile BFF for Optimus Halal — Hono + tRPC + Drizzle",
+  "description": "Mobile BFF for Naqiy — Hono + tRPC + Drizzle",
   "type": "module",
   "scripts": {
     "dev": "tsx --env-file=.env --watch src/index.ts",

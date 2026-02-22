@@ -43,6 +43,8 @@ import type { StoreFeatureProperties } from "@/components/map";
 import { trackEvent } from "@/lib/analytics";
 import Animated, {
   FadeIn,
+  FadeOut,
+  FadeInUp,
   FadeInRight,
   useSharedValue,
   useAnimatedStyle,
@@ -133,7 +135,6 @@ export default function MapScreen() {
   // Map state
   const cameraRef = useRef<any>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => [240 + insets.bottom, "50%", "90%"], [insets.bottom]);
   // Initialize with France center so the query fires immediately —
   // waiting for onMapIdle can hang forever if Mapbox tiles fail to load
   const [mapRegion, setMapRegion] = useState<{
@@ -180,6 +181,12 @@ export default function MapScreen() {
 
   const stores = useMemo(() => storesQuery.data ?? [], [storesQuery.data]);
 
+  // Dynamic peek height: compact when list is empty, full when store cards visible
+  const isListLoading = storesQuery.isLoading || locationLoading || (storesQuery.isFetching && stores.length === 0);
+  const hasSheetContent = stores.length > 0 || isListLoading || !!selectedStoreId;
+  const peekHeight = hasSheetContent ? 240 + insets.bottom : 130 + insets.bottom;
+  const snapPoints = useMemo(() => [peekHeight, "50%", "90%"], [peekHeight]);
+
   const hasShownListRef = useRef(false);
 
   useEffect(() => {
@@ -194,10 +201,12 @@ export default function MapScreen() {
   const currentSnapIndexRef = useRef(0);
 
   // Animated index tracks the bottom sheet position on the UI thread (0→1→2)
-  // Used to smoothly fade out the search overlay as the sheet rises
+  // Snap points: index 0 = peek (240px), index 1 = 50%, index 2 = 90%
+  // Overlay stays fully visible until ~70% of sheet travel (index 1.4),
+  // then fades to 0 at index 2 (90% = fully expanded)
   const animatedSheetIndex = useSharedValue(0);
   const overlayFadeStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(animatedSheetIndex.value, [0, 0.8], [1, 0], Extrapolation.CLAMP),
+    opacity: interpolate(animatedSheetIndex.value, [1.4, 2], [1, 0], Extrapolation.CLAMP),
   }));
   // Disable touch on overlay when mostly invisible (avoids ghost taps)
   const [overlayInteractive, setOverlayInteractive] = useState(true);
@@ -209,13 +218,12 @@ export default function MapScreen() {
   const triggerSheetBounce = useCallback(() => {
     const sheet = bottomSheetRef.current;
     if (!sheet) return;
-    // Peek height + 30px overshoot → brief lift, then snap back to index 0
-    const peekHeight = 240 + insets.bottom;
+    // Current peek height + 30px overshoot → brief lift, then snap back to index 0
     sheet.snapToPosition(peekHeight + 30);
     bounceTimerRef.current = setTimeout(() => {
       sheet.snapToIndex(0);
     }, 400);
-  }, [insets.bottom]);
+  }, [peekHeight]);
 
   useEffect(() => {
     return () => {
@@ -229,8 +237,9 @@ export default function MapScreen() {
     currentSnapIndexRef.current = index;
     // Haptic only when user actively changes snap (not programmatic bounce)
     if (!bounceTimerRef.current) impact();
-    // Toggle overlay interactivity
-    setOverlayInteractive(index === 0);
+    // Overlay stays interactive at peek (0) and half-expanded (1),
+    // disabled only at full expand (2) where it's faded out
+    setOverlayInteractive(index <= 1);
     if (index > 0) {
       setSheetExpanded(true);
       if (bounceTimerRef.current) {
@@ -544,9 +553,11 @@ export default function MapScreen() {
   }, [handleStoreCardPress]);
 
   const handleCloseDetail = useCallback(() => {
-    setSelectedStoreId(null);
+    // Choreograph: snap sheet down first, then swap content after exit animation
     setSheetExpanded(false);
     bottomSheetRef.current?.snapToIndex(0);
+    // Delay content swap so FadeOut (150ms) completes before store list fades in
+    setTimeout(() => setSelectedStoreId(null), 160);
   }, []);
 
   // Stable callbacks for StoreDetailCard actions — use selectedStore via ref
@@ -841,20 +852,32 @@ export default function MapScreen() {
       >
         <View style={{ flex: 1 }}>
           {selectedStore ? (
-            <StoreDetailCard
-              store={selectedStore as StoreFeatureProperties}
-              detail={storeDetailQuery.data}
-              isDetailLoading={storeDetailQuery.isLoading && sheetExpanded}
-              isExpanded={sheetExpanded}
-              onDirections={handleDirections}
-              onCall={handleCallStore}
-              onShare={handleShareStore}
-              onClose={handleCloseDetail}
-              colors={colors}
-            />
+            <Animated.View
+              key="store-detail"
+              entering={FadeInUp.duration(250)}
+              exiting={FadeOut.duration(180)}
+              style={{ flex: 1 }}
+            >
+              <StoreDetailCard
+                store={selectedStore as StoreFeatureProperties}
+                detail={storeDetailQuery.data}
+                isDetailLoading={storeDetailQuery.isLoading && sheetExpanded}
+                isExpanded={sheetExpanded}
+                onDirections={handleDirections}
+                onCall={handleCallStore}
+                onShare={handleShareStore}
+                onClose={handleCloseDetail}
+                colors={colors}
+              />
+            </Animated.View>
           ) : (
             /* Store List */
-            <View className="flex-1 pb-4">
+            <Animated.View
+              key="store-list"
+              entering={FadeIn.duration(220)}
+              exiting={FadeOut.duration(150)}
+              className="flex-1 pb-4"
+            >
               {/* Header */}
               <View className="flex-row items-center justify-between px-5 mb-3">
                 <Text
@@ -865,60 +888,72 @@ export default function MapScreen() {
                   {t.map.nearYou}
                 </Text>
                 {stores.length > 0 && (
-                  <Text className="text-sm font-semibold" style={{ color: colors.primary }}>
+                  <Animated.Text
+                    entering={FadeIn.duration(300)}
+                    className="text-sm font-semibold"
+                    style={{ color: colors.primary }}
+                  >
                     {stores.length} {stores.length > 1 ? t.map.stores : t.map.store}
-                  </Text>
+                  </Animated.Text>
                 )}
               </View>
 
               {/* Store Cards */}
-              {(storesQuery.isLoading || locationLoading || (storesQuery.isFetching && stores.length === 0)) ? (
-                <View className="flex-1 items-center justify-center py-8">
+              {isListLoading ? (
+                <Animated.View
+                  entering={FadeIn.duration(200)}
+                  className="flex-1 items-center justify-center py-8"
+                >
                   <ActivityIndicator size="small" color={colors.primary} />
                   <Text className="text-xs mt-2" style={{ color: colors.textMuted }}>
                     {locationLoading ? t.map.locating : t.map.searchResults}
                   </Text>
-                </View>
+                </Animated.View>
               ) : stores.length === 0 ? (
-                <View className="flex-1 items-center justify-center px-8 py-6">
+                <Animated.View
+                  entering={FadeIn.duration(250)}
+                  className="flex-1 items-center justify-center px-8 py-6"
+                >
                   <MaterialIcons name="explore" size={32} color={colors.textMuted} />
                   <Text className="text-sm mt-2 text-center" style={{ color: colors.textSecondary }}>
                     {t.map.noStoresFound}
                   </Text>
-                </View>
+                </Animated.View>
               ) : (
-                <FlatList
-                  horizontal
-                  data={stores}
-                  keyExtractor={(item) => item.id}
-                  renderItem={({ item, index }) => (
-                    <Animated.View
-                      entering={hasShownListRef.current ? undefined : FadeInRight.delay(Math.min(index * 80, 400)).duration(300)}
-                    >
-                      <StoreCard
-                        store={item as StoreFeatureProperties}
-                        isSelected={item.id === selectedStoreId}
-                        isDark={isDark}
-                        onPressId={handleStoreCardPressById}
-                        colors={colors}
-                      />
-                    </Animated.View>
-                  )}
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
-                  snapToInterval={CARD_WIDTH + 12}
-                  decelerationRate="fast"
-                  getItemLayout={(_, index) => ({
-                    length: CARD_WIDTH + 12,
-                    offset: (CARD_WIDTH + 12) * index,
-                    index,
-                  })}
-                  windowSize={3}
-                  maxToRenderPerBatch={5}
-                  initialNumToRender={3}
-                />
+                <Animated.View entering={FadeIn.duration(250)}>
+                  <FlatList
+                    horizontal
+                    data={stores}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item, index }) => (
+                      <Animated.View
+                        entering={hasShownListRef.current ? undefined : FadeInRight.delay(Math.min(index * 80, 400)).duration(300)}
+                      >
+                        <StoreCard
+                          store={item as StoreFeatureProperties}
+                          isSelected={item.id === selectedStoreId}
+                          isDark={isDark}
+                          onPressId={handleStoreCardPressById}
+                          colors={colors}
+                        />
+                      </Animated.View>
+                    )}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
+                    snapToInterval={CARD_WIDTH + 12}
+                    decelerationRate="fast"
+                    getItemLayout={(_, index) => ({
+                      length: CARD_WIDTH + 12,
+                      offset: (CARD_WIDTH + 12) * index,
+                      index,
+                    })}
+                    windowSize={3}
+                    maxToRenderPerBatch={5}
+                    initialNumToRender={3}
+                  />
+                </Animated.View>
               )}
-            </View>
+            </Animated.View>
           )}
         </View>
       </BottomSheet>

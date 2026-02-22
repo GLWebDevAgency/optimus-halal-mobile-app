@@ -85,7 +85,7 @@ const isPremium = middleware(async ({ ctx, next }) => {
   if (ctx.subscriptionTier !== "premium") {
     throw new TRPCError({
       code: "FORBIDDEN",
-      message: "Cette fonctionnalite necessite Optimus+",
+      message: "Cette fonctionnalite necessite Naqiy+",
     });
   }
   return next({ ctx });

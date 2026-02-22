@@ -1,5 +1,5 @@
 /**
- * Optimus Halal - Type Definitions
+ * Naqiy — Type Definitions
  */
 
 import { HalalStatus } from "@constants/config";

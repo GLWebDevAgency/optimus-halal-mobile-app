@@ -53,8 +53,8 @@ export const fr = {
     and: "et notre",
     stepOf: "Étape {{current}} sur {{total}}",
     noInternet: "Pas de connexion internet",
-    premiumRequired: "Cette fonctionnalite necessite Optimus+",
-    upgrade: "Passer a Optimus+",
+    premiumRequired: "Cette fonctionnalite necessite Naqiy+",
+    upgrade: "Passer a Naqiy+",
   },
 
   // Navigation
@@ -260,7 +260,7 @@ export const fr = {
     addError: "Impossible d'ajouter aux favoris",
     removeError: "Impossible de retirer des favoris",
     premiumLimitTitle: "Limite atteinte",
-    premiumLimitMessage: "Vous avez atteint la limite de 5 favoris. Passez à Optimus+ pour des favoris illimités.",
+    premiumLimitMessage: "Vous avez atteint la limite de 5 favoris. Passez à Naqiy+ pour des favoris illimités.",
     alreadyFavorite: "Ce produit est déjà dans vos favoris",
   },
 
@@ -509,7 +509,7 @@ export const fr = {
     newProductAdded: "Nouveau produit ajouté",
     newProductAddedDesc: "Ce produit a été ajouté récemment. Les données seront enrichies progressivement.",
     whereToBuy: "Où acheter ?",
-    verifiedWith: "Vérifié avec Optimus Halal",
+    verifiedWith: "Vérifié avec Naqiy",
     nutriScore: "Nutri-Score",
     novaGroup: "NOVA",
     ecoScore: "Éco-Score",
@@ -853,7 +853,7 @@ export const fr = {
     },
     // Welcome Screen
     welcome: {
-      appName: "Optimus Halal",
+      appName: "Naqiy",
       tagline: "Consommation halal transparente",
       greeting: "Bienvenue !",
       subtitleV2: "Connectez-vous en un clic avec votre email",
@@ -1100,9 +1100,9 @@ export const fr = {
     premiumMap: "Carte premium avec avis et photos",
     badge: "Badge Consommateur Conscient",
     prioritySupport: "Support prioritaire",
-    subscribe: "S'abonner a Optimus+",
+    subscribe: "S'abonner a Naqiy+",
     restorePurchases: "Restaurer mes achats",
-    alreadyPremium: "Vous etes Optimus+",
+    alreadyPremium: "Vous etes Naqiy+",
     enjoyFeatures: "Profitez de toutes les fonctionnalites premium",
     purchaseComingSoon: "L'achat in-app sera bientot disponible",
     restoreComingSoon: "La restauration sera bientot disponible",

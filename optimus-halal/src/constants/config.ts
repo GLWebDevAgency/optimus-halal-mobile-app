@@ -1,5 +1,5 @@
 /**
- * Optimus Halal - Feature Flags Configuration
+ * Naqiy — Feature Flags Configuration
  *
  * Système de feature flags pour activer/désactiver des fonctionnalités
  */
@@ -74,13 +74,13 @@ export const defaultFeatureFlags: FeatureFlags = {
  * App Constants
  */
 export const APP_CONFIG = {
-  APP_NAME: "Optimus Halal",
-  TAGLINE: "Halal. Éthique. Vérifié.",
+  APP_NAME: "Naqiy",
+  TAGLINE: "Ton halal, en toute clarté.",
   VERSION: "1.0.0",
   MIN_VERSION_REQUIRED: "1.0.0",
-  SUPPORT_EMAIL: "support@optimushalal.com",
-  PRIVACY_POLICY_URL: "https://optimushalal.com/privacy",
-  TERMS_URL: "https://optimushalal.com/terms",
+  SUPPORT_EMAIL: "support@naqiy.com",
+  PRIVACY_POLICY_URL: "https://naqiy.com/privacy",
+  TERMS_URL: "https://naqiy.com/terms",
 } as const;
 
 /**

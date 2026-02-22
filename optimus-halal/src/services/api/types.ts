@@ -808,6 +808,6 @@ export interface RedeemRewardResponse {
 /**
  * Placeholder for the tRPC AppRouter type.
  * TODO: Replace with the real shared AppRouter from the backend package
- * when @optimus-halal/shared-types is published.
+ * when @naqiy/shared-types is published.
  */
 export type AppRouter = any;

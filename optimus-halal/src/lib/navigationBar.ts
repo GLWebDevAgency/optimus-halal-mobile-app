@@ -9,7 +9,7 @@ export function setNavigationBarTheme(isDark: boolean) {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const NavigationBar = require("expo-navigation-bar");
-    NavigationBar.setBackgroundColorAsync(isDark ? "#0f1a13" : "#ffffff").catch(() => {});
+    NavigationBar.setBackgroundColorAsync(isDark ? "#0C0C0C" : "#f3f1ed").catch(() => {});
     NavigationBar.setButtonStyleAsync(isDark ? "light" : "dark").catch(() => {});
   } catch {
     // expo-navigation-bar requires a dev client — gracefully skip in Expo Go

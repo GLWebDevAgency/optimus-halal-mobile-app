@@ -95,7 +95,7 @@ export const ShareCardView = forwardRef<View, { data: ShareCardData; labels: Sha
         {/* Top bar with logo */}
         <View style={styles.topBar}>
           <View style={styles.logoBadge}>
-            <Text style={styles.logoText}>🌿 Optimus Halal</Text>
+            <Text style={styles.logoText}>🌿 Naqiy</Text>
           </View>
         </View>
 

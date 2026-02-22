@@ -50,7 +50,7 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeResult> {
     const url = `${env.OPENFOODFACTS_API_URL}/product/${barcode}.json`;
     const response = await fetch(url, {
       headers: {
-        "User-Agent": "OptimusHalal/1.0 (contact@optimus-sila.com)",
+        "User-Agent": "Naqiy/1.0 (contact@naqiy.com)",
       },
     });
 
@@ -448,7 +448,7 @@ export async function analyzeHalalStatus(
         tier: "doubtful",
         reasons: [{ type: "ingredient", name: "—", status: "doubtful", explanation: "Aucun ingrédient disponible" }],
         certifierName: null,
-        analysisSource: "Analyse automatique Optimus",
+        analysisSource: "Analyse automatique Naqiy",
       },
       options.strictness
     );
@@ -463,7 +463,7 @@ export async function analyzeHalalStatus(
         tier: "haram",
         reasons,
         certifierName: null,
-        analysisSource: "Analyse automatique Optimus",
+        analysisSource: "Analyse automatique Naqiy",
       },
       options.strictness
     );
@@ -477,7 +477,7 @@ export async function analyzeHalalStatus(
         tier: "doubtful",
         reasons,
         certifierName: null,
-        analysisSource: "Analyse automatique Optimus",
+        analysisSource: "Analyse automatique Naqiy",
       },
       options.strictness
     );
@@ -496,7 +496,7 @@ export async function analyzeHalalStatus(
         explanation: "Aucun ingrédient haram ou douteux détecté",
       }],
       certifierName: null,
-      analysisSource: "Analyse automatique Optimus",
+      analysisSource: "Analyse automatique Naqiy",
     },
     options.strictness
   );

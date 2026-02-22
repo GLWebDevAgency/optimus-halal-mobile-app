@@ -1,10 +1,20 @@
 import React, { useMemo, useRef, useCallback } from "react";
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
-import Animated, { FadeIn, FadeInDown, FadeInRight } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeOut,
+  FadeInDown,
+  FadeInRight,
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  interpolate,
+  interpolateColor,
+} from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
-import { storeTypeColors, glass } from "@/theme/colors";
+import { storeTypeColors } from "@/theme/colors";
 import type { SearchResult } from "@/hooks";
 import { STORE_TYPE_ICON, type ThemeColors } from "./types";
 
@@ -61,7 +71,16 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
   // Guard: if user is pressing a result, don't hide suggestions on blur
   const isPressInProgressRef = useRef(false);
 
+  // ── Search bar focus animations ──
+  const focusProgress = useSharedValue(0);
+
+  const handleFocus = useCallback(() => {
+    focusProgress.value = withTiming(1, { duration: 250 });
+    onShowSuggestions(true);
+  }, [onShowSuggestions, focusProgress]);
+
   const handleBlur = useCallback(() => {
+    focusProgress.value = withTiming(0, { duration: 200 });
     // Delay hide so onPress on a result fires first
     setTimeout(() => {
       if (!isPressInProgressRef.current) {
@@ -69,7 +88,26 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
       }
       isPressInProgressRef.current = false;
     }, 150);
-  }, [onShowSuggestions]);
+  }, [onShowSuggestions, focusProgress]);
+
+  // Animated border glow + shadow on focus
+  const borderNormal = colors.border;
+  const borderFocused = colors.primary;
+  const bgNormal = isDark ? "rgba(30,41,59,0.8)" : "rgba(255,255,255,0.9)";
+  const bgFocused = isDark ? "rgba(30,41,59,0.95)" : "rgba(255,255,255,1)";
+
+  const searchBarAnimStyle = useAnimatedStyle(() => ({
+    borderColor: interpolateColor(focusProgress.value, [0, 1], [borderNormal, borderFocused]),
+    backgroundColor: interpolateColor(focusProgress.value, [0, 1], [bgNormal, bgFocused]),
+    shadowOpacity: interpolate(focusProgress.value, [0, 1], [0, 0.18]),
+    shadowRadius: interpolate(focusProgress.value, [0, 1], [0, 12]),
+  }));
+
+  // Search icon subtle scale + opacity boost
+  const searchIconAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: withSpring(interpolate(focusProgress.value, [0, 1], [1, 1.12]), { damping: 15 }) }],
+    opacity: interpolate(focusProgress.value, [0, 1], [0.5, 1]),
+  }));
 
   const handleResultPress = useCallback((result: SearchResult) => {
     isPressInProgressRef.current = true;
@@ -100,39 +138,46 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
         {/* Search Bar */}
         <Animated.View
           entering={FadeInDown.delay(100).duration(400)}
-          className="flex-row gap-3 mb-3"
+          className="flex-row gap-3 mb-2"
         >
-          <BlurView
-            intensity={isDark ? 40 : 80}
-            tint={isDark ? "dark" : "light"}
-            className="flex-1 h-12 flex-row items-center px-4 rounded-xl overflow-hidden"
-            style={{
-              borderWidth: 1,
-              borderColor: isDark ? glass.dark.border : glass.light.border,
-            }}
+          <Animated.View
+            className="flex-1 h-11 flex-row items-center px-4 rounded-full overflow-hidden"
+            style={[
+              {
+                borderWidth: 1,
+                shadowColor: colors.primary,
+                shadowOffset: { width: 0, height: 0 },
+                elevation: 0,
+              },
+              searchBarAnimStyle,
+            ]}
           >
-            <MaterialIcons name="search" size={20} color={colors.textMuted} />
+            <Animated.View style={searchIconAnimStyle}>
+              <MaterialIcons name="search" size={18} color={colors.primary} />
+            </Animated.View>
             <TextInput
               value={searchText}
               onChangeText={onSearchTextChange}
               placeholder={t.searchStores}
               placeholderTextColor={colors.textMuted}
-              className="flex-1 ml-3 text-base"
+              className="flex-1 ml-2.5 text-sm"
               style={{ color: colors.textPrimary }}
               returnKeyType="search"
-              onFocus={() => onShowSuggestions(true)}
+              onFocus={handleFocus}
               onBlur={handleBlur}
             />
             {searchText.length > 0 && (
-              isSearchActive ? (
-                <ActivityIndicator size="small" color={colors.primary} />
-              ) : (
-                <TouchableOpacity onPress={onClearSearch} hitSlop={8}>
-                  <MaterialIcons name="close" size={18} color={colors.textMuted} />
-                </TouchableOpacity>
-              )
+              <Animated.View entering={FadeIn.duration(150)} exiting={FadeOut.duration(100)}>
+                {isSearchActive ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                  <TouchableOpacity onPress={onClearSearch} hitSlop={8}>
+                    <MaterialIcons name="close" size={16} color={colors.textMuted} />
+                  </TouchableOpacity>
+                )}
+              </Animated.View>
             )}
-          </BlurView>
+          </Animated.View>
         </Animated.View>
 
         {/* Hybrid Search Results (Stores + Addresses) */}
@@ -234,7 +279,7 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
           entering={FadeInRight.delay(200).duration(400)}
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 8 }}
+          contentContainerStyle={{ gap: 6 }}
         >
           {filters.map((filter) => {
             const isActive = activeFilters.includes(filter.id);
@@ -243,7 +288,7 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
               <TouchableOpacity
                 key={filter.id}
                 onPress={() => onToggleFilter(filter.id)}
-                className="h-9 flex-row items-center gap-1.5 px-4 rounded-full"
+                className="h-7 flex-row items-center gap-1 px-3 rounded-full"
                 style={{
                   backgroundColor: isActive
                     ? colors.primary
@@ -260,25 +305,25 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
                 {'storeType' in filter && filter.storeType ? (
                   <View
                     style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: 4,
+                      width: 6,
+                      height: 6,
+                      borderRadius: 3,
                       backgroundColor: isActive ? "#ffffff" : (storeTypeColors[filter.storeType as keyof typeof storeTypeColors]?.base ?? colors.textMuted),
                     }}
                   />
                 ) : 'openNow' in filter ? (
-                  <MaterialIcons name="schedule" size={14} color={isActive ? "#ffffff" : "#22c55e"} />
+                  <MaterialIcons name="schedule" size={12} color={isActive ? "#ffffff" : "#22c55e"} />
                 ) : 'minRating' in filter ? (
-                  <MaterialIcons name="star" size={14} color={isActive ? "#ffffff" : "#fbbf24"} />
+                  <MaterialIcons name="star" size={12} color={isActive ? "#ffffff" : "#fbbf24"} />
                 ) : null}
                 <Text
-                  className={`text-sm ${isActive ? "font-semibold" : "font-medium"}`}
+                  className={`text-xs ${isActive ? "font-semibold" : "font-medium"}`}
                   style={{ color: isActive ? "#ffffff" : colors.textPrimary }}
                 >
                   {filterLabel}
                 </Text>
                 {isActive && (
-                  <MaterialIcons name="close" size={16} color="#ffffff" />
+                  <MaterialIcons name="close" size={12} color="#ffffff" />
                 )}
               </TouchableOpacity>
             );

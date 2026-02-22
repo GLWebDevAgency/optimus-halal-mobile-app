@@ -2,35 +2,35 @@ import { ExpoConfig, ConfigContext } from "expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "Optimus Halal",
-  slug: "optimus-halal",
+  name: "Naqiy",
+  slug: "naqiy",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/icon.png",
   userInterfaceStyle: "automatic",
-  scheme: "optimushalal",
+  scheme: "naqiy",
   splash: {
     image: "./assets/splash-icon.png",
     resizeMode: "contain",
-    backgroundColor: "#102216",
+    backgroundColor: "#0C0C0C",
   },
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.optimushalal.app",
+    bundleIdentifier: "com.naqiy.app",
     infoPlist: {
       NSCameraUsageDescription:
-        "Optimus Halal utilise la caméra pour scanner les codes-barres des produits.",
+        "Naqiy utilise la caméra pour scanner les codes-barres des produits.",
       NSFaceIDUsageDescription:
         "Utilisez Face ID pour une connexion sécurisée.",
       NSLocationWhenInUseUsageDescription:
-        "Optimus Halal utilise votre localisation pour trouver les points de vente à proximité.",
+        "Naqiy utilise votre localisation pour trouver les points de vente à proximité.",
     },
   },
   android: {
-    package: "com.optimushalal.app",
+    package: "com.naqiy.app",
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
-      backgroundColor: "#102216",
+      backgroundColor: "#0C0C0C",
     },
     edgeToEdgeEnabled: true,
     permissions: [
@@ -52,7 +52,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "expo-camera",
       {
         cameraPermission:
-          "Optimus Halal utilise la caméra pour scanner les codes-barres.",
+          "Naqiy utilise la caméra pour scanner les codes-barres.",
       },
     ],
     [
@@ -67,7 +67,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "@sentry/react-native",
       {
         organization: "limame-ghassene",
-        project: "optimus-halal",
+        project: "naqiy",
       },
     ],
     "@rnmapbox/maps",

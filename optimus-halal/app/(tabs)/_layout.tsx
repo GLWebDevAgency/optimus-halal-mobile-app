@@ -24,9 +24,11 @@ import { Tabs } from "expo-router";
 import { PremiumTabBar } from "@/components/navigation/PremiumTabBar";
 import { QueryErrorBoundary } from "@/components/QueryErrorBoundary";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useTheme } from "@/hooks/useTheme";
 
 export default function TabsLayout() {
   const { t } = useTranslation();
+  const { colors } = useTheme();
 
   return (
     <QueryErrorBoundary>
@@ -35,6 +37,7 @@ export default function TabsLayout() {
           headerShown: false,
           animation: "fade",
           ...(Platform.OS === "android" ? { animationDuration: 200 } : {}),
+          sceneStyle: { backgroundColor: colors.background },
         }}
         tabBar={(props) => <PremiumTabBar {...props} />}
       >

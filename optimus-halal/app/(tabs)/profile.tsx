@@ -63,7 +63,7 @@ const MenuItem = React.memo(function MenuItem({
       accessibilityLabel={title}
       accessibilityHint={subtitle ? subtitle : undefined}
       className="flex-row items-center justify-between p-4"
-      style={!isLast ? { borderBottomWidth: 1, borderBottomColor: colors.borderLight } : undefined}
+      style={!isLast ? { borderBottomWidth: 1, borderBottomColor: colors.border } : undefined}
     >
       <View className="flex-row items-center gap-3">
         <View
@@ -123,12 +123,7 @@ const StatsCard = React.memo(function StatsCard({
       style={{
         backgroundColor: colors.card,
         borderWidth: 1,
-        borderColor: colors.borderLight,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        borderColor: colors.cardBorder,
       }}
     >
       <View
@@ -250,7 +245,7 @@ export default function ProfileScreen() {
       {/* Header */}
       <Animated.View
         entering={FadeIn.duration(400)}
-        style={{ paddingTop: insets.top, backgroundColor: colors.background, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}
+        style={{ paddingTop: insets.top }}
       >
         <View className="flex-row items-center justify-between p-4">
           <TouchableOpacity
@@ -286,7 +281,7 @@ export default function ProfileScreen() {
       >
         {/* Profile Header */}
         <Animated.View
-          entering={FadeInDown.delay(100).duration(500)}
+          entering={FadeInDown.delay(50).duration(500)}
           className="items-center pt-4 pb-6 px-6"
         >
           {/* Avatar */}
@@ -328,7 +323,7 @@ export default function ProfileScreen() {
           {/* Level Badge */}
           <View
             className="flex-row items-center gap-1.5 mb-6 px-3 py-1 rounded-full"
-            style={{ backgroundColor: colors.primaryLight, borderWidth: 1, borderColor: colors.primaryLight }}
+            style={{ backgroundColor: isDark ? "rgba(212, 175, 55, 0.1)" : colors.primaryLight, borderWidth: 1, borderColor: isDark ? "rgba(212, 175, 55, 0.2)" : colors.primaryLight }}
           >
             <MaterialIcons name="verified" size={16} color={colors.primary} />
             <Text className="font-medium text-xs uppercase tracking-wide" style={{ color: colors.primary }}>
@@ -342,19 +337,14 @@ export default function ProfileScreen() {
             activeOpacity={0.9}
             accessibilityRole="button"
             accessibilityLabel={t.profile.editProfile}
-            className="h-11 px-8 rounded-full items-center justify-center w-full max-w-[200px]"
+            className="h-11 px-8 rounded-full items-center justify-center w-full max-w-[240px]"
             style={{
-              backgroundColor: isDark ? colors.card : "#0f172a",
-              borderWidth: isDark ? 1 : 0,
-              borderColor: isDark ? colors.borderLight : "transparent",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.05,
-              shadowRadius: 8,
-              elevation: 2,
+              backgroundColor: isDark ? "rgba(212, 175, 55, 0.12)" : "#0f172a",
+              borderWidth: 1,
+              borderColor: isDark ? "rgba(212, 175, 55, 0.25)" : "transparent",
             }}
           >
-            <Text className="font-semibold text-sm" style={{ color: "#ffffff" }}>
+            <Text className="font-semibold text-sm" style={{ color: isDark ? colors.primary : "#ffffff" }}>
               {t.profile.editProfile}
             </Text>
           </TouchableOpacity>
@@ -362,17 +352,12 @@ export default function ProfileScreen() {
 
         {/* Gamification Card */}
         <Animated.View
-          entering={FadeInUp.delay(150).duration(500)}
+          entering={FadeInUp.delay(100).duration(500)}
           className="mx-4 mb-6 p-4 rounded-2xl"
           style={{
             backgroundColor: colors.card,
             borderWidth: 1,
-            borderColor: colors.borderLight,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.05,
-            shadowRadius: 8,
-            elevation: 2,
+            borderColor: colors.cardBorder,
           }}
         >
           {/* XP Progress */}
@@ -433,8 +418,8 @@ export default function ProfileScreen() {
 
         {/* Stats Cards */}
         <Animated.View
-          entering={FadeInUp.delay(200).duration(500)}
-          className="flex-row gap-3 px-4 mb-8"
+          entering={FadeInUp.delay(150).duration(500)}
+          className="flex-row gap-3 px-4 mb-6"
         >
           <StatsCard
             icon="history"
@@ -455,7 +440,7 @@ export default function ProfileScreen() {
         </Animated.View>
 
         {/* Optimus+ Premium Entry */}
-        <Animated.View entering={FadeInUp.delay(250).duration(500)} className="px-4 mb-4">
+        <Animated.View entering={FadeInUp.delay(200).duration(500)} className="px-4 mb-6">
           <TouchableOpacity
             onPress={() => {
               impact();
@@ -468,10 +453,10 @@ export default function ProfileScreen() {
               flexDirection: "row",
               alignItems: "center",
               padding: 16,
-              borderRadius: 14,
-              backgroundColor: isDark ? "rgba(19,236,106,0.08)" : "rgba(19,236,106,0.04)",
+              borderRadius: 16,
+              backgroundColor: isDark ? "rgba(212, 175, 55, 0.08)" : "rgba(212, 175, 55, 0.05)",
               borderWidth: 1,
-              borderColor: isDark ? "rgba(19,236,106,0.15)" : "rgba(19,236,106,0.1)",
+              borderColor: isDark ? "rgba(212, 175, 55, 0.18)" : "rgba(212, 175, 55, 0.12)",
             }}
           >
             <MaterialIcons name="workspace-premium" size={24} color={colors.primary} />
@@ -489,7 +474,7 @@ export default function ProfileScreen() {
 
         {/* Preferences Section */}
         <Animated.View
-          entering={FadeInUp.delay(300).duration(500)}
+          entering={FadeInUp.delay(250).duration(500)}
           className="px-4 mb-6"
         >
           <Text accessibilityRole="header" className="text-base font-bold px-2 mb-3" style={{ color: colors.textPrimary }}>
@@ -573,8 +558,8 @@ export default function ProfileScreen() {
 
         {/* Account Section */}
         <Animated.View
-          entering={FadeInUp.delay(400).duration(500)}
-          className="px-4 mb-8"
+          entering={FadeInUp.delay(300).duration(500)}
+          className="px-4 mb-6"
         >
           <Text accessibilityRole="header" className="text-base font-bold px-2 mb-3" style={{ color: colors.textPrimary }}>
             {t.profile.account}
@@ -616,7 +601,7 @@ export default function ProfileScreen() {
 
         {/* Logout Button */}
         <Animated.View
-          entering={FadeInUp.delay(500).duration(500)}
+          entering={FadeInUp.delay(350).duration(500)}
           className="px-4 mb-8"
         >
           <TouchableOpacity
@@ -624,16 +609,11 @@ export default function ProfileScreen() {
             activeOpacity={0.9}
             accessibilityRole="button"
             accessibilityLabel={t.profile.logout}
-            className="w-full rounded-xl p-3.5 flex-row items-center justify-center gap-2"
+            className="w-full rounded-2xl p-3.5 flex-row items-center justify-center gap-2"
             style={{
               backgroundColor: colors.card,
               borderWidth: 1,
               borderColor: isDark ? "rgba(239,68,68,0.15)" : "#fee2e2",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.05,
-              shadowRadius: 8,
-              elevation: 2,
             }}
           >
             <MaterialIcons name="logout" size={18} color="#ef4444" />

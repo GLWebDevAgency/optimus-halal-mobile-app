@@ -67,7 +67,7 @@ export const favoritesRouter = router({
           throw new TRPCError({
             code: "FORBIDDEN",
             message:
-              "Limite de 5 favoris atteinte. Passez a Optimus+ pour des favoris illimites.",
+              "Limite de 5 favoris atteinte. Passez a Naqiy+ pour des favoris illimites.",
           });
         }
       }

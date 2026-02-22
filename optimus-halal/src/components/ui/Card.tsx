@@ -2,6 +2,8 @@
  * Card Component
  *
  * Composant carte réutilisable avec différentes variantes.
+ * Uses runtime theme tokens from colors.ts for background/border colors,
+ * and NativeWind only for layout (rounded, padding, overflow).
  *
  * Android shadow fix: On Android, `elevation` (the only way to get shadows)
  * is clipped by `overflow: hidden` on the same View. The elevated variant
@@ -13,28 +15,13 @@
 
 import React from "react";
 import { View, ViewProps, TouchableOpacity, Platform, StyleSheet } from "react-native";
+import { useTheme } from "@/hooks/useTheme";
 
 export interface CardProps extends Omit<ViewProps, 'onBlur' | 'onFocus'> {
   variant?: "elevated" | "outlined" | "filled";
   pressable?: boolean;
   onPress?: () => void;
 }
-
-const variantStyles = {
-  elevated: `
-    bg-white dark:bg-surface-dark
-    shadow-soft dark:shadow-soft-dark
-    border border-slate-100 dark:border-slate-700/50
-  `,
-  outlined: `
-    bg-transparent
-    border border-slate-200 dark:border-slate-700
-  `,
-  filled: `
-    bg-slate-50 dark:bg-surface-dark
-    border border-transparent
-  `,
-};
 
 /**
  * On Android, NativeWind's shadow-soft (CSS boxShadow) produces no visible
@@ -49,8 +36,6 @@ const androidElevatedOuter = StyleSheet.create({
   container: {
     elevation: 2,
     borderRadius: BORDER_RADIUS,
-    // Force overflow visible so elevation shadow is not clipped, even if
-    // the consumer passes className="overflow-hidden" on the Card.
     overflow: "visible" as const,
   },
 });
@@ -70,27 +55,43 @@ export const Card: React.FC<CardProps> = ({
   children,
   ...props
 }) => {
+  const { colors } = useTheme();
   const isElevated = variant === "elevated";
   const useNestedShadow = isElevated && needsAndroidShadowFix;
 
-  // On Android elevated: outer has no overflow-hidden (shadow not clipped)
-  // On all others: single container with overflow-hidden as before
   const baseStyles = useNestedShadow
-    ? "rounded-2xl"                    // outer: no overflow-hidden
-    : "rounded-2xl overflow-hidden";   // single container: overflow-hidden OK
-  const variantStyle = variantStyles[variant];
+    ? "rounded-2xl"
+    : "rounded-2xl overflow-hidden";
+
+  // Runtime theme-aware colors for each variant
+  const variantColors = {
+    elevated: {
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.cardBorder,
+    },
+    outlined: {
+      backgroundColor: "transparent",
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    filled: {
+      backgroundColor: colors.backgroundSecondary,
+      borderWidth: 1,
+      borderColor: "transparent",
+    },
+  }[variant];
 
   if (pressable && onPress) {
     const { style, testID, accessibilityLabel, accessibilityHint } = props;
 
     if (useNestedShadow) {
-      // Android elevated pressable: outer TouchableOpacity (shadow) + inner View (clip)
       return (
         <TouchableOpacity
           onPress={onPress}
           activeOpacity={0.8}
-          className={`${baseStyles} ${variantStyle} ${className}`}
-          style={[style, androidElevatedOuter.container]}
+          className={`${baseStyles} ${className}`}
+          style={[variantColors, style, androidElevatedOuter.container]}
           testID={testID}
           accessibilityLabel={accessibilityLabel}
           accessibilityHint={accessibilityHint}
@@ -106,8 +107,8 @@ export const Card: React.FC<CardProps> = ({
       <TouchableOpacity
         onPress={onPress}
         activeOpacity={0.8}
-        className={`${baseStyles} ${variantStyle} ${className}`}
-        style={style}
+        className={`${baseStyles} ${className}`}
+        style={[variantColors, style]}
         testID={testID}
         accessibilityLabel={accessibilityLabel}
         accessibilityHint={accessibilityHint}
@@ -118,11 +119,10 @@ export const Card: React.FC<CardProps> = ({
   }
 
   if (useNestedShadow) {
-    // Android elevated non-pressable: outer View (shadow) + inner View (clip)
     return (
       <View
-        className={`${baseStyles} ${variantStyle} ${className}`}
-        style={[props.style, androidElevatedOuter.container]}
+        className={`${baseStyles} ${className}`}
+        style={[variantColors, props.style, androidElevatedOuter.container]}
         {...props}
       >
         <View style={androidInnerClip.container}>
@@ -133,7 +133,7 @@ export const Card: React.FC<CardProps> = ({
   }
 
   return (
-    <View className={`${baseStyles} ${variantStyle} ${className}`} style={props.style} {...props}>
+    <View className={`${baseStyles} ${className}`} style={[variantColors, props.style]} {...props}>
       {children}
     </View>
   );
@@ -172,13 +172,17 @@ export const CardFooter: React.FC<ViewProps> = ({
   className = "",
   children,
   ...props
-}) => (
-  <View
-    className={`px-4 py-3 border-t border-slate-100 dark:border-slate-700/50 ${className}`}
-    {...props}
-  >
-    {children}
-  </View>
-);
+}) => {
+  const { colors } = useTheme();
+  return (
+    <View
+      className={`px-4 py-3 ${className}`}
+      style={{ borderTopWidth: 1, borderTopColor: colors.borderLight }}
+      {...props}
+    >
+      {children}
+    </View>
+  );
+};
 
 export default Card;

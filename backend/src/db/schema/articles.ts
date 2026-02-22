@@ -17,7 +17,7 @@ export const articles = pgTable(
     coverImage: t.text("cover_image"),
     excerpt: t.text(),
     content: t.text(),
-    author: t.varchar({ length: 100 }).default("Optimus Team").notNull(),
+    author: t.varchar({ length: 100 }).default("Naqiy Team").notNull(),
     type: articleTypeEnum().default("blog").notNull(),
     tags: t.text().array().default([]),
     readTimeMinutes: t.integer("read_time_minutes").default(3),

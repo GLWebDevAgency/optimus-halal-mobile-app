@@ -45,7 +45,7 @@ app.use("/trpc/*", rateLimit({ windowMs: 60_000, max: 300, keyPrefix: "rl:api" }
 app.get("/health", async (c) => {
   const checks: Record<string, string> = {
     status: "ok",
-    service: "optimus-halal-bff",
+    service: "naqiy-bff",
     version: "1.0.0",
     timestamp: new Date().toISOString(),
   };
@@ -119,7 +119,7 @@ app.onError((err, c) => {
 const port = env.PORT;
 
 logger.info("Serveur demarré", {
-  service: "optimus-halal-bff",
+  service: "naqiy-bff",
   port,
   env: env.NODE_ENV,
   url: `http://localhost:${port}`,

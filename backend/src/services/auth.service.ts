@@ -31,7 +31,7 @@ export async function signAccessToken(userId: string): Promise<string> {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(env.JWT_ACCESS_EXPIRY)
-    .setIssuer("optimus-halal")
+    .setIssuer("naqiy")
     .setAudience("mobile")
     .sign(accessSecret);
 }
@@ -40,7 +40,7 @@ export async function verifyAccessToken(
   token: string
 ): Promise<jose.JWTPayload> {
   const { payload } = await jose.jwtVerify(token, accessSecret, {
-    issuer: "optimus-halal",
+    issuer: "naqiy",
     audience: "mobile",
   });
   return payload;
@@ -56,7 +56,7 @@ export async function signRefreshToken(
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(env.JWT_REFRESH_EXPIRY)
-    .setIssuer("optimus-halal")
+    .setIssuer("naqiy")
     .setAudience("mobile-refresh")
     .sign(refreshSecret);
 }
@@ -65,7 +65,7 @@ export async function verifyRefreshToken(
   token: string
 ): Promise<jose.JWTPayload> {
   const { payload } = await jose.jwtVerify(token, refreshSecret, {
-    issuer: "optimus-halal",
+    issuer: "naqiy",
     audience: "mobile-refresh",
   });
   return payload;
