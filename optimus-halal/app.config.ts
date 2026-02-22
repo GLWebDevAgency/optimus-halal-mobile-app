@@ -71,6 +71,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     "@rnmapbox/maps",
+    [
+      "expo-system-ui",
+      {
+        backgroundColor: "#0C0C0C",
+      },
+    ],
   ],
   runtimeVersion: {
     policy: "appVersion",
