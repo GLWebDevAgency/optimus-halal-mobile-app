@@ -297,55 +297,36 @@ const StatusIcon = React.memo(function StatusIcon({
   );
 });
 
-// ── Nutrition Badge ─────────────────────────────────────────
+// ── Nutrition Card ───────────────────────────────────────────
 
-const NutritionBadge = React.memo(function NutritionBadge({
+const NutritionCard = React.memo(function NutritionCard({
   label,
   value,
   color,
+  description,
 }: {
   label: string;
   value: string | number;
   color: string;
+  description: string;
 }) {
-  const { isDark, colors } = useTheme();
+  const { colors } = useTheme();
   return (
-    <View
-      style={[
-        styles.nutritionBadge,
-        {
-          backgroundColor: isDark
-            ? "rgba(255,255,255,0.04)"
-            : "rgba(0,0,0,0.03)",
-          borderColor: isDark
-            ? "rgba(212,175,55,0.1)"
-            : "rgba(212,175,55,0.08)",
-        },
-      ]}
-    >
-      {/* Mini circular indicator */}
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, paddingHorizontal: 4 }}>
       <View
-        style={[
-          styles.nutritionIndicator,
-          { backgroundColor: `${color}20`, borderColor: color },
-        ]}
+        style={{
+          width: 44, height: 44, borderRadius: 22,
+          backgroundColor: `${color}15`,
+          borderWidth: 2, borderColor: color,
+          alignItems: "center", justifyContent: "center",
+        }}
       >
-        <Text
-          style={[styles.nutritionValue, { color }]}
-          numberOfLines={1}
-        >
-          {String(value).toUpperCase()}
-        </Text>
+        <Text style={{ fontSize: 18, fontWeight: "900", color }}>{String(value).toUpperCase()}</Text>
       </View>
-      <Text
-        style={[
-          styles.nutritionLabel,
-          { color: colors.textSecondary },
-        ]}
-        numberOfLines={1}
-      >
-        {label}
-      </Text>
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 14, fontWeight: "700", color: colors.textPrimary }}>{label}</Text>
+        <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>{description}</Text>
+      </View>
     </View>
   );
 });
@@ -440,6 +421,7 @@ const IngredientRow = React.memo(function IngredientRow({
   problemColor,
   explanation,
   problemStatus,
+  scholarlyReference,
 }: {
   name: string;
   isLast: boolean;
@@ -447,6 +429,7 @@ const IngredientRow = React.memo(function IngredientRow({
   problemColor?: string;
   explanation?: string;
   problemStatus?: string;
+  scholarlyReference?: string | null;
 }) {
   const { isDark, colors } = useTheme();
   const { t } = useTranslation();
@@ -463,8 +446,9 @@ const IngredientRow = React.memo(function IngredientRow({
     });
   }, [expanded, isProblematic, explanation, expandHeight]);
 
+  const detailHeight = scholarlyReference ? 96 : 72;
   const detailStyle = useAnimatedStyle(() => ({
-    height: expandHeight.value * 72,
+    height: expandHeight.value * detailHeight,
     opacity: expandHeight.value,
     overflow: "hidden" as const,
   }));
@@ -567,6 +551,22 @@ const IngredientRow = React.memo(function IngredientRow({
           >
             {explanation}
           </Text>
+          {scholarlyReference && (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 }}>
+              <MaterialIcons name="menu-book" size={11} color={colors.textMuted} />
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontStyle: "italic",
+                  color: colors.textMuted,
+                  flex: 1,
+                }}
+                numberOfLines={1}
+              >
+                {scholarlyReference}
+              </Text>
+            </View>
+          )}
         </Animated.View>
       )}
     </PressableScale>
@@ -877,6 +877,7 @@ export default function ScanResultScreen() {
   const offExtras = scanMutation.data?.offExtras ?? null;
   const communityVerifiedCount = scanMutation.data?.communityVerifiedCount ?? 0;
   const madhabVerdicts = scanMutation.data?.madhabVerdicts ?? [];
+  const ingredientRulings = scanMutation.data?.ingredientRulings ?? [];
   const levelUp = scanMutation.data?.levelUp ?? null;
 
   // ── Social Proof (From Backend) ──────
@@ -931,6 +932,12 @@ export default function ScanResultScreen() {
       explanation: string;
       scholarlyReference: string | null;
     }>;
+    conflictingIngredients: Array<{
+      pattern: string;
+      ruling: string;
+      explanation: string;
+      scholarlyReference: string | null;
+    }>;
   } | null>(null);
 
   const handleCloseMadhab = useCallback(() => setSelectedMadhab(null), []);
@@ -942,12 +949,20 @@ export default function ScanResultScreen() {
   // Build a Map of problematic ingredient names for fast lookup
   // Includes color + explanation for expandable ingredient detail
   const problematicIngredients = useMemo(() => {
-    const names = new Map<string, { color: string; explanation: string; status: string }>();
+    const names = new Map<string, {
+      color: string;
+      explanation: string;
+      status: string;
+      scholarlyReference?: string | null;
+      fatwaSourceName?: string | null;
+    }>();
     for (const r of haramReasons) {
       names.set(r.name.toLowerCase(), {
         color: halalStatusTokens.haram.base,
         explanation: r.explanation,
         status: r.status,
+        scholarlyReference: r.scholarlyReference,
+        fatwaSourceName: r.fatwaSourceName,
       });
     }
     for (const r of doubtfulReasons) {
@@ -956,6 +971,8 @@ export default function ScanResultScreen() {
           color: halalStatusTokens.doubtful.base,
           explanation: r.explanation,
           status: r.status,
+          scholarlyReference: r.scholarlyReference,
+          fatwaSourceName: r.fatwaSourceName,
         });
       }
     }
@@ -1812,6 +1829,14 @@ export default function ScanResultScreen() {
                         >
                           {reason.explanation}
                         </Text>
+                        {reason.scholarlyReference && (
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 }}>
+                            <MaterialIcons name="menu-book" size={11} color={colors.textMuted} />
+                            <Text style={{ fontSize: 11, fontStyle: "italic", color: colors.textMuted, flex: 1 }} numberOfLines={1}>
+                              {reason.scholarlyReference}
+                            </Text>
+                          </View>
+                        )}
                       </View>
                     </View>
                   ))}
@@ -1851,6 +1876,14 @@ export default function ScanResultScreen() {
                         >
                           {reason.explanation}
                         </Text>
+                        {reason.scholarlyReference && (
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 }}>
+                            <MaterialIcons name="menu-book" size={11} color={colors.textMuted} />
+                            <Text style={{ fontSize: 11, fontStyle: "italic", color: colors.textMuted, flex: 1 }} numberOfLines={1}>
+                              {reason.scholarlyReference}
+                            </Text>
+                          </View>
+                        )}
                       </View>
                     </View>
                   ))}
@@ -1927,47 +1960,85 @@ export default function ScanResultScreen() {
             </Animated.View>
           )}
 
-          {/* ── Nutrition Badges ── */}
-          {offExtras &&
-            (offExtras.nutriscoreGrade || offExtras.novaGroup) && (
-              <Animated.View entering={FadeInDown.delay(350).duration(500)}>
-                <Text
-                  style={[
-                    styles.sectionTitle,
-                    { color: colors.textPrimary },
-                  ]}
-                  accessibilityRole="header"
+          {/* ── Sources Savantes ── */}
+          {ingredientRulings.length > 0 &&
+            ingredientRulings.some((r: any) => r.fatwaSourceName) && (
+              <Animated.View entering={FadeInDown.delay(340).duration(500)}>
+                <CollapsibleSection
+                  title={t.scanResult.scholarlyReferences}
+                  badge={`${new Set(ingredientRulings.filter((r: any) => r.fatwaSourceName).map((r: any) => r.fatwaSourceName)).size} ${t.scanResult.sourceLabel}`}
+                  defaultOpen={false}
                 >
-                  {t.scanResult.nutrition}
-                </Text>
-                <View style={styles.nutritionRow}>
+                  {[...new Map(
+                    ingredientRulings
+                      .filter((r: any) => r.fatwaSourceName)
+                      .map((r: any) => [r.fatwaSourceName, r] as const)
+                  ).values()].map((ruling: any, idx: number) => (
+                    <View
+                      key={`ref-${idx}`}
+                      style={[
+                        styles.reasonRow,
+                        idx > 0 && {
+                          borderTopWidth: StyleSheet.hairlineWidth,
+                          borderTopColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                        },
+                      ]}
+                    >
+                      <MaterialIcons name="menu-book" size={16} color={brandTokens.gold} style={{ marginTop: 1 }} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.reasonName, { color: colors.textPrimary }]}>
+                          {ruling.fatwaSourceName}
+                        </Text>
+                        {ruling.scholarlyReference && (
+                          <Text style={[styles.reasonExplanation, { color: colors.textSecondary }]} numberOfLines={3}>
+                            {ruling.scholarlyReference}
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+                  ))}
+                </CollapsibleSection>
+              </Animated.View>
+            )}
+
+          {/* ── Nutrition & Impact ── */}
+          {offExtras &&
+            (offExtras.nutriscoreGrade || offExtras.novaGroup || offExtras.ecoscoreGrade) && (
+              <Animated.View entering={FadeInDown.delay(360).duration(500)}>
+                <CollapsibleSection
+                  title={t.scanResult.nutritionEnvironment}
+                  badge={[
+                    offExtras.nutriscoreGrade && `Nutri ${offExtras.nutriscoreGrade.toUpperCase()}`,
+                    offExtras.novaGroup && `NOVA ${offExtras.novaGroup}`,
+                    offExtras.ecoscoreGrade && `Eco ${offExtras.ecoscoreGrade.toUpperCase()}`,
+                  ].filter(Boolean).join(" · ")}
+                  defaultOpen={false}
+                >
                   {offExtras.nutriscoreGrade && (
-                    <NutritionBadge
-                      label={t.scanResult.nutriScore ?? "Nutri-Score"}
+                    <NutritionCard
+                      label="Nutri-Score"
                       value={offExtras.nutriscoreGrade}
-                      color={
-                        NUTRISCORE_COLORS[offExtras.nutriscoreGrade] ??
-                        "#94a3b8"
-                      }
+                      color={NUTRISCORE_COLORS[offExtras.nutriscoreGrade] ?? "#94a3b8"}
+                      description={t.scanResult.nutriScoreDesc}
                     />
                   )}
                   {offExtras.novaGroup && (
-                    <NutritionBadge
-                      label={t.scanResult.novaGroup ?? "NOVA"}
+                    <NutritionCard
+                      label="NOVA"
                       value={offExtras.novaGroup}
                       color={NOVA_COLORS[offExtras.novaGroup] ?? "#94a3b8"}
+                      description={t.scanResult.novaGroupDesc}
                     />
                   )}
                   {offExtras.ecoscoreGrade && (
-                    <NutritionBadge
-                      label={t.scanResult.ecoScore ?? "Eco-Score"}
+                    <NutritionCard
+                      label="Eco-Score"
                       value={offExtras.ecoscoreGrade}
-                      color={
-                        NUTRISCORE_COLORS[offExtras.ecoscoreGrade] ?? "#94a3b8"
-                      }
+                      color={NUTRISCORE_COLORS[offExtras.ecoscoreGrade] ?? "#94a3b8"}
+                      description={t.scanResult.ecoScoreDesc}
                     />
                   )}
-                </View>
+                </CollapsibleSection>
               </Animated.View>
             )}
 
@@ -2028,7 +2099,17 @@ export default function ScanResultScreen() {
               >
                 {ingredients.map((ingredient, index) => {
                   const lower = ingredient.toLowerCase();
-                  const problemInfo = problematicIngredients.get(lower);
+                  // Direct match on ingredient name
+                  let problemInfo = problematicIngredients.get(lower);
+                  // Fallback: check if any ruling pattern matches inside this ingredient
+                  if (!problemInfo) {
+                    for (const [pattern, info] of problematicIngredients.entries()) {
+                      if (lower.includes(pattern) || pattern.includes(lower)) {
+                        problemInfo = info;
+                        break;
+                      }
+                    }
+                  }
                   return (
                     <IngredientRow
                       key={index}
@@ -2038,6 +2119,7 @@ export default function ScanResultScreen() {
                       problemColor={problemInfo?.color}
                       explanation={problemInfo?.explanation}
                       problemStatus={problemInfo?.status}
+                      scholarlyReference={problemInfo?.scholarlyReference}
                     />
                   );
                 })}
@@ -2482,6 +2564,7 @@ export default function ScanResultScreen() {
         }
         status={selectedMadhab?.status ?? "halal"}
         conflictingAdditives={selectedMadhab?.conflictingAdditives ?? []}
+        conflictingIngredients={selectedMadhab?.conflictingIngredients ?? []}
         onClose={handleCloseMadhab}
       />
 
@@ -2851,38 +2934,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "800",
     textTransform: "uppercase",
-  },
-
-  // ── Nutrition ──────────────────────────────────
-  nutritionRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 16,
-  },
-  nutritionBadge: {
-    flex: 1,
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: 14,
-    alignItems: "center",
-    gap: 6,
-  },
-  nutritionIndicator: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 2,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  nutritionValue: {
-    fontSize: 18,
-    fontWeight: "900",
-    textTransform: "uppercase",
-  },
-  nutritionLabel: {
-    fontSize: 11,
-    fontWeight: "600",
   },
 
   // ── Allergens ──────────────────────────────────

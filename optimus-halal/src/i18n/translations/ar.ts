@@ -461,6 +461,14 @@ export const ar: TranslationKeys = {
     shopOnMarketplace: "استكشاف المتجر",
     // Legal disclaimer (Ch09 Al-Qadar — mandatory on scan result)
     disclaimer: "نقيّ أداة معلومات وليست مرجعاً دينياً. تحقق دائماً من الملصقات بنفسك واستشر إمامك للحصول على رأي شخصي.",
+    // Scholarly references & enriched UI
+    scholarlyReferences: "المراجع العلمية",
+    sourceLabel: "مصادر",
+    ingredientsConcerned: "المكونات المعنية",
+    nutritionEnvironment: "التغذية والأثر",
+    nutriScoreDesc: "الجودة الغذائية من A (الأفضل) إلى E",
+    novaGroupDesc: "مستوى التصنيع من 1 (طبيعي) إلى 4 (مصنّع جداً)",
+    ecoScoreDesc: "الأثر البيئي من A (منخفض) إلى E (مرتفع)",
   },
   map: {
     title: "الخريطة",

@@ -42,12 +42,20 @@ interface ConflictingAdditive {
   scholarlyReference: string | null;
 }
 
+interface ConflictingIngredient {
+  pattern: string;
+  ruling: string;
+  explanation: string;
+  scholarlyReference: string | null;
+}
+
 interface MadhabBottomSheetProps {
   visible: boolean;
   madhab: string;
   madhabLabel: string;
   status: "halal" | "doubtful" | "haram";
   conflictingAdditives: ConflictingAdditive[];
+  conflictingIngredients?: ConflictingIngredient[];
   onClose: () => void;
 }
 
@@ -69,6 +77,7 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
   madhabLabel,
   status,
   conflictingAdditives,
+  conflictingIngredients = [],
   onClose,
 }: MadhabBottomSheetProps) {
   const { isDark, colors } = useTheme();
@@ -190,8 +199,8 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
           </Pressable>
         </View>
 
-        {/* Additive list — scrollable for many items */}
-        {conflictingAdditives.length > 0 ? (
+        {/* Conflict lists — scrollable for many items */}
+        {conflictingAdditives.length > 0 || conflictingIngredients.length > 0 ? (
           <ScrollView
             style={styles.content}
             contentContainerStyle={{ paddingBottom: 8 }}
@@ -203,6 +212,8 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
             >
               {t.scanResult.madhabConflictExplain}
             </Text>
+
+            {/* Additives */}
             {conflictingAdditives.map((add) => (
               <View
                 key={add.code}
@@ -280,6 +291,95 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
                 )}
               </View>
             ))}
+
+            {/* Ingredients */}
+            {conflictingIngredients.length > 0 && (
+              <>
+                {conflictingAdditives.length > 0 && (
+                  <Text
+                    style={[
+                      styles.sectionLabel,
+                      { color: colors.textSecondary, marginTop: 12 },
+                    ]}
+                  >
+                    {t.scanResult.ingredientsConcerned}
+                  </Text>
+                )}
+                {conflictingIngredients.map((ing) => (
+                  <View
+                    key={ing.pattern}
+                    style={[
+                      styles.additiveCard,
+                      {
+                        backgroundColor: isDark
+                          ? "rgba(255,255,255,0.03)"
+                          : "rgba(0,0,0,0.02)",
+                        borderColor: isDark
+                          ? "rgba(255,255,255,0.06)"
+                          : "rgba(0,0,0,0.06)",
+                      },
+                    ]}
+                  >
+                    <View style={styles.additiveHeader}>
+                      <Text
+                        style={[styles.additiveCode, { color: colors.textPrimary }]}
+                      >
+                        {ing.pattern}
+                      </Text>
+                      <View style={{ flex: 1 }} />
+                      <View
+                        style={[
+                          styles.rulingBadge,
+                          {
+                            backgroundColor:
+                              `${STATUS_COLORS[ing.ruling as keyof typeof STATUS_COLORS] ?? neutral[500]}15`,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.rulingText,
+                            {
+                              color:
+                                STATUS_COLORS[ing.ruling as keyof typeof STATUS_COLORS] ??
+                                neutral[500],
+                            },
+                          ]}
+                        >
+                          {ing.ruling === "haram"
+                            ? t.scanResult.haram
+                            : ing.ruling === "doubtful"
+                              ? t.scanResult.doubtful
+                              : t.scanResult.halal}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text
+                      style={[
+                        styles.additiveExplanation,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      {ing.explanation}
+                    </Text>
+                    {ing.scholarlyReference && (
+                      <View style={styles.refRow}>
+                        <MaterialIcons
+                          name="menu-book"
+                          size={12}
+                          color={colors.textMuted}
+                        />
+                        <Text
+                          style={[styles.refText, { color: colors.textMuted }]}
+                        >
+                          {ing.scholarlyReference}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                ))}
+              </>
+            )}
           </ScrollView>
         ) : (
           <View style={styles.content}>

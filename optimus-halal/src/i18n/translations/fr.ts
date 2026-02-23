@@ -550,6 +550,14 @@ export const fr = {
     shopOnMarketplace: "Explorer le marketplace",
     // Legal disclaimer (Ch09 Al-Qadar — mandatory on scan result)
     disclaimer: "Naqiy est un outil d'information, pas une autorité religieuse. Vérifiez toujours les étiquettes vous-même et consultez votre imam pour un avis personnalisé.",
+    // Scholarly references & enriched UI
+    scholarlyReferences: "Sources Savantes",
+    sourceLabel: "sources",
+    ingredientsConcerned: "Ingrédients concernés",
+    nutritionEnvironment: "Nutrition & Impact",
+    nutriScoreDesc: "Qualité nutritionnelle de A (meilleur) à E",
+    novaGroupDesc: "Degré de transformation de 1 (brut) à 4 (ultra-transformé)",
+    ecoScoreDesc: "Impact environnemental de A (faible) à E (élevé)",
   },
 
   // Map
