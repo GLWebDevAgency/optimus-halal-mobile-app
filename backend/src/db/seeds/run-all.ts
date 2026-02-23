@@ -11,6 +11,7 @@
  *   4. Additives + Madhab rulings (200+ E-numbers)
  *   5. Alert categories + Alerts (Al-Kanz + RappelConso)
  *   6. Articles (editorial content)
+ *   7. Ingredient Rulings (47 scholarly-sourced halal rulings)
  *
  * All seeds use ON CONFLICT DO UPDATE (upsert) — safe to re-run on every deploy.
  */
@@ -91,6 +92,17 @@ export async function seedReferenceData(db: PostgresJsDatabase): Promise<SeedSta
     console.log(`    Articles: ${count} upserted (${Date.now() - t6}ms)`);
   } catch (err) {
     console.warn(`    Articles: skipped (${(err as Error).message})`);
+  }
+
+  // ── Phase 7: Ingredient Rulings ─────────────────────────
+  const t7 = Date.now();
+  try {
+    const { seedIngredientRulings } = await import("./seed-ingredient-rulings.js");
+    const count = await seedIngredientRulings(db);
+    stats.push({ phase: "Ingredient Rulings", count, durationMs: Date.now() - t7 });
+    console.log(`    Ingredient Rulings: ${count} upserted (${Date.now() - t7}ms)`);
+  } catch (err) {
+    console.warn(`    Ingredient Rulings: skipped (${(err as Error).message})`);
   }
 
   // ── Summary ─────────────────────────────────────────────
