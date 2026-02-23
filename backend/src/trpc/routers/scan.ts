@@ -13,7 +13,9 @@ import {
 import {
   lookupBarcode,
   analyzeHalalStatus,
+  matchIngredientRulings,
   type HalalAnalysis,
+  type MatchedIngredientRuling,
 } from "../../services/barcode.service.js";
 import { matchAllergens } from "../../services/allergen.service.js";
 import { notFound } from "../../lib/errors.js";
@@ -83,11 +85,18 @@ export interface MadhabVerdictItem {
     explanation: string;
     scholarlyReference: string | null;
   }>;
+  conflictingIngredients: Array<{
+    pattern: string;
+    ruling: string;
+    explanation: string;
+    scholarlyReference: string | null;
+  }>;
 }
 
 async function computeMadhabVerdicts(
   db: any,
-  halalAnalysis: HalalAnalysis | null
+  halalAnalysis: HalalAnalysis | null,
+  ingredientRulingsData: MatchedIngredientRuling[] = [],
 ): Promise<MadhabVerdictItem[]> {
   if (!halalAnalysis) return [];
 
@@ -97,6 +106,7 @@ async function computeMadhabVerdicts(
       madhab: m,
       status: "halal" as const,
       conflictingAdditives: [],
+      conflictingIngredients: [],
     }));
   }
 
@@ -107,61 +117,50 @@ async function computeMadhabVerdicts(
     .map((r) => r.name.split(" ")[0])
     .filter((code) => /^E\d+[a-z]?$/i.test(code));
 
-  if (additiveCodes.length === 0) {
-    // No problematic additives → all schools: same as general analysis
-    return MADHAB_SCHOOLS.map((m) => ({
-      madhab: m,
-      status: halalAnalysis.status as "halal" | "doubtful" | "haram",
-      conflictingAdditives: [],
-    }));
-  }
-
   // Fetch all madhab rulings + additive names in one join query
-  const rulings = await db
-    .select({
-      additiveCode: additiveMadhabRulings.additiveCode,
-      madhab: additiveMadhabRulings.madhab,
-      ruling: additiveMadhabRulings.ruling,
-      explanationFr: additiveMadhabRulings.explanationFr,
-      scholarlyReference: additiveMadhabRulings.scholarlyReference,
-      additiveName: additivesTable.nameFr,
-    })
-    .from(additiveMadhabRulings)
-    .innerJoin(
-      additivesTable,
-      eq(additiveMadhabRulings.additiveCode, additivesTable.code)
-    )
-    .where(inArray(additiveMadhabRulings.additiveCode, additiveCodes));
+  let additivesByMadhab = new Map<string, RulingRow[]>();
 
-  // Type for joined ruling rows
-  type RulingRow = {
-    additiveCode: string;
-    madhab: string;
-    ruling: string;
-    explanationFr: string;
-    scholarlyReference: string | null;
-    additiveName: string;
-  };
+  if (additiveCodes.length > 0) {
+    const rulings = await db
+      .select({
+        additiveCode: additiveMadhabRulings.additiveCode,
+        madhab: additiveMadhabRulings.madhab,
+        ruling: additiveMadhabRulings.ruling,
+        explanationFr: additiveMadhabRulings.explanationFr,
+        scholarlyReference: additiveMadhabRulings.scholarlyReference,
+        additiveName: additivesTable.nameFr,
+      })
+      .from(additiveMadhabRulings)
+      .innerJoin(
+        additivesTable,
+        eq(additiveMadhabRulings.additiveCode, additivesTable.code)
+      )
+      .where(inArray(additiveMadhabRulings.additiveCode, additiveCodes));
 
-  // Group by madhab
-  const byMadhab = new Map<string, RulingRow[]>();
-  for (const r of rulings as RulingRow[]) {
-    const list = byMadhab.get(r.madhab) ?? [];
-    list.push(r);
-    byMadhab.set(r.madhab, list);
+    for (const r of rulings as RulingRow[]) {
+      const list = additivesByMadhab.get(r.madhab) ?? [];
+      list.push(r);
+      additivesByMadhab.set(r.madhab, list);
+    }
   }
 
   // Worst-status logic: haram > doubtful > halal
   const STATUS_WEIGHT = { haram: 3, doubtful: 2, halal: 1, unknown: 0 } as const;
 
+  // Per-madhab field mapping for ingredient rulings
+  const MADHAB_FIELD = {
+    hanafi: "rulingHanafi",
+    shafii: "rulingShafii",
+    maliki: "rulingMaliki",
+    hanbali: "rulingHanbali",
+  } as const;
+
   return MADHAB_SCHOOLS.map((madhab) => {
-    const schoolRulings = byMadhab.get(madhab) ?? [];
+    // ── Additive conflicts ──
+    const schoolRulings = additivesByMadhab.get(madhab) ?? [];
+    const conflictingAdditives = schoolRulings.filter((r: RulingRow) => r.ruling !== "halal");
 
-    // Non-halal rulings for this school
-    const conflicting = schoolRulings.filter((r: RulingRow) => r.ruling !== "halal");
-
-    // If no rulings exist for this school, fall back to general analysis status
-    const worstStatus = schoolRulings.length > 0
+    let worstStatus: "halal" | "doubtful" | "haram" = schoolRulings.length > 0
       ? schoolRulings.reduce((worst: "halal" | "doubtful" | "haram", r: RulingRow) => {
           const w = STATUS_WEIGHT[r.ruling as keyof typeof STATUS_WEIGHT] ?? 0;
           const cw = STATUS_WEIGHT[worst as keyof typeof STATUS_WEIGHT] ?? 0;
@@ -169,19 +168,53 @@ async function computeMadhabVerdicts(
         }, "halal" as "halal" | "doubtful" | "haram")
       : (halalAnalysis.status as "halal" | "doubtful" | "haram");
 
+    // ── Ingredient conflicts ──
+    const conflictingIngredients = ingredientRulingsData
+      .filter((ir) => {
+        const madhabRuling = (ir[MADHAB_FIELD[madhab]] ?? ir.ruling) as string;
+        return madhabRuling !== "halal";
+      })
+      .map((ir) => {
+        const madhabRuling = (ir[MADHAB_FIELD[madhab]] ?? ir.ruling) as string;
+        return {
+          pattern: ir.pattern,
+          ruling: madhabRuling,
+          explanation: ir.explanationFr,
+          scholarlyReference: ir.scholarlyReference,
+        };
+      });
+
+    // Combine worst status from additives and ingredients
+    for (const ci of conflictingIngredients) {
+      const w = STATUS_WEIGHT[ci.ruling as keyof typeof STATUS_WEIGHT] ?? 0;
+      const cw = STATUS_WEIGHT[worstStatus as keyof typeof STATUS_WEIGHT] ?? 0;
+      if (w > cw) worstStatus = ci.ruling as "halal" | "doubtful" | "haram";
+    }
+
     return {
       madhab,
       status: worstStatus,
-      conflictingAdditives: conflicting.map((r: RulingRow) => ({
+      conflictingAdditives: conflictingAdditives.map((r: RulingRow) => ({
         code: r.additiveCode,
         name: r.additiveName ?? r.additiveCode,
         ruling: r.ruling,
         explanation: r.explanationFr,
         scholarlyReference: r.scholarlyReference,
       })),
+      conflictingIngredients,
     };
   });
 }
+
+// Type for joined additive ruling rows
+type RulingRow = {
+  additiveCode: string;
+  madhab: string;
+  ruling: string;
+  explanationFr: string;
+  scholarlyReference: string | null;
+  additiveName: string;
+};
 
 export const scanRouter = router({
   scanBarcode: protectedProcedure
@@ -472,8 +505,14 @@ export const scanRouter = router({
           )
         );
 
-      // 8. Madhab verdicts — all 4 school opinions for comparative display
-      const madhabVerdicts = await computeMadhabVerdicts(ctx.db, halalAnalysis);
+      // 8. Ingredient rulings — enriched scholarly data for UI
+      const ingredientsText = storedOff?.ingredients_text as string | undefined;
+      const ingredientRulingsData = ingredientsText
+        ? await matchIngredientRulings(ingredientsText, analysisOptions.madhab)
+        : [];
+
+      // 9. Madhab verdicts — all 4 school opinions for comparative display
+      const madhabVerdicts = await computeMadhabVerdicts(ctx.db, halalAnalysis, ingredientRulingsData);
 
       return {
         scan: result.scan,
@@ -485,6 +524,7 @@ export const scanRouter = router({
         personalAlerts,
         communityVerifiedCount: communityCount?.count ?? 0,
         madhabVerdicts,
+        ingredientRulings: ingredientRulingsData,
         levelUp: result.levelUp,
       };
     }),

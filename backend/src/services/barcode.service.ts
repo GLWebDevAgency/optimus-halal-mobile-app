@@ -2,7 +2,8 @@ import { env } from "../lib/env.js";
 import { redis } from "../lib/redis.js";
 import { logger } from "../lib/logger.js";
 import { db } from "../db/index.js";
-import { additives, additiveMadhabRulings } from "../db/schema/index.js";
+import { additives, additiveMadhabRulings, ingredientRulings } from "../db/schema/index.js";
+import type { IngredientRuling } from "../db/schema/ingredient-rulings.js";
 import { eq, and, inArray } from "drizzle-orm";
 
 // ── OpenFoodFacts Types ─────────────────────────────────────
@@ -122,6 +123,9 @@ export interface HalalReason {
   name: string;
   status: "haram" | "doubtful" | "halal";
   explanation: string;
+  scholarlyReference?: string | null;
+  fatwaSourceName?: string | null;
+  category?: string | null;
 }
 
 export interface HalalAnalysisOptions {
@@ -296,20 +300,154 @@ const ADDITIVES_HALAL_DB: Record<string, AdditiveInfo> = {
   "en:e966":  { name: "Lactitol", status: "halal", explanation: "Dérivé du lactose" },
 };
 
-// ── Halal Keywords ──────────────────────────────────────────
+// ── Ingredient Rulings Engine v4 — DB-Driven ────────────────
 
-const HARAM_INGREDIENTS = [
-  "porc", "pork", "gelatin", "gélatine", "lard", "saindoux",
-  "alcool", "alcohol", "ethanol", "éthanol", "wine", "vin",
-  "bière", "beer", "rhum", "rum", "whisky", "vodka", "brandy",
-  "carmine", "cochineal",
-];
+export interface MatchedIngredientRuling {
+  pattern: string;
+  ruling: HalalStatus;
+  confidence: number;
+  explanationFr: string;
+  explanationEn: string | null;
+  scholarlyReference: string | null;
+  fatwaSourceUrl: string | null;
+  fatwaSourceName: string | null;
+  category: string | null;
+  priority: number;
+  rulingHanafi: HalalStatus | null;
+  rulingShafii: HalalStatus | null;
+  rulingMaliki: HalalStatus | null;
+  rulingHanbali: HalalStatus | null;
+}
 
-const DOUBTFUL_INGREDIENTS = [
-  "mono-", "diglycerides", "monoglycérides",
-  "whey", "lactosérum",
-  "rennet", "présure",
-];
+// In-memory cache — 47 rows, refreshed every 10 min
+let _ingredientRulingsCache: IngredientRuling[] | null = null;
+let _ingredientRulingsCacheTs = 0;
+const INGREDIENT_RULINGS_CACHE_TTL = 600_000; // 10 minutes
+
+/** @internal — Exposed for test cleanup only */
+export function _resetIngredientRulingsCache(): void {
+  _ingredientRulingsCache = null;
+  _ingredientRulingsCacheTs = 0;
+}
+
+async function getIngredientRulings(): Promise<IngredientRuling[]> {
+  const now = Date.now();
+  if (_ingredientRulingsCache && now - _ingredientRulingsCacheTs < INGREDIENT_RULINGS_CACHE_TTL) {
+    return _ingredientRulingsCache;
+  }
+
+  const rulings = await db
+    .select()
+    .from(ingredientRulings)
+    .where(eq(ingredientRulings.isActive, true));
+
+  _ingredientRulingsCache = rulings;
+  _ingredientRulingsCacheTs = now;
+  return rulings;
+}
+
+export function testPattern(text: string, pattern: string, matchType: string): boolean {
+  switch (matchType) {
+    case "exact":
+      return text === pattern;
+    case "contains":
+      return text.includes(pattern);
+    case "word_boundary": {
+      const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      return new RegExp(`\\b${escaped}\\b`, "i").test(text);
+    }
+    case "regex": {
+      try {
+        return new RegExp(pattern, "i").test(text);
+      } catch {
+        logger.warn("Regex invalide dans ingredient_rulings", { pattern });
+        return false;
+      }
+    }
+    default:
+      return false;
+  }
+}
+
+export function resolveRulingForMadhab(ruling: IngredientRuling, madhab: Madhab): HalalStatus {
+  if (madhab === "general") return ruling.rulingDefault as HalalStatus;
+
+  const madhabRuling = ({
+    hanafi: ruling.rulingHanafi,
+    shafii: ruling.rulingShafii,
+    maliki: ruling.rulingMaliki,
+    hanbali: ruling.rulingHanbali,
+  } as const)[madhab];
+
+  return (madhabRuling ?? ruling.rulingDefault) as HalalStatus;
+}
+
+export async function matchIngredientRulings(
+  ingredientsText: string,
+  madhab: Madhab,
+): Promise<MatchedIngredientRuling[]> {
+  const rulings = await getIngredientRulings();
+  const lower = ingredientsText.toLowerCase();
+
+  // Track which keywords are overridden by higher-priority compound matches
+  const overrideMap = new Map<string, number>(); // keyword → highest priority that overrides it
+  const directMatches: IngredientRuling[] = [];
+
+  for (const ruling of rulings) {
+    const pattern = ruling.compoundPattern.toLowerCase();
+    if (!testPattern(lower, pattern, ruling.matchType)) continue;
+
+    directMatches.push(ruling);
+
+    // If this ruling overrides a keyword, record it
+    if (ruling.overridesKeyword) {
+      const key = ruling.overridesKeyword.toLowerCase();
+      const existing = overrideMap.get(key) ?? 0;
+      if (ruling.priority > existing) {
+        overrideMap.set(key, ruling.priority);
+      }
+    }
+  }
+
+  // Sort by priority descending, deduplicate, and apply overrides
+  const sorted = directMatches.sort((a, b) => b.priority - a.priority);
+  const results: MatchedIngredientRuling[] = [];
+  const seenPatterns = new Set<string>();
+
+  for (const ruling of sorted) {
+    const patternKey = ruling.compoundPattern.toLowerCase();
+    if (seenPatterns.has(patternKey)) continue;
+
+    // Check if this low-priority keyword is overridden
+    const overridePriority = overrideMap.get(patternKey);
+    if (overridePriority !== undefined && overridePriority > ruling.priority) {
+      continue; // Overridden by a compound match
+    }
+
+    seenPatterns.add(patternKey);
+
+    results.push({
+      pattern: ruling.compoundPattern,
+      ruling: resolveRulingForMadhab(ruling, madhab),
+      confidence: ruling.confidence,
+      explanationFr: ruling.explanationFr,
+      explanationEn: ruling.explanationEn,
+      scholarlyReference: ruling.scholarlyReference,
+      fatwaSourceUrl: ruling.fatwaSourceUrl,
+      fatwaSourceName: ruling.fatwaSourceName,
+      category: ruling.category,
+      priority: ruling.priority,
+      rulingHanafi: ruling.rulingHanafi as HalalStatus | null,
+      rulingShafii: ruling.rulingShafii as HalalStatus | null,
+      rulingMaliki: ruling.rulingMaliki as HalalStatus | null,
+      rulingHanbali: ruling.rulingHanbali as HalalStatus | null,
+    });
+  }
+
+  return results;
+}
+
+// ── Halal Label Tags ────────────────────────────────────────
 
 const HALAL_LABEL_TAGS = [
   "en:halal",
@@ -394,47 +532,41 @@ export async function analyzeHalalStatus(
     }
   }
 
-  // Check ingredients text
+  // ── TIER 3: Check ingredients text via DB-driven rulings ──
   if (ingredientsText) {
-    const lower = ingredientsText.toLowerCase();
+    const matchedRulings = await matchIngredientRulings(
+      ingredientsText,
+      options.madhab,
+    );
 
-    for (const keyword of HARAM_INGREDIENTS) {
-      if (lower.includes(keyword)) {
-        reasons.push({
-          type: "ingredient",
-          name: keyword,
-          status: "haram",
-          explanation: getHaramExplanation(keyword),
-        });
-        worstStatus = "haram";
-        worstConfidence = Math.max(worstConfidence, 0.85);
+    const isVegan = ingredientsAnalysisTags?.includes("en:vegan");
+
+    for (const match of matchedRulings) {
+      let effectiveStatus = match.ruling;
+      let explanation = match.explanationFr;
+
+      // Vegan override: if product is vegan and ruling is doubtful, upgrade
+      if (isVegan && effectiveStatus === "doubtful") {
+        effectiveStatus = "halal";
+        explanation = `${match.pattern} — produit labellisé vegan, donc origine végétale`;
       }
-    }
 
-    if (worstStatus !== "haram") {
-      for (const keyword of DOUBTFUL_INGREDIENTS) {
-        if (lower.includes(keyword)) {
-          const isVegan = ingredientsAnalysisTags?.includes("en:vegan");
-          if (isVegan) {
-            reasons.push({
-              type: "ingredient",
-              name: keyword,
-              status: "halal",
-              explanation: `${keyword} — produit labellisé vegan, donc origine végétale`,
-            });
-          } else {
-            reasons.push({
-              type: "ingredient",
-              name: keyword,
-              status: "doubtful",
-              explanation: getDoubtfulExplanation(keyword),
-            });
-            if (worstStatus !== "doubtful") {
-              worstStatus = "doubtful";
-            }
-            worstConfidence = Math.max(worstConfidence, 0.6);
-          }
-        }
+      reasons.push({
+        type: "ingredient",
+        name: match.pattern,
+        status: effectiveStatus as "halal" | "haram" | "doubtful",
+        explanation,
+        scholarlyReference: match.scholarlyReference,
+        fatwaSourceName: match.fatwaSourceName,
+        category: match.category,
+      });
+
+      if (effectiveStatus === "haram") {
+        worstStatus = "haram";
+        worstConfidence = Math.max(worstConfidence, match.confidence);
+      } else if (effectiveStatus === "doubtful" && worstStatus !== "haram") {
+        worstStatus = "doubtful";
+        worstConfidence = Math.max(worstConfidence, match.confidence);
       }
     }
   }
@@ -533,44 +665,3 @@ function applyStrictnessOverlay(
   }
 }
 
-// ── Explanation helpers ─────────────────────────────────────
-
-function getHaramExplanation(keyword: string): string {
-  const explanations: Record<string, string> = {
-    porc: "Viande de porc — interdit (Sourate 2:173)",
-    pork: "Viande de porc — interdit (Sourate 2:173)",
-    gelatin: "Gélatine — généralement d'origine porcine",
-    "gélatine": "Gélatine — généralement d'origine porcine",
-    lard: "Graisse de porc",
-    saindoux: "Graisse de porc",
-    alcool: "Substance enivrante — interdit (Sourate 5:90)",
-    alcohol: "Substance enivrante — interdit (Sourate 5:90)",
-    ethanol: "Alcool éthylique — substance enivrante",
-    "éthanol": "Alcool éthylique — substance enivrante",
-    wine: "Vin — boisson alcoolisée",
-    vin: "Vin — boisson alcoolisée",
-    "bière": "Bière — boisson alcoolisée",
-    beer: "Bière — boisson alcoolisée",
-    rhum: "Rhum — boisson alcoolisée",
-    rum: "Rhum — boisson alcoolisée",
-    whisky: "Whisky — boisson alcoolisée",
-    vodka: "Vodka — boisson alcoolisée",
-    brandy: "Brandy — boisson alcoolisée",
-    carmine: "Colorant E120 — extrait d'insectes (cochenille)",
-    cochineal: "Cochenille — insecte utilisé comme colorant",
-  };
-  return explanations[keyword] ?? `Ingrédient haram détecté : ${keyword}`;
-}
-
-function getDoubtfulExplanation(keyword: string): string {
-  const explanations: Record<string, string> = {
-    "mono-": "Mono/diglycérides — origine animale ou végétale non précisée",
-    diglycerides: "Diglycérides — origine animale ou végétale non précisée",
-    "monoglycérides": "Monoglycérides — origine animale ou végétale non précisée",
-    whey: "Lactosérum (whey) — procédé peut impliquer présure animale",
-    "lactosérum": "Lactosérum — procédé peut impliquer présure animale",
-    rennet: "Présure — enzyme souvent d'origine animale",
-    "présure": "Présure — enzyme souvent d'origine animale",
-  };
-  return explanations[keyword] ?? `Ingrédient douteux : ${keyword}`;
-}
