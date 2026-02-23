@@ -307,6 +307,14 @@ export default function MapScreen() {
     ? "mapbox://styles/mapbox/dark-v11"
     : "mapbox://styles/mapbox/light-v11";
 
+  // Reset layers gate when Mapbox style URL changes (dark↔light switch)
+  // — prevents "Layer not in style" errors during style reload
+  const prevStyleRef = useRef(mapStyleURL);
+  if (prevStyleRef.current !== mapStyleURL) {
+    prevStyleRef.current = mapStyleURL;
+    setIsStyleLoaded(false);
+  }
+
   // "Search this area" — manual refresh fallback (shows after large pans)
   const lastCommittedCenterRef = useRef<[number, number] | null>(null);
   const [showSearchThisArea, setShowSearchThisArea] = useState(false);
@@ -710,8 +718,10 @@ export default function MapScreen() {
         scaleBarEnabled={false}
         onCameraChanged={handleCameraChanged}
         onDidFinishLoadingMap={() => {
-          setIsStyleLoaded(true);
           trackEvent("map_opened", { source: "tab_bar", has_location: !!userLocation });
+        }}
+        onDidFinishLoadingStyle={() => {
+          setIsStyleLoaded(true);
         }}
       >
         <Camera
