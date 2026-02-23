@@ -19,7 +19,6 @@ import {
   View,
   Text,
   ScrollView,
-  Pressable,
   Dimensions,
   StyleSheet,
   Platform,
@@ -48,7 +47,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
-import { IconButton, ArabicCalligraphy, StatusPill, LevelUpCelebration } from "@/components/ui";
+import { IconButton, ArabicCalligraphy, StatusPill, LevelUpCelebration, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PersonalAlerts, type PersonalAlert } from "@/components/scan/PersonalAlerts";
 import { MadhabBottomSheet } from "@/components/scan/MadhabBottomSheet";
@@ -319,8 +318,8 @@ const NutritionBadge = React.memo(function NutritionBadge({
             ? "rgba(255,255,255,0.04)"
             : "rgba(0,0,0,0.03)",
           borderColor: isDark
-            ? "rgba(255,255,255,0.08)"
-            : "rgba(0,0,0,0.06)",
+            ? "rgba(212,175,55,0.1)"
+            : "rgba(212,175,55,0.08)",
         },
       ]}
     >
@@ -382,8 +381,8 @@ const CollapsibleSection = React.memo(function CollapsibleSection({
             ? "rgba(255,255,255,0.03)"
             : "#ffffff",
           borderColor: isDark
-            ? "rgba(255,255,255,0.06)"
-            : "rgba(0,0,0,0.06)",
+            ? "rgba(212,175,55,0.1)"
+            : "rgba(212,175,55,0.08)",
         },
       ]}
     >
@@ -740,7 +739,7 @@ const ScanErrorState = React.memo(function ScanErrorState({
   const { t } = useTranslation();
 
   return (
-    <View style={[styles.stateContainer, { backgroundColor: colors.background }]}>
+    <View style={[styles.stateContainer]}>
       <Animated.View entering={FadeIn.duration(300)} style={styles.stateContent}>
         <View
           style={[
@@ -809,7 +808,7 @@ const ScanNotFoundState = React.memo(function ScanNotFoundState({
   const { t } = useTranslation();
 
   return (
-    <View style={[styles.stateContainer, { backgroundColor: colors.background }]}>
+    <View style={[styles.stateContainer]}>
       <Animated.View entering={FadeIn.duration(300)} style={styles.stateContent}>
         <View
           style={[
@@ -1145,7 +1144,8 @@ export default function ScanResultScreen() {
     : statusConfig.gradientLight;
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1 }}>
+      <PremiumBackground />
       {/* ── Floating Back Button (absolute, above everything) ── */}
       <View
         style={[
@@ -1232,6 +1232,28 @@ export default function ScanResultScreen() {
               </Text>
             </View>
 
+            {/* Confidence Score badge — Al-Ilm: transparency on certainty level */}
+            {product?.confidenceScore != null && product.confidenceScore > 0 && (
+              <View
+                style={[
+                  styles.communityBadge,
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(255,255,255,0.06)"
+                      : "rgba(0,0,0,0.04)",
+                    borderColor: isDark
+                      ? "rgba(255,255,255,0.10)"
+                      : "rgba(0,0,0,0.06)",
+                  },
+                ]}
+              >
+                <MaterialIcons name="speed" size={12} color={statusConfig.color} />
+                <Text style={[styles.communityBadgeText, { color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)" }]}>
+                  {`${Math.round(product.confidenceScore * 100)}% ${t.scanResult.confidence}`}
+                </Text>
+              </View>
+            )}
+
             {/* Community badge — inline with certifier */}
             {communityVerifiedCount >= 1 && (
               <View
@@ -1257,25 +1279,32 @@ export default function ScanResultScreen() {
               </View>
             )}
 
-            {/* Social Proof badge (Scanned X times) */}
-            <View
-              style={[
-                styles.communityBadge,
-                {
-                  backgroundColor: isDark
-                    ? "rgba(255,255,255,0.06)"
-                    : "rgba(0,0,0,0.04)",
-                  borderColor: isDark
-                    ? "rgba(212,175,55,0.2)"
-                    : "rgba(212,175,55,0.15)",
-                },
-              ]}
-            >
-              <MaterialIcons name="local-fire-department" size={12} color={brandTokens.gold} />
-              <Text style={[styles.communityBadgeText, { color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)" }]}>
-                {(t.scanResult as any).scannedByCommunity?.replace("{{count}}", (totalScansCount/1000).toFixed(1) + "k") ?? `Scanné ${(totalScansCount/1000).toFixed(1)}k fois`}
-              </Text>
-            </View>
+            {/* Social Proof badge (Scanned X times) — only show when meaningful */}
+            {totalScansCount > 0 && (
+              <View
+                style={[
+                  styles.communityBadge,
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(255,255,255,0.06)"
+                      : "rgba(0,0,0,0.04)",
+                    borderColor: isDark
+                      ? "rgba(212,175,55,0.2)"
+                      : "rgba(212,175,55,0.15)",
+                  },
+                ]}
+              >
+                <MaterialIcons name="local-fire-department" size={12} color={brandTokens.gold} />
+                <Text style={[styles.communityBadgeText, { color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)" }]}>
+                  {(t.scanResult as any).scannedByCommunity?.replace(
+                    "{{count}}",
+                    totalScansCount >= 1000
+                      ? `${(totalScansCount / 1000).toFixed(1)}k`
+                      : String(totalScansCount)
+                  ) ?? `Scanné ${totalScansCount >= 1000 ? `${(totalScansCount / 1000).toFixed(1)}k` : totalScansCount} fois`}
+                </Text>
+              </View>
+            )}
           </Animated.View>
 
           {/* Madhab verdicts row — compact, below metadata */}
@@ -1331,8 +1360,8 @@ export default function ScanResultScreen() {
                   ? "rgba(0,0,0,0.35)"
                   : "rgba(255,255,255,0.6)",
                 borderColor: isDark
-                  ? "rgba(255,255,255,0.06)"
-                  : "rgba(0,0,0,0.06)",
+                  ? "rgba(212,175,55,0.12)"
+                  : "rgba(212,175,55,0.1)",
               },
             ]}
           >
@@ -1400,6 +1429,10 @@ export default function ScanResultScreen() {
                 backgroundColor: isDark
                   ? "rgba(255,255,255,0.03)"
                   : "rgba(0,0,0,0.02)",
+                borderWidth: 1,
+                borderColor: isDark
+                  ? "rgba(212,175,55,0.08)"
+                  : "rgba(212,175,55,0.06)",
               },
             ]}
           >
@@ -1422,9 +1455,14 @@ export default function ScanResultScreen() {
             alternativesQuery.data && alternativesQuery.data.length > 0 && (
             <Animated.View entering={FadeInDown.delay(100).duration(500)} style={{ marginBottom: 20 }}>
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                <Text style={{ fontSize: 16, fontWeight: "800", color: colors.textPrimary }}>
-                  {t.scanResult.halalAlternatives}
-                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: isDark ? "rgba(212,175,55,0.15)" : "rgba(212,175,55,0.1)", alignItems: "center", justifyContent: "center" }}>
+                    <MaterialIcons name="swap-horiz" size={14} color="#d4af37" />
+                  </View>
+                  <Text style={{ fontSize: 16, fontWeight: "800", color: colors.textPrimary }}>
+                    {t.scanResult.halalAlternatives}
+                  </Text>
+                </View>
                 <MaterialIcons name={marketplaceEnabled ? "storefront" : "local-mall"} size={20} color={brandTokens.gold} />
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingBottom: 4 }}>
@@ -1457,9 +1495,9 @@ export default function ScanResultScreen() {
                         }}
                       >
                         {isPremiumLocked && (
-                          <View style={[StyleSheet.absoluteFill, { zIndex: 10, backgroundColor: isDark ? "rgba(10,10,10,0.8)" : "rgba(255,255,255,0.8)", alignItems: "center", justifyContent: "center" }]}>
-                             <MaterialIcons name="lock" size={28} color={brandTokens.gold} />
-                             <Text style={{ color: brandTokens.gold, fontSize: 10, fontWeight: "800", marginTop: 4, textAlign: "center" }}>VANTA GOLD</Text>
+                          <View style={[StyleSheet.absoluteFill, { zIndex: 10, backgroundColor: isDark ? "rgba(10,10,10,0.85)" : "rgba(255,255,255,0.85)", alignItems: "center", justifyContent: "center", borderRadius: 16 }]}>
+                             <MaterialIcons name="lock" size={24} color={brandTokens.gold} />
+                             <Text style={{ color: brandTokens.gold, fontSize: 11, fontWeight: "800", marginTop: 4, textAlign: "center", letterSpacing: 1 }}>Naqiy+</Text>
                           </View>
                         )}
                         <View style={{ opacity: isPremiumLocked ? 0.3 : 1 }}>
@@ -1513,16 +1551,16 @@ export default function ScanResultScreen() {
                   paddingVertical: 12,
                   paddingHorizontal: 20,
                   borderRadius: 14,
-                  backgroundColor: isDark ? "rgba(19,236,106,0.08)" : "rgba(19,236,106,0.06)",
+                  backgroundColor: isDark ? "rgba(212,175,55,0.06)" : "rgba(212,175,55,0.04)",
                   borderWidth: 1,
-                  borderColor: isDark ? "rgba(19,236,106,0.2)" : "rgba(19,236,106,0.15)",
+                  borderColor: isDark ? "rgba(212,175,55,0.2)" : "rgba(212,175,55,0.15)",
                 }}
               >
-                <MaterialIcons name="storefront" size={18} color={brandTokens.primary} />
-                <Text style={{ fontSize: 14, fontWeight: "700", color: brandTokens.primary }}>
+                <MaterialIcons name="storefront" size={18} color={brandTokens.gold} />
+                <Text style={{ fontSize: 14, fontWeight: "700", color: brandTokens.gold }}>
                   {marketplaceEnabled ? t.scanResult.shopHalalAlternatives : t.scanResult.shopOnMarketplace}
                 </Text>
-                <MaterialIcons name="arrow-forward" size={16} color={brandTokens.primary} />
+                <MaterialIcons name="arrow-forward" size={16} color={brandTokens.gold} />
               </PressableScale>
             </Animated.View>
           )}
@@ -1631,8 +1669,8 @@ export default function ScanResultScreen() {
                       ? "rgba(255,255,255,0.03)"
                       : "#ffffff",
                     borderColor: isDark
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(0,0,0,0.06)",
+                      ? "rgba(212,175,55,0.12)"
+                      : "rgba(212,175,55,0.1)",
                   },
                 ]}
               >
@@ -1677,8 +1715,8 @@ export default function ScanResultScreen() {
                       styles.certifierDivider,
                       {
                         backgroundColor: isDark
-                          ? "rgba(255,255,255,0.06)"
-                          : "rgba(0,0,0,0.06)",
+                          ? "rgba(212,175,55,0.15)"
+                          : "rgba(212,175,55,0.12)",
                       },
                     ]}
                   />
@@ -2009,17 +2047,42 @@ export default function ScanResultScreen() {
 
           {/* ── Halal Alternatives previously here, moved to top of contentContainer ── */}
 
-          {/* ── Votre Avis Compte (local vote) ── */}
+          {/* ── Votre Avis Compte (community trust) ── */}
           {product && (
             <Animated.View entering={FadeInDown.delay(460).duration(500)}>
-              <View style={{ alignItems: "center", paddingVertical: 12, gap: 8 }}>
-                <Text style={{ fontSize: 14, fontWeight: "700", color: colors.textPrimary }}>
+              <View
+                style={{
+                  borderRadius: 16,
+                  borderWidth: 1,
+                  borderColor: isDark ? "rgba(212,175,55,0.12)" : "rgba(212,175,55,0.1)",
+                  backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#ffffff",
+                  padding: 20,
+                  marginBottom: 16,
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
+                {/* Gold shield icon */}
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    backgroundColor: isDark ? "rgba(212,175,55,0.12)" : "rgba(212,175,55,0.08)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 2,
+                  }}
+                >
+                  <MaterialIcons name="verified-user" size={18} color="#d4af37" />
+                </View>
+                <Text style={{ fontSize: 15, fontWeight: "800", color: colors.textPrimary, letterSpacing: 0.3 }}>
                   {t.scanResult.yourOpinionMatters}
                 </Text>
-                <Text style={{ fontSize: 12, color: colors.textSecondary, textAlign: "center" }}>
+                <Text style={{ fontSize: 13, color: colors.textSecondary, textAlign: "center", lineHeight: 18, paddingHorizontal: 12 }}>
                   {t.scanResult.isThisResultAccurate}
                 </Text>
-                <View style={{ flexDirection: "row", gap: 16, marginTop: 4 }}>
+                <View style={{ flexDirection: "row", gap: 16, marginTop: 6 }}>
                   <PressableScale
                     onPress={() => {
                       impact();
@@ -2030,10 +2093,19 @@ export default function ScanResultScreen() {
                       }
                     }}
                     style={{
-                      width: 52, height: 52, borderRadius: 26, alignItems: "center", justifyContent: "center",
-                      backgroundColor: userVote === "up" ? colors.primaryLight : isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                      width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center",
+                      backgroundColor: userVote === "up"
+                        ? (isDark ? "rgba(19,236,106,0.15)" : "rgba(19,236,106,0.1)")
+                        : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)"),
                       borderWidth: userVote === "up" ? 2 : 1,
                       borderColor: userVote === "up" ? colors.primary : isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
+                      ...(userVote === "up" ? {
+                        shadowColor: colors.primary,
+                        shadowOffset: { width: 0, height: 0 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 10,
+                        elevation: 4,
+                      } : {}),
                     }}
                     accessibilityRole="button"
                     accessibilityLabel={t.scanResult.accurateResult}
@@ -2050,10 +2122,19 @@ export default function ScanResultScreen() {
                       }
                     }}
                     style={{
-                      width: 52, height: 52, borderRadius: 26, alignItems: "center", justifyContent: "center",
-                      backgroundColor: userVote === "down" ? "#ef444420" : isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                      width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center",
+                      backgroundColor: userVote === "down"
+                        ? (isDark ? "rgba(239,68,68,0.15)" : "rgba(239,68,68,0.08)")
+                        : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)"),
                       borderWidth: userVote === "down" ? 2 : 1,
                       borderColor: userVote === "down" ? "#ef4444" : isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
+                      ...(userVote === "down" ? {
+                        shadowColor: "#ef4444",
+                        shadowOffset: { width: 0, height: 0 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 10,
+                        elevation: 4,
+                      } : {}),
                     }}
                     accessibilityRole="button"
                     accessibilityLabel={t.scanResult.inaccurateResult}
@@ -2063,7 +2144,7 @@ export default function ScanResultScreen() {
                 </View>
                 {userVote && (
                   <Animated.View entering={FadeIn.duration(300)}>
-                    <Text style={{ fontSize: 12, color: colors.primary, fontWeight: "600", marginTop: 4 }}>
+                    <Text style={{ fontSize: 13, color: "#d4af37", fontWeight: "700", marginTop: 2 }}>
                       {t.scanResult.thankYouForFeedback}
                     </Text>
                   </Animated.View>
@@ -2080,18 +2161,18 @@ export default function ScanResultScreen() {
                   styles.newProductBanner,
                   {
                     backgroundColor: isDark
-                      ? "rgba(59,130,246,0.08)"
-                      : "rgba(59,130,246,0.04)",
+                      ? "rgba(212,175,55,0.06)"
+                      : "rgba(212,175,55,0.04)",
                     borderColor: isDark
-                      ? "rgba(59,130,246,0.2)"
-                      : "rgba(59,130,246,0.15)",
+                      ? "rgba(212,175,55,0.2)"
+                      : "rgba(212,175,55,0.15)",
                   },
                 ]}
               >
                 <MaterialIcons
                   name="new-releases"
                   size={20}
-                  color="#3b82f6"
+                  color="#d4af37"
                   style={{ marginTop: 2 }}
                 />
                 <View style={{ flex: 1 }}>
@@ -2099,7 +2180,7 @@ export default function ScanResultScreen() {
                     style={{
                       fontSize: 14,
                       fontWeight: "700",
-                      color: isDark ? "#93c5fd" : "#1e40af",
+                      color: isDark ? "#fcd880" : "#92700c",
                     }}
                   >
                     {t.scanResult.newProductAdded}
@@ -2107,7 +2188,7 @@ export default function ScanResultScreen() {
                   <Text
                     style={{
                       fontSize: 13,
-                      color: isDark ? "#93c5fdcc" : "#1e40afcc",
+                      color: isDark ? "#fcd880cc" : "#92700ccc",
                       marginTop: 2,
                       lineHeight: 18,
                     }}
@@ -2118,6 +2199,40 @@ export default function ScanResultScreen() {
               </View>
             </Animated.View>
           )}
+
+          {/* ── Legal Disclaimer (Ch09 Al-Qadar — mandatory) ──
+               "Servir, pas juger" (Ch00 Principe 5).
+               This is NOT optional — docs/naqiy/internal/09-al-qadar §2.2:
+               "Le disclaimer legal doit apparaitre en bas de chaque ecran de scan result" */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "flex-start",
+              gap: 8,
+              paddingVertical: 12,
+              paddingHorizontal: 4,
+              marginTop: 4,
+              marginBottom: 8,
+            }}
+          >
+            <MaterialIcons
+              name="info-outline"
+              size={14}
+              color={isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.25)"}
+              style={{ marginTop: 1 }}
+            />
+            <Text
+              style={{
+                flex: 1,
+                fontSize: 11,
+                lineHeight: 16,
+                color: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)",
+                fontStyle: "italic",
+              }}
+            >
+              {t.scanResult.disclaimer}
+            </Text>
+          </View>
         </View>
       </ScrollView>
 
@@ -2145,13 +2260,13 @@ export default function ScanResultScreen() {
                 styles.actionBarInner,
                 {
                   borderColor: isDark
-                    ? "rgba(255,255,255,0.08)"
-                    : "rgba(0,0,0,0.06)",
+                    ? "rgba(212,175,55,0.12)"
+                    : "rgba(212,175,55,0.1)",
                 },
               ]}
             >
               {/* Favorite */}
-              <Pressable
+              <PressableScale
                 onPress={handleFavAnimated}
                 disabled={isFavMutating}
                 style={[
@@ -2178,10 +2293,10 @@ export default function ScanResultScreen() {
                     color={productIsFavorite ? "#ef4444" : colors.textSecondary}
                   />
                 </Animated.View>
-              </Pressable>
+              </PressableScale>
 
               {/* Share */}
-              <Pressable
+              <PressableScale
                 onPress={handleShare}
                 style={[
                   styles.actionButton,
@@ -2199,7 +2314,7 @@ export default function ScanResultScreen() {
                   size={22}
                   color={colors.textSecondary}
                 />
-              </Pressable>
+              </PressableScale>
 
               {/* Where to Buy (primary CTA) */}
               <PressableScale
@@ -2214,7 +2329,7 @@ export default function ScanResultScreen() {
               </PressableScale>
 
               {/* Report */}
-              <Pressable
+              <PressableScale
                 onPress={handleReport}
                 style={[
                   styles.actionButton,
@@ -2232,7 +2347,7 @@ export default function ScanResultScreen() {
                   size={22}
                   color={colors.textSecondary}
                 />
-              </Pressable>
+              </PressableScale>
             </View>
           </BlurView>
         ) : (
@@ -2251,13 +2366,13 @@ export default function ScanResultScreen() {
                 styles.actionBarInner,
                 {
                   borderColor: isDark
-                    ? "rgba(255,255,255,0.08)"
-                    : "rgba(0,0,0,0.06)",
+                    ? "rgba(212,175,55,0.12)"
+                    : "rgba(212,175,55,0.1)",
                 },
               ]}
             >
               {/* Favorite */}
-              <Pressable
+              <PressableScale
                 onPress={handleFavAnimated}
                 disabled={isFavMutating}
                 style={[
@@ -2284,10 +2399,10 @@ export default function ScanResultScreen() {
                     color={productIsFavorite ? "#ef4444" : colors.textSecondary}
                   />
                 </Animated.View>
-              </Pressable>
+              </PressableScale>
 
               {/* Share */}
-              <Pressable
+              <PressableScale
                 onPress={handleShare}
                 style={[
                   styles.actionButton,
@@ -2305,7 +2420,7 @@ export default function ScanResultScreen() {
                   size={22}
                   color={colors.textSecondary}
                 />
-              </Pressable>
+              </PressableScale>
 
               {/* Where to Buy (primary CTA) */}
               <PressableScale
@@ -2320,7 +2435,7 @@ export default function ScanResultScreen() {
               </PressableScale>
 
               {/* Report */}
-              <Pressable
+              <PressableScale
                 onPress={handleReport}
                 style={[
                   styles.actionButton,
@@ -2338,7 +2453,7 @@ export default function ScanResultScreen() {
                   size={22}
                   color={colors.textSecondary}
                 />
-              </Pressable>
+              </PressableScale>
             </View>
           </View>
         )}

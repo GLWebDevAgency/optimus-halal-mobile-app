@@ -21,7 +21,10 @@ import Animated, { FadeInDown, FadeIn, ZoomIn } from "react-native-reanimated";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { useAchievements, useLoyaltyBalance } from "@/hooks/useLoyalty";
+import { PremiumBackground } from "@/components/ui";
 import { Skeleton } from "@/components/ui/Skeleton";
+
+const GOLD = "#d4af37";
 
 const LOCALE_MAP: Record<string, string> = { fr: "fr-FR", en: "en-US", ar: "ar-SA" };
 
@@ -89,15 +92,15 @@ const AchievementCard = React.memo(function AchievementCard({
 
   const cardBg = achievement.unlocked
     ? isDark
-      ? "rgba(34,197,94,0.06)"
-      : "rgba(34,197,94,0.04)"
-    : colors.card;
+      ? "rgba(212,175,55,0.06)"
+      : "rgba(212,175,55,0.04)"
+    : isDark ? "rgba(255,255,255,0.03)" : colors.card;
 
   const cardBorder = achievement.unlocked
-    ? "rgba(34,197,94,0.2)"
-    : colors.border;
+    ? "rgba(212,175,55,0.2)"
+    : isDark ? "rgba(212,175,55,0.08)" : colors.border;
 
-  const iconColor = achievement.unlocked ? "#22c55e" : colors.textMuted;
+  const iconColor = achievement.unlocked ? GOLD : colors.textMuted;
 
   const locale = LOCALE_MAP[language] ?? "fr-FR";
 
@@ -134,8 +137,8 @@ const AchievementCard = React.memo(function AchievementCard({
             {
               backgroundColor: achievement.unlocked
                 ? isDark
-                  ? "rgba(34,197,94,0.12)"
-                  : "rgba(34,197,94,0.08)"
+                  ? "rgba(212,175,55,0.15)"
+                  : "rgba(212,175,55,0.1)"
                 : isDark
                   ? "rgba(255,255,255,0.04)"
                   : "rgba(0,0,0,0.03)",
@@ -183,13 +186,13 @@ const AchievementCard = React.memo(function AchievementCard({
             styles.dateBadge,
             {
               backgroundColor: isDark
-                ? "rgba(34,197,94,0.1)"
-                : "rgba(34,197,94,0.06)",
+                ? "rgba(212,175,55,0.12)"
+                : "rgba(212,175,55,0.08)",
             },
           ]}
         >
-          <MaterialIcons name="check-circle" size={10} color="#22c55e" />
-          <Text style={styles.dateText}>
+          <MaterialIcons name="check-circle" size={10} color={GOLD} />
+          <Text style={[styles.dateText, { color: GOLD }]}>
             {formattedDate}
           </Text>
         </View>
@@ -262,41 +265,44 @@ export default function AchievementsScreen() {
 
   if (achievementsLoading) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Pressable
-            onPress={handleBack}
-            style={[
-              styles.backButton,
-              {
-                backgroundColor: colors.card,
-                borderColor: colors.border,
-              },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={t.common.back}
-          >
-            <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
-          </Pressable>
-          <Text
-            style={[styles.headerTitle, { color: colors.textPrimary }]}
-            accessibilityRole="header"
-          >
-            {t.achievements.title}
-          </Text>
-          <View style={styles.headerSpacer} />
-        </View>
+      <View style={{ flex: 1 }}>
+        <PremiumBackground />
+        <SafeAreaView style={[styles.container]}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Pressable
+              onPress={handleBack}
+              style={[
+                styles.backButton,
+                {
+                  backgroundColor: colors.card,
+                  borderColor: colors.border,
+                },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={t.common.back}
+            >
+              <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
+            </Pressable>
+            <Text
+              style={[styles.headerTitle, { color: colors.textPrimary }]}
+              accessibilityRole="header"
+            >
+              {t.achievements.title}
+            </Text>
+            <View style={styles.headerSpacer} />
+          </View>
 
-        {/* Skeleton grid */}
-        <View style={styles.skeletonGrid}>
-          {[0, 1, 2, 3, 4, 5].map((i) => (
-            <View key={i} style={i % 2 === 0 ? styles.cardLeft : styles.cardRight}>
-              <SkeletonCard index={i} />
-            </View>
-          ))}
-        </View>
-      </SafeAreaView>
+          {/* Skeleton grid */}
+          <View style={styles.skeletonGrid}>
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <View key={i} style={i % 2 === 0 ? styles.cardLeft : styles.cardRight}>
+                <SkeletonCard index={i} />
+              </View>
+            ))}
+          </View>
+        </SafeAreaView>
+      </View>
     );
   }
 
@@ -304,48 +310,51 @@ export default function AchievementsScreen() {
 
   if (achievementsError) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={styles.header}>
-          <Pressable
-            onPress={handleBack}
-            style={[
-              styles.backButton,
-              {
-                backgroundColor: colors.card,
-                borderColor: colors.border,
-              },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={t.common.back}
-          >
-            <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
-          </Pressable>
-          <Text
-            style={[styles.headerTitle, { color: colors.textPrimary }]}
-            accessibilityRole="header"
-          >
-            {t.achievements.title}
-          </Text>
-          <View style={styles.headerSpacer} />
-        </View>
-        <View style={styles.centerContent}>
-          <MaterialIcons name="cloud-off" size={64} color={colors.textMuted} />
-          <Text style={[styles.errorText, { color: colors.textSecondary }]}>
-            {t.common.loadingError}
-          </Text>
-          <PressableScale
-            onPress={() => refetch()}
-            accessibilityRole="button"
-            accessibilityLabel={t.common.retry}
-          >
-            <View style={[styles.retryButton, { backgroundColor: colors.primary }]}>
-              <Text style={[styles.retryText, { color: isDark ? "#102217" : "#0d1b13" }]}>
-                {t.common.retry}
-              </Text>
-            </View>
-          </PressableScale>
-        </View>
-      </SafeAreaView>
+      <View style={{ flex: 1 }}>
+        <PremiumBackground />
+        <SafeAreaView style={[styles.container]}>
+          <View style={styles.header}>
+            <Pressable
+              onPress={handleBack}
+              style={[
+                styles.backButton,
+                {
+                  backgroundColor: colors.card,
+                  borderColor: colors.border,
+                },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={t.common.back}
+            >
+              <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
+            </Pressable>
+            <Text
+              style={[styles.headerTitle, { color: colors.textPrimary }]}
+              accessibilityRole="header"
+            >
+              {t.achievements.title}
+            </Text>
+            <View style={styles.headerSpacer} />
+          </View>
+          <View style={styles.centerContent}>
+            <MaterialIcons name="cloud-off" size={64} color={colors.textMuted} />
+            <Text style={[styles.errorText, { color: colors.textSecondary }]}>
+              {t.common.loadingError}
+            </Text>
+            <PressableScale
+              onPress={() => refetch()}
+              accessibilityRole="button"
+              accessibilityLabel={t.common.retry}
+            >
+              <View style={[styles.retryButton, { backgroundColor: colors.primary }]}>
+                <Text style={[styles.retryText, { color: isDark ? "#102217" : "#0d1b13" }]}>
+                  {t.common.retry}
+                </Text>
+              </View>
+            </PressableScale>
+          </View>
+        </SafeAreaView>
+      </View>
     );
   }
 
@@ -353,48 +362,53 @@ export default function AchievementsScreen() {
 
   if (!achievements || achievements.length === 0) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={styles.header}>
-          <Pressable
-            onPress={handleBack}
-            style={[
-              styles.backButton,
-              {
-                backgroundColor: colors.card,
-                borderColor: colors.border,
-              },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={t.common.back}
-          >
-            <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
-          </Pressable>
-          <Text
-            style={[styles.headerTitle, { color: colors.textPrimary }]}
-            accessibilityRole="header"
-          >
-            {t.achievements.title}
-          </Text>
-          <View style={styles.headerSpacer} />
-        </View>
-        <View style={styles.centerContent}>
-          <MaterialIcons name="emoji-events" size={72} color={colors.textMuted} />
-          <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
-            {t.achievements.empty}
-          </Text>
-          <Text style={[styles.emptyDesc, { color: colors.textMuted }]}>
-            {t.achievements.emptyDesc}
-          </Text>
-        </View>
-      </SafeAreaView>
+      <View style={{ flex: 1 }}>
+        <PremiumBackground />
+        <SafeAreaView style={[styles.container]}>
+          <View style={styles.header}>
+            <Pressable
+              onPress={handleBack}
+              style={[
+                styles.backButton,
+                {
+                  backgroundColor: colors.card,
+                  borderColor: colors.border,
+                },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={t.common.back}
+            >
+              <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
+            </Pressable>
+            <Text
+              style={[styles.headerTitle, { color: colors.textPrimary }]}
+              accessibilityRole="header"
+            >
+              {t.achievements.title}
+            </Text>
+            <View style={styles.headerSpacer} />
+          </View>
+          <View style={styles.centerContent}>
+            <MaterialIcons name="emoji-events" size={72} color={colors.textMuted} />
+            <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
+              {t.achievements.empty}
+            </Text>
+            <Text style={[styles.emptyDesc, { color: colors.textMuted }]}>
+              {t.achievements.emptyDesc}
+            </Text>
+          </View>
+        </SafeAreaView>
+      </View>
     );
   }
 
   // ── Main content ─────────────────────────────────────
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <FlatList
+    <View style={{ flex: 1 }}>
+      <PremiumBackground />
+      <SafeAreaView style={[styles.container]}>
+        <FlatList
         data={achievements as Achievement[]}
         keyExtractor={keyExtractor}
         numColumns={2}
@@ -431,12 +445,12 @@ export default function AchievementsScreen() {
                   styles.countBadge,
                   {
                     backgroundColor: isDark
-                      ? "rgba(34,197,94,0.12)"
-                      : "rgba(34,197,94,0.08)",
+                      ? "rgba(212,175,55,0.15)"
+                      : "rgba(212,175,55,0.1)",
                   },
                 ]}
               >
-                <Text style={styles.countText}>
+                <Text style={[styles.countText, { color: GOLD }]}>
                   {unlockedCount}/{totalCount}
                 </Text>
               </View>
@@ -448,8 +462,8 @@ export default function AchievementsScreen() {
               style={[
                 styles.progressBanner,
                 {
-                  backgroundColor: colors.card,
-                  borderColor: colors.border,
+                  backgroundColor: isDark ? "rgba(255,255,255,0.03)" : colors.card,
+                  borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
                 },
               ]}
             >
@@ -460,13 +474,13 @@ export default function AchievementsScreen() {
                       styles.levelBadge,
                       {
                         backgroundColor: isDark
-                          ? "rgba(34,197,94,0.15)"
-                          : "rgba(34,197,94,0.1)",
+                          ? "rgba(212,175,55,0.15)"
+                          : "rgba(212,175,55,0.1)",
                       },
                     ]}
                   >
-                    <MaterialIcons name="military-tech" size={20} color="#22c55e" />
-                    <Text style={styles.levelText}>
+                    <MaterialIcons name="military-tech" size={20} color={GOLD} />
+                    <Text style={[styles.levelText, { color: GOLD }]}>
                       {t.home.level} {loyaltyData?.level ?? 1}
                     </Text>
                   </View>
@@ -510,8 +524,9 @@ export default function AchievementsScreen() {
             </Animated.View>
           </>
         }
-      />
-    </SafeAreaView>
+        />
+      </SafeAreaView>
+    </View>
   );
 }
 
@@ -616,7 +631,7 @@ const styles = StyleSheet.create({
   progressBarFill: {
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#22c55e",
+    backgroundColor: GOLD,
   },
   progressPercentText: {
     fontSize: 12,
@@ -636,7 +651,7 @@ const styles = StyleSheet.create({
 
   // Cards
   card: {
-    borderRadius: 16,
+    borderRadius: 20,
     borderWidth: 1,
     padding: 14,
     marginBottom: CARD_GAP,

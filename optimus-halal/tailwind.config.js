@@ -39,15 +39,15 @@ module.exports = {
           900: "#6c421c",
           950: "#3f220c",
         },
-        // Background Colors
+        // Background Colors — aligned with darkTheme in theme/colors.ts
         background: {
-          light: "#f8faf9",
-          dark: "#0a1a10",
+          light: "#f3f1ed",
+          dark: "#0C0C0C",
         },
-        // Surface Colors
+        // Surface Colors — aligned with darkTheme.card in theme/colors.ts
         surface: {
           light: "#ffffff",
-          dark: "#132a1a",
+          dark: "#1A1A1A",
         },
         // Text Colors
         text: {

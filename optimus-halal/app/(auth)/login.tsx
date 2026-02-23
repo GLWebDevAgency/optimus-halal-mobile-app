@@ -16,7 +16,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Pressable,
 } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { router, Link } from "expo-router";
@@ -268,14 +267,14 @@ export default function LoginScreen() {
                 <Text className="flex-1 text-sm font-medium text-red-600 dark:text-red-400">
                   {serverError}
                 </Text>
-                <Pressable
+                <PressableScale
                   onPress={() => setServerError(null)}
                   hitSlop={8}
                   accessibilityLabel={t.common.close}
                   accessibilityRole="button"
                 >
                   <MaterialIcons name="close" size={18} color={isDark ? "#f87171" : "#dc2626"} />
-                </Pressable>
+                </PressableScale>
               </View>
             </Animated.View>
           )}
@@ -335,6 +334,13 @@ export default function LoginScreen() {
                 onPress={handleLogin}
                 accessibilityLabel={t.auth.login.submit}
                 accessibilityHint={t.auth.login.submit}
+                style={{
+                  shadowColor: "#d4af37",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 12,
+                  elevation: 8,
+                }}
                 icon={
                   <MaterialIcons
                     name="arrow-forward"
@@ -352,13 +358,15 @@ export default function LoginScreen() {
                 accessibilityLabel={t.auth.login.biometric}
                 accessibilityHint={t.auth.login.biometric}
               >
-                <View className="flex-row items-center justify-center gap-2 h-14 rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent">
-                  <MaterialIcons
-                    name="face"
-                    size={24}
-                    color={colors.primary}
-                  />
-                  <Text className="text-base font-medium text-slate-700 dark:text-slate-300">
+                <View style={{
+                  flexDirection: "row", alignItems: "center", justifyContent: "center",
+                  gap: 8, height: 56, borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: isDark ? "rgba(212,175,55,0.15)" : "rgba(212,175,55,0.2)",
+                  backgroundColor: isDark ? "rgba(212,175,55,0.04)" : "rgba(212,175,55,0.03)",
+                }}>
+                  <MaterialIcons name="face" size={24} color="#d4af37" />
+                  <Text style={{ fontSize: 15, fontWeight: "500", color: colors.textSecondary }}>
                     {t.auth.login.biometric}
                   </Text>
                 </View>
@@ -369,13 +377,13 @@ export default function LoginScreen() {
           {/* Sign Up Link */}
           <Animated.View
             entering={FadeIn.delay(400).duration(600)}
-            className="items-center mt-10"
+            style={{ alignItems: "center", marginTop: 40 }}
           >
-            <Text className="text-sm text-slate-500 dark:text-slate-400">
+            <Text style={{ fontSize: 14, color: colors.textSecondary }}>
               {t.auth.login.noAccount}{" "}
               <Link href="/(auth)/signup" asChild>
                 <Text
-                  className="font-bold text-primary-500"
+                  style={{ fontWeight: "700", color: "#d4af37" }}
                   accessibilityRole="link"
                   accessibilityLabel={t.auth.login.createAccount}
                   accessibilityHint={t.auth.login.createAccount}

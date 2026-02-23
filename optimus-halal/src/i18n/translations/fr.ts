@@ -548,6 +548,8 @@ export const fr = {
     buyAlternative: "Acheter",
     shopHalalAlternatives: "Trouver des alternatives halal",
     shopOnMarketplace: "Explorer le marketplace",
+    // Legal disclaimer (Ch09 Al-Qadar — mandatory on scan result)
+    disclaimer: "Naqiy est un outil d'information, pas une autorité religieuse. Vérifiez toujours les étiquettes vous-même et consultez votre imam pour un avis personnalisé.",
   },
 
   // Map

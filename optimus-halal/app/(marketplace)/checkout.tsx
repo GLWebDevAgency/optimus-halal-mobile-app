@@ -20,6 +20,7 @@ import {
   ScrollView,
   TextInput,
 } from "react-native";
+import { PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -65,12 +66,13 @@ export default function CheckoutScreen() {
   const orderTotal = subtotal + shippingCost + tax;
 
   return (
-    <View className="flex-1 bg-background-light dark:bg-background-dark">
+    <View className="flex-1">
+      <PremiumBackground />
       {/* Header */}
       <Animated.View
         entering={FadeIn.duration(300)}
-        className="sticky top-0 z-50 flex-row items-center bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md px-4 py-2 justify-between border-b border-gray-100 dark:border-gray-800"
-        style={{ paddingTop: insets.top + 4 }}
+        className="sticky top-0 z-50 flex-row items-center backdrop-blur-md px-4 py-2 justify-between border-b border-gray-100 dark:border-gray-800"
+        style={{ paddingTop: insets.top + 4, backgroundColor: isDark ? "rgba(12,12,12,0.92)" : "rgba(243,241,237,0.92)" }}
       >
         <Pressable
           onPress={handleBack}
@@ -445,8 +447,8 @@ export default function CheckoutScreen() {
       {/* Fixed Bottom CTA */}
       <Animated.View
         entering={FadeInUp.delay(500).duration(400)}
-        className="absolute bottom-0 left-0 right-0 bg-white dark:bg-[#1c3024] border-t border-gray-100 dark:border-gray-800 p-4 shadow-lg z-40"
-        style={{ paddingBottom: insets.bottom + 16 }}
+        className="absolute bottom-0 left-0 right-0 border-t border-gray-100 dark:border-gray-800 p-4 shadow-lg z-40"
+        style={{ paddingBottom: insets.bottom + 16, backgroundColor: isDark ? "rgba(12,12,12,0.92)" : "rgba(243,241,237,0.92)" }}
       >
         <View className="flex-row items-center gap-4 mb-4">
           <View className="flex-1">

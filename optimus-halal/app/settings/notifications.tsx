@@ -15,11 +15,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
-import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInDown, ZoomIn } from "react-native-reanimated";
 import { PressableScale } from "@/components/ui/PressableScale";
+import { PremiumBackground } from "@/components/ui";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { trpc } from "@/lib/trpc";
+
+const GOLD = "#d4af37";
 
 // Frequency options
 type FrequencyOption = "daily" | "weekly" | "realtime";
@@ -135,13 +138,13 @@ export default function NotificationsScreen() {
   // Theme-aware colors
   const themeColors = {
     background: isDark ? "#102217" : "#f6f8f7",
-    card: isDark ? "#1a2e22" : "#ffffff",
-    cardBorder: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
+    card: isDark ? "rgba(255,255,255,0.03)" : "#ffffff",
+    cardBorder: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
     textPrimary: isDark ? "#e8f5e9" : "#0d1b13",
     textSecondary: isDark ? "#9ca3af" : "#4b5563",
     primary: colors.primary,
     toggleOff: isDark ? "#2d4436" : "#e0e0e0",
-    headerBorder: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.1)",
+    headerBorder: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.12)",
   };
 
   // Map UI keys → backend fields
@@ -203,7 +206,7 @@ export default function NotificationsScreen() {
           justifyContent: "space-between",
           padding: 16,
           borderBottomWidth: isLast ? 0 : 1,
-          borderBottomColor: themeColors.cardBorder,
+          borderBottomColor: isDark ? "rgba(212,175,55,0.06)" : "rgba(212,175,55,0.1)",
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
@@ -272,7 +275,7 @@ export default function NotificationsScreen() {
           justifyContent: "space-between",
           padding: 16,
           borderBottomWidth: isLast ? 0 : 1,
-          borderBottomColor: themeColors.cardBorder,
+          borderBottomColor: isDark ? "rgba(212,175,55,0.06)" : "rgba(212,175,55,0.1)",
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
@@ -346,20 +349,25 @@ export default function NotificationsScreen() {
             justifyContent: "space-between",
             padding: 16,
             borderBottomWidth: isLast ? 0 : 1,
-            borderBottomColor: themeColors.cardBorder,
+            borderBottomColor: isDark ? "rgba(212,175,55,0.06)" : "rgba(212,175,55,0.1)",
+            backgroundColor: isSelected
+              ? isDark ? "rgba(212,175,55,0.04)" : "rgba(212,175,55,0.03)"
+              : "transparent",
           }}
         >
           <Text
             style={{
               fontSize: 14,
-              fontWeight: "500",
+              fontWeight: isSelected ? "600" : "500",
               color: isSelected ? themeColors.textPrimary : themeColors.textSecondary,
             }}
           >
             {(t.notifications as any)[option.nameKey]}
           </Text>
           {isSelected && (
-            <MaterialIcons name="check" size={20} color={themeColors.primary} />
+            <Animated.View entering={ZoomIn.springify()}>
+              <MaterialIcons name="check-circle" size={20} color={GOLD} />
+            </Animated.View>
           )}
         </View>
       </PressableScale>
@@ -368,15 +376,20 @@ export default function NotificationsScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator size="large" color={themeColors.primary} />
-      </SafeAreaView>
+      <View style={{ flex: 1 }}>
+        <PremiumBackground />
+        <SafeAreaView style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <ActivityIndicator size="large" color={themeColors.primary} />
+        </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background }}>
-      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
+    <View style={{ flex: 1 }}>
+      <PremiumBackground />
+      <SafeAreaView style={{ flex: 1 }}>
+        <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
 
       {/* Header */}
       <Animated.View
@@ -473,9 +486,10 @@ export default function NotificationsScreen() {
               fontWeight: "700",
               letterSpacing: 1,
               textTransform: "uppercase",
-              color: themeColors.textSecondary,
+              color: GOLD,
               marginBottom: 16,
               paddingLeft: 4,
+              opacity: 0.8,
             }}
             accessibilityRole="header"
           >
@@ -484,7 +498,7 @@ export default function NotificationsScreen() {
           <View
             style={{
               backgroundColor: themeColors.card,
-              borderRadius: 16,
+              borderRadius: 20,
               overflow: "hidden",
               borderWidth: 1,
               borderColor: themeColors.cardBorder,
@@ -507,9 +521,10 @@ export default function NotificationsScreen() {
               fontWeight: "700",
               letterSpacing: 1,
               textTransform: "uppercase",
-              color: themeColors.textSecondary,
+              color: GOLD,
               marginBottom: 16,
               paddingLeft: 4,
+              opacity: 0.8,
             }}
             accessibilityRole="header"
           >
@@ -518,7 +533,7 @@ export default function NotificationsScreen() {
           <View
             style={{
               backgroundColor: themeColors.card,
-              borderRadius: 16,
+              borderRadius: 20,
               overflow: "hidden",
               borderWidth: 1,
               borderColor: themeColors.cardBorder,
@@ -541,9 +556,10 @@ export default function NotificationsScreen() {
               fontWeight: "700",
               letterSpacing: 1,
               textTransform: "uppercase",
-              color: themeColors.textSecondary,
+              color: GOLD,
               marginBottom: 16,
               paddingLeft: 4,
+              opacity: 0.8,
             }}
             accessibilityRole="header"
           >
@@ -552,7 +568,7 @@ export default function NotificationsScreen() {
           <View
             style={{
               backgroundColor: themeColors.card,
-              borderRadius: 16,
+              borderRadius: 20,
               overflow: "hidden",
               borderWidth: 1,
               borderColor: themeColors.cardBorder,
@@ -566,6 +582,7 @@ export default function NotificationsScreen() {
           </View>
         </Animated.View>
       </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }

@@ -459,6 +459,8 @@ export const ar: TranslationKeys = {
     buyAlternative: "شراء",
     shopHalalAlternatives: "إيجاد بدائل حلال",
     shopOnMarketplace: "استكشاف المتجر",
+    // Legal disclaimer (Ch09 Al-Qadar — mandatory on scan result)
+    disclaimer: "نقيّ أداة معلومات وليست مرجعاً دينياً. تحقق دائماً من الملصقات بنفسك واستشر إمامك للحصول على رأي شخصي.",
   },
   map: {
     title: "الخريطة",

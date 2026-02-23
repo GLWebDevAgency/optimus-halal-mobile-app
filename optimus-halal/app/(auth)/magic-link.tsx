@@ -28,10 +28,13 @@ import Animated, {
   FadeOut,
 } from "react-native-reanimated";
 
-import { Input, IconButton, Button } from "@/components/ui";
+import { Image } from "expo-image";
+import { Input, IconButton, Button, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { useLocalAuthStore } from "@/store";
 import { useTranslation, useHaptics, useTheme } from "@/hooks";
+const logoSource = require("@assets/images/logo_naqiy.webp");
+
 import {
   requestMagicLink,
   verifyMagicLinkToken,
@@ -208,6 +211,25 @@ export default function MagicLinkLoginScreen() {
   // Render different states
   const renderInputState = () => (
     <>
+      {/* Brand Logo */}
+      <Animated.View
+        entering={FadeInDown.delay(150).duration(500)}
+        className="items-center mb-6"
+      >
+        <View
+          className="w-16 h-16 rounded-2xl items-center justify-center"
+          style={{ backgroundColor: colors.card }}
+          accessible={false}
+        >
+          <Image
+            source={logoSource}
+            style={{ width: 42, height: 42 }}
+            contentFit="contain"
+            cachePolicy="memory-disk"
+          />
+        </View>
+      </Animated.View>
+
       <Animated.View
         entering={FadeInDown.delay(200).duration(600)}
         className="mb-6"
@@ -300,13 +322,23 @@ export default function MagicLinkLoginScreen() {
       exiting={FadeOut.duration(200)}
       className="items-center"
     >
-      {/* Email Icon */}
+      {/* Brand Logo */}
       <Animated.View
         entering={FadeInDown.delay(100).duration(500)}
-        className="w-24 h-24 rounded-full bg-primary-50 dark:bg-primary-900/30 items-center justify-center mb-6"
+        className="mb-6"
         accessible={false}
       >
-        <MaterialIcons name="mail-outline" size={48} color={colors.primary} />
+        <View
+          className="w-20 h-20 rounded-2xl items-center justify-center"
+          style={{ backgroundColor: colors.card }}
+        >
+          <Image
+            source={logoSource}
+            style={{ width: 52, height: 52 }}
+            contentFit="contain"
+            cachePolicy="memory-disk"
+          />
+        </View>
       </Animated.View>
 
       {/* Title */}
@@ -433,7 +465,8 @@ export default function MagicLinkLoginScreen() {
   );
 
   return (
-    <View className="flex-1 bg-white dark:bg-background-dark">
+    <View className="flex-1">
+      <PremiumBackground />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"

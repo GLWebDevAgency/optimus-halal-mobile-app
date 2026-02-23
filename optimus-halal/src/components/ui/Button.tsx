@@ -48,13 +48,13 @@ const variantStyles = {
     gradient: null,
   },
   outline: {
-    container: "bg-transparent border-2 border-slate-200 dark:border-slate-700",
+    container: "bg-transparent border-2 border-gold-200 dark:border-gold-700",
     text: "text-slate-700 dark:text-slate-300 font-semibold",
     gradient: null,
   },
   ghost: {
     container: "bg-transparent",
-    text: "text-primary-500 font-semibold",
+    text: "text-gold-500 font-semibold",
     gradient: null,
   },
   danger: {
@@ -152,12 +152,20 @@ export const Button: React.FC<ButtonProps> = ({
         testID={testID}
         {...a11yProps}
       >
-        <View className={containerClassName} style={{ overflow: "hidden" }}>
+        <View
+          className={containerClassName}
+          style={{
+            overflow: "hidden",
+            ...(variant === "primary"
+              ? { borderWidth: 1, borderColor: isDark ? "rgba(207,165,51,0.5)" : "rgba(19,236,106,0.3)" }
+              : {}),
+          }}
+        >
           <LinearGradient
             colors={resolvedGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
-            className="absolute inset-0 rounded-2xl"
+            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 16 }}
           />
           {content}
         </View>

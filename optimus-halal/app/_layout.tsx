@@ -15,12 +15,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   I18nManager,
   View,
-  ActivityIndicator,
   Text,
   ScrollView,
   Pressable,
 } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
+import { AnimatedSplash } from "@/components/AnimatedSplash";
 import { useLanguageStore } from "@/store";
 import { useTheme, useTranslation } from "@/hooks";
 import { initializeTokens, isAuthenticated as hasStoredTokens, clearTokens, setApiLanguage, setOnAuthFailure } from "@/services/api";
@@ -126,8 +126,18 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
   const [timedOut, setTimedOut] = useState(false);
   const [tokensReady, setTokensReady] = useState(false);
   const [forceReady, setForceReady] = useState(false);
+  const [splashDone, setSplashDone] = useState(false);
   const initCalled = useRef(false);
+  const nativeSplashHidden = useRef(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Hide native splash immediately on mount — AnimatedSplash takes over
+  useEffect(() => {
+    if (!nativeSplashHidden.current) {
+      nativeSplashHidden.current = true;
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, []);
 
   // Step 1: Load tokens from SecureStore
   useEffect(() => {
@@ -177,8 +187,6 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
     if (!isInitializing && timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
-      // Hide splash screen smoothly now that everything is ready
-      setTimeout(() => SplashScreen.hideAsync(), 100);
     }
   }, [isInitializing]);
 
@@ -186,26 +194,12 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
     setApiLanguage(language);
   }, [language]);
 
+  // AnimatedSplash exit callback
+  const handleSplashFinish = useCallback(() => setSplashDone(true), []);
   const handleLongPress = useCallback(() => setShowDebug(true), []);
 
   if (showDebug) {
     return <DebugOverlay onClose={() => setShowDebug(false)} />;
-  }
-
-  // Show loading spinner only during app startup init (with timeout escape)
-  if (isInitializing && !timedOut) {
-    return (
-      <Pressable
-        onLongPress={handleLongPress}
-        delayLongPress={3000}
-        style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: initIsDark ? "#0C0C0C" : "#f3f1ed" }}
-      >
-        <ActivityIndicator size="large" color="#16a34a" />
-        <Text style={{ color: "#888", fontSize: 12, marginTop: 16 }}>
-          {t.common.loadingLongPress}
-        </Text>
-      </Pressable>
-    );
   }
 
   // If timed out, show debug info + option to continue
@@ -231,6 +225,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
           onPress={() => {
             setForceReady(true);
             setTimedOut(false);
+            setSplashDone(true);
           }}
         >
           <View style={{ backgroundColor: "#333", padding: 12, borderRadius: 8 }}>
@@ -243,7 +238,24 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      {/* AnimatedSplash overlays content — renders on top, exits when ready */}
+      {!splashDone && (
+        <Pressable
+          onLongPress={handleLongPress}
+          delayLongPress={3000}
+          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+        >
+          <AnimatedSplash
+            isReady={!isInitializing}
+            onFinish={handleSplashFinish}
+          />
+        </Pressable>
+      )}
+    </>
+  );
 }
 
 // ============================================

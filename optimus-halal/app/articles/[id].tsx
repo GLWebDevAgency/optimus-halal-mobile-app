@@ -29,6 +29,7 @@ import Svg, { Path } from "react-native-svg";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useHaptics } from "@/hooks";
+import { PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { trpc } from "@/lib/trpc";
 import { brand, gold } from "@/theme/colors";
@@ -102,7 +103,8 @@ export default function ArticleDetailScreen() {
   // --- Loading state ---
   if (isLoading) {
     return (
-      <View style={[styles.center, { backgroundColor: colors.background }]}>
+      <View style={styles.center}>
+        <PremiumBackground />
         <ActivityIndicator size="large" color={brand.primary} />
       </View>
     );
@@ -111,7 +113,8 @@ export default function ArticleDetailScreen() {
   // --- Error state ---
   if (error || !article) {
     return (
-      <View style={[styles.center, { backgroundColor: colors.background }]}>
+      <View style={styles.center}>
+        <PremiumBackground />
         <MaterialIcons name="article" size={64} color={colors.textMuted} />
         <Text style={[styles.errorText, { color: colors.textSecondary }]}>
           {t.articles.notFound}
@@ -129,7 +132,8 @@ export default function ArticleDetailScreen() {
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
+    <View style={styles.root}>
+      <PremiumBackground />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}

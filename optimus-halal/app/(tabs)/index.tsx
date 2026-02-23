@@ -15,7 +15,6 @@ import {
   ScrollView,
   Pressable,
   RefreshControl,
-  Platform,
   Dimensions,
   StyleSheet,
 } from "react-native";
@@ -38,6 +37,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import Svg, { Path } from "react-native-svg";
 
 import { Avatar, PremiumBackground } from "@/components/ui";
+const logoSource = require("@assets/images/logo_naqiy.webp");
 import { PressableScale } from "@/components/ui/PressableScale";
 import { HomeSkeleton } from "@/components/skeletons";
 import { useMe } from "@/hooks/useAuth";
@@ -45,7 +45,6 @@ import { useFavoritesList } from "@/hooks/useFavorites";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTheme } from "@/hooks/useTheme";
 import { brand, glass, lightTheme, darkTheme } from "@/theme/colors";
-import { getShadows } from "@/theme/shadows";
 import { useHaptics, useUserLocation, useMapStores } from "@/hooks";
 import { trpc } from "@/lib/trpc";
 
@@ -210,20 +209,23 @@ const QuickActionCard = React.memo(function QuickActionCard({
                 backgroundColor: isDark ? glass.dark.bg : glass.light.bg,
                 borderColor: isDark
                   ? glass.dark.border
-                  : glass.light.border,
+                  : "rgba(212,175,55,0.10)",
               },
             ]}
           >
-            {/* Directional gold halo — radiates from scanner card, covers ~50% */}
-            {isDark && (
-              <LinearGradient
-                colors={["rgba(207,165,51,0.18)", "rgba(207,165,51,0.07)", "transparent"]}
-                start={glowStart}
-                end={glowEnd}
-                style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
-                pointerEvents="none"
-              />
-            )}
+            {/* Directional halo — radiates from scanner card direction */}
+            {/* Dark: gold glow | Light: green glow (like the scanner card) */}
+            <LinearGradient
+              colors={
+                isDark
+                  ? ["rgba(207,165,51,0.18)", "rgba(207,165,51,0.07)", "transparent"]
+                  : ["rgba(19,236,106,0.12)", "rgba(19,236,106,0.04)", "transparent"]
+              }
+              start={glowStart}
+              end={glowEnd}
+              style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
+              pointerEvents="none"
+            />
             <View style={styles.quickActionContent}>
               <View
                 style={[
@@ -536,7 +538,7 @@ const FavoriteCircle = React.memo(function FavoriteCircle({
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const { isDark, isRamadan, colors, heroGradient } = useTheme();
+  const { isDark, isRamadan, colors } = useTheme();
   const { impact } = useHaptics();
   const { t } = useTranslation();
 
@@ -772,7 +774,7 @@ export default function HomeScreen() {
             SECTION 1: HERO HEADER
             ==================================================== */}
         <Animated.View style={[{ paddingHorizontal: 20 }, heroAnimStyle]}>
-          {/* Row: Avatar + Greeting + Bell */}
+          {/* Row: Avatar + Greeting + Brand + Bell */}
           <Animated.View
             entering={FadeInDown.delay(0).duration(500).springify().damping(20)}
             style={styles.headerRow}
@@ -806,37 +808,53 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            {/* Notification Bell */}
-            <Pressable
-              onPress={() => router.navigate("/(tabs)/alerts")}
-              accessibilityRole="button"
-              accessibilityLabel={t.common.notifications}
-              accessibilityHint={t.common.viewAlerts}
-              style={[
-                styles.bellButton,
-                {
-                  backgroundColor: isDark
-                    ? "rgba(255,255,255,0.06)"
-                    : "rgba(255,255,255,0.7)",
-                  borderColor: isDark
-                    ? "rgba(255,255,255,0.08)"
-                    : "rgba(0,0,0,0.06)",
-                },
-              ]}
-            >
-              <MaterialIcons
-                name="notifications-none"
-                size={22}
-                color={isDark ? colors.primary : colors.textPrimary}
-              />
-              {unreadCount > 0 && (
-                <View style={styles.bellBadge}>
-                  <Text style={styles.bellBadgeText}>
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </Text>
-                </View>
-              )}
-            </Pressable>
+            {/* Right: Brand Mark + Notification Bell */}
+            <View style={styles.headerRight}>
+              {/* Naqiy brand mark */}
+              <View style={styles.brandMark} accessible={false}>
+                <Image
+                  source={logoSource}
+                  style={{ width: 20, height: 20 }}
+                  contentFit="contain"
+                  cachePolicy="memory-disk"
+                />
+                <Text style={[styles.brandMarkText, { color: colors.textPrimary }]}>
+                  Naqiy
+                </Text>
+              </View>
+
+              {/* Notification Bell */}
+              <Pressable
+                onPress={() => router.navigate("/(tabs)/alerts")}
+                accessibilityRole="button"
+                accessibilityLabel={t.common.notifications}
+                accessibilityHint={t.common.viewAlerts}
+                style={[
+                  styles.bellButton,
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(255,255,255,0.06)"
+                      : "rgba(255,255,255,0.7)",
+                    borderColor: isDark
+                      ? "rgba(207,165,51,0.15)"
+                      : "rgba(212,175,55,0.12)",
+                  },
+                ]}
+              >
+                <MaterialIcons
+                  name="notifications-none"
+                  size={22}
+                  color={isDark ? brand.gold : colors.textPrimary}
+                />
+                {unreadCount > 0 && (
+                  <View style={styles.bellBadge}>
+                    <Text style={styles.bellBadgeText}>
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+            </View>
           </Animated.View>
 
           {/* Impact Stats Pill */}
@@ -850,10 +868,10 @@ export default function HomeScreen() {
               {
                 backgroundColor: isDark
                   ? "rgba(255,255,255,0.06)"
-                  : "rgba(255,255,255,0.7)",
+                  : "rgba(255,255,255,0.75)",
                 borderColor: isDark
-                  ? "rgba(255,255,255,0.08)"
-                  : "rgba(0,0,0,0.06)",
+                  ? "rgba(207,165,51,0.15)"
+                  : "rgba(212,175,55,0.12)",
               },
             ]}
           >
@@ -1114,7 +1132,7 @@ export default function HomeScreen() {
                   {t.home.featured}
                 </Text>
                 <Svg width={20} height={10} viewBox="0 0 24 12">
-                  <Path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke={colors.primary} strokeWidth={1.5} fill="none" opacity={0.5} />
+                  <Path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke={brand.gold} strokeWidth={1.5} fill="none" opacity={0.7} />
                 </Svg>
               </View>
               <Pressable
@@ -1122,7 +1140,7 @@ export default function HomeScreen() {
                 accessibilityRole="link"
                 accessibilityLabel={t.home.viewAll}
               >
-                <Text style={[styles.seeAllText, { color: colors.primary }]}>
+                <Text style={[styles.seeAllText, { color: brand.gold }]}>
                   {t.home.viewAll}
                 </Text>
               </Pressable>
@@ -1172,7 +1190,7 @@ export default function HomeScreen() {
                 {t.home.favorites}
               </Text>
               <Svg width={20} height={10} viewBox="0 0 24 12">
-                <Path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke={colors.primary} strokeWidth={1.5} fill="none" opacity={0.5} />
+                <Path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke={brand.gold} strokeWidth={1.5} fill="none" opacity={0.7} />
               </Svg>
             </View>
             {favoriteProducts.length > 0 && (
@@ -1182,7 +1200,7 @@ export default function HomeScreen() {
                 accessibilityLabel={`${t.home.viewAll} ${t.home.favorites}`}
               >
                 <Text
-                  style={[styles.seeAllText, { color: colors.primary }]}
+                  style={[styles.seeAllText, { color: brand.gold }]}
                 >
                   {t.home.viewAll} ({favoriteProducts.length})
                 </Text>
@@ -1210,10 +1228,10 @@ export default function HomeScreen() {
                     {
                       backgroundColor: isDark
                         ? "rgba(255,255,255,0.03)"
-                        : "#f8fafc",
+                        : "rgba(212,175,55,0.03)",
                       borderColor: isDark
-                        ? "rgba(255,255,255,0.06)"
-                        : "#e2e8f0",
+                        ? "rgba(207,165,51,0.12)"
+                        : "rgba(212,175,55,0.15)",
                     },
                   ]}
                 >
@@ -1265,11 +1283,11 @@ export default function HomeScreen() {
                     styles.addCircle,
                     {
                       borderColor: isDark
-                        ? "rgba(255,255,255,0.08)"
-                        : "#e2e8f0",
+                        ? "rgba(207,165,51,0.15)"
+                        : "rgba(212,175,55,0.18)",
                       backgroundColor: isDark
                         ? "rgba(255,255,255,0.04)"
-                        : "#f8fafc",
+                        : "rgba(212,175,55,0.03)",
                     },
                   ]}
                 >
@@ -1304,6 +1322,21 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   // ---- Header ----
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  brandMark: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  brandMarkText: {
+    fontSize: 15,
+    fontWeight: "700",
+    letterSpacing: -0.3,
+  },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -1313,6 +1346,7 @@ const styles = StyleSheet.create({
   headerLeft: {
     flexDirection: "row",
     alignItems: "center",
+    flex: 1,
   },
   greetingLabel: {
     fontSize: 13,

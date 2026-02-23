@@ -18,11 +18,15 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
-import Animated, { FadeIn, FadeInDown, SlideInDown } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInDown, SlideInDown, ZoomIn } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 import { PressableScale } from "@/components/ui/PressableScale";
+import { PremiumBackground } from "@/components/ui";
 import { usePreferencesStore } from "@/store";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
+
+const GOLD = "#d4af37";
 
 const { width } = Dimensions.get("window");
 
@@ -279,36 +283,35 @@ export default function ExclusionsScreen() {
         style={{
           width: "100%",
           aspectRatio: 1,
-          borderRadius: 12,
+          borderRadius: 16,
           padding: 12,
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: selected ? themeColors.primary : themeColors.card,
-          borderWidth: 1,
-          borderColor: selected ? themeColors.primary : themeColors.cardBorder,
-          shadowColor: selected ? themeColors.primary : "#000",
-          shadowOffset: { width: 0, height: selected ? 4 : 1 },
-          shadowOpacity: selected ? 0.3 : 0.05,
-          shadowRadius: selected ? 8 : 2,
+          backgroundColor: selected ? (isDark ? "rgba(212,175,55,0.15)" : "rgba(212,175,55,0.1)") : (isDark ? "rgba(255,255,255,0.03)" : themeColors.card),
+          borderWidth: selected ? 2 : 1,
+          borderColor: selected ? GOLD : (isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)"),
+          shadowColor: selected ? GOLD : "#000",
+          shadowOffset: { width: 0, height: selected ? 0 : 1 },
+          shadowOpacity: selected ? 0.2 : 0.05,
+          shadowRadius: selected ? 12 : 2,
           elevation: selected ? 4 : 1,
           position: "relative",
         }}
         accessibilityRole="button"
         accessibilityLabel={`${allergen.name} - ${allergen.description}`}
       >
-        {/* Selection indicator dot */}
+        {/* Selection indicator */}
         {selected && (
-          <View
+          <Animated.View
+            entering={ZoomIn.springify()}
             style={{
               position: "absolute",
-              top: 8,
-              right: 8,
-              width: 8,
-              height: 8,
-              borderRadius: 4,
-              backgroundColor: "#ffffff",
+              top: 6,
+              right: 6,
             }}
-          />
+          >
+            <MaterialIcons name="check-circle" size={16} color={GOLD} />
+          </Animated.View>
         )}
 
         <MaterialIcons
@@ -409,8 +412,10 @@ export default function ExclusionsScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background }}>
-      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
+    <View style={{ flex: 1 }}>
+      <PremiumBackground />
+      <SafeAreaView style={{ flex: 1 }}>
+        <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       
       {/* Header */}
       <Animated.View
@@ -496,11 +501,11 @@ export default function ExclusionsScreen() {
           style={{
             marginHorizontal: 20,
             marginTop: 8,
-            borderRadius: 12,
+            borderRadius: 16,
             padding: 16,
-            backgroundColor: themeColors.card,
+            backgroundColor: isDark ? "rgba(255,255,255,0.03)" : themeColors.card,
             borderWidth: 1,
-            borderColor: themeColors.cardBorder,
+            borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
             flexDirection: "row",
           }}
         >
@@ -718,14 +723,14 @@ export default function ExclusionsScreen() {
                   paddingHorizontal: 8,
                   paddingVertical: 4,
                   borderRadius: 12,
-                  backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
+                  backgroundColor: "rgba(212, 175, 55, 0.15)",
                 }}
               >
                 <Text
                   style={{
                     fontSize: 10,
-                    fontWeight: "500",
-                    color: isDark ? "#ffffff" : themeColors.textSecondary,
+                    fontWeight: "600",
+                    color: GOLD,
                   }}
                 >
                   {(activeCount > 1 ? t.exclusions.activeCountPlural : t.exclusions.activeCount).replace("{{count}}", String(activeCount))}
@@ -772,10 +777,10 @@ export default function ExclusionsScreen() {
             style={{
               marginTop: 16,
               padding: 14,
-              borderRadius: 12,
+              borderRadius: 16,
               borderWidth: 1,
               borderStyle: "dashed",
-              borderColor: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)",
+              borderColor: isDark ? "rgba(212,175,55,0.2)" : "rgba(212,175,55,0.3)",
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "center",
@@ -812,37 +817,50 @@ export default function ExclusionsScreen() {
           paddingBottom: 32,
           backgroundColor: isDark ? "rgba(16, 34, 23, 0.9)" : "rgba(246, 248, 247, 0.9)",
           borderTopWidth: 1,
-          borderTopColor: themeColors.cardBorder,
+          borderTopColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.12)",
         }}
       >
         <PressableScale
           onPress={handleSave}
           style={{
-            backgroundColor: themeColors.primary,
             borderRadius: 16,
-            paddingVertical: 16,
-            alignItems: "center",
-            justifyContent: "center",
-            shadowColor: themeColors.primary,
+            overflow: "hidden",
+            shadowColor: "#10b981",
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-            elevation: 4,
+            shadowOpacity: 0.4,
+            shadowRadius: 20,
+            elevation: 8,
           }}
           accessibilityRole="button"
           accessibilityLabel={t.exclusions.savePreferences}
         >
-          <Text
+          <LinearGradient
+            colors={["#10b981", "#059669"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
             style={{
-              fontSize: 16,
-              fontWeight: "700",
-              color: "#102217",
+              paddingVertical: 16,
+              alignItems: "center",
+              justifyContent: "center",
+              flexDirection: "row",
+              gap: 8,
+              borderRadius: 16,
             }}
           >
-            {t.exclusions.savePreferences}
-          </Text>
+            <MaterialIcons name="check" size={20} color="#102217" />
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: "700",
+                color: "#102217",
+              }}
+            >
+              {t.exclusions.savePreferences}
+            </Text>
+          </LinearGradient>
         </PressableScale>
-      </Animated.View>
-    </SafeAreaView>
+        </Animated.View>
+      </SafeAreaView>
+    </View>
   );
 }

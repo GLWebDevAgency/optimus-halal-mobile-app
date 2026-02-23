@@ -97,12 +97,12 @@ export default function AuthWelcomeScreen() {
         {/* Welcome Text */}
         <Animated.View
           entering={FadeInDown.delay(200).duration(600)}
-          className="mb-8"
+          style={{ marginBottom: 32 }}
         >
-          <Text className="text-slate-900 dark:text-white text-2xl font-bold mb-2" accessibilityRole="header">
+          <Text style={{ color: colors.textPrimary, fontSize: 24, fontWeight: "800", letterSpacing: -0.5, marginBottom: 6 }} accessibilityRole="header">
             {t.auth.welcome.greeting}
           </Text>
-          <Text className="text-slate-500 dark:text-slate-400 text-base">
+          <Text style={{ color: colors.textSecondary, fontSize: 15, lineHeight: 22 }}>
             {authMode === "v2"
               ? t.auth.welcome.subtitleV2
               : t.auth.welcome.subtitleHybrid
@@ -122,38 +122,49 @@ export default function AuthWelcomeScreen() {
             accessibilityHint={t.auth.welcome.emailLoginDesc}
           >
             <View
-              className="bg-primary-500 rounded-2xl p-6 border-2 border-primary-600"
               style={{
-                shadowColor: colors.primary,
+                borderRadius: 16,
+                padding: 24,
+                borderWidth: 2,
+                backgroundColor: isDark ? "rgba(212,175,55,0.1)" : "rgba(212,175,55,0.06)",
+                borderColor: isDark ? "rgba(212,175,55,0.3)" : "rgba(212,175,55,0.25)",
+                shadowColor: "#d4af37",
                 shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.3,
+                shadowOpacity: 0.25,
                 shadowRadius: 16,
                 elevation: 8,
               }}
             >
-              <View className="flex-row items-center justify-between mb-3">
-                <View className="flex-row items-center">
-                  <View className="w-10 h-10 rounded-full bg-white/20 items-center justify-center mr-3">
-                    <MaterialIcons name="mail-outline" size={24} color="white" />
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <View style={{
+                    width: 40, height: 40, borderRadius: 20,
+                    backgroundColor: "rgba(212,175,55,0.2)",
+                    alignItems: "center", justifyContent: "center", marginRight: 12,
+                  }}>
+                    <MaterialIcons name="mail-outline" size={24} color="#d4af37" />
                   </View>
-                  <Text className="text-white text-lg font-bold">
+                  <Text style={{ color: colors.textPrimary, fontSize: 18, fontWeight: "700" }}>
                     {t.auth.welcome.emailLogin}
                   </Text>
                 </View>
                 {authMode === "hybrid" && (
-                  <View className="bg-white/20 px-2 py-1 rounded-full">
-                    <Text className="text-white text-xs font-semibold">
+                  <View style={{
+                    backgroundColor: "rgba(212,175,55,0.2)",
+                    paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12,
+                  }}>
+                    <Text style={{ color: "#d4af37", fontSize: 12, fontWeight: "600" }}>
                       {t.auth.welcome.recommended}
                     </Text>
                   </View>
                 )}
               </View>
-              <Text className="text-white/90 text-sm leading-relaxed">
+              <Text style={{ color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.6)", fontSize: 14, lineHeight: 20 }}>
                 {t.auth.welcome.emailLoginDesc}
               </Text>
-              <View className="flex-row items-center mt-3">
-                <MaterialIcons name="check-circle" size={16} color="white" />
-                <Text className="text-white/90 text-xs ml-2">
+              <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}>
+                <MaterialIcons name="check-circle" size={16} color="#d4af37" />
+                <Text style={{ color: isDark ? "rgba(212,175,55,0.8)" : "rgba(146,112,12,0.9)", fontSize: 12, marginLeft: 8 }}>
                   {t.auth.welcome.noPasswordNeeded}
                 </Text>
               </View>
@@ -166,11 +177,18 @@ export default function AuthWelcomeScreen() {
           <>
             <Animated.View
               entering={FadeIn.delay(400).duration(400)}
-              className="relative py-4"
+              style={{ paddingVertical: 16, position: "relative" }}
             >
-              <View className="absolute inset-x-0 top-1/2 h-px bg-slate-200 dark:bg-slate-800" />
-              <View className="items-center">
-                <Text className="bg-white dark:bg-background-dark px-4 text-sm text-slate-500">
+              <View style={{
+                position: "absolute", left: 0, right: 0, top: "50%",
+                height: 1, backgroundColor: isDark ? "rgba(212,175,55,0.12)" : "rgba(212,175,55,0.15)",
+              }} />
+              <View style={{ alignItems: "center" }}>
+                <Text style={{
+                  backgroundColor: colors.background,
+                  paddingHorizontal: 16, fontSize: 13, fontWeight: "600",
+                  color: isDark ? "rgba(212,175,55,0.5)" : "rgba(146,112,12,0.5)",
+                }}>
                   {t.common.or}
                 </Text>
               </View>
@@ -183,27 +201,32 @@ export default function AuthWelcomeScreen() {
                 accessibilityLabel={t.auth.welcome.classicLogin}
                 accessibilityHint={t.auth.welcome.classicLoginDesc}
               >
-                <View className="bg-white dark:bg-surface-dark rounded-2xl p-5 border border-slate-200 dark:border-slate-700">
-                  <View className="flex-row items-center">
-                    <View className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 items-center justify-center mr-3">
-                      <MaterialIcons
-                        name="lock-outline"
-                        size={24}
-                        color={isDark ? "#94a3b8" : "#64748b"}
-                      />
+                <View style={{
+                  borderRadius: 16, padding: 20,
+                  backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#ffffff",
+                  borderWidth: 1,
+                  borderColor: isDark ? "rgba(212,175,55,0.12)" : "rgba(212,175,55,0.1)",
+                }}>
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <View style={{
+                      width: 40, height: 40, borderRadius: 20,
+                      backgroundColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.06)",
+                      alignItems: "center", justifyContent: "center", marginRight: 12,
+                    }}>
+                      <MaterialIcons name="lock-outline" size={24} color="#d4af37" />
                     </View>
-                    <View className="flex-1">
-                      <Text className="text-slate-900 dark:text-white font-semibold">
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: colors.textPrimary, fontWeight: "600", fontSize: 15 }}>
                         {t.auth.welcome.classicLogin}
                       </Text>
-                      <Text className="text-slate-500 dark:text-slate-400 text-sm">
+                      <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 2 }}>
                         {t.auth.welcome.classicLoginDesc}
                       </Text>
                     </View>
                     <MaterialIcons
                       name="chevron-right"
                       size={24}
-                      color={isDark ? "#64748b" : "#94a3b8"}
+                      color={isDark ? "rgba(212,175,55,0.4)" : "rgba(212,175,55,0.5)"}
                     />
                   </View>
                 </View>
@@ -215,30 +238,36 @@ export default function AuthWelcomeScreen() {
         {/* Benefits */}
         <Animated.View
           entering={FadeIn.delay(authMode === "hybrid" ? 600 : 400).duration(400)}
-          className="mt-12 bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6"
+          style={{
+            marginTop: 48,
+            borderRadius: 16, padding: 24,
+            backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(212,175,55,0.03)",
+            borderWidth: 1,
+            borderColor: isDark ? "rgba(212,175,55,0.1)" : "rgba(212,175,55,0.08)",
+          }}
         >
-          <Text className="text-slate-900 dark:text-white font-semibold mb-4" accessibilityRole="header">
+          <Text style={{ color: colors.textPrimary, fontWeight: "700", fontSize: 15, marginBottom: 16 }} accessibilityRole="header">
             {t.auth.welcome.whySignUp}
           </Text>
-          
-          <View className="space-y-3">
-            <View className="flex-row items-start">
-              <MaterialIcons name="qr-code-scanner" size={20} color={colors.primary} />
-              <Text className="text-slate-600 dark:text-slate-400 text-sm ml-3 flex-1">
+
+          <View style={{ gap: 14 }}>
+            <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+              <MaterialIcons name="qr-code-scanner" size={20} color="#d4af37" />
+              <Text style={{ color: colors.textSecondary, fontSize: 13, marginLeft: 12, flex: 1, lineHeight: 19 }}>
                 {t.auth.welcome.benefit1}
               </Text>
             </View>
-            
-            <View className="flex-row items-start">
-              <MaterialIcons name="location-on" size={20} color={colors.primary} />
-              <Text className="text-slate-600 dark:text-slate-400 text-sm ml-3 flex-1">
+
+            <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+              <MaterialIcons name="location-on" size={20} color="#d4af37" />
+              <Text style={{ color: colors.textSecondary, fontSize: 13, marginLeft: 12, flex: 1, lineHeight: 19 }}>
                 {t.auth.welcome.benefit2}
               </Text>
             </View>
-            
-            <View className="flex-row items-start">
-              <MaterialIcons name="notifications-active" size={20} color={colors.primary} />
-              <Text className="text-slate-600 dark:text-slate-400 text-sm ml-3 flex-1">
+
+            <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+              <MaterialIcons name="notifications-active" size={20} color="#d4af37" />
+              <Text style={{ color: colors.textSecondary, fontSize: 13, marginLeft: 12, flex: 1, lineHeight: 19 }}>
                 {t.auth.welcome.benefit3}
               </Text>
             </View>
@@ -248,12 +277,12 @@ export default function AuthWelcomeScreen() {
         {/* Footer */}
         <Animated.View
           entering={FadeIn.delay(authMode === "hybrid" ? 700 : 500).duration(400)}
-          className="items-center mt-8"
+          style={{ alignItems: "center", marginTop: 32 }}
         >
-          <Text className="text-xs text-slate-500 dark:text-slate-400 text-center">
+          <Text style={{ fontSize: 12, color: colors.textMuted, textAlign: "center", lineHeight: 18 }}>
             {t.common.signUpWith}{"\n"}
-            <Text className="underline">{t.auth.signup.termsLink}</Text> {t.common.and}{" "}
-            <Text className="underline">{t.auth.signup.privacyLink}</Text>
+            <Text style={{ textDecorationLine: "underline" }}>{t.auth.signup.termsLink}</Text> {t.common.and}{" "}
+            <Text style={{ textDecorationLine: "underline" }}>{t.auth.signup.privacyLink}</Text>
           </Text>
         </Animated.View>
       </ScrollView>

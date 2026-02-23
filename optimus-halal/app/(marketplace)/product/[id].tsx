@@ -20,6 +20,7 @@ import {
   ScrollView,
   Dimensions,
 } from "react-native";
+import { PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
@@ -190,12 +191,13 @@ export default function ProductDetailScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background-light dark:bg-background-dark">
+    <View className="flex-1">
+      <PremiumBackground />
       {/* Header */}
       <Animated.View
         entering={FadeIn.duration(300)}
-        className="absolute top-0 left-0 right-0 z-50 flex-row items-center justify-between bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md p-4"
-        style={{ paddingTop: insets.top + 8 }}
+        className="absolute top-0 left-0 right-0 z-50 flex-row items-center justify-between backdrop-blur-md p-4"
+        style={{ paddingTop: insets.top + 8, backgroundColor: isDark ? "rgba(12,12,12,0.92)" : "rgba(243,241,237,0.92)" }}
       >
         <Pressable
           onPress={handleBack}
@@ -497,8 +499,8 @@ export default function ProductDetailScreen() {
       {/* Fixed Bottom CTA */}
       <Animated.View
         entering={FadeInUp.delay(800).duration(400)}
-        className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-4"
-        style={{ paddingBottom: insets.bottom + 8, paddingTop: 12 }}
+        className="absolute bottom-0 left-0 right-0 border-t border-slate-200 dark:border-slate-800 px-4"
+        style={{ paddingBottom: insets.bottom + 8, paddingTop: 12, backgroundColor: isDark ? "rgba(12,12,12,0.92)" : "rgba(243,241,237,0.92)" }}
       >
         <View className="flex-row items-center gap-4">
           <View className="flex-1">

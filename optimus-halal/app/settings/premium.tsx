@@ -1,5 +1,5 @@
 /**
- * Premium Paywall Screen — Optimus+
+ * Premium Paywall Screen — Naqiy+
  *
  * Full-screen paywall with hero, feature list, plan cards,
  * CTA, restore purchases, and legal notice.
@@ -18,14 +18,19 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
-import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInDown, ZoomIn } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
+import { Image } from "expo-image";
 import { PressableScale } from "@/components/ui/PressableScale";
+import { PremiumBackground } from "@/components/ui";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useHaptics } from "@/hooks/useHaptics";
 import { usePremium } from "@/hooks/usePremium";
 import { useFeatureFlagsStore } from "@/store";
 import { trackEvent } from "@/lib/analytics";
+
+const GOLD = "#d4af37";
 
 type PlanId = "monthly" | "annual" | "lifetime";
 
@@ -90,54 +95,65 @@ export default function PremiumPaywallScreen() {
   // If payments not enabled, show coming soon
   if (!flags.paymentsEnabled) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-        <View style={{ padding: 16, flexDirection: "row", alignItems: "center" }}>
-          <Pressable
-            onPress={handleClose}
-            hitSlop={16}
-            accessibilityRole="button"
-            accessibilityLabel={t.common.close}
-          >
-            <MaterialIcons name="close" size={24} color={colors.textPrimary} />
-          </Pressable>
-        </View>
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 32 }}>
-          <MaterialIcons name="workspace-premium" size={64} color={colors.primary} />
-          <Text style={{ color: colors.textPrimary, fontSize: 24, fontWeight: "800", marginTop: 16, textAlign: "center" }}>
-            Optimus+
-          </Text>
-          <Text style={{ color: colors.textSecondary, fontSize: 15, textAlign: "center", marginTop: 8 }}>
-            {t.common.comingSoon}
-          </Text>
-        </View>
-      </SafeAreaView>
+      <View style={{ flex: 1 }}>
+        <PremiumBackground />
+        <SafeAreaView style={{ flex: 1 }}>
+          <View style={{ padding: 16, flexDirection: "row", alignItems: "center" }}>
+            <Pressable
+              onPress={handleClose}
+              hitSlop={16}
+              accessibilityRole="button"
+              accessibilityLabel={t.common.close}
+            >
+              <MaterialIcons name="close" size={24} color={colors.textPrimary} />
+            </Pressable>
+          </View>
+          <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 32 }}>
+            <Image
+              source={require("@assets/images/logo_naqiy.webp")}
+              style={{ width: 64, height: 64 }}
+              contentFit="contain"
+              cachePolicy="memory-disk"
+            />
+            <Text style={{ color: colors.textPrimary, fontSize: 24, fontWeight: "800", marginTop: 16, textAlign: "center" }}>
+              Naqiy+
+            </Text>
+            <Text style={{ color: colors.textSecondary, fontSize: 15, textAlign: "center", marginTop: 8 }}>
+              {t.common.comingSoon}
+            </Text>
+          </View>
+        </SafeAreaView>
+      </View>
     );
   }
 
   // If already premium, show status
   if (isPremium) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-        <View style={{ padding: 16, flexDirection: "row", alignItems: "center" }}>
-          <Pressable
-            onPress={handleClose}
-            hitSlop={16}
-            accessibilityRole="button"
-            accessibilityLabel={t.common.close}
-          >
-            <MaterialIcons name="close" size={24} color={colors.textPrimary} />
-          </Pressable>
-        </View>
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 32 }}>
-          <MaterialIcons name="verified" size={64} color={colors.primary} />
-          <Text style={{ color: colors.textPrimary, fontSize: 24, fontWeight: "800", marginTop: 16 }}>
-            {t.premium.alreadyPremium}
-          </Text>
-          <Text style={{ color: colors.textSecondary, fontSize: 15, textAlign: "center", marginTop: 8 }}>
-            {t.premium.enjoyFeatures}
-          </Text>
-        </View>
-      </SafeAreaView>
+      <View style={{ flex: 1 }}>
+        <PremiumBackground />
+        <SafeAreaView style={{ flex: 1 }}>
+          <View style={{ padding: 16, flexDirection: "row", alignItems: "center" }}>
+            <Pressable
+              onPress={handleClose}
+              hitSlop={16}
+              accessibilityRole="button"
+              accessibilityLabel={t.common.close}
+            >
+              <MaterialIcons name="close" size={24} color={colors.textPrimary} />
+            </Pressable>
+          </View>
+          <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 32 }}>
+            <MaterialIcons name="verified" size={64} color={GOLD} />
+            <Text style={{ color: colors.textPrimary, fontSize: 24, fontWeight: "800", marginTop: 16 }}>
+              {t.premium.alreadyPremium}
+            </Text>
+            <Text style={{ color: colors.textSecondary, fontSize: 15, textAlign: "center", marginTop: 8 }}>
+              {t.premium.enjoyFeatures}
+            </Text>
+          </View>
+        </SafeAreaView>
+      </View>
     );
   }
 
@@ -145,17 +161,19 @@ export default function PremiumPaywallScreen() {
     impact();
     trackEvent("premium_purchase_started", { product_id: selectedPlan });
     // TODO: Replace with actual RevenueCat purchase flow
-    Alert.alert("Optimus+", t.premium.purchaseComingSoon);
+    Alert.alert("Naqiy+", t.premium.purchaseComingSoon);
   };
 
   const handleRestore = () => {
     impact();
-    Alert.alert("Optimus+", t.premium.restoreComingSoon);
+    Alert.alert("Naqiy+", t.premium.restoreComingSoon);
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Close button */}
+    <View style={{ flex: 1 }}>
+      <PremiumBackground />
+      <SafeAreaView style={{ flex: 1 }}>
+        {/* Close button */}
       <View style={{ padding: 16, flexDirection: "row", alignItems: "center" }}>
         <Pressable
           onPress={handleClose}
@@ -170,9 +188,14 @@ export default function PremiumPaywallScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         {/* Hero */}
         <Animated.View entering={FadeIn.duration(400)} style={{ alignItems: "center", paddingVertical: 24 }}>
-          <MaterialIcons name="workspace-premium" size={56} color={colors.primary} />
+          <Image
+            source={require("@assets/images/logo_naqiy.webp")}
+            style={{ width: 56, height: 56 }}
+            contentFit="contain"
+            cachePolicy="memory-disk"
+          />
           <Text style={{ color: colors.textPrimary, fontSize: 28, fontWeight: "900", marginTop: 12 }}>
-            Optimus+
+            Naqiy+
           </Text>
           <Text style={{ color: colors.textSecondary, fontSize: 15, textAlign: "center", marginTop: 6, paddingHorizontal: 32 }}>
             {t.premium.subtitle}
@@ -188,17 +211,17 @@ export default function PremiumPaywallScreen() {
                   width: 36,
                   height: 36,
                   borderRadius: 10,
-                  backgroundColor: isDark ? "rgba(19,236,106,0.1)" : "rgba(19,236,106,0.08)",
+                  backgroundColor: isDark ? "rgba(212,175,55,0.1)" : "rgba(212,175,55,0.08)",
                   alignItems: "center",
                   justifyContent: "center",
                 }}
               >
-                <MaterialIcons name={feature.icon} size={20} color={colors.primary} />
+                <MaterialIcons name={feature.icon} size={20} color={GOLD} />
               </View>
               <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: "500", flex: 1 }}>
                 {feature.label}
               </Text>
-              <MaterialIcons name="check-circle" size={20} color={colors.primary} />
+              <MaterialIcons name="check-circle" size={20} color={GOLD} />
             </View>
           ))}
         </Animated.View>
@@ -222,12 +245,19 @@ export default function PremiumPaywallScreen() {
                     flexDirection: "row",
                     alignItems: "center",
                     padding: 16,
-                    borderRadius: 14,
+                    borderRadius: 16,
                     borderWidth: 2,
-                    borderColor: isSelected ? colors.primary : isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
+                    borderColor: isSelected ? GOLD : isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
                     backgroundColor: isSelected
-                      ? isDark ? "rgba(19,236,106,0.08)" : "rgba(19,236,106,0.04)"
-                      : "transparent",
+                      ? isDark ? "rgba(212,175,55,0.06)" : "rgba(212,175,55,0.04)"
+                      : isDark ? "rgba(255,255,255,0.03)" : "transparent",
+                    ...(isSelected && {
+                      shadowColor: GOLD,
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 12,
+                      elevation: 4,
+                    }),
                   }}
                 >
                   <View style={{ flex: 1 }}>
@@ -236,8 +266,8 @@ export default function PremiumPaywallScreen() {
                         {plan.price}
                       </Text>
                       {plan.badge && (
-                        <View style={{ backgroundColor: colors.primary, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
-                          <Text style={{ color: "#0d1b13", fontSize: 11, fontWeight: "800" }}>
+                        <View style={{ backgroundColor: "rgba(212,175,55,0.15)", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
+                          <Text style={{ color: GOLD, fontSize: 11, fontWeight: "800" }}>
                             {plan.badge}
                           </Text>
                         </View>
@@ -248,11 +278,13 @@ export default function PremiumPaywallScreen() {
                       {plan.savings ? ` \u00b7 ${plan.savings}` : ""}
                     </Text>
                   </View>
-                  <MaterialIcons
-                    name={isSelected ? "radio-button-checked" : "radio-button-unchecked"}
-                    size={24}
-                    color={isSelected ? colors.primary : colors.textSecondary}
-                  />
+                  {isSelected ? (
+                    <Animated.View entering={ZoomIn.springify()}>
+                      <MaterialIcons name="check-circle" size={24} color={GOLD} />
+                    </Animated.View>
+                  ) : (
+                    <MaterialIcons name="radio-button-unchecked" size={24} color={colors.textSecondary} />
+                  )}
                 </View>
               </PressableScale>
             );
@@ -268,15 +300,32 @@ export default function PremiumPaywallScreen() {
           >
             <View
               style={{
-                backgroundColor: colors.primary,
-                paddingVertical: 16,
-                borderRadius: 14,
-                alignItems: "center",
+                borderRadius: 16,
+                overflow: "hidden",
+                shadowColor: "#10b981",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.4,
+                shadowRadius: 20,
+                elevation: 8,
               }}
             >
-              <Text style={{ color: "#0d1b13", fontSize: 17, fontWeight: "800" }}>
-                {t.premium.subscribe}
-              </Text>
+              <LinearGradient
+                colors={["#10b981", "#059669"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  paddingVertical: 16,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexDirection: "row",
+                  gap: 8,
+                  borderRadius: 16,
+                }}
+              >
+                <Text style={{ color: "#ffffff", fontSize: 17, fontWeight: "800" }}>
+                  {t.premium.subscribe}
+                </Text>
+              </LinearGradient>
             </View>
           </PressableScale>
         </Animated.View>
@@ -293,8 +342,9 @@ export default function PremiumPaywallScreen() {
           <Text style={{ color: colors.textSecondary, fontSize: 11, textAlign: "center", lineHeight: 16, opacity: 0.7 }}>
             {t.premium.legal}
           </Text>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }

@@ -29,6 +29,7 @@ import Animated, {
   FadeInRight,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
+import { PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 
 import { useLocalAuthStore, useLocalCartStore } from "@/store";
@@ -278,12 +279,13 @@ export default function MarketplaceCatalogScreen() {
   }, []);
 
   return (
-    <View className="flex-1 bg-background-light dark:bg-background-dark">
+    <View className="flex-1">
+      <PremiumBackground />
       {/* Sticky Header */}
       <Animated.View
         entering={FadeIn.duration(400)}
-        className="bg-background-light/95 dark:bg-background-dark/95 border-b border-slate-200/50 dark:border-slate-800"
-        style={{ paddingTop: insets.top }}
+        className="border-b border-slate-200/50 dark:border-slate-800"
+        style={{ paddingTop: insets.top, backgroundColor: isDark ? "rgba(12,12,12,0.92)" : "rgba(243,241,237,0.92)" }}
       >
         {/* Top Row */}
         <View className="flex-row items-center justify-between px-4 py-3">

@@ -1,10 +1,11 @@
 /**
- * Marketplace Coming Soon Screen
- * 
- * Page d'attente pour le marketplace avec:
- * - Hero visual avec badge certification
- * - Formulaire d'inscription waitlist
- * - Social proof avec avatars
+ * Marketplace Coming Soon Screen — Premium Naqiy Edition
+ *
+ * Page d'attente pour le Naqiy Marketplace avec:
+ * - Brand header: Logo + "Naqiy Marketplace"
+ * - Hero card gold-tinted avec marketplace icon
+ * - Waitlist CTA avec gold gradient
+ * - Social proof avatars
  */
 
 import React, { useState, useCallback } from "react";
@@ -12,12 +13,13 @@ import {
   View,
   Text,
   TextInput,
-  Pressable,
   ScrollView,
   Alert,
   KeyboardAvoidingView,
   Platform,
+  StyleSheet,
 } from "react-native";
+import { PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -30,6 +32,10 @@ import Animated, {
   FadeInUp,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
+import { brand, glass } from "@/theme/colors";
+
+const logoSource = require("@assets/images/logo_naqiy.webp");
+const GOLD = "#d4af37";
 
 const WAITLIST_AVATARS = [
   "https://lh3.googleusercontent.com/aida-public/AB6AXuA4ovN9jYOXt22g2xyrUQerj1gvBMDUkGo-XFHAnonmyn_aDXxmVJoVnINp0eOLrzYsyJiOFxFHAm5DB3xxovgGbJ4r51BrbKest7aA5RSAWaf34JSbNPU2UD3HrKX0b2sscTejq3gY2z0A1xMikHMXEr389sXO6DD9_XQnRCgt7lEG0mYipI2pwdXjqhcIf8TO4JQQOj0w_c0GxyO8ezWjWcwZaKY84RCg0Q6NzSUfkdU4KmS_N4JMlFR8c-tri67J4nQwAizW_vix",
@@ -40,15 +46,10 @@ const WAITLIST_AVATARS = [
 export default function MarketplaceComingSoonScreen() {
   const insets = useSafeAreaInsets();
   const { isDark, colors } = useTheme();
-  const { impact, notification } = useHaptics();
+  const { notification } = useHaptics();
 
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleBack = useCallback(async () => {
-    impact();
-    router.back();
-  }, []);
 
   const handleSubmit = useCallback(async () => {
     if (!email.trim()) {
@@ -56,7 +57,6 @@ export default function MarketplaceComingSoonScreen() {
       return;
     }
 
-    // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Alert.alert("Erreur", "Veuillez entrer une adresse email valide");
@@ -66,219 +66,346 @@ export default function MarketplaceComingSoonScreen() {
     notification();
     setIsSubmitting(true);
 
-    // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
       Alert.alert(
-        "Inscription réussie! 🎉",
+        "Inscription réussie!",
         "Vous serez notifié dès le lancement du marketplace.",
         [{ text: "Super!", onPress: () => router.back() }]
       );
     }, 1500);
-  }, [email]);
+  }, [email, notification]);
 
   return (
-    <View
-      className="flex-1 bg-background-light dark:bg-background-dark"
-      style={{ paddingTop: insets.top }}
-    >
+    <View style={{ flex: 1, paddingTop: insets.top }}>
+      <PremiumBackground />
+
       {/* Header */}
       <Animated.View
         entering={FadeIn.duration(400)}
-        className="flex-row items-center justify-between px-4 py-4"
+        style={styles.header}
       >
-        <Pressable
-          onPress={handleBack}
-          hitSlop={8}
-        >
-          <View className="h-10 w-10 items-center justify-center rounded-full">
-            <MaterialIcons
-              name="arrow-back-ios"
-              size={22}
-              color={isDark ? "#ffffff" : "#1e293b"}
-            />
-          </View>
-        </Pressable>
-
-        {/* Logo */}
-        <View className="flex-row items-center gap-2">
-          <View className="h-6 w-6 rounded bg-primary items-center justify-center">
-            <MaterialIcons name="verified" size={16} color="#102216" />
-          </View>
-          <Text className="font-bold text-lg text-slate-800 dark:text-white">
-            Halalify
+        <View style={styles.headerBrand}>
+          <PressableScale
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="Retour"
+          >
+            <View
+              style={[
+                styles.backButton,
+                {
+                  backgroundColor: isDark
+                    ? "rgba(255,255,255,0.06)"
+                    : "rgba(255,255,255,0.7)",
+                  borderColor: isDark
+                    ? "rgba(207,165,51,0.15)"
+                    : "rgba(212,175,55,0.12)",
+                },
+              ]}
+            >
+              <MaterialIcons
+                name="arrow-back-ios-new"
+                size={16}
+                color={isDark ? GOLD : colors.textPrimary}
+              />
+            </View>
+          </PressableScale>
+          <Image
+            source={logoSource}
+            style={{ width: 26, height: 26 }}
+            contentFit="contain"
+            cachePolicy="memory-disk"
+          />
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
+            Naqiy{" "}
+            <Text style={{ fontWeight: "400", color: colors.textSecondary }}>
+              Marketplace
+            </Text>
           </Text>
         </View>
 
-        <View className="w-10" />
+        {/* Notification bell */}
+        <PressableScale
+          onPress={() => router.navigate("/(tabs)/alerts")}
+          accessibilityRole="button"
+          accessibilityLabel="Notifications"
+        >
+          <View
+            style={[
+              styles.bellButton,
+              {
+                backgroundColor: isDark
+                  ? "rgba(255,255,255,0.06)"
+                  : "rgba(255,255,255,0.7)",
+                borderColor: isDark
+                  ? "rgba(207,165,51,0.15)"
+                  : "rgba(212,175,55,0.12)",
+              },
+            ]}
+          >
+            <MaterialIcons
+              name="notifications-none"
+              size={20}
+              color={isDark ? GOLD : colors.textPrimary}
+            />
+          </View>
+        </PressableScale>
       </Animated.View>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1"
+        style={{ flex: 1 }}
       >
         <ScrollView
-          className="flex-1"
           contentContainerStyle={{
             flexGrow: 1,
-            justifyContent: "center",
             paddingHorizontal: 24,
-            paddingBottom: insets.bottom + 16,
+            paddingBottom: insets.bottom + 24,
           }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Hero Visual */}
+          {/* Hero Card */}
           <Animated.View
-            entering={FadeInDown.delay(200).duration(600)}
-            className="relative w-full aspect-square max-w-[320px] self-center mb-8"
+            entering={FadeInDown.delay(150).duration(600)}
+            style={{ marginTop: 16 }}
           >
-            {/* Decorative blur */}
-            <View className="absolute inset-0 bg-primary/20 rounded-full blur-3xl opacity-60" />
-
-            {/* Main Image Card */}
-            <View className="relative w-full h-full bg-white dark:bg-slate-800 rounded-3xl shadow-2xl overflow-hidden border border-white/50 dark:border-white/5">
-              <Image
-                source={{
-                  uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuB-zk3K5A99Er3WNEbx4SxaPom-9DdbJj0G-kV6nyGVVBRr_0rxOr5JrFEPqnElHJlQgEFbgcEthfz0AEZNpU7rfVE_naDRaiwqsq3kl_0hlNkm9T1KsgJ0Df0-E3YU7c3bpBiWj5AYVCfug5KI9QHdAqChHavZ-dVjMwOs9sT36_Yr4Zo1Fisw0B02JdXSXFMIy2n7A0X2RCr6r2ETHvu1LBvOw9dm882-gQ6wf2-tLzpwozz-yMHb1v-e3f_hR8DrJyhQUl_kwf-k",
-                }}
-                className="w-full h-full"
-                contentFit="cover"
-                transition={200}
-              />
-
-              {/* Overlay gradient */}
+            <View
+              style={[
+                styles.heroCard,
+                {
+                  backgroundColor: isDark ? glass.dark.bg : glass.light.bg,
+                  borderColor: isDark
+                    ? "rgba(207,165,51,0.18)"
+                    : "rgba(212,175,55,0.12)",
+                },
+              ]}
+            >
+              {/* Directional gold halo */}
               <LinearGradient
-                colors={["transparent", "rgba(0,0,0,0.6)"]}
-                className="absolute inset-0"
+                colors={
+                  isDark
+                    ? ["rgba(207,165,51,0.15)", "transparent"]
+                    : ["rgba(19,236,106,0.08)", "transparent"]
+                }
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[StyleSheet.absoluteFill, { borderRadius: 24 }]}
+                pointerEvents="none"
               />
 
-              {/* Floating Badge */}
-              <View className="absolute bottom-6 left-6 right-6 p-4 bg-white/95 dark:bg-slate-900/95 rounded-xl border border-amber-500/30 flex-row items-center gap-3">
-                <View className="h-10 w-10 rounded-full bg-primary/10 items-center justify-center">
-                  <MaterialIcons name="workspace-premium" size={24} color="#059669" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-0.5">
-                    Certifié
-                  </Text>
-                  <Text className="text-sm font-medium text-slate-800 dark:text-white leading-tight">
-                    Traçabilité 100% Transparente
-                  </Text>
-                </View>
+              {/* Marketplace icon */}
+              <View
+                style={[
+                  styles.heroIconWrap,
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(212,175,55,0.12)"
+                      : "rgba(212,175,55,0.08)",
+                  },
+                ]}
+              >
+                <MaterialIcons name="storefront" size={40} color={GOLD} />
+              </View>
+
+              {/* Content */}
+              <Text
+                style={[
+                  styles.heroTitle,
+                  { color: colors.textPrimary },
+                ]}
+              >
+                Le Marketplace arrive bientôt !
+              </Text>
+              <Text
+                style={[
+                  styles.heroSubtitle,
+                  { color: colors.textSecondary },
+                ]}
+              >
+                Découvrez bientôt des produits halal certifiés, éthiques et de qualité premium.
+              </Text>
+
+              {/* Features preview */}
+              <View style={styles.featuresRow}>
+                {[
+                  { icon: "verified" as const, label: "Certifié Halal" },
+                  { icon: "local-shipping" as const, label: "Livraison" },
+                  { icon: "shield" as const, label: "Traçabilité" },
+                ].map((item, i) => (
+                  <View key={i} style={styles.featureChip}>
+                    <MaterialIcons
+                      name={item.icon}
+                      size={14}
+                      color={isDark ? GOLD : brand.primary}
+                    />
+                    <Text
+                      style={[
+                        styles.featureChipText,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                  </View>
+                ))}
               </View>
             </View>
           </Animated.View>
 
-          {/* Typography Block */}
+          {/* Waitlist Section */}
           <Animated.View
-            entering={FadeInDown.delay(400).duration(600)}
-            className="items-center w-full mb-8"
+            entering={FadeInDown.delay(350).duration(600)}
+            style={{ marginTop: 28 }}
           >
-            {/* Coming Soon Badge */}
-            <View className="flex-row items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 mb-4">
-              <View className="w-2 h-2 rounded-full bg-amber-500" />
-              <Text className="text-xs font-semibold text-amber-600 dark:text-amber-500 uppercase tracking-wide">
-                Bientôt Disponible
-              </Text>
-            </View>
+            <Text
+              style={[styles.waitlistTitle, { color: colors.textPrimary }]}
+            >
 
-            <Text className="text-3xl font-bold text-slate-800 dark:text-white text-center leading-tight tracking-tight mb-3">
-              Shopping Éthique,{"\n"}Simplifié.
+              {"Rejoindre la liste d'attente"}
+            </Text>
+            <Text
+              style={[
+                styles.waitlistSubtitle,
+                { color: colors.textSecondary },
+              ]}
+            >
+              {"Soyez parmi les premiers à accéder au marketplace."}
             </Text>
 
-            <Text className="text-base text-slate-600 dark:text-slate-300 text-center leading-relaxed max-w-xs">
-              Nous créons un marketplace pour des produits halal certifiés et transparents. 
-              Inscrivez-vous pour un accès anticipé.
-            </Text>
-          </Animated.View>
-
-          {/* Email Form */}
-          <Animated.View
-            entering={FadeInUp.delay(600).duration(600)}
-            className="w-full gap-4"
-          >
             {/* Email Input */}
-            <View className="relative">
-              <View className="absolute inset-y-0 left-0 pl-3.5 justify-center">
+            <View style={{ marginTop: 16 }}>
+              <View
+                style={[
+                  styles.inputWrap,
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(255,255,255,0.03)"
+                      : "#ffffff",
+                    borderColor: isDark
+                      ? "rgba(212,175,55,0.15)"
+                      : "rgba(212,175,55,0.2)",
+                  },
+                ]}
+              >
                 <MaterialIcons
                   name="mail-outline"
                   size={20}
-                  color={isDark ? "#9ca3af" : "#9ca3af"}
+                  color={isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)"}
+                  style={{ marginRight: 12 }}
+                />
+                <TextInput
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="Votre adresse email"
+                  placeholderTextColor={
+                    isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.35)"
+                  }
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  style={[
+                    styles.input,
+                    { color: colors.textPrimary },
+                  ]}
                 />
               </View>
-              <TextInput
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Entrez votre adresse email"
-                placeholderTextColor="#9ca3af"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-                className="w-full pl-11 pr-4 py-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
-                style={{ fontSize: 16 }}
-              />
             </View>
 
-            {/* Submit Button */}
+            {/* CTA Button */}
             <PressableScale
               onPress={handleSubmit}
               disabled={isSubmitting}
-              style={{
-                shadowColor: colors.primary,
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
-                shadowRadius: 8,
-              }}
+              style={{ marginTop: 14 }}
+              accessibilityRole="button"
+              accessibilityLabel="Rejoindre la liste d'attente"
             >
               <View
-                className={`w-full bg-primary py-4 rounded-xl flex-row items-center justify-center gap-2 shadow-lg ${
-                  isSubmitting ? "opacity-70" : ""
-                }`}
+                style={[
+                  styles.ctaButton,
+                  isSubmitting && { opacity: 0.6 },
+                ]}
               >
-                <Text className="text-background-dark font-bold text-lg">
-                  {isSubmitting ? "Inscription..." : "Me Notifier"}
+                <LinearGradient
+                  colors={isDark ? ["#FDE08B", "#CFA533"] : [brand.primary, "#0ea64b"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[StyleSheet.absoluteFill, { borderRadius: 14 }]}
+                />
+                <MaterialIcons
+                  name="notifications-active"
+                  size={18}
+                  color={isDark ? "#1A1A1A" : "#ffffff"}
+                />
+                <Text
+                  style={[
+                    styles.ctaText,
+                    { color: isDark ? "#1A1A1A" : "#ffffff" },
+                  ]}
+                >
+                  {isSubmitting
+                    ? "Inscription..."
+                    : "Rejoindre la liste d'attente"}
                 </Text>
-                {!isSubmitting && (
-                  <MaterialIcons name="arrow-forward" size={20} color="#102216" />
-                )}
               </View>
             </PressableScale>
           </Animated.View>
 
           {/* Social Proof */}
           <Animated.View
-            entering={FadeInUp.delay(800).duration(600)}
-            className="mt-6 items-center gap-3"
+            entering={FadeInUp.delay(550).duration(600)}
+            style={styles.socialProof}
           >
-            {/* Avatar Stack */}
-            <View className="flex-row items-center">
+            <View style={styles.avatarStack}>
               {WAITLIST_AVATARS.map((uri, index) => (
                 <View
                   key={index}
-                  className="h-6 w-6 rounded-full border-2 border-white dark:border-background-dark overflow-hidden"
-                  style={{ marginLeft: index > 0 ? -8 : 0 }}
+                  style={[
+                    styles.avatarCircle,
+                    {
+                      marginLeft: index > 0 ? -10 : 0,
+                      borderColor: isDark ? "#0C0C0C" : "#f3f1ed",
+                    },
+                  ]}
                 >
                   <Image
                     source={{ uri }}
-                    className="w-full h-full"
+                    style={{ width: "100%", height: "100%", borderRadius: 14 }}
                     contentFit="cover"
                     transition={200}
                   />
                 </View>
               ))}
               <View
-                className="h-6 w-6 rounded-full border-2 border-white dark:border-background-dark bg-slate-100 dark:bg-slate-800 items-center justify-center"
-                style={{ marginLeft: -8 }}
+                style={[
+                  styles.avatarCircle,
+                  styles.avatarCount,
+                  {
+                    marginLeft: -10,
+                    borderColor: isDark ? "#0C0C0C" : "#f3f1ed",
+                    backgroundColor: isDark
+                      ? "rgba(212,175,55,0.12)"
+                      : "rgba(212,175,55,0.08)",
+                  },
+                ]}
               >
-                <Text className="text-[8px] font-bold text-slate-500 dark:text-slate-300">
+                <Text
+                  style={{
+                    fontSize: 9,
+                    fontWeight: "800",
+                    color: GOLD,
+                  }}
+                >
                   +2k
                 </Text>
               </View>
             </View>
 
-            <Text className="text-xs text-slate-400 dark:text-slate-500 font-medium text-center">
-              Rejoignez 2 000+ personnes en attente.{"\n"}Pas de spam, promis.
+            <Text
+              style={[styles.socialText, { color: colors.textMuted }]}
+            >
+              Rejoignez 2 000+ personnes en attente
             </Text>
           </Animated.View>
         </ScrollView>
@@ -286,3 +413,152 @@ export default function MarketplaceComingSoonScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  headerBrand: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    letterSpacing: -0.3,
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+  },
+  bellButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+  },
+
+  // Hero card
+  heroCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 28,
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  heroIconWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  heroTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    textAlign: "center",
+    letterSpacing: -0.3,
+    marginBottom: 8,
+  },
+  heroSubtitle: {
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 20,
+    maxWidth: 300,
+    marginBottom: 20,
+  },
+  featuresRow: {
+    flexDirection: "row",
+    gap: 8,
+    flexWrap: "wrap",
+    justifyContent: "center",
+  },
+  featureChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: "rgba(212,175,55,0.06)",
+  },
+  featureChipText: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+
+  // Waitlist
+  waitlistTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    letterSpacing: -0.2,
+  },
+  waitlistSubtitle: {
+    fontSize: 13,
+    marginTop: 4,
+  },
+  inputWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    height: 52,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+  },
+  input: {
+    flex: 1,
+    fontSize: 15,
+    height: "100%",
+  },
+  ctaButton: {
+    height: 52,
+    borderRadius: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    overflow: "hidden",
+  },
+  ctaText: {
+    fontSize: 15,
+    fontWeight: "700",
+  },
+
+  // Social proof
+  socialProof: {
+    alignItems: "center",
+    marginTop: 28,
+    gap: 10,
+  },
+  avatarStack: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  avatarCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2,
+    overflow: "hidden",
+  },
+  avatarCount: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  socialText: {
+    fontSize: 12,
+    fontWeight: "500",
+  },
+});

@@ -21,6 +21,7 @@ import {
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { useHaptics, useTheme, useTranslation } from "@/hooks";
 import { ImpactFeedbackStyle, NotificationFeedbackType } from "expo-haptics";
 import Animated, {
@@ -33,8 +34,11 @@ import Animated, {
   withSequence,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
+import { PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { brand } from "@/theme/colors";
+
+const logoSource = require("@assets/images/logo_naqiy.webp");
 
 export default function ForgotPasswordScreen() {
   const insets = useSafeAreaInsets();
@@ -110,34 +114,8 @@ export default function ForgotPasswordScreen() {
   }));
 
   return (
-    <View 
-      style={[
-        styles.container, 
-        { backgroundColor: isDark ? "#102217" : "#f6f8f7" }
-      ]}
-    >
-      {/* Background Gradient */}
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <LinearGradient
-          colors={isDark 
-            ? ["rgba(19, 236, 106, 0.05)", "transparent", "transparent"]
-            : ["rgba(19, 236, 106, 0.08)", "transparent", "transparent"]
-          }
-          style={styles.backgroundGradient}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 0.5 }}
-        />
-        {/* Bottom gradient fade */}
-        <LinearGradient
-          colors={isDark 
-            ? ["transparent", "rgba(16, 34, 23, 0.9)"]
-            : ["transparent", "rgba(246, 248, 247, 0.9)"]
-          }
-          style={styles.bottomGradient}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-        />
-      </View>
+    <View style={styles.container}>
+      <PremiumBackground />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -174,12 +152,23 @@ export default function ForgotPasswordScreen() {
             
             <View style={styles.headerSpacer} />
             
-            {/* Subtle brand icon */}
-            <View style={styles.headerIcon} accessible={false}>
-              <MaterialIcons
-                name="lock-reset"
-                size={28}
-                color={isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"}
+            {/* Brand logo */}
+            <View
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 12,
+                backgroundColor: colors.card,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              accessible={false}
+            >
+              <Image
+                source={logoSource}
+                style={{ width: 26, height: 26 }}
+                contentFit="contain"
+                cachePolicy="memory-disk"
               />
             </View>
           </Animated.View>
@@ -367,20 +356,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  backgroundGradient: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: "50%",
-  },
-  bottomGradient: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 256,
-  },
   keyboardView: {
     flex: 1,
   },
@@ -404,9 +379,6 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     flex: 1,
-  },
-  headerIcon: {
-    opacity: 0.5,
   },
   content: {
     flex: 1,

@@ -18,11 +18,13 @@ import {
   Clipboard,
 } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
+import { PremiumBackground } from "@/components/ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -32,6 +34,8 @@ import {
   useClaimReward,
   useMyRewards,
 } from "@/hooks/useLoyalty";
+
+const GOLD = "#d4af37";
 
 const LOCALE_MAP: Record<string, string> = { fr: "fr-FR", en: "en-US", ar: "ar-SA" };
 
@@ -98,8 +102,8 @@ const RewardCard = React.memo(function RewardCard({
       style={[
         styles.rewardCard,
         {
-          backgroundColor: colors.card,
-          borderColor: colors.borderLight,
+          backgroundColor: isDark ? "rgba(255,255,255,0.03)" : colors.card,
+          borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
           opacity: isOutOfStock ? 0.5 : 1,
         },
       ]}
@@ -219,18 +223,28 @@ const RewardCard = React.memo(function RewardCard({
             accessibilityLabel={`${t.rewards.claim} ${reward.nameFr ?? reward.name}`}
           >
             <View
-              style={[
-                styles.claimButton,
-                {
-                  backgroundColor: isDark ? "#22c55e" : "#16a34a",
-                },
-              ]}
+              style={{
+                borderRadius: 10,
+                overflow: "hidden",
+                shadowColor: "#10b981",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.4,
+                shadowRadius: 20,
+                elevation: 8,
+              }}
             >
-              {isClaiming ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <Text style={styles.claimButtonText}>{t.rewards.claim}</Text>
-              )}
+              <LinearGradient
+                colors={["#10b981", "#059669"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.claimButton}
+              >
+                {isClaiming ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Text style={styles.claimButtonText}>{t.rewards.claim}</Text>
+                )}
+              </LinearGradient>
             </View>
           </PressableScale>
         ) : (
@@ -286,8 +300,8 @@ const ClaimedRewardCard = React.memo(function ClaimedRewardCard({
       style={[
         styles.claimedCard,
         {
-          backgroundColor: colors.card,
-          borderColor: colors.borderLight,
+          backgroundColor: isDark ? "rgba(255,255,255,0.03)" : colors.card,
+          borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
         },
       ]}
     >
@@ -314,16 +328,14 @@ const ClaimedRewardCard = React.memo(function ClaimedRewardCard({
           style={[
             styles.claimedBadge,
             {
-              backgroundColor: isDark
-                ? "rgba(34,197,94,0.15)"
-                : "rgba(34,197,94,0.10)",
+              backgroundColor: "rgba(212,175,55,0.15)",
             },
           ]}
         >
           <Text
             style={[
               styles.claimedBadgeText,
-              { color: isDark ? "#4ade80" : "#15803d" },
+              { color: GOLD },
             ]}
           >
             {t.rewards.claimed}
@@ -497,39 +509,40 @@ export default function RewardsScreen() {
   // ── Loading ─────────────────────────────────────────
   if (isLoading) {
     return (
-      <SafeAreaView
-        style={[styles.container, { backgroundColor: colors.background }]}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <Pressable
-            onPress={() => router.back()}
-            style={[
-              styles.backButton,
-              {
-                backgroundColor: colors.card,
-                borderColor: colors.borderLight,
-              },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={t.common.back}
-          >
-            <MaterialIcons
-              name="arrow-back"
-              size={20}
-              color={colors.textPrimary}
-            />
-          </Pressable>
-          <Text
-            style={[styles.headerTitle, { color: colors.textPrimary }]}
-            accessibilityRole="header"
-          >
-            {t.rewards.title}
-          </Text>
-          <View style={styles.headerSpacer} />
-        </View>
-        <SkeletonLoader isDark={isDark} colors={colors} />
-      </SafeAreaView>
+      <View style={{ flex: 1 }}>
+        <PremiumBackground />
+        <SafeAreaView style={[styles.container]}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Pressable
+              onPress={() => router.back()}
+              style={[
+                styles.backButton,
+                {
+                  backgroundColor: colors.card,
+                  borderColor: colors.borderLight,
+                },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={t.common.back}
+            >
+              <MaterialIcons
+                name="arrow-back"
+                size={20}
+                color={colors.textPrimary}
+              />
+            </Pressable>
+            <Text
+              style={[styles.headerTitle, { color: colors.textPrimary }]}
+              accessibilityRole="header"
+            >
+              {t.rewards.title}
+            </Text>
+            <View style={styles.headerSpacer} />
+          </View>
+          <SkeletonLoader isDark={isDark} colors={colors} />
+        </SafeAreaView>
+      </View>
     );
   }
 
@@ -543,11 +556,11 @@ export default function RewardsScreen() {
           styles.balanceBanner,
           {
             backgroundColor: isDark
-              ? "rgba(34,197,94,0.08)"
-              : "rgba(34,197,94,0.05)",
+              ? "rgba(212,175,55,0.06)"
+              : "rgba(212,175,55,0.04)",
             borderColor: isDark
-              ? "rgba(34,197,94,0.20)"
-              : "rgba(34,197,94,0.15)",
+              ? "rgba(212,175,55,0.15)"
+              : "rgba(212,175,55,0.12)",
           },
         ]}
       >
@@ -557,12 +570,12 @@ export default function RewardsScreen() {
               <MaterialIcons
                 name="stars"
                 size={32}
-                color={isDark ? "#4ade80" : "#22c55e"}
+                color={GOLD}
               />
               <Text
                 style={[
                   styles.pointsNumber,
-                  { color: isDark ? "#4ade80" : "#15803d" },
+                  { color: GOLD },
                 ]}
               >
                 {userPoints.toLocaleString()}
@@ -577,23 +590,23 @@ export default function RewardsScreen() {
               styles.levelBadge,
               {
                 backgroundColor: isDark
-                  ? "rgba(34,197,94,0.20)"
-                  : "rgba(34,197,94,0.12)",
+                  ? "rgba(212,175,55,0.15)"
+                  : "rgba(212,175,55,0.1)",
                 borderColor: isDark
-                  ? "rgba(34,197,94,0.30)"
-                  : "rgba(34,197,94,0.20)",
+                  ? "rgba(212,175,55,0.25)"
+                  : "rgba(212,175,55,0.18)",
               },
             ]}
           >
             <MaterialIcons
               name="shield"
               size={16}
-              color={isDark ? "#4ade80" : "#22c55e"}
+              color={GOLD}
             />
             <Text
               style={[
                 styles.levelText,
-                { color: isDark ? "#4ade80" : "#15803d" },
+                { color: GOLD },
               ]}
             >
               {t.rewards.level.replace("{{level}}", String(userLevel))}
@@ -688,11 +701,11 @@ export default function RewardsScreen() {
   );
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
-    >
-      {/* Header */}
-      <Animated.View entering={FadeIn.duration(400)} style={styles.header}>
+    <View style={{ flex: 1 }}>
+      <PremiumBackground />
+      <SafeAreaView style={[styles.container]}>
+        {/* Header */}
+        <Animated.View entering={FadeIn.duration(400)} style={styles.header}>
         <Pressable
           onPress={() => router.back()}
           style={[
@@ -721,18 +734,19 @@ export default function RewardsScreen() {
         <View style={styles.headerSpacer} />
       </Animated.View>
 
-      {/* Main Content */}
-      <FlatList
-        data={typedRewardsList}
-        keyExtractor={rewardKeyExtractor}
-        renderItem={renderRewardCard}
-        ListHeaderComponent={ListHeader}
-        ListFooterComponent={ListFooter}
-        ListEmptyComponent={EmptyRewards}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
-    </SafeAreaView>
+        {/* Main Content */}
+        <FlatList
+          data={typedRewardsList}
+          keyExtractor={rewardKeyExtractor}
+          renderItem={renderRewardCard}
+          ListHeaderComponent={ListHeader}
+          ListFooterComponent={ListFooter}
+          ListEmptyComponent={EmptyRewards}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        />
+      </SafeAreaView>
+    </View>
   );
 }
 
@@ -842,7 +856,7 @@ const styles = StyleSheet.create({
   rewardCard: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 16,
+    borderRadius: 20,
     borderWidth: 1,
     padding: 16,
     marginBottom: 12,
@@ -939,7 +953,7 @@ const styles = StyleSheet.create({
 
   // Claimed Card
   claimedCard: {
-    borderRadius: 16,
+    borderRadius: 20,
     borderWidth: 1,
     padding: 16,
     marginBottom: 12,

@@ -20,6 +20,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useFavoritesList, useRemoveFavorite } from "@/hooks/useFavorites";
 import { PressableScale } from "@/components/ui/PressableScale";
+import { PremiumBackground } from "@/components/ui";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 
@@ -323,95 +324,103 @@ export default function FavoritesScreen() {
   // Loading state
   if (isLoading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-        <View style={{ paddingHorizontal: 20, paddingTop: 16, flexDirection: "row", alignItems: "center" }}>
-          <PressableScale
-            onPress={() => router.back()}
-            style={{
-              marginRight: 12,
-              height: 40,
-              width: 40,
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: 20,
-              backgroundColor: colors.card,
-              borderColor: colors.borderLight,
-              borderWidth: 1,
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={t.common.back}
-          >
-            <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
-          </PressableScale>
-          <Text style={{ fontSize: 24, fontWeight: "700", color: colors.textPrimary }}>
-            {t.favorites.title}
-          </Text>
-        </View>
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={{ color: colors.textSecondary, marginTop: 12 }}>
-            {t.favorites.loadingFavorites}
-          </Text>
-        </View>
-      </SafeAreaView>
+      <View style={{ flex: 1 }}>
+        <PremiumBackground />
+        <SafeAreaView style={{ flex: 1 }}>
+          <View style={{ paddingHorizontal: 20, paddingTop: 16, flexDirection: "row", alignItems: "center" }}>
+            <PressableScale
+              onPress={() => router.back()}
+              style={{
+                marginRight: 12,
+                height: 40,
+                width: 40,
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 20,
+                backgroundColor: colors.card,
+                borderColor: colors.borderLight,
+                borderWidth: 1,
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={t.common.back}
+            >
+              <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
+            </PressableScale>
+            <Text style={{ fontSize: 24, fontWeight: "700", color: colors.textPrimary }}>
+              {t.favorites.title}
+            </Text>
+          </View>
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={{ color: colors.textSecondary, marginTop: 12 }}>
+              {t.favorites.loadingFavorites}
+            </Text>
+          </View>
+        </SafeAreaView>
+      </View>
     );
   }
 
   // Error state
   if (isError) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-        <View style={{ paddingHorizontal: 20, paddingTop: 16, flexDirection: "row", alignItems: "center" }}>
-          <PressableScale
-            onPress={() => router.back()}
-            style={{
-              marginRight: 12,
-              height: 40,
-              width: 40,
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: 20,
-              backgroundColor: colors.card,
-              borderColor: colors.borderLight,
-              borderWidth: 1,
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={t.common.back}
-          >
-            <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
-          </PressableScale>
-          <Text style={{ fontSize: 24, fontWeight: "700", color: colors.textPrimary }}>
-            {t.favorites.title}
-          </Text>
-        </View>
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
-          <MaterialIcons name="cloud-off" size={64} color={colors.textMuted} />
-          <Text style={{ color: colors.textSecondary, fontSize: 16, marginTop: 16, textAlign: "center" }}>
-            {t.favorites.loadError}
-          </Text>
-          <PressableScale
-            onPress={() => refetch()}
-            style={{
-              marginTop: 20,
-              backgroundColor: colors.primary,
-              paddingHorizontal: 24,
-              paddingVertical: 12,
-              borderRadius: 12,
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={t.common.retry}
-          >
-            <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
-              {t.common.retry}
+      <View style={{ flex: 1 }}>
+        <PremiumBackground />
+        <SafeAreaView style={{ flex: 1 }}>
+          <View style={{ paddingHorizontal: 20, paddingTop: 16, flexDirection: "row", alignItems: "center" }}>
+            <PressableScale
+              onPress={() => router.back()}
+              style={{
+                marginRight: 12,
+                height: 40,
+                width: 40,
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 20,
+                backgroundColor: colors.card,
+                borderColor: colors.borderLight,
+                borderWidth: 1,
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={t.common.back}
+            >
+              <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
+            </PressableScale>
+            <Text style={{ fontSize: 24, fontWeight: "700", color: colors.textPrimary }}>
+              {t.favorites.title}
             </Text>
-          </PressableScale>
-        </View>
-      </SafeAreaView>
+          </View>
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
+            <MaterialIcons name="cloud-off" size={64} color={colors.textMuted} />
+            <Text style={{ color: colors.textSecondary, fontSize: 16, marginTop: 16, textAlign: "center" }}>
+              {t.favorites.loadError}
+            </Text>
+            <PressableScale
+              onPress={() => refetch()}
+              style={{
+                marginTop: 20,
+                backgroundColor: colors.primary,
+                paddingHorizontal: 24,
+                paddingVertical: 12,
+                borderRadius: 12,
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={t.common.retry}
+            >
+              <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
+                {t.common.retry}
+              </Text>
+            </PressableScale>
+          </View>
+        </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1 }}>
+    <PremiumBackground />
+    <SafeAreaView style={{ flex: 1 }}>
       {/* Header */}
       <Animated.View
         entering={FadeIn.duration(400)}
@@ -648,5 +657,6 @@ export default function FavoritesScreen() {
         />
       )}
     </SafeAreaView>
+    </View>
   );
 }

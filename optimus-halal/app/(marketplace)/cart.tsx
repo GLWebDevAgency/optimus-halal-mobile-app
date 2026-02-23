@@ -15,6 +15,7 @@ import {
   Pressable,
   ScrollView,
 } from "react-native";
+import { PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -263,12 +264,13 @@ export default function CartScreen() {
   const orderTotal = subtotal + tax + shipping;
 
   return (
-    <View className="flex-1 bg-background-light dark:bg-background-dark">
+    <View className="flex-1">
+      <PremiumBackground />
       {/* Header */}
       <Animated.View
         entering={FadeIn.duration(300)}
-        className="sticky top-0 z-50 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-slate-200/50 dark:border-white/5 px-4 py-3"
-        style={{ paddingTop: insets.top + 8 }}
+        className="sticky top-0 z-50 backdrop-blur-md border-b border-slate-200/50 dark:border-white/5 px-4 py-3"
+        style={{ paddingTop: insets.top + 8, backgroundColor: isDark ? "rgba(12,12,12,0.90)" : "rgba(243,241,237,0.90)" }}
       >
         <View className="flex-row items-center justify-between">
           <Pressable
@@ -379,8 +381,8 @@ export default function CartScreen() {
           {/* Fixed Bottom CTA */}
           <Animated.View
             entering={FadeInUp.delay(400).duration(400)}
-            className="absolute bottom-0 left-0 right-0 bg-white/80 dark:bg-[#102216]/90 backdrop-blur-xl border-t border-slate-200 dark:border-white/5 shadow-lg"
-            style={{ paddingBottom: insets.bottom + 16, paddingTop: 16, paddingHorizontal: 16 }}
+            className="absolute bottom-0 left-0 right-0 backdrop-blur-xl border-t border-slate-200 dark:border-white/5 shadow-lg"
+            style={{ paddingBottom: insets.bottom + 16, paddingTop: 16, paddingHorizontal: 16, backgroundColor: isDark ? "rgba(12,12,12,0.92)" : "rgba(243,241,237,0.92)" }}
           >
             <View className="flex-row justify-between items-center mb-4 px-1">
               <View>

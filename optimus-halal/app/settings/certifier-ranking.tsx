@@ -12,6 +12,7 @@ import {
   Linking,
 } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
+import { PremiumBackground } from "@/components/ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
@@ -20,6 +21,8 @@ import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { trpc } from "@/lib/trpc";
+
+const GOLD = "#d4af37";
 
 // ── Types ─────────────────────────────────────────
 
@@ -89,9 +92,9 @@ const CertifierCard = React.memo(function CertifierCard({
           marginHorizontal: 16,
           marginBottom: 12,
           padding: 16,
-          borderRadius: 16,
-          backgroundColor: colors.card,
-          borderColor: colors.borderLight,
+          borderRadius: 20,
+          backgroundColor: isDark ? "rgba(255,255,255,0.03)" : colors.card,
+          borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
           borderWidth: 1,
         }}
       >
@@ -103,7 +106,9 @@ const CertifierCard = React.memo(function CertifierCard({
               width: 32,
               height: 32,
               borderRadius: 16,
-              backgroundColor: rank <= 3 ? trustBg : (isDark ? "rgba(255,255,255,0.05)" : "#f3f4f6"),
+              backgroundColor: rank <= 3
+                ? isDark ? "rgba(212,175,55,0.15)" : "rgba(212,175,55,0.1)"
+                : (isDark ? "rgba(255,255,255,0.05)" : "#f3f4f6"),
               alignItems: "center",
               justifyContent: "center",
               marginRight: 12,
@@ -113,7 +118,7 @@ const CertifierCard = React.memo(function CertifierCard({
               style={{
                 fontSize: 14,
                 fontWeight: "700",
-                color: rank <= 3 ? trustColor : colors.textMuted,
+                color: rank <= 3 ? GOLD : colors.textMuted,
               }}
             >
               {rank}
@@ -194,8 +199,8 @@ const CertifierCard = React.memo(function CertifierCard({
             accessibilityLabel={`Visiter le site de ${item.name}`}
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 12 }}>
-              <MaterialIcons name="open-in-new" size={12} color={colors.primary} />
-              <Text style={{ fontSize: 11, color: colors.primary, fontWeight: "600" }}>
+              <MaterialIcons name="open-in-new" size={12} color={GOLD} />
+              <Text style={{ fontSize: 11, color: GOLD, fontWeight: "600" }}>
                 {t.certifierRanking.officialWebsite}
               </Text>
             </View>
@@ -283,11 +288,13 @@ export default function CertifierRankingScreen() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Header */}
+    <View style={{ flex: 1 }}>
+      <PremiumBackground />
+      <SafeAreaView style={{ flex: 1 }}>
+        {/* Header */}
       <Animated.View
         entering={FadeIn.duration(400)}
-        style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 }}
+        style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.12)" }}
       >
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <Pressable
@@ -299,8 +306,8 @@ export default function CertifierRankingScreen() {
               alignItems: "center",
               justifyContent: "center",
               borderRadius: 22,
-              backgroundColor: colors.card,
-              borderColor: colors.borderLight,
+              backgroundColor: isDark ? "rgba(255,255,255,0.03)" : colors.card,
+              borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
               borderWidth: 1,
             }}
             accessibilityRole="button"
@@ -376,7 +383,8 @@ export default function CertifierRankingScreen() {
           contentContainerStyle={{ paddingTop: 4, paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
         />
-      )}
-    </SafeAreaView>
+        )}
+      </SafeAreaView>
+    </View>
   );
 }

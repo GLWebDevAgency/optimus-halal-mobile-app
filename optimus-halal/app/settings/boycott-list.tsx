@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
+import { PremiumBackground } from "@/components/ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
@@ -19,6 +20,8 @@ import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { trpc } from "@/lib/trpc";
+
+const GOLD = "#d4af37";
 
 // ── Level helpers ─────────────────────────────────
 
@@ -118,8 +121,8 @@ const BoycottCard = React.memo(function BoycottCard({
           marginBottom: 12,
           padding: 16,
           borderRadius: 16,
-          backgroundColor: colors.card,
-          borderColor: colors.borderLight,
+          backgroundColor: isDark ? "rgba(255,255,255,0.03)" : colors.card,
+          borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
           borderWidth: 1,
           borderLeftWidth: 4,
           borderLeftColor: severityColor,
@@ -210,15 +213,17 @@ export default function BoycottListScreen() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Header */}
+    <View style={{ flex: 1 }}>
+      <PremiumBackground />
+      <SafeAreaView style={{ flex: 1 }}>
+        {/* Header */}
       <Animated.View entering={FadeIn.duration(400)} style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 }}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <Pressable
             onPress={() => router.back()}
             style={{
               marginEnd: 12, height: 44, width: 44, alignItems: "center", justifyContent: "center",
-              borderRadius: 22, backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1,
+              borderRadius: 22, backgroundColor: isDark ? "rgba(255,255,255,0.03)" : colors.card, borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)", borderWidth: 1,
             }}
             accessibilityRole="button"
             accessibilityLabel={t.common.back}
@@ -252,8 +257,8 @@ export default function BoycottListScreen() {
               >
                 <View style={{
                   paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, marginRight: 8,
-                  backgroundColor: isSelected ? colors.primary : colors.card,
-                  borderColor: isSelected ? colors.primary : colors.borderLight, borderWidth: 1,
+                  backgroundColor: isSelected ? colors.primary : (isDark ? "rgba(255,255,255,0.03)" : colors.card),
+                  borderColor: isSelected ? colors.primary : (isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)"), borderWidth: 1,
                 }}>
                   <Text style={{
                     fontSize: 12, fontWeight: isSelected ? "700" : "500",
@@ -277,7 +282,7 @@ export default function BoycottListScreen() {
         </View>
       ) : isError ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
-          <MaterialIcons name="cloud-off" size={64} color={colors.textMuted} />
+          <MaterialIcons name="cloud-off" size={64} color={isDark ? "rgba(212,175,55,0.4)" : "rgba(212,175,55,0.5)"} />
           <Text style={{ color: colors.textSecondary, fontSize: 16, marginTop: 16 }}>{t.boycott.loadError}</Text>
           <PressableScale onPress={() => refetch()} accessibilityRole="button">
             <View style={{ marginTop: 20, backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 }}>
@@ -287,7 +292,7 @@ export default function BoycottListScreen() {
         </View>
       ) : items.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 80 }}>
-          <MaterialIcons name="check-circle" size={64} color={colors.primary} />
+          <MaterialIcons name="check-circle" size={64} color={GOLD} />
           <Text style={{ color: colors.textSecondary, fontSize: 18, marginTop: 16 }}>{t.boycott.noCompanies}</Text>
           <Text style={{ color: colors.textMuted, fontSize: 14, marginTop: 8, textAlign: "center", paddingHorizontal: 32 }}>
             {t.boycott.noCompaniesDesc}
@@ -301,7 +306,8 @@ export default function BoycottListScreen() {
           contentContainerStyle={{ paddingTop: 4, paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
         />
-      )}
-    </SafeAreaView>
+        )}
+      </SafeAreaView>
+    </View>
   );
 }

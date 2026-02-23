@@ -27,6 +27,7 @@ import Animated, {
   FadeInUp,
 } from "react-native-reanimated";
 
+import { Image } from "expo-image";
 import { Card, Avatar, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { ProfileSkeleton } from "@/components/skeletons";
@@ -446,7 +447,7 @@ export default function ProfileScreen() {
           />
         </Animated.View>
 
-        {/* Optimus+ Premium Entry */}
+        {/* Naqiy+ Premium Entry */}
         <Animated.View entering={FadeInUp.delay(200).duration(500)} className="px-4 mb-6">
           <PressableScale
             onPress={() => {
@@ -454,7 +455,7 @@ export default function ProfileScreen() {
               router.push("/settings/premium" as any);
             }}
             accessibilityRole="button"
-            accessibilityLabel="Optimus+"
+            accessibilityLabel="Naqiy+"
           >
             <View
               style={{
@@ -467,10 +468,15 @@ export default function ProfileScreen() {
                 borderColor: isDark ? "rgba(212, 175, 55, 0.18)" : "rgba(212, 175, 55, 0.12)",
               }}
             >
-              <MaterialIcons name="workspace-premium" size={24} color={colors.primary} />
+              <Image
+                source={require("@assets/images/logo_naqiy.webp")}
+                style={{ width: 24, height: 24 }}
+                contentFit="contain"
+                cachePolicy="memory-disk"
+              />
               <View style={{ flex: 1, marginStart: 12 }}>
                 <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: "700" }}>
-                  Optimus+
+                  Naqiy+
                 </Text>
                 <Text style={{ color: colors.textSecondary, fontSize: 12 }} numberOfLines={1}>
                   {isPremium ? t.premium.enjoyFeatures : t.premium.subtitle}

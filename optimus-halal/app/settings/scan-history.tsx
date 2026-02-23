@@ -1,6 +1,14 @@
 /**
- * Scan History Screen
- * Wired to tRPC scan.getHistory (Sprint 9)
+ * Scan History Screen — Premium Refonte
+ *
+ * Ch03 Al-Taqwa: "L'historique est dans settings/scan-history.tsx,
+ * pas sur l'écran d'accueil. Il n'y a pas de résumé hebdomadaire
+ * de vos scans haram." — It's a personal journal, not a surveillance tool.
+ *
+ * Layout:
+ *   HEADER — gold accent, scan count subtitle
+ *   SCAN CARDS — compact horizontal rows, glass-morphism, gold borders
+ *     Product image | Name/Brand/Time | Status badge + confidence %
  */
 
 import React, { useMemo, useCallback } from "react";
@@ -18,8 +26,10 @@ import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useScanHistory } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
-import { EmptyState } from "@/components/ui";
+import { EmptyState, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
+
+const GOLD = "#d4af37";
 
 const LOCALE_MAP: Record<string, string> = { fr: "fr-FR", en: "en-US", ar: "ar-SA" };
 
@@ -33,6 +43,7 @@ interface StatusConfig {
   bgColor: string;
   textColor: string;
   iconColor: string;
+  borderColor: string;
 }
 
 function getStatusConfig(status: string | null, isDark: boolean, t: ReturnType<typeof useTranslation>["t"]): StatusConfig {
@@ -41,33 +52,37 @@ function getStatusConfig(status: string | null, isDark: boolean, t: ReturnType<t
       return {
         label: t.scanHistory.statusHalal,
         icon: "verified",
-        bgColor: isDark ? "rgba(34,197,94,0.15)" : "rgba(34,197,94,0.1)",
+        bgColor: isDark ? "rgba(34,197,94,0.12)" : "rgba(34,197,94,0.08)",
         textColor: isDark ? "#4ade80" : "#15803d",
         iconColor: "#22c55e",
+        borderColor: isDark ? "rgba(34,197,94,0.25)" : "rgba(34,197,94,0.2)",
       };
     case "haram":
       return {
         label: t.scanHistory.statusHaram,
         icon: "cancel",
-        bgColor: isDark ? "rgba(239,68,68,0.15)" : "rgba(239,68,68,0.1)",
+        bgColor: isDark ? "rgba(239,68,68,0.12)" : "rgba(239,68,68,0.08)",
         textColor: isDark ? "#f87171" : "#dc2626",
         iconColor: "#ef4444",
+        borderColor: isDark ? "rgba(239,68,68,0.25)" : "rgba(239,68,68,0.2)",
       };
     case "doubtful":
       return {
         label: t.scanHistory.statusDoubtful,
         icon: "help",
-        bgColor: isDark ? "rgba(249,115,22,0.15)" : "rgba(249,115,22,0.1)",
+        bgColor: isDark ? "rgba(249,115,22,0.12)" : "rgba(249,115,22,0.08)",
         textColor: isDark ? "#fb923c" : "#c2410c",
         iconColor: "#f97316",
+        borderColor: isDark ? "rgba(249,115,22,0.25)" : "rgba(249,115,22,0.2)",
       };
     default:
       return {
         label: t.scanHistory.statusUnknown,
         icon: "help-outline",
-        bgColor: isDark ? "rgba(156,163,175,0.15)" : "rgba(156,163,175,0.1)",
+        bgColor: isDark ? "rgba(156,163,175,0.12)" : "rgba(156,163,175,0.08)",
         textColor: isDark ? "#9ca3af" : "#6b7280",
         iconColor: "#9ca3af",
+        borderColor: isDark ? "rgba(156,163,175,0.2)" : "rgba(156,163,175,0.15)",
       };
   }
 }
@@ -120,81 +135,115 @@ const ScanRow = React.memo(function ScanRow({ item, index, isDark, colors, t, la
   const status = getStatusConfig(item.halalStatus, isDark, t);
 
   return (
-    <Animated.View entering={FadeInDown.delay(index * 60).duration(300)}>
+    <Animated.View entering={FadeInDown.delay(Math.min(index * 50, 400)).duration(350)}>
       <PressableScale
         onPress={() => router.push(`/scan-result?barcode=${item.barcode}`)}
         accessibilityRole="button"
         accessibilityLabel={`${item.product?.name ?? item.barcode}, ${status.label}`}
         style={{
-          flexDirection: "row",
-          alignItems: "center",
-          padding: 12,
           marginHorizontal: 16,
-          marginBottom: 8,
-          borderRadius: 16,
-          backgroundColor: colors.card,
-          borderColor: colors.borderLight,
-          borderWidth: 1,
+          marginBottom: 10,
         }}
       >
-        {/* Product Image */}
+        {/* Inner row — flexDirection must be here, NOT on PressableScale
+            (PressableScale wraps children in Animated.View which resets flex) */}
         <View
           style={{
-            width: 56,
-            height: 56,
-            borderRadius: 12,
-            overflow: "hidden",
-            backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#f3f4f6",
-            marginRight: 12,
+            flexDirection: "row",
+            alignItems: "center",
+            padding: 14,
+            borderRadius: 16,
+            backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#ffffff",
+            borderWidth: 1,
+            borderColor: isDark ? "rgba(212,175,55,0.12)" : "rgba(212,175,55,0.1)",
           }}
         >
-          {item.product?.imageUrl ? (
-            <Image
-              source={{ uri: item.product.imageUrl }}
-              style={{ width: "100%", height: "100%" }}
-              contentFit="cover"
-              transition={200}
-            />
-          ) : (
-            <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-              <MaterialIcons name="inventory-2" size={24} color={colors.textMuted} />
-            </View>
-          )}
-        </View>
-
-        {/* Product Info */}
-        <View style={{ flex: 1, marginRight: 8 }}>
-          <Text
-            style={{ fontSize: 14, fontWeight: "700", color: colors.textPrimary, marginBottom: 2 }}
-            numberOfLines={1}
-          >
-            {item.product?.name ?? t.scanHistory.unknownProduct}
-          </Text>
-          <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 4 }} numberOfLines={1}>
-            {item.product?.brand ?? item.barcode}
-          </Text>
-          <Text style={{ fontSize: 10, color: colors.textMuted }}>
-            {formatDate(item.scannedAt, t, locale)}
-          </Text>
-        </View>
-
-        {/* Status Badge */}
-        <View style={{ alignItems: "center", gap: 4 }}>
+          {/* ── Product Image ── */}
           <View
             style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: status.bgColor,
+              width: 52,
+              height: 52,
+              borderRadius: 14,
+              overflow: "hidden",
+              backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#f8f7f4",
+              borderWidth: 1,
+              borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.06)",
             }}
           >
-            <MaterialIcons name={status.icon} size={18} color={status.iconColor} />
+            {item.product?.imageUrl ? (
+              <Image
+                source={{ uri: item.product.imageUrl }}
+                style={{ width: "100%", height: "100%" }}
+                contentFit="cover"
+                transition={200}
+              />
+            ) : (
+              <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+                <MaterialIcons name="inventory-2" size={22} color={isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)"} />
+              </View>
+            )}
           </View>
-          <Text style={{ fontSize: 9, fontWeight: "600", color: status.textColor }}>
-            {status.label}
-          </Text>
+
+          {/* ── Product Info ── */}
+          <View style={{ flex: 1, marginLeft: 12, marginRight: 10 }}>
+            <Text
+              style={{
+                fontSize: 14,
+                fontWeight: "700",
+                color: colors.textPrimary,
+                letterSpacing: -0.2,
+              }}
+              numberOfLines={1}
+            >
+              {item.product?.name ?? t.scanHistory.unknownProduct}
+            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 3 }}>
+              {item.product?.brand && (
+                <Text
+                  style={{ fontSize: 12, color: colors.textSecondary }}
+                  numberOfLines={1}
+                >
+                  {item.product.brand}
+                </Text>
+              )}
+              {item.product?.brand && (
+                <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)" }} />
+              )}
+              <Text style={{ fontSize: 11, color: colors.textMuted }}>
+                {formatDate(item.scannedAt, t, locale)}
+              </Text>
+            </View>
+            {/* Confidence score — Ch02 Al-Ilm: transparency on certainty */}
+            {item.confidenceScore != null && item.confidenceScore > 0 && (
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 }}>
+                <MaterialIcons name="speed" size={10} color={isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)"} />
+                <Text style={{ fontSize: 10, color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)" }}>
+                  {`${Math.round(item.confidenceScore * 100)}% ${t.scanResult.confidence}`}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* ── Status Badge ── */}
+          <View style={{ alignItems: "center", gap: 3 }}>
+            <View
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 12,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: status.bgColor,
+                borderWidth: 1,
+                borderColor: status.borderColor,
+              }}
+            >
+              <MaterialIcons name={status.icon} size={18} color={status.iconColor} />
+            </View>
+            <Text style={{ fontSize: 9, fontWeight: "700", color: status.textColor, letterSpacing: 0.3 }}>
+              {status.label}
+            </Text>
+          </View>
         </View>
       </PressableScale>
     </Animated.View>
@@ -222,42 +271,66 @@ export default function ScanHistoryScreen() {
   // Loading
   if (isLoading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-        <Header colors={colors} t={t} />
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={{ color: colors.textSecondary, marginTop: 12 }}>{t.common.loading}</Text>
-        </View>
-      </SafeAreaView>
+      <View style={{ flex: 1 }}>
+        <PremiumBackground />
+        <SafeAreaView style={{ flex: 1 }}>
+          <Header isDark={isDark} colors={colors} t={t} />
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+            <ActivityIndicator size="large" color={GOLD} />
+            <Text style={{ color: colors.textSecondary, marginTop: 12, fontSize: 13 }}>{t.common.loading}</Text>
+          </View>
+        </SafeAreaView>
+      </View>
     );
   }
 
   // Error
   if (isError) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-        <Header colors={colors} t={t} />
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
-          <MaterialIcons name="cloud-off" size={64} color={colors.textMuted} />
-          <Text style={{ color: colors.textSecondary, fontSize: 16, marginTop: 16, textAlign: "center" }}>
-            {t.scanHistory.loadError}
-          </Text>
-          <PressableScale
-            onPress={() => refetch()}
-            style={{ marginTop: 20, backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 }}
-            accessibilityRole="button"
-            accessibilityLabel={t.common.retry}
-          >
-            <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>{t.common.retry}</Text>
-          </PressableScale>
-        </View>
-      </SafeAreaView>
+      <View style={{ flex: 1 }}>
+        <PremiumBackground />
+        <SafeAreaView style={{ flex: 1 }}>
+          <Header isDark={isDark} colors={colors} t={t} />
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
+            <View style={{
+              width: 64,
+              height: 64,
+              borderRadius: 20,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: isDark ? "rgba(239,68,68,0.1)" : "rgba(239,68,68,0.06)",
+              marginBottom: 16,
+            }}>
+              <MaterialIcons name="cloud-off" size={32} color={isDark ? "#f87171" : "#ef4444"} />
+            </View>
+            <Text style={{ color: colors.textSecondary, fontSize: 15, textAlign: "center", lineHeight: 22 }}>
+              {t.scanHistory.loadError}
+            </Text>
+            <PressableScale
+              onPress={() => refetch()}
+              style={{
+                marginTop: 20,
+                backgroundColor: GOLD,
+                paddingHorizontal: 28,
+                paddingVertical: 12,
+                borderRadius: 12,
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={t.common.retry}
+            >
+              <Text style={{ color: "#0C0C0C", fontWeight: "800", fontSize: 14 }}>{t.common.retry}</Text>
+            </PressableScale>
+          </View>
+        </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <Header colors={colors} t={t} count={scans.length} />
+    <View style={{ flex: 1 }}>
+      <PremiumBackground />
+      <SafeAreaView style={{ flex: 1 }}>
+        <Header isDark={isDark} colors={colors} t={t} count={scans.length} />
 
       {scans.length === 0 ? (
         <EmptyState
@@ -275,28 +348,29 @@ export default function ScanHistoryScreen() {
           contentContainerStyle={{ paddingTop: 8, paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
         />
-      )}
-    </SafeAreaView>
+        )}
+      </SafeAreaView>
+    </View>
   );
 }
 
 // ── Header Component ──────────────────────────────
 
-function Header({ colors, t, count }: { colors: any; t: any; count?: number }) {
+function Header({ isDark, colors, t, count }: { isDark: boolean; colors: any; t: any; count?: number }) {
   return (
-    <Animated.View entering={FadeIn.duration(400)} style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 }}>
+    <Animated.View entering={FadeIn.duration(400)} style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16 }}>
       <View style={{ flexDirection: "row", alignItems: "center" }}>
         <PressableScale
           onPress={() => router.back()}
           style={{
-            marginEnd: 12,
+            marginEnd: 14,
             height: 44,
             width: 44,
             alignItems: "center",
             justifyContent: "center",
-            borderRadius: 22,
-            backgroundColor: colors.card,
-            borderColor: colors.borderLight,
+            borderRadius: 14,
+            backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "#ffffff",
+            borderColor: isDark ? "rgba(212,175,55,0.15)" : "rgba(212,175,55,0.12)",
             borderWidth: 1,
           }}
           accessibilityRole="button"
@@ -304,17 +378,20 @@ function Header({ colors, t, count }: { colors: any; t: any; count?: number }) {
         >
           <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
         </PressableScale>
-        <View>
+        <View style={{ flex: 1 }}>
           <Text
-            style={{ fontSize: 24, fontWeight: "700", letterSpacing: -0.5, color: colors.textPrimary }}
+            style={{ fontSize: 24, fontWeight: "800", letterSpacing: -0.5, color: colors.textPrimary }}
             accessibilityRole="header"
           >
             {t.scanHistory.title}
           </Text>
           {count !== undefined && (
-            <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
-              {(count > 1 ? t.scanHistory.scanCountPlural : t.scanHistory.scanCount).replace("{{count}}", String(count))}
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 3 }}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: GOLD }} />
+              <Text style={{ fontSize: 12, color: isDark ? "rgba(212,175,55,0.7)" : "rgba(146,112,12,0.8)", fontWeight: "600" }}>
+                {(count > 1 ? t.scanHistory.scanCountPlural : t.scanHistory.scanCount).replace("{{count}}", String(count))}
+              </Text>
+            </View>
           )}
         </View>
       </View>

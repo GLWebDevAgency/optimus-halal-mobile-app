@@ -1,8 +1,9 @@
 /**
- * Marketplace Tab Screen
- * 
- * Point d'entrée marketplace dans les tabs
- * Redirige vers le catalog ou coming-soon selon le feature flag
+ * Marketplace Tab Screen — Premium Naqiy Edition
+ *
+ * Point d'entrée marketplace dans les tabs.
+ * Coming-soon state: gold glass hero + waitlist CTA + Naqiy branding.
+ * Active state: product catalog with premium gold styling.
  */
 
 import React, { useState, useCallback, useMemo } from "react";
@@ -10,8 +11,8 @@ import {
   View,
   Text,
   ScrollView,
-  Pressable,
   RefreshControl,
+  StyleSheet,
 } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -29,7 +30,10 @@ import { PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { useFeatureFlagsStore, useLocalCartStore } from "@/store";
 import { trpc } from "@/lib/trpc";
-import { brand, gold, halalStatus } from "@/theme/colors";
+import { brand, glass, halalStatus } from "@/theme/colors";
+
+const GOLD = "#d4af37";
+const logoSource = require("@assets/images/logo_naqiy.webp");
 
 interface Product {
   id: string;
@@ -55,7 +59,15 @@ const HALAL_STATUS_COLOR: Record<string, string> = {
   unknown: halalStatus.unknown.base,
 };
 
-const ProductCard = React.memo(function ProductCard({ product, index }: { product: Product; index: number }) {
+/* ─── Product Card ─── */
+
+const ProductCard = React.memo(function ProductCard({
+  product,
+  index,
+}: {
+  product: Product;
+  index: number;
+}) {
   const { isDark, colors } = useTheme();
   const { impact, notification } = useHaptics();
   const { t } = useTranslation();
@@ -81,96 +93,171 @@ const ProductCard = React.memo(function ProductCard({ product, index }: { produc
   return (
     <Animated.View
       entering={FadeInRight.delay(index * 100).duration(400)}
-      className="w-44 mr-4"
+      style={{ width: 176, marginRight: 16 }}
     >
-      {/* Outer view: elevation + no overflow clipping */}
       <PressableScale
         onPress={handlePress}
         accessibilityRole="button"
         accessibilityLabel={`${product.name}, ${product.brand ?? ""}, ${product.halalStatus}`}
-        style={{
-          backgroundColor: colors.card,
-          borderColor: colors.borderLight,
-          borderWidth: 1,
-          borderRadius: 16,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: isDark ? 0.3 : 0.1,
-          shadowRadius: 12,
-          elevation: 4,
-        }}
       >
-        {/* Inner view: overflow hidden + borderRadius for clipping */}
-        <View style={{ borderRadius: 16, overflow: "hidden" }}>
-          <View className="relative">
-            {product.image ? (
-              <Image
-                source={{ uri: product.image }}
-                className="w-full h-32"
-                contentFit="cover"
-                transition={200}
-                accessibilityLabel={`Photo de ${product.name}`}
-              />
-            ) : (
-              <View
-                className="w-full h-32 items-center justify-center"
-                style={{ backgroundColor: colors.buttonSecondary }}
-              >
-                <MaterialIcons name="inventory-2" size={32} color={colors.iconSecondary} />
-              </View>
-            )}
-            {/* Halal status badge */}
-            <View
-              className="absolute top-2 left-2 px-2 py-1 rounded-full"
-              style={{ backgroundColor: statusColor }}
-            >
-              <Text className="text-[10px] font-bold text-white uppercase">
-                {product.halalStatus}
-              </Text>
-            </View>
-          </View>
-
-          <View className="p-3">
-            {product.brand && (
-              <Text className="text-xs mb-1" style={{ color: colors.textSecondary }}>
-                {product.brand}
-              </Text>
-            )}
-            <Text
-              className="text-sm font-semibold mb-2"
-              numberOfLines={2}
-              style={{ color: colors.textPrimary }}
-            >
-              {product.name}
-            </Text>
-
-            {product.certifierName && (
-              <View className="flex-row items-center mb-2">
-                <MaterialIcons name="verified" size={14} color={colors.primary} />
-                <Text className="text-xs ml-1" numberOfLines={1} style={{ color: colors.textSecondary }}>
-                  {product.certifierName}
-                </Text>
-              </View>
-            )}
-
-            <View className="flex-row items-center justify-between">
-              {product.price != null ? (
-                <Text className="text-lg font-bold" style={{ color: colors.primary }}>
-                  {product.price.toFixed(2)}€
-                </Text>
+        <View
+          style={[
+            styles.productCard,
+            {
+              backgroundColor: isDark ? glass.dark.bg : glass.light.bg,
+              borderColor: isDark
+                ? "rgba(207,165,51,0.15)"
+                : "rgba(212,175,55,0.12)",
+              shadowOpacity: isDark ? 0.2 : 0.08,
+            },
+          ]}
+        >
+          <View style={{ borderRadius: 16, overflow: "hidden" }}>
+            {/* Image */}
+            <View style={{ position: "relative" }}>
+              {product.image ? (
+                <Image
+                  source={{ uri: product.image }}
+                  style={{ width: "100%", height: 128 }}
+                  contentFit="cover"
+                  transition={200}
+                  accessibilityLabel={`Photo de ${product.name}`}
+                />
               ) : (
-                <Text className="text-xs" style={{ color: colors.textMuted }}>
-                  Prix N/A
+                <View
+                  style={{
+                    width: "100%",
+                    height: 128,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: isDark
+                      ? "rgba(255,255,255,0.04)"
+                      : "rgba(0,0,0,0.03)",
+                  }}
+                >
+                  <MaterialIcons
+                    name="inventory-2"
+                    size={32}
+                    color={isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}
+                  />
+                </View>
+              )}
+              {/* Halal status badge */}
+              <View
+                style={{
+                  position: "absolute",
+                  top: 8,
+                  left: 8,
+                  paddingHorizontal: 8,
+                  paddingVertical: 4,
+                  borderRadius: 999,
+                  backgroundColor: statusColor,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 10,
+                    fontWeight: "700",
+                    color: "#fff",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {product.halalStatus}
+                </Text>
+              </View>
+            </View>
+
+            {/* Details */}
+            <View style={{ padding: 12 }}>
+              {product.brand && (
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: colors.textSecondary,
+                    marginBottom: 4,
+                  }}
+                >
+                  {product.brand}
                 </Text>
               )}
-              <Pressable
-                onPress={handleAddToCart}
-                style={{ backgroundColor: colors.primaryLight, padding: 8, borderRadius: 9999 }}
-                accessibilityRole="button"
-                accessibilityLabel={`${t.marketplace.addToCart} ${product.name}`}
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "600",
+                  color: colors.textPrimary,
+                  marginBottom: 8,
+                }}
+                numberOfLines={2}
               >
-                <MaterialIcons name="add-shopping-cart" size={16} color={colors.primary} />
-              </Pressable>
+                {product.name}
+              </Text>
+
+              {product.certifierName && (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginBottom: 8,
+                  }}
+                >
+                  <MaterialIcons name="verified" size={14} color={GOLD} />
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: colors.textSecondary,
+                      marginLeft: 4,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {product.certifierName}
+                  </Text>
+                </View>
+              )}
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                {product.price != null ? (
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "700",
+                      color: isDark ? GOLD : brand.primary,
+                    }}
+                  >
+                    {product.price.toFixed(2)}€
+                  </Text>
+                ) : (
+                  <Text style={{ fontSize: 12, color: colors.textMuted }}>
+                    Prix N/A
+                  </Text>
+                )}
+                <PressableScale
+                  onPress={handleAddToCart}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${t.marketplace.addToCart} ${product.name}`}
+                >
+                  <View
+                    style={{
+                      backgroundColor: isDark
+                        ? "rgba(212,175,55,0.12)"
+                        : "rgba(212,175,55,0.08)",
+                      padding: 8,
+                      borderRadius: 999,
+                    }}
+                  >
+                    <MaterialIcons
+                      name="add-shopping-cart"
+                      size={16}
+                      color={isDark ? GOLD : brand.primary}
+                    />
+                  </View>
+                </PressableScale>
+              </View>
             </View>
           </View>
         </View>
@@ -178,6 +265,8 @@ const ProductCard = React.memo(function ProductCard({ product, index }: { produc
     </Animated.View>
   );
 });
+
+/* ─── Marketplace Tab ─── */
 
 export default function MarketplaceTab() {
   const insets = useSafeAreaInsets();
@@ -223,133 +312,231 @@ export default function MarketplaceTab() {
     setRefreshing(false);
   }, [productsQuery, unreadQuery]);
 
-  const handleCategoryPress = useCallback((categoryId: string) => {
-    impact();
-    setSelectedCategory(categoryId);
-  }, []);
+  const handleCategoryPress = useCallback(
+    (categoryId: string) => {
+      impact();
+      setSelectedCategory(categoryId);
+    },
+    [impact],
+  );
 
   const handleViewAllPress = useCallback(() => {
     impact();
     router.push("/(marketplace)/catalog" as any);
-  }, []);
+  }, [impact]);
 
   const handleCartPress = useCallback(() => {
     impact();
     router.push("/(marketplace)/cart" as any);
-  }, []);
+  }, [impact]);
 
   const handleAlertsPress = useCallback(() => {
     impact();
     router.navigate("/(tabs)/alerts" as any);
-  }, []);
+  }, [impact]);
+
+  /* ─── Coming Soon ─── */
 
   if (!flags.marketplaceEnabled) {
     return (
-      <View className="flex-1">
+      <View style={{ flex: 1, paddingTop: insets.top }}>
         <PremiumBackground />
+
+        {/* Header */}
+        <Animated.View entering={FadeIn.duration(400)} style={styles.header}>
+          <View style={styles.headerBrand}>
+            <Image
+              source={logoSource}
+              style={{ width: 26, height: 26 }}
+              contentFit="contain"
+              cachePolicy="memory-disk"
+            />
+            <Text
+              style={[styles.headerTitle, { color: colors.textPrimary }]}
+            >
+              Naqiy{" "}
+              <Text style={{ fontWeight: "400", color: colors.textSecondary }}>
+                Marketplace
+              </Text>
+            </Text>
+          </View>
+
+          <PressableScale
+            onPress={handleAlertsPress}
+            accessibilityRole="button"
+            accessibilityLabel={t.common.notifications}
+          >
+            <View
+              style={[
+                styles.iconButton,
+                {
+                  backgroundColor: isDark
+                    ? "rgba(255,255,255,0.06)"
+                    : "rgba(255,255,255,0.7)",
+                  borderColor: isDark
+                    ? "rgba(207,165,51,0.15)"
+                    : "rgba(212,175,55,0.12)",
+                },
+              ]}
+            >
+              <MaterialIcons
+                name="notifications-none"
+                size={20}
+                color={isDark ? GOLD : colors.textPrimary}
+              />
+              {unreadCount > 0 && (
+                <View
+                  style={[
+                    styles.unreadDot,
+                    { borderColor: isDark ? "#0C0C0C" : "#f3f1ed" },
+                  ]}
+                />
+              )}
+            </View>
+          </PressableScale>
+        </Animated.View>
 
         <ScrollView
           contentContainerStyle={{
-            paddingTop: insets.top + 16,
-            paddingBottom: 100,
+            flexGrow: 1,
+            paddingHorizontal: 24,
+            paddingBottom: insets.bottom + 24,
           }}
+          showsVerticalScrollIndicator={false}
         >
+          {/* Hero Card */}
           <Animated.View
-            entering={FadeIn.delay(100).duration(400)}
-            className="px-5 mb-6"
+            entering={FadeInDown.delay(150).duration(600)}
+            style={{ marginTop: 16 }}
           >
-            <View className="flex-row items-center justify-between">
-              <View>
-                <Text className="text-2xl font-bold" style={{ color: colors.textPrimary }}>
-                  {t.marketplace.title}
-                </Text>
-                <Text className="text-sm mt-1" style={{ color: colors.textSecondary }}>
-                  {t.common.comingSoon}
-                </Text>
-              </View>
-              <Pressable
-                onPress={handleAlertsPress}
-                accessibilityRole="button"
-                accessibilityLabel={t.common.notifications}
-                accessibilityHint={t.common.viewAlerts}
+            <View
+              style={[
+                styles.heroCard,
+                {
+                  backgroundColor: isDark ? glass.dark.bg : glass.light.bg,
+                  borderColor: isDark
+                    ? "rgba(207,165,51,0.18)"
+                    : "rgba(212,175,55,0.12)",
+                },
+              ]}
+            >
+              {/* Directional halo */}
+              <LinearGradient
+                colors={
+                  isDark
+                    ? ["rgba(207,165,51,0.15)", "transparent"]
+                    : ["rgba(19,236,106,0.08)", "transparent"]
+                }
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[StyleSheet.absoluteFill, { borderRadius: 24 }]}
+                pointerEvents="none"
+              />
+
+              {/* Store icon */}
+              <View
+                style={[
+                  styles.heroIconWrap,
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(212,175,55,0.12)"
+                      : "rgba(212,175,55,0.08)",
+                  },
+                ]}
               >
-                <View
-                  className="relative h-10 w-10 items-center justify-center rounded-full"
-                  style={{ backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1 }}
-                >
-                  <MaterialIcons
-                    name="notifications"
-                    size={22}
-                    color={colors.iconPrimary}
-                  />
-                  {unreadCount > 0 && (
-                    <View
-                      className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full"
-                      style={{ backgroundColor: gold[500], borderColor: colors.card, borderWidth: 2 }}
+                <MaterialIcons name="storefront" size={40} color={GOLD} />
+              </View>
+
+              <Text
+                style={[styles.heroTitle, { color: colors.textPrimary }]}
+              >
+                {t.marketplace.comingSoon}
+              </Text>
+              <Text
+                style={[styles.heroSubtitle, { color: colors.textSecondary }]}
+              >
+                {t.marketplace.comingSoonDesc}
+              </Text>
+
+              {/* Feature chips */}
+              <View style={styles.featuresRow}>
+                {[
+                  { icon: "verified" as const, label: "Certifié Halal" },
+                  { icon: "local-shipping" as const, label: "Livraison" },
+                  { icon: "shield" as const, label: "Traçabilité" },
+                ].map((item, i) => (
+                  <View key={i} style={styles.featureChip}>
+                    <MaterialIcons
+                      name={item.icon}
+                      size={14}
+                      color={isDark ? GOLD : brand.primary}
                     />
-                  )}
-                </View>
-              </Pressable>
+                    <Text
+                      style={[
+                        styles.featureChipText,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                  </View>
+                ))}
+              </View>
             </View>
           </Animated.View>
 
+          {/* CTA */}
           <Animated.View
-            entering={FadeInDown.delay(200).duration(600)}
-            className="px-5"
+            entering={FadeInDown.delay(350).duration(600)}
+            style={{ marginTop: 24 }}
           >
-            <LinearGradient
-              colors={isDark ? ["#1a2420", "#0d1b13"] : ["#f0fdf4", "#dcfce7"]}
-              className="rounded-3xl p-8 items-center"
-              style={{
-                shadowColor: brand.primary,
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.15,
-                shadowRadius: 24,
-                elevation: 8,
-              }}
+            <PressableScale
+              onPress={() =>
+                router.push("/(marketplace)/coming-soon" as any)
+              }
+              accessibilityRole="button"
+              accessibilityLabel={t.marketplace.joinWaitlist}
             >
-              <View
-                className="w-24 h-24 rounded-full items-center justify-center mb-6"
-                style={{ backgroundColor: colors.primaryLight }}
-              >
-                <MaterialIcons name="storefront" size={48} color={colors.primary} />
-              </View>
-              <Text className="text-xl font-bold text-center mb-2" style={{ color: colors.textPrimary }}>
-                {t.marketplace.comingSoon}
-              </Text>
-              <Text className="text-sm text-center mb-6" style={{ color: colors.textSecondary }}>
-                {t.marketplace.comingSoonDesc}
-              </Text>
-              <PressableScale
-                onPress={() => router.push("/(marketplace)/coming-soon" as any)}
-                accessibilityRole="button"
-                accessibilityLabel={t.marketplace.joinWaitlist}
-                accessibilityHint={t.marketplace.joinWaitlist}
-              >
-                <View
-                  className="px-6 py-3 rounded-xl flex-row items-center gap-2"
-                  style={{ backgroundColor: colors.primary }}
+              <View style={styles.ctaButton}>
+                <LinearGradient
+                  colors={
+                    isDark
+                      ? ["#FDE08B", "#CFA533"]
+                      : [brand.primary, "#0ea64b"]
+                  }
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[StyleSheet.absoluteFill, { borderRadius: 14 }]}
+                />
+                <MaterialIcons
+                  name="notifications-active"
+                  size={18}
+                  color={isDark ? "#1A1A1A" : "#ffffff"}
+                />
+                <Text
+                  style={[
+                    styles.ctaText,
+                    { color: isDark ? "#1A1A1A" : "#ffffff" },
+                  ]}
                 >
-                  <MaterialIcons name="notifications-active" size={20} color="#0d1b12" />
-                  <Text className="font-bold" style={{ color: colors.textPrimary }}>{t.marketplace.joinWaitlist}</Text>
-                </View>
-              </PressableScale>
-            </LinearGradient>
+                  {t.marketplace.joinWaitlist}
+                </Text>
+              </View>
+            </PressableScale>
           </Animated.View>
         </ScrollView>
       </View>
     );
   }
 
+  /* ─── Active Marketplace ─── */
+
   return (
-    <View className="flex-1">
+    <View style={{ flex: 1, paddingTop: insets.top }}>
       <PremiumBackground />
 
       <ScrollView
-        contentContainerStyle={{
-          paddingTop: insets.top + 16,
-          paddingBottom: 100,
-        }}
+        contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -359,84 +546,118 @@ export default function MarketplaceTab() {
           />
         }
       >
+        {/* Header */}
         <Animated.View
           entering={FadeIn.delay(100).duration(400)}
-          className="flex-row items-center justify-between px-5 mb-4"
+          style={styles.header}
         >
-          <View>
-            <Text accessibilityRole="header" className="text-2xl font-bold" style={{ color: colors.textPrimary }}>
-              {t.marketplace.title}
-            </Text>
-            <Text className="text-sm mt-1" style={{ color: colors.textSecondary }}>
-              {t.marketplace.subtitle}
+          <View style={styles.headerBrand}>
+            <Image
+              source={logoSource}
+              style={{ width: 26, height: 26 }}
+              contentFit="contain"
+              cachePolicy="memory-disk"
+            />
+            <Text
+              style={[styles.headerTitle, { color: colors.textPrimary }]}
+            >
+              Naqiy{" "}
+              <Text style={{ fontWeight: "400", color: colors.textSecondary }}>
+                Marketplace
+              </Text>
             </Text>
           </View>
 
-          <View className="flex-row items-center gap-3">
-            <Pressable
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            {/* Alerts */}
+            <PressableScale
               onPress={handleAlertsPress}
               accessibilityRole="button"
               accessibilityLabel={t.common.notifications}
-              accessibilityHint={t.common.viewAlerts}
             >
               <View
-                className="relative h-10 w-10 items-center justify-center rounded-full"
-                style={{ backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1 }}
+                style={[
+                  styles.iconButton,
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(255,255,255,0.06)"
+                      : "rgba(255,255,255,0.7)",
+                    borderColor: isDark
+                      ? "rgba(207,165,51,0.15)"
+                      : "rgba(212,175,55,0.12)",
+                  },
+                ]}
               >
                 <MaterialIcons
-                  name="notifications"
-                  size={22}
-                  color={colors.iconPrimary}
+                  name="notifications-none"
+                  size={20}
+                  color={isDark ? GOLD : colors.textPrimary}
                 />
                 {unreadCount > 0 && (
                   <View
-                    className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full"
-                    style={{ backgroundColor: gold[500], borderColor: colors.card, borderWidth: 2 }}
+                    style={[
+                      styles.unreadDot,
+                      { borderColor: isDark ? "#0C0C0C" : "#f3f1ed" },
+                    ]}
                   />
                 )}
               </View>
-            </Pressable>
+            </PressableScale>
 
-            <Pressable
+            {/* Cart */}
+            <PressableScale
               onPress={handleCartPress}
               accessibilityRole="button"
               accessibilityLabel={t.marketplace.viewCart}
-              accessibilityHint={t.marketplace.viewCart}
             >
               <View
-                className="relative h-10 w-10 items-center justify-center rounded-full"
-                style={{ backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1 }}
+                style={[
+                  styles.iconButton,
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(255,255,255,0.06)"
+                      : "rgba(255,255,255,0.7)",
+                    borderColor: isDark
+                      ? "rgba(207,165,51,0.15)"
+                      : "rgba(212,175,55,0.12)",
+                  },
+                ]}
               >
                 <MaterialIcons
-                  name="shopping-cart"
-                  size={22}
-                  color={colors.iconPrimary}
+                  name="shopping-cart-checkout"
+                  size={20}
+                  color={isDark ? GOLD : colors.textPrimary}
                 />
                 {itemCount > 0 && (
                   <View
-                    className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full items-center justify-center px-1"
-                    style={{ backgroundColor: colors.primary }}
+                    style={[
+                      styles.cartBadge,
+                      {
+                        backgroundColor: isDark ? GOLD : brand.primary,
+                      },
+                    ]}
                   >
-                    <Text className="text-[10px] font-bold text-white">
+                    <Text style={styles.cartBadgeText}>
                       {itemCount > 99 ? "99+" : itemCount}
                     </Text>
                   </View>
                 )}
               </View>
-            </Pressable>
+            </PressableScale>
           </View>
         </Animated.View>
 
+        {/* Categories */}
         <Animated.View
           entering={FadeInDown.delay(150).duration(400)}
-          className="mb-6"
+          style={{ marginBottom: 24 }}
         >
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: 20 }}
           >
-            {CATEGORIES.map((category, index) => {
+            {CATEGORIES.map((category) => {
               const categoryLabel = t.marketplace.categories[category.id];
               const isSelected = selectedCategory === category.id;
               return (
@@ -447,21 +668,47 @@ export default function MarketplaceTab() {
                   accessibilityLabel={`${categoryLabel}${isSelected ? `, ${t.common.selected}` : ""}`}
                 >
                   <View
-                    className="flex-row items-center px-4 py-2 rounded-full mr-3"
-                    style={
+                    style={[
+                      styles.categoryChip,
                       isSelected
-                        ? { backgroundColor: colors.primary }
-                        : { backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1 }
-                    }
+                        ? {
+                            backgroundColor: isDark ? GOLD : brand.primary,
+                            borderColor: "transparent",
+                          }
+                        : {
+                            backgroundColor: isDark
+                              ? glass.dark.bg
+                              : glass.light.bg,
+                            borderColor: isDark
+                              ? "rgba(207,165,51,0.12)"
+                              : "rgba(212,175,55,0.1)",
+                          },
+                    ]}
                   >
                     <MaterialIcons
                       name={category.icon}
                       size={18}
-                      color={isSelected ? "#fff" : colors.iconSecondary}
+                      color={
+                        isSelected
+                          ? isDark
+                            ? "#1A1A1A"
+                            : "#fff"
+                          : isDark
+                            ? "rgba(255,255,255,0.5)"
+                            : "rgba(0,0,0,0.4)"
+                      }
                     />
                     <Text
-                      className="ml-2 text-sm font-medium"
-                      style={{ color: isSelected ? "#fff" : colors.textSecondary }}
+                      style={{
+                        marginLeft: 8,
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: isSelected
+                          ? isDark
+                            ? "#1A1A1A"
+                            : "#fff"
+                          : colors.textSecondary,
+                      }}
                     >
                       {categoryLabel}
                     </Text>
@@ -472,29 +719,62 @@ export default function MarketplaceTab() {
           </ScrollView>
         </Animated.View>
 
+        {/* Featured Products */}
         <Animated.View
           entering={FadeInDown.delay(200).duration(400)}
-          className="mb-6"
+          style={{ marginBottom: 24 }}
         >
-          <View className="flex-row items-center justify-between px-5 mb-4">
-            <Text accessibilityRole="header" className="text-lg font-bold" style={{ color: colors.textPrimary }}>
-              {t.marketplace.featured}
-            </Text>
-            <Pressable onPress={handleViewAllPress} accessibilityRole="link" accessibilityLabel={`${t.home.viewAll} ${t.marketplace.featured}`}>
-              <Text className="text-sm font-medium" style={{ color: colors.primary }}>
+          <View style={styles.sectionHeader}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <View style={styles.sectionWave}>
+                <MaterialIcons name="auto-awesome" size={14} color={GOLD} />
+              </View>
+              <Text
+                accessibilityRole="header"
+                style={[styles.sectionTitle, { color: colors.textPrimary }]}
+              >
+                {t.marketplace.featured}
+              </Text>
+            </View>
+            <PressableScale
+              onPress={handleViewAllPress}
+              accessibilityRole="link"
+              accessibilityLabel={`${t.home.viewAll} ${t.marketplace.featured}`}
+            >
+              <Text style={{ fontSize: 14, fontWeight: "600", color: GOLD }}>
                 {t.home.viewAll}
               </Text>
-            </Pressable>
+            </PressableScale>
           </View>
 
           {productsQuery.isLoading ? (
-            <View className="items-center justify-center py-8">
+            <View
+              style={{ alignItems: "center", justifyContent: "center", paddingVertical: 32 }}
+            >
               <RefreshControl refreshing={true} tintColor={brand.primary} />
             </View>
           ) : products.length === 0 ? (
-            <View className="items-center justify-center py-8 px-5">
-              <MaterialIcons name="inventory-2" size={40} color={colors.iconSecondary} />
-              <Text className="text-sm mt-3 text-center" style={{ color: colors.textSecondary }}>
+            <View
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+                paddingVertical: 32,
+                paddingHorizontal: 20,
+              }}
+            >
+              <MaterialIcons
+                name="inventory-2"
+                size={40}
+                color={isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}
+              />
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: colors.textSecondary,
+                  marginTop: 12,
+                  textAlign: "center",
+                }}
+              >
                 Aucun produit trouvé
               </Text>
             </View>
@@ -511,53 +791,261 @@ export default function MarketplaceTab() {
           )}
         </Animated.View>
 
+        {/* Promo Banner */}
         <Animated.View
           entering={FadeInDown.delay(300).duration(400)}
-          className="px-5"
+          style={{ paddingHorizontal: 20 }}
         >
-          <LinearGradient
-            colors={isDark ? ["#1e293b", "#0f172a"] : ["#fff7ed", "#ffedd5"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            className="rounded-2xl p-5 flex-row items-center"
-            style={{
-              shadowColor: gold[500],
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.15,
-              shadowRadius: 12,
-              elevation: 4,
-            }}
+          <View
+            style={[
+              styles.promoBanner,
+              {
+                backgroundColor: isDark ? glass.dark.bg : glass.light.bg,
+                borderColor: isDark
+                  ? "rgba(207,165,51,0.18)"
+                  : "rgba(212,175,55,0.12)",
+              },
+            ]}
           >
-            <View className="flex-1 mr-4">
-              <Text className="text-lg font-bold mb-1" style={{ color: colors.textPrimary }}>
+            {/* Gold halo */}
+            <LinearGradient
+              colors={
+                isDark
+                  ? ["rgba(207,165,51,0.1)", "transparent"]
+                  : ["rgba(212,175,55,0.06)", "transparent"]
+              }
+              start={{ x: 1, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
+              pointerEvents="none"
+            />
+
+            <View style={{ flex: 1, marginRight: 16 }}>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: "700",
+                  color: colors.textPrimary,
+                  marginBottom: 4,
+                  letterSpacing: -0.2,
+                }}
+              >
                 {t.marketplace.freeShipping}
               </Text>
-              <Text className="text-sm mb-3" style={{ color: colors.textSecondary }}>
+              <Text
+                style={{
+                  fontSize: 13,
+                  color: colors.textSecondary,
+                  marginBottom: 12,
+                  lineHeight: 18,
+                }}
+              >
                 {t.marketplace.freeShippingDesc}
               </Text>
-              <Pressable
+              <PressableScale
                 onPress={handleViewAllPress}
                 accessibilityRole="link"
                 accessibilityLabel={t.marketplace.discoverOffers}
-                accessibilityHint={t.marketplace.freeShipping}
               >
-                <View className="flex-row items-center">
-                  <Text className="text-sm font-semibold" style={{ color: gold[500] }}>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <Text
+                    style={{ fontSize: 14, fontWeight: "700", color: GOLD }}
+                  >
                     {t.marketplace.discoverOffers}
                   </Text>
-                  <MaterialIcons name="arrow-forward" size={16} color={gold[500]} />
+                  <MaterialIcons
+                    name="arrow-forward"
+                    size={16}
+                    color={GOLD}
+                    style={{ marginLeft: 4 }}
+                  />
                 </View>
-              </Pressable>
+              </PressableScale>
             </View>
+
             <View
-              className="w-16 h-16 rounded-full items-center justify-center"
-              style={{ backgroundColor: "rgba(212, 175, 55, 0.20)" }}
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 20,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: isDark
+                  ? "rgba(212,175,55,0.12)"
+                  : "rgba(212,175,55,0.08)",
+              }}
             >
-              <MaterialIcons name="local-shipping" size={32} color={gold[500]} />
+              <MaterialIcons name="local-shipping" size={32} color={GOLD} />
             </View>
-          </LinearGradient>
+          </View>
         </Animated.View>
       </ScrollView>
     </View>
   );
 }
+
+/* ─── Styles ─── */
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  headerBrand: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    letterSpacing: -0.3,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+  },
+  unreadDot: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: GOLD,
+    borderWidth: 2,
+  },
+  cartBadge: {
+    position: "absolute",
+    top: -2,
+    right: -2,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+  },
+  cartBadgeText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#fff",
+  },
+
+  // Hero (coming soon)
+  heroCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 28,
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  heroIconWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  heroTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    textAlign: "center",
+    letterSpacing: -0.3,
+    marginBottom: 8,
+  },
+  heroSubtitle: {
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 20,
+    maxWidth: 300,
+    marginBottom: 20,
+  },
+  featuresRow: {
+    flexDirection: "row",
+    gap: 8,
+    flexWrap: "wrap",
+    justifyContent: "center",
+  },
+  featureChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: "rgba(212,175,55,0.06)",
+  },
+  featureChipText: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  ctaButton: {
+    height: 52,
+    borderRadius: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    overflow: "hidden",
+  },
+  ctaText: {
+    fontSize: 15,
+    fontWeight: "700",
+  },
+
+  // Marketplace active
+  categoryChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 999,
+    marginRight: 10,
+    borderWidth: 1,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  sectionWave: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(212,175,55,0.08)",
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    letterSpacing: -0.2,
+  },
+  productCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    shadowColor: GOLD,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  promoBanner: {
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+});

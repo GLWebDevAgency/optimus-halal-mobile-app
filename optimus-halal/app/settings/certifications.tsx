@@ -15,11 +15,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
-import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInDown, FadeInUp, ZoomIn } from "react-native-reanimated";
 import { PressableScale } from "@/components/ui/PressableScale";
+import { PremiumBackground } from "@/components/ui";
 import { usePreferencesStore } from "@/store";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
+
+const GOLD = "#d4af37";
 
 // Types
 interface Certification {
@@ -176,8 +179,10 @@ export default function CertificationsScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Header Sticky */}
+    <View style={{ flex: 1 }}>
+      <PremiumBackground />
+      <SafeAreaView style={{ flex: 1 }}>
+        {/* Header Sticky */}
       <Animated.View
         entering={FadeIn.duration(300)}
         style={{
@@ -266,19 +271,19 @@ export default function CertificationsScreen() {
                 key={cert.id}
                 entering={FadeInDown.delay(150 + index * 50).duration(400)}
                 style={{
-                  backgroundColor: colors.card,
+                  backgroundColor: isDark ? "rgba(255,255,255,0.03)" : colors.card,
                   borderRadius: 16,
                   padding: 16,
                   opacity: cardOpacity,
                   borderWidth: 1,
-                  borderColor: isEnabled 
-                    ? isDark ? "rgba(19, 236, 106, 0.3)" : "rgba(19, 236, 106, 0.3)"
-                    : isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: isDark ? 0 : 0.05,
-                  shadowRadius: 8,
-                  elevation: isDark ? 0 : 2,
+                  borderColor: isEnabled
+                    ? GOLD
+                    : isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
+                  shadowColor: isEnabled ? GOLD : "#000",
+                  shadowOffset: { width: 0, height: isEnabled ? 0 : 2 },
+                  shadowOpacity: isEnabled ? 0.2 : (isDark ? 0 : 0.05),
+                  shadowRadius: isEnabled ? 12 : 8,
+                  elevation: isEnabled ? 4 : (isDark ? 0 : 2),
                 }}
               >
                 <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 16 }}>
@@ -349,24 +354,24 @@ export default function CertificationsScreen() {
                             flexDirection: "row",
                             alignItems: "center",
                             gap: 4,
-                            backgroundColor: isDark ? "rgba(34, 197, 94, 0.1)" : "rgba(34, 197, 94, 0.1)",
+                            backgroundColor: "rgba(212, 175, 55, 0.15)",
                             paddingHorizontal: 8,
                             paddingVertical: 4,
                             borderRadius: 6,
                             borderWidth: 1,
-                            borderColor: isDark ? "rgba(34, 197, 94, 0.2)" : "rgba(34, 197, 94, 0.2)",
+                            borderColor: "rgba(212, 175, 55, 0.25)",
                           }}
                         >
                           <MaterialIcons
                             name="verified"
                             size={12}
-                            color={isDark ? "#4ade80" : "#16a34a"}
+                            color={GOLD}
                           />
                           <Text
                             style={{
                               fontSize: 10,
                               fontWeight: "600",
-                              color: isDark ? "#4ade80" : "#16a34a",
+                              color: GOLD,
                             }}
                           >
                             Recommandé
@@ -413,7 +418,7 @@ export default function CertificationsScreen() {
               fontWeight: "700",
               textTransform: "uppercase",
               letterSpacing: 1,
-              color: colors.textSecondary,
+              color: GOLD,
               marginBottom: 12,
               paddingHorizontal: 4,
             }}
@@ -430,18 +435,18 @@ export default function CertificationsScreen() {
                 key={criteria.id}
                 entering={FadeInDown.delay(450 + index * 50).duration(400)}
                 style={{
-                  backgroundColor: colors.card,
+                  backgroundColor: isDark ? "rgba(255,255,255,0.03)" : colors.card,
                   borderRadius: 16,
                   padding: 16,
                   borderWidth: 1,
                   borderColor: isEnabled
-                    ? isDark ? "rgba(19, 236, 106, 0.3)" : "rgba(19, 236, 106, 0.3)"
-                    : isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: isDark ? 0 : 0.05,
-                  shadowRadius: 8,
-                  elevation: isDark ? 0 : 2,
+                    ? GOLD
+                    : isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
+                  shadowColor: isEnabled ? GOLD : "#000",
+                  shadowOffset: { width: 0, height: isEnabled ? 0 : 2 },
+                  shadowOpacity: isEnabled ? 0.2 : (isDark ? 0 : 0.05),
+                  shadowRadius: isEnabled ? 12 : 8,
+                  elevation: isEnabled ? 4 : (isDark ? 0 : 2),
                 }}
               >
                 <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 16 }}>
@@ -505,13 +510,13 @@ export default function CertificationsScreen() {
             style={{
               position: "relative",
               overflow: "hidden",
-              borderRadius: 12,
+              borderRadius: 16,
               padding: 16,
               backgroundColor: isDark
-                ? "rgba(31, 41, 55, 1)"
+                ? "rgba(255,255,255,0.03)"
                 : "rgba(243, 244, 246, 1)",
               borderWidth: 1,
-              borderColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(209, 213, 219, 1)",
+              borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
             }}
           >
             {/* Decorative blur */}
@@ -584,7 +589,7 @@ export default function CertificationsScreen() {
                 alignSelf: "center",
                 width: 40,
                 height: 4,
-                backgroundColor: colors.borderLight,
+                backgroundColor: "rgba(212,175,55,0.3)",
                 borderRadius: 2,
                 marginBottom: 16,
               }}
@@ -624,7 +629,8 @@ export default function CertificationsScreen() {
                       {selectedCert.name}
                     </Text>
                     {selectedCert.isRecommended && (
-                      <View
+                      <Animated.View
+                        entering={ZoomIn.springify()}
                         style={{
                           flexDirection: "row",
                           alignItems: "center",
@@ -632,11 +638,11 @@ export default function CertificationsScreen() {
                           marginTop: 4,
                         }}
                       >
-                        <MaterialIcons name="verified" size={14} color={isDark ? "#4ade80" : "#16a34a"} />
-                        <Text style={{ fontSize: 12, fontWeight: "600", color: isDark ? "#4ade80" : "#16a34a" }}>
-                          Recommandé par Optimus Halal
+                        <MaterialIcons name="verified" size={14} color={GOLD} />
+                        <Text style={{ fontSize: 12, fontWeight: "600", color: GOLD }}>
+                          Recommandé par Naqiy
                         </Text>
-                      </View>
+                      </Animated.View>
                     )}
                   </View>
                 </View>
@@ -729,8 +735,9 @@ export default function CertificationsScreen() {
             )}
           </Pressable>
         </Pressable>
-      </Modal>
-    </SafeAreaView>
+        </Modal>
+      </SafeAreaView>
+    </View>
   );
 }
 

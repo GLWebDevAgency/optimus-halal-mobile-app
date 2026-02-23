@@ -19,6 +19,7 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown, SlideInDown } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { useMe } from "@/hooks/useAuth";
@@ -26,8 +27,10 @@ import { trpc } from "@/lib/trpc";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { useImageUpload } from "@/hooks/useImageUpload";
-import { PhoneInput, LocationPicker, parseInternationalPhone } from "@/components/ui";
+import { PhoneInput, LocationPicker, parseInternationalPhone, PremiumBackground } from "@/components/ui";
 import { City, FRENCH_CITIES } from "@/constants/locations";
+
+const GOLD = "#d4af37";
 
 export default function EditProfileScreen() {
   const { isDark, colors } = useTheme();
@@ -52,6 +55,7 @@ export default function EditProfileScreen() {
   // UI state
   const [isSaving, setIsSaving] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   // Initialize form with profile data
   useEffect(() => {
@@ -178,9 +182,12 @@ export default function EditProfileScreen() {
       keyboardType?: "default" | "email-address" | "phone-pad";
       autoCapitalize?: "none" | "sentences" | "words" | "characters";
       editable?: boolean;
+      fieldName?: string;
     }
   ) => {
     const isEditable = options?.editable !== false;
+    const fieldId = options?.fieldName ?? label;
+    const isFocused = focusedField === fieldId;
     return (
       <View style={{ marginBottom: 20 }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 6 }}>
@@ -213,25 +220,28 @@ export default function EditProfileScreen() {
             keyboardType={options?.keyboardType || "default"}
             autoCapitalize={options?.autoCapitalize || "sentences"}
             editable={isEditable}
+            onFocus={() => setFocusedField(fieldId)}
+            onBlur={() => setFocusedField(null)}
             accessibilityLabel={label}
             accessibilityState={{ disabled: !isEditable }}
             style={{
               width: "100%",
               borderRadius: 12,
-              backgroundColor: isEditable ? colors.card : (isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)"),
+              backgroundColor: isEditable ? (isDark ? "rgba(255,255,255,0.03)" : colors.card) : (isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)"),
               paddingVertical: 14,
               paddingLeft: 44,
               paddingRight: 16,
               fontSize: 15,
               color: isEditable ? colors.textPrimary : colors.textSecondary,
               borderWidth: 1,
-              borderColor: colors.border,
+              borderColor: isFocused ? (isDark ? "rgba(212,175,55,0.5)" : "rgba(212,175,55,0.4)") : (isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)"),
+              ...(isFocused ? { shadowColor: GOLD, shadowOpacity: 0.2, shadowRadius: 12, shadowOffset: { width: 0, height: 0 }, elevation: 4 } : {}),
             }}
           />
           <MaterialIcons
             name={icon}
             size={20}
-            color={colors.textSecondary}
+            color={isFocused ? GOLD : colors.textSecondary}
             style={{
               position: "absolute",
               left: 14,
@@ -246,19 +256,24 @@ export default function EditProfileScreen() {
   // Show loading skeleton while fetching profile
   if (meQuery.isLoading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, alignItems: "center", justifyContent: "center" }}>
-        <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{ marginTop: 16, color: colors.textSecondary }}>{t.editProfile.loadingProfile}</Text>
-      </SafeAreaView>
+      <View style={{ flex: 1 }}>
+        <PremiumBackground />
+        <SafeAreaView style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={{ marginTop: 16, color: colors.textSecondary }}>{t.editProfile.loadingProfile}</Text>
+        </SafeAreaView>
+      </View>
     );
   }
 
   // Show error state if profile failed to load
   if (meQuery.isError && !profile) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, alignItems: "center", justifyContent: "center", padding: 20 }}>
-        <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
+      <View style={{ flex: 1 }}>
+        <PremiumBackground />
+        <SafeAreaView style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
         <MaterialIcons name="error-outline" size={48} color="#ef4444" style={{ marginBottom: 16 }} />
         <Text style={{
           fontSize: 18,
@@ -301,13 +316,16 @@ export default function EditProfileScreen() {
         >
           <Text style={{ color: colors.textSecondary }}>{t.common.back}</Text>
         </PressableScale>
-      </SafeAreaView>
+        </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
+    <View style={{ flex: 1 }}>
+      <PremiumBackground />
+      <SafeAreaView style={{ flex: 1 }}>
+        <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -332,11 +350,11 @@ export default function EditProfileScreen() {
               width: 44,
               height: 44,
               borderRadius: 22,
-              backgroundColor: colors.card,
+              backgroundColor: isDark ? "rgba(255,255,255,0.03)" : colors.card,
               alignItems: "center",
               justifyContent: "center",
               borderWidth: 1,
-              borderColor: colors.cardBorder,
+              borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 1 },
               shadowOpacity: 0.05,
@@ -388,13 +406,13 @@ export default function EditProfileScreen() {
                   height: 112,
                   borderRadius: 56,
                   overflow: "hidden",
-                  borderWidth: 4,
-                  borderColor: colors.card,
-                  shadowColor: "#000",
+                  borderWidth: 3,
+                  borderColor: GOLD,
+                  shadowColor: GOLD,
                   shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.15,
-                  shadowRadius: 8,
-                  elevation: 4,
+                  shadowOpacity: 0.3,
+                  shadowRadius: 12,
+                  elevation: 6,
                 }}
               >
                 {avatarUrl ? (
@@ -548,19 +566,22 @@ export default function EditProfileScreen() {
               multiline
               numberOfLines={4}
               textAlignVertical="top"
+              onFocus={() => setFocusedField("bio")}
+              onBlur={() => setFocusedField(null)}
               accessibilityLabel="Bio"
               accessibilityHint="Décrivez-vous en quelques mots"
               style={{
                 width: "100%",
                 borderRadius: 12,
-                backgroundColor: colors.card,
+                backgroundColor: isDark ? "rgba(255,255,255,0.03)" : colors.card,
                 paddingVertical: 12,
                 paddingHorizontal: 16,
                 fontSize: 15,
                 color: colors.textPrimary,
                 borderWidth: 1,
-                borderColor: colors.border,
+                borderColor: focusedField === "bio" ? (isDark ? "rgba(212,175,55,0.5)" : "rgba(212,175,55,0.4)") : (isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)"),
                 minHeight: 100,
+                ...(focusedField === "bio" ? { shadowColor: GOLD, shadowOpacity: 0.2, shadowRadius: 12, shadowOffset: { width: 0, height: 0 }, elevation: 4 } : {}),
               }}
             />
           </Animated.View>
@@ -579,57 +600,57 @@ export default function EditProfileScreen() {
             paddingBottom: 32,
             backgroundColor: isDark ? "rgba(16, 34, 23, 0.95)" : "rgba(246, 248, 247, 0.95)",
             borderTopWidth: 1,
-            borderTopColor: colors.cardBorder,
+            borderTopColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.12)",
           }}
         >
           <PressableScale
             onPress={handleSave}
             disabled={isSaving || isUploadingAvatar || !hasChanges}
             style={{
-              backgroundColor: hasChanges ? colors.primary : (isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"),
               borderRadius: 16,
-              paddingVertical: 16,
-              alignItems: "center",
-              justifyContent: "center",
-              flexDirection: "row",
-              shadowColor: hasChanges ? "#000" : "transparent",
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: hasChanges ? 0.15 : 0,
-              shadowRadius: 8,
-              elevation: hasChanges ? 4 : 0,
-              borderWidth: 1,
-              borderColor: "rgba(0,0,0,0.05)",
+              overflow: "hidden",
+              ...(hasChanges ? {
+                shadowColor: "#10b981",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.4,
+                shadowRadius: 20,
+                elevation: 8,
+              } : {}),
             }}
             accessibilityRole="button"
             accessibilityLabel={isSaving ? t.editProfile.saving : hasChanges ? t.common.saveChanges : t.common.noChanges}
           >
-            {isSaving ? (
-              <>
-                <ActivityIndicator size="small" color="#0d1b13" style={{ marginRight: 8 }} />
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontWeight: "700",
-                    color: "#0d1b13",
-                  }}
-                >
-                  {t.editProfile.saving}
-                </Text>
-              </>
-            ) : (
-              <Text
-                style={{
-                  fontSize: 16,
-                  fontWeight: "700",
-                  color: hasChanges ? "#0d1b13" : colors.textSecondary,
-                }}
+            {hasChanges ? (
+              <LinearGradient
+                colors={["#10b981", "#059669"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ paddingVertical: 16, alignItems: "center", justifyContent: "center", flexDirection: "row", gap: 8, borderRadius: 16 }}
               >
-                {hasChanges ? t.common.saveChanges : t.common.noChanges}
-              </Text>
+                {isSaving ? (
+                  <>
+                    <ActivityIndicator size="small" color="#0d1b13" style={{ marginRight: 8 }} />
+                    <Text style={{ fontSize: 16, fontWeight: "700", color: "#0d1b13" }}>
+                      {t.editProfile.saving}
+                    </Text>
+                  </>
+                ) : (
+                  <Text style={{ fontSize: 16, fontWeight: "700", color: "#0d1b13" }}>
+                    {t.common.saveChanges}
+                  </Text>
+                )}
+              </LinearGradient>
+            ) : (
+              <View style={{ paddingVertical: 16, alignItems: "center", justifyContent: "center", backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)", borderRadius: 16 }}>
+                <Text style={{ fontSize: 16, fontWeight: "700", color: colors.textSecondary }}>
+                  {t.common.noChanges}
+                </Text>
+              </View>
             )}
           </PressableScale>
         </Animated.View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }

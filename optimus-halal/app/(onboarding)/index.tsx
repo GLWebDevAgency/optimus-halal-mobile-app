@@ -27,7 +27,7 @@ import Animated, {
 import { useHaptics, useTheme, useTranslation } from "@/hooks";
 
 import { OnboardingSlide } from "@/components/onboarding";
-import { PageIndicator, Button } from "@/components/ui";
+import { PremiumBackground, PageIndicator } from "@/components/ui";
 import { onboardingSlides } from "@constants/onboarding";
 import { useOnboardingStore } from "@/store";
 
@@ -88,7 +88,8 @@ export default function OnboardingScreen() {
   });
 
   return (
-    <View className="flex-1 bg-background-light dark:bg-background-dark">
+    <View className="flex-1">
+      <PremiumBackground />
       {/* Skip Button */}
       <Animated.View
         entering={FadeIn.delay(300)}

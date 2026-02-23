@@ -1,18 +1,17 @@
 /**
- * Reporting Form Screen
+ * Reporting Form Screen — Ultra-Premium Edition
  *
  * Formulaire de signalement avec:
- * - Header avec titre et cancel
- * - Title input (required by API)
- * - Section recherche produit avec barcode scanner
- * - Grid types de violation (4 options → backend enum)
- * - Textarea détails supplémentaires
- * - Upload photo evidence
- * - Toggle contact follow-up
- * - Bouton submit → trpc.report.createReport
+ * - Gold-accent section numbering with premium badges
+ * - Spring-animated progress bar with gold→emerald gradient
+ * - Animated input focus glow (gold border + shadow)
+ * - Violation cards with gold glow ring + ZoomIn checkmark
+ * - LinearGradient CTA with emerald glow shadow
+ * - Gold-tinted dividers, borders, photo zone
+ * - Staggered cascading enter animations
  */
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -37,7 +36,12 @@ import Animated, {
   FadeIn,
   FadeInDown,
   FadeInUp,
+  ZoomIn,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
 } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 import { trpc } from "@/lib/trpc";
 
 // Map UI violation types → backend report type enum
@@ -47,6 +51,30 @@ const VIOLATION_TYPES = [
   { id: "contamination", backendType: "wrong_ingredients" as const, icon: "science" as const, iconColor: "#64748b", titleKey: "violationContamination" as const, subtitleKey: "violationContaminationSub" as const },
   { id: "other", backendType: "other" as const, icon: "warning" as const, iconColor: "#64748b", titleKey: "violationOther" as const, subtitleKey: "violationOtherSub" as const },
 ];
+
+// ── Gold accent system (matches PremiumBackground dust particles) ──
+const GOLD = "#d4af37";
+const GOLD_LIGHT = "rgba(212, 175, 55, 0.15)";
+
+// ── Section Number Badge ──
+const SectionBadge = React.memo(function SectionBadge({ num, isDark }: { num: number; isDark: boolean }) {
+  return (
+    <View
+      style={{
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: isDark ? "rgba(212,175,55,0.15)" : "rgba(212,175,55,0.12)",
+        borderWidth: 1,
+        borderColor: isDark ? "rgba(212,175,55,0.3)" : "rgba(212,175,55,0.25)",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Text style={{ fontSize: 12, fontWeight: "700", color: GOLD }}>{num}</Text>
+    </View>
+  );
+});
 
 export default function ReportingFormScreen() {
   const insets = useSafeAreaInsets();
@@ -60,7 +88,29 @@ export default function ReportingFormScreen() {
   const [details, setDetails] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
   const [allowContact, setAllowContact] = useState(true);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
   const { upload: uploadImage, isUploading } = useImageUpload();
+
+  // ── Progress animation (spring-driven scaleX) ──
+  const progressAnim = useSharedValue(0);
+
+  const progress = [
+    title.trim().length >= 5,
+    selectedViolation !== null,
+    details.trim().length >= 10,
+  ].filter(Boolean).length;
+  const progressPercent = Math.round((progress / 3) * 100);
+
+  useEffect(() => {
+    progressAnim.value = withSpring(progressPercent / 100, {
+      damping: 18,
+      stiffness: 120,
+    });
+  }, [progressPercent, progressAnim]);
+
+  const progressBarStyle = useAnimatedStyle(() => ({
+    transform: [{ scaleX: progressAnim.value }],
+  }));
 
   const createReport = trpc.report.createReport.useMutation({
     onSuccess: () => {
@@ -95,17 +145,17 @@ export default function ReportingFormScreen() {
   const handleBack = useCallback(() => {
     impact();
     safeGoBack();
-  }, [safeGoBack]);
+  }, [safeGoBack, impact]);
 
   const handleCancel = useCallback(() => {
     impact();
     safeGoBack();
-  }, [safeGoBack]);
+  }, [safeGoBack, impact]);
 
   const handleSelectViolation = useCallback((id: string) => {
     impact();
     setSelectedViolation(id);
-  }, []);
+  }, [impact]);
 
   const MAX_PHOTOS = 5;
 
@@ -136,7 +186,6 @@ export default function ReportingFormScreen() {
     if (!violationType) return;
 
     try {
-      // Upload all local photos to R2, keep already-uploaded URLs as-is
       const photoUrls = await Promise.all(
         photos.map((p) =>
           p.startsWith("http") ? p : uploadImage({ uri: p, type: "report" }),
@@ -157,24 +206,39 @@ export default function ReportingFormScreen() {
   const handleScanBarcode = useCallback(() => {
     impact();
     router.navigate("/(tabs)/scanner");
-  }, []);
+  }, [impact]);
 
-  // Progress: title filled = 33%, violation selected = 66%, details filled = 100%
-  const progress = [
-    title.trim().length >= 5,
-    selectedViolation !== null,
-    details.trim().length >= 10,
-  ].filter(Boolean).length;
-  const progressPercent = Math.round((progress / 3) * 100);
+  // ── Input focus glow helpers ──
+  const getInputBorderColor = (fieldName: string) =>
+    focusedField === fieldName
+      ? isDark ? "rgba(212,175,55,0.5)" : "rgba(212,175,55,0.4)"
+      : colors.borderLight;
+
+  const getInputShadow = (fieldName: string) =>
+    focusedField === fieldName
+      ? {
+          shadowColor: GOLD,
+          shadowOffset: { width: 0, height: 0 } as const,
+          shadowOpacity: isDark ? 0.25 : 0.15,
+          shadowRadius: 12,
+          elevation: 4,
+        }
+      : {};
 
   return (
     <View className="flex-1">
       <PremiumBackground />
-      {/* Header */}
+
+      {/* ── Header — Gold-accent bottom border ── */}
       <Animated.View
         entering={FadeIn.duration(300)}
-        className="flex-row items-center backdrop-blur-md px-4 pt-12 pb-2 justify-between border-b"
-        style={{ paddingTop: insets.top + 8, backgroundColor: isDark ? "rgba(10,26,16,0.9)" : "rgba(248,250,249,0.9)", borderBottomColor: colors.borderLight }}
+        className="flex-row items-center px-4 pb-3 justify-between"
+        style={{
+          paddingTop: insets.top + 8,
+          backgroundColor: isDark ? "rgba(10,26,16,0.88)" : "rgba(248,250,249,0.9)",
+          borderBottomWidth: 1,
+          borderBottomColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.12)",
+        }}
       >
         <Pressable
           onPress={handleBack}
@@ -182,16 +246,14 @@ export default function ReportingFormScreen() {
           accessibilityRole="button"
           accessibilityLabel={t.common.back}
         >
-          <MaterialIcons
-            name="arrow-back"
-            size={24}
-            color={colors.textPrimary}
-          />
+          <MaterialIcons name="arrow-back" size={24} color={colors.textPrimary} />
         </Pressable>
 
-        <Text className="text-lg font-bold tracking-tight flex-1 text-center" style={{ color: colors.textPrimary }}>
-          {t.report.title}
-        </Text>
+        <View className="flex-1 items-center">
+          <Text className="text-lg font-bold tracking-tight" style={{ color: colors.textPrimary }}>
+            {t.report.title}
+          </Text>
+        </View>
 
         <Pressable
           onPress={handleCancel}
@@ -209,28 +271,41 @@ export default function ReportingFormScreen() {
         contentContainerStyle={{ paddingBottom: 180 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Progress Indicator */}
+        {/* ── Progress Indicator — Spring-animated bar ── */}
         <Animated.View
           entering={FadeInDown.delay(100).duration(400)}
           className="px-5 pt-4 gap-2"
         >
           <View className="flex-row justify-between items-end">
-            <Text className="text-sm font-semibold tracking-wide uppercase text-emerald-500">
+            <Text
+              className="text-sm font-semibold tracking-wide uppercase"
+              style={{ color: progressPercent === 100 ? "#10b981" : GOLD }}
+            >
               {progressPercent < 100 ? t.report.progressFields.replace("{{progress}}", String(progress)) : t.report.readyToSend}
             </Text>
             <Text className="text-xs font-medium" style={{ color: colors.textSecondary }}>
               {t.report.completed.replace("{{percent}}", String(progressPercent))}
             </Text>
           </View>
-          <View className="rounded-full h-1.5 w-full overflow-hidden" style={{ backgroundColor: colors.buttonSecondary }}>
+          <View
+            className="rounded-full h-2 w-full overflow-hidden"
+            style={{ backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }}
+          >
             <Animated.View
-              className="h-full rounded-full bg-emerald-500"
-              style={{ width: `${progressPercent}%` }}
-            />
+              className="h-full w-full rounded-full"
+              style={[progressBarStyle, { transformOrigin: "left center" }]}
+            >
+              <LinearGradient
+                colors={progressPercent === 100 ? ["#10b981", "#059669"] : [GOLD, "#c5952d"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{ flex: 1, borderRadius: 999 }}
+              />
+            </Animated.View>
           </View>
         </Animated.View>
 
-        {/* Title & Description */}
+        {/* ── Title & Description ── */}
         <Animated.View
           entering={FadeInDown.delay(150).duration(400)}
           className="px-5 pt-6 pb-2"
@@ -243,70 +318,111 @@ export default function ReportingFormScreen() {
           </Text>
         </Animated.View>
 
-        {/* Divider */}
-        <View className="h-px mx-5 my-4" style={{ backgroundColor: colors.borderLight }} />
+        {/* Gold-tinted divider */}
+        <View
+          className="mx-5 my-4"
+          style={{ height: 1, backgroundColor: isDark ? "rgba(212,175,55,0.06)" : "rgba(212,175,55,0.1)" }}
+        />
 
-        {/* Section 1: Report Title */}
+        {/* ── Section 1: Report Title ── */}
         <Animated.View
           entering={FadeInDown.delay(200).duration(400)}
           className="px-5 gap-3"
         >
-          <Text className="text-sm font-bold tracking-tight" style={{ color: colors.textPrimary }}>
-            1. {t.report.titleLabel} *
-          </Text>
-          <TextInput
-            className="w-full px-4 py-4 border rounded-xl text-sm font-medium shadow-sm"
-            placeholder={t.report.titlePlaceholder}
-            placeholderTextColor={colors.textMuted}
-            value={title}
-            onChangeText={setTitle}
-            maxLength={255}
-            style={{ backgroundColor: colors.card, borderColor: colors.borderLight, color: colors.textPrimary }}
-          />
+          <View className="flex-row items-center gap-2">
+            <SectionBadge num={1} isDark={isDark} />
+            <Text className="text-sm font-bold tracking-tight" style={{ color: colors.textPrimary }}>
+              {t.report.titleLabel} <Text style={{ color: "#ef4444" }}>*</Text>
+            </Text>
+          </View>
+          <View style={getInputShadow("title")}>
+            <TextInput
+              className="w-full px-4 py-4 rounded-2xl text-sm font-medium"
+              placeholder={t.report.titlePlaceholder}
+              placeholderTextColor={colors.textMuted}
+              value={title}
+              onChangeText={setTitle}
+              maxLength={255}
+              onFocus={() => setFocusedField("title")}
+              onBlur={() => setFocusedField(null)}
+              style={{
+                backgroundColor: isDark ? "rgba(255,255,255,0.04)" : colors.card,
+                borderWidth: 1.5,
+                borderColor: getInputBorderColor("title"),
+                color: colors.textPrimary,
+              }}
+            />
+          </View>
           {title.length > 0 && title.length < 5 && (
-            <Text className="text-xs text-red-400">{t.report.minChars5}</Text>
+            <Animated.Text entering={FadeIn.duration(200)} className="text-xs text-red-400">
+              {t.report.minChars5}
+            </Animated.Text>
           )}
         </Animated.View>
 
-        {/* Section 2: Identify Product */}
+        {/* ── Section 2: Identify Product ── */}
         <Animated.View
           entering={FadeInDown.delay(250).duration(400)}
           className="px-5 pt-8 gap-3"
         >
-          <Text className="text-sm font-bold tracking-tight" style={{ color: colors.textPrimary }}>
-            2. {t.report.identifyProduct}
-          </Text>
-          <View className="relative">
+          <View className="flex-row items-center gap-2">
+            <SectionBadge num={2} isDark={isDark} />
+            <Text className="text-sm font-bold tracking-tight" style={{ color: colors.textPrimary }}>
+              {t.report.identifyProduct}
+            </Text>
+          </View>
+          <View className="relative" style={getInputShadow("product")}>
             <View className="absolute left-3.5 top-1/2 -translate-y-1/2 z-10">
-              <MaterialIcons name="search" size={20} color={colors.textMuted} />
+              <MaterialIcons name="search" size={20} color={focusedField === "product" ? GOLD : colors.textMuted} />
             </View>
             <TextInput
-              className="w-full pl-11 pr-12 py-4 border rounded-xl text-sm font-medium shadow-sm"
+              className="w-full pl-11 pr-12 py-4 rounded-2xl text-sm font-medium"
               placeholder={t.report.searchPlaceholder}
               placeholderTextColor={colors.textMuted}
               value={productSearch}
               onChangeText={setProductSearch}
-              style={{ backgroundColor: colors.card, borderColor: colors.borderLight, color: colors.textPrimary }}
+              onFocus={() => setFocusedField("product")}
+              onBlur={() => setFocusedField(null)}
+              style={{
+                backgroundColor: isDark ? "rgba(255,255,255,0.04)" : colors.card,
+                borderWidth: 1.5,
+                borderColor: getInputBorderColor("product"),
+                color: colors.textPrimary,
+              }}
             />
-            <Pressable
+            <PressableScale
               onPress={handleScanBarcode}
               accessibilityRole="button"
               accessibilityLabel={t.report.identifyProduct}
-              style={{ position: "absolute", right: 14, top: "50%", transform: [{ translateY: -12 }] }}
+              style={{
+                position: "absolute",
+                right: 10,
+                top: "50%",
+                transform: [{ translateY: -16 }],
+                width: 32,
+                height: 32,
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 8,
+                backgroundColor: isDark ? "rgba(212,175,55,0.1)" : "rgba(212,175,55,0.08)",
+              }}
             >
-              <MaterialIcons name="qr-code-scanner" size={24} color={colors.textMuted} />
-            </Pressable>
+              <MaterialIcons name="qr-code-scanner" size={20} color={GOLD} />
+            </PressableScale>
           </View>
         </Animated.View>
 
-        {/* Section 3: Type of Violation */}
+        {/* ── Section 3: Type of Violation ── */}
         <Animated.View
           entering={FadeInDown.delay(300).duration(400)}
           className="px-5 pt-8 gap-3"
         >
-          <Text className="text-sm font-bold tracking-tight" style={{ color: colors.textPrimary }}>
-            3. {t.report.violationType} *
-          </Text>
+          <View className="flex-row items-center gap-2">
+            <SectionBadge num={3} isDark={isDark} />
+            <Text className="text-sm font-bold tracking-tight" style={{ color: colors.textPrimary }}>
+              {t.report.violationType} <Text style={{ color: "#ef4444" }}>*</Text>
+            </Text>
+          </View>
           <View className="flex-row flex-wrap gap-3">
             {VIOLATION_TYPES.map((type) => {
               const isSelected = selectedViolation === type.id;
@@ -314,40 +430,63 @@ export default function ReportingFormScreen() {
                 <PressableScale
                   key={type.id}
                   onPress={() => handleSelectViolation(type.id)}
-                  style={{
-                    width: "48%",
-                  }}
+                  style={{ width: "48%" }}
                   accessibilityRole="button"
                   accessibilityLabel={t.report[type.titleKey]}
                 >
                   <View
-                    className="relative p-4 rounded-xl border-2 shadow-sm"
+                    className="relative p-4 rounded-2xl overflow-hidden"
                     style={{
-                      borderColor: isSelected ? "#10b981" : colors.borderLight,
+                      borderWidth: isSelected ? 2 : 1.5,
+                      borderColor: isSelected ? GOLD : colors.borderLight,
                       backgroundColor: isSelected
-                        ? (isDark ? "rgba(16,185,129,0.1)" : "rgba(16,185,129,0.05)")
-                        : colors.card,
+                        ? (isDark ? "rgba(212,175,55,0.06)" : "rgba(212,175,55,0.04)")
+                        : (isDark ? "rgba(255,255,255,0.03)" : colors.card),
+                      ...(isSelected ? {
+                        shadowColor: GOLD,
+                        shadowOffset: { width: 0, height: 0 },
+                        shadowOpacity: isDark ? 0.3 : 0.2,
+                        shadowRadius: 16,
+                        elevation: 6,
+                      } : {}),
                     }}
                   >
                     {isSelected && (
-                      <View className="absolute top-3 right-3">
-                        <MaterialIcons name="check-circle" size={18} color="#10b981" />
-                      </View>
+                      <Animated.View
+                        entering={ZoomIn.springify()}
+                        className="absolute top-3 right-3"
+                      >
+                        <View
+                          style={{
+                            width: 22,
+                            height: 22,
+                            borderRadius: 11,
+                            backgroundColor: GOLD,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <MaterialIcons name="check" size={14} color="#ffffff" />
+                        </View>
+                      </Animated.View>
                     )}
                     <View
-                      className="w-10 h-10 rounded-full items-center justify-center mb-3 border"
+                      className="w-11 h-11 rounded-full items-center justify-center mb-3"
                       style={{
-                        backgroundColor: isSelected ? colors.card : colors.backgroundSecondary,
-                        borderColor: colors.borderLight,
+                        backgroundColor: isSelected
+                          ? (isDark ? "rgba(212,175,55,0.15)" : "rgba(212,175,55,0.1)")
+                          : (isDark ? "rgba(255,255,255,0.06)" : colors.backgroundSecondary),
+                        borderWidth: 1,
+                        borderColor: isSelected ? "rgba(212,175,55,0.3)" : colors.borderLight,
                       }}
                     >
                       <MaterialIcons
                         name={type.icon}
                         size={22}
-                        color={isSelected ? "#fbbf24" : type.iconColor}
+                        color={isSelected ? GOLD : type.iconColor}
                       />
                     </View>
-                    <Text className="text-sm font-bold" style={{ color: colors.textPrimary }}>
+                    <Text className="text-sm font-bold" style={{ color: isSelected ? GOLD : colors.textPrimary }}>
                       {t.report[type.titleKey]}
                     </Text>
                     <Text className="text-xs mt-0.5" style={{ color: colors.textSecondary }}>
@@ -360,48 +499,66 @@ export default function ReportingFormScreen() {
           </View>
         </Animated.View>
 
-        {/* Section 4: Additional Details */}
+        {/* ── Section 4: Additional Details ── */}
         <Animated.View
           entering={FadeInDown.delay(350).duration(400)}
           className="px-5 pt-8 gap-3"
         >
-          <Text className="text-sm font-bold tracking-tight" style={{ color: colors.textPrimary }}>
-            4. {t.report.additionalDetails} *
-          </Text>
-          <TextInput
-            className="w-full p-4 border rounded-xl text-sm font-medium shadow-sm"
-            placeholder={t.report.detailsPlaceholder}
-            placeholderTextColor={colors.textMuted}
-            value={details}
-            onChangeText={setDetails}
-            multiline
-            numberOfLines={3}
-            textAlignVertical="top"
-            style={{ minHeight: 100, backgroundColor: colors.card, borderColor: colors.borderLight, color: colors.textPrimary }}
-            maxLength={2000}
-          />
+          <View className="flex-row items-center gap-2">
+            <SectionBadge num={4} isDark={isDark} />
+            <Text className="text-sm font-bold tracking-tight" style={{ color: colors.textPrimary }}>
+              {t.report.additionalDetails} <Text style={{ color: "#ef4444" }}>*</Text>
+            </Text>
+          </View>
+          <View style={getInputShadow("details")}>
+            <TextInput
+              className="w-full p-4 rounded-2xl text-sm font-medium"
+              placeholder={t.report.detailsPlaceholder}
+              placeholderTextColor={colors.textMuted}
+              value={details}
+              onChangeText={setDetails}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+              onFocus={() => setFocusedField("details")}
+              onBlur={() => setFocusedField(null)}
+              style={{
+                minHeight: 100,
+                backgroundColor: isDark ? "rgba(255,255,255,0.04)" : colors.card,
+                borderWidth: 1.5,
+                borderColor: getInputBorderColor("details"),
+                color: colors.textPrimary,
+              }}
+              maxLength={2000}
+            />
+          </View>
           {details.length > 0 && details.length < 10 && (
-            <Text className="text-xs text-red-400">{t.report.minChars10}</Text>
+            <Animated.Text entering={FadeIn.duration(200)} className="text-xs text-red-400">
+              {t.report.minChars10}
+            </Animated.Text>
           )}
         </Animated.View>
 
-        {/* Section 5: Photo Evidence */}
+        {/* ── Section 5: Photo Evidence ── */}
         <Animated.View
           entering={FadeInDown.delay(400).duration(400)}
           className="px-5 pt-8 gap-3"
         >
-          <View className="flex-row justify-between items-end">
-            <Text className="text-sm font-bold tracking-tight" style={{ color: colors.textPrimary }}>
-              5. {t.report.photoEvidence}
-            </Text>
-            <View className="bg-emerald-500/10 px-2 py-0.5 rounded-full">
-              <Text className="text-xs font-semibold text-emerald-500">
+          <View className="flex-row justify-between items-center">
+            <View className="flex-row items-center gap-2">
+              <SectionBadge num={5} isDark={isDark} />
+              <Text className="text-sm font-bold tracking-tight" style={{ color: colors.textPrimary }}>
+                {t.report.photoEvidence}
+              </Text>
+            </View>
+            <View style={{ backgroundColor: GOLD_LIGHT, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 }}>
+              <Text style={{ fontSize: 11, fontWeight: "600", color: GOLD }}>
                 {t.report.recommended}
               </Text>
             </View>
           </View>
 
-          {/* Upload Zone */}
+          {/* Upload Zone — Gold-tinted dashed border */}
           <PressableScale
             onPress={handleAddPhoto}
             disabled={photos.length >= MAX_PHOTOS}
@@ -409,17 +566,30 @@ export default function ReportingFormScreen() {
             accessibilityLabel={t.report.tapToAdd}
           >
             <View
-              className="w-full h-36 border-2 border-dashed rounded-xl items-center justify-center gap-2"
+              className="w-full h-36 border-2 border-dashed rounded-2xl items-center justify-center gap-2"
               style={{
-                borderColor: photos.length >= MAX_PHOTOS ? colors.borderLight : colors.border,
+                borderColor: photos.length >= MAX_PHOTOS
+                  ? colors.borderLight
+                  : (isDark ? "rgba(212,175,55,0.25)" : "rgba(212,175,55,0.3)"),
                 backgroundColor: photos.length >= MAX_PHOTOS
                   ? (isDark ? "rgba(30,41,59,0.5)" : "rgba(243,244,246,0.5)")
-                  : colors.backgroundSecondary,
+                  : (isDark ? "rgba(212,175,55,0.03)" : "rgba(212,175,55,0.04)"),
                 opacity: photos.length >= MAX_PHOTOS ? 0.5 : 1,
               }}
             >
-              <View className="w-12 h-12 rounded-full shadow-sm items-center justify-center" style={{ backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#ffffff" }}>
-                <MaterialIcons name="add-a-photo" size={28} color="#10b981" />
+              <View
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: isDark ? "rgba(212,175,55,0.12)" : "rgba(212,175,55,0.08)",
+                  borderWidth: 1,
+                  borderColor: isDark ? "rgba(212,175,55,0.2)" : "rgba(212,175,55,0.15)",
+                }}
+              >
+                <MaterialIcons name="add-a-photo" size={24} color={GOLD} />
               </View>
               <View className="items-center">
                 <Text className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
@@ -432,7 +602,7 @@ export default function ReportingFormScreen() {
             </View>
           </PressableScale>
 
-          {/* Photo Thumbnails */}
+          {/* Photo Thumbnails — ZoomIn staggered */}
           {photos.length > 0 && (
             <ScrollView
               horizontal
@@ -440,45 +610,56 @@ export default function ReportingFormScreen() {
               contentContainerStyle={{ gap: 12, paddingBottom: 8, paddingTop: 4 }}
             >
               {photos.map((photo, index) => (
-                <PressableScale
-                  key={index}
-                  onPress={() => handleRemovePhoto(index)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${t.report.photoEvidence} ${index + 1}`}
-                >
-                  <View
-                    className="relative w-20 h-20 rounded-lg overflow-hidden border shadow-sm"
-                    style={{ borderColor: colors.borderLight }}
+                <Animated.View key={index} entering={ZoomIn.delay(index * 80).duration(250)}>
+                  <PressableScale
+                    onPress={() => handleRemovePhoto(index)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${t.report.photoEvidence} ${index + 1}`}
                   >
-                    <Image
-                      source={{ uri: photo }}
-                      className="w-full h-full"
-                      contentFit="cover"
-                      transition={200}
-                    />
-                    <View className="absolute inset-0 bg-black/30 items-center justify-center">
-                      <MaterialIcons name="delete" size={20} color="#ffffff" />
-                    </View>
-                    {index === 0 && (
-                      <View className="absolute bottom-1 right-1 bg-black/60 rounded px-1 py-0.5">
-                        <Text className="text-[8px] text-white font-medium uppercase tracking-wider">
-                          {t.report.cover}
-                        </Text>
+                    <View
+                      className="relative w-20 h-20 rounded-xl overflow-hidden"
+                      style={{
+                        borderWidth: 1.5,
+                        borderColor: isDark ? "rgba(212,175,55,0.2)" : "rgba(212,175,55,0.15)",
+                      }}
+                    >
+                      <Image
+                        source={{ uri: photo }}
+                        className="w-full h-full"
+                        contentFit="cover"
+                        transition={200}
+                      />
+                      <View className="absolute inset-0 items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.35)" }}>
+                        <MaterialIcons name="delete" size={20} color="#ffffff" />
                       </View>
-                    )}
-                  </View>
-                </PressableScale>
+                      {index === 0 && (
+                        <View className="absolute bottom-1 right-1 rounded px-1 py-0.5" style={{ backgroundColor: "rgba(212,175,55,0.85)" }}>
+                          <Text className="text-[8px] text-white font-bold uppercase tracking-wider">
+                            {t.report.cover}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </PressableScale>
+                </Animated.View>
               ))}
             </ScrollView>
           )}
         </Animated.View>
 
-        {/* Allow Contact Toggle */}
+        {/* ── Allow Contact Toggle — Glass card ── */}
         <Animated.View
           entering={FadeInDown.delay(450).duration(400)}
           className="px-5 pt-4 pb-4"
         >
-          <View className="flex-row items-center justify-between p-4 rounded-xl border shadow-sm" style={{ backgroundColor: colors.card, borderColor: colors.borderLight }}>
+          <View
+            className="flex-row items-center justify-between p-4 rounded-2xl"
+            style={{
+              backgroundColor: isDark ? "rgba(255,255,255,0.03)" : colors.card,
+              borderWidth: 1,
+              borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
+            }}
+          >
             <View className="flex-1 gap-0.5">
               <Text className="text-sm font-bold" style={{ color: colors.textPrimary }}>
                 {t.report.allowFollowup}
@@ -497,11 +678,18 @@ export default function ReportingFormScreen() {
         </Animated.View>
       </ScrollView>
 
-      {/* Fixed Bottom CTA */}
+      {/* ── Fixed Bottom CTA — LinearGradient + glow ── */}
       <Animated.View
         entering={FadeInUp.delay(500).duration(400)}
-        className="absolute bottom-0 left-0 right-0 border-t p-5 backdrop-blur-xl z-40"
-        style={{ paddingBottom: insets.bottom + 24, backgroundColor: colors.background, borderTopColor: colors.borderLight }}
+        className="absolute bottom-0 left-0 right-0 z-40"
+        style={{
+          paddingBottom: insets.bottom + 24,
+          paddingTop: 16,
+          paddingHorizontal: 20,
+          backgroundColor: isDark ? "rgba(12,12,12,0.92)" : "rgba(243,241,237,0.92)",
+          borderTopWidth: 1,
+          borderTopColor: isDark ? "rgba(212,175,55,0.06)" : "rgba(212,175,55,0.1)",
+        }}
       >
         <PressableScale
           onPress={handleSubmit}
@@ -510,36 +698,52 @@ export default function ReportingFormScreen() {
           accessibilityLabel={t.report.submitReport}
         >
           <View
-            className="w-full py-4 rounded-xl flex-row items-center justify-center gap-2"
+            className="w-full rounded-2xl overflow-hidden"
             style={{
-              backgroundColor: isFormValid && !createReport.isPending && !isUploading
-                ? "#10b981"
-                : colors.buttonSecondary,
               ...(isFormValid && !createReport.isPending && !isUploading
                 ? {
                     shadowColor: "#10b981",
-                    shadowOffset: { width: 0, height: 0 },
+                    shadowOffset: { width: 0, height: 4 },
                     shadowOpacity: 0.4,
                     shadowRadius: 20,
+                    elevation: 8,
                   }
                 : {}),
             }}
           >
-            {createReport.isPending || isUploading ? (
-              <ActivityIndicator size="small" color="#ffffff" />
-            ) : (
-              <>
-                <Text className="font-bold text-base text-white">
-                  {t.report.submitReport}
-                </Text>
-                <MaterialIcons name="send" size={20} color="#ffffff" />
-              </>
-            )}
+            <LinearGradient
+              colors={
+                isFormValid && !createReport.isPending && !isUploading
+                  ? ["#10b981", "#059669"]
+                  : [isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)", isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"]
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ paddingVertical: 16, alignItems: "center", justifyContent: "center", flexDirection: "row", gap: 8 }}
+            >
+              {createReport.isPending || isUploading ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <>
+                  <Text
+                    className="font-bold text-base"
+                    style={{ color: isFormValid ? "#ffffff" : colors.textMuted }}
+                  >
+                    {t.report.submitReport}
+                  </Text>
+                  <MaterialIcons
+                    name="send"
+                    size={20}
+                    color={isFormValid ? "#ffffff" : colors.textMuted}
+                  />
+                </>
+              )}
+            </LinearGradient>
           </View>
         </PressableScale>
 
         <View className="flex-row items-center justify-center gap-1.5 mt-4 opacity-70">
-          <MaterialIcons name="lock" size={12} color={colors.textMuted} />
+          <MaterialIcons name="lock" size={12} color={GOLD} />
           <Text className="text-[11px] font-medium tracking-wide" style={{ color: colors.textMuted }}>
             {t.report.encryptionNotice}
           </Text>

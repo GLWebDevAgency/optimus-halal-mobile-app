@@ -14,7 +14,6 @@ import React, { useState, useCallback, useEffect, useRef } from "react";
 import {
   View,
   Text,
-  Pressable,
   StyleSheet,
   Dimensions,
   Alert,
@@ -48,8 +47,9 @@ import { BlurView } from "expo-blur";
 
 import { useTranslation } from "@/hooks/useTranslation";
 import { PressableScale } from "@/components/ui/PressableScale";
-import { brand, darkTheme } from "@/theme/colors";
+import { brand } from "@/theme/colors";
 
+const GOLD = "#d4af37";
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const SCAN_FRAME_WIDTH = 320;
 const SCAN_FRAME_HEIGHT = 288;
@@ -258,7 +258,7 @@ export default function ScannerScreen() {
           style={styles.permissionContent}
         >
           <View style={styles.permissionIconContainer}>
-            <MaterialIcons name="camera-alt" size={48} color={colors.primary} />
+            <MaterialIcons name="camera-alt" size={48} color={GOLD} />
           </View>
           <View style={styles.permissionTextContainer}>
             <Text style={styles.permissionTitle}>{t.scanner.noPermission}</Text>
@@ -376,25 +376,25 @@ export default function ScannerScreen() {
         >
           {/* Close Button */}
           <Animated.View entering={FadeIn.delay(200).duration(400)}>
-            <Pressable
+            <PressableScale
               onPress={handleClose}
               style={styles.headerButton}
               accessibilityRole="button"
               accessibilityLabel={t.common.close}
             >
               <MaterialIcons name="close" size={20} color="#ffffff" />
-            </Pressable>
+            </PressableScale>
           </Animated.View>
 
           {/* App Title Badge */}
           <Animated.View entering={FadeIn.delay(300).duration(400)} style={styles.titleBadge}>
-            <MaterialIcons name="verified-user" size={18} color={colors.primary} />
+            <MaterialIcons name="verified-user" size={18} color={GOLD} />
             <Text style={styles.titleText}>{t.scanner.halalScanner}</Text>
           </Animated.View>
 
           {/* Flash Toggle */}
           <Animated.View entering={FadeIn.delay(200).duration(400)}>
-            <Pressable
+            <PressableScale
               onPress={handleToggleFlash}
               style={[styles.headerButton, isFlashOn && styles.headerButtonActive]}
               accessibilityRole="button"
@@ -403,9 +403,9 @@ export default function ScannerScreen() {
               <MaterialIcons
                 name={isFlashOn ? "flash-on" : "flash-off"}
                 size={20}
-                color={isFlashOn ? colors.primary : "#ffffff"}
+                color={isFlashOn ? GOLD : "#ffffff"}
               />
-            </Pressable>
+            </PressableScale>
           </Animated.View>
         </LinearGradient>
 
@@ -440,7 +440,7 @@ export default function ScannerScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={t.scanner.gallery}
               >
-                <MaterialIcons name="photo-library" size={26} color="#ffffff" />
+                <MaterialIcons name="photo-library" size={26} color={GOLD} />
               </PressableScale>
               <Text style={styles.sideButtonLabel}>{t.scanner.gallery.toUpperCase()}</Text>
             </Animated.View>
@@ -479,7 +479,7 @@ export default function ScannerScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={t.scanner.history}
               >
-                <MaterialIcons name="history" size={26} color="#FFD700" />
+                <MaterialIcons name="history" size={26} color={GOLD} />
               </PressableScale>
               <Text style={styles.sideButtonLabel}>{t.scanner.history.toUpperCase()}</Text>
             </Animated.View>
@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
   },
   permissionContainer: {
     flex: 1,
-    backgroundColor: "#102216",
+    backgroundColor: "#0C0C0C",
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 24,
@@ -519,8 +519,10 @@ const styles = StyleSheet.create({
   permissionIconContainer: {
     width: 80,
     height: 80,
-    borderRadius: 40,
-    backgroundColor: "rgba(29, 229, 96, 0.15)",
+    borderRadius: 24,
+    backgroundColor: "rgba(212,175,55,0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(212,175,55,0.15)",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -541,7 +543,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   permissionButton: {
-    backgroundColor: brand.primary,
+    backgroundColor: GOLD,
     paddingHorizontal: 32,
     paddingVertical: 16,
     borderRadius: 16,
@@ -550,8 +552,8 @@ const styles = StyleSheet.create({
   },
   permissionButtonText: {
     fontSize: 16,
-    fontWeight: "700",
-    color: darkTheme.textInverse,
+    fontWeight: "800",
+    color: "#0C0C0C",
   },
   cancelButton: {
     paddingVertical: 12,
@@ -566,7 +568,7 @@ const styles = StyleSheet.create({
   },
   overlayDark: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(30, 41, 59, 0.6)",
+    backgroundColor: "rgba(12,12,12,0.65)",
   },
   middleRow: {
     flexDirection: "row",
@@ -580,7 +582,7 @@ const styles = StyleSheet.create({
     height: SCAN_FRAME_HEIGHT,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: "rgba(212,175,55,0.08)",
     position: "relative",
     overflow: "hidden",
   },
@@ -647,14 +649,15 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "rgba(100, 116, 139, 0.4)",
+    backgroundColor: "rgba(212,175,55,0.08)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: "rgba(212,175,55,0.2)",
     alignItems: "center",
     justifyContent: "center",
   },
   headerButtonActive: {
-    backgroundColor: "rgba(29, 229, 96, 0.2)",
+    backgroundColor: "rgba(212,175,55,0.18)",
+    borderColor: "rgba(212,175,55,0.35)",
   },
   titleBadge: {
     flexDirection: "row",
@@ -663,9 +666,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: "rgba(15, 23, 42, 0.8)",
+    backgroundColor: "rgba(12,12,12,0.85)",
     borderWidth: 1,
-    borderColor: "rgba(71, 85, 105, 0.5)",
+    borderColor: "rgba(212,175,55,0.25)",
   },
   titleText: {
     fontSize: 14,
@@ -684,7 +687,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: "rgba(212,175,55,0.15)",
     overflow: "hidden",
   },
   instructionText: {
@@ -717,16 +720,16 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 16,
-    backgroundColor: "rgba(100, 116, 139, 0.6)",
+    backgroundColor: "rgba(212,175,55,0.06)",
     borderWidth: 1,
-    borderColor: "rgba(71, 85, 105, 0.5)",
+    borderColor: "rgba(212,175,55,0.2)",
     alignItems: "center",
     justifyContent: "center",
   },
   sideButtonLabel: {
     fontSize: 10,
     fontWeight: "700",
-    color: "rgba(203, 213, 225, 1)",
+    color: "rgba(212,175,55,0.75)",
     letterSpacing: 1,
   },
   captureButtonContainer: {
@@ -747,8 +750,8 @@ const styles = StyleSheet.create({
     height: 96,
     borderRadius: 48,
     borderWidth: 3,
-    borderColor: "rgba(255,255,255,0.1)",
-    backgroundColor: "rgba(255,255,255,0.05)",
+    borderColor: "rgba(212,175,55,0.25)",
+    backgroundColor: "rgba(212,175,55,0.04)",
     alignItems: "center",
     justifyContent: "center",
   },

@@ -14,13 +14,16 @@ import {
   ScrollView,
 } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
+import { PremiumBackground } from "@/components/ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
-import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInDown, ZoomIn } from "react-native-reanimated";
 import { useHaptics, useTranslation } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
 import { trpc } from "@/lib/trpc";
+
+const GOLD = "#d4af37";
 
 type MadhabValue = "hanafi" | "shafii" | "maliki" | "hanbali" | "general";
 
@@ -72,8 +75,10 @@ export default function MadhabScreen() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Header */}
+    <View style={{ flex: 1 }}>
+      <PremiumBackground />
+      <SafeAreaView style={{ flex: 1 }}>
+        {/* Header */}
       <Animated.View
         entering={FadeIn.duration(400)}
         className="flex-row items-center px-4 pb-4 pt-2"
@@ -114,19 +119,19 @@ export default function MadhabScreen() {
           className="px-4 mb-6"
         >
           <View
-            className="rounded-xl p-4"
+            className="rounded-2xl p-4"
             style={{
               backgroundColor: isDark
                 ? "rgba(19,236,106,0.08)"
                 : "rgba(19,236,106,0.05)",
               borderWidth: 1,
               borderColor: isDark
-                ? "rgba(19,236,106,0.15)"
-                : "rgba(19,236,106,0.1)",
+                ? "rgba(212,175,55,0.12)"
+                : "rgba(212,175,55,0.1)",
             }}
           >
             <View className="flex-row items-center gap-2 mb-2">
-              <MaterialIcons name="info" size={18} color={colors.primary} />
+              <MaterialIcons name="info" size={18} color={GOLD} />
               <Text className="text-sm font-semibold text-slate-900 dark:text-white">
                 {t.madhab.infoTitle}
               </Text>
@@ -152,21 +157,26 @@ export default function MadhabScreen() {
               accessibilityHint={option.description}
             >
               <View
-                className="rounded-xl p-4 flex-row items-center gap-4"
+                className="rounded-2xl p-4 flex-row items-center gap-4"
                 style={{
                   backgroundColor: isDark
                     ? selected === option.value
-                      ? "rgba(19,236,106,0.1)"
+                      ? "rgba(212,175,55,0.08)"
                       : "rgba(255,255,255,0.03)"
                     : selected === option.value
-                      ? "rgba(19,236,106,0.06)"
+                      ? "rgba(212,175,55,0.05)"
                       : "#ffffff",
                   borderWidth: selected === option.value ? 2 : 1,
                   borderColor: selected === option.value
-                    ? colors.primary
+                    ? GOLD
                     : isDark
-                      ? "rgba(255,255,255,0.05)"
-                      : "#e2e8f0",
+                      ? "rgba(212,175,55,0.08)"
+                      : "rgba(212,175,55,0.1)",
+                  shadowColor: selected === option.value ? GOLD : "transparent",
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: selected === option.value ? 0.2 : 0,
+                  shadowRadius: selected === option.value ? 12 : 0,
+                  elevation: selected === option.value ? 4 : 0,
                 }}
               >
                 {/* Radio indicator */}
@@ -175,17 +185,19 @@ export default function MadhabScreen() {
                   style={{
                     borderWidth: 2,
                     borderColor: selected === option.value
-                      ? colors.primary
+                      ? GOLD
                       : isDark
                         ? "#4b5563"
                         : "#cbd5e1",
                     backgroundColor: selected === option.value
-                      ? colors.primary
+                      ? GOLD
                       : "transparent",
                   }}
                 >
                   {selected === option.value && (
-                    <MaterialIcons name="check" size={14} color="#fff" />
+                    <Animated.View entering={ZoomIn.springify()}>
+                      <MaterialIcons name="check" size={14} color="#fff" />
+                    </Animated.View>
                   )}
                 </View>
 
@@ -211,7 +223,8 @@ export default function MadhabScreen() {
             </Text>
           </Animated.View>
         )}
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }

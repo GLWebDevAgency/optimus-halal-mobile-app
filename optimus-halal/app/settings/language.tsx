@@ -5,12 +5,15 @@
 import React from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
+import { PremiumBackground } from "@/components/ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
-import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInDown, ZoomIn } from "react-native-reanimated";
 import { useTranslation, type Language } from "@/hooks/useTranslation";
 import { useTheme } from "@/hooks/useTheme";
+
+const GOLD = "#d4af37";
 
 const LANGUAGES: { code: Language; native: string; flag: string }[] = [
   { code: "fr", native: "Français", flag: "🇫🇷" },
@@ -28,15 +31,17 @@ const LANGUAGES: { code: Language; native: string; flag: string }[] = [
 
 export default function LanguageScreen() {
   const { t, language, setLanguage } = useTranslation();
-  const { colors } = useTheme();
+  const { isDark, colors } = useTheme();
 
   const handleSelect = (lang: Language) => {
     setLanguage(lang);
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Header */}
+    <View style={{ flex: 1 }}>
+      <PremiumBackground />
+      <SafeAreaView style={{ flex: 1 }}>
+        {/* Header */}
       <Animated.View
         entering={FadeIn.duration(400)}
         style={{
@@ -45,7 +50,7 @@ export default function LanguageScreen() {
           paddingHorizontal: 16,
           paddingVertical: 12,
           borderBottomWidth: 1,
-          borderBottomColor: colors.borderLight,
+          borderBottomColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.12)",
         }}
       >
         <Pressable
@@ -80,11 +85,11 @@ export default function LanguageScreen() {
         <Animated.View
           entering={FadeInDown.delay(200).duration(400)}
           style={{
-            backgroundColor: colors.card,
+            backgroundColor: isDark ? "rgba(255,255,255,0.03)" : colors.card,
             borderRadius: 16,
             overflow: "hidden",
             borderWidth: 1,
-            borderColor: colors.borderLight,
+            borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
           }}
           accessibilityRole="radiogroup"
           accessibilityLabel="Sélection de la langue"
@@ -106,7 +111,7 @@ export default function LanguageScreen() {
                   paddingHorizontal: 16,
                   paddingVertical: 16,
                   borderBottomWidth: index !== LANGUAGES.length - 1 ? 1 : 0,
-                  borderBottomColor: colors.borderLight,
+                  borderBottomColor: isDark ? "rgba(212,175,55,0.06)" : "rgba(212,175,55,0.1)",
                 }}
               >
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -114,13 +119,16 @@ export default function LanguageScreen() {
                   <Text style={{ color: colors.textPrimary, fontSize: 16 }}>{lang.native}</Text>
                 </View>
                 {language === lang.code && (
-                  <MaterialIcons name="check-circle" size={24} color={colors.primary} />
+                  <Animated.View entering={ZoomIn.springify()}>
+                    <MaterialIcons name="check-circle" size={24} color={GOLD} />
+                  </Animated.View>
                 )}
               </View>
             </PressableScale>
           ))}
         </Animated.View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }

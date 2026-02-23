@@ -23,6 +23,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
+import { Image } from "expo-image";
 import { Button, Input, IconButton, PhoneInput, LocationPicker, validateFrenchPhone, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { useLocalAuthStore } from "@/store";
@@ -30,9 +31,11 @@ import { authService } from "@/services/api/auth.service";
 import { City } from "@/constants/locations";
 import { useTranslation, useHaptics, useTheme } from "@/hooks";
 
+const logoSource = require("@assets/images/logo_naqiy.webp");
+
 export default function SignUpScreen() {
   const insets = useSafeAreaInsets();
-  const { isDark } = useTheme();
+  const { isDark, colors } = useTheme();
   const { impact, notification } = useHaptics();
   const { t } = useTranslation();
 
@@ -175,6 +178,25 @@ export default function SignUpScreen() {
             <Text className="text-sm font-medium text-slate-400 dark:text-slate-500">
               {t.common.stepOf.replace("{{current}}", "1").replace("{{total}}", "3")}
             </Text>
+          </Animated.View>
+
+          {/* Brand Logo */}
+          <Animated.View
+            entering={FadeInDown.delay(150).duration(500)}
+            className="items-center mb-6"
+          >
+            <View
+              className="w-16 h-16 rounded-2xl items-center justify-center"
+              style={{ backgroundColor: colors.card }}
+              accessible={false}
+            >
+              <Image
+                source={logoSource}
+                style={{ width: 42, height: 42 }}
+                contentFit="contain"
+                cachePolicy="memory-disk"
+              />
+            </View>
           </Animated.View>
 
           {/* Title */}

@@ -21,6 +21,7 @@ import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation, useMe, useLeaderboard, useHaptics } from "@/hooks";
+import { PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 
 // -- Types ------------------------------------------------------------------
@@ -411,80 +412,83 @@ export default function LeaderboardScreen() {
   // -- Loading state --
   if (leaderboardQuery.isLoading) {
     return (
-      <SafeAreaView
-        style={[styles.container, { backgroundColor: colors.background }]}
-      >
-        <Header
+      <View style={{ flex: 1 }}>
+        <PremiumBackground />
+        <SafeAreaView style={[styles.container]}>
+          <Header
           onBack={handleBack}
           colors={colors}
           isDark={isDark}
           t={t}
           totalCount={0}
         />
-        <SkeletonPodium isDark={isDark} />
-        <View style={styles.skeletonListWrap}>
-          {Array.from({ length: 10 }).map((_, i) => (
-            <SkeletonRow key={i} isDark={isDark} />
-          ))}
-        </View>
-      </SafeAreaView>
+          <SkeletonPodium isDark={isDark} />
+          <View style={styles.skeletonListWrap}>
+            {Array.from({ length: 10 }).map((_, i) => (
+              <SkeletonRow key={i} isDark={isDark} />
+            ))}
+          </View>
+        </SafeAreaView>
+      </View>
     );
   }
 
   // -- Error state --
   if (leaderboardQuery.isError) {
     return (
-      <SafeAreaView
-        style={[styles.container, { backgroundColor: colors.background }]}
-      >
-        <Header
-          onBack={handleBack}
-          colors={colors}
-          isDark={isDark}
-          t={t}
-          totalCount={0}
-        />
-        <View style={styles.centerWrap}>
-          <MaterialIcons name="cloud-off" size={64} color={colors.textMuted} />
-          <Text style={[styles.errorText, { color: colors.textSecondary }]}>
-            {t.common.loadingError}
-          </Text>
-          <PressableScale
-            onPress={handleRetry}
-            style={[styles.retryButton, { backgroundColor: colors.primary }]}
-            accessibilityRole="button"
-            accessibilityLabel={t.common.retry}
-          >
-            <Text style={styles.retryButtonText}>{t.common.retry}</Text>
-          </PressableScale>
-        </View>
-      </SafeAreaView>
+      <View style={{ flex: 1 }}>
+        <PremiumBackground />
+        <SafeAreaView style={[styles.container]}>
+          <Header
+            onBack={handleBack}
+            colors={colors}
+            isDark={isDark}
+            t={t}
+            totalCount={0}
+          />
+          <View style={styles.centerWrap}>
+            <MaterialIcons name="cloud-off" size={64} color={colors.textMuted} />
+            <Text style={[styles.errorText, { color: colors.textSecondary }]}>
+              {t.common.loadingError}
+            </Text>
+            <PressableScale
+              onPress={handleRetry}
+              style={[styles.retryButton, { backgroundColor: colors.primary }]}
+              accessibilityRole="button"
+              accessibilityLabel={t.common.retry}
+            >
+              <Text style={styles.retryButtonText}>{t.common.retry}</Text>
+            </PressableScale>
+          </View>
+        </SafeAreaView>
+      </View>
     );
   }
 
   // -- Empty state --
   if (allEntries.length === 0) {
     return (
-      <SafeAreaView
-        style={[styles.container, { backgroundColor: colors.background }]}
-      >
-        <Header
-          onBack={handleBack}
-          colors={colors}
-          isDark={isDark}
-          t={t}
-          totalCount={0}
-        />
-        <View style={styles.centerWrap}>
-          <MaterialIcons name="emoji-events" size={64} color={colors.textMuted} />
-          <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
-            {t.leaderboard.empty}
-          </Text>
-          <Text style={[styles.emptyDesc, { color: colors.textMuted }]}>
-            {t.leaderboard.emptyDesc}
-          </Text>
-        </View>
-      </SafeAreaView>
+      <View style={{ flex: 1 }}>
+        <PremiumBackground />
+        <SafeAreaView style={[styles.container]}>
+          <Header
+            onBack={handleBack}
+            colors={colors}
+            isDark={isDark}
+            t={t}
+            totalCount={0}
+          />
+          <View style={styles.centerWrap}>
+            <MaterialIcons name="emoji-events" size={64} color={colors.textMuted} />
+            <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
+              {t.leaderboard.empty}
+            </Text>
+            <Text style={[styles.emptyDesc, { color: colors.textMuted }]}>
+              {t.leaderboard.emptyDesc}
+            </Text>
+          </View>
+        </SafeAreaView>
+      </View>
     );
   }
 
@@ -544,10 +548,10 @@ export default function LeaderboardScreen() {
   );
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
-    >
-      <Header
+    <View style={{ flex: 1 }}>
+      <PremiumBackground />
+      <SafeAreaView style={[styles.container]}>
+        <Header
         onBack={handleBack}
         colors={colors}
         isDark={isDark}
@@ -564,6 +568,7 @@ export default function LeaderboardScreen() {
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
+    </View>
   );
 }
 

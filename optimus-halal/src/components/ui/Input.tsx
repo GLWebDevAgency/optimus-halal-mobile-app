@@ -1,19 +1,20 @@
 /**
- * Input Component
- * 
- * Composant input réutilisable avec support dark mode
+ * Input Component — Premium Naqiy Edition
+ *
+ * Gold-tinted borders at rest, green glow on focus (like the leaf
+ * on the Naqiy "N" — the brand comes alive when you interact).
  */
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   TextInput,
   TextInputProps,
   View,
   Text,
-  Pressable,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { neutral } from "@/theme/colors";
+import { useTheme } from "@/hooks/useTheme";
+import { PressableScale } from "./PressableScale";
 
 export interface InputProps extends TextInputProps {
   label?: string;
@@ -34,89 +35,119 @@ export function Input({
   rightIcon,
   onRightIconPress,
   containerClassName = "",
-  className = "",
   secureTextEntry,
   ref,
+  onFocus: onFocusProp,
+  onBlur: onBlurProp,
   ...props
 }: InputProps) {
-    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-    const isPassword = secureTextEntry !== undefined;
+  const { isDark, colors } = useTheme();
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const isPassword = secureTextEntry !== undefined;
 
-    const togglePasswordVisibility = () => {
-      setIsPasswordVisible(!isPasswordVisible);
-    };
+  const togglePasswordVisibility = useCallback(() => {
+    setIsPasswordVisible((v) => !v);
+  }, []);
 
-    return (
-      <View className={`flex flex-col gap-2 ${containerClassName}`}>
-        {label && (
-          <Text className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
-            {label}
-          </Text>
+  const handleFocus = useCallback((e: any) => {
+    setIsFocused(true);
+    onFocusProp?.(e);
+  }, [onFocusProp]);
+
+  const handleBlur = useCallback((e: any) => {
+    setIsFocused(false);
+    onBlurProp?.(e);
+  }, [onBlurProp]);
+
+  // Border color: error > focus (green leaf) > gold rest
+  const borderColor = error
+    ? "#ef4444"
+    : isFocused
+      ? isDark ? "rgba(19,236,106,0.5)" : "rgba(9,154,68,0.5)"
+      : isDark ? "rgba(212,175,55,0.15)" : "rgba(212,175,55,0.2)";
+
+  const iconColor = isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)";
+
+  return (
+    <View style={{ gap: 8 }} className={containerClassName}>
+      {label && (
+        <Text style={{
+          fontSize: 13, fontWeight: "600", marginLeft: 4,
+          color: colors.textPrimary,
+        }}>
+          {label}
+        </Text>
+      )}
+
+      <View style={{ position: "relative" }}>
+        {leftIcon && (
+          <View style={{
+            position: "absolute", left: 16, top: 0, bottom: 0,
+            justifyContent: "center", zIndex: 10,
+          }}>
+            <MaterialIcons name={leftIcon} size={20} color={iconColor} />
+          </View>
         )}
-        
-        <View className="relative">
-          {leftIcon && (
-            <View className="absolute left-4 top-0 bottom-0 justify-center z-10">
-              <MaterialIcons
-                name={leftIcon}
-                size={20}
-                color={neutral[400]}
-              />
-            </View>
-          )}
 
-          <TextInput
-            ref={ref}
-            className={`
-              w-full h-14 px-4
-              ${leftIcon ? "pl-12" : ""}
-              ${rightIcon || isPassword ? "pr-12" : ""}
-              bg-white dark:bg-surface-dark
-              border rounded-xl
-              ${error 
-                ? "border-danger" 
-                : "border-slate-200 dark:border-slate-700 focus:border-primary-500"
+        <TextInput
+          ref={ref}
+          style={{
+            width: "100%",
+            height: 56,
+            paddingHorizontal: 16,
+            paddingLeft: leftIcon ? 48 : 16,
+            paddingRight: (rightIcon || isPassword) ? 48 : 16,
+            backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#ffffff",
+            borderWidth: 1,
+            borderRadius: 12,
+            borderColor,
+            color: colors.textPrimary,
+            fontSize: 16,
+          }}
+          placeholderTextColor={isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.35)"}
+          secureTextEntry={isPassword ? !isPasswordVisible : false}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          {...props}
+        />
+
+        {(rightIcon || isPassword) && (
+          <PressableScale
+            onPress={isPassword ? togglePasswordVisibility : onRightIconPress}
+            style={{
+              position: "absolute", right: 16, top: 0, bottom: 0,
+              justifyContent: "center",
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={isPassword ? "Toggle password visibility" : undefined}
+          >
+            <MaterialIcons
+              name={
+                isPassword
+                  ? isPasswordVisible
+                    ? "visibility-off"
+                    : "visibility"
+                  : rightIcon!
               }
-              text-slate-900 dark:text-white
-              text-base
-              ${className}
-            `}
-            placeholderTextColor={neutral[400]}
-            secureTextEntry={isPassword ? !isPasswordVisible : false}
-            {...props}
-          />
-
-          {(rightIcon || isPassword) && (
-            <Pressable
-              onPress={isPassword ? togglePasswordVisibility : onRightIconPress}
-              className="absolute right-4 top-0 bottom-0 justify-center"
-            >
-              <MaterialIcons
-                name={
-                  isPassword
-                    ? isPasswordVisible
-                      ? "visibility-off"
-                      : "visibility"
-                    : rightIcon!
-                }
-                size={20}
-                color={neutral[400]}
-              />
-            </Pressable>
-          )}
-        </View>
-
-        {error && (
-          <Text className="text-sm text-danger ml-1">{error}</Text>
-        )}
-        
-        {hint && !error && (
-          <Text className="text-xs text-slate-500 dark:text-slate-400 ml-1">
-            {hint}
-          </Text>
+              size={20}
+              color={iconColor}
+            />
+          </PressableScale>
         )}
       </View>
-    );
+
+      {error && (
+        <Text style={{ fontSize: 13, color: "#ef4444", marginLeft: 4 }}>{error}</Text>
+      )}
+
+      {hint && !error && (
+        <Text style={{ fontSize: 12, color: colors.textMuted, marginLeft: 4 }}>
+          {hint}
+        </Text>
+      )}
+    </View>
+  );
 }
 
 export default Input;

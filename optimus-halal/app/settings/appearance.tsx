@@ -12,13 +12,16 @@ import {
   ScrollView,
 } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
+import { PremiumBackground } from "@/components/ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
-import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInDown, ZoomIn } from "react-native-reanimated";
 import { useHaptics, useTranslation } from "@/hooks";
 
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
+
+const GOLD = "#d4af37";
 
 const THEME_OPTIONS: { id: ThemeMode; labelKey: "automatic" | "light" | "dark"; icon: keyof typeof MaterialIcons.glyphMap }[] = [
   {
@@ -39,7 +42,7 @@ const THEME_OPTIONS: { id: ThemeMode; labelKey: "automatic" | "light" | "dark"; 
 ];
 
 export default function AppearanceScreen() {
-  const { theme, setTheme, effectiveTheme, colors } = useTheme();
+  const { isDark, theme, setTheme, effectiveTheme, colors } = useTheme();
   const { t } = useTranslation();
 
   const { impact } = useHaptics();
@@ -55,8 +58,10 @@ export default function AppearanceScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Header */}
+    <View style={{ flex: 1 }}>
+      <PremiumBackground />
+      <SafeAreaView style={{ flex: 1 }}>
+        {/* Header */}
       <Animated.View
         entering={FadeIn.duration(400)}
         className="px-5 pt-4 pb-4"
@@ -95,7 +100,7 @@ export default function AppearanceScreen() {
         <Animated.View
           entering={FadeInDown.delay(100).duration(400)}
           className="rounded-2xl p-6 mb-6 items-center"
-          style={{ backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1 }}
+          style={{ backgroundColor: isDark ? "rgba(255,255,255,0.03)" : colors.card, borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)", borderWidth: 1 }}
         >
           <View
             className="w-20 h-20 rounded-full items-center justify-center mb-4"
@@ -124,7 +129,7 @@ export default function AppearanceScreen() {
         <Animated.View
           entering={FadeInDown.delay(200).duration(400)}
           className="rounded-2xl overflow-hidden"
-          style={{ backgroundColor: colors.card, borderColor: colors.borderLight, borderWidth: 1 }}
+          style={{ backgroundColor: isDark ? "rgba(255,255,255,0.03)" : colors.card, borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)", borderWidth: 1 }}
           accessibilityRole="radiogroup"
           accessibilityLabel={t.appearance.themeOptions}
         >
@@ -143,19 +148,19 @@ export default function AppearanceScreen() {
               >
                 <View
                   className={`flex-row items-center p-4 ${!isLast ? "border-b" : ""}`}
-                  style={{ borderColor: colors.borderLight }}
+                  style={{ borderColor: isDark ? "rgba(212,175,55,0.06)" : "rgba(212,175,55,0.1)" }}
                 >
                   {/* Icon */}
                   <View
                     className="w-12 h-12 rounded-xl items-center justify-center mr-4"
                     style={{
-                      backgroundColor: isSelected ? colors.primaryLight : colors.buttonSecondary,
+                      backgroundColor: isSelected ? (isDark ? "rgba(212,175,55,0.15)" : "rgba(212,175,55,0.1)") : colors.buttonSecondary,
                     }}
                   >
                     <MaterialIcons
                       name={option.icon}
                       size={24}
-                      color={isSelected ? colors.primary : colors.textSecondary}
+                      color={isSelected ? GOLD : colors.textSecondary}
                     />
                   </View>
 
@@ -163,7 +168,7 @@ export default function AppearanceScreen() {
                   <View className="flex-1">
                     <Text
                       className="font-semibold text-base mb-0.5"
-                      style={{ color: isSelected ? colors.primary : colors.textPrimary }}
+                      style={{ color: isSelected ? GOLD : colors.textPrimary }}
                     >
                       {themeLabels[option.labelKey].label}
                     </Text>
@@ -179,12 +184,15 @@ export default function AppearanceScreen() {
                   <View
                     className="w-6 h-6 rounded-full items-center justify-center border-2"
                     style={{
-                      borderColor: isSelected ? colors.primary : colors.borderLight,
-                      backgroundColor: isSelected ? colors.primary : "transparent",
+                      borderColor: isSelected ? GOLD : colors.borderLight,
+                      backgroundColor: isSelected ? GOLD : "transparent",
+                      ...(isSelected ? { shadowColor: GOLD, shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 0 }, elevation: 4 } : {}),
                     }}
                   >
                     {isSelected && (
-                      <MaterialIcons name="check" size={16} color="#ffffff" />
+                      <Animated.View entering={ZoomIn.springify()}>
+                        <MaterialIcons name="check" size={16} color="#ffffff" />
+                      </Animated.View>
                     )}
                   </View>
                 </View>
@@ -197,12 +205,12 @@ export default function AppearanceScreen() {
         <Animated.View
           entering={FadeInDown.delay(300).duration(400)}
           className="mt-6 rounded-2xl p-4"
-          style={{ backgroundColor: colors.primaryLight }}
+          style={{ backgroundColor: "rgba(212,175,55,0.08)", borderWidth: 1, borderColor: isDark ? "rgba(212,175,55,0.12)" : "rgba(212,175,55,0.15)" }}
         >
           <View className="flex-row items-start gap-3">
-            <MaterialIcons name="info-outline" size={20} color={colors.primary} />
+            <MaterialIcons name="info-outline" size={20} color={GOLD} />
             <View className="flex-1">
-              <Text style={{ color: colors.primary }} className="text-sm font-medium mb-1">
+              <Text style={{ color: GOLD }} className="text-sm font-medium mb-1">
                 {t.appearance.autoMode}
               </Text>
               <Text style={{ color: colors.textSecondary }} className="text-xs leading-5">
@@ -211,7 +219,8 @@ export default function AppearanceScreen() {
             </View>
           </View>
         </Animated.View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
