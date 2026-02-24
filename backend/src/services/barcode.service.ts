@@ -115,6 +115,7 @@ export interface HalalAnalysis {
   tier: HalalTier;
   reasons: HalalReason[];
   certifierName: string | null;
+  certifierId: string | null;
   analysisSource: string;
 }
 
@@ -461,6 +462,40 @@ const HALAL_LABEL_TAGS = [
   "ar:halal",
 ];
 
+// ── OFF labels_tags → certifiers DB ID mapping ──────────────
+// Maps OpenFoodFacts certifier-specific label tags to our certifiers table IDs.
+// Source: manual cross-reference of OFF taxonomy with certification-list.json.
+
+export const LABEL_TAG_TO_CERTIFIER_ID: Record<string, string> = {
+  "fr:a-votre-service":                                       "avs-a-votre-service",
+  "fr:avs":                                                   "avs-a-votre-service",
+  "fr:achahada":                                              "achahada",
+  "fr:altakwa":                                               "altakwa",
+  "fr:association-rituelle-de-la-grande-mosquee-de-lyon":     "argml-mosquee-de-lyon",
+  "fr:mosquee-de-lyon":                                       "argml-mosquee-de-lyon",
+  "fr:argml":                                                 "argml-mosquee-de-lyon",
+  "fr:societe-francaise-de-controle-de-viande-halal":         "sfcvh-mosquee-de-paris",
+  "fr:sfcvh":                                                 "sfcvh-mosquee-de-paris",
+  "fr:mosquee-de-paris":                                      "sfcvh-mosquee-de-paris",
+  "fr:arrissala":                                             "arrissala",
+  "fr:halal-services":                                        "halal-services",
+  "fr:european-halal-trust":                                  "european-halal-trust",
+  "fr:halal-monitoring-committee":                            "halal-monitoring-committee",
+  "en:halal-monitoring-committee":                            "halal-monitoring-committee",
+  "fr:khalis-halal":                                          "khalis-halal",
+  "fr:sidq":                                                  "sidq",
+  "fr:muslim-conseil-international":                          "muslim-conseil-international-mci",
+  "fr:mci":                                                   "muslim-conseil-international-mci",
+  "fr:halal-correct":                                         "halal-correct",
+  "fr:halal-polska":                                          "halal-polska",
+  "fr:afcai":                                                 "afcai",
+  "fr:acmif":                                                 "acmif-mosquee-d-evry",
+  "fr:mosquee-d-evry":                                        "acmif-mosquee-d-evry",
+  "fr:alamane":                                               "alamane",
+  "fr:islamic-centre-aachen":                                 "islamic-centre-aachen",
+  "en:islamic-centre-aachen":                                 "islamic-centre-aachen",
+};
+
 // ── Main Analysis Function (v3 — async + madhab-aware) ─────
 
 export async function analyzeHalalStatus(
@@ -474,9 +509,23 @@ export async function analyzeHalalStatus(
 
   // ── TIER 1: Check halal certification labels ──────────────
   if (labelsTags?.length) {
-    const halalLabel = labelsTags.find((tag) =>
+    // 1a. Try certifier-specific label tags first (e.g. fr:a-votre-service → avs)
+    let matchedCertifierId: string | null = null;
+    let matchedCertifierTag: string | null = null;
+    for (const tag of labelsTags) {
+      const certId = LABEL_TAG_TO_CERTIFIER_ID[tag.toLowerCase()];
+      if (certId) {
+        matchedCertifierId = certId;
+        matchedCertifierTag = tag;
+        break;
+      }
+    }
+
+    // 1b. Fall back to generic halal labels
+    const halalLabel = matchedCertifierTag ?? labelsTags.find((tag) =>
       HALAL_LABEL_TAGS.includes(tag.toLowerCase())
     );
+
     if (halalLabel) {
       const certName = halalLabel
         .replace("en:", "")
@@ -489,7 +538,9 @@ export async function analyzeHalalStatus(
         type: "label",
         name: certName,
         status: "halal",
-        explanation: "Label halal certifié détecté sur le produit",
+        explanation: matchedCertifierId
+          ? `Certifié par un organisme halal reconnu (${certName})`
+          : "Label halal certifié détecté sur le produit",
       });
 
       return {
@@ -498,7 +549,10 @@ export async function analyzeHalalStatus(
         tier: "certified",
         reasons,
         certifierName: certName,
-        analysisSource: "Label certifié OpenFoodFacts",
+        certifierId: matchedCertifierId,
+        analysisSource: matchedCertifierId
+          ? "Certifieur identifié via OpenFoodFacts"
+          : "Label certifié OpenFoodFacts",
       };
     }
   }
@@ -580,6 +634,7 @@ export async function analyzeHalalStatus(
         tier: "doubtful",
         reasons: [{ type: "ingredient", name: "—", status: "doubtful", explanation: "Aucun ingrédient disponible" }],
         certifierName: null,
+        certifierId: null,
         analysisSource: "Analyse automatique Naqiy",
       },
       options.strictness
@@ -595,6 +650,7 @@ export async function analyzeHalalStatus(
         tier: "haram",
         reasons,
         certifierName: null,
+        certifierId: null,
         analysisSource: "Analyse automatique Naqiy",
       },
       options.strictness
@@ -609,6 +665,7 @@ export async function analyzeHalalStatus(
         tier: "doubtful",
         reasons,
         certifierName: null,
+        certifierId: null,
         analysisSource: "Analyse automatique Naqiy",
       },
       options.strictness
@@ -628,6 +685,7 @@ export async function analyzeHalalStatus(
         explanation: "Aucun ingrédient haram ou douteux détecté",
       }],
       certifierName: null,
+      certifierId: null,
       analysisSource: "Analyse automatique Naqiy",
     },
     options.strictness

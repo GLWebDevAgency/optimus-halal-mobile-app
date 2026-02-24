@@ -19,6 +19,7 @@ interface TrustRingProps {
   size?: number;
   strokeWidth?: number;
   color?: string;
+  children?: React.ReactNode;
 }
 
 function octagonPath(cx: number, cy: number, r: number): string {
@@ -37,6 +38,7 @@ export const TrustRing: React.FC<TrustRingProps> = ({
   size = 140,
   strokeWidth = 6,
   color = brand.primary,
+  children,
 }) => {
   const { isDark, colors } = useTheme();
   const cx = size / 2;
@@ -87,13 +89,17 @@ export const TrustRing: React.FC<TrustRingProps> = ({
           animatedProps={animatedProps}
         />
       </Svg>
-      <View style={{ position: "absolute", alignItems: "center" }}>
-        <Text style={{ fontSize: size * 0.22, fontWeight: "900", color: colors.textPrimary }}>
-          {displayScore}
-        </Text>
-        <Text style={{ fontSize: size * 0.09, fontWeight: "600", color: colors.textSecondary, marginTop: -2 }}>
-          %
-        </Text>
+      <View style={{ position: "absolute", alignItems: "center", justifyContent: "center" }}>
+        {children ?? (
+          <>
+            <Text style={{ fontSize: size * 0.22, fontWeight: "900", color: colors.textPrimary }}>
+              {displayScore}
+            </Text>
+            <Text style={{ fontSize: size * 0.09, fontWeight: "600", color: colors.textSecondary, marginTop: -2 }}>
+              %
+            </Text>
+          </>
+        )}
       </View>
     </View>
   );

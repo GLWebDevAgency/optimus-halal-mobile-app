@@ -111,12 +111,21 @@ export default function MarketplaceComingSoonScreen() {
               />
             </View>
           </PressableScale>
-          <Image
-            source={logoSource}
-            style={{ width: 26, height: 26 }}
-            contentFit="contain"
-            cachePolicy="memory-disk"
-          />
+          <View style={{
+            width: 36,
+            height: 36,
+            borderRadius: 10,
+            backgroundColor: isDark ? "rgba(212, 175, 55, 0.08)" : "rgba(212, 175, 55, 0.05)",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+            <Image
+              source={logoSource}
+              style={{ width: 30, height: 30 }}
+              contentFit="contain"
+              cachePolicy="memory-disk"
+            />
+          </View>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
             Naqiy{" "}
             <Text style={{ fontWeight: "400", color: colors.textSecondary }}>

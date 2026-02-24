@@ -55,6 +55,10 @@ async function main() {
           acceptsStunning: certifier.acceptsStunning,
           halalAssessment: certifier.halalAssessment,
           trustScore: certifier.trustScore,
+          trustScoreHanafi: certifier.trustScoreHanafi,
+          trustScoreShafii: certifier.trustScoreShafii,
+          trustScoreMaliki: certifier.trustScoreMaliki,
+          trustScoreHanbali: certifier.trustScoreHanbali,
           notes: certifier.notes,
           updatedAt: new Date(),
         },
@@ -64,7 +68,7 @@ async function main() {
   // Print ranking
   const ranked = certifierData
     .sort((a, b) => (b.trustScore ?? 0) - (a.trustScore ?? 0))
-    .map((c, i) => `  ${i + 1}. ${c.name} — Score: ${c.trustScore}/100 ${c.halalAssessment ? "✓" : "✗"}`);
+    .map((c, i) => `  ${i + 1}. ${c.name} — U:${c.trustScore} H:${c.trustScoreHanafi} S:${c.trustScoreShafii} M:${c.trustScoreMaliki} Hb:${c.trustScoreHanbali} ${c.halalAssessment ? "✓" : "✗"}`);
   console.log(`\n  ── Trust Score Ranking ──`);
   ranked.forEach((r) => console.log(r));
 

@@ -6,7 +6,7 @@
  */
 
 import type { NewCertifier } from "../schema/certifiers.js";
-import { computeTrustScore } from "../schema/certifiers.js";
+import { computeAllTrustScores } from "../schema/certifiers.js";
 
 interface CertificationEntry {
   id: string;
@@ -25,7 +25,7 @@ interface CertificationEntry {
 }
 
 function transformCertifier(entry: CertificationEntry): NewCertifier {
-  const trustScore = computeTrustScore(entry);
+  const scores = computeAllTrustScores(entry);
 
   return {
     id: entry.id,
@@ -40,7 +40,7 @@ function transformCertifier(entry: CertificationEntry): NewCertifier {
     acceptsPostSlaughterElectrocution: entry.acceptsPoultryElectrocutionPostSlaughter,
     acceptsStunning: entry.acceptsStunningForCattleCalvesLambs,
     halalAssessment: entry["halal-assessment"] ?? false,
-    trustScore,
+    ...scores,
     notes: entry.notes?.length ? entry.notes : null,
     isActive: true,
   };

@@ -812,12 +812,21 @@ export default function HomeScreen() {
             <View style={styles.headerRight}>
               {/* Naqiy brand mark */}
               <View style={styles.brandMark} accessible={false}>
-                <Image
-                  source={logoSource}
-                  style={{ width: 20, height: 20 }}
-                  contentFit="contain"
-                  cachePolicy="memory-disk"
-                />
+                <View style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 10,
+                  backgroundColor: isDark ? "rgba(212, 175, 55, 0.08)" : "rgba(212, 175, 55, 0.05)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}>
+                  <Image
+                    source={logoSource}
+                    style={{ width: 28, height: 28 }}
+                    contentFit="contain"
+                    cachePolicy="memory-disk"
+                  />
+                </View>
                 <Text style={[styles.brandMarkText, { color: colors.textPrimary }]}>
                   Naqiy
                 </Text>

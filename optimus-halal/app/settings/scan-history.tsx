@@ -137,7 +137,7 @@ const ScanRow = React.memo(function ScanRow({ item, index, isDark, colors, t, la
   return (
     <Animated.View entering={FadeInDown.delay(Math.min(index * 50, 400)).duration(350)}>
       <PressableScale
-        onPress={() => router.push(`/scan-result?barcode=${item.barcode}`)}
+        onPress={() => router.push(`/scan-result?barcode=${item.barcode}&viewOnly=1`)}
         accessibilityRole="button"
         accessibilityLabel={`${item.product?.name ?? item.barcode}, ${status.label}`}
         style={{

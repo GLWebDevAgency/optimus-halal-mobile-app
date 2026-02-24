@@ -57,6 +57,13 @@
       "when": 1771840260000,
       "tag": "0007_ingredient_rulings",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1771935994524,
+      "tag": "0008_old_kid_colt",
+      "breakpoints": true
     }
   ]
 }

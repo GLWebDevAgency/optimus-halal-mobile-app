@@ -468,12 +468,21 @@ export default function ProfileScreen() {
                 borderColor: isDark ? "rgba(212, 175, 55, 0.18)" : "rgba(212, 175, 55, 0.12)",
               }}
             >
-              <Image
-                source={require("@assets/images/logo_naqiy.webp")}
-                style={{ width: 24, height: 24 }}
-                contentFit="contain"
-                cachePolicy="memory-disk"
-              />
+              <View style={{
+                width: 38,
+                height: 38,
+                borderRadius: 10,
+                backgroundColor: isDark ? "rgba(212, 175, 55, 0.08)" : "rgba(212, 175, 55, 0.05)",
+                alignItems: "center",
+                justifyContent: "center",
+              }}>
+                <Image
+                  source={require("@assets/images/logo_naqiy.webp")}
+                  style={{ width: 30, height: 30 }}
+                  contentFit="contain"
+                  cachePolicy="memory-disk"
+                />
+              </View>
               <View style={{ flex: 1, marginStart: 12 }}>
                 <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: "700" }}>
                   Naqiy+

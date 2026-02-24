@@ -9,6 +9,7 @@ import {
   boycottTargets,
   additives as additivesTable,
   additiveMadhabRulings,
+  certifiers,
 } from "../../db/schema/index.js";
 import {
   lookupBarcode,
@@ -223,6 +224,7 @@ export const scanRouter = router({
         barcode: z.string().regex(/^[0-9]{4,14}$/, "Code-barres invalide"),
         latitude: z.number().min(-90).max(90).optional(),
         longitude: z.number().min(-180).max(180).optional(),
+        viewOnly: z.boolean().optional(), // true = read-only, no scan record created
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -281,6 +283,7 @@ export const scanRouter = router({
               halalStatus: halalAnalysis.status,
               confidenceScore: halalAnalysis.confidence,
               certifierName: halalAnalysis.certifierName,
+              certifierId: halalAnalysis.certifierId,
               imageUrl: off.image_front_url ?? off.image_url,
               nutritionFacts: off.nutriments ?? null,
               offData: off,
@@ -301,6 +304,23 @@ export const scanRouter = router({
             storedOff.ingredients_analysis_tags as string[] | undefined,
             analysisOptions,
           );
+
+          // Sync product record if certifier or confidence changed
+          if (halalAnalysis && (
+            product.certifierId !== halalAnalysis.certifierId ||
+            product.certifierName !== halalAnalysis.certifierName ||
+            product.confidenceScore !== halalAnalysis.confidence
+          )) {
+            await ctx.db
+              .update(products)
+              .set({
+                halalStatus: halalAnalysis.status,
+                confidenceScore: halalAnalysis.confidence,
+                certifierName: halalAnalysis.certifierName,
+                certifierId: halalAnalysis.certifierId,
+              })
+              .where(eq(products.id, product.id));
+          }
         }
       }
 
@@ -388,96 +408,105 @@ export const scanRouter = router({
         }
       }
 
-      // 5. Record scan + update user stats
-      const result = await ctx.db.transaction(async (tx) => {
-        const [scan] = await tx
-          .insert(scans)
-          .values({
-            userId: ctx.userId,
-            productId: product?.id,
-            barcode: input.barcode,
-            halalStatus: product?.halalStatus ?? "unknown",
-            confidenceScore: product?.confidenceScore ?? 0,
-            latitude: input.latitude,
-            longitude: input.longitude,
-          })
-          .returning();
+      // 5. Record scan + update user stats (skip in viewOnly mode)
+      // Use fresh analysis values (not stale product DB values) — fixes confidence desync
+      const scanHalalStatus = halalAnalysis?.status ?? product?.halalStatus ?? "unknown";
+      const scanConfidence = halalAnalysis?.confidence ?? product?.confidenceScore ?? 0;
 
-        const now = new Date();
-        const user = await tx.query.users.findFirst({
-          where: eq(users.id, ctx.userId),
-          columns: {
-            lastScanDate: true,
-            currentStreak: true,
-            longestStreak: true,
-            experiencePoints: true,
-            level: true,
-            streakFreezeCount: true,
-          },
-        });
+      let result: {
+        scan: any;
+        levelUp: { previousLevel: number; newLevel: number; newXp: number } | null;
+      };
 
-        let newStreak = 1;
-        let usedStreakFreeze = false;
-        if (user?.lastScanDate) {
-          const lastScan = new Date(user.lastScanDate);
-          const diffDays = Math.floor(
-            (now.getTime() - lastScan.getTime()) / (1000 * 60 * 60 * 24)
-          );
-          if (diffDays === 0) {
-            newStreak = user.currentStreak ?? 1;
-          } else if (diffDays === 1) {
-            newStreak = (user.currentStreak ?? 0) + 1;
-          } else if (diffDays <= 3 && (user.streakFreezeCount ?? 0) > 0) {
-            // Streak freeze: preserve streak if missed 1-3 days and user has freezes
-            newStreak = (user.currentStreak ?? 0) + 1;
-            usedStreakFreeze = true;
+      if (input.viewOnly) {
+        // View-only mode: no scan record, no XP, no streak update
+        result = { scan: null, levelUp: null };
+      } else {
+        result = await ctx.db.transaction(async (tx) => {
+          const [scan] = await tx
+            .insert(scans)
+            .values({
+              userId: ctx.userId,
+              productId: product?.id,
+              barcode: input.barcode,
+              halalStatus: scanHalalStatus,
+              confidenceScore: scanConfidence,
+              latitude: input.latitude,
+              longitude: input.longitude,
+            })
+            .returning();
+
+          const now = new Date();
+          const user = await tx.query.users.findFirst({
+            where: eq(users.id, ctx.userId),
+            columns: {
+              lastScanDate: true,
+              currentStreak: true,
+              longestStreak: true,
+              experiencePoints: true,
+              level: true,
+              streakFreezeCount: true,
+            },
+          });
+
+          let newStreak = 1;
+          let usedStreakFreeze = false;
+          if (user?.lastScanDate) {
+            const lastScan = new Date(user.lastScanDate);
+            const diffDays = Math.floor(
+              (now.getTime() - lastScan.getTime()) / (1000 * 60 * 60 * 24)
+            );
+            if (diffDays === 0) {
+              newStreak = user.currentStreak ?? 1;
+            } else if (diffDays === 1) {
+              newStreak = (user.currentStreak ?? 0) + 1;
+            } else if (diffDays <= 3 && (user.streakFreezeCount ?? 0) > 0) {
+              // Streak freeze: preserve streak if missed 1-3 days and user has freezes
+              newStreak = (user.currentStreak ?? 0) + 1;
+              usedStreakFreeze = true;
+            }
+            // else: diffDays > 3 or no freeze → newStreak stays 1 (reset)
           }
-          // else: diffDays > 3 or no freeze → newStreak stays 1 (reset)
-        }
 
-        // Milestone bonus XP: award extra XP when streak hits key thresholds
-        const STREAK_MILESTONES: Record<number, number> = {
-          3: 15, 7: 30, 14: 50, 30: 100, 60: 200, 100: 500, 365: 1000,
-        };
-        const milestoneBonus = STREAK_MILESTONES[newStreak] ?? 0;
+          // Milestone bonus XP: award extra XP when streak hits key thresholds
+          const STREAK_MILESTONES: Record<number, number> = {
+            3: 15, 7: 30, 14: 50, 30: 100, 60: 200, 100: 500, 365: 1000,
+          };
+          const milestoneBonus = STREAK_MILESTONES[newStreak] ?? 0;
 
-        // Level-up detection
-        const previousXp = user?.experiencePoints ?? 0;
-        const previousLevel = user?.level ?? 1;
-        const newXp = previousXp + 10 + milestoneBonus;
-        const newLevel = calculateLevel(newXp);
+          // Level-up detection
+          const previousXp = user?.experiencePoints ?? 0;
+          const previousLevel = user?.level ?? 1;
+          const newXp = previousXp + 10 + milestoneBonus;
+          const newLevel = calculateLevel(newXp);
 
-        await tx
-          .update(users)
-          .set({
-            totalScans: sql`${users.totalScans} + 1`,
-            experiencePoints: newXp,
-            level: newLevel,
-            currentStreak: newStreak,
-            longestStreak: sql`GREATEST(${users.longestStreak}, ${newStreak})`,
-            lastScanDate: now,
-            updatedAt: now,
-            ...(usedStreakFreeze
-              ? {
-                  streakFreezeCount: sql`${users.streakFreezeCount} - 1`,
-                  streakFreezeLastUsed: now,
-                }
-              : {}),
-          })
-          .where(eq(users.id, ctx.userId));
+          await tx
+            .update(users)
+            .set({
+              totalScans: sql`${users.totalScans} + 1`,
+              experiencePoints: newXp,
+              level: newLevel,
+              currentStreak: newStreak,
+              longestStreak: sql`GREATEST(${users.longestStreak}, ${newStreak})`,
+              lastScanDate: now,
+              updatedAt: now,
+              ...(usedStreakFreeze
+                ? {
+                    streakFreezeCount: sql`${users.streakFreezeCount} - 1`,
+                    streakFreezeLastUsed: now,
+                  }
+                : {}),
+            })
+            .where(eq(users.id, ctx.userId));
 
-        return {
-          scan,
-          levelUp: newLevel > previousLevel
-            ? { previousLevel, newLevel, newXp }
-            : null,
-          streakInfo: {
-            current: newStreak,
-            usedFreeze: usedStreakFreeze,
-            milestoneBonus: milestoneBonus > 0 ? { streak: newStreak, bonusXp: milestoneBonus } : null,
-          },
-        };
-      });
+          return {
+            scan,
+            levelUp: newLevel > previousLevel
+              ? { previousLevel, newLevel, newXp }
+              : null,
+          };
+        });
+      }
 
       // 6. Build enriched OFF extras for the mobile app
       const storedOff = (product?.offData ?? offData) as Record<string, unknown> | null;
@@ -514,6 +543,41 @@ export const scanRouter = router({
       // 9. Madhab verdicts — all 4 school opinions for comparative display
       const madhabVerdicts = await computeMadhabVerdicts(ctx.db, halalAnalysis, ingredientRulingsData);
 
+      // 10. Certifier enrichment — load trust score + real name from DB
+      let certifierData: {
+        id: string;
+        name: string;
+        trustScore: number;
+        trustScoreHanafi: number;
+        trustScoreShafii: number;
+        trustScoreMaliki: number;
+        trustScoreHanbali: number;
+        website: string | null;
+        halalAssessment: boolean;
+      } | null = null;
+
+      if (halalAnalysis?.certifierId) {
+        const certifier = await ctx.db.query.certifiers.findFirst({
+          where: eq(certifiers.id, halalAnalysis.certifierId),
+          columns: {
+            id: true,
+            name: true,
+            trustScore: true,
+            trustScoreHanafi: true,
+            trustScoreShafii: true,
+            trustScoreMaliki: true,
+            trustScoreHanbali: true,
+            website: true,
+            halalAssessment: true,
+          },
+        });
+        if (certifier) {
+          certifierData = certifier;
+          // Override certifierName with the real DB name
+          halalAnalysis.certifierName = certifier.name;
+        }
+      }
+
       return {
         scan: result.scan,
         product: product ?? null,
@@ -525,6 +589,7 @@ export const scanRouter = router({
         communityVerifiedCount: communityCount?.count ?? 0,
         madhabVerdicts,
         ingredientRulings: ingredientRulingsData,
+        certifierData,
         levelUp: result.levelUp,
       };
     }),

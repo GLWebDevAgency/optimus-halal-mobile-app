@@ -109,12 +109,21 @@ export default function PremiumPaywallScreen() {
             </Pressable>
           </View>
           <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 32 }}>
-            <Image
-              source={require("@assets/images/logo_naqiy.webp")}
-              style={{ width: 64, height: 64 }}
-              contentFit="contain"
-              cachePolicy="memory-disk"
-            />
+            <View style={{
+              width: 72,
+              height: 72,
+              borderRadius: 18,
+              backgroundColor: isDark ? "rgba(212, 175, 55, 0.08)" : "rgba(212, 175, 55, 0.05)",
+              alignItems: "center",
+              justifyContent: "center",
+            }}>
+              <Image
+                source={require("@assets/images/logo_naqiy.webp")}
+                style={{ width: 56, height: 56 }}
+                contentFit="contain"
+                cachePolicy="memory-disk"
+              />
+            </View>
             <Text style={{ color: colors.textPrimary, fontSize: 24, fontWeight: "800", marginTop: 16, textAlign: "center" }}>
               Naqiy+
             </Text>
@@ -188,12 +197,21 @@ export default function PremiumPaywallScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         {/* Hero */}
         <Animated.View entering={FadeIn.duration(400)} style={{ alignItems: "center", paddingVertical: 24 }}>
-          <Image
-            source={require("@assets/images/logo_naqiy.webp")}
-            style={{ width: 56, height: 56 }}
-            contentFit="contain"
-            cachePolicy="memory-disk"
-          />
+          <View style={{
+            width: 64,
+            height: 64,
+            borderRadius: 16,
+            backgroundColor: isDark ? "rgba(212, 175, 55, 0.08)" : "rgba(212, 175, 55, 0.05)",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+            <Image
+              source={require("@assets/images/logo_naqiy.webp")}
+              style={{ width: 50, height: 50 }}
+              contentFit="contain"
+              cachePolicy="memory-disk"
+            />
+          </View>
           <Text style={{ color: colors.textPrimary, fontSize: 28, fontWeight: "900", marginTop: 12 }}>
             Naqiy+
           </Text>
