@@ -904,9 +904,9 @@ export const ingredientRulingsSeed: NewIngredientRuling[] = [
     rulingHanbali: null,
     confidence: 0.9,
     explanationFr:
-      "Mono-glycérides (E471) : émulsifiant pouvant être d'origine végétale (soja, palme) ou animale (dont porc). Sans précision de source, douteux. IslamWeb (#387325) et l'ECFR les déclarent licites par défaut (al-asl al-ibahah). En pays non-musulman, prudence recommandée (IslamQA #114129).",
+      "Mono-glycérides (E471) : émulsifiant d'origine végétale (soja, palme) ou animale (dont porc). ⚠️ En Europe, ~95 % des E471 sans mention d'origine sont dérivés de graisses animales (principalement porc). IslamQA (#114129) recommande explicitement la prudence en pays non-musulman. Seule la mention « origine végétale » sur l'emballage garantit une source licite.",
     explanationEn:
-      "Mono-glycerides (E471): emulsifier that can be plant (soy, palm) or animal (including pork) derived. Without source specification, doubtful. IslamWeb (#387325) and ECFR declare permissible by default (al-asl al-ibahah). In non-Muslim countries, caution advised (IslamQA #114129).",
+      "Mono-glycerides (E471): plant (soy, palm) or animal (including pork) derived emulsifier. ⚠️ In Europe, ~95% of E471 without a stated origin is derived from animal fats (mainly pork). IslamQA (#114129) explicitly recommends caution in non-Muslim countries. Only an explicit 'plant origin' label on the packaging guarantees a permissible source.",
     scholarlyReference:
       "IslamWeb #387325, IslamQA #97541, #114129, ECFR, IIFA Resolution 198",
     fatwaSourceUrl: "https://www.islamweb.net/en/fatwa/387325",
@@ -924,9 +924,9 @@ export const ingredientRulingsSeed: NewIngredientRuling[] = [
     rulingHanbali: null,
     confidence: 0.9,
     explanationFr:
-      "Diglycérides : voir mono-glycérides (E471). Source végétale ou animale indéterminée.",
+      "Diglycérides : voir mono-glycérides (E471). ⚠️ ~95 % d'origine animale (porc) en Europe si non précisé. Prudence recommandée (IslamQA #114129).",
     explanationEn:
-      "Diglycerides: see mono-glycerides (E471). Plant or animal source undetermined.",
+      "Diglycerides: see mono-glycerides (E471). ⚠️ ~95% animal-derived (pork) in Europe if unspecified. Caution advised (IslamQA #114129).",
     scholarlyReference: "IslamWeb #387325, IslamQA #97541",
     fatwaSourceUrl: "https://www.islamweb.net/en/fatwa/387325",
     fatwaSourceName: "IslamWeb #387325",
@@ -943,9 +943,9 @@ export const ingredientRulingsSeed: NewIngredientRuling[] = [
     rulingHanbali: null,
     confidence: 0.9,
     explanationFr:
-      "Monoglycérides : voir mono-glycérides (E471). Douteux si source non précisée.",
+      "Monoglycérides : voir mono-glycérides (E471). ⚠️ ~95 % d'origine animale (porc) en Europe si non précisé. Prudence recommandée (IslamQA #114129).",
     explanationEn:
-      "Monoglycerides: see mono-glycerides (E471). Doubtful if source unspecified.",
+      "Monoglycerides: see mono-glycerides (E471). ⚠️ ~95% animal-derived (pork) in Europe if unspecified. Caution advised (IslamQA #114129).",
     scholarlyReference: "IslamWeb #387325",
     fatwaSourceUrl: "https://www.islamweb.net/en/fatwa/387325",
     fatwaSourceName: "IslamWeb #387325",
@@ -962,9 +962,9 @@ export const ingredientRulingsSeed: NewIngredientRuling[] = [
     rulingHanbali: null,
     confidence: 0.9,
     explanationFr:
-      "E471 (mono- et diglycérides d'acides gras) : peut être végétal ou animal. En l'absence de précision sur la source, statut douteux. IslamWeb (#387325) : licite par défaut. IslamQA (#114129) : prudence en pays non-musulman.",
+      "E471 (mono- et diglycérides d'acides gras) : ⚠️ En Europe, ~95 % des E471 sans mention d'origine sont dérivés de graisses animales (principalement porc). IslamQA (#114129) recommande la prudence en pays non-musulman. Si « origine végétale » est indiqué sur l'emballage : halal.",
     explanationEn:
-      "E471 (mono- and diglycerides of fatty acids): can be plant or animal. Without source specification, doubtful. IslamWeb (#387325): permissible by default. IslamQA (#114129): caution in non-Muslim countries.",
+      "E471 (mono- and diglycerides of fatty acids): ⚠️ In Europe, ~95% of E471 without a stated origin is derived from animal fats (mainly pork). IslamQA (#114129) advises caution in non-Muslim countries. If 'plant origin' is stated on the packaging: halal.",
     scholarlyReference: "IslamWeb #387325, IslamQA #97541, #114129",
     fatwaSourceUrl: "https://www.islamweb.net/en/fatwa/387325",
     fatwaSourceName: "IslamWeb #387325, IslamQA #97541",
