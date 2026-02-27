@@ -64,6 +64,27 @@
       "when": 1771935994524,
       "tag": "0008_old_kid_colt",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1772006400000,
+      "tag": "0009_trust_score_v3",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1772092800000,
+      "tag": "0010_trust_score_v4",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1772179200000,
+      "tag": "0011_scholarly_references",
+      "breakpoints": true
     }
   ]
 }

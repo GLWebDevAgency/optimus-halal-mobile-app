@@ -176,7 +176,7 @@ export default function ProfileScreen() {
   const { isPremium } = usePremium();
 
   // tRPC data
-  const { data: profile, isLoading: profileLoading } = useMe();
+  const { data: profile, isLoading: profileLoading, isError: profileError } = useMe();
   const { data: favoritesData } = useFavoritesList({ limit: 1 });
   const { data: loyalty } = useLoyaltyBalance();
   const logoutMutation = useLogout();
@@ -242,8 +242,31 @@ export default function ProfileScreen() {
     );
   }, [logoutMutation, t, impact]);
 
-  // Skeleton while profile data loads
-  if (profileLoading || !profile) return <ProfileSkeleton />;
+  // Skeleton only during the initial fetch — never block on error or stale cache
+  if (profileLoading && !profile) return <ProfileSkeleton />;
+
+  // Error fallback — query failed and no cached data
+  if (profileError && !profile) {
+    return (
+      <View style={{ flex: 1 }}>
+        <PremiumBackground />
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingTop: insets.top }}>
+          <MaterialIcons name="wifi-off" size={48} color={colors.textMuted} />
+          <Text style={{ marginTop: 16, fontSize: 16, fontWeight: "600", color: colors.textPrimary }}>
+            {t.errors.network}
+          </Text>
+          <PressableScale
+            onPress={() => {/* useMe auto-refetches on mount */
+              router.replace("/(tabs)/profile" as any);
+            }}
+            style={{ marginTop: 20, paddingHorizontal: 24, paddingVertical: 10, backgroundColor: colors.primary, borderRadius: 12 }}
+          >
+            <Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>{t.common.retry}</Text>
+          </PressableScale>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1">

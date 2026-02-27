@@ -91,11 +91,31 @@ export const StoreCard = React.memo(function StoreCard({
                 transition={200}
               />
             ) : (
-              <MaterialIcons
-                name={STORE_TYPE_ICON[store.storeType] ?? "store"}
-                size={24}
-                color={colors.textMuted}
-              />
+              <>
+                <MaterialIcons
+                  name={STORE_TYPE_ICON[store.storeType] ?? "store"}
+                  size={24}
+                  color={colors.textMuted}
+                />
+                {store.logoUrl && (
+                  <View
+                    className="absolute bottom-0.5 right-0.5 rounded-full overflow-hidden"
+                    style={{
+                      width: 22, height: 22,
+                      borderWidth: 1.5,
+                      borderColor: colors.card,
+                      backgroundColor: colors.buttonSecondary,
+                    }}
+                  >
+                    <Image
+                      source={{ uri: store.logoUrl }}
+                      style={{ width: "100%", height: "100%" }}
+                      contentFit="cover"
+                      transition={200}
+                    />
+                  </View>
+                )}
+              </>
             )}
           </View>
 

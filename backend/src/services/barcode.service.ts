@@ -354,8 +354,13 @@ export function testPattern(text: string, pattern: string, matchType: string): b
     case "contains":
       return text.includes(pattern);
     case "word_boundary": {
+      // \b is ASCII-only — accented chars (é, è, ü…) create false boundaries.
+      // e.g. "lactosérum" would match \brum\b because é is not [a-zA-Z0-9_].
+      // Use Unicode-aware negative lookbehind/lookahead for word chars instead.
       const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      return new RegExp(`\\b${escaped}\\b`, "i").test(text);
+      const UWB = String.raw`(?<![a-zA-ZÀ-ÿ\d])`;  // Unicode word boundary start
+      const UWE = String.raw`(?![a-zA-ZÀ-ÿ\d])`;    // Unicode word boundary end
+      return new RegExp(`${UWB}${escaped}${UWE}`, "i").test(text);
     }
     case "regex": {
       try {
@@ -496,6 +501,37 @@ export const LABEL_TAG_TO_CERTIFIER_ID: Record<string, string> = {
   "en:islamic-centre-aachen":                                 "islamic-centre-aachen",
 };
 
+// ── Vegetal origin context detection ────────────────────────
+// When the ingredients text explicitly states "(origine végétale)" near
+// an additive, upgrade its status from doubtful → halal.
+// Example: "mono - et diglycérides d'acides gras (origine végétale)"
+// This is pure regex — no NLP needed.
+const VEGETAL_QUALIFIERS_RE =
+  /\(\s*(?:d[''])?origine\s+v[ée]g[ée]tale\s*\)|\(\s*v[ée]g[ée]tal(?:e)?\s*\)|\(\s*(?:plant|vegetable)\s+(?:origin|source)\s*\)/i;
+
+function hasVegetalOriginContext(
+  ingredientsText: string | undefined,
+  searchTerms: string[],
+): boolean {
+  if (!ingredientsText) return false;
+  const textLower = ingredientsText.toLowerCase();
+
+  for (const rawTerm of searchTerms) {
+    const term = rawTerm.toLowerCase();
+    if (term.length < 3) continue;
+
+    const idx = textLower.indexOf(term);
+    if (idx === -1) continue;
+
+    // Check a window of 150 chars after the match for a vegetal qualifier
+    const windowEnd = Math.min(ingredientsText.length, idx + term.length + 150);
+    const window = ingredientsText.substring(idx, windowEnd);
+    if (VEGETAL_QUALIFIERS_RE.test(window)) return true;
+  }
+
+  return false;
+}
+
 // ── Main Analysis Function (v3 — async + madhab-aware) ─────
 
 export async function analyzeHalalStatus(
@@ -551,8 +587,8 @@ export async function analyzeHalalStatus(
         certifierName: certName,
         certifierId: matchedCertifierId,
         analysisSource: matchedCertifierId
-          ? "Certifieur identifié via OpenFoodFacts"
-          : "Label certifié OpenFoodFacts",
+          ? "Naqiy · Certifieur identifié via OpenFoodFacts"
+          : "Naqiy · Label certifié via OpenFoodFacts",
       };
     }
   }
@@ -567,19 +603,31 @@ export async function analyzeHalalStatus(
     const additiveResults = await lookupAdditives(additivesTags, options.madhab);
 
     for (const add of additiveResults) {
+      let effectiveStatus = add.halalStatus as "halal" | "haram" | "doubtful";
+      let effectiveExplanation = add.madhabOverride
+        ? `${add.explanation} (selon école ${options.madhab})`
+        : add.explanation;
+
+      // Vegetal origin override: upgrade doubtful → halal when text specifies plant source
+      if (effectiveStatus === "doubtful" && hasVegetalOriginContext(
+        ingredientsText,
+        [add.code, ...add.name.split(/[/\s,()-]+/).filter((w) => w.length >= 4)],
+      )) {
+        effectiveStatus = "halal";
+        effectiveExplanation = `${add.name} — origine végétale précisée par le fabricant`;
+      }
+
       reasons.push({
         type: "additive",
         name: `${add.code} (${add.name})`,
-        status: add.halalStatus as "halal" | "haram" | "doubtful",
-        explanation: add.madhabOverride
-          ? `${add.explanation} (selon école ${options.madhab})`
-          : add.explanation,
+        status: effectiveStatus,
+        explanation: effectiveExplanation,
       });
 
-      if (add.halalStatus === "haram") {
+      if (effectiveStatus === "haram") {
         worstStatus = "haram";
         worstConfidence = Math.max(worstConfidence, 0.9);
-      } else if (add.halalStatus === "doubtful" && worstStatus !== "haram") {
+      } else if (effectiveStatus === "doubtful" && worstStatus !== "haram") {
         worstStatus = "doubtful";
         worstConfidence = Math.max(worstConfidence, 0.6);
       }
@@ -603,6 +651,14 @@ export async function analyzeHalalStatus(
       if (isVegan && effectiveStatus === "doubtful") {
         effectiveStatus = "halal";
         explanation = `${match.pattern} — produit labellisé vegan, donc origine végétale`;
+      }
+      // Vegetal origin override: text says "(origine végétale)" near the matched ingredient
+      else if (effectiveStatus === "doubtful" && hasVegetalOriginContext(
+        ingredientsText,
+        [match.pattern],
+      )) {
+        effectiveStatus = "halal";
+        explanation = `${match.pattern} — origine végétale précisée par le fabricant`;
       }
 
       reasons.push({
@@ -635,7 +691,7 @@ export async function analyzeHalalStatus(
         reasons: [{ type: "ingredient", name: "—", status: "doubtful", explanation: "Aucun ingrédient disponible" }],
         certifierName: null,
         certifierId: null,
-        analysisSource: "Analyse automatique Naqiy",
+        analysisSource: "Analyse automatique Naqiy · Données OpenFoodFacts",
       },
       options.strictness
     );
@@ -651,7 +707,7 @@ export async function analyzeHalalStatus(
         reasons,
         certifierName: null,
         certifierId: null,
-        analysisSource: "Analyse automatique Naqiy",
+        analysisSource: "Analyse automatique Naqiy · Données OpenFoodFacts",
       },
       options.strictness
     );
@@ -666,7 +722,7 @@ export async function analyzeHalalStatus(
         reasons,
         certifierName: null,
         certifierId: null,
-        analysisSource: "Analyse automatique Naqiy",
+        analysisSource: "Analyse automatique Naqiy · Données OpenFoodFacts",
       },
       options.strictness
     );
@@ -686,7 +742,7 @@ export async function analyzeHalalStatus(
       }],
       certifierName: null,
       certifierId: null,
-      analysisSource: "Analyse automatique Naqiy",
+      analysisSource: "Analyse automatique Naqiy · Données OpenFoodFacts",
     },
     options.strictness
   );

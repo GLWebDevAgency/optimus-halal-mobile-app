@@ -188,9 +188,26 @@ export const TrustScoreBottomSheet = React.memo(function TrustScoreBottomSheet({
           t.scanResult.trustScoreNegative1,
           t.scanResult.trustScoreNegative2,
           t.scanResult.trustScoreNegative3,
+          t.scanResult.trustScoreNegative4,
+          t.scanResult.trustScoreNegative5,
         ].map((label, i) => (
           <View key={i} style={styles.indicatorRow}>
             <MaterialIcons name="remove-circle-outline" size={16} color={halalStatus.haram.base} />
+            <Text style={[styles.indicatorText, { color: colors.textSecondary }]}>{label}</Text>
+          </View>
+        ))}
+
+        {/* V4: Transparency indicators */}
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginTop: 16 }]}>
+          {t.scanResult.trustScoreTransparencyTitle}
+        </Text>
+        {[
+          t.scanResult.trustScoreTransparency1,
+          t.scanResult.trustScoreTransparency2,
+          t.scanResult.trustScoreTransparency3,
+        ].map((label, i) => (
+          <View key={i} style={styles.indicatorRow}>
+            <MaterialIcons name="visibility" size={16} color={colors.textSecondary} />
             <Text style={[styles.indicatorText, { color: colors.textSecondary }]}>{label}</Text>
           </View>
         ))}

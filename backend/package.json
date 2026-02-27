@@ -19,7 +19,9 @@
     "db:seed:additives": "tsx --env-file=.env src/db/seeds/additives-seed.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "fetch:stores": "tsx scripts/fetch-store-data.ts",
+    "upload:logos": "tsx --env-file=.env scripts/upload-store-logos.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.990.0",

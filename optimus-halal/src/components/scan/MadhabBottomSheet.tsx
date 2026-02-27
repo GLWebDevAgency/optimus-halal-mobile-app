@@ -32,6 +32,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { halalStatus, neutral, darkTheme, lightTheme, getTrustScoreColor } from "@/theme/colors";
+import { MadhabScoreRing } from "./MadhabScoreRing";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -69,36 +70,40 @@ const STATUS_COLORS = {
   haram: halalStatus.haram.base,
 } as const;
 
-const STATUS_ICONS = {
-  halal: "check-circle" as const,
-  doubtful: "help" as const,
-  haram: "cancel" as const,
-};
+// STATUS_ICONS removed — replaced by MadhabScoreRing verdict icons
 
 const MADHAB_WEIGHT_KEYS: Record<string, readonly string[]> = {
   hanafi: [
     "madhabWeight_salariedSlaughterers_hanafi",
     "madhabWeight_mechanicalSlaughter_hanafi",
     "madhabWeight_electronarcosis_hanafi",
+    "madhabWeight_postSlaughterElectrocution_hanafi",
     "madhabWeight_stunning_hanafi",
+    "madhabWeight_vsm_hanafi",
   ],
   shafii: [
     "madhabWeight_salariedSlaughterers_shafii",
     "madhabWeight_mechanicalSlaughter_shafii",
     "madhabWeight_electronarcosis_shafii",
+    "madhabWeight_postSlaughterElectrocution_shafii",
     "madhabWeight_stunning_shafii",
+    "madhabWeight_vsm_shafii",
   ],
   maliki: [
     "madhabWeight_salariedSlaughterers_maliki",
     "madhabWeight_mechanicalSlaughter_maliki",
     "madhabWeight_electronarcosis_maliki",
+    "madhabWeight_postSlaughterElectrocution_maliki",
     "madhabWeight_stunning_maliki",
+    "madhabWeight_vsm_maliki",
   ],
   hanbali: [
     "madhabWeight_salariedSlaughterers_hanbali",
     "madhabWeight_mechanicalSlaughter_hanbali",
     "madhabWeight_electronarcosis_hanbali",
+    "madhabWeight_postSlaughterElectrocution_hanbali",
     "madhabWeight_stunning_hanbali",
+    "madhabWeight_vsm_hanbali",
   ],
 };
 
@@ -152,7 +157,6 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
   }));
 
   const statusColor = STATUS_COLORS[status];
-  const statusIcon = STATUS_ICONS[status];
   const hasTrustScore = certifierName != null && certifierTrustScore != null;
   const trustScoreColor = hasTrustScore ? getTrustScoreColor(certifierTrustScore) : neutral[500];
   const fiqhKeys = MADHAB_WEIGHT_KEYS[madhab] ?? [];
@@ -192,18 +196,15 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
           />
         </View>
 
-        {/* Header */}
+        {/* Header — Ring + Title */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <View
-              style={[
-                styles.statusDot,
-                { backgroundColor: `${statusColor}20`, borderColor: statusColor },
-              ]}
-            >
-              <MaterialIcons name={statusIcon} size={20} color={statusColor} />
-            </View>
-            <View style={{ flex: 1 }}>
+            <MadhabScoreRing
+              label=""
+              verdict={status}
+              trustScore={certifierTrustScore}
+            />
+            <View style={{ flex: 1, marginLeft: 4 }}>
               <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
                 {t.scanResult.madhabDiffersTitle.replace("{{madhab}}", madhabLabel)}
               </Text>
@@ -213,6 +214,9 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
                   : status === "doubtful"
                     ? t.scanResult.doubtful
                     : t.scanResult.haram}
+                {hasTrustScore && (
+                  ` · ${certifierTrustScore}/100`
+                )}
               </Text>
             </View>
           </View>
@@ -544,14 +548,7 @@ const styles = StyleSheet.create({
     gap: 12,
     flex: 1,
   },
-  statusDot: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 2,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  // statusDot removed — replaced by MadhabScoreRing in header
   headerTitle: {
     fontSize: 17,
     fontWeight: "700",

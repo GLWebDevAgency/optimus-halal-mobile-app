@@ -37,6 +37,9 @@ import Animated, {
   SlideInUp,
   useSharedValue,
   useAnimatedStyle,
+  useAnimatedReaction,
+  useDerivedValue,
+  runOnJS,
   withTiming,
   withSpring,
   withRepeat,
@@ -50,7 +53,9 @@ import { IconButton, StatusPill, LevelUpCelebration, PremiumBackground } from "@
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PersonalAlerts, type PersonalAlert } from "@/components/scan/PersonalAlerts";
 import { MadhabBottomSheet } from "@/components/scan/MadhabBottomSheet";
+import { MadhabScoreRing } from "@/components/scan/MadhabScoreRing";
 import { TrustScoreBottomSheet } from "@/components/scan/TrustScoreBottomSheet";
+import { ScoreDetailBottomSheet } from "@/components/scan/ScoreDetailBottomSheet";
 import { ShareCardView, captureAndShareCard } from "@/components/scan/ShareCard";
 import { trpc } from "@/lib/trpc";
 import { useScanBarcode } from "@/hooks/useScan";
@@ -798,6 +803,12 @@ export default function ScanResultScreen() {
       ? "doubtful"
       : halalStatus;
   const statusConfig = STATUS_CONFIG[effectiveHeroStatus] ?? STATUS_CONFIG.unknown;
+  // Dynamic hero label: "Certification Détectée" only when a certifier exists,
+  // otherwise "Composition Conforme" for halal-by-analysis products (e.g. bread)
+  const heroLabel =
+    effectiveHeroStatus === "halal" && !certifierData_
+      ? t.scanResult.compositionCompliant
+      : t.scanResult[statusConfig.labelKey];
   const shadows = getShadows(isDark);
   const ingredients: string[] = (product?.ingredients as string[]) ?? [];
 
@@ -861,6 +872,10 @@ export default function ScanResultScreen() {
   // ── Trust Score Bottom Sheet ─────────────────
   const [showTrustScoreSheet, setShowTrustScoreSheet] = useState(false);
   const handleCloseTrustScore = useCallback(() => setShowTrustScoreSheet(false), []);
+
+  // ── Score Detail Bottom Sheet ──────────────
+  const [showScoreDetailSheet, setShowScoreDetailSheet] = useState(false);
+  const handleCloseScoreDetail = useCallback(() => setShowScoreDetailSheet(false), []);
 
   // ── User Vote (backend-synced) ────────────────
   const [userVote, setUserVote] = useState<"up" | "down" | null>(null);
@@ -974,7 +989,9 @@ export default function ScanResultScreen() {
 
   const shareLabels = useMemo(() => {
     const statusLabelMap: Record<string, string> = {
-      halal: t.scanResult.certifiedHalal,
+      halal: certifierData
+        ? t.scanResult.certifiedHalal
+        : t.scanResult.compositionCompliant,
       haram: t.scanResult.haramDetected,
       doubtful: t.scanResult.doubtfulStatus,
       unknown: t.scanResult.unverified,
@@ -986,7 +1003,7 @@ export default function ScanResultScreen() {
       verifiedWith: t.scanResult.verifiedWith,
       tagline: t.scanResult.shareTagline,
     };
-  }, [halalStatus, t]);
+  }, [halalStatus, certifierData, t]);
 
   const handleShare = useCallback(async () => {
     impact();
@@ -1096,6 +1113,85 @@ export default function ScanResultScreen() {
 
   const shimmerStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: shimmerX.value }, { skewX: "-20deg" }],
+  }));
+
+  // ── Hero: Animated score counter (0→N) ────────
+  const scoreDisplay = useSharedValue(0);
+  const barScale = useSharedValue(0);
+  const [displayedScore, setDisplayedScore] = useState(0);
+
+  useEffect(() => {
+    if (certifierTrustScore != null) {
+      scoreDisplay.value = withTiming(certifierTrustScore, {
+        duration: 1200,
+        easing: Easing.out(Easing.cubic),
+      });
+      barScale.value = withTiming(certifierTrustScore / 100, {
+        duration: 1400,
+        easing: Easing.out(Easing.cubic),
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [certifierTrustScore]);
+
+  const roundedScore = useDerivedValue(() => Math.round(scoreDisplay.value));
+  useAnimatedReaction(
+    () => roundedScore.value,
+    (val) => runOnJS(setDisplayedScore)(val),
+  );
+
+  // Bar fill via scaleX — GPU-only, no layout recalc
+  const animatedBarStyle = useAnimatedStyle(() => ({
+    transform: [{ scaleX: barScale.value }],
+  }));
+
+  // ── Hero: Image glow pulse (opacity overlay, not shadowOpacity) ──
+  const glowOpacity = useSharedValue(0.15);
+
+  useEffect(() => {
+    if (!reducedMotion) {
+      glowOpacity.value = withRepeat(
+        withSequence(
+          withTiming(0.4, { duration: 2000, easing: Easing.inOut(Easing.sin) }),
+          withTiming(0.15, { duration: 2000, easing: Easing.inOut(Easing.sin) })
+        ),
+        -1,
+        false
+      );
+    }
+  }, [reducedMotion]);
+
+  const imageGlowStyle = useAnimatedStyle(() => ({
+    opacity: glowOpacity.value,
+  }));
+
+  // ── Hero: Ambient orb drift ───────────────────
+  const orbX = useSharedValue(0);
+  const orbY = useSharedValue(0);
+
+  useEffect(() => {
+    if (!reducedMotion) {
+      orbX.value = withRepeat(
+        withSequence(
+          withTiming(20, { duration: 6000, easing: Easing.inOut(Easing.sin) }),
+          withTiming(-20, { duration: 6000, easing: Easing.inOut(Easing.sin) })
+        ),
+        -1,
+        false
+      );
+      orbY.value = withRepeat(
+        withSequence(
+          withTiming(15, { duration: 5000, easing: Easing.inOut(Easing.sin) }),
+          withTiming(-15, { duration: 5000, easing: Easing.inOut(Easing.sin) })
+        ),
+        -1,
+        false
+      );
+    }
+  }, [reducedMotion]);
+
+  const orbStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: orbX.value }, { translateY: orbY.value }],
   }));
 
   // ── RENDER: Loading ────────────────────────────
@@ -1219,6 +1315,27 @@ export default function ScanResultScreen() {
         />
       </View>
 
+      {/* ── Floating Info Button (top-right, certified products only) ── */}
+      {certifierData && (
+        <View
+          style={[
+            styles.floatingInfoButton,
+            { top: insets.top + 8 },
+          ]}
+        >
+          <IconButton
+            icon="info-outline"
+            variant="filled"
+            onPress={() => {
+              impact();
+              setShowTrustScoreSheet(true);
+            }}
+            color={isDark ? brandTokens.white : lightTheme.textPrimary}
+            accessibilityLabel={t.scanResult.trustScoreExplainTitle}
+          />
+        </View>
+      )}
+
       <ScrollView
         contentContainerStyle={{ paddingBottom: insets.bottom + 140 }}
         showsVerticalScrollIndicator={false}
@@ -1230,7 +1347,7 @@ export default function ScanResultScreen() {
         <View
           style={[styles.heroGradient, { paddingTop: insets.top + 64 }]}
           accessibilityRole="summary"
-          accessibilityLabel={`${t.scanResult[statusConfig.labelKey]}`}
+          accessibilityLabel={heroLabel}
         >
           {/* L0: Status-tinted gradient base */}
           <LinearGradient
@@ -1255,18 +1372,25 @@ export default function ScanResultScreen() {
           <View style={[StyleSheet.absoluteFill, {
             backgroundColor: `${statusConfig.glowColor}08`,
           }]} />
-          {/* L4: Ambient orb — top-right, subtle */}
-          <LinearGradient
-            colors={[`${statusConfig.glowColor}10`, "transparent"]}
-            style={{
-              position: "absolute",
-              top: -80,
-              right: -60,
-              width: 280,
-              height: 280,
-              borderRadius: 140,
-            }}
-          />
+          {/* L4: Ambient orb — drifting slowly */}
+          <Animated.View
+            style={[
+              {
+                position: "absolute",
+                top: -80,
+                right: -60,
+                width: 280,
+                height: 280,
+                borderRadius: 140,
+              },
+              orbStyle,
+            ]}
+          >
+            <LinearGradient
+              colors={[`${statusConfig.glowColor}18`, `${statusConfig.glowColor}08`, "transparent"]}
+              style={{ width: 280, height: 280, borderRadius: 140 }}
+            />
+          </Animated.View>
 
           {/* ── ROW 1: HERO HORIZONTAL SPLIT ── */}
           <Animated.View
@@ -1275,13 +1399,33 @@ export default function ScanResultScreen() {
           >
             {/* LEFT COLUMN: Product Image + Brand */}
             <View style={styles.heroImageColumn}>
-              <View style={[
-                styles.heroImageWrapper,
-                {
-                  borderColor: `${statusConfig.color}25`,
-                  backgroundColor: isDark ? glass.dark.highlight : glass.light.border,
-                },
-              ]}>
+              <View style={{ width: 80, height: 80 }}>
+                {/* Glow halo — separate layer, animates opacity only (GPU cheap) */}
+                <Animated.View
+                  style={[
+                    {
+                      position: "absolute",
+                      top: -6,
+                      left: -6,
+                      right: -6,
+                      bottom: -6,
+                      borderRadius: 18,
+                      backgroundColor: statusConfig.glowColor,
+                    },
+                    imageGlowStyle,
+                  ]}
+                  pointerEvents="none"
+                />
+                <Animated.View
+                  entering={FadeIn.delay(SUSPENSE_DURATION).duration(400)}
+                  style={[
+                    styles.heroImageWrapper,
+                    {
+                      borderColor: `${statusConfig.color}25`,
+                      backgroundColor: isDark ? glass.dark.highlight : glass.light.border,
+                    },
+                  ]}
+                >
                 {product.imageUrl ? (
                   <Image
                     source={{ uri: product.imageUrl }}
@@ -1293,6 +1437,7 @@ export default function ScanResultScreen() {
                 ) : (
                   <MaterialIcons name="image-not-supported" size={24} color={colors.textMuted} />
                 )}
+              </Animated.View>
               </View>
               {product.brand && (
                 <Text
@@ -1314,7 +1459,7 @@ export default function ScanResultScreen() {
                   contentFit="contain"
                 />
                 <Text style={[styles.heroScoreLabelText, { color: colors.textMuted }]}>
-                  Naqiy Score{userMadhab !== "general" && ` · ${t.madhab.options[userMadhab].label}`}
+                  {t.scanResult.naqiyScoreLabel}{userMadhab !== "general" && ` · ${t.madhab.options[userMadhab].label}`}
                 </Text>
               </View>
 
@@ -1347,7 +1492,7 @@ export default function ScanResultScreen() {
                             },
                           ]}
                         >
-                          {certifierTrustScore!}/100
+                          {displayedScore}/100
                         </Text>
                       </View>
                       <View
@@ -1356,28 +1501,39 @@ export default function ScanResultScreen() {
                           { backgroundColor: isDark ? glass.dark.border : glass.light.borderStrong },
                         ]}
                       >
-                        <View
+                        <Animated.View
                           style={[
                             styles.heroCertifierBarFill,
                             {
-                              width: `${certifierTrustScore!}%`,
+                              width: "100%",
+                              transformOrigin: "left",
                               backgroundColor: certifierTrustScore! >= 70
                                 ? halalStatusTokens.halal.base
                                 : certifierTrustScore! >= 40
                                   ? halalStatusTokens.doubtful.base
                                   : halalStatusTokens.haram.base,
                             },
+                            animatedBarStyle,
                           ]}
                         />
                       </View>
+                      {/* Tier sub-label — tucked under progress bar */}
+                      {halalAnalysis && (
+                        <Text style={[styles.heroTierLabel, { color: colors.textMuted }]}>
+                          {t.scanResult.tier}{" "}
+                          {halalAnalysis.tier === "certified" ? "1" : halalAnalysis.tier === "analyzed_clean" ? "2" : halalAnalysis.tier === "doubtful" ? "3" : "4"}
+                          {" · "}
+                          {halalAnalysis.tier === "certified" ? t.scanResult.tierCertified : halalAnalysis.tier === "analyzed_clean" ? t.scanResult.tierAnalyzed : halalAnalysis.tier === "doubtful" ? t.scanResult.tierDoubtful : t.scanResult.tierUnknown}
+                        </Text>
+                      )}
                     </View>
-                    {/* Right: "?" icon centered vertically — glass style */}
+                    {/* Right: stats icon — opens per-theme score detail */}
                     <PressableScale
                       onPress={() => {
                         impact();
-                        setShowTrustScoreSheet(true);
+                        setShowScoreDetailSheet(true);
                       }}
-                      accessibilityLabel={t.scanResult.trustScoreExplainTitle}
+                      accessibilityLabel={t.scanResult.scoreDetailTitle}
                       accessibilityRole="button"
                     >
                       <View
@@ -1390,7 +1546,7 @@ export default function ScanResultScreen() {
                         ]}
                       >
                         <MaterialIcons
-                          name="help-outline"
+                          name="leaderboard"
                           size={20}
                           color={isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.35)"}
                         />
@@ -1404,7 +1560,7 @@ export default function ScanResultScreen() {
                       numberOfLines={1}
                       accessibilityRole="header"
                     >
-                      {t.scanResult[statusConfig.labelKey]}
+                      {heroLabel}
                     </Text>
                   </View>
                 )}
@@ -1435,45 +1591,12 @@ export default function ScanResultScreen() {
             </View>
           </View>
 
-          {/* ── ROW 2: METADATA BAND ── */}
-          <Animated.View
-            entering={FadeIn.delay(SUSPENSE_DURATION + 350).duration(500)}
-            style={styles.metadataBand}
-          >
-            {/* Certifier chip — with trust score when available */}
-            <View
-              style={[
-                styles.certifierHeroBadge,
-                {
-                  backgroundColor: isDark
-                    ? glass.dark.bg
-                    : glass.light.border,
-                  borderColor: isDark
-                    ? glass.dark.borderStrong
-                    : glass.light.borderStrong,
-                },
-              ]}
+          {/* ── ROW 2: METADATA BAND (community badge only) ── */}
+          {communityVerifiedCount > 0 && (
+            <Animated.View
+              entering={FadeIn.delay(SUSPENSE_DURATION + 350).duration(500)}
+              style={styles.metadataBand}
             >
-              {certifierData ? (
-                <CertifierLogo certifierId={certifierData.id} size={16} fallbackColor={statusConfig.color} />
-              ) : (
-                <MaterialIcons
-                  name={halalAnalysis?.certifierName ? "verified" : "analytics"}
-                  size={13}
-                  color={statusConfig.color}
-                />
-              )}
-              <Text style={[styles.certifierHeroBadgeText, { color: colors.textSecondary }]}>
-                {certifierData
-                  ? `${certifierData.name} · ${certifierTrustScore!}/100`
-                  : halalAnalysis?.certifierName
-                    ? `${t.scanResult.certifiedHalal} · ${halalAnalysis.certifierName}`
-                    : t.scanResult.noCertifier}
-              </Text>
-            </View>
-
-            {/* Community verified count chip */}
-            {communityVerifiedCount > 0 && (
               <View
                 style={[
                   styles.certifierHeroBadge,
@@ -1495,47 +1618,10 @@ export default function ScanResultScreen() {
                   ).replace("{{count}}", String(communityVerifiedCount))}
                 </Text>
               </View>
-            )}
+            </Animated.View>
+          )}
 
-            {/* Tier chip */}
-            {halalAnalysis && (
-              <View
-                style={[
-                  styles.certifierHeroBadge,
-                  {
-                    backgroundColor: isDark
-                      ? glass.dark.bg
-                      : glass.light.border,
-                    borderColor: isDark
-                      ? glass.dark.borderStrong
-                      : glass.light.borderStrong,
-                  },
-                ]}
-              >
-                <MaterialIcons name="shield" size={13} color={statusConfig.color} />
-                <Text style={[styles.certifierHeroBadgeText, { color: colors.textSecondary }]}>
-                  {t.scanResult.tier}{" "}
-                  {halalAnalysis.tier === "certified"
-                    ? "1"
-                    : halalAnalysis.tier === "analyzed_clean"
-                      ? "2"
-                      : halalAnalysis.tier === "doubtful"
-                        ? "3"
-                        : "4"}
-                  {" · "}
-                  {halalAnalysis.tier === "certified"
-                    ? t.scanResult.tierCertified
-                    : halalAnalysis.tier === "analyzed_clean"
-                      ? t.scanResult.tierAnalyzed
-                      : halalAnalysis.tier === "doubtful"
-                        ? t.scanResult.tierDoubtful
-                        : t.scanResult.tierUnknown}
-                </Text>
-              </View>
-            )}
-          </Animated.View>
-
-          {/* ── ROW 3: Madhab Verdicts ── */}
+          {/* ── ROW 3: Madhab Score Rings (Plan B — Score Orbitaire) ── */}
           {madhabVerdicts.length > 0 && (
             <Animated.View
               entering={FadeIn.delay(SUSPENSE_DURATION + 550).duration(500)}
@@ -1544,15 +1630,10 @@ export default function ScanResultScreen() {
                 { borderTopColor: isDark ? glass.dark.border : glass.light.border },
               ]}
             >
-              {madhabVerdicts.map((v) => {
+              {madhabVerdicts.map((v, i) => {
                 const labelKey = MADHAB_LABEL_KEY[v.madhab as keyof typeof MADHAB_LABEL_KEY];
                 const label = labelKey ? t.scanResult[labelKey] : v.madhab;
 
-                // Verdict icon color = ingredient analysis (semantic, never trust-score)
-                const verdictColor = halalStatusTokens[v.status as keyof typeof halalStatusTokens]?.base ?? halalStatusTokens.unknown.base;
-                const badgeIcon = v.status === "halal" ? "check" : v.status === "doubtful" ? "help" : "close";
-
-                // Trust score = separate informative indicator (neutral display)
                 const trustKey = MADHAB_TRUST_KEY[v.madhab as keyof typeof MADHAB_TRUST_KEY];
                 const madhabTrustScore = certifierData_ && trustKey
                   ? (certifierData_ as Record<string, unknown>)[trustKey] as number | null ?? null
@@ -1565,30 +1646,77 @@ export default function ScanResultScreen() {
                       impact();
                       setSelectedMadhab(v);
                     }}
-                    style={[
-                      styles.madhabChip,
-                      {
-                        backgroundColor: `${verdictColor}${isDark ? "15" : "0D"}`,
-                        borderColor: `${verdictColor}${isDark ? "30" : "20"}`,
-                      },
-                    ]}
                     accessibilityRole="button"
-                    accessibilityLabel={`${label}: ${v.status}${madhabTrustScore !== null ? ` (${madhabTrustScore}/100)` : ""}`}
+                    accessibilityLabel={`${label}: ${v.status}${madhabTrustScore !== null ? `, ${t.scanResult.madhabTrustScoreLabel} ${madhabTrustScore}/100` : ""}`}
                   >
-                    <View style={styles.madhabChipInner}>
-                      <MaterialIcons name={badgeIcon} size={13} color={verdictColor} />
-                      <Text style={[styles.madhabChipLabel, { color: colors.textSecondary }]}>
-                        {label}
-                      </Text>
-                      {madhabTrustScore !== null && (
-                        <Text style={[styles.madhabChipScore, { color: colors.textMuted }]}>
-                          {madhabTrustScore}
-                        </Text>
-                      )}
-                    </View>
+                    <MadhabScoreRing
+                      label={label}
+                      verdict={v.status as "halal" | "doubtful" | "haram"}
+                      trustScore={madhabTrustScore}
+                      conflictCount={v.conflictingAdditives.length + (v.conflictingIngredients?.length ?? 0)}
+                      isUserSchool={userMadhab === v.madhab}
+                      staggerIndex={i}
+                    />
                   </PressableScale>
                 );
               })}
+
+              {/* ── Info note below rings ── */}
+              <View style={styles.madhabInfoNote}>
+                <MaterialIcons name="info-outline" size={11} color={colors.textMuted} style={{ marginTop: 1 }} />
+                <Text style={[styles.madhabInfoNoteText, { color: colors.textMuted }]}>
+                  {certifierData_?.name
+                    ? t.scanResult.madhabCertifierNote.replace("{{certifier}}", certifierData_.name)
+                    : t.scanResult.madhabAlgoNote}
+                </Text>
+              </View>
+
+              {/* ── Hadith "Al-Halal Bayyin" — only for doubtful status ── */}
+              {effectiveHeroStatus === "doubtful" && (
+                <Animated.View
+                  entering={FadeInDown.delay(SUSPENSE_DURATION + 800).duration(500)}
+                  style={[
+                    styles.hadithCard,
+                    {
+                      backgroundColor: isDark ? `${gold[500]}0C` : `${gold[500]}08`,
+                      borderColor: isDark ? `${gold[500]}20` : `${gold[500]}15`,
+                      shadowColor: gold[500],
+                      shadowOpacity: isDark ? 0.12 : 0.06,
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowRadius: 8,
+                      elevation: 3,
+                    },
+                  ]}
+                >
+                  {/* Single gold accent line — top */}
+                  <LinearGradient
+                    colors={[`${gold[500]}00`, gold[500], `${gold[500]}00`]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.hadithAccentLine}
+                  />
+
+                  {/* Quote text in user's language */}
+                  <Text
+                    style={[
+                      styles.hadithText,
+                      { color: isDark ? gold[200] : gold[800] },
+                    ]}
+                  >
+                    {t.scanResult.hadithHalalBayyin}
+                  </Text>
+
+                  {/* Source */}
+                  <Text
+                    style={[
+                      styles.hadithSource,
+                      { color: isDark ? gold[400] : gold[600] },
+                    ]}
+                  >
+                    — {t.scanResult.hadithHalalBayyinSource}
+                  </Text>
+                </Animated.View>
+              )}
             </Animated.View>
           )}
         </View>
@@ -2436,6 +2564,16 @@ export default function ScanResultScreen() {
         onClose={handleCloseTrustScore}
       />
 
+      {/* ── Score Detail Bottom Sheet (per-theme breakdown) ── */}
+      <ScoreDetailBottomSheet
+        visible={showScoreDetailSheet}
+        certifierId={certifierData?.id ?? null}
+        certifierName={certifierData?.name ?? null}
+        trustScore={certifierTrustScore}
+        practices={certifierData?.practices ?? null}
+        onClose={handleCloseScoreDetail}
+      />
+
       {/* ── Madhab Bottom Sheet ── */}
       <MadhabBottomSheet
         visible={!!selectedMadhab}
@@ -2486,6 +2624,11 @@ const styles = StyleSheet.create({
   floatingBackButton: {
     position: "absolute",
     left: spacing.xl,
+    zIndex: 50,
+  },
+  floatingInfoButton: {
+    position: "absolute",
+    right: spacing.xl,
     zIndex: 50,
   },
 
@@ -2585,6 +2728,12 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
   },
+  heroTierLabel: {
+    fontSize: 9,
+    fontWeight: fontWeightTokens.medium,
+    marginTop: 2,
+    letterSpacing: 0.3,
+  },
   heroHelpButton: {
     width: 38,
     height: 38,
@@ -2679,35 +2828,61 @@ const styles = StyleSheet.create({
   // ── Madhab chips row ────────────────────────────
   madhabRow: {
     flexDirection: "row" as const,
-    alignItems: "center" as const,
+    alignItems: "flex-start" as const,
     justifyContent: "center" as const,
     flexWrap: "wrap" as const,
-    gap: spacing.md,
+    gap: spacing.xl,
     marginTop: spacing.lg,
     paddingTop: spacing.lg,
+    paddingBottom: spacing.xs,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
-  madhabChip: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.full,
-    borderWidth: 1,
-  },
-  madhabChipInner: {
+  madhabInfoNote: {
     flexDirection: "row" as const,
-    alignItems: "center" as const,
+    alignItems: "flex-start" as const,
     gap: spacing.xs,
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.md,
+    width: "100%" as const,
   },
-  madhabChipLabel: {
-    fontSize: fontSizeTokens.caption,
-    fontWeight: fontWeightTokens.semiBold,
-    letterSpacing: 0.3,
-  },
-  madhabChipScore: {
+  madhabInfoNoteText: {
     fontSize: fontSizeTokens.micro,
-    fontWeight: fontWeightTokens.bold,
+    fontWeight: fontWeightTokens.medium,
+    lineHeight: 14,
+    flex: 1,
   },
 
+  // ── Hadith premium card ──────────────────────
+  hadithCard: {
+    width: "100%" as const,
+    marginTop: spacing.md,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: "hidden" as const,
+  },
+  hadithAccentLine: {
+    width: "40%" as const,
+    height: 1,
+    alignSelf: "center" as const,
+    marginBottom: spacing.sm,
+  },
+  hadithText: {
+    fontSize: 11,
+    fontWeight: fontWeightTokens.medium,
+    lineHeight: 18,
+    fontStyle: "italic" as const,
+    textAlign: "center" as const,
+  },
+  hadithSource: {
+    fontSize: 9,
+    fontWeight: fontWeightTokens.semiBold,
+    textAlign: "center" as const,
+    marginTop: spacing.xs,
+    letterSpacing: 0.4,
+  },
 
   // ── Content ────────────────────────────────────
   contentContainer: {

@@ -6,6 +6,7 @@ export interface StoreFeatureProperties {
   name: string;
   storeType: string;
   imageUrl: string | null;
+  logoUrl: string | null;
   address: string;
   city: string;
   phone: string | null;

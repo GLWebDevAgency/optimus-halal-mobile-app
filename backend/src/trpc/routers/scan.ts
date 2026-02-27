@@ -9,7 +9,6 @@ import {
   boycottTargets,
   additives as additivesTable,
   additiveMadhabRulings,
-  certifiers,
 } from "../../db/schema/index.js";
 import {
   lookupBarcode,
@@ -19,6 +18,7 @@ import {
   type MatchedIngredientRuling,
 } from "../../services/barcode.service.js";
 import { matchAllergens } from "../../services/allergen.service.js";
+import { getCertifierScores, getAllCertifierScores } from "../../services/certifier-score.service.js";
 import { notFound } from "../../lib/errors.js";
 
 // ── Level thresholds ──────────────────────────────────────────
@@ -305,8 +305,9 @@ export const scanRouter = router({
             analysisOptions,
           );
 
-          // Sync product record if certifier or confidence changed
+          // Sync product record if analysis result changed (status, certifier, or confidence)
           if (halalAnalysis && (
+            product.halalStatus !== halalAnalysis.status ||
             product.certifierId !== halalAnalysis.certifierId ||
             product.certifierName !== halalAnalysis.certifierName ||
             product.confidenceScore !== halalAnalysis.confidence
@@ -320,6 +321,15 @@ export const scanRouter = router({
                 certifierId: halalAnalysis.certifierId,
               })
               .where(eq(products.id, product.id));
+
+            // Keep local product in sync with DB for the response
+            product = {
+              ...product,
+              halalStatus: halalAnalysis.status,
+              confidenceScore: halalAnalysis.confidence,
+              certifierName: halalAnalysis.certifierName,
+              certifierId: halalAnalysis.certifierId,
+            };
           }
         }
       }
@@ -543,7 +553,9 @@ export const scanRouter = router({
       // 9. Madhab verdicts — all 4 school opinions for comparative display
       const madhabVerdicts = await computeMadhabVerdicts(ctx.db, halalAnalysis, ingredientRulingsData);
 
-      // 10. Certifier enrichment — load trust score + real name from DB
+      // 10. Certifier enrichment — runtime-computed trust scores
+      // Scores are computed LIVE from raw practice flags + certifier_events
+      // with dynamic controversy penalty (time-decay). Not pre-computed.
       let certifierData: {
         id: string;
         name: string;
@@ -554,27 +566,38 @@ export const scanRouter = router({
         trustScoreHanbali: number;
         website: string | null;
         halalAssessment: boolean;
+        practices: {
+          controllersAreEmployees: boolean | null;
+          controllersPresentEachProduction: boolean | null;
+          hasSalariedSlaughterers: boolean | null;
+          acceptsMechanicalSlaughter: boolean | null;
+          acceptsElectronarcosis: boolean | null;
+          acceptsPostSlaughterElectrocution: boolean | null;
+          acceptsStunning: boolean | null;
+          acceptsVsm: boolean | null;
+          transparencyPublicCharter: boolean | null;
+          transparencyAuditReports: boolean | null;
+          transparencyCompanyList: boolean | null;
+        };
       } | null = null;
 
       if (halalAnalysis?.certifierId) {
-        const certifier = await ctx.db.query.certifiers.findFirst({
-          where: eq(certifiers.id, halalAnalysis.certifierId),
-          columns: {
-            id: true,
-            name: true,
-            trustScore: true,
-            trustScoreHanafi: true,
-            trustScoreShafii: true,
-            trustScoreMaliki: true,
-            trustScoreHanbali: true,
-            website: true,
-            halalAssessment: true,
-          },
-        });
-        if (certifier) {
-          certifierData = certifier;
+        const scored = await getCertifierScores(ctx.db, ctx.redis, halalAnalysis.certifierId);
+        if (scored) {
+          certifierData = {
+            id: scored.id,
+            name: scored.name,
+            trustScore: scored.scores.trustScore,
+            trustScoreHanafi: scored.scores.trustScoreHanafi,
+            trustScoreShafii: scored.scores.trustScoreShafii,
+            trustScoreMaliki: scored.scores.trustScoreMaliki,
+            trustScoreHanbali: scored.scores.trustScoreHanbali,
+            website: scored.website,
+            halalAssessment: scored.halalAssessment,
+            practices: scored.practices,
+          };
           // Override certifierName with the real DB name
-          halalAnalysis.certifierName = certifier.name;
+          halalAnalysis.certifierName = scored.name;
         }
       }
 
@@ -613,7 +636,8 @@ export const scanRouter = router({
         }
       }
 
-      const items = await ctx.db
+      // Query scans + products (no certifier JOIN — scores come from runtime engine)
+      const rawItems = await ctx.db
         .select({
           id: scans.id,
           barcode: scans.barcode,
@@ -626,6 +650,10 @@ export const scanRouter = router({
             brand: products.brand,
             imageUrl: products.imageUrl,
             category: products.category,
+            halalStatus: products.halalStatus,
+            confidenceScore: products.confidenceScore,
+            certifierId: products.certifierId,
+            certifierName: products.certifierName,
           },
         })
         .from(scans)
@@ -635,10 +663,32 @@ export const scanRouter = router({
         .limit(input.limit + 1);
 
       let nextCursor: string | undefined;
-      if (items.length > input.limit) {
-        const next = items.pop()!;
+      if (rawItems.length > input.limit) {
+        const next = rawItems.pop()!;
         nextCursor = next.id;
       }
+
+      // Enrich with runtime-computed trust scores (batch, cached in Redis 1h)
+      // getAllCertifierScores() is a single batched query — no N+1
+      const allScores = await getAllCertifierScores(ctx.db, ctx.redis);
+      const scoreMap = new Map(allScores.map((c) => [c.id, c.scores]));
+
+      const items = rawItems.map((item) => {
+        const certifierId = item.product?.certifierId;
+        const scores = certifierId ? scoreMap.get(certifierId) ?? null : null;
+        return {
+          ...item,
+          certifier: scores
+            ? {
+                trustScore: scores.trustScore,
+                trustScoreHanafi: scores.trustScoreHanafi,
+                trustScoreShafii: scores.trustScoreShafii,
+                trustScoreMaliki: scores.trustScoreMaliki,
+                trustScoreHanbali: scores.trustScoreHanbali,
+              }
+            : null,
+        };
+      });
 
       return { items, nextCursor };
     }),

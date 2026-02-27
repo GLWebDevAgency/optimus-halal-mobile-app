@@ -104,10 +104,19 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
         <View className="flex-row items-start justify-between mb-2">
           <View className="flex-row items-start flex-1 pr-3">
             <View
-              className="w-10 h-10 rounded-xl items-center justify-center mr-3"
+              className="w-10 h-10 rounded-xl items-center justify-center mr-3 overflow-hidden"
               style={{ backgroundColor: `${typeColor}18` }}
             >
-              <MaterialIcons name={typeIcon} size={20} color={typeColor} />
+              {store.logoUrl ? (
+                <Image
+                  source={{ uri: store.logoUrl }}
+                  style={{ width: "100%", height: "100%" }}
+                  contentFit="cover"
+                  transition={200}
+                />
+              ) : (
+                <MaterialIcons name={typeIcon} size={20} color={typeColor} />
+              )}
             </View>
             <View className="flex-1">
               <Text className="text-lg font-bold" style={{ color: colors.textPrimary }} numberOfLines={1}>

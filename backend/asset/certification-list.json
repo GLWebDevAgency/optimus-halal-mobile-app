@@ -1,5 +1,3 @@
-
-
 [
     {
         "id": "achahada",
@@ -13,12 +11,19 @@
         "acceptsPoultryElectronarcosis": false,
         "acceptsPoultryElectrocutionPostSlaughter": false,
         "acceptsStunningForCattleCalvesLambs": false,
+        "acceptsVsm": false,
+        "transparencyPublicCharter": true,
+        "transparencyAuditReports": false,
+        "transparencyCompanyList": true,
         "halal-assessment": true,
-        "notes": []
+        "controversyPenalty": 0,
+        "notes": [
+            "Charte halal publique sur achahada.com. Liste des entreprises certifiees accessible via le site."
+        ]
     },
     {
         "id": "acmif-mosquee-d-evry",
-        "name": "ACMIF - Mosquée d’Evry",
+        "name": "ACMIF - Mosquee d'Evry",
         "website": "https://www.mosquee-evry.fr",
         "creationYear": 1996,
         "controllersAreEmployees": false,
@@ -28,8 +33,15 @@
         "acceptsPoultryElectronarcosis": true,
         "acceptsPoultryElectrocutionPostSlaughter": true,
         "acceptsStunningForCattleCalvesLambs": true,
+        "acceptsVsm": true,
+        "transparencyPublicCharter": false,
+        "transparencyAuditReports": false,
+        "transparencyCompanyList": false,
         "halal-assessment": false,
-        "notes": []
+        "controversyPenalty": 0,
+        "notes": [
+            "Meme cahier des charges que la Mosquee de Paris (SFCVH). Controleurs non salaries — choisis parmi les employes de l'entreprise certifiee ou detaches par la mosquee (questionhalal.com)."
+        ]
     },
     {
         "id": "afcai",
@@ -43,8 +55,15 @@
         "acceptsPoultryElectronarcosis": true,
         "acceptsPoultryElectrocutionPostSlaughter": true,
         "acceptsStunningForCattleCalvesLambs": true,
+        "acceptsVsm": true,
+        "transparencyPublicCharter": false,
+        "transparencyAuditReports": false,
+        "transparencyCompanyList": false,
         "halal-assessment": false,
-        "notes": []
+        "controversyPenalty": -5,
+        "notes": [
+            "Certifie Doux — abattage mecanique industriel sans controle permanent. Accepte que les sacrificateurs soient des 'Gens du Livre' (non-musulmans), position tres controversee (al-kanz.org, 2010)."
+        ]
     },
     {
         "id": "alamane",
@@ -58,14 +77,19 @@
         "acceptsPoultryElectronarcosis": true,
         "acceptsPoultryElectrocutionPostSlaughter": true,
         "acceptsStunningForCattleCalvesLambs": true,
+        "acceptsVsm": true,
+        "transparencyPublicCharter": false,
+        "transparencyAuditReports": false,
+        "transparencyCompanyList": false,
         "halal-assessment": false,
+        "controversyPenalty": 0,
         "notes": []
     },
     {
         "id": "altakwa",
         "name": "ALTAKWA",
         "website": "https://www.altakwa.fr",
-        "creationYear": 1990,
+        "creationYear": 1989,
         "controllersAreEmployees": true,
         "controllersPresentEachProduction": true,
         "hasSalariedSlaughterers": true,
@@ -73,25 +97,38 @@
         "acceptsPoultryElectronarcosis": false,
         "acceptsPoultryElectrocutionPostSlaughter": false,
         "acceptsStunningForCattleCalvesLambs": false,
+        "acceptsVsm": false,
+        "transparencyPublicCharter": true,
+        "transparencyAuditReports": false,
+        "transparencyCompanyList": false,
         "halal-assessment": true,
-        "notes": []
+        "controversyPenalty": 0,
+        "notes": [
+            "Fondee en 1989 par Cheikh Ahmad ALDILAIMI. Equipes de sacrificateurs-inspecteurs sur site. Refus categorique de tout etourdissement (electronarcose, percussion, gazage). Source: altakwa.fr"
+        ]
     },
     {
         "id": "argml-mosquee-de-lyon",
-        "name": "ARGML - Mosquée de Lyon",
-        "website": "https://www.hallal.mosquee-lyon.org",
+        "name": "ARGML - Mosquee de Lyon",
+        "website": "https://argml.com",
         "creationYear": 1995,
-        "controllersAreEmployees": null,
+        "controllersAreEmployees": true,
         "controllersPresentEachProduction": true,
         "hasSalariedSlaughterers": true,
         "acceptsMechanicalPoultrySlaughter": false,
         "acceptsPoultryElectronarcosis": true,
         "acceptsPoultryElectrocutionPostSlaughter": true,
         "acceptsStunningForCattleCalvesLambs": true,
+        "acceptsVsm": true,
+        "transparencyPublicCharter": false,
+        "transparencyAuditReports": false,
+        "transparencyCompanyList": false,
         "halal-assessment": false,
+        "controversyPenalty": 0,
         "notes": [
-            "Au sein de certains site de production, les contrôleurs sont aussi salariés de l’usine, ce qui ne garantit pas l’indépendance des contrôleurs.",
-            "ATTENTION : l’indépendance de certains contrôleurs n’est pas garanti dès lors ou ils sont salariés en parallèle du site de production."
+            "~80 controleurs rituels salaries de l'ARGML, independants des abattoirs (source: argml.com/argml/, video TikTok Isla Delice/ARGML). Sacrificateurs = salaries des abattoirs mais agrees et supervises par l'ARGML.",
+            "Accepte l'electronarcose sous conditions strictes (parametres bas, test de reveil). S'est separee de Bernard Royal Dauphine en dec. 2021 quand les normes UE ont impose des parametres trop eleves tuant les volailles (al-kanz.org, dec. 2021). Preuve de rigueur dans l'application de ses standards.",
+            "Certifie Isla Delice — produits contenant de la VSM (viande separee mecaniquement)."
         ]
     },
     {
@@ -106,14 +143,21 @@
         "acceptsPoultryElectronarcosis": true,
         "acceptsPoultryElectrocutionPostSlaughter": true,
         "acceptsStunningForCattleCalvesLambs": true,
+        "acceptsVsm": false,
+        "transparencyPublicCharter": false,
+        "transparencyAuditReports": false,
+        "transparencyCompanyList": false,
         "halal-assessment": false,
-        "notes": []
+        "controversyPenalty": 0,
+        "notes": [
+            "Interdit la VSM dans sa charte (source: al-kanz.org, 2010 — Arrissala, Altakwa et Achahada considerent la VSM comme haram)."
+        ]
     },
     {
         "id": "avs-a-votre-service",
         "name": "A Votre Service - AVS",
-        "website": "https://www.halal-avs.com",
-        "creationYear": 1992,
+        "website": "https://avs.fr",
+        "creationYear": 1991,
         "controllersAreEmployees": true,
         "controllersPresentEachProduction": true,
         "hasSalariedSlaughterers": true,
@@ -121,8 +165,18 @@
         "acceptsPoultryElectronarcosis": false,
         "acceptsPoultryElectrocutionPostSlaughter": false,
         "acceptsStunningForCattleCalvesLambs": false,
+        "acceptsVsm": true,
+        "transparencyPublicCharter": true,
+        "transparencyAuditReports": false,
+        "transparencyCompanyList": true,
         "halal-assessment": true,
-        "notes": []
+        "controversyPenalty": 0,
+        "notes": [
+            "155 controleurs salaries (source: avs.fr). Presence permanente sur tous les sites de production.",
+            "Accepte la VSM dans les charcuteries certifiees (source: al-kanz.org 2013, halalfrais.fr 2026). Polemique historique Isla Delice (2010-2013, RESOLUE : AVS s'est separee d'Isla Delice fin 2012). AVS certifie desormais Isla Mondial (0% VSM).",
+            "Mai 2025 : AVS suspend sa certification a l'abattoir de Meaux suite a des revelations L214 sur la maltraitance animale (source: l214.com). Preuve de reactivite.",
+            "Charte halal publique (avs.fr/charte-halal). Liste des marques certifiees publiee (avs.fr/marques)."
+        ]
     },
     {
         "id": "european-halal-trust",
@@ -136,8 +190,15 @@
         "acceptsPoultryElectronarcosis": false,
         "acceptsPoultryElectrocutionPostSlaughter": false,
         "acceptsStunningForCattleCalvesLambs": false,
+        "acceptsVsm": false,
+        "transparencyPublicCharter": true,
+        "transparencyAuditReports": true,
+        "transparencyCompanyList": true,
         "halal-assessment": true,
-        "notes": []
+        "controversyPenalty": 0,
+        "notes": [
+            "Cahier des charges public (ehthalal.com). Publie des rapports de controle synthetiques. Liste des entreprises certifiees accessible sur le site."
+        ]
     },
     {
         "id": "halal-correct",
@@ -151,23 +212,36 @@
         "acceptsPoultryElectronarcosis": true,
         "acceptsPoultryElectrocutionPostSlaughter": true,
         "acceptsStunningForCattleCalvesLambs": true,
+        "acceptsVsm": true,
+        "transparencyPublicCharter": false,
+        "transparencyAuditReports": false,
+        "transparencyCompanyList": false,
         "halal-assessment": false,
+        "controversyPenalty": 0,
         "notes": []
     },
     {
         "id": "halal-monitoring-committee",
-        "name": "HALAL MONITORING COMMITTE",
+        "name": "Halal Monitoring Committee",
         "website": "https://www.halalhmc.org",
-        "creationYear": null,
+        "creationYear": 2003,
         "controllersAreEmployees": true,
         "controllersPresentEachProduction": true,
         "hasSalariedSlaughterers": true,
         "acceptsMechanicalPoultrySlaughter": false,
         "acceptsPoultryElectronarcosis": false,
         "acceptsPoultryElectrocutionPostSlaughter": false,
-        "acceptsStunningForCattleCalvesLambs": false,
+        "acceptsStunningForCattleCalvesLambs": true,
+        "acceptsVsm": false,
+        "transparencyPublicCharter": true,
+        "transparencyAuditReports": true,
+        "transparencyCompanyList": true,
         "halal-assessment": true,
-        "notes": []
+        "controversyPenalty": 0,
+        "notes": [
+            "Organisme britannique (UK), 700+ restaurants et boucheries certifies. Accepte le stunning reversible pour bovins uniquement (source: debat-halal.fr, halalhmc.org). Refus strict pour volailles.",
+            "Standards publics (halalhmc.org/standards). Rapports de monitoring publies. Annuaire des entreprises certifiees accessible en ligne."
+        ]
     },
     {
         "id": "halal-polska",
@@ -181,7 +255,12 @@
         "acceptsPoultryElectronarcosis": true,
         "acceptsPoultryElectrocutionPostSlaughter": true,
         "acceptsStunningForCattleCalvesLambs": true,
+        "acceptsVsm": true,
+        "transparencyPublicCharter": false,
+        "transparencyAuditReports": false,
+        "transparencyCompanyList": false,
         "halal-assessment": false,
+        "controversyPenalty": 0,
         "notes": []
     },
     {
@@ -196,8 +275,15 @@
         "acceptsPoultryElectronarcosis": false,
         "acceptsPoultryElectrocutionPostSlaughter": false,
         "acceptsStunningForCattleCalvesLambs": false,
+        "acceptsVsm": false,
+        "transparencyPublicCharter": true,
+        "transparencyAuditReports": false,
+        "transparencyCompanyList": false,
         "halal-assessment": true,
-        "notes": []
+        "controversyPenalty": 0,
+        "notes": [
+            "Cahier des charges public accessible sur halal-services.fr."
+        ]
     },
     {
         "id": "islamic-centre-aachen",
@@ -211,7 +297,12 @@
         "acceptsPoultryElectronarcosis": true,
         "acceptsPoultryElectrocutionPostSlaughter": true,
         "acceptsStunningForCattleCalvesLambs": true,
+        "acceptsVsm": true,
+        "transparencyPublicCharter": false,
+        "transparencyAuditReports": false,
+        "transparencyCompanyList": false,
         "halal-assessment": false,
+        "controversyPenalty": 0,
         "notes": []
     },
     {
@@ -226,7 +317,12 @@
         "acceptsPoultryElectronarcosis": false,
         "acceptsPoultryElectrocutionPostSlaughter": false,
         "acceptsStunningForCattleCalvesLambs": false,
+        "acceptsVsm": false,
+        "transparencyPublicCharter": false,
+        "transparencyAuditReports": false,
+        "transparencyCompanyList": false,
         "halal-assessment": true,
+        "controversyPenalty": 0,
         "notes": []
     },
     {
@@ -241,12 +337,17 @@
         "acceptsPoultryElectronarcosis": true,
         "acceptsPoultryElectrocutionPostSlaughter": true,
         "acceptsStunningForCattleCalvesLambs": false,
+        "acceptsVsm": true,
+        "transparencyPublicCharter": false,
+        "transparencyAuditReports": false,
+        "transparencyCompanyList": false,
         "halal-assessment": false,
+        "controversyPenalty": 0,
         "notes": []
     },
     {
         "id": "sfcvh-mosquee-de-paris",
-        "name": "SFCVH - Mosquée de Paris",
+        "name": "SFCVH - Mosquee de Paris",
         "website": "https://www.sfcvh.com",
         "creationYear": 1994,
         "controllersAreEmployees": false,
@@ -256,8 +357,17 @@
         "acceptsPoultryElectronarcosis": true,
         "acceptsPoultryElectrocutionPostSlaughter": true,
         "acceptsStunningForCattleCalvesLambs": true,
+        "acceptsVsm": true,
+        "transparencyPublicCharter": false,
+        "transparencyAuditReports": false,
+        "transparencyCompanyList": false,
         "halal-assessment": false,
-        "notes": []
+        "controversyPenalty": -15,
+        "notes": [
+            "Affaire Herta (jan. 2011) : analyses Eurofins revelent traces ADN porc dans Knacki Halal certifiee SFCVH. Contre-expertise Genetic ID contredit. Herta abandonne sa gamme halal en 2012. Source: al-kanz.org/2011/01/25/herta-halal-analyses",
+            "Enquete L'Opinion (2015) : societe privee de 3 salaries monopolise la certification export vers l'Algerie sans controleurs terrain. Source: al-kanz.org/2016/03/18/mosquee-paris-sfcvh/",
+            "Juin 2022 : rupture definitive entre la Grande Mosquee de Paris et la SFCVH. La GMP certifie desormais en direct. Source: grandemosqueedeparis.fr/post/communique"
+        ]
     },
     {
         "id": "sidq",
@@ -271,7 +381,12 @@
         "acceptsPoultryElectronarcosis": false,
         "acceptsPoultryElectrocutionPostSlaughter": false,
         "acceptsStunningForCattleCalvesLambs": false,
+        "acceptsVsm": false,
+        "transparencyPublicCharter": false,
+        "transparencyAuditReports": false,
+        "transparencyCompanyList": false,
         "halal-assessment": true,
+        "controversyPenalty": 0,
         "notes": []
     }
 ]

@@ -15,6 +15,7 @@ import { redis } from "./lib/redis.js";
 import { sql } from "drizzle-orm";
 import { initSentry, Sentry } from "./lib/sentry.js";
 import { webhookRoutes } from "./routes/webhook.js";
+import { internalRoutes } from "./routes/internal.js";
 
 initSentry();
 
@@ -80,6 +81,9 @@ app.get("/health", async (c) => {
 
 // ── Webhook Routes ──────────────────────────────────────
 app.route("/webhooks", webhookRoutes);
+
+// ── Internal Routes (cron, admin — auth via CRON_SECRET) ──
+app.route("/internal", internalRoutes);
 
 // ── tRPC Handler ──────────────────────────────────────────
 

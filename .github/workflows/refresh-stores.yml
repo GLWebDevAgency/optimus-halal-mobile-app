@@ -1,0 +1,63 @@
+name: Refresh Store Data
+
+on:
+  schedule:
+    # Weekly: Monday 3:00 AM CET (2:00 UTC)
+    - cron: '0 2 * * 1'
+  workflow_dispatch: # Manual trigger from GitHub UI
+
+jobs:
+  refresh:
+    name: Trigger Store Refresh
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Trigger refresh endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          API_URL: ${{ secrets.PRODUCTION_API_URL }}
+        run: |
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -H "Content-Type: application/json" \
+            "${API_URL}/internal/refresh-stores")
+
+          echo "HTTP Status: ${RESPONSE}"
+
+          if [ "${RESPONSE}" = "202" ]; then
+            echo "Refresh triggered successfully"
+          elif [ "${RESPONSE}" = "409" ]; then
+            echo "Refresh already in progress — skipping"
+          else
+            echo "Unexpected response: ${RESPONSE}"
+            exit 1
+          fi
+
+      - name: Wait for pipeline completion
+        run: sleep 90
+
+      - name: Check refresh status
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          API_URL: ${{ secrets.PRODUCTION_API_URL }}
+        run: |
+          STATUS=$(curl -s \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${API_URL}/internal/refresh-stores/status")
+
+          echo "Refresh status:"
+          echo "${STATUS}" | jq .
+
+          SUCCESS=$(echo "${STATUS}" | jq -r '.lastRun.success // false')
+          if [ "${SUCCESS}" != "true" ]; then
+            echo "Refresh did not complete successfully"
+            ERRORS=$(echo "${STATUS}" | jq -r '.lastRun.errors // []')
+            echo "Errors: ${ERRORS}"
+            exit 1
+          fi
+
+          echo "Stores upserted: $(echo "${STATUS}" | jq '.lastRun.storesUpserted')"
+          echo "Hours upserted: $(echo "${STATUS}" | jq '.lastRun.hoursUpserted')"
+          echo "Duration: $(echo "${STATUS}" | jq '.lastRun.durationMs')ms"

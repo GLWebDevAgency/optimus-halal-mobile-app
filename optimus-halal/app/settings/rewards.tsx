@@ -19,6 +19,7 @@ import {
 } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -385,32 +386,12 @@ const ClaimedRewardCard = React.memo(function ClaimedRewardCard({
 
 // ── Skeleton Loader ───────────────────────────────────
 
-function SkeletonLoader({
-  isDark,
-  colors,
-}: {
-  isDark: boolean;
-  colors: ReturnType<typeof useTheme>["colors"];
-}) {
-  const shimmer = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
+function SkeletonLoader() {
   return (
     <View style={styles.skeletonContainer}>
-      {/* Banner skeleton */}
-      <View
-        style={[
-          styles.skeletonBanner,
-          { backgroundColor: shimmer, borderColor: colors.borderLight },
-        ]}
-      />
-      {/* Cards skeleton */}
+      <Skeleton width="100%" height={120} borderRadius={20} style={{ marginBottom: 24 }} />
       {[0, 1, 2, 3].map((i) => (
-        <View
-          key={i}
-          style={[
-            styles.skeletonCard,
-            { backgroundColor: shimmer, borderColor: colors.borderLight },
-          ]}
-        />
+        <Skeleton key={i} width="100%" height={88} borderRadius={16} style={{ marginBottom: 12 }} />
       ))}
     </View>
   );
@@ -540,7 +521,7 @@ export default function RewardsScreen() {
             </Text>
             <View style={styles.headerSpacer} />
           </View>
-          <SkeletonLoader isDark={isDark} colors={colors} />
+          <SkeletonLoader />
         </SafeAreaView>
       </View>
     );
@@ -1058,17 +1039,5 @@ const styles = StyleSheet.create({
   skeletonContainer: {
     paddingHorizontal: 20,
     paddingTop: 8,
-  },
-  skeletonBanner: {
-    height: 120,
-    borderRadius: 20,
-    borderWidth: 1,
-    marginBottom: 24,
-  },
-  skeletonCard: {
-    height: 88,
-    borderRadius: 16,
-    borderWidth: 1,
-    marginBottom: 12,
   },
 });

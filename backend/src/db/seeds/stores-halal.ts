@@ -1,24 +1,29 @@
 /**
- * Halal Store Seed — Enterprise-Grade Data Pipeline
+ * Halal Store Seed — Enterprise-Grade Data Pipeline v2
  *
  * Sources:
- * - AVS (A Votre Service): Restaurants, Grossistes, Abattoirs
- * - Achahada: Boucheries certifiées, Marques/Fournisseurs
+ * - AVS (A Votre Service): Boucheries, Restaurants, Fournisseurs, Abattoirs
+ * - Achahada: 262 stores (boucheries, restaurants, supermarchés, grossistes, abattoirs)
  *
  * Data quality pipeline:
- * 1. Extract: Load raw JSON assets
- * 2. Transform: Normalize, validate, enrich
- * 3. Deduplicate: Fuzzy match on name+coordinates
- * 4. Load: NewStore[] ready for Drizzle upsert
+ * 1. Extract: Load raw JSON assets (fresh from fetch-store-data.ts)
+ * 2. Transform: Normalize, validate, enrich (logos from R2, hours parsed)
+ * 3. Deduplicate: Fuzzy match on name+coordinates (100m grid)
+ * 4. Load: NewStore[] + ParsedStoreHours[] ready for Drizzle upsert
  *
- * Future: Cron scraper will refresh from official AVS/Achahada websites.
+ * Asset dependencies:
+ * - avs-boucheries.json, avs-restaurants.json, avs-fournisseurs.json (from fetch:stores)
+ * - avs-certified-abatoirs.json (original dump — no public endpoint)
+ * - achahada-all-stores.json + categoryMap (from fetch:stores)
+ * - achahada-logo-map.json (from upload:logos)
  */
 
 import type { NewStore } from "../schema/stores.js";
 
-// ── Source data shapes ──────────────────────────────────────────
+// ── Source data shapes (exported for store-refresh.service.ts) ──
 
-interface AVSEntry {
+/** AVS Abattoirs (legacy manual dump — equinox.avs.fr, different field set) */
+export interface AVSLegacyEntry {
   id: string;
   name: string;
   city: string | null;
@@ -41,7 +46,34 @@ interface AVSEntry {
   siteTypes: string[];
 }
 
-interface AchahadaEntry {
+/**
+ * AVS Sites — shared shape for Boucheries, Restaurants, Fournisseurs
+ * (equinox.avs.fr/v1/website/sites/* and /providers endpoints)
+ * All 3 endpoints return this common shape with `isActive` (not `active`).
+ * Nullable fields: country, phone, fax, email, webSite, specialities
+ */
+export interface AVSSiteEntry {
+  id: string;
+  name: string;
+  city: string;
+  zipCode: string;
+  address: string;
+  country: string | null;
+  lat: number;
+  lon: number;
+  latitude: number;
+  longitude: number;
+  phone: string | null;
+  fax: string | null;
+  email: string | null;
+  webSite: string | null;
+  specialities: string | null;
+  isActive: boolean;
+  isActivityMealBag: boolean;
+}
+
+/** Achahada store (achahada.com WordPress store locator) */
+export interface AchahadaEntry {
   id: string;
   store: string;
   address: string;
@@ -53,10 +85,26 @@ interface AchahadaEntry {
   lng: string;
   phone: string;
   email: string;
-  hours: string; // HTML table
+  hours: string; // HTML table with <time> tags
   url: string;
   thumb: string; // HTML img tag
   distance: number;
+}
+
+export interface AchahadaAllStoresData {
+  stores: AchahadaEntry[];
+  categoryMap: Record<string, number[]>;
+  fetchedAt: string;
+}
+
+// ── Parsed hours output ─────────────────────────────────────────
+
+export interface ParsedStoreHours {
+  sourceId: string;
+  dayOfWeek: number; // 0=Sunday, 6=Saturday
+  openTime: string | null; // "09:00"
+  closeTime: string | null; // "17:00"
+  isClosed: boolean;
 }
 
 // ── Data quality: normalization helpers ──────────────────────────
@@ -116,32 +164,6 @@ function decodeHtml(html: string): string {
     .trim();
 }
 
-/** Extract image URL from HTML img tag */
-function extractImageUrl(html: string | null): string | null {
-  if (!html?.trim()) return null;
-  const match = html.match(/src="([^"]+)"/);
-  if (!match?.[1]) return null;
-  // Prefer the highest resolution: strip size suffixes like -150x150
-  return match[1].replace(/-\d+x\d+(\.\w+)$/, "$1");
-}
-
-/** Parse Achahada HTML opening hours to structured JSON */
-function parseOpeningHours(html: string | null): Record<string, string> | null {
-  if (!html?.trim()) return null;
-  const hours: Record<string, string> = {};
-  const rows = html.match(/<tr>.*?<\/tr>/g);
-  if (!rows) return null;
-  for (const row of rows) {
-    const cells = row.match(/<td>(.*?)<\/td>/g);
-    if (cells?.length === 2) {
-      const day = cells[0].replace(/<[^>]+>/g, "").trim();
-      const time = cells[1].replace(/<[^>]+>/g, "").trim();
-      if (day) hours[day] = time;
-    }
-  }
-  return Object.keys(hours).length > 0 ? hours : null;
-}
-
 // ── Geo validation ──────────────────────────────────────────────
 
 /** France bounding box (metropolitan) */
@@ -175,11 +197,141 @@ function dedupKey(name: string, lat: number, lng: number): string {
   return `${normalizedName}|${roundedLat}|${roundedLng}`;
 }
 
-// ── Transform AVS → NewStore ────────────────────────────────────
+// ── Achahada category → store type resolution ───────────────────
 
-function transformAVS(
-  entry: AVSEntry,
-  storeType: "restaurant" | "wholesaler" | "abattoir",
+/**
+ * Achahada filter IDs → store types (priority order, first match wins):
+ *   73 → butcher       (Boucheries)
+ *   83 → restaurant    (Restaurants / Fast-food)
+ *   90 → abattoir      (Abattoirs)
+ *   75 → supermarket   (Grandes Surfaces)
+ *   89 → wholesaler    (Grossistes)
+ *   91 → wholesaler    (Marques / Fournisseurs)
+ *   77 → other         (Autres — catch-all, 142 stores)
+ *   80 → other         (Divers)
+ */
+const ACHAHADA_CATEGORY_PRIORITY: Array<{ filterId: number; storeType: NewStore["storeType"] }> = [
+  { filterId: 73, storeType: "butcher" },
+  { filterId: 83, storeType: "restaurant" },
+  { filterId: 90, storeType: "abattoir" },
+  { filterId: 75, storeType: "supermarket" },
+  { filterId: 89, storeType: "wholesaler" },
+  { filterId: 91, storeType: "wholesaler" },
+  { filterId: 77, storeType: "other" },
+  { filterId: 80, storeType: "other" },
+];
+
+function resolveAchahadaType(categoryIds: number[] | undefined): NewStore["storeType"] {
+  if (!categoryIds?.length) return "other";
+  for (const { filterId, storeType } of ACHAHADA_CATEGORY_PRIORITY) {
+    if (categoryIds.includes(filterId)) return storeType;
+  }
+  return "other";
+}
+
+/**
+ * 3 entries in achahada-all-stores.json are notes about other certifiers,
+ * not actual stores. Filter them out.
+ */
+const INCLASSABLE_IDS = new Set(["9058", "9063"]); // AVS note, Mosquée de Lyon note
+
+function isInclassableStore(entry: AchahadaEntry): boolean {
+  if (INCLASSABLE_IDS.has(entry.id)) return true;
+  const name = entry.store.toLowerCase();
+  return name.startsWith("avs ") || name.includes("mosqué");
+}
+
+// ── Hours parsing ───────────────────────────────────────────────
+
+const DAY_MAP: Record<string, number> = {
+  sunday: 0,
+  monday: 1,
+  tuesday: 2,
+  wednesday: 3,
+  thursday: 4,
+  friday: 5,
+  saturday: 6,
+};
+
+/** Convert "9:00 AM" → "09:00", "5:00 PM" → "17:00" */
+function to24h(timeStr: string): string | null {
+  const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return null;
+  let hours = parseInt(match[1], 10);
+  const minutes = match[2];
+  const period = match[3].toUpperCase();
+  if (period === "PM" && hours !== 12) hours += 12;
+  if (period === "AM" && hours === 12) hours = 0;
+  return `${String(hours).padStart(2, "0")}:${minutes}`;
+}
+
+/** Parse "9:00 AM - 5:00 PM" → { openTime: "09:00", closeTime: "17:00" } */
+function parseTimeRange(rangeStr: string): { openTime: string | null; closeTime: string | null } {
+  const parts = rangeStr.split("-").map((s) => s.trim());
+  if (parts.length !== 2) return { openTime: null, closeTime: null };
+  return {
+    openTime: to24h(parts[0]),
+    closeTime: to24h(parts[1]),
+  };
+}
+
+/**
+ * Parse Achahada HTML hours table into structured storeHours rows.
+ * Input: `<table ...><tr><td>Monday</td><td><time>9:00 AM - 5:00 PM</time></td></tr>...</table>`
+ * Output: ParsedStoreHours[] (one per day)
+ */
+function convertHoursToStoreHours(html: string | null, sourceId: string): ParsedStoreHours[] {
+  if (!html?.trim()) return [];
+  const results: ParsedStoreHours[] = [];
+
+  const rows = html.match(/<tr>.*?<\/tr>/gs);
+  if (!rows) return [];
+
+  for (const row of rows) {
+    const cells = row.match(/<td>(.*?)<\/td>/gs);
+    if (cells?.length !== 2) continue;
+
+    const dayStr = cells[0].replace(/<[^>]+>/g, "").trim().toLowerCase();
+    const dayOfWeek = DAY_MAP[dayStr];
+    if (dayOfWeek === undefined) continue;
+
+    const timeCell = cells[1].replace(/<[^>]+>/g, "").trim();
+
+    if (timeCell.toLowerCase() === "closed") {
+      results.push({ sourceId, dayOfWeek, openTime: null, closeTime: null, isClosed: true });
+    } else {
+      const { openTime, closeTime } = parseTimeRange(timeCell);
+      if (openTime && closeTime) {
+        results.push({ sourceId, dayOfWeek, openTime, closeTime, isClosed: false });
+      }
+    }
+  }
+
+  return results;
+}
+
+/** Parse Achahada HTML opening hours to structured JSON (for description/rawData) */
+function parseOpeningHours(html: string | null): Record<string, string> | null {
+  if (!html?.trim()) return null;
+  const hours: Record<string, string> = {};
+  const rows = html.match(/<tr>.*?<\/tr>/g);
+  if (!rows) return null;
+  for (const row of rows) {
+    const cells = row.match(/<td>(.*?)<\/td>/g);
+    if (cells?.length === 2) {
+      const day = cells[0].replace(/<[^>]+>/g, "").trim();
+      const time = cells[1].replace(/<[^>]+>/g, "").trim();
+      if (day) hours[day] = time;
+    }
+  }
+  return Object.keys(hours).length > 0 ? hours : null;
+}
+
+// ── Transform AVS Legacy (Abattoirs only) → NewStore ────────────
+
+function transformAVSLegacy(
+  entry: AVSLegacyEntry,
+  storeType: "abattoir",
 ): NewStore | null {
   if (!entry.active) return null;
   if (!isValidFranceCoord(entry.latitude, entry.longitude)) return null;
@@ -219,19 +371,52 @@ function transformAVS(
   };
 }
 
+// ── Transform AVS Sites (Boucheries/Restaurants/Fournisseurs) → NewStore ──
+
+function transformAVSSite(
+  entry: AVSSiteEntry,
+  storeType: "butcher" | "restaurant" | "wholesaler",
+): NewStore | null {
+  if (!entry.isActive) return null;
+  if (!isValidFranceCoord(entry.latitude, entry.longitude)) return null;
+
+  return {
+    name: decodeHtml(entry.name),
+    storeType,
+    address: entry.address?.trim() ?? "",
+    city: normalizeCity(entry.city ?? ""),
+    postalCode: normalizePostalCode(entry.zipCode),
+    country: "France",
+    latitude: entry.latitude,
+    longitude: entry.longitude,
+    phone: normalizePhone(entry.phone),
+    email: entry.email?.trim() || null,
+    website: entry.webSite?.trim() || null,
+    halalCertified: true,
+    certifier: "avs",
+    certifierName: "AVS — A Votre Service",
+    description: entry.specialities ?? null,
+    sourceId: `avs-${storeType}-${entry.id}`,
+    sourceType: `avs_${storeType}`,
+    rawData: entry,
+    isActive: true,
+  };
+}
+
 // ── Transform Achahada → NewStore ───────────────────────────────
 
 function transformAchahada(
   entry: AchahadaEntry,
-  storeType: "butcher" | "wholesaler",
+  storeType: NewStore["storeType"],
+  logoMap: Record<string, string>,
 ): NewStore | null {
   const lat = parseFloat(entry.lat?.trim());
   const lng = parseFloat(entry.lng?.trim());
 
   if (!isValidFranceCoord(lat, lng)) return null;
 
-  const logoUrl = extractImageUrl(entry.thumb);
   const openingHours = parseOpeningHours(entry.hours);
+  const logoUrl = logoMap[entry.id] ?? null;
 
   return {
     name: decodeHtml(entry.store),
@@ -254,115 +439,121 @@ function transformAchahada(
     description: openingHours
       ? `Horaires: ${Object.entries(openingHours).map(([d, h]) => `${d}: ${h}`).join(", ")}`
       : null,
-    sourceId: `achahada-${storeType}-${entry.id}`,
-    sourceType: `achahada_${storeType}`,
+    sourceId: `achahada-${entry.id}`,
+    sourceType: "achahada",
     rawData: { ...entry, parsedHours: openingHours },
     isActive: true,
   };
 }
 
-// ── Pipeline: Load → Transform → Validate → Deduplicate ────────
+// ── Pipeline: Transform → Validate → Deduplicate ────────────────
 
 export interface SeedStats {
   totalRaw: number;
   filteredInactive: number;
   filteredBadGeo: number;
+  filteredInclassable: number;
   deduplicated: number;
   finalCount: number;
   bySource: Record<string, number>;
   byType: Record<string, number>;
+  hoursCount: number;
 }
 
-export async function loadStoreSeedData(): Promise<{
-  stores: NewStore[];
-  stats: SeedStats;
-}> {
+/**
+ * Pure transform/validate/dedup pipeline — zero I/O.
+ * Accepts raw data from any source (static JSON files or live API fetch).
+ * Used by both:
+ *   - loadStoreSeedData() → reads from asset/ JSON files
+ *   - store-refresh.service.ts → fetches from live APIs
+ */
+export function transformAndDedup(
+  avsBoucheries: AVSSiteEntry[],
+  avsRestaurants: AVSSiteEntry[],
+  avsFournisseurs: AVSSiteEntry[],
+  avsAbattoirs: AVSLegacyEntry[],
+  achahadaData: AchahadaAllStoresData,
+  logoMap: Record<string, string>,
+): { stores: NewStore[]; hours: ParsedStoreHours[]; stats: SeedStats; droppedSourceIds: string[] } {
   const all: NewStore[] = [];
+  const allHours: ParsedStoreHours[] = [];
   const stats: SeedStats = {
     totalRaw: 0,
     filteredInactive: 0,
     filteredBadGeo: 0,
+    filteredInclassable: 0,
     deduplicated: 0,
     finalCount: 0,
     bySource: {},
     byType: {},
+    hoursCount: 0,
   };
 
-  // ── Load AVS Restaurants ──────────────────────────────
-  const avsRestaurants: AVSEntry[] = await import(
-    "../../../asset/avs-certified-restaurant.json",
-    { with: { type: "json" } }
-  ).then((m) => m.default);
+  // ── AVS Boucheries ─────────────────────────────────────
+  stats.totalRaw += avsBoucheries.length;
+  for (const entry of avsBoucheries) {
+    const store = transformAVSSite(entry, "butcher");
+    if (store) all.push(store);
+    else if (!entry.isActive) stats.filteredInactive++;
+    else stats.filteredBadGeo++;
+  }
+
+  // ── AVS Restaurants ────────────────────────────────────
   stats.totalRaw += avsRestaurants.length;
-
   for (const entry of avsRestaurants) {
-    const store = transformAVS(entry, "restaurant");
+    const store = transformAVSSite(entry, "restaurant");
     if (store) all.push(store);
-    else if (!entry.active) stats.filteredInactive++;
+    else if (!entry.isActive) stats.filteredInactive++;
     else stats.filteredBadGeo++;
   }
 
-  // ── Load AVS Suppliers ────────────────────────────────
-  const avsSuppliers: AVSEntry[] = await import(
-    "../../../asset/avs-certified-suppliers.json",
-    { with: { type: "json" } }
-  ).then((m) => m.default);
-  stats.totalRaw += avsSuppliers.length;
-
-  for (const entry of avsSuppliers) {
-    const store = transformAVS(entry, "wholesaler");
+  // ── AVS Fournisseurs ───────────────────────────────────
+  stats.totalRaw += avsFournisseurs.length;
+  for (const entry of avsFournisseurs) {
+    const store = transformAVSSite(entry, "wholesaler");
     if (store) all.push(store);
-    else if (!entry.active) stats.filteredInactive++;
+    else if (!entry.isActive) stats.filteredInactive++;
     else stats.filteredBadGeo++;
   }
 
-  // ── Load AVS Abattoirs ────────────────────────────────
-  const avsAbattoirs: AVSEntry[] = await import(
-    "../../../asset/avs-certified-abatoirs.json",
-    { with: { type: "json" } }
-  ).then((m) => m.default);
+  // ── AVS Abattoirs ──────────────────────────────────────
   stats.totalRaw += avsAbattoirs.length;
-
   for (const entry of avsAbattoirs) {
-    const store = transformAVS(entry, "abattoir");
+    const store = transformAVSLegacy(entry, "abattoir");
     if (store) all.push(store);
     else if (!entry.active) stats.filteredInactive++;
     else stats.filteredBadGeo++;
   }
 
-  // ── Load Achahada Boucheries ──────────────────────────
-  const achahadaBoucheries: AchahadaEntry[] = await import(
-    "../../../asset/achahada-certified-boucheries.json",
-    { with: { type: "json" } }
-  ).then((m) => m.default);
-  stats.totalRaw += achahadaBoucheries.length;
+  // ── Achahada ───────────────────────────────────────────
+  stats.totalRaw += achahadaData.stores.length;
+  for (const entry of achahadaData.stores) {
+    if (isInclassableStore(entry)) {
+      stats.filteredInclassable++;
+      continue;
+    }
 
-  for (const entry of achahadaBoucheries) {
-    const store = transformAchahada(entry, "butcher");
-    if (store) all.push(store);
-    else stats.filteredBadGeo++;
-  }
+    const categoryIds = achahadaData.categoryMap[entry.id];
+    const storeType = resolveAchahadaType(categoryIds);
 
-  // ── Load Achahada Brands/Fournisseurs ─────────────────
-  const achahadaBrands: AchahadaEntry[] = await import(
-    "../../../asset/achahada-certified-brands.json",
-    { with: { type: "json" } }
-  ).then((m) => m.default);
-  stats.totalRaw += achahadaBrands.length;
-
-  for (const entry of achahadaBrands) {
-    const store = transformAchahada(entry, "wholesaler");
-    if (store) all.push(store);
-    else stats.filteredBadGeo++;
+    const store = transformAchahada(entry, storeType, logoMap);
+    if (store) {
+      all.push(store);
+      const hours = convertHoursToStoreHours(entry.hours, `achahada-${entry.id}`);
+      allHours.push(...hours);
+    } else {
+      stats.filteredBadGeo++;
+    }
   }
 
   // ── Deduplicate ───────────────────────────────────────
   const seen = new Map<string, NewStore>();
+  const allSourceIds = new Set<string>();
   for (const store of all) {
+    if (store.sourceId) allSourceIds.add(store.sourceId);
     const key = dedupKey(store.name, store.latitude, store.longitude);
     if (seen.has(key)) {
       stats.deduplicated++;
-      // Prefer AVS data (more structured) over Achahada
       const existing = seen.get(key)!;
       if (
         existing.sourceType?.startsWith("achahada") &&
@@ -377,14 +568,45 @@ export async function loadStoreSeedData(): Promise<{
 
   const dedupedStores = [...seen.values()];
 
+  // Filter hours to only include stores that survived dedup
+  const survivingSourceIds = new Set(dedupedStores.map((s) => s.sourceId));
+
+  // Track sourceIds that were dropped during dedup (for DB cleanup)
+  const droppedSourceIds = [...allSourceIds].filter((id) => !survivingSourceIds.has(id));
+  const dedupedHours = allHours.filter((h) => survivingSourceIds.has(h.sourceId));
+
   // ── Compute stats ─────────────────────────────────────
   for (const store of dedupedStores) {
-    const source = store.sourceType?.split("_")[0] ?? "unknown";
+    const source = store.sourceType === "achahada" ? "achahada" : store.sourceType?.split("_")[0] ?? "unknown";
     stats.bySource[source] = (stats.bySource[source] ?? 0) + 1;
     const sType = store.storeType ?? "other";
     stats.byType[sType] = (stats.byType[sType] ?? 0) + 1;
   }
   stats.finalCount = dedupedStores.length;
+  stats.hoursCount = dedupedHours.length;
 
-  return { stores: dedupedStores, stats };
+  return { stores: dedupedStores, hours: dedupedHours, stats, droppedSourceIds };
+}
+
+/**
+ * Load store seed data from static asset/ JSON files.
+ * Delegates to transformAndDedup() for the actual pipeline.
+ */
+export async function loadStoreSeedData(): Promise<{
+  stores: NewStore[];
+  hours: ParsedStoreHours[];
+  stats: SeedStats;
+  droppedSourceIds: string[];
+}> {
+  const [avsBoucheries, avsRestaurants, avsFournisseurs, avsAbattoirs, achahadaData, logoMap] =
+    await Promise.all([
+      import("../../../asset/avs-boucheries.json", { with: { type: "json" } }).then((m) => m.default as AVSSiteEntry[]),
+      import("../../../asset/avs-restaurants.json", { with: { type: "json" } }).then((m) => m.default as AVSSiteEntry[]),
+      import("../../../asset/avs-fournisseurs.json", { with: { type: "json" } }).then((m) => m.default as AVSSiteEntry[]),
+      import("../../../asset/avs-certified-abatoirs.json", { with: { type: "json" } }).then((m) => m.default as AVSLegacyEntry[]),
+      import("../../../asset/achahada-all-stores.json", { with: { type: "json" } }).then((m) => m.default as AchahadaAllStoresData),
+      import("../../../asset/achahada-logo-map.json", { with: { type: "json" } }).then((m) => m.default as Record<string, string>),
+    ]);
+
+  return transformAndDedup(avsBoucheries, avsRestaurants, avsFournisseurs, avsAbattoirs, achahadaData, logoMap);
 }
