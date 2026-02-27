@@ -1144,10 +1144,11 @@ export default function ScanResultScreen() {
   }));
 
   // ── Hero: Image glow pulse (opacity overlay, not shadowOpacity) ──
-  const glowOpacity = useSharedValue(0.15);
+  // Haram → static glow (no pulsing anxiety), others → gentle pulse
+  const glowOpacity = useSharedValue(halalStatus === "haram" ? 0.2 : 0.15);
 
   useEffect(() => {
-    if (!reducedMotion) {
+    if (!reducedMotion && halalStatus !== "haram") {
       glowOpacity.value = withRepeat(
         withSequence(
           withTiming(0.4, { duration: 2000, easing: Easing.inOut(Easing.sin) }),
@@ -1157,7 +1158,7 @@ export default function ScanResultScreen() {
         false
       );
     }
-  }, [reducedMotion]);
+  }, [reducedMotion, halalStatus]);
 
   const imageGlowStyle = useAnimatedStyle(() => ({
     opacity: glowOpacity.value,
@@ -1633,8 +1634,25 @@ export default function ScanResultScreen() {
             </Animated.View>
           )}
 
-          {/* ── ROW 3: Madhab Score Rings (Plan B — Score Orbitaire) ── */}
-          {madhabVerdicts.length > 0 && (
+          {/* ── ROW 3: Madhab Score Rings or Unanimous Text ── */}
+          {madhabVerdicts.length > 0 && (() => {
+            // Detect unanimous verdict — all 4 schools agree with same status
+            const statuses = madhabVerdicts.map((v) => v.status);
+            const isUnanimous = statuses.length === 4 && statuses.every((s) => s === statuses[0]);
+            const unanimousStatus = statuses[0] as "halal" | "haram" | "doubtful";
+
+            const unanimousTextMap = {
+              haram: t.scanResult.madhabUnanimousHaram,
+              halal: t.scanResult.madhabUnanimousHalal,
+              doubtful: t.scanResult.madhabUnanimousDoubtful,
+            };
+            const unanimousColorMap = {
+              haram: halalStatusTokens.haram.base,
+              halal: halalStatusTokens.halal.base,
+              doubtful: halalStatusTokens.doubtful.base,
+            };
+
+            return (
             <Animated.View
               entering={FadeIn.delay(SUSPENSE_DURATION + 550).duration(500)}
               style={[
@@ -1642,44 +1660,61 @@ export default function ScanResultScreen() {
                 { borderTopColor: isDark ? glass.dark.border : glass.light.border },
               ]}
             >
-              {madhabVerdicts.map((v, i) => {
-                const labelKey = MADHAB_LABEL_KEY[v.madhab as keyof typeof MADHAB_LABEL_KEY];
-                const label = labelKey ? t.scanResult[labelKey] : v.madhab;
+              {isUnanimous ? (
+                // Unanimous: single text with ijma' — no rings needed
+                <View style={styles.unanimousContainer}>
+                  <MaterialIcons
+                    name={unanimousStatus === "halal" ? "check-circle" : unanimousStatus === "haram" ? "cancel" : "help"}
+                    size={18}
+                    color={unanimousColorMap[unanimousStatus]}
+                  />
+                  <Text style={[styles.unanimousText, { color: unanimousColorMap[unanimousStatus] }]}>
+                    {unanimousTextMap[unanimousStatus]}
+                  </Text>
+                </View>
+              ) : (
+                // Divergence between schools — show individual rings
+                madhabVerdicts.map((v, i) => {
+                  const labelKey = MADHAB_LABEL_KEY[v.madhab as keyof typeof MADHAB_LABEL_KEY];
+                  const label = labelKey ? t.scanResult[labelKey] : v.madhab;
 
-                const trustKey = MADHAB_TRUST_KEY[v.madhab as keyof typeof MADHAB_TRUST_KEY];
-                const madhabTrustScore = certifierData_ && trustKey
-                  ? (certifierData_ as Record<string, unknown>)[trustKey] as number | null ?? null
-                  : null;
+                  const trustKey = MADHAB_TRUST_KEY[v.madhab as keyof typeof MADHAB_TRUST_KEY];
+                  const madhabTrustScore = certifierData_ && trustKey
+                    ? (certifierData_ as Record<string, unknown>)[trustKey] as number | null ?? null
+                    : null;
 
-                return (
-                  <PressableScale
-                    key={v.madhab}
-                    onPress={() => {
-                      impact();
-                      setSelectedMadhab(v);
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${label}: ${v.status}${madhabTrustScore !== null ? `, ${t.scanResult.madhabTrustScoreLabel} ${madhabTrustScore}/100` : ""}`}
-                  >
-                    <MadhabScoreRing
-                      label={label}
-                      verdict={v.status as "halal" | "doubtful" | "haram"}
-                      trustScore={madhabTrustScore}
-                      conflictCount={v.conflictingAdditives.length + (v.conflictingIngredients?.length ?? 0)}
-                      isUserSchool={userMadhab === v.madhab}
-                      staggerIndex={i}
-                    />
-                  </PressableScale>
-                );
-              })}
+                  return (
+                    <PressableScale
+                      key={v.madhab}
+                      onPress={() => {
+                        impact();
+                        setSelectedMadhab(v);
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${label}: ${v.status}${madhabTrustScore !== null ? `, ${t.scanResult.madhabTrustScoreLabel} ${madhabTrustScore}/100` : ""}`}
+                    >
+                      <MadhabScoreRing
+                        label={label}
+                        verdict={v.status as "halal" | "doubtful" | "haram"}
+                        trustScore={madhabTrustScore}
+                        conflictCount={v.conflictingAdditives.length + (v.conflictingIngredients?.length ?? 0)}
+                        isUserSchool={userMadhab === v.madhab}
+                        staggerIndex={i}
+                      />
+                    </PressableScale>
+                  );
+                })
+              )}
 
-              {/* ── Info note below rings ── */}
+              {/* ── Info note below ── */}
               <View style={styles.madhabInfoNote}>
                 <MaterialIcons name="info-outline" size={11} color={colors.textMuted} style={{ marginTop: 1 }} />
                 <Text style={[styles.madhabInfoNoteText, { color: colors.textMuted }]}>
-                  {certifierData_?.name
-                    ? t.scanResult.madhabCertifierNote.replace("{{certifier}}", certifierData_.name)
-                    : t.scanResult.madhabAlgoNote}
+                  {isUnanimous
+                    ? t.scanResult.madhabAlgoNote
+                    : certifierData_?.name
+                      ? t.scanResult.madhabCertifierNote.replace("{{certifier}}", certifierData_.name)
+                      : t.scanResult.madhabAlgoNote}
                 </Text>
               </View>
 
@@ -1730,7 +1765,8 @@ export default function ScanResultScreen() {
                 </Animated.View>
               )}
             </Animated.View>
-          )}
+          );
+          })()}
         </View>
 
         {/* ════════════════════════════════════════════════════
@@ -2835,6 +2871,20 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
     paddingBottom: spacing.xs,
     borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  unanimousContainer: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: spacing.md,
+    width: "100%" as const,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  unanimousText: {
+    fontSize: fontSizeTokens.bodySmall,
+    fontWeight: fontWeightTokens.bold,
+    flex: 1,
+    lineHeight: 20,
   },
   madhabInfoNote: {
     flexDirection: "row" as const,
