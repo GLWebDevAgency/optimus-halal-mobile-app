@@ -71,7 +71,6 @@ import { GlowCard } from "@/components/ui/GlowCard";
 import { CertifierLogo } from "@/components/scan/CertifierLogo";
 
 
-import { usePremium } from "@/hooks/usePremium";
 import { useFeatureFlagsStore } from "@/store";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -832,7 +831,6 @@ export default function ScanResultScreen() {
   const certifierData = scanMutation.data?.certifierData ?? null;
 
   // ── Halal Alternatives Query ──────────────────
-  const { isPremium, showPaywall } = usePremium();
   const { isFeatureEnabled } = useFeatureFlagsStore();
   const marketplaceEnabled = isFeatureEnabled("marketplaceEnabled");
   const alternativesQuery = trpc.product.getAlternatives.useQuery(
@@ -1262,27 +1260,41 @@ export default function ScanResultScreen() {
         <MaterialIcons name="share" size={22} color={colors.textSecondary} />
       </PressableScale>
 
-      {/* Where to Buy (primary CTA) */}
-      <PressableScale
-        onPress={handleFindStores}
-        style={[styles.ctaButton, { backgroundColor: colors.primary, ...shadows.float, shadowColor: colors.primary }]}
-        accessibilityRole="button"
-        accessibilityLabel={t.scanResult.whereToBuy}
-        accessibilityHint={t.scanResult.findStores}
-      >
-        <Animated.View
-          style={[
-            StyleSheet.absoluteFill,
-            shimmerStyle,
-            { width: 60, backgroundColor: "rgba(255,255,255,0.15)" },
-          ]}
-          pointerEvents="none"
-        />
-        <MaterialIcons name={marketplaceEnabled ? "shopping-cart" : "location-on"} size={20} color={lightTheme.textPrimary} />
-        <Text style={[styles.ctaText, { color: lightTheme.textPrimary }]}>
-          {marketplaceEnabled ? t.scanResult.viewOnMarketplace : t.scanResult.whereToBuy}
-        </Text>
-      </PressableScale>
+      {/* Primary CTA — contextual: halal → "Où acheter ?", haram/doubtful → "Scanner un autre" */}
+      {halalStatus === "halal" ? (
+        <PressableScale
+          onPress={handleFindStores}
+          style={[styles.ctaButton, { backgroundColor: colors.primary, ...shadows.float, shadowColor: colors.primary }]}
+          accessibilityRole="button"
+          accessibilityLabel={t.scanResult.whereToBuy}
+          accessibilityHint={t.scanResult.findStores}
+        >
+          <Animated.View
+            style={[
+              StyleSheet.absoluteFill,
+              shimmerStyle,
+              { width: 60, backgroundColor: "rgba(255,255,255,0.15)" },
+            ]}
+            pointerEvents="none"
+          />
+          <MaterialIcons name={marketplaceEnabled ? "shopping-cart" : "location-on"} size={20} color={lightTheme.textPrimary} />
+          <Text style={[styles.ctaText, { color: lightTheme.textPrimary }]}>
+            {marketplaceEnabled ? t.scanResult.viewOnMarketplace : t.scanResult.whereToBuy}
+          </Text>
+        </PressableScale>
+      ) : (
+        <PressableScale
+          onPress={handleGoBack}
+          style={[styles.ctaButton, { backgroundColor: colors.primary, ...shadows.float, shadowColor: colors.primary }]}
+          accessibilityRole="button"
+          accessibilityLabel={t.scanResult.scanAnother}
+        >
+          <MaterialIcons name="qr-code-scanner" size={20} color={lightTheme.textPrimary} />
+          <Text style={[styles.ctaText, { color: lightTheme.textPrimary }]}>
+            {t.scanResult.scanAnother}
+          </Text>
+        </PressableScale>
+      )}
 
       {/* Report */}
       <PressableScale
@@ -1741,19 +1753,13 @@ export default function ScanResultScreen() {
                 <MaterialIcons name={marketplaceEnabled ? "storefront" : "local-mall"} size={20} color={brandTokens.gold} />
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.lg, paddingBottom: spacing.xs }}>
-                {alternativesQuery.data.slice(0, 3).map((alt: any, index: number) => {
-                  const isPremiumLocked = index === 2 && !isPremium;
-                  return (
+                {alternativesQuery.data.slice(0, 3).map((alt: any, index: number) => (
                     <PressableScale
                       key={alt.id}
                       onPress={() => {
-                        if (isPremiumLocked) {
-                          showPaywall();
-                        } else if (marketplaceEnabled) {
-                          // Navigate to marketplace product page (cross-tab: use navigate)
+                        if (marketplaceEnabled) {
                           router.navigate({ pathname: "/(marketplace)/product/[id]", params: { id: alt.id } } as any);
                         } else {
-                          // Fallback: open scan-result for the alternative
                           router.navigate({ pathname: "/scan-result", params: { barcode: alt.barcode } });
                         }
                       }}
@@ -1763,13 +1769,7 @@ export default function ScanResultScreen() {
                         glowIntensity="subtle"
                         style={{ ...styles.altCard, backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#ffffff" }}
                       >
-                        {isPremiumLocked && (
-                          <View style={[StyleSheet.absoluteFill, styles.altLockOverlay, { backgroundColor: isDark ? "rgba(10,10,10,0.85)" : "rgba(255,255,255,0.85)" }]}>
-                             <MaterialIcons name="lock" size={24} color={brandTokens.gold} />
-                             <Text style={styles.altLockText}>Naqiy+</Text>
-                          </View>
-                        )}
-                        <View style={{ opacity: isPremiumLocked ? 0.3 : 1 }}>
+                        <View>
                           {alt.imageUrl ? (
                             <Image source={{ uri: alt.imageUrl }} style={styles.altImage} contentFit="cover" transition={200} />
                           ) : (
@@ -1781,7 +1781,7 @@ export default function ScanResultScreen() {
                             {alt.name}
                           </Text>
                           <StatusPill status={(alt.halalStatus ?? "halal") as "halal" | "haram" | "doubtful" | "unknown"} size="sm" animated={false} />
-                          {marketplaceEnabled && !isPremiumLocked && (
+                          {marketplaceEnabled && (
                             <View style={[styles.altBuyBadge, { backgroundColor: isDark ? `${brandTokens.primary}1A` : `${brandTokens.primary}14` }]}>
                               <MaterialIcons name="shopping-cart" size={11} color={brandTokens.primary} />
                               <Text style={styles.altBuyText}>{t.scanResult.buyAlternative}</Text>
@@ -1790,8 +1790,7 @@ export default function ScanResultScreen() {
                         </View>
                       </GlowCard>
                     </PressableScale>
-                  );
-                })}
+                ))}
               </ScrollView>
               {/* ── "Explore marketplace" CTA — shop halal alternatives by category ── */}
               <PressableScale
