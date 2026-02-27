@@ -181,10 +181,10 @@ export const MADHAB_RULINGS: Omit<NewAdditiveMadhabRuling, "id" | "createdAt">[]
   { additiveCode: "E471", madhab: "maliki", ruling: "doubtful", explanationFr: "Origine inconnue = douteux. La plupart des savants malikites recommandent la prudence.", scholarlyReference: "IIFA" },
   { additiveCode: "E471", madhab: "hanbali", ruling: "doubtful", explanationFr: "Position identique aux autres écoles : douteux si origine non confirmée.", scholarlyReference: "IslamQA.info" },
 
-  // E120 Carmine — consensus haram
+  // E120 Carmine — haram sauf Maliki (halal : insectes non interdits par Coran 6:145)
   { additiveCode: "E120", madhab: "hanafi", ruling: "haram", explanationFr: "Extrait d'insectes (cochenille). Les insectes ne sont pas halal dans le fiqh hanafite.", scholarlyReference: "SeekersGuidance" },
   { additiveCode: "E120", madhab: "shafii", ruling: "haram", explanationFr: "Insectes impurs — haram par consensus shafi'ite.", scholarlyReference: "IslamQA" },
-  { additiveCode: "E120", madhab: "maliki", ruling: "haram", explanationFr: "Haram — les insectes ne sont pas licites à la consommation.", scholarlyReference: "IIFA" },
+  { additiveCode: "E120", madhab: "maliki", ruling: "halal", explanationFr: "Halal selon l'école malikite : le Coran 6:145 ne mentionne que 4 interdictions explicites. Les insectes ne figurent pas dans cette liste restrictive (Al-Qurtubi, Al-Jami' li-Ahkam al-Qur'an).", scholarlyReference: "Al-Qurtubi, Tafsir Coran 6:145" },
   { additiveCode: "E120", madhab: "hanbali", ruling: "haram", explanationFr: "Haram — consensus des quatre écoles sur les insectes.", scholarlyReference: "IslamQA.info" },
 
   // E542 Bone phosphate — consensus haram

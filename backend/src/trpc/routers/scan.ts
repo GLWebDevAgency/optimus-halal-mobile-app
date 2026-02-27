@@ -169,9 +169,16 @@ async function computeMadhabVerdicts(
         }, "halal" as "halal" | "doubtful" | "haram")
       : (halalAnalysis.status as "halal" | "doubtful" | "haram");
 
-    // ── Ingredient conflicts ──
+    // ── Ingredient conflicts (Tier 3) ──
+    // Deduplicate: skip ingredient patterns that are E-numbers already evaluated
+    // by Tier 2 (additive_madhab_rulings). This prevents the same substance
+    // from appearing in both conflictingAdditives and conflictingIngredients,
+    // and avoids worst-status contradictions between the two tables.
+    const additiveLower = new Set(additiveCodes.map((c) => c.toLowerCase()));
     const conflictingIngredients = ingredientRulingsData
       .filter((ir) => {
+        // Skip if this pattern is an E-number already covered by Tier 2
+        if (additiveLower.has(ir.pattern.toLowerCase())) return false;
         const madhabRuling = (ir[MADHAB_FIELD[madhab]] ?? ir.ruling) as string;
         return madhabRuling !== "halal";
       })
