@@ -347,9 +347,13 @@ const IngredientRow = React.memo(function IngredientRow({
   }, [expanded, isProblematic, explanation, expandHeight]);
 
   const hasFatwa = !!(fatwaSourceName || fatwaSourceUrl);
-  const detailHeight = (scholarlyReference ? 96 : 72) + (hasFatwa ? 22 : 0);
+  const [detailHeight, setDetailHeight] = useState(0);
+  const onDetailLayout = useCallback((e: { nativeEvent: { layout: { height: number } } }) => {
+    const h = e.nativeEvent.layout.height;
+    if (h > 0 && h !== detailHeight) setDetailHeight(h);
+  }, [detailHeight]);
   const detailStyle = useAnimatedStyle(() => ({
-    height: expandHeight.value * detailHeight,
+    height: detailHeight > 0 ? expandHeight.value * detailHeight : undefined,
     opacity: expandHeight.value,
     overflow: "hidden" as const,
   }));
@@ -415,52 +419,54 @@ const IngredientRow = React.memo(function IngredientRow({
       {/* Expandable detail */}
       {isProblematic && explanation && (
         <Animated.View style={[ingredientStyles.detailWrap, detailStyle]}>
-          <View style={ingredientStyles.statusRow}>
-            <View
-              style={[ingredientStyles.statusBadge, { backgroundColor: (problemColor ?? halalStatusTokens.doubtful.base) + "20" }]}
-            >
-              <Text
-                style={[ingredientStyles.statusText, { color: problemColor ?? halalStatusTokens.doubtful.base }]}
+          <View onLayout={onDetailLayout}>
+            <View style={ingredientStyles.statusRow}>
+              <View
+                style={[ingredientStyles.statusBadge, { backgroundColor: (problemColor ?? halalStatusTokens.doubtful.base) + "20" }]}
               >
-                {statusLabel}
-              </Text>
+                <Text
+                  style={[ingredientStyles.statusText, { color: problemColor ?? halalStatusTokens.doubtful.base }]}
+                >
+                  {statusLabel}
+                </Text>
+              </View>
             </View>
+            <Text
+              style={[ingredientStyles.explanation, { color: colors.textSecondary }]}
+              numberOfLines={2}
+            >
+              {explanation}
+            </Text>
+            {scholarlyReference && (
+              <View style={ingredientStyles.refRow}>
+                <MaterialIcons name="menu-book" size={11} color={colors.textMuted} />
+                <Text style={[ingredientStyles.refText, { color: colors.textMuted }]} numberOfLines={1}>
+                  {scholarlyReference}
+                </Text>
+              </View>
+            )}
+            {hasFatwa && (
+              <PressableScale
+                onPress={() => fatwaSourceUrl && Linking.openURL(fatwaSourceUrl)}
+                disabled={!fatwaSourceUrl}
+                style={ingredientStyles.refRow}
+              >
+                <MaterialIcons name="gavel" size={11} color={colors.primary} />
+                <Text
+                  style={[
+                    ingredientStyles.refText,
+                    { color: fatwaSourceUrl ? colors.primary : colors.textMuted },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {fatwaSourceName ?? t.scanResult.fatwaSource}
+                </Text>
+                {fatwaSourceUrl && (
+                  <MaterialIcons name="open-in-new" size={10} color={colors.primary} />
+                )}
+              </PressableScale>
+            )}
           </View>
-          <Text
-            style={[ingredientStyles.explanation, { color: colors.textSecondary }]}
-            numberOfLines={2}
-          >
-            {explanation}
-          </Text>
-          {scholarlyReference && (
-            <View style={ingredientStyles.refRow}>
-              <MaterialIcons name="menu-book" size={11} color={colors.textMuted} />
-              <Text style={[ingredientStyles.refText, { color: colors.textMuted }]} numberOfLines={1}>
-                {scholarlyReference}
-              </Text>
-            </View>
-          )}
-          {hasFatwa && (
-            <PressableScale
-              onPress={() => fatwaSourceUrl && Linking.openURL(fatwaSourceUrl)}
-              disabled={!fatwaSourceUrl}
-              style={ingredientStyles.refRow}
-            >
-              <MaterialIcons name="gavel" size={11} color={colors.primary} />
-              <Text
-                style={[
-                  ingredientStyles.refText,
-                  { color: fatwaSourceUrl ? colors.primary : colors.textMuted },
-                ]}
-                numberOfLines={1}
-              >
-                {fatwaSourceName ?? t.scanResult.fatwaSource}
-              </Text>
-              {fatwaSourceUrl && (
-                <MaterialIcons name="open-in-new" size={10} color={colors.primary} />
-              )}
-            </PressableScale>
-          )}
         </Animated.View>
       )}
     </PressableScale>
@@ -2367,7 +2373,7 @@ export default function ScanResultScreen() {
                   // Fallback: check if any ruling pattern matches inside this ingredient
                   if (!problemInfo) {
                     for (const [pattern, info] of problematicIngredients.entries()) {
-                      if (lower.includes(pattern) || pattern.includes(lower)) {
+                      if (lower.includes(pattern)) {
                         problemInfo = info;
                         break;
                       }
@@ -2496,7 +2502,7 @@ export default function ScanResultScreen() {
                   {
                     backgroundColor: isDark
                       ? glass.dark.highlight
-                      : glass.dark.highlight,
+                      : glass.light.bg,
                     borderColor: isDark
                       ? glass.dark.border
                       : `${brandTokens.gold}26`,
