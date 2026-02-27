@@ -24,7 +24,7 @@
     "upload:logos": "tsx --env-file=.env scripts/upload-store-logos.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.990.0",
+    "@aws-sdk/client-s3": "^3.999.0",
     "@aws-sdk/s3-request-presigner": "^3.990.0",
     "@hono/node-server": "^1.13.0",
     "@hono/trpc-server": "^0.3.0",
