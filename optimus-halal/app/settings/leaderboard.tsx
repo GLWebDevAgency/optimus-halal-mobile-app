@@ -22,6 +22,7 @@ import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation, useMe, useLeaderboard, useHaptics } from "@/hooks";
 import { PremiumBackground } from "@/components/ui";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { PressableScale } from "@/components/ui/PressableScale";
 
 // -- Types ------------------------------------------------------------------
@@ -325,29 +326,27 @@ const RankedRow = React.memo(function RankedRow({
 
 // -- Skeleton Components ----------------------------------------------------
 
-function SkeletonPodium({ isDark }: { isDark: boolean }) {
-  const bg = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
+function SkeletonPodium() {
   return (
     <View style={styles.podiumSection}>
       {[48, 64, 48].map((size, i) => (
-        <View key={i} style={[styles.podiumCard, { backgroundColor: bg, marginTop: i === 1 ? 0 : 24 }]}>
-          <View style={[styles.skeletonCircle, { width: size, height: size, borderRadius: size / 2, backgroundColor: bg }]} />
-          <View style={[styles.skeletonBar, { width: 60, backgroundColor: bg }]} />
-          <View style={[styles.skeletonBar, { width: 40, backgroundColor: bg }]} />
+        <View key={i} style={[styles.podiumCard, { marginTop: i === 1 ? 0 : 24 }]}>
+          <Skeleton width={size} height={size} borderRadius={size / 2} style={{ marginBottom: 8 }} />
+          <Skeleton width={60} height={12} borderRadius={6} style={{ marginBottom: 6 }} />
+          <Skeleton width={40} height={12} borderRadius={6} />
         </View>
       ))}
     </View>
   );
 }
 
-function SkeletonRow({ isDark }: { isDark: boolean }) {
-  const bg = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
+function SkeletonRow() {
   return (
     <View style={[styles.rankedRow, { borderWidth: 0 }]}>
-      <View style={[styles.skeletonCircle, { width: 24, height: 24, borderRadius: 12, backgroundColor: bg }]} />
-      <View style={[styles.skeletonCircle, { width: 32, height: 32, borderRadius: 16, backgroundColor: bg }]} />
-      <View style={[styles.skeletonBar, { flex: 1, backgroundColor: bg }]} />
-      <View style={[styles.skeletonBar, { width: 40, backgroundColor: bg }]} />
+      <Skeleton width={24} height={24} borderRadius={12} />
+      <Skeleton width={32} height={32} borderRadius={16} />
+      <Skeleton width={120} height={12} borderRadius={6} />
+      <Skeleton width={40} height={12} borderRadius={6} />
     </View>
   );
 }
@@ -422,10 +421,10 @@ export default function LeaderboardScreen() {
           t={t}
           totalCount={0}
         />
-          <SkeletonPodium isDark={isDark} />
+          <SkeletonPodium />
           <View style={styles.skeletonListWrap}>
             {Array.from({ length: 10 }).map((_, i) => (
-              <SkeletonRow key={i} isDark={isDark} />
+              <SkeletonRow key={i} />
             ))}
           </View>
         </SafeAreaView>
@@ -862,14 +861,6 @@ const styles = StyleSheet.create({
   },
 
   // Skeleton
-  skeletonCircle: {
-    marginBottom: 8,
-  },
-  skeletonBar: {
-    height: 12,
-    borderRadius: 6,
-    marginBottom: 6,
-  },
   skeletonListWrap: {
     paddingHorizontal: 12,
     gap: 4,

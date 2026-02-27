@@ -13,9 +13,12 @@ import {
 import {
   lookupBarcode,
   analyzeHalalStatus,
+  matchIngredientRulings,
   type HalalAnalysis,
+  type MatchedIngredientRuling,
 } from "../../services/barcode.service.js";
 import { matchAllergens } from "../../services/allergen.service.js";
+import { getCertifierScores, getAllCertifierScores } from "../../services/certifier-score.service.js";
 import { notFound } from "../../lib/errors.js";
 
 // ── Level thresholds ──────────────────────────────────────────
@@ -83,11 +86,18 @@ export interface MadhabVerdictItem {
     explanation: string;
     scholarlyReference: string | null;
   }>;
+  conflictingIngredients: Array<{
+    pattern: string;
+    ruling: string;
+    explanation: string;
+    scholarlyReference: string | null;
+  }>;
 }
 
 async function computeMadhabVerdicts(
   db: any,
-  halalAnalysis: HalalAnalysis | null
+  halalAnalysis: HalalAnalysis | null,
+  ingredientRulingsData: MatchedIngredientRuling[] = [],
 ): Promise<MadhabVerdictItem[]> {
   if (!halalAnalysis) return [];
 
@@ -97,6 +107,7 @@ async function computeMadhabVerdicts(
       madhab: m,
       status: "halal" as const,
       conflictingAdditives: [],
+      conflictingIngredients: [],
     }));
   }
 
@@ -107,61 +118,50 @@ async function computeMadhabVerdicts(
     .map((r) => r.name.split(" ")[0])
     .filter((code) => /^E\d+[a-z]?$/i.test(code));
 
-  if (additiveCodes.length === 0) {
-    // No problematic additives → all schools: same as general analysis
-    return MADHAB_SCHOOLS.map((m) => ({
-      madhab: m,
-      status: halalAnalysis.status as "halal" | "doubtful" | "haram",
-      conflictingAdditives: [],
-    }));
-  }
-
   // Fetch all madhab rulings + additive names in one join query
-  const rulings = await db
-    .select({
-      additiveCode: additiveMadhabRulings.additiveCode,
-      madhab: additiveMadhabRulings.madhab,
-      ruling: additiveMadhabRulings.ruling,
-      explanationFr: additiveMadhabRulings.explanationFr,
-      scholarlyReference: additiveMadhabRulings.scholarlyReference,
-      additiveName: additivesTable.nameFr,
-    })
-    .from(additiveMadhabRulings)
-    .innerJoin(
-      additivesTable,
-      eq(additiveMadhabRulings.additiveCode, additivesTable.code)
-    )
-    .where(inArray(additiveMadhabRulings.additiveCode, additiveCodes));
+  let additivesByMadhab = new Map<string, RulingRow[]>();
 
-  // Type for joined ruling rows
-  type RulingRow = {
-    additiveCode: string;
-    madhab: string;
-    ruling: string;
-    explanationFr: string;
-    scholarlyReference: string | null;
-    additiveName: string;
-  };
+  if (additiveCodes.length > 0) {
+    const rulings = await db
+      .select({
+        additiveCode: additiveMadhabRulings.additiveCode,
+        madhab: additiveMadhabRulings.madhab,
+        ruling: additiveMadhabRulings.ruling,
+        explanationFr: additiveMadhabRulings.explanationFr,
+        scholarlyReference: additiveMadhabRulings.scholarlyReference,
+        additiveName: additivesTable.nameFr,
+      })
+      .from(additiveMadhabRulings)
+      .innerJoin(
+        additivesTable,
+        eq(additiveMadhabRulings.additiveCode, additivesTable.code)
+      )
+      .where(inArray(additiveMadhabRulings.additiveCode, additiveCodes));
 
-  // Group by madhab
-  const byMadhab = new Map<string, RulingRow[]>();
-  for (const r of rulings as RulingRow[]) {
-    const list = byMadhab.get(r.madhab) ?? [];
-    list.push(r);
-    byMadhab.set(r.madhab, list);
+    for (const r of rulings as RulingRow[]) {
+      const list = additivesByMadhab.get(r.madhab) ?? [];
+      list.push(r);
+      additivesByMadhab.set(r.madhab, list);
+    }
   }
 
   // Worst-status logic: haram > doubtful > halal
   const STATUS_WEIGHT = { haram: 3, doubtful: 2, halal: 1, unknown: 0 } as const;
 
+  // Per-madhab field mapping for ingredient rulings
+  const MADHAB_FIELD = {
+    hanafi: "rulingHanafi",
+    shafii: "rulingShafii",
+    maliki: "rulingMaliki",
+    hanbali: "rulingHanbali",
+  } as const;
+
   return MADHAB_SCHOOLS.map((madhab) => {
-    const schoolRulings = byMadhab.get(madhab) ?? [];
+    // ── Additive conflicts ──
+    const schoolRulings = additivesByMadhab.get(madhab) ?? [];
+    const conflictingAdditives = schoolRulings.filter((r: RulingRow) => r.ruling !== "halal");
 
-    // Non-halal rulings for this school
-    const conflicting = schoolRulings.filter((r: RulingRow) => r.ruling !== "halal");
-
-    // If no rulings exist for this school, fall back to general analysis status
-    const worstStatus = schoolRulings.length > 0
+    let worstStatus: "halal" | "doubtful" | "haram" = schoolRulings.length > 0
       ? schoolRulings.reduce((worst: "halal" | "doubtful" | "haram", r: RulingRow) => {
           const w = STATUS_WEIGHT[r.ruling as keyof typeof STATUS_WEIGHT] ?? 0;
           const cw = STATUS_WEIGHT[worst as keyof typeof STATUS_WEIGHT] ?? 0;
@@ -169,19 +169,53 @@ async function computeMadhabVerdicts(
         }, "halal" as "halal" | "doubtful" | "haram")
       : (halalAnalysis.status as "halal" | "doubtful" | "haram");
 
+    // ── Ingredient conflicts ──
+    const conflictingIngredients = ingredientRulingsData
+      .filter((ir) => {
+        const madhabRuling = (ir[MADHAB_FIELD[madhab]] ?? ir.ruling) as string;
+        return madhabRuling !== "halal";
+      })
+      .map((ir) => {
+        const madhabRuling = (ir[MADHAB_FIELD[madhab]] ?? ir.ruling) as string;
+        return {
+          pattern: ir.pattern,
+          ruling: madhabRuling,
+          explanation: ir.explanationFr,
+          scholarlyReference: ir.scholarlyReference,
+        };
+      });
+
+    // Combine worst status from additives and ingredients
+    for (const ci of conflictingIngredients) {
+      const w = STATUS_WEIGHT[ci.ruling as keyof typeof STATUS_WEIGHT] ?? 0;
+      const cw = STATUS_WEIGHT[worstStatus as keyof typeof STATUS_WEIGHT] ?? 0;
+      if (w > cw) worstStatus = ci.ruling as "halal" | "doubtful" | "haram";
+    }
+
     return {
       madhab,
       status: worstStatus,
-      conflictingAdditives: conflicting.map((r: RulingRow) => ({
+      conflictingAdditives: conflictingAdditives.map((r: RulingRow) => ({
         code: r.additiveCode,
         name: r.additiveName ?? r.additiveCode,
         ruling: r.ruling,
         explanation: r.explanationFr,
         scholarlyReference: r.scholarlyReference,
       })),
+      conflictingIngredients,
     };
   });
 }
+
+// Type for joined additive ruling rows
+type RulingRow = {
+  additiveCode: string;
+  madhab: string;
+  ruling: string;
+  explanationFr: string;
+  scholarlyReference: string | null;
+  additiveName: string;
+};
 
 export const scanRouter = router({
   scanBarcode: protectedProcedure
@@ -190,6 +224,7 @@ export const scanRouter = router({
         barcode: z.string().regex(/^[0-9]{4,14}$/, "Code-barres invalide"),
         latitude: z.number().min(-90).max(90).optional(),
         longitude: z.number().min(-180).max(180).optional(),
+        viewOnly: z.boolean().optional(), // true = read-only, no scan record created
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -248,6 +283,7 @@ export const scanRouter = router({
               halalStatus: halalAnalysis.status,
               confidenceScore: halalAnalysis.confidence,
               certifierName: halalAnalysis.certifierName,
+              certifierId: halalAnalysis.certifierId,
               imageUrl: off.image_front_url ?? off.image_url,
               nutritionFacts: off.nutriments ?? null,
               offData: off,
@@ -268,6 +304,33 @@ export const scanRouter = router({
             storedOff.ingredients_analysis_tags as string[] | undefined,
             analysisOptions,
           );
+
+          // Sync product record if analysis result changed (status, certifier, or confidence)
+          if (halalAnalysis && (
+            product.halalStatus !== halalAnalysis.status ||
+            product.certifierId !== halalAnalysis.certifierId ||
+            product.certifierName !== halalAnalysis.certifierName ||
+            product.confidenceScore !== halalAnalysis.confidence
+          )) {
+            await ctx.db
+              .update(products)
+              .set({
+                halalStatus: halalAnalysis.status,
+                confidenceScore: halalAnalysis.confidence,
+                certifierName: halalAnalysis.certifierName,
+                certifierId: halalAnalysis.certifierId,
+              })
+              .where(eq(products.id, product.id));
+
+            // Keep local product in sync with DB for the response
+            product = {
+              ...product,
+              halalStatus: halalAnalysis.status,
+              confidenceScore: halalAnalysis.confidence,
+              certifierName: halalAnalysis.certifierName,
+              certifierId: halalAnalysis.certifierId,
+            };
+          }
         }
       }
 
@@ -355,96 +418,105 @@ export const scanRouter = router({
         }
       }
 
-      // 5. Record scan + update user stats
-      const result = await ctx.db.transaction(async (tx) => {
-        const [scan] = await tx
-          .insert(scans)
-          .values({
-            userId: ctx.userId,
-            productId: product?.id,
-            barcode: input.barcode,
-            halalStatus: product?.halalStatus ?? "unknown",
-            confidenceScore: product?.confidenceScore ?? 0,
-            latitude: input.latitude,
-            longitude: input.longitude,
-          })
-          .returning();
+      // 5. Record scan + update user stats (skip in viewOnly mode)
+      // Use fresh analysis values (not stale product DB values) — fixes confidence desync
+      const scanHalalStatus = halalAnalysis?.status ?? product?.halalStatus ?? "unknown";
+      const scanConfidence = halalAnalysis?.confidence ?? product?.confidenceScore ?? 0;
 
-        const now = new Date();
-        const user = await tx.query.users.findFirst({
-          where: eq(users.id, ctx.userId),
-          columns: {
-            lastScanDate: true,
-            currentStreak: true,
-            longestStreak: true,
-            experiencePoints: true,
-            level: true,
-            streakFreezeCount: true,
-          },
-        });
+      let result: {
+        scan: any;
+        levelUp: { previousLevel: number; newLevel: number; newXp: number } | null;
+      };
 
-        let newStreak = 1;
-        let usedStreakFreeze = false;
-        if (user?.lastScanDate) {
-          const lastScan = new Date(user.lastScanDate);
-          const diffDays = Math.floor(
-            (now.getTime() - lastScan.getTime()) / (1000 * 60 * 60 * 24)
-          );
-          if (diffDays === 0) {
-            newStreak = user.currentStreak ?? 1;
-          } else if (diffDays === 1) {
-            newStreak = (user.currentStreak ?? 0) + 1;
-          } else if (diffDays <= 3 && (user.streakFreezeCount ?? 0) > 0) {
-            // Streak freeze: preserve streak if missed 1-3 days and user has freezes
-            newStreak = (user.currentStreak ?? 0) + 1;
-            usedStreakFreeze = true;
+      if (input.viewOnly) {
+        // View-only mode: no scan record, no XP, no streak update
+        result = { scan: null, levelUp: null };
+      } else {
+        result = await ctx.db.transaction(async (tx) => {
+          const [scan] = await tx
+            .insert(scans)
+            .values({
+              userId: ctx.userId,
+              productId: product?.id,
+              barcode: input.barcode,
+              halalStatus: scanHalalStatus,
+              confidenceScore: scanConfidence,
+              latitude: input.latitude,
+              longitude: input.longitude,
+            })
+            .returning();
+
+          const now = new Date();
+          const user = await tx.query.users.findFirst({
+            where: eq(users.id, ctx.userId),
+            columns: {
+              lastScanDate: true,
+              currentStreak: true,
+              longestStreak: true,
+              experiencePoints: true,
+              level: true,
+              streakFreezeCount: true,
+            },
+          });
+
+          let newStreak = 1;
+          let usedStreakFreeze = false;
+          if (user?.lastScanDate) {
+            const lastScan = new Date(user.lastScanDate);
+            const diffDays = Math.floor(
+              (now.getTime() - lastScan.getTime()) / (1000 * 60 * 60 * 24)
+            );
+            if (diffDays === 0) {
+              newStreak = user.currentStreak ?? 1;
+            } else if (diffDays === 1) {
+              newStreak = (user.currentStreak ?? 0) + 1;
+            } else if (diffDays <= 3 && (user.streakFreezeCount ?? 0) > 0) {
+              // Streak freeze: preserve streak if missed 1-3 days and user has freezes
+              newStreak = (user.currentStreak ?? 0) + 1;
+              usedStreakFreeze = true;
+            }
+            // else: diffDays > 3 or no freeze → newStreak stays 1 (reset)
           }
-          // else: diffDays > 3 or no freeze → newStreak stays 1 (reset)
-        }
 
-        // Milestone bonus XP: award extra XP when streak hits key thresholds
-        const STREAK_MILESTONES: Record<number, number> = {
-          3: 15, 7: 30, 14: 50, 30: 100, 60: 200, 100: 500, 365: 1000,
-        };
-        const milestoneBonus = STREAK_MILESTONES[newStreak] ?? 0;
+          // Milestone bonus XP: award extra XP when streak hits key thresholds
+          const STREAK_MILESTONES: Record<number, number> = {
+            3: 15, 7: 30, 14: 50, 30: 100, 60: 200, 100: 500, 365: 1000,
+          };
+          const milestoneBonus = STREAK_MILESTONES[newStreak] ?? 0;
 
-        // Level-up detection
-        const previousXp = user?.experiencePoints ?? 0;
-        const previousLevel = user?.level ?? 1;
-        const newXp = previousXp + 10 + milestoneBonus;
-        const newLevel = calculateLevel(newXp);
+          // Level-up detection
+          const previousXp = user?.experiencePoints ?? 0;
+          const previousLevel = user?.level ?? 1;
+          const newXp = previousXp + 10 + milestoneBonus;
+          const newLevel = calculateLevel(newXp);
 
-        await tx
-          .update(users)
-          .set({
-            totalScans: sql`${users.totalScans} + 1`,
-            experiencePoints: newXp,
-            level: newLevel,
-            currentStreak: newStreak,
-            longestStreak: sql`GREATEST(${users.longestStreak}, ${newStreak})`,
-            lastScanDate: now,
-            updatedAt: now,
-            ...(usedStreakFreeze
-              ? {
-                  streakFreezeCount: sql`${users.streakFreezeCount} - 1`,
-                  streakFreezeLastUsed: now,
-                }
-              : {}),
-          })
-          .where(eq(users.id, ctx.userId));
+          await tx
+            .update(users)
+            .set({
+              totalScans: sql`${users.totalScans} + 1`,
+              experiencePoints: newXp,
+              level: newLevel,
+              currentStreak: newStreak,
+              longestStreak: sql`GREATEST(${users.longestStreak}, ${newStreak})`,
+              lastScanDate: now,
+              updatedAt: now,
+              ...(usedStreakFreeze
+                ? {
+                    streakFreezeCount: sql`${users.streakFreezeCount} - 1`,
+                    streakFreezeLastUsed: now,
+                  }
+                : {}),
+            })
+            .where(eq(users.id, ctx.userId));
 
-        return {
-          scan,
-          levelUp: newLevel > previousLevel
-            ? { previousLevel, newLevel, newXp }
-            : null,
-          streakInfo: {
-            current: newStreak,
-            usedFreeze: usedStreakFreeze,
-            milestoneBonus: milestoneBonus > 0 ? { streak: newStreak, bonusXp: milestoneBonus } : null,
-          },
-        };
-      });
+          return {
+            scan,
+            levelUp: newLevel > previousLevel
+              ? { previousLevel, newLevel, newXp }
+              : null,
+          };
+        });
+      }
 
       // 6. Build enriched OFF extras for the mobile app
       const storedOff = (product?.offData ?? offData) as Record<string, unknown> | null;
@@ -472,8 +544,62 @@ export const scanRouter = router({
           )
         );
 
-      // 8. Madhab verdicts — all 4 school opinions for comparative display
-      const madhabVerdicts = await computeMadhabVerdicts(ctx.db, halalAnalysis);
+      // 8. Ingredient rulings — enriched scholarly data for UI
+      const ingredientsText = storedOff?.ingredients_text as string | undefined;
+      const ingredientRulingsData = ingredientsText
+        ? await matchIngredientRulings(ingredientsText, analysisOptions.madhab)
+        : [];
+
+      // 9. Madhab verdicts — all 4 school opinions for comparative display
+      const madhabVerdicts = await computeMadhabVerdicts(ctx.db, halalAnalysis, ingredientRulingsData);
+
+      // 10. Certifier enrichment — runtime-computed trust scores
+      // Scores are computed LIVE from raw practice flags + certifier_events
+      // with dynamic controversy penalty (time-decay). Not pre-computed.
+      let certifierData: {
+        id: string;
+        name: string;
+        trustScore: number;
+        trustScoreHanafi: number;
+        trustScoreShafii: number;
+        trustScoreMaliki: number;
+        trustScoreHanbali: number;
+        website: string | null;
+        halalAssessment: boolean;
+        practices: {
+          controllersAreEmployees: boolean | null;
+          controllersPresentEachProduction: boolean | null;
+          hasSalariedSlaughterers: boolean | null;
+          acceptsMechanicalSlaughter: boolean | null;
+          acceptsElectronarcosis: boolean | null;
+          acceptsPostSlaughterElectrocution: boolean | null;
+          acceptsStunning: boolean | null;
+          acceptsVsm: boolean | null;
+          transparencyPublicCharter: boolean | null;
+          transparencyAuditReports: boolean | null;
+          transparencyCompanyList: boolean | null;
+        };
+      } | null = null;
+
+      if (halalAnalysis?.certifierId) {
+        const scored = await getCertifierScores(ctx.db, ctx.redis, halalAnalysis.certifierId);
+        if (scored) {
+          certifierData = {
+            id: scored.id,
+            name: scored.name,
+            trustScore: scored.scores.trustScore,
+            trustScoreHanafi: scored.scores.trustScoreHanafi,
+            trustScoreShafii: scored.scores.trustScoreShafii,
+            trustScoreMaliki: scored.scores.trustScoreMaliki,
+            trustScoreHanbali: scored.scores.trustScoreHanbali,
+            website: scored.website,
+            halalAssessment: scored.halalAssessment,
+            practices: scored.practices,
+          };
+          // Override certifierName with the real DB name
+          halalAnalysis.certifierName = scored.name;
+        }
+      }
 
       return {
         scan: result.scan,
@@ -485,6 +611,8 @@ export const scanRouter = router({
         personalAlerts,
         communityVerifiedCount: communityCount?.count ?? 0,
         madhabVerdicts,
+        ingredientRulings: ingredientRulingsData,
+        certifierData,
         levelUp: result.levelUp,
       };
     }),
@@ -508,7 +636,8 @@ export const scanRouter = router({
         }
       }
 
-      const items = await ctx.db
+      // Query scans + products (no certifier JOIN — scores come from runtime engine)
+      const rawItems = await ctx.db
         .select({
           id: scans.id,
           barcode: scans.barcode,
@@ -521,6 +650,10 @@ export const scanRouter = router({
             brand: products.brand,
             imageUrl: products.imageUrl,
             category: products.category,
+            halalStatus: products.halalStatus,
+            confidenceScore: products.confidenceScore,
+            certifierId: products.certifierId,
+            certifierName: products.certifierName,
           },
         })
         .from(scans)
@@ -530,10 +663,32 @@ export const scanRouter = router({
         .limit(input.limit + 1);
 
       let nextCursor: string | undefined;
-      if (items.length > input.limit) {
-        const next = items.pop()!;
+      if (rawItems.length > input.limit) {
+        const next = rawItems.pop()!;
         nextCursor = next.id;
       }
+
+      // Enrich with runtime-computed trust scores (batch, cached in Redis 1h)
+      // getAllCertifierScores() is a single batched query — no N+1
+      const allScores = await getAllCertifierScores(ctx.db, ctx.redis);
+      const scoreMap = new Map(allScores.map((c) => [c.id, c.scores]));
+
+      const items = rawItems.map((item) => {
+        const certifierId = item.product?.certifierId;
+        const scores = certifierId ? scoreMap.get(certifierId) ?? null : null;
+        return {
+          ...item,
+          certifier: scores
+            ? {
+                trustScore: scores.trustScore,
+                trustScoreHanafi: scores.trustScoreHanafi,
+                trustScoreShafii: scores.trustScoreShafii,
+                trustScoreMaliki: scores.trustScoreMaliki,
+                trustScoreHanbali: scores.trustScoreHanbali,
+              }
+            : null,
+        };
+      });
 
       return { items, nextCursor };
     }),

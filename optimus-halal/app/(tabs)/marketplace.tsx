@@ -345,12 +345,21 @@ export default function MarketplaceTab() {
         {/* Header */}
         <Animated.View entering={FadeIn.duration(400)} style={styles.header}>
           <View style={styles.headerBrand}>
-            <Image
-              source={logoSource}
-              style={{ width: 26, height: 26 }}
-              contentFit="contain"
-              cachePolicy="memory-disk"
-            />
+            <View style={{
+              width: 36,
+              height: 36,
+              borderRadius: 10,
+              backgroundColor: isDark ? "rgba(212, 175, 55, 0.08)" : "rgba(212, 175, 55, 0.05)",
+              alignItems: "center",
+              justifyContent: "center",
+            }}>
+              <Image
+                source={logoSource}
+                style={{ width: 30, height: 30 }}
+                contentFit="contain"
+                cachePolicy="memory-disk"
+              />
+            </View>
             <Text
               style={[styles.headerTitle, { color: colors.textPrimary }]}
             >
@@ -365,7 +374,7 @@ export default function MarketplaceTab() {
             onPress={handleAlertsPress}
             accessibilityRole="button"
             accessibilityLabel={t.common.notifications}
-          >
+>
             <View
               style={[
                 styles.iconButton,
@@ -552,12 +561,21 @@ export default function MarketplaceTab() {
           style={styles.header}
         >
           <View style={styles.headerBrand}>
-            <Image
-              source={logoSource}
-              style={{ width: 26, height: 26 }}
-              contentFit="contain"
-              cachePolicy="memory-disk"
-            />
+            <View style={{
+              width: 36,
+              height: 36,
+              borderRadius: 10,
+              backgroundColor: isDark ? "rgba(212, 175, 55, 0.08)" : "rgba(212, 175, 55, 0.05)",
+              alignItems: "center",
+              justifyContent: "center",
+            }}>
+              <Image
+                source={logoSource}
+                style={{ width: 30, height: 30 }}
+                contentFit="contain"
+                cachePolicy="memory-disk"
+              />
+            </View>
             <Text
               style={[styles.headerTitle, { color: colors.textPrimary }]}
             >
@@ -897,10 +915,10 @@ const styles = StyleSheet.create({
   headerBrand: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 8,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "700",
     letterSpacing: -0.3,
   },

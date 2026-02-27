@@ -25,6 +25,8 @@ const envSchema = z.object({
     .describe("Comma-separated allowed origins"),
   SENTRY_DSN: z.string().url().optional(),
   SENTRY_ENVIRONMENT: z.string().default("development"),
+  // Internal cron endpoints
+  CRON_SECRET: z.string().min(32).optional(),
   // Cloudflare R2
   R2_ACCOUNT_ID: z.string().min(1).optional(),
   R2_ACCESS_KEY_ID: z.string().min(1).optional(),

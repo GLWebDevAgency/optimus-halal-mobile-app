@@ -585,7 +585,7 @@ export default function FavoritesScreen() {
                 product={item}
                 index={index}
                 onRemove={() => handleRemove(item.productId)}
-                onView={() => router.push(`/scan-result?barcode=${item.barcode}`)}
+                onView={() => router.push(`/scan-result?barcode=${item.barcode}&viewOnly=1`)}
                 onScan={() => router.navigate("/(tabs)/scanner")}
                 isDark={isDark}
                 colors={colors}

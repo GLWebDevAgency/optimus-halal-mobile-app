@@ -23,41 +23,54 @@ import {
   StyleSheet,
   Platform,
   Alert,
+  Linking,
 } from "react-native";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
+import Svg, { Path } from "react-native-svg";
 import { ImpactFeedbackStyle, NotificationFeedbackType } from "expo-haptics";
 import Animated, {
   FadeIn,
   FadeInDown,
-  FadeInUp,
   SlideInUp,
   useSharedValue,
   useAnimatedStyle,
+  useAnimatedReaction,
+  useDerivedValue,
+  runOnJS,
   withTiming,
   withSpring,
   withRepeat,
   withSequence,
-  withDelay,
-  cancelAnimation,
   Easing,
   useReducedMotion,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
-import { IconButton, ArabicCalligraphy, StatusPill, LevelUpCelebration, PremiumBackground } from "@/components/ui";
+import { IconButton, StatusPill, LevelUpCelebration, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PersonalAlerts, type PersonalAlert } from "@/components/scan/PersonalAlerts";
 import { MadhabBottomSheet } from "@/components/scan/MadhabBottomSheet";
+import { MadhabScoreRing } from "@/components/scan/MadhabScoreRing";
+import { TrustScoreBottomSheet } from "@/components/scan/TrustScoreBottomSheet";
+import { ScoreDetailBottomSheet } from "@/components/scan/ScoreDetailBottomSheet";
 import { ShareCardView, captureAndShareCard } from "@/components/scan/ShareCard";
 import { trpc } from "@/lib/trpc";
 import { useScanBarcode } from "@/hooks/useScan";
 import { useTranslation, useHaptics, useAddFavorite, useRemoveFavorite, useCreateReview } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
-import { halalStatus as halalStatusTokens, brand as brandTokens } from "@/theme/colors";
+import { halalStatus as halalStatusTokens, brand as brandTokens, glass, lightTheme, semantic, gold } from "@/theme/colors";
+import { textStyles, fontSize as fontSizeTokens, fontWeight as fontWeightTokens } from "@/theme/typography";
+import { spacing, radius } from "@/theme/spacing";
+import { getShadows } from "@/theme/shadows";
+import { durations, easings, entryAnimations } from "@/theme/animations";
 import { GlowCard } from "@/components/ui/GlowCard";
+
+import { CertifierLogo } from "@/components/scan/CertifierLogo";
+
+
 import { usePremium } from "@/hooks/usePremium";
 import { useFeatureFlagsStore } from "@/store";
 
@@ -120,6 +133,13 @@ const MADHAB_LABEL_KEY = {
   hanbali: "madhabHanbali",
 } as const;
 
+const MADHAB_TRUST_KEY = {
+  hanafi: "trustScoreHanafi",
+  shafii: "trustScoreShafii",
+  maliki: "trustScoreMaliki",
+  hanbali: "trustScoreHanbali",
+} as const;
+
 // Nutri-Score color map (follows international nutrition labelling standard)
 const NUTRISCORE_COLORS: Record<string, string> = {
   a: halalStatusTokens.halal.base,
@@ -137,217 +157,43 @@ const NOVA_COLORS: Record<number, string> = {
   4: halalStatusTokens.haram.base,
 };
 
-// ── Pulsing Glow Ring (behind status icon) ──────────────────
-
-const PulsingGlow = React.memo(function PulsingGlow({
-  color,
-  size,
-}: {
-  color: string;
-  size: number;
-}) {
-  const reducedMotion = useReducedMotion();
-  const pulseScale = useSharedValue(1);
-  const pulseOpacity = useSharedValue(0.4);
-
-  useEffect(() => {
-    if (!reducedMotion) {
-      pulseScale.value = withRepeat(
-        withTiming(1.35, { duration: 1800, easing: Easing.inOut(Easing.ease) }),
-        -1,
-        true
-      );
-      pulseOpacity.value = withRepeat(
-        withTiming(0, { duration: 1800, easing: Easing.inOut(Easing.ease) }),
-        -1,
-        true
-      );
-    }
-    return () => {
-      cancelAnimation(pulseScale);
-      cancelAnimation(pulseOpacity);
-    };
-  }, [reducedMotion]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pulseScale.value }],
-    opacity: pulseOpacity.value,
-  }));
-
-  return (
-    <Animated.View
-      style={[
-        {
-          position: "absolute",
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          borderWidth: 3,
-          borderColor: color,
-        },
-        animatedStyle,
-      ]}
-    />
-  );
-});
-
-// ── Suspense Reveal Ring (brief anticipation before verdict) ─
-
 const SUSPENSE_DURATION = 350;
 
-const SuspenseRevealRing = React.memo(function SuspenseRevealRing({
-  color,
-}: {
-  color: string;
-}) {
-  const reducedMotion = useReducedMotion();
-  const ringScale = useSharedValue(0.6);
-  const ringOpacity = useSharedValue(0);
+// ── Nutrition Card ───────────────────────────────────────────
 
-  useEffect(() => {
-    if (reducedMotion) return;
-    // Pulse twice then dissolve
-    ringScale.value = withSequence(
-      withTiming(1.1, { duration: 160, easing: Easing.out(Easing.cubic) }),
-      withTiming(0.9, { duration: 140, easing: Easing.inOut(Easing.cubic) }),
-      withTiming(1.2, { duration: 160, easing: Easing.out(Easing.cubic) }),
-    );
-    // Fade in, hold, fade out — all chained to avoid race condition
-    ringOpacity.value = withSequence(
-      withTiming(0.7, { duration: 150 }),
-      withDelay(SUSPENSE_DURATION - 300, withTiming(0, { duration: 150 })),
-    );
-  }, [reducedMotion, ringScale, ringOpacity]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: ringScale.value }],
-    opacity: ringOpacity.value,
-  }));
-
-  if (reducedMotion) return null;
-
-  return (
-    <Animated.View
-      style={[
-        {
-          width: 76,
-          height: 76,
-          borderRadius: 38,
-          borderWidth: 3,
-          borderColor: color,
-          position: "absolute",
-          top: 0,
-        },
-        animatedStyle,
-      ]}
-    />
-  );
-});
-
-// ── Status Icon with Glow ───────────────────────────────────
-
-const StatusIcon = React.memo(function StatusIcon({
-  config,
-}: {
-  config: StatusVisualConfig;
-}) {
-  const reducedMotion = useReducedMotion();
-  const scale = useSharedValue(reducedMotion ? 1 : 0.3);
-  const iconOpacity = useSharedValue(reducedMotion ? 1 : 0);
-
-  useEffect(() => {
-    if (!reducedMotion) {
-      // Dramatic entrance using springOptimus timing after suspense
-      scale.value = withDelay(
-        SUSPENSE_DURATION,
-        withSpring(1, { damping: 14, stiffness: 170, mass: 0.9 })
-      );
-      iconOpacity.value = withDelay(SUSPENSE_DURATION + 100, withTiming(1, { duration: 350 }));
-    }
-  }, [reducedMotion]);
-
-  const containerStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  const iconStyle = useAnimatedStyle(() => ({
-    opacity: iconOpacity.value,
-  }));
-
-  return (
-    <View style={styles.statusIconWrapper}>
-      <SuspenseRevealRing color={config.glowColor} />
-      <PulsingGlow color={config.glowColor} size={76} />
-      <Animated.View
-        style={[
-          styles.statusIconCircle,
-          {
-            backgroundColor: `${config.color}18`,
-            borderColor: config.color,
-            shadowColor: config.glowColor,
-          },
-          containerStyle,
-        ]}
-      >
-        <Animated.View style={iconStyle}>
-          <MaterialIcons name={config.icon} size={32} color={config.color} />
-        </Animated.View>
-      </Animated.View>
-    </View>
-  );
-});
-
-// ── Nutrition Badge ─────────────────────────────────────────
-
-const NutritionBadge = React.memo(function NutritionBadge({
+const NutritionCard = React.memo(function NutritionCard({
   label,
   value,
   color,
+  description,
 }: {
   label: string;
   value: string | number;
   color: string;
+  description: string;
 }) {
-  const { isDark, colors } = useTheme();
+  const { colors } = useTheme();
   return (
-    <View
-      style={[
-        styles.nutritionBadge,
-        {
-          backgroundColor: isDark
-            ? "rgba(255,255,255,0.04)"
-            : "rgba(0,0,0,0.03)",
-          borderColor: isDark
-            ? "rgba(212,175,55,0.1)"
-            : "rgba(212,175,55,0.08)",
-        },
-      ]}
-    >
-      {/* Mini circular indicator */}
+    <View style={nutritionStyles.row}>
       <View
-        style={[
-          styles.nutritionIndicator,
-          { backgroundColor: `${color}20`, borderColor: color },
-        ]}
+        style={[nutritionStyles.badge, { backgroundColor: `${color}15`, borderColor: color }]}
       >
-        <Text
-          style={[styles.nutritionValue, { color }]}
-          numberOfLines={1}
-        >
-          {String(value).toUpperCase()}
-        </Text>
+        <Text style={[nutritionStyles.badgeText, { color }]}>{String(value).toUpperCase()}</Text>
       </View>
-      <Text
-        style={[
-          styles.nutritionLabel,
-          { color: colors.textSecondary },
-        ]}
-        numberOfLines={1}
-      >
-        {label}
-      </Text>
+      <View style={{ flex: 1 }}>
+        <Text style={[nutritionStyles.label, { color: colors.textPrimary }]}>{label}</Text>
+        <Text style={[nutritionStyles.desc, { color: colors.textSecondary }]}>{description}</Text>
+      </View>
     </View>
   );
+});
+
+const nutritionStyles = StyleSheet.create({
+  row: { flexDirection: "row", alignItems: "center", gap: spacing.lg, paddingVertical: spacing.lg, paddingHorizontal: spacing.xs },
+  badge: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, alignItems: "center", justifyContent: "center" },
+  badgeText: { fontSize: fontSizeTokens.h4, fontWeight: fontWeightTokens.black },
+  label: { fontSize: fontSizeTokens.bodySmall, fontWeight: fontWeightTokens.bold },
+  desc: { fontSize: fontSizeTokens.caption, marginTop: spacing["2xs"] },
 });
 
 // ── Collapsible Section ─────────────────────────────────────
@@ -366,11 +212,30 @@ const CollapsibleSection = React.memo(function CollapsibleSection({
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const { isDark, colors } = useTheme();
   const { impact } = useHaptics();
+  const reducedMotion = useReducedMotion();
+  const [contentHeight, setContentHeight] = useState(0);
+  const animProgress = useSharedValue(defaultOpen ? 1 : 0);
 
   const toggle = useCallback(() => {
     impact();
-    setIsOpen((prev) => !prev);
-  }, [impact]);
+    setIsOpen((prev) => {
+      const next = !prev;
+      animProgress.value = reducedMotion
+        ? next ? 1 : 0
+        : withTiming(next ? 1 : 0, { duration: durations.normal, easing: easings.easeOut });
+      return next;
+    });
+  }, [impact, animProgress, reducedMotion]);
+
+  const contentStyle = useAnimatedStyle(() => ({
+    height: contentHeight > 0 ? animProgress.value * contentHeight : undefined,
+    opacity: animProgress.value,
+    overflow: "hidden" as const,
+  }));
+
+  const chevronStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${animProgress.value * 180}deg` }],
+  }));
 
   return (
     <View
@@ -378,11 +243,11 @@ const CollapsibleSection = React.memo(function CollapsibleSection({
         styles.collapsibleContainer,
         {
           backgroundColor: isDark
-            ? "rgba(255,255,255,0.03)"
-            : "#ffffff",
+            ? glass.dark.bg
+            : colors.card,
           borderColor: isDark
-            ? "rgba(212,175,55,0.1)"
-            : "rgba(212,175,55,0.08)",
+            ? glass.dark.border
+            : glass.light.border,
         },
       ]}
     >
@@ -391,6 +256,7 @@ const CollapsibleSection = React.memo(function CollapsibleSection({
         style={styles.collapsibleHeader}
         accessibilityRole="button"
         accessibilityLabel={title}
+        accessibilityState={{ expanded: isOpen }}
       >
         <View style={styles.collapsibleHeaderLeft}>
           <Text
@@ -404,8 +270,8 @@ const CollapsibleSection = React.memo(function CollapsibleSection({
                 styles.collapsibleBadge,
                 {
                   backgroundColor: isDark
-                    ? "rgba(255,255,255,0.08)"
-                    : "rgba(0,0,0,0.05)",
+                    ? glass.dark.highlight
+                    : glass.light.bgSubtle,
                 },
               ]}
             >
@@ -420,13 +286,25 @@ const CollapsibleSection = React.memo(function CollapsibleSection({
             </View>
           )}
         </View>
-        <MaterialIcons
-          name={isOpen ? "expand-less" : "expand-more"}
-          size={24}
-          color={colors.textSecondary}
-        />
+        <Animated.View style={chevronStyle}>
+          <MaterialIcons
+            name="expand-more"
+            size={24}
+            color={colors.textSecondary}
+          />
+        </Animated.View>
       </PressableScale>
-      {isOpen && <View style={styles.collapsibleContent}>{children}</View>}
+      <Animated.View style={contentStyle}>
+        <View
+          style={styles.collapsibleContent}
+          onLayout={(e) => {
+            const h = e.nativeEvent.layout.height;
+            if (h > 0 && h !== contentHeight) setContentHeight(h);
+          }}
+        >
+          {children}
+        </View>
+      </Animated.View>
     </View>
   );
 });
@@ -440,6 +318,9 @@ const IngredientRow = React.memo(function IngredientRow({
   problemColor,
   explanation,
   problemStatus,
+  scholarlyReference,
+  fatwaSourceName,
+  fatwaSourceUrl,
 }: {
   name: string;
   isLast: boolean;
@@ -447,6 +328,9 @@ const IngredientRow = React.memo(function IngredientRow({
   problemColor?: string;
   explanation?: string;
   problemStatus?: string;
+  scholarlyReference?: string | null;
+  fatwaSourceName?: string | null;
+  fatwaSourceUrl?: string | null;
 }) {
   const { isDark, colors } = useTheme();
   const { t } = useTranslation();
@@ -458,13 +342,15 @@ const IngredientRow = React.memo(function IngredientRow({
     const next = !expanded;
     setExpanded(next);
     expandHeight.value = withTiming(next ? 1 : 0, {
-      duration: 250,
-      easing: Easing.out(Easing.cubic),
+      duration: durations.normal,
+      easing: easings.easeOut,
     });
   }, [expanded, isProblematic, explanation, expandHeight]);
 
+  const hasFatwa = !!(fatwaSourceName || fatwaSourceUrl);
+  const detailHeight = (scholarlyReference ? 96 : 72) + (hasFatwa ? 22 : 0);
   const detailStyle = useAnimatedStyle(() => ({
-    height: expandHeight.value * 72,
+    height: expandHeight.value * detailHeight,
     opacity: expandHeight.value,
     overflow: "hidden" as const,
   }));
@@ -491,7 +377,7 @@ const IngredientRow = React.memo(function IngredientRow({
         },
       ]}
     >
-      <View style={{ flexDirection: "row", alignItems: "center", flex: 1, gap: 10 }}>
+      <View style={ingredientStyles.nameRow}>
         <View
           style={[
             styles.ingredientDot,
@@ -529,48 +415,68 @@ const IngredientRow = React.memo(function IngredientRow({
 
       {/* Expandable detail */}
       {isProblematic && explanation && (
-        <Animated.View style={[{ marginTop: 4, paddingLeft: 18 }, detailStyle]}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 4,
-            }}
-          >
+        <Animated.View style={[ingredientStyles.detailWrap, detailStyle]}>
+          <View style={ingredientStyles.statusRow}>
             <View
-              style={{
-                paddingHorizontal: 6,
-                paddingVertical: 2,
-                borderRadius: 4,
-                backgroundColor: (problemColor ?? halalStatusTokens.doubtful.base) + "20",
-              }}
+              style={[ingredientStyles.statusBadge, { backgroundColor: (problemColor ?? halalStatusTokens.doubtful.base) + "20" }]}
             >
               <Text
-                style={{
-                  fontSize: 11,
-                  fontWeight: "700",
-                  color: problemColor ?? halalStatusTokens.doubtful.base,
-                  textTransform: "uppercase",
-                }}
+                style={[ingredientStyles.statusText, { color: problemColor ?? halalStatusTokens.doubtful.base }]}
               >
                 {statusLabel}
               </Text>
             </View>
           </View>
           <Text
-            style={{
-              fontSize: 13,
-              color: colors.textSecondary,
-              lineHeight: 18,
-            }}
+            style={[ingredientStyles.explanation, { color: colors.textSecondary }]}
             numberOfLines={2}
           >
             {explanation}
           </Text>
+          {scholarlyReference && (
+            <View style={ingredientStyles.refRow}>
+              <MaterialIcons name="menu-book" size={11} color={colors.textMuted} />
+              <Text style={[ingredientStyles.refText, { color: colors.textMuted }]} numberOfLines={1}>
+                {scholarlyReference}
+              </Text>
+            </View>
+          )}
+          {hasFatwa && (
+            <PressableScale
+              onPress={() => fatwaSourceUrl && Linking.openURL(fatwaSourceUrl)}
+              disabled={!fatwaSourceUrl}
+              style={ingredientStyles.refRow}
+            >
+              <MaterialIcons name="gavel" size={11} color={colors.primary} />
+              <Text
+                style={[
+                  ingredientStyles.refText,
+                  { color: fatwaSourceUrl ? colors.primary : colors.textMuted },
+                ]}
+                numberOfLines={1}
+              >
+                {fatwaSourceName ?? t.scanResult.fatwaSource}
+              </Text>
+              {fatwaSourceUrl && (
+                <MaterialIcons name="open-in-new" size={10} color={colors.primary} />
+              )}
+            </PressableScale>
+          )}
         </Animated.View>
       )}
     </PressableScale>
   );
+});
+
+const ingredientStyles = StyleSheet.create({
+  nameRow: { flexDirection: "row", alignItems: "center", flex: 1, gap: spacing.md },
+  detailWrap: { marginTop: spacing.xs, paddingLeft: spacing["2xl"] },
+  statusRow: { flexDirection: "row", alignItems: "center", marginBottom: spacing.xs },
+  statusBadge: { paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: radius.sm },
+  statusText: { fontSize: fontSizeTokens.micro, fontWeight: fontWeightTokens.bold, textTransform: "uppercase" },
+  explanation: { fontSize: fontSizeTokens.caption, lineHeight: 18 },
+  refRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs, marginTop: spacing.xs },
+  refText: { fontSize: fontSizeTokens.micro, fontStyle: "italic", flex: 1 },
 });
 
 // ── Loading Skeleton ────────────────────────────────────────
@@ -611,7 +517,7 @@ const ScanLoadingSkeleton = React.memo(function ScanLoadingSkeleton({
     : (["#ecfdf5", "#d1fae5", "#a7f3d0"] as const);
 
   return (
-    <View style={{ flex: 1, backgroundColor: isDark ? "#0a1a10" : "#f6f8f7" }}>
+    <View style={{ flex: 1, backgroundColor: isDark ? "#0a1a10" : lightTheme.backgroundSecondary }}>
       <LinearGradient
         colors={[...bgColors]}
         style={[styles.heroGradient, { height: HERO_HEIGHT, paddingTop: insets.top }]}
@@ -620,17 +526,14 @@ const ScanLoadingSkeleton = React.memo(function ScanLoadingSkeleton({
           {/* Skeleton status circle */}
           <Animated.View
             style={[
+              skeletonStyles.circle,
               {
-                width: 80,
-                height: 80,
-                borderRadius: 40,
                 backgroundColor: isDark
-                  ? "rgba(19,236,106,0.08)"
-                  : "rgba(19,236,106,0.12)",
-                borderWidth: 3,
+                  ? halalStatusTokens.halal.bgDark
+                  : halalStatusTokens.halal.bg,
                 borderColor: isDark
-                  ? "rgba(19,236,106,0.2)"
-                  : "rgba(19,236,106,0.25)",
+                  ? `${brandTokens.primary}33`
+                  : `${brandTokens.primary}40`,
               },
               shimmerStyle,
             ]}
@@ -664,12 +567,7 @@ const ScanLoadingSkeleton = React.memo(function ScanLoadingSkeleton({
                 color={isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)"}
               />
               <Text
-                style={{
-                  fontSize: 12,
-                  fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
-                  color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)",
-                  marginStart: 6,
-                }}
+                style={[skeletonStyles.barcodeText, { color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)" }]}
               >
                 {barcode}
               </Text>
@@ -679,15 +577,8 @@ const ScanLoadingSkeleton = React.memo(function ScanLoadingSkeleton({
           {/* Skeleton certifier badge placeholder */}
           <Animated.View
             style={[
-              {
-                width: 160,
-                height: 28,
-                borderRadius: 14,
-                backgroundColor: isDark
-                  ? "rgba(255,255,255,0.06)"
-                  : "rgba(0,0,0,0.05)",
-                marginTop: 16,
-              },
+              skeletonStyles.badge,
+              { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)" },
               shimmerStyle,
             ]}
           />
@@ -695,29 +586,18 @@ const ScanLoadingSkeleton = React.memo(function ScanLoadingSkeleton({
       </LinearGradient>
 
       {/* Skeleton cards below hero */}
-      <View style={{ paddingHorizontal: 20, paddingTop: 20 }}>
+      <View style={skeletonStyles.cardsWrap}>
         <Animated.View
           style={[
-            {
-              height: 80,
-              borderRadius: 16,
-              backgroundColor: isDark
-                ? "rgba(255,255,255,0.04)"
-                : "rgba(0,0,0,0.04)",
-            },
+            skeletonStyles.cardLarge,
+            { backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)" },
             shimmerStyle,
           ]}
         />
         <Animated.View
           style={[
-            {
-              height: 60,
-              borderRadius: 16,
-              marginTop: 12,
-              backgroundColor: isDark
-                ? "rgba(255,255,255,0.03)"
-                : "rgba(0,0,0,0.03)",
-            },
+            skeletonStyles.cardSmall,
+            { backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)" },
             shimmerStyle,
           ]}
         />
@@ -727,6 +607,15 @@ const ScanLoadingSkeleton = React.memo(function ScanLoadingSkeleton({
 });
 
 // ── Error State ─────────────────────────────────────────────
+
+const skeletonStyles = StyleSheet.create({
+  circle: { width: 80, height: 80, borderRadius: 40, borderWidth: 3 },
+  barcodeText: { fontSize: fontSizeTokens.caption, fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace", marginStart: spacing.sm },
+  badge: { width: 160, height: 28, borderRadius: 14, marginTop: spacing.xl },
+  cardsWrap: { paddingHorizontal: spacing["2xl"], paddingTop: spacing["2xl"] },
+  cardLarge: { height: 80, borderRadius: radius.lg },
+  cardSmall: { height: 60, borderRadius: radius.lg, marginTop: spacing.lg },
+});
 
 const ScanErrorState = React.memo(function ScanErrorState({
   onRetry,
@@ -746,15 +635,15 @@ const ScanErrorState = React.memo(function ScanErrorState({
             styles.stateIconCircle,
             {
               backgroundColor: isDark
-                ? "rgba(239,68,68,0.1)"
-                : "rgba(239,68,68,0.08)",
+                ? halalStatusTokens.haram.bgDark
+                : halalStatusTokens.haram.bg,
             },
           ]}
         >
           <MaterialIcons
             name="error-outline"
             size={36}
-            color={isDark ? "#f87171" : "#ef4444"}
+            color={halalStatusTokens.haram.base}
           />
         </View>
         <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>
@@ -769,9 +658,7 @@ const ScanErrorState = React.memo(function ScanErrorState({
             style={[
               styles.stateButton,
               {
-                backgroundColor: isDark
-                  ? "rgba(255,255,255,0.06)"
-                  : "#f1f5f9",
+                backgroundColor: colors.buttonSecondary,
               },
             ]}
             accessibilityRole="button"
@@ -787,7 +674,7 @@ const ScanErrorState = React.memo(function ScanErrorState({
             accessibilityRole="button"
             accessibilityLabel={t.common.retry}
           >
-            <Text style={[styles.stateButtonText, { color: "#0d1b13" }]}>
+            <Text style={[styles.stateButtonText, { color: lightTheme.textPrimary }]}>
               {t.common.retry}
             </Text>
           </PressableScale>
@@ -815,15 +702,15 @@ const ScanNotFoundState = React.memo(function ScanNotFoundState({
             styles.stateIconCircle,
             {
               backgroundColor: isDark
-                ? "rgba(234,179,8,0.1)"
-                : "rgba(234,179,8,0.08)",
+                ? `${brandTokens.gold}1A`
+                : `${brandTokens.gold}14`,
             },
           ]}
         >
           <MaterialIcons
             name="search-off"
             size={36}
-            color={isDark ? "#fbbf24" : "#d97706"}
+            color={brandTokens.gold}
           />
         </View>
         <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>
@@ -838,7 +725,7 @@ const ScanNotFoundState = React.memo(function ScanNotFoundState({
           accessibilityRole="button"
           accessibilityLabel={t.scanResult.scanAnother}
         >
-          <Text style={[styles.stateButtonText, { color: "#0d1b13" }]}>
+          <Text style={[styles.stateButtonText, { color: lightTheme.textPrimary }]}>
             {t.scanResult.scanAnother}
           </Text>
         </PressableScale>
@@ -856,35 +743,73 @@ export default function ScanResultScreen() {
   const { isDark, colors } = useTheme();
   const { impact, notification } = useHaptics();
   const { t } = useTranslation();
-  const { barcode } = useLocalSearchParams<{ barcode: string }>();
+  const reducedMotion = useReducedMotion();
+  const { barcode, viewOnly } = useLocalSearchParams<{ barcode: string; viewOnly?: string }>();
+  const isViewOnly = viewOnly === "1";
 
   // ── tRPC Mutation ──────────────────────────────
   const scanMutation = useScanBarcode();
+  const { data: userProfile } = trpc.profile.getProfile.useQuery();
   const hasFired = useRef(false);
   const shareCardRef = useRef<View>(null);
 
   useEffect(() => {
     if (barcode && !hasFired.current) {
       hasFired.current = true;
-      scanMutation.mutate({ barcode });
+      scanMutation.mutate({ barcode, viewOnly: isViewOnly || undefined });
     }
-  }, [barcode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- hasFired ref guards re-fire
+  }, [barcode, isViewOnly]);
 
   // ── Derived State ──────────────────────────────
   const product = scanMutation.data?.product ?? null;
   const halalAnalysis = scanMutation.data?.halalAnalysis ?? null;
   const boycott = scanMutation.data?.boycott ?? null;
   const offExtras = scanMutation.data?.offExtras ?? null;
-  const communityVerifiedCount = scanMutation.data?.communityVerifiedCount ?? 0;
   const madhabVerdicts = scanMutation.data?.madhabVerdicts ?? [];
+  const ingredientRulings = useMemo(
+    () => scanMutation.data?.ingredientRulings ?? [],
+    [scanMutation.data?.ingredientRulings]
+  );
   const levelUp = scanMutation.data?.levelUp ?? null;
-
-  // ── Social Proof (From Backend) ──────
-  const totalScansCount = communityVerifiedCount;
 
   const halalStatus: HalalStatusKey =
     (product?.halalStatus as HalalStatusKey) ?? "unknown";
-  const statusConfig = STATUS_CONFIG[halalStatus] ?? STATUS_CONFIG.unknown;
+
+  // ── Per-madhab trust score selection ──
+  // If user has a madhab preference (hanafi/shafii/maliki/hanbali), use
+  // the school-specific score. Otherwise fall back to universal score.
+  const userMadhab = (userProfile?.madhab as "hanafi" | "shafii" | "maliki" | "hanbali" | "general" | null) ?? "general";
+  const certifierData_ = scanMutation.data?.certifierData;
+  const certifierTrustScore = useMemo(() => {
+    if (!certifierData_) return null;
+    const MADHAB_SCORE_KEY = {
+      hanafi: "trustScoreHanafi",
+      shafii: "trustScoreShafii",
+      maliki: "trustScoreMaliki",
+      hanbali: "trustScoreHanbali",
+    } as const;
+    if (userMadhab !== "general" && userMadhab in MADHAB_SCORE_KEY) {
+      return certifierData_[MADHAB_SCORE_KEY[userMadhab as keyof typeof MADHAB_SCORE_KEY]] ?? certifierData_.trustScore;
+    }
+    return certifierData_.trustScore;
+  }, [certifierData_, userMadhab]);
+
+  // ── Hero color rule: combine halal status + certifier trust score ──
+  // For halal products, if the certifier has a trust score < 70, downgrade
+  // the hero to "doubtful" visuals (orange) so color matches the bar.
+  const effectiveHeroStatus: HalalStatusKey =
+    halalStatus === "halal" && certifierTrustScore !== null && certifierTrustScore < 70
+      ? "doubtful"
+      : halalStatus;
+  const statusConfig = STATUS_CONFIG[effectiveHeroStatus] ?? STATUS_CONFIG.unknown;
+  // Dynamic hero label: "Certification Détectée" only when a certifier exists,
+  // otherwise "Composition Conforme" for halal-by-analysis products (e.g. bread)
+  const heroLabel =
+    effectiveHeroStatus === "halal" && !certifierData_
+      ? t.scanResult.compositionCompliant
+      : t.scanResult[statusConfig.labelKey];
+  const shadows = getShadows(isDark);
   const ingredients: string[] = (product?.ingredients as string[]) ?? [];
 
   const haramReasons = useMemo(
@@ -900,8 +825,11 @@ export default function ScanResultScreen() {
     [halalAnalysis?.reasons]
   );
   const allergensTags: string[] = offExtras?.allergensTags ?? [];
+
   const personalAlerts: PersonalAlert[] =
     scanMutation.data?.personalAlerts ?? [];
+  const communityVerifiedCount = scanMutation.data?.communityVerifiedCount ?? 0;
+  const certifierData = scanMutation.data?.certifierData ?? null;
 
   // ── Halal Alternatives Query ──────────────────
   const { isPremium, showPaywall } = usePremium();
@@ -931,9 +859,23 @@ export default function ScanResultScreen() {
       explanation: string;
       scholarlyReference: string | null;
     }>;
+    conflictingIngredients: Array<{
+      pattern: string;
+      ruling: string;
+      explanation: string;
+      scholarlyReference: string | null;
+    }>;
   } | null>(null);
 
   const handleCloseMadhab = useCallback(() => setSelectedMadhab(null), []);
+
+  // ── Trust Score Bottom Sheet ─────────────────
+  const [showTrustScoreSheet, setShowTrustScoreSheet] = useState(false);
+  const handleCloseTrustScore = useCallback(() => setShowTrustScoreSheet(false), []);
+
+  // ── Score Detail Bottom Sheet ──────────────
+  const [showScoreDetailSheet, setShowScoreDetailSheet] = useState(false);
+  const handleCloseScoreDetail = useCallback(() => setShowScoreDetailSheet(false), []);
 
   // ── User Vote (backend-synced) ────────────────
   const [userVote, setUserVote] = useState<"up" | "down" | null>(null);
@@ -942,12 +884,37 @@ export default function ScanResultScreen() {
   // Build a Map of problematic ingredient names for fast lookup
   // Includes color + explanation for expandable ingredient detail
   const problematicIngredients = useMemo(() => {
-    const names = new Map<string, { color: string; explanation: string; status: string }>();
+    const names = new Map<string, {
+      color: string;
+      explanation: string;
+      status: string;
+      scholarlyReference?: string | null;
+      fatwaSourceName?: string | null;
+      fatwaSourceUrl?: string | null;
+    }>();
+    // Build from ingredient rulings first (has fatwaSourceUrl)
+    for (const ir of ingredientRulings) {
+      if (ir.ruling !== "halal") {
+        names.set(ir.pattern.toLowerCase(), {
+          color: ir.ruling === "haram" ? halalStatusTokens.haram.base : halalStatusTokens.doubtful.base,
+          explanation: ir.explanationFr,
+          status: ir.ruling,
+          scholarlyReference: ir.scholarlyReference,
+          fatwaSourceName: ir.fatwaSourceName,
+          fatwaSourceUrl: ir.fatwaSourceUrl,
+        });
+      }
+    }
+    // Overlay with haram/doubtful reasons (may have more details)
     for (const r of haramReasons) {
+      const existing = names.get(r.name.toLowerCase());
       names.set(r.name.toLowerCase(), {
         color: halalStatusTokens.haram.base,
         explanation: r.explanation,
         status: r.status,
+        scholarlyReference: r.scholarlyReference ?? existing?.scholarlyReference,
+        fatwaSourceName: r.fatwaSourceName ?? existing?.fatwaSourceName,
+        fatwaSourceUrl: existing?.fatwaSourceUrl,
       });
     }
     for (const r of doubtfulReasons) {
@@ -956,11 +923,13 @@ export default function ScanResultScreen() {
           color: halalStatusTokens.doubtful.base,
           explanation: r.explanation,
           status: r.status,
+          scholarlyReference: r.scholarlyReference,
+          fatwaSourceName: r.fatwaSourceName,
         });
       }
     }
     return names;
-  }, [haramReasons, doubtfulReasons]);
+  }, [haramReasons, doubtfulReasons, ingredientRulings]);
 
   // ── Favorites (backend-synced) ─────────────────
   const favoritesQuery = trpc.favorites.list.useQuery(
@@ -1020,7 +989,9 @@ export default function ScanResultScreen() {
 
   const shareLabels = useMemo(() => {
     const statusLabelMap: Record<string, string> = {
-      halal: t.scanResult.certifiedHalal,
+      halal: certifierData
+        ? t.scanResult.certifiedHalal
+        : t.scanResult.compositionCompliant,
       haram: t.scanResult.haramDetected,
       doubtful: t.scanResult.doubtfulStatus,
       unknown: t.scanResult.unverified,
@@ -1032,7 +1003,7 @@ export default function ScanResultScreen() {
       verifiedWith: t.scanResult.verifiedWith,
       tagline: t.scanResult.shareTagline,
     };
-  }, [halalStatus, t]);
+  }, [halalStatus, certifierData, t]);
 
   const handleShare = useCallback(async () => {
     impact();
@@ -1105,9 +1076,10 @@ export default function ScanResultScreen() {
     scanMutation.reset();
     if (barcode) {
       hasFired.current = true;
-      scanMutation.mutate({ barcode });
+      scanMutation.mutate({ barcode, viewOnly: isViewOnly || undefined });
     }
-  }, [barcode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [barcode, isViewOnly]);
 
   // ── Favorite animation ─────────────────────────
   const favScale = useSharedValue(1);
@@ -1121,6 +1093,105 @@ export default function ScanResultScreen() {
 
   const favAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: favScale.value }],
+  }));
+
+  // ── CTA shimmer animation ──────────────────────
+  const shimmerX = useSharedValue(-80);
+
+  useEffect(() => {
+    if (!reducedMotion) {
+      shimmerX.value = withRepeat(
+        withSequence(
+          withTiming(300, { duration: 2500, easing: Easing.linear }),
+          withTiming(-80, { duration: 0 })
+        ),
+        -1,
+        false
+      );
+    }
+  }, [reducedMotion]);
+
+  const shimmerStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shimmerX.value }, { skewX: "-20deg" }],
+  }));
+
+  // ── Hero: Animated score counter (0→N) ────────
+  const scoreDisplay = useSharedValue(0);
+  const barScale = useSharedValue(0);
+  const [displayedScore, setDisplayedScore] = useState(0);
+
+  useEffect(() => {
+    if (certifierTrustScore != null) {
+      scoreDisplay.value = withTiming(certifierTrustScore, {
+        duration: 1200,
+        easing: Easing.out(Easing.cubic),
+      });
+      barScale.value = withTiming(certifierTrustScore / 100, {
+        duration: 1400,
+        easing: Easing.out(Easing.cubic),
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [certifierTrustScore]);
+
+  const roundedScore = useDerivedValue(() => Math.round(scoreDisplay.value));
+  useAnimatedReaction(
+    () => roundedScore.value,
+    (val) => runOnJS(setDisplayedScore)(val),
+  );
+
+  // Bar fill via scaleX — GPU-only, no layout recalc
+  const animatedBarStyle = useAnimatedStyle(() => ({
+    transform: [{ scaleX: barScale.value }],
+  }));
+
+  // ── Hero: Image glow pulse (opacity overlay, not shadowOpacity) ──
+  const glowOpacity = useSharedValue(0.15);
+
+  useEffect(() => {
+    if (!reducedMotion) {
+      glowOpacity.value = withRepeat(
+        withSequence(
+          withTiming(0.4, { duration: 2000, easing: Easing.inOut(Easing.sin) }),
+          withTiming(0.15, { duration: 2000, easing: Easing.inOut(Easing.sin) })
+        ),
+        -1,
+        false
+      );
+    }
+  }, [reducedMotion]);
+
+  const imageGlowStyle = useAnimatedStyle(() => ({
+    opacity: glowOpacity.value,
+  }));
+
+  // ── Hero: Ambient orb drift ───────────────────
+  const orbX = useSharedValue(0);
+  const orbY = useSharedValue(0);
+
+  useEffect(() => {
+    if (!reducedMotion) {
+      orbX.value = withRepeat(
+        withSequence(
+          withTiming(20, { duration: 6000, easing: Easing.inOut(Easing.sin) }),
+          withTiming(-20, { duration: 6000, easing: Easing.inOut(Easing.sin) })
+        ),
+        -1,
+        false
+      );
+      orbY.value = withRepeat(
+        withSequence(
+          withTiming(15, { duration: 5000, easing: Easing.inOut(Easing.sin) }),
+          withTiming(-15, { duration: 5000, easing: Easing.inOut(Easing.sin) })
+        ),
+        -1,
+        false
+      );
+    }
+  }, [reducedMotion]);
+
+  const orbStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: orbX.value }, { translateY: orbY.value }],
   }));
 
   // ── RENDER: Loading ────────────────────────────
@@ -1143,6 +1214,88 @@ export default function ScanResultScreen() {
     ? statusConfig.gradientDark
     : statusConfig.gradientLight;
 
+  const actionButtonBg = isDark ? glass.dark.bg : glass.light.border;
+
+  // Shared action bar buttons — rendered once, used in both iOS (BlurView) and Android (View) wrappers
+  const actionBarButtons = (
+    <View
+      style={[
+        styles.actionBarInner,
+        { borderColor: isDark ? glass.dark.border : glass.light.border },
+      ]}
+    >
+      {/* Favorite */}
+      <PressableScale
+        onPress={handleFavAnimated}
+        disabled={isFavMutating}
+        style={[
+          styles.actionButton,
+          {
+            backgroundColor: actionButtonBg,
+            opacity: isFavMutating ? 0.5 : 1,
+          },
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel={
+          productIsFavorite
+            ? t.scanResult.removeFromFavorites
+            : t.scanResult.addToFavorites
+        }
+        accessibilityState={{ selected: productIsFavorite, busy: isFavMutating }}
+      >
+        <Animated.View style={favAnimatedStyle}>
+          <MaterialIcons
+            name={productIsFavorite ? "favorite" : "favorite-border"}
+            size={24}
+            color={productIsFavorite ? halalStatusTokens.haram.base : colors.textSecondary}
+          />
+        </Animated.View>
+      </PressableScale>
+
+      {/* Share */}
+      <PressableScale
+        onPress={handleShare}
+        style={[styles.actionButton, { backgroundColor: actionButtonBg }]}
+        accessibilityRole="button"
+        accessibilityLabel={t.scanResult.shareProduct}
+      >
+        <MaterialIcons name="share" size={22} color={colors.textSecondary} />
+      </PressableScale>
+
+      {/* Where to Buy (primary CTA) */}
+      <PressableScale
+        onPress={handleFindStores}
+        style={[styles.ctaButton, { backgroundColor: colors.primary, ...shadows.float, shadowColor: colors.primary }]}
+        accessibilityRole="button"
+        accessibilityLabel={t.scanResult.whereToBuy}
+        accessibilityHint={t.scanResult.findStores}
+      >
+        <Animated.View
+          style={[
+            StyleSheet.absoluteFill,
+            shimmerStyle,
+            { width: 60, backgroundColor: "rgba(255,255,255,0.15)" },
+          ]}
+          pointerEvents="none"
+        />
+        <MaterialIcons name={marketplaceEnabled ? "shopping-cart" : "location-on"} size={20} color={lightTheme.textPrimary} />
+        <Text style={[styles.ctaText, { color: lightTheme.textPrimary }]}>
+          {marketplaceEnabled ? t.scanResult.viewOnMarketplace : t.scanResult.whereToBuy}
+        </Text>
+      </PressableScale>
+
+      {/* Report */}
+      <PressableScale
+        onPress={handleReport}
+        style={[styles.actionButton, { backgroundColor: actionButtonBg }]}
+        accessibilityRole="button"
+        accessibilityLabel={t.scanResult.report}
+      >
+        <MaterialIcons name="flag" size={22} color={colors.textSecondary} />
+      </PressableScale>
+    </View>
+  );
+
   return (
     <View style={{ flex: 1 }}>
       <PremiumBackground />
@@ -1157,294 +1310,416 @@ export default function ScanResultScreen() {
           icon="arrow-back"
           variant="filled"
           onPress={handleGoBack}
-          color={isDark ? "#ffffff" : "#0d1b13"}
+          color={isDark ? brandTokens.white : lightTheme.textPrimary}
           accessibilityLabel={t.common.back}
         />
       </View>
 
+      {/* ── Floating Info Button (top-right, certified products only) ── */}
+      {certifierData && (
+        <View
+          style={[
+            styles.floatingInfoButton,
+            { top: insets.top + 8 },
+          ]}
+        >
+          <IconButton
+            icon="info-outline"
+            variant="filled"
+            onPress={() => {
+              impact();
+              setShowTrustScoreSheet(true);
+            }}
+            color={isDark ? brandTokens.white : lightTheme.textPrimary}
+            accessibilityLabel={t.scanResult.trustScoreExplainTitle}
+          />
+        </View>
+      )}
+
       <ScrollView
-        contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 140 }}
         showsVerticalScrollIndicator={false}
         bounces={true}
       >
         {/* ════════════════════════════════════════════════════
             HERO SECTION — compact, verdict-first, premium layout
             ════════════════════════════════════════════════════ */}
-        <LinearGradient
-          colors={[...gradientColors]}
-          style={[styles.heroGradient, { paddingTop: insets.top + 48 }]}
+        <View
+          style={[styles.heroGradient, { paddingTop: insets.top + 64 }]}
           accessibilityRole="summary"
-          accessibilityLabel={`${t.scanResult[statusConfig.labelKey]}`}
+          accessibilityLabel={heroLabel}
         >
-          {/* ── GROUP 1: Verdict Cluster ── */}
-          <Animated.View entering={FadeIn.delay(50).duration(400)} style={styles.verdictCluster}>
-            <StatusIcon config={statusConfig} />
-
-            {/* Verdict text — dramatic drop after suspense */}
-            <Animated.View
-              entering={FadeInDown.delay(SUSPENSE_DURATION + 200).duration(500)}
-              style={styles.verdictTextContainer}
-            >
-              <Text
-                style={[styles.verdictText, { color: statusConfig.color }]}
-                accessibilityRole="header"
-              >
-                {t.scanResult[statusConfig.labelKey]}
-              </Text>
-
-              {/* Arabic calligraphy — subtle accent below verdict */}
-              {halalStatus === "halal" && (
-                <View style={{ marginTop: 2 }}>
-                  <ArabicCalligraphy text="halalTayyib" color={statusConfig.color} size={16} opacity={0.35} />
-                </View>
-              )}
-            </Animated.View>
-          </Animated.View>
-
-          {/* ── GROUP 2: Metadata Band (certifier + madhab) ── */}
-          <Animated.View
-            entering={FadeIn.delay(SUSPENSE_DURATION + 350).duration(500)}
-            style={styles.metadataBand}
-          >
-            {/* Certifier chip */}
-            <View
-              style={[
-                styles.certifierHeroBadge,
-                {
-                  backgroundColor: isDark
-                    ? "rgba(255,255,255,0.06)"
-                    : "rgba(0,0,0,0.04)",
-                  borderColor: isDark
-                    ? "rgba(255,255,255,0.10)"
-                    : "rgba(0,0,0,0.06)",
-                },
-              ]}
-            >
-              <MaterialIcons
-                name={halalAnalysis?.certifierName ? "verified" : "analytics"}
-                size={14}
-                color={statusConfig.color}
-              />
-              <Text style={[styles.certifierHeroBadgeText, { color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.7)" }]}>
-                {halalAnalysis?.certifierName
-                  ? `${t.scanResult.certifierBadge} ${halalAnalysis.certifierName}`
-                  : t.scanResult.noCertifier}
-              </Text>
-            </View>
-
-            {/* Confidence Score badge — Al-Ilm: transparency on certainty level */}
-            {product?.confidenceScore != null && product.confidenceScore > 0 && (
-              <View
-                style={[
-                  styles.communityBadge,
-                  {
-                    backgroundColor: isDark
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(0,0,0,0.04)",
-                    borderColor: isDark
-                      ? "rgba(255,255,255,0.10)"
-                      : "rgba(0,0,0,0.06)",
-                  },
-                ]}
-              >
-                <MaterialIcons name="speed" size={12} color={statusConfig.color} />
-                <Text style={[styles.communityBadgeText, { color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)" }]}>
-                  {`${Math.round(product.confidenceScore * 100)}% ${t.scanResult.confidence}`}
-                </Text>
-              </View>
-            )}
-
-            {/* Community badge — inline with certifier */}
-            {communityVerifiedCount >= 1 && (
-              <View
-                style={[
-                  styles.communityBadge,
-                  {
-                    backgroundColor: isDark
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(0,0,0,0.04)",
-                    borderColor: isDark
-                      ? "rgba(255,255,255,0.10)"
-                      : "rgba(0,0,0,0.06)",
-                  },
-                ]}
-              >
-                <MaterialIcons name="group" size={12} color={statusConfig.color} />
-                <Text style={[styles.communityBadgeText, { color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)" }]}>
-                  {(communityVerifiedCount === 1
-                    ? t.scanResult.verifiedByCount
-                    : t.scanResult.verifiedByCountPlural
-                  ).replace("{{count}}", String(communityVerifiedCount))}
-                </Text>
-              </View>
-            )}
-
-            {/* Social Proof badge (Scanned X times) — only show when meaningful */}
-            {totalScansCount > 0 && (
-              <View
-                style={[
-                  styles.communityBadge,
-                  {
-                    backgroundColor: isDark
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(0,0,0,0.04)",
-                    borderColor: isDark
-                      ? "rgba(212,175,55,0.2)"
-                      : "rgba(212,175,55,0.15)",
-                  },
-                ]}
-              >
-                <MaterialIcons name="local-fire-department" size={12} color={brandTokens.gold} />
-                <Text style={[styles.communityBadgeText, { color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)" }]}>
-                  {(t.scanResult as any).scannedByCommunity?.replace(
-                    "{{count}}",
-                    totalScansCount >= 1000
-                      ? `${(totalScansCount / 1000).toFixed(1)}k`
-                      : String(totalScansCount)
-                  ) ?? `Scanné ${totalScansCount >= 1000 ? `${(totalScansCount / 1000).toFixed(1)}k` : totalScansCount} fois`}
-                </Text>
-              </View>
-            )}
-          </Animated.View>
-
-          {/* Madhab verdicts row — compact, below metadata */}
-          {madhabVerdicts.length > 0 && (
-            <Animated.View
-              entering={FadeIn.delay(SUSPENSE_DURATION + 450).duration(500)}
-              style={styles.madhabRow}
-            >
-              {madhabVerdicts.map((v) => {
-                const labelKey = MADHAB_LABEL_KEY[v.madhab as keyof typeof MADHAB_LABEL_KEY];
-                const label = labelKey ? t.scanResult[labelKey] : v.madhab;
-                const badgeColor = halalStatusTokens[v.status as keyof typeof halalStatusTokens]?.base ?? halalStatusTokens.unknown.base;
-                const badgeIcon = v.status === "halal" ? "check-circle" : v.status === "doubtful" ? "help" : "cancel";
-                return (
-                  <PressableScale
-                    key={v.madhab}
-                    onPress={() => {
-                      if (v.status !== "halal") {
-                        impact();
-                        setSelectedMadhab(v);
-                      }
-                    }}
-                    disabled={v.status === "halal"}
-                    style={[
-                      styles.madhabBadge,
-                      {
-                        backgroundColor: isDark
-                          ? `${badgeColor}10`
-                          : `${badgeColor}08`,
-                        borderColor: `${badgeColor}30`,
-                      },
-                    ]}
-                    accessibilityRole={v.status !== "halal" ? "button" : "text"}
-                    accessibilityLabel={`${label}: ${v.status}`}
-                  >
-                    <MaterialIcons name={badgeIcon} size={13} color={badgeColor} />
-                    <Text style={[styles.madhabBadgeLabel, { color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.7)" }]}>
-                      {label}
-                    </Text>
-                  </PressableScale>
-                );
-              })}
-            </Animated.View>
+          {/* L0: Status-tinted gradient base */}
+          <LinearGradient
+            colors={[...gradientColors]}
+            style={StyleSheet.absoluteFill}
+          />
+          {/* L1: Glassmorphic blur overlay */}
+          {Platform.OS === "ios" ? (
+            <BlurView
+              intensity={60}
+              tint={isDark ? "dark" : "light"}
+              style={[StyleSheet.absoluteFill, {
+                backgroundColor: isDark ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.2)",
+              }]}
+            />
+          ) : (
+            <View style={[StyleSheet.absoluteFill, {
+              backgroundColor: isDark ? "rgba(12,12,12,0.92)" : "rgba(243,241,237,0.92)",
+            }]} />
           )}
-
-          {/* ── GROUP 3: Product Card ── */}
+          {/* L2: Subtle status-colored accent wash */}
+          <View style={[StyleSheet.absoluteFill, {
+            backgroundColor: `${statusConfig.glowColor}08`,
+          }]} />
+          {/* L4: Ambient orb — drifting slowly */}
           <Animated.View
-            entering={FadeInUp.delay(SUSPENSE_DURATION + 500).duration(500)}
             style={[
-              styles.productOverlay,
               {
-                backgroundColor: isDark
-                  ? "rgba(0,0,0,0.35)"
-                  : "rgba(255,255,255,0.6)",
-                borderColor: isDark
-                  ? "rgba(212,175,55,0.12)"
-                  : "rgba(212,175,55,0.1)",
+                position: "absolute",
+                top: -80,
+                right: -60,
+                width: 280,
+                height: 280,
+                borderRadius: 140,
               },
+              orbStyle,
             ]}
           >
-            {/* Product thumbnail */}
-            <View
-              style={[
-                styles.productThumb,
-                {
-                  backgroundColor: isDark
-                    ? "rgba(255,255,255,0.08)"
-                    : "rgba(0,0,0,0.04)",
-                },
-              ]}
-            >
-              {product.imageUrl ? (
-                <Image
-                  source={{ uri: product.imageUrl }}
-                  style={styles.productThumbImage}
-                  contentFit="cover"
-                  transition={200}
-                  accessibilityLabel={product.name}
-                />
-              ) : (
-                <MaterialIcons
-                  name="image-not-supported"
-                  size={24}
-                  color={isDark ? "#334155" : "#cbd5e1"}
-                />
-              )}
-            </View>
+            <LinearGradient
+              colors={[`${statusConfig.glowColor}18`, `${statusConfig.glowColor}08`, "transparent"]}
+              style={{ width: 280, height: 280, borderRadius: 140 }}
+            />
+          </Animated.View>
 
-            {/* Product text */}
-            <View style={styles.productTextContainer}>
-              <Text
-                style={[styles.productName, { color: colors.textPrimary }]}
-                numberOfLines={2}
-                accessibilityRole="header"
-              >
-                {product.name}
-              </Text>
+          {/* ── ROW 1: HERO HORIZONTAL SPLIT ── */}
+          <Animated.View
+            entering={FadeIn.delay(50).duration(400)}
+            style={styles.heroSplit}
+          >
+            {/* LEFT COLUMN: Product Image + Brand */}
+            <View style={styles.heroImageColumn}>
+              <View style={{ width: 80, height: 80 }}>
+                {/* Glow halo — separate layer, animates opacity only (GPU cheap) */}
+                <Animated.View
+                  style={[
+                    {
+                      position: "absolute",
+                      top: -6,
+                      left: -6,
+                      right: -6,
+                      bottom: -6,
+                      borderRadius: 18,
+                      backgroundColor: statusConfig.glowColor,
+                    },
+                    imageGlowStyle,
+                  ]}
+                  pointerEvents="none"
+                />
+                <Animated.View
+                  entering={FadeIn.delay(SUSPENSE_DURATION).duration(400)}
+                  style={[
+                    styles.heroImageWrapper,
+                    {
+                      borderColor: `${statusConfig.color}25`,
+                      backgroundColor: isDark ? glass.dark.highlight : glass.light.border,
+                    },
+                  ]}
+                >
+                {product.imageUrl ? (
+                  <Image
+                    source={{ uri: product.imageUrl }}
+                    style={styles.heroImage}
+                    contentFit="cover"
+                    transition={200}
+                    accessibilityLabel={product.name}
+                  />
+                ) : (
+                  <MaterialIcons name="image-not-supported" size={24} color={colors.textMuted} />
+                )}
+              </Animated.View>
+              </View>
               {product.brand && (
                 <Text
-                  style={[styles.productBrand, { color: colors.textSecondary }]}
+                  style={[styles.heroBrandLabel, { color: colors.textMuted }]}
                   numberOfLines={1}
                 >
                   {product.brand}
                 </Text>
               )}
-              <Text
-                style={[styles.productBarcode, { color: colors.textMuted }]}
+            </View>
+
+            {/* RIGHT COLUMN: Certifier Trust Score + Verdict */}
+            <View style={styles.heroInfoColumn}>
+              {/* Naqiy Score label row */}
+              <View style={styles.heroScoreLabelRow}>
+                <Image
+                  source={require("@assets/images/logo_naqiy.webp")}
+                  style={{ width: 18, height: 18, opacity: isDark ? 0.5 : 0.35 }}
+                  contentFit="contain"
+                />
+                <Text style={[styles.heroScoreLabelText, { color: colors.textMuted }]}>
+                  {t.scanResult.naqiyScoreLabel}{userMadhab !== "general" && ` · ${t.madhab.options[userMadhab].label}`}
+                </Text>
+              </View>
+
+              {/* Certifier trust score bar OR verdict fallback */}
+              <Animated.View
+                entering={FadeInDown.delay(SUSPENSE_DURATION + 100).duration(500)}
+                style={styles.heroScoreRow}
               >
+                {certifierData ? (
+                  <View style={styles.heroCertifierRow}>
+                    {/* Left: name + score + bar */}
+                    <View style={styles.heroCertifierBar}>
+                      <View style={styles.heroCertifierHeader}>
+                        <CertifierLogo certifierId={certifierData.id} size={20} fallbackColor={statusConfig.color} />
+                        <Text
+                          style={[styles.heroCertifierName, { color: colors.textPrimary }]}
+                          numberOfLines={1}
+                        >
+                          {certifierData.name}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.heroCertifierScore,
+                            {
+                              color: certifierTrustScore! >= 70
+                                ? halalStatusTokens.halal.base
+                                : certifierTrustScore! >= 40
+                                  ? halalStatusTokens.doubtful.base
+                                  : halalStatusTokens.haram.base,
+                            },
+                          ]}
+                        >
+                          {displayedScore}/100
+                        </Text>
+                      </View>
+                      <View
+                        style={[
+                          styles.heroCertifierBarBg,
+                          { backgroundColor: isDark ? glass.dark.border : glass.light.borderStrong },
+                        ]}
+                      >
+                        <Animated.View
+                          style={[
+                            styles.heroCertifierBarFill,
+                            {
+                              width: "100%",
+                              transformOrigin: "left",
+                              backgroundColor: certifierTrustScore! >= 70
+                                ? halalStatusTokens.halal.base
+                                : certifierTrustScore! >= 40
+                                  ? halalStatusTokens.doubtful.base
+                                  : halalStatusTokens.haram.base,
+                            },
+                            animatedBarStyle,
+                          ]}
+                        />
+                      </View>
+                      {/* Tier sub-label — tucked under progress bar */}
+                      {halalAnalysis && (
+                        <Text style={[styles.heroTierLabel, { color: colors.textMuted }]}>
+                          {t.scanResult.tier}{" "}
+                          {halalAnalysis.tier === "certified" ? "1" : halalAnalysis.tier === "analyzed_clean" ? "2" : halalAnalysis.tier === "doubtful" ? "3" : "4"}
+                          {" · "}
+                          {halalAnalysis.tier === "certified" ? t.scanResult.tierCertified : halalAnalysis.tier === "analyzed_clean" ? t.scanResult.tierAnalyzed : halalAnalysis.tier === "doubtful" ? t.scanResult.tierDoubtful : t.scanResult.tierUnknown}
+                        </Text>
+                      )}
+                    </View>
+                    {/* Right: stats icon — opens per-theme score detail */}
+                    <PressableScale
+                      onPress={() => {
+                        impact();
+                        setShowScoreDetailSheet(true);
+                      }}
+                      accessibilityLabel={t.scanResult.scoreDetailTitle}
+                      accessibilityRole="button"
+                    >
+                      <View
+                        style={[
+                          styles.heroHelpButton,
+                          {
+                            backgroundColor: isDark ? glass.dark.bg : glass.light.border,
+                            borderColor: isDark ? glass.dark.border : glass.light.borderStrong,
+                          },
+                        ]}
+                      >
+                        <MaterialIcons
+                          name="leaderboard"
+                          size={20}
+                          color={isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.35)"}
+                        />
+                      </View>
+                    </PressableScale>
+                  </View>
+                ) : (
+                  <View style={styles.heroVerdictColumn}>
+                    <Text
+                      style={[styles.heroVerdictText, { color: statusConfig.color }]}
+                      numberOfLines={1}
+                      accessibilityRole="header"
+                    >
+                      {heroLabel}
+                    </Text>
+                  </View>
+                )}
+              </Animated.View>
+            </View>
+          </Animated.View>
+
+          {/* ── Product name + barcode (full-width below split) ── */}
+          <View style={[
+            styles.heroDivider,
+            { backgroundColor: isDark ? glass.dark.border : glass.light.border },
+          ]} />
+          <View style={styles.heroProductRow}>
+            <Text
+              style={[styles.heroProductName, { color: colors.textPrimary }]}
+              numberOfLines={2}
+              accessibilityRole="header"
+            >
+              {product.name}
+            </Text>
+            <View style={styles.heroBarcodeChip}>
+              <Svg width={14} height={10} viewBox="0 0 14 10">
+                <Path d="M0 0h1v10H0zM2 0h1v10H2zM4 0h2v10H4zM7 0h1v10H7zM9 0h1v8H9zM11 0h1v10h-1zM13 0h1v10h-1z" fill={colors.textMuted} opacity={0.6} />
+              </Svg>
+              <Text style={[styles.heroBarcode, { color: colors.textMuted }]}>
                 {product.barcode}
               </Text>
             </View>
-          </Animated.View>
-        </LinearGradient>
+          </View>
 
-        {/* ── Product Image Showcase (max 200px) ── */}
-        {product.imageUrl && (
-          <Animated.View
-            entering={FadeIn.delay(SUSPENSE_DURATION + 600).duration(400)}
-            style={[
-              styles.productImageShowcase,
-              {
-                backgroundColor: isDark
-                  ? "rgba(255,255,255,0.03)"
-                  : "rgba(0,0,0,0.02)",
-                borderWidth: 1,
-                borderColor: isDark
-                  ? "rgba(212,175,55,0.08)"
-                  : "rgba(212,175,55,0.06)",
-              },
-            ]}
-          >
-            <Image
-              source={{ uri: product.imageUrl }}
-              style={styles.productImageLarge}
-              contentFit="contain"
-              transition={300}
-              accessibilityLabel={product.name}
-            />
-          </Animated.View>
-        )}
+          {/* ── ROW 2: METADATA BAND (community badge only) ── */}
+          {communityVerifiedCount > 0 && (
+            <Animated.View
+              entering={FadeIn.delay(SUSPENSE_DURATION + 350).duration(500)}
+              style={styles.metadataBand}
+            >
+              <View
+                style={[
+                  styles.certifierHeroBadge,
+                  {
+                    backgroundColor: isDark
+                      ? glass.dark.bg
+                      : glass.light.border,
+                    borderColor: isDark
+                      ? glass.dark.borderStrong
+                      : glass.light.borderStrong,
+                  },
+                ]}
+              >
+                <MaterialIcons name="groups" size={13} color={colors.textMuted} />
+                <Text style={[styles.certifierHeroBadgeText, { color: colors.textSecondary }]}>
+                  {(communityVerifiedCount > 1
+                    ? t.scanResult.verifiedByCountPlural
+                    : t.scanResult.verifiedByCount
+                  ).replace("{{count}}", String(communityVerifiedCount))}
+                </Text>
+              </View>
+            </Animated.View>
+          )}
+
+          {/* ── ROW 3: Madhab Score Rings (Plan B — Score Orbitaire) ── */}
+          {madhabVerdicts.length > 0 && (
+            <Animated.View
+              entering={FadeIn.delay(SUSPENSE_DURATION + 550).duration(500)}
+              style={[
+                styles.madhabRow,
+                { borderTopColor: isDark ? glass.dark.border : glass.light.border },
+              ]}
+            >
+              {madhabVerdicts.map((v, i) => {
+                const labelKey = MADHAB_LABEL_KEY[v.madhab as keyof typeof MADHAB_LABEL_KEY];
+                const label = labelKey ? t.scanResult[labelKey] : v.madhab;
+
+                const trustKey = MADHAB_TRUST_KEY[v.madhab as keyof typeof MADHAB_TRUST_KEY];
+                const madhabTrustScore = certifierData_ && trustKey
+                  ? (certifierData_ as Record<string, unknown>)[trustKey] as number | null ?? null
+                  : null;
+
+                return (
+                  <PressableScale
+                    key={v.madhab}
+                    onPress={() => {
+                      impact();
+                      setSelectedMadhab(v);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${label}: ${v.status}${madhabTrustScore !== null ? `, ${t.scanResult.madhabTrustScoreLabel} ${madhabTrustScore}/100` : ""}`}
+                  >
+                    <MadhabScoreRing
+                      label={label}
+                      verdict={v.status as "halal" | "doubtful" | "haram"}
+                      trustScore={madhabTrustScore}
+                      conflictCount={v.conflictingAdditives.length + (v.conflictingIngredients?.length ?? 0)}
+                      isUserSchool={userMadhab === v.madhab}
+                      staggerIndex={i}
+                    />
+                  </PressableScale>
+                );
+              })}
+
+              {/* ── Info note below rings ── */}
+              <View style={styles.madhabInfoNote}>
+                <MaterialIcons name="info-outline" size={11} color={colors.textMuted} style={{ marginTop: 1 }} />
+                <Text style={[styles.madhabInfoNoteText, { color: colors.textMuted }]}>
+                  {certifierData_?.name
+                    ? t.scanResult.madhabCertifierNote.replace("{{certifier}}", certifierData_.name)
+                    : t.scanResult.madhabAlgoNote}
+                </Text>
+              </View>
+
+              {/* ── Hadith "Al-Halal Bayyin" — only for doubtful status ── */}
+              {effectiveHeroStatus === "doubtful" && (
+                <Animated.View
+                  entering={FadeInDown.delay(SUSPENSE_DURATION + 800).duration(500)}
+                  style={[
+                    styles.hadithCard,
+                    {
+                      backgroundColor: isDark ? `${gold[500]}0C` : `${gold[500]}08`,
+                      borderColor: isDark ? `${gold[500]}20` : `${gold[500]}15`,
+                      shadowColor: gold[500],
+                      shadowOpacity: isDark ? 0.12 : 0.06,
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowRadius: 8,
+                      elevation: 3,
+                    },
+                  ]}
+                >
+                  {/* Single gold accent line — top */}
+                  <LinearGradient
+                    colors={[`${gold[500]}00`, gold[500], `${gold[500]}00`]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.hadithAccentLine}
+                  />
+
+                  {/* Quote text in user's language */}
+                  <Text
+                    style={[
+                      styles.hadithText,
+                      { color: isDark ? gold[200] : gold[800] },
+                    ]}
+                  >
+                    {t.scanResult.hadithHalalBayyin}
+                  </Text>
+
+                  {/* Source */}
+                  <Text
+                    style={[
+                      styles.hadithSource,
+                      { color: isDark ? gold[400] : gold[600] },
+                    ]}
+                  >
+                    — {t.scanResult.hadithHalalBayyinSource}
+                  </Text>
+                </Animated.View>
+              )}
+            </Animated.View>
+          )}
+        </View>
 
         {/* ════════════════════════════════════════════════════
             CONTENT SECTIONS (below the fold)
@@ -1453,19 +1728,19 @@ export default function ScanResultScreen() {
           {/* ── Halal Alternatives (Contextual Cross-Selling) ── */}
           {(halalStatus === "haram" || halalStatus === "doubtful") &&
             alternativesQuery.data && alternativesQuery.data.length > 0 && (
-            <Animated.View entering={FadeInDown.delay(100).duration(500)} style={{ marginBottom: 20 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                  <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: isDark ? "rgba(212,175,55,0.15)" : "rgba(212,175,55,0.1)", alignItems: "center", justifyContent: "center" }}>
-                    <MaterialIcons name="swap-horiz" size={14} color="#d4af37" />
+            <Animated.View entering={entryAnimations.fadeInDown(1)} style={styles.altSection}>
+              <View style={styles.altHeader}>
+                <View style={styles.altHeaderLeft}>
+                  <View style={[styles.altHeaderIcon, { backgroundColor: isDark ? `${brandTokens.gold}25` : `${brandTokens.gold}1A` }]}>
+                    <MaterialIcons name="swap-horiz" size={14} color={brandTokens.gold} />
                   </View>
-                  <Text style={{ fontSize: 16, fontWeight: "800", color: colors.textPrimary }}>
+                  <Text style={[styles.altHeaderTitle, { color: colors.textPrimary }]}>
                     {t.scanResult.halalAlternatives}
                   </Text>
                 </View>
                 <MaterialIcons name={marketplaceEnabled ? "storefront" : "local-mall"} size={20} color={brandTokens.gold} />
               </View>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingBottom: 4 }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.lg, paddingBottom: spacing.xs }}>
                 {alternativesQuery.data.slice(0, 3).map((alt: any, index: number) => {
                   const isPremiumLocked = index === 2 && !isPremium;
                   return (
@@ -1486,37 +1761,30 @@ export default function ScanResultScreen() {
                       <GlowCard
                         glowColor={brandTokens.gold}
                         glowIntensity="subtle"
-                        style={{
-                          width: 150,
-                          padding: 12,
-                          backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#ffffff",
-                          justifyContent: "space-between",
-                          overflow: "hidden"
-                        }}
+                        style={{ ...styles.altCard, backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#ffffff" }}
                       >
                         {isPremiumLocked && (
-                          <View style={[StyleSheet.absoluteFill, { zIndex: 10, backgroundColor: isDark ? "rgba(10,10,10,0.85)" : "rgba(255,255,255,0.85)", alignItems: "center", justifyContent: "center", borderRadius: 16 }]}>
+                          <View style={[StyleSheet.absoluteFill, styles.altLockOverlay, { backgroundColor: isDark ? "rgba(10,10,10,0.85)" : "rgba(255,255,255,0.85)" }]}>
                              <MaterialIcons name="lock" size={24} color={brandTokens.gold} />
-                             <Text style={{ color: brandTokens.gold, fontSize: 11, fontWeight: "800", marginTop: 4, textAlign: "center", letterSpacing: 1 }}>Naqiy+</Text>
+                             <Text style={styles.altLockText}>Naqiy+</Text>
                           </View>
                         )}
                         <View style={{ opacity: isPremiumLocked ? 0.3 : 1 }}>
                           {alt.imageUrl ? (
-                            <Image source={{ uri: alt.imageUrl }} style={{ width: 70, height: 70, borderRadius: 10, alignSelf: "center", marginBottom: 8 }} contentFit="cover" transition={200} />
+                            <Image source={{ uri: alt.imageUrl }} style={styles.altImage} contentFit="cover" transition={200} />
                           ) : (
-                            <View style={{ width: 70, height: 70, borderRadius: 10, alignSelf: "center", marginBottom: 8, backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)", alignItems: "center", justifyContent: "center" }}>
+                            <View style={[styles.altImagePlaceholder, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)" }]}>
                               <MaterialIcons name="image" size={24} color={colors.textMuted} />
                             </View>
                           )}
-                          <Text style={{ fontSize: 13, fontWeight: "700", color: colors.textPrimary, marginBottom: 4 }} numberOfLines={2}>
+                          <Text style={[styles.altName, { color: colors.textPrimary }]} numberOfLines={2}>
                             {alt.name}
                           </Text>
                           <StatusPill status={(alt.halalStatus ?? "halal") as "halal" | "haram" | "doubtful" | "unknown"} size="sm" animated={false} />
-                          {/* Marketplace buy indicator */}
                           {marketplaceEnabled && !isPremiumLocked && (
-                            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 6, backgroundColor: isDark ? "rgba(19,236,106,0.1)" : "rgba(19,236,106,0.08)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, alignSelf: "flex-start" }}>
+                            <View style={[styles.altBuyBadge, { backgroundColor: isDark ? `${brandTokens.primary}1A` : `${brandTokens.primary}14` }]}>
                               <MaterialIcons name="shopping-cart" size={11} color={brandTokens.primary} />
-                              <Text style={{ fontSize: 10, fontWeight: "700", color: brandTokens.primary }}>{t.scanResult.buyAlternative}</Text>
+                              <Text style={styles.altBuyText}>{t.scanResult.buyAlternative}</Text>
                             </View>
                           )}
                         </View>
@@ -1542,22 +1810,16 @@ export default function ScanResultScreen() {
                 }}
                 accessibilityRole="button"
                 accessibilityLabel={t.scanResult.shopHalalAlternatives}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  marginTop: 14,
-                  paddingVertical: 12,
-                  paddingHorizontal: 20,
-                  borderRadius: 14,
-                  backgroundColor: isDark ? "rgba(212,175,55,0.06)" : "rgba(212,175,55,0.04)",
-                  borderWidth: 1,
-                  borderColor: isDark ? "rgba(212,175,55,0.2)" : "rgba(212,175,55,0.15)",
-                }}
+                style={[
+                  styles.altExploreCta,
+                  {
+                    backgroundColor: isDark ? `${brandTokens.gold}0F` : `${brandTokens.gold}0A`,
+                    borderColor: isDark ? `${brandTokens.gold}33` : `${brandTokens.gold}26`,
+                  },
+                ]}
               >
                 <MaterialIcons name="storefront" size={18} color={brandTokens.gold} />
-                <Text style={{ fontSize: 14, fontWeight: "700", color: brandTokens.gold }}>
+                <Text style={styles.altExploreCtaText}>
                   {marketplaceEnabled ? t.scanResult.shopHalalAlternatives : t.scanResult.shopOnMarketplace}
                 </Text>
                 <MaterialIcons name="arrow-forward" size={16} color={brandTokens.gold} />
@@ -1567,19 +1829,11 @@ export default function ScanResultScreen() {
 
           {/* ── Boycott Alert (highest priority after verdict) ── */}
           {boycott?.isBoycotted && (
-            <Animated.View entering={FadeInDown.delay(100).duration(500)}>
-              <View
-                style={[
-                  styles.boycottCard,
-                  {
-                    backgroundColor: isDark
-                      ? "rgba(239,68,68,0.08)"
-                      : "rgba(239,68,68,0.04)",
-                    borderColor: isDark
-                      ? "rgba(239,68,68,0.2)"
-                      : "rgba(239,68,68,0.15)",
-                  },
-                ]}
+            <Animated.View entering={entryAnimations.fadeInDown(2)}>
+              <GlowCard
+                glowColor={halalStatusTokens.haram.base}
+                glowIntensity="medium"
+                style={styles.boycottCard}
               >
                 <View style={styles.boycottHeader}>
                   <View
@@ -1587,17 +1841,17 @@ export default function ScanResultScreen() {
                       styles.boycottIconCircle,
                       {
                         backgroundColor: isDark
-                          ? "rgba(239,68,68,0.15)"
-                          : "rgba(239,68,68,0.1)",
+                          ? halalStatusTokens.haram.bgDark
+                          : halalStatusTokens.haram.bg,
                       },
                     ]}
                   >
-                    <MaterialIcons name="block" size={20} color="#ef4444" />
+                    <MaterialIcons name="block" size={20} color={halalStatusTokens.haram.base} />
                   </View>
                   <Text
                     style={[
                       styles.boycottTitle,
-                      { color: isDark ? "#fca5a5" : "#dc2626" },
+                      { color: isDark ? "#fca5a5" : lightTheme.statusMauvais },
                     ]}
                   >
                     {t.scanResult.boycottActive}
@@ -1611,15 +1865,15 @@ export default function ScanResultScreen() {
                       idx > 0 && {
                         borderTopWidth: StyleSheet.hairlineWidth,
                         borderTopColor: isDark
-                          ? "rgba(239,68,68,0.15)"
-                          : "rgba(239,68,68,0.1)",
+                          ? halalStatusTokens.haram.bgDark
+                          : halalStatusTokens.haram.bg,
                       },
                     ]}
                   >
                     <Text
                       style={[
                         styles.boycottCompany,
-                        { color: isDark ? "#fca5a5" : "#b91c1c" },
+                        { color: isDark ? "#fca5a5" : lightTheme.statusMauvais },
                       ]}
                     >
                       {target.companyName}
@@ -1630,7 +1884,7 @@ export default function ScanResultScreen() {
                     <Text
                       style={[
                         styles.boycottReason,
-                        { color: isDark ? "#fca5a5cc" : "#dc2626cc" },
+                        { color: isDark ? "#fca5a5cc" : `${lightTheme.statusMauvais}cc` },
                       ]}
                     >
                       {target.reasonSummary ?? target.companyName}
@@ -1639,7 +1893,7 @@ export default function ScanResultScreen() {
                       <Text
                         style={[
                           styles.boycottSource,
-                          { color: isDark ? "#ef4444aa" : "#ef4444aa" },
+                          { color: `${halalStatusTokens.haram.base}aa` },
                         ]}
                       >
                         {t.scanResult.source}: {target.sourceName ?? "BDS"}
@@ -1647,131 +1901,118 @@ export default function ScanResultScreen() {
                     )}
                   </View>
                 ))}
-              </View>
+              </GlowCard>
             </Animated.View>
           )}
 
           {/* ── Personal Alerts ── */}
           {personalAlerts.length > 0 && (
-            <View style={{ marginHorizontal: -20 }}>
-              <PersonalAlerts alerts={personalAlerts} />
-            </View>
+            <PersonalAlerts alerts={personalAlerts} />
           )}
 
-          {/* ── Certifier / Analysis Source (2-column) ── */}
-          {halalAnalysis && (
-            <Animated.View entering={FadeInDown.delay(200).duration(500)}>
-              <View
-                style={[
-                  styles.certifierCard,
-                  {
-                    backgroundColor: isDark
-                      ? "rgba(255,255,255,0.03)"
-                      : "#ffffff",
-                    borderColor: isDark
-                      ? "rgba(212,175,55,0.12)"
-                      : "rgba(212,175,55,0.1)",
-                  },
-                ]}
-              >
-                <View style={styles.certifierTwoCol}>
-                  {/* Left column: Certifier / Analysis method */}
-                  <View style={styles.certifierCol}>
-                    <View
-                      style={[
-                        styles.certifierIconCircle,
-                        {
-                          backgroundColor: isDark
-                            ? "rgba(19,236,106,0.12)"
-                            : "rgba(19,236,106,0.08)",
-                        },
-                      ]}
-                    >
-                      <MaterialIcons
-                        name={halalAnalysis.certifierName ? "verified" : "analytics"}
-                        size={20}
-                        color={colors.primary}
-                      />
-                    </View>
-                    <Text
-                      style={[styles.certifierName, { color: colors.textPrimary }]}
-                      numberOfLines={2}
-                    >
-                      {halalAnalysis.certifierName
-                        ? halalAnalysis.certifierName
-                        : t.scanResult.algorithmicAnalysis}
-                    </Text>
-                    <Text
-                      style={[styles.certifierSource, { color: colors.textSecondary }]}
-                      numberOfLines={1}
-                    >
-                      {halalAnalysis.analysisSource}
-                    </Text>
-                  </View>
-
-                  {/* Divider */}
-                  <View
-                    style={[
-                      styles.certifierDivider,
-                      {
-                        backgroundColor: isDark
-                          ? "rgba(212,175,55,0.15)"
-                          : "rgba(212,175,55,0.12)",
-                      },
-                    ]}
-                  />
-
-                  {/* Right column: Tier / Reliability */}
-                  <View style={styles.certifierCol}>
-                    <View
-                      style={[
-                        styles.certifierIconCircle,
-                        {
-                          backgroundColor: isDark
-                            ? "rgba(255,255,255,0.06)"
-                            : "rgba(0,0,0,0.04)",
-                        },
-                      ]}
-                    >
-                      <MaterialIcons
-                        name="shield"
-                        size={20}
-                        color={statusConfig.color}
-                      />
-                    </View>
-                    <Text
-                      style={[styles.certifierName, { color: colors.textPrimary }]}
-                    >
-                      {t.scanResult.tier}{" "}
-                      {halalAnalysis.tier === "certified"
-                        ? "1"
-                        : halalAnalysis.tier === "analyzed_clean"
-                          ? "2"
-                          : halalAnalysis.tier === "doubtful"
-                            ? "3"
-                            : "4"}
-                    </Text>
-                    <Text
-                      style={[styles.certifierSource, { color: colors.textSecondary }]}
-                    >
-                      {halalAnalysis.tier === "certified"
-                        ? t.scanResult.tierCertified
-                        : halalAnalysis.tier === "analyzed_clean"
-                          ? t.scanResult.tierAnalyzed
-                          : halalAnalysis.tier === "doubtful"
-                            ? t.scanResult.tierDoubtful
-                            : t.scanResult.tierUnknown}
-                    </Text>
-                  </View>
-                </View>
-              </View>
+          {/* ── Analysis Source (compact line) ── */}
+          {halalAnalysis?.analysisSource && (
+            <Animated.View
+              entering={entryAnimations.fadeInDown(3)}
+              style={styles.analysisSourceRow}
+            >
+              <MaterialIcons name="info-outline" size={13} color={colors.textMuted} />
+              <Text style={[styles.analysisSourceText, { color: colors.textMuted }]}>
+                {t.scanResult.source}: {halalAnalysis.analysisSource}
+              </Text>
             </Animated.View>
+          )}
+
+          {/* ── Product Details (Labels, Origins, Analysis Tags) ── */}
+          {offExtras && (
+            (() => {
+              const labelChips = (offExtras.labelsTags ?? [])
+                .map((tag: string) => tag.replace(/^en:/, "").replace(/-/g, " "))
+                .filter((l: string) => l.length > 1)
+                .slice(0, 8);
+              const analysisTags = (offExtras.ingredientsAnalysisTags ?? [])
+                .map((tag: string) => tag.replace(/^en:/, "").replace(/-/g, " "))
+                .filter((l: string) => l.length > 1);
+              const hasContent = labelChips.length > 0 || offExtras.manufacturingPlaces || offExtras.origins || analysisTags.length > 0;
+              if (!hasContent) return null;
+              return (
+                <Animated.View entering={entryAnimations.fadeInDown(3)} style={styles.productDetailsSection}>
+                  {/* P1: Quality labels */}
+                  {labelChips.length > 0 && (
+                    <View style={styles.productDetailRow}>
+                      <MaterialIcons name="label" size={14} color={colors.textMuted} />
+                      <View style={styles.productDetailChips}>
+                        {labelChips.map((label: string, i: number) => (
+                          <View
+                            key={i}
+                            style={[
+                              styles.productDetailChip,
+                              {
+                                backgroundColor: isDark ? glass.dark.bg : glass.light.border,
+                                borderColor: isDark ? glass.dark.borderStrong : glass.light.borderStrong,
+                              },
+                            ]}
+                          >
+                            <Text style={[styles.productDetailChipText, { color: colors.textSecondary }]} numberOfLines={1}>
+                              {label}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  )}
+
+                  {/* P2: Manufacturing + Origins */}
+                  {offExtras.manufacturingPlaces && (
+                    <View style={styles.productDetailRow}>
+                      <MaterialIcons name="factory" size={14} color={colors.textMuted} />
+                      <Text style={[styles.productDetailText, { color: colors.textSecondary }]}>
+                        {t.scanResult.madeIn} {offExtras.manufacturingPlaces}
+                      </Text>
+                    </View>
+                  )}
+                  {offExtras.origins && (
+                    <View style={styles.productDetailRow}>
+                      <MaterialIcons name="public" size={14} color={colors.textMuted} />
+                      <Text style={[styles.productDetailText, { color: colors.textSecondary }]}>
+                        {t.scanResult.originFrom}: {offExtras.origins}
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* P3: Ingredient analysis tags (vegan, palm oil free, etc.) */}
+                  {analysisTags.length > 0 && (
+                    <View style={styles.productDetailRow}>
+                      <MaterialIcons name="eco" size={14} color={colors.textMuted} />
+                      <View style={styles.productDetailChips}>
+                        {analysisTags.map((tag: string, i: number) => (
+                          <View
+                            key={i}
+                            style={[
+                              styles.productDetailChip,
+                              {
+                                backgroundColor: isDark ? `${halalStatusTokens.halal.base}15` : `${halalStatusTokens.halal.base}0D`,
+                                borderColor: isDark ? `${halalStatusTokens.halal.base}30` : `${halalStatusTokens.halal.base}20`,
+                              },
+                            ]}
+                          >
+                            <Text style={[styles.productDetailChipText, { color: halalStatusTokens.halal.base }]} numberOfLines={1}>
+                              {tag}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  )}
+                </Animated.View>
+              );
+            })()
           )}
 
           {/* ── Why This Status ── */}
           {halalAnalysis &&
             (haramReasons.length > 0 || doubtfulReasons.length > 0) && (
-              <Animated.View entering={FadeInDown.delay(250).duration(500)}>
+              <Animated.View entering={entryAnimations.fadeInDown(4)}>
                 <CollapsibleSection
                   title={t.scanResult.whyThisStatus}
                   defaultOpen={true}
@@ -1784,22 +2025,22 @@ export default function ScanResultScreen() {
                         idx > 0 && {
                           borderTopWidth: StyleSheet.hairlineWidth,
                           borderTopColor: isDark
-                            ? "rgba(255,255,255,0.06)"
-                            : "rgba(0,0,0,0.06)",
+                            ? glass.dark.bg
+                            : glass.light.border,
                         },
                       ]}
                     >
                       <MaterialIcons
                         name="dangerous"
                         size={18}
-                        color="#ef4444"
+                        color={halalStatusTokens.haram.base}
                         style={{ marginTop: 1 }}
                       />
                       <View style={{ flex: 1 }}>
                         <Text
                           style={[
                             styles.reasonName,
-                            { color: isDark ? "#fca5a5" : "#dc2626" },
+                            { color: isDark ? "#fca5a5" : halalStatusTokens.haram.base },
                           ]}
                         >
                           {reason.name}
@@ -1812,6 +2053,14 @@ export default function ScanResultScreen() {
                         >
                           {reason.explanation}
                         </Text>
+                        {reason.scholarlyReference && (
+                          <View style={ingredientStyles.refRow}>
+                            <MaterialIcons name="menu-book" size={11} color={colors.textMuted} />
+                            <Text style={[ingredientStyles.refText, { color: colors.textMuted }]} numberOfLines={1}>
+                              {reason.scholarlyReference}
+                            </Text>
+                          </View>
+                        )}
                       </View>
                     </View>
                   ))}
@@ -1823,22 +2072,22 @@ export default function ScanResultScreen() {
                         (haramReasons.length > 0 || idx > 0) && {
                           borderTopWidth: StyleSheet.hairlineWidth,
                           borderTopColor: isDark
-                            ? "rgba(255,255,255,0.06)"
-                            : "rgba(0,0,0,0.06)",
+                            ? glass.dark.bg
+                            : glass.light.border,
                         },
                       ]}
                     >
                       <MaterialIcons
                         name="help"
                         size={18}
-                        color="#f97316"
+                        color={halalStatusTokens.doubtful.base}
                         style={{ marginTop: 1 }}
                       />
                       <View style={{ flex: 1 }}>
                         <Text
                           style={[
                             styles.reasonName,
-                            { color: isDark ? "#fdba74" : "#c2410c" },
+                            { color: isDark ? "#fdba74" : halalStatusTokens.doubtful.base },
                           ]}
                         >
                           {reason.name}
@@ -1851,6 +2100,14 @@ export default function ScanResultScreen() {
                         >
                           {reason.explanation}
                         </Text>
+                        {reason.scholarlyReference && (
+                          <View style={ingredientStyles.refRow}>
+                            <MaterialIcons name="menu-book" size={11} color={colors.textMuted} />
+                            <Text style={[ingredientStyles.refText, { color: colors.textMuted }]} numberOfLines={1}>
+                              {reason.scholarlyReference}
+                            </Text>
+                          </View>
+                        )}
                       </View>
                     </View>
                   ))}
@@ -1860,7 +2117,7 @@ export default function ScanResultScreen() {
 
           {/* ── Additives ── */}
           {additiveReasons.length > 0 && (
-            <Animated.View entering={FadeInDown.delay(300).duration(500)}>
+            <Animated.View entering={entryAnimations.fadeInDown(5)}>
               <CollapsibleSection
                 title={t.scanResult.additivesDetected}
                 badge={`${additiveReasons.length} ${t.scanResult.additive}${additiveReasons.length > 1 ? "s" : ""}`}
@@ -1927,53 +2184,91 @@ export default function ScanResultScreen() {
             </Animated.View>
           )}
 
-          {/* ── Nutrition Badges ── */}
-          {offExtras &&
-            (offExtras.nutriscoreGrade || offExtras.novaGroup) && (
-              <Animated.View entering={FadeInDown.delay(350).duration(500)}>
-                <Text
-                  style={[
-                    styles.sectionTitle,
-                    { color: colors.textPrimary },
-                  ]}
-                  accessibilityRole="header"
+          {/* ── Sources Savantes ── */}
+          {ingredientRulings.length > 0 &&
+            ingredientRulings.some((r: any) => r.fatwaSourceName) && (
+              <Animated.View entering={entryAnimations.fadeInDown(6)}>
+                <CollapsibleSection
+                  title={t.scanResult.scholarlyReferences}
+                  badge={`${new Set(ingredientRulings.filter((r: any) => r.fatwaSourceName).map((r: any) => r.fatwaSourceName)).size} ${t.scanResult.sourceLabel}`}
+                  defaultOpen={false}
                 >
-                  {t.scanResult.nutrition}
-                </Text>
-                <View style={styles.nutritionRow}>
+                  {[...new Map(
+                    ingredientRulings
+                      .filter((r: any) => r.fatwaSourceName)
+                      .map((r: any) => [r.fatwaSourceName, r] as const)
+                  ).values()].map((ruling: any, idx: number) => (
+                    <View
+                      key={`ref-${idx}`}
+                      style={[
+                        styles.reasonRow,
+                        idx > 0 && {
+                          borderTopWidth: StyleSheet.hairlineWidth,
+                          borderTopColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                        },
+                      ]}
+                    >
+                      <MaterialIcons name="menu-book" size={16} color={brandTokens.gold} style={{ marginTop: 1 }} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.reasonName, { color: colors.textPrimary }]}>
+                          {ruling.fatwaSourceName}
+                        </Text>
+                        {ruling.scholarlyReference && (
+                          <Text style={[styles.reasonExplanation, { color: colors.textSecondary }]} numberOfLines={3}>
+                            {ruling.scholarlyReference}
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+                  ))}
+                </CollapsibleSection>
+              </Animated.View>
+            )}
+
+          {/* ── Nutrition & Impact ── */}
+          {offExtras &&
+            (offExtras.nutriscoreGrade || offExtras.novaGroup || offExtras.ecoscoreGrade) && (
+              <Animated.View entering={entryAnimations.fadeInDown(7)}>
+                <CollapsibleSection
+                  title={t.scanResult.nutritionEnvironment}
+                  badge={[
+                    offExtras.nutriscoreGrade && `Nutri ${offExtras.nutriscoreGrade.toUpperCase()}`,
+                    offExtras.novaGroup && `NOVA ${offExtras.novaGroup}`,
+                    offExtras.ecoscoreGrade && `Eco ${offExtras.ecoscoreGrade.toUpperCase()}`,
+                  ].filter(Boolean).join(" · ")}
+                  defaultOpen={false}
+                >
                   {offExtras.nutriscoreGrade && (
-                    <NutritionBadge
-                      label={t.scanResult.nutriScore ?? "Nutri-Score"}
+                    <NutritionCard
+                      label="Nutri-Score"
                       value={offExtras.nutriscoreGrade}
-                      color={
-                        NUTRISCORE_COLORS[offExtras.nutriscoreGrade] ??
-                        "#94a3b8"
-                      }
+                      color={NUTRISCORE_COLORS[offExtras.nutriscoreGrade] ?? "#94a3b8"}
+                      description={t.scanResult.nutriScoreDesc}
                     />
                   )}
                   {offExtras.novaGroup && (
-                    <NutritionBadge
-                      label={t.scanResult.novaGroup ?? "NOVA"}
+                    <NutritionCard
+                      label="NOVA"
                       value={offExtras.novaGroup}
                       color={NOVA_COLORS[offExtras.novaGroup] ?? "#94a3b8"}
+                      description={t.scanResult.novaGroupDesc}
                     />
                   )}
                   {offExtras.ecoscoreGrade && (
-                    <NutritionBadge
-                      label={t.scanResult.ecoScore ?? "Eco-Score"}
+                    <NutritionCard
+                      label="Eco-Score"
                       value={offExtras.ecoscoreGrade}
-                      color={
-                        NUTRISCORE_COLORS[offExtras.ecoscoreGrade] ?? "#94a3b8"
-                      }
+                      color={NUTRISCORE_COLORS[offExtras.ecoscoreGrade] ?? "#94a3b8"}
+                      description={t.scanResult.ecoScoreDesc}
                     />
                   )}
-                </View>
+                </CollapsibleSection>
               </Animated.View>
             )}
 
           {/* ── Allergens ── */}
           {allergensTags.length > 0 && (
-            <Animated.View entering={FadeInDown.delay(380).duration(500)}>
+            <Animated.View entering={entryAnimations.fadeInDown(8)}>
               <Text
                 style={[
                   styles.sectionTitle,
@@ -1983,7 +2278,11 @@ export default function ScanResultScreen() {
               >
                 {t.scanResult.allergens}
               </Text>
-              <View style={styles.allergensRow}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.allergensRow}
+              >
                 {allergensTags.map((tag) => {
                   const label = tag
                     .replace(/^(en|fr):/, "")
@@ -1995,18 +2294,18 @@ export default function ScanResultScreen() {
                         styles.allergenChip,
                         {
                           backgroundColor: isDark
-                            ? "rgba(245,158,11,0.1)"
-                            : "rgba(245,158,11,0.06)",
+                            ? `${semantic.warning.base}18`
+                            : `${semantic.warning.base}0F`,
                           borderColor: isDark
-                            ? "rgba(245,158,11,0.25)"
-                            : "rgba(245,158,11,0.2)",
+                            ? `${semantic.warning.base}40`
+                            : `${semantic.warning.base}33`,
                         },
                       ]}
                     >
                       <Text
                         style={[
                           styles.allergenText,
-                          { color: isDark ? "#fbbf24" : "#b45309" },
+                          { color: isDark ? gold[300] : gold[700] },
                         ]}
                       >
                         {label}
@@ -2014,13 +2313,13 @@ export default function ScanResultScreen() {
                     </View>
                   );
                 })}
-              </View>
+              </ScrollView>
             </Animated.View>
           )}
 
           {/* ── Ingredients (Collapsible) ── */}
           {ingredients.length > 0 && (
-            <Animated.View entering={FadeInDown.delay(400).duration(500)}>
+            <Animated.View entering={entryAnimations.fadeInDown(9)}>
               <CollapsibleSection
                 title={t.scanResult.composition}
                 badge={`${ingredients.length} ${t.scanResult.ingredients}`}
@@ -2028,7 +2327,17 @@ export default function ScanResultScreen() {
               >
                 {ingredients.map((ingredient, index) => {
                   const lower = ingredient.toLowerCase();
-                  const problemInfo = problematicIngredients.get(lower);
+                  // Direct match on ingredient name
+                  let problemInfo = problematicIngredients.get(lower);
+                  // Fallback: check if any ruling pattern matches inside this ingredient
+                  if (!problemInfo) {
+                    for (const [pattern, info] of problematicIngredients.entries()) {
+                      if (lower.includes(pattern) || pattern.includes(lower)) {
+                        problemInfo = info;
+                        break;
+                      }
+                    }
+                  }
                   return (
                     <IngredientRow
                       key={index}
@@ -2038,6 +2347,9 @@ export default function ScanResultScreen() {
                       problemColor={problemInfo?.color}
                       explanation={problemInfo?.explanation}
                       problemStatus={problemInfo?.status}
+                      scholarlyReference={problemInfo?.scholarlyReference}
+                      fatwaSourceName={problemInfo?.fatwaSourceName}
+                      fatwaSourceUrl={problemInfo?.fatwaSourceUrl}
                     />
                   );
                 })}
@@ -2045,44 +2357,27 @@ export default function ScanResultScreen() {
             </Animated.View>
           )}
 
-          {/* ── Halal Alternatives previously here, moved to top of contentContainer ── */}
 
           {/* ── Votre Avis Compte (community trust) ── */}
           {product && (
-            <Animated.View entering={FadeInDown.delay(460).duration(500)}>
-              <View
-                style={{
-                  borderRadius: 16,
-                  borderWidth: 1,
-                  borderColor: isDark ? "rgba(212,175,55,0.12)" : "rgba(212,175,55,0.1)",
-                  backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#ffffff",
-                  padding: 20,
-                  marginBottom: 16,
-                  alignItems: "center",
-                  gap: 10,
-                }}
+            <Animated.View entering={entryAnimations.fadeInDown(10)}>
+              <GlowCard
+                glowColor={brandTokens.gold}
+                glowIntensity="subtle"
+                style={styles.voteCard}
               >
-                {/* Gold shield icon */}
                 <View
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 18,
-                    backgroundColor: isDark ? "rgba(212,175,55,0.12)" : "rgba(212,175,55,0.08)",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginBottom: 2,
-                  }}
+                  style={[styles.voteShieldIcon, { backgroundColor: isDark ? glass.dark.border : glass.dark.highlight }]}
                 >
-                  <MaterialIcons name="verified-user" size={18} color="#d4af37" />
+                  <MaterialIcons name="verified-user" size={18} color={brandTokens.gold} />
                 </View>
-                <Text style={{ fontSize: 15, fontWeight: "800", color: colors.textPrimary, letterSpacing: 0.3 }}>
+                <Text style={[styles.voteTitle, { color: colors.textPrimary }]}>
                   {t.scanResult.yourOpinionMatters}
                 </Text>
-                <Text style={{ fontSize: 13, color: colors.textSecondary, textAlign: "center", lineHeight: 18, paddingHorizontal: 12 }}>
+                <Text style={[styles.voteSubtitle, { color: colors.textSecondary }]}>
                   {t.scanResult.isThisResultAccurate}
                 </Text>
-                <View style={{ flexDirection: "row", gap: 16, marginTop: 6 }}>
+                <View style={styles.voteButtonRow}>
                   <PressableScale
                     onPress={() => {
                       impact();
@@ -2092,21 +2387,23 @@ export default function ScanResultScreen() {
                         reviewMutation.mutate({ productId: product.id, rating: 5 });
                       }
                     }}
-                    style={{
-                      width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center",
-                      backgroundColor: userVote === "up"
-                        ? (isDark ? "rgba(19,236,106,0.15)" : "rgba(19,236,106,0.1)")
-                        : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)"),
-                      borderWidth: userVote === "up" ? 2 : 1,
-                      borderColor: userVote === "up" ? colors.primary : isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
-                      ...(userVote === "up" ? {
-                        shadowColor: colors.primary,
-                        shadowOffset: { width: 0, height: 0 },
-                        shadowOpacity: 0.3,
-                        shadowRadius: 10,
-                        elevation: 4,
-                      } : {}),
-                    }}
+                    style={[
+                      styles.voteButton,
+                      {
+                        backgroundColor: userVote === "up"
+                          ? (isDark ? halalStatusTokens.halal.bgDark : halalStatusTokens.halal.bg)
+                          : (isDark ? glass.dark.bg : glass.light.border),
+                        borderWidth: userVote === "up" ? 2 : 1,
+                        borderColor: userVote === "up" ? colors.primary : isDark ? glass.dark.borderStrong : glass.light.borderStrong,
+                        ...(userVote === "up" ? {
+                          shadowColor: colors.primary,
+                          shadowOffset: { width: 0, height: 0 },
+                          shadowOpacity: 0.3,
+                          shadowRadius: 10,
+                          elevation: 4,
+                        } : {}),
+                      },
+                    ]}
                     accessibilityRole="button"
                     accessibilityLabel={t.scanResult.accurateResult}
                   >
@@ -2121,77 +2418,70 @@ export default function ScanResultScreen() {
                         reviewMutation.mutate({ productId: product.id, rating: 1 });
                       }
                     }}
-                    style={{
-                      width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center",
-                      backgroundColor: userVote === "down"
-                        ? (isDark ? "rgba(239,68,68,0.15)" : "rgba(239,68,68,0.08)")
-                        : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)"),
-                      borderWidth: userVote === "down" ? 2 : 1,
-                      borderColor: userVote === "down" ? "#ef4444" : isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
-                      ...(userVote === "down" ? {
-                        shadowColor: "#ef4444",
-                        shadowOffset: { width: 0, height: 0 },
-                        shadowOpacity: 0.3,
-                        shadowRadius: 10,
-                        elevation: 4,
-                      } : {}),
-                    }}
+                    style={[
+                      styles.voteButton,
+                      {
+                        backgroundColor: userVote === "down"
+                          ? (isDark ? halalStatusTokens.haram.bgDark : halalStatusTokens.haram.bg)
+                          : (isDark ? glass.dark.bg : glass.light.border),
+                        borderWidth: userVote === "down" ? 2 : 1,
+                        borderColor: userVote === "down" ? halalStatusTokens.haram.base : isDark ? glass.dark.borderStrong : glass.light.borderStrong,
+                        ...(userVote === "down" ? {
+                          shadowColor: halalStatusTokens.haram.base,
+                          shadowOffset: { width: 0, height: 0 },
+                          shadowOpacity: 0.3,
+                          shadowRadius: 10,
+                          elevation: 4,
+                        } : {}),
+                      },
+                    ]}
                     accessibilityRole="button"
                     accessibilityLabel={t.scanResult.inaccurateResult}
                   >
-                    <MaterialIcons name="thumb-down" size={24} color={userVote === "down" ? "#ef4444" : colors.textSecondary} />
+                    <MaterialIcons name="thumb-down" size={24} color={userVote === "down" ? halalStatusTokens.haram.base : colors.textSecondary} />
                   </PressableScale>
                 </View>
                 {userVote && (
                   <Animated.View entering={FadeIn.duration(300)}>
-                    <Text style={{ fontSize: 13, color: "#d4af37", fontWeight: "700", marginTop: 2 }}>
+                    <Text style={styles.voteThanks}>
                       {t.scanResult.thankYouForFeedback}
                     </Text>
                   </Animated.View>
                 )}
-              </View>
+              </GlowCard>
             </Animated.View>
           )}
 
           {/* ── New Product Banner ── */}
           {scanMutation.data?.isNewProduct && (
-            <Animated.View entering={FadeInDown.delay(450).duration(500)}>
+            <Animated.View entering={entryAnimations.fadeInDown(11)}>
               <View
                 style={[
                   styles.newProductBanner,
                   {
                     backgroundColor: isDark
-                      ? "rgba(212,175,55,0.06)"
-                      : "rgba(212,175,55,0.04)",
+                      ? glass.dark.highlight
+                      : glass.dark.highlight,
                     borderColor: isDark
-                      ? "rgba(212,175,55,0.2)"
-                      : "rgba(212,175,55,0.15)",
+                      ? glass.dark.border
+                      : `${brandTokens.gold}26`,
                   },
                 ]}
               >
                 <MaterialIcons
                   name="new-releases"
                   size={20}
-                  color="#d4af37"
+                  color={brandTokens.gold}
                   style={{ marginTop: 2 }}
                 />
                 <View style={{ flex: 1 }}>
                   <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: "700",
-                      color: isDark ? "#fcd880" : "#92700c",
-                    }}
+                    style={[styles.newProductTitle, { color: isDark ? brandTokens.gold : colors.textSecondary }]}
                   >
                     {t.scanResult.newProductAdded}
                   </Text>
                   <Text
-                    style={{
-                      fontSize: 13,
-                      color: isDark ? "#fcd880cc" : "#92700ccc",
-                      marginTop: 2,
-                      lineHeight: 18,
-                    }}
+                    style={[styles.newProductDesc, { color: isDark ? colors.textSecondary : colors.textMuted }]}
                   >
                     {t.scanResult.newProductAddedDesc}
                   </Text>
@@ -2204,32 +2494,14 @@ export default function ScanResultScreen() {
                "Servir, pas juger" (Ch00 Principe 5).
                This is NOT optional — docs/naqiy/internal/09-al-qadar §2.2:
                "Le disclaimer legal doit apparaitre en bas de chaque ecran de scan result" */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "flex-start",
-              gap: 8,
-              paddingVertical: 12,
-              paddingHorizontal: 4,
-              marginTop: 4,
-              marginBottom: 8,
-            }}
-          >
+          <View style={styles.disclaimerRow}>
             <MaterialIcons
               name="info-outline"
               size={14}
-              color={isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.25)"}
+              color={colors.textMuted}
               style={{ marginTop: 1 }}
             />
-            <Text
-              style={{
-                flex: 1,
-                fontSize: 11,
-                lineHeight: 16,
-                color: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)",
-                fontStyle: "italic",
-              }}
-            >
+            <Text style={[styles.disclaimerText, { color: colors.textMuted }]}>
               {t.scanResult.disclaimer}
             </Text>
           </View>
@@ -2255,100 +2527,7 @@ export default function ScanResultScreen() {
             tint={isDark ? "dark" : "light"}
             style={styles.actionBarBlur}
           >
-            <View
-              style={[
-                styles.actionBarInner,
-                {
-                  borderColor: isDark
-                    ? "rgba(212,175,55,0.12)"
-                    : "rgba(212,175,55,0.1)",
-                },
-              ]}
-            >
-              {/* Favorite */}
-              <PressableScale
-                onPress={handleFavAnimated}
-                disabled={isFavMutating}
-                style={[
-                  styles.actionButton,
-                  {
-                    backgroundColor: isDark
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(0,0,0,0.04)",
-                    opacity: isFavMutating ? 0.5 : 1,
-                  },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={
-                  productIsFavorite
-                    ? t.scanResult.removeFromFavorites
-                    : t.scanResult.addToFavorites
-                }
-                accessibilityState={{ selected: productIsFavorite, busy: isFavMutating }}
-              >
-                <Animated.View style={favAnimatedStyle}>
-                  <MaterialIcons
-                    name={productIsFavorite ? "favorite" : "favorite-border"}
-                    size={24}
-                    color={productIsFavorite ? "#ef4444" : colors.textSecondary}
-                  />
-                </Animated.View>
-              </PressableScale>
-
-              {/* Share */}
-              <PressableScale
-                onPress={handleShare}
-                style={[
-                  styles.actionButton,
-                  {
-                    backgroundColor: isDark
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(0,0,0,0.04)",
-                  },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={t.scanResult.shareProduct}
-              >
-                <MaterialIcons
-                  name="share"
-                  size={22}
-                  color={colors.textSecondary}
-                />
-              </PressableScale>
-
-              {/* Where to Buy (primary CTA) */}
-              <PressableScale
-                onPress={handleFindStores}
-                style={[styles.ctaButton, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
-                accessibilityRole="button"
-                accessibilityLabel={t.scanResult.whereToBuy}
-                accessibilityHint={t.scanResult.findStores}
-              >
-                <MaterialIcons name={marketplaceEnabled ? "shopping-cart" : "location-on"} size={20} color="#0d1b13" />
-                <Text style={styles.ctaText}>{marketplaceEnabled ? t.scanResult.viewOnMarketplace : t.scanResult.whereToBuy}</Text>
-              </PressableScale>
-
-              {/* Report */}
-              <PressableScale
-                onPress={handleReport}
-                style={[
-                  styles.actionButton,
-                  {
-                    backgroundColor: isDark
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(0,0,0,0.04)",
-                  },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={t.scanResult.report}
-              >
-                <MaterialIcons
-                  name="flag"
-                  size={22}
-                  color={colors.textSecondary}
-                />
-              </PressableScale>
-            </View>
+            {actionBarButtons}
           </BlurView>
         ) : (
           <View
@@ -2361,100 +2540,7 @@ export default function ScanResultScreen() {
               },
             ]}
           >
-            <View
-              style={[
-                styles.actionBarInner,
-                {
-                  borderColor: isDark
-                    ? "rgba(212,175,55,0.12)"
-                    : "rgba(212,175,55,0.1)",
-                },
-              ]}
-            >
-              {/* Favorite */}
-              <PressableScale
-                onPress={handleFavAnimated}
-                disabled={isFavMutating}
-                style={[
-                  styles.actionButton,
-                  {
-                    backgroundColor: isDark
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(0,0,0,0.04)",
-                    opacity: isFavMutating ? 0.5 : 1,
-                  },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={
-                  productIsFavorite
-                    ? t.scanResult.removeFromFavorites
-                    : t.scanResult.addToFavorites
-                }
-                accessibilityState={{ selected: productIsFavorite, busy: isFavMutating }}
-              >
-                <Animated.View style={favAnimatedStyle}>
-                  <MaterialIcons
-                    name={productIsFavorite ? "favorite" : "favorite-border"}
-                    size={24}
-                    color={productIsFavorite ? "#ef4444" : colors.textSecondary}
-                  />
-                </Animated.View>
-              </PressableScale>
-
-              {/* Share */}
-              <PressableScale
-                onPress={handleShare}
-                style={[
-                  styles.actionButton,
-                  {
-                    backgroundColor: isDark
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(0,0,0,0.04)",
-                  },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={t.scanResult.shareProduct}
-              >
-                <MaterialIcons
-                  name="share"
-                  size={22}
-                  color={colors.textSecondary}
-                />
-              </PressableScale>
-
-              {/* Where to Buy (primary CTA) */}
-              <PressableScale
-                onPress={handleFindStores}
-                style={[styles.ctaButton, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
-                accessibilityRole="button"
-                accessibilityLabel={t.scanResult.whereToBuy}
-                accessibilityHint={t.scanResult.findStores}
-              >
-                <MaterialIcons name={marketplaceEnabled ? "shopping-cart" : "location-on"} size={20} color="#0d1b13" />
-                <Text style={styles.ctaText}>{marketplaceEnabled ? t.scanResult.viewOnMarketplace : t.scanResult.whereToBuy}</Text>
-              </PressableScale>
-
-              {/* Report */}
-              <PressableScale
-                onPress={handleReport}
-                style={[
-                  styles.actionButton,
-                  {
-                    backgroundColor: isDark
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(0,0,0,0.04)",
-                  },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={t.scanResult.report}
-              >
-                <MaterialIcons
-                  name="flag"
-                  size={22}
-                  color={colors.textSecondary}
-                />
-              </PressableScale>
-            </View>
+            {actionBarButtons}
           </View>
         )}
       </Animated.View>
@@ -2469,6 +2555,25 @@ export default function ScanResultScreen() {
         />
       )}
 
+      {/* ── Trust Score Bottom Sheet ── */}
+      <TrustScoreBottomSheet
+        visible={showTrustScoreSheet}
+        certifierName={certifierData?.name ?? null}
+        trustScore={certifierTrustScore}
+        madhab={userMadhab !== "general" ? userMadhab : null}
+        onClose={handleCloseTrustScore}
+      />
+
+      {/* ── Score Detail Bottom Sheet (per-theme breakdown) ── */}
+      <ScoreDetailBottomSheet
+        visible={showScoreDetailSheet}
+        certifierId={certifierData?.id ?? null}
+        certifierName={certifierData?.name ?? null}
+        trustScore={certifierTrustScore}
+        practices={certifierData?.practices ?? null}
+        onClose={handleCloseScoreDetail}
+      />
+
       {/* ── Madhab Bottom Sheet ── */}
       <MadhabBottomSheet
         visible={!!selectedMadhab}
@@ -2482,6 +2587,14 @@ export default function ScanResultScreen() {
         }
         status={selectedMadhab?.status ?? "halal"}
         conflictingAdditives={selectedMadhab?.conflictingAdditives ?? []}
+        conflictingIngredients={selectedMadhab?.conflictingIngredients ?? []}
+        certifierName={certifierData_?.name ?? null}
+        certifierTrustScore={
+          selectedMadhab && certifierData_
+            ? ((certifierData_ as Record<string, unknown>)[MADHAB_TRUST_KEY[selectedMadhab.madhab as keyof typeof MADHAB_TRUST_KEY]] as number | null) ?? null
+            : null
+        }
+        certifierTrustScoreUniversal={certifierData_?.trustScore ?? null}
         onClose={handleCloseMadhab}
       />
 
@@ -2500,330 +2613,430 @@ export default function ScanResultScreen() {
 // ══════════════════════════════════════════════════════════════
 
 const styles = StyleSheet.create({
-  // ── Hero ───────────────────────────────────────
+  // ── Hero container ─────────────────────────────
   heroGradient: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingHorizontal: spacing["3xl"],
+    paddingBottom: spacing["3xl"],
+    overflow: "hidden",
   },
 
   // ── Floating back button ───────────────────────
   floatingBackButton: {
     position: "absolute",
-    left: 16,
+    left: spacing.xl,
+    zIndex: 50,
+  },
+  floatingInfoButton: {
+    position: "absolute",
+    right: spacing.xl,
     zIndex: 50,
   },
 
-  // ── Verdict cluster (icon + text, tightly grouped) ─
-  verdictCluster: {
-    alignItems: "center",
-    marginBottom: 16,
+  // ── Hero horizontal split ─────────────────────
+  heroSplit: {
+    flexDirection: "row" as const,
+    alignItems: "flex-start" as const,
+    gap: spacing.xl,
   },
 
-  // ── Status icon (compact) ─────────────────────
-  statusIconWrapper: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: 76,
-    height: 76,
-    marginBottom: 6,
+  // ── Hero: Left column (product image + brand) ─
+  heroImageColumn: {
+    alignItems: "center" as const,
+    gap: spacing.xs,
   },
-  statusIconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    borderWidth: 2.5,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 6,
+  heroImageWrapper: {
+    width: 80,
+    height: 80,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    overflow: "hidden" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  heroImage: {
+    width: 80,
+    height: 80,
+    borderRadius: radius.lg,
+  },
+  heroBrandLabel: {
+    fontSize: fontSizeTokens.caption,
+    fontWeight: fontWeightTokens.medium,
+    marginTop: spacing["2xs"],
+    textAlign: "center" as const,
+    maxWidth: 80,
   },
 
-  // ── Verdict text ───────────────────────────────
-  verdictTextContainer: {
-    alignItems: "center",
+  // ── Hero: Right column (score + verdict + product info) ─
+  heroInfoColumn: {
+    flex: 1,
+    paddingVertical: spacing.xs,
   },
-  verdictText: {
-    fontSize: 20,
-    fontWeight: "900",
-    letterSpacing: 2,
-    textTransform: "uppercase",
-    textAlign: "center",
+  heroScoreLabelRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  heroScoreLabelText: {
+    fontSize: fontSizeTokens.micro,
+    fontWeight: fontWeightTokens.semiBold,
+    letterSpacing: 1.5,
+    textTransform: "uppercase" as const,
   },
 
-  // ── Metadata band (certifier + community, horizontal) ─
+  // ── Hero: Score row + certifier bar ─────────────
+  heroScoreRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  heroCertifierRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: spacing.lg,
+  },
+  heroCertifierBar: {
+    flex: 1,
+    gap: spacing.sm,
+  },
+  heroCertifierHeader: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: spacing.sm,
+  },
+  heroCertifierName: {
+    flex: 1,
+    fontSize: fontSizeTokens.caption,
+    fontWeight: fontWeightTokens.semiBold,
+  },
+  heroCertifierScore: {
+    fontSize: fontSizeTokens.caption,
+    fontWeight: fontWeightTokens.bold,
+  },
+  heroCertifierBarBg: {
+    height: 4,
+    borderRadius: 2,
+    overflow: "hidden" as const,
+  },
+  heroCertifierBarFill: {
+    height: 4,
+    borderRadius: 2,
+  },
+  heroTierLabel: {
+    fontSize: 9,
+    fontWeight: fontWeightTokens.medium,
+    marginTop: 2,
+    letterSpacing: 0.3,
+  },
+  heroHelpButton: {
+    width: 38,
+    height: 38,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  heroVerdictColumn: {
+    flex: 1,
+    gap: spacing["2xs"],
+  },
+  heroVerdictText: {
+    fontSize: fontSizeTokens.h4,
+    fontWeight: fontWeightTokens.bold,
+    letterSpacing: 0.3,
+  },
+
+  // ── Hero: Divider ─────────────────────────────
+  heroDivider: {
+    height: StyleSheet.hairlineWidth,
+    width: "100%" as const,
+    marginVertical: spacing.md,
+    opacity: 0.2,
+  },
+
+  // ── Hero: Product info in right column ────────
+  heroProductRow: {
+    flexDirection: "row" as const,
+    alignItems: "flex-start" as const,
+    justifyContent: "space-between" as const,
+    gap: spacing.lg,
+  },
+  heroProductName: {
+    fontSize: fontSizeTokens.h4,
+    fontWeight: fontWeightTokens.bold,
+    lineHeight: 24,
+    flex: 1,
+  },
+  heroBarcodeChip: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: spacing.xs,
+    paddingTop: spacing["2xs"],
+  },
+  heroBarcode: {
+    fontSize: fontSizeTokens.micro,
+    fontWeight: fontWeightTokens.medium,
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+  },
+
+  // ── Metadata band (certifier + confidence) ────
   metadataBand: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    justifyContent: "center" as const,
+    justifyContent: "flex-start" as const,
     flexWrap: "wrap" as const,
-    gap: 6,
-    marginBottom: 8,
+    gap: spacing.md,
+    marginBottom: spacing.xl,
   },
 
   // ── Community badge ──────────────────────────────
   communityBadge: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 16,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.lg,
     borderWidth: 1,
   },
   communityBadgeText: {
-    fontSize: 11,
-    fontWeight: "600" as const,
+    fontSize: fontSizeTokens.micro,
+    fontWeight: fontWeightTokens.semiBold,
   },
 
   // ── Certifier hero badge ────────────────────────
   certifierHeroBadge: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 16,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.lg,
     borderWidth: 1,
   },
   certifierHeroBadgeText: {
-    fontSize: 11,
-    fontWeight: "600" as const,
+    fontSize: fontSizeTokens.micro,
+    fontWeight: fontWeightTokens.semiBold,
   },
 
-  // ── Madhab badges row ───────────────────────────
+  // ── Madhab chips row ────────────────────────────
   madhabRow: {
     flexDirection: "row" as const,
-    alignItems: "center" as const,
-    flexWrap: "wrap" as const,
+    alignItems: "flex-start" as const,
     justifyContent: "center" as const,
-    gap: 5,
-    marginBottom: 14,
-    paddingHorizontal: 8,
+    flexWrap: "wrap" as const,
+    gap: spacing.xl,
+    marginTop: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xs,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
-  madhabBadge: {
+  madhabInfoNote: {
     flexDirection: "row" as const,
-    alignItems: "center" as const,
-    gap: 3,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
+    alignItems: "flex-start" as const,
+    gap: spacing.xs,
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.md,
+    width: "100%" as const,
   },
-  madhabBadgeLabel: {
-    fontSize: 10,
-    fontWeight: "600" as const,
-  },
-
-  // ── Product image showcase (below HERO) ────────
-  productImageShowcase: {
-    alignItems: "center",
-    paddingVertical: 16,
-    marginHorizontal: 20,
-    marginTop: -8,
-    borderRadius: 16,
-  },
-  productImageLarge: {
-    width: "100%",
-    height: 200,
-    borderRadius: 12,
-  },
-
-  // ── Product overlay ────────────────────────────
-  productOverlay: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    width: "100%",
-    borderRadius: 16,
-    padding: 12,
-    borderWidth: 1,
-    // Glass-morphism look
-    overflow: "hidden",
-  },
-  productThumb: {
-    width: 80,
-    height: 80,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  productThumbImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 14,
-  },
-  productTextContainer: {
+  madhabInfoNoteText: {
+    fontSize: fontSizeTokens.micro,
+    fontWeight: fontWeightTokens.medium,
+    lineHeight: 14,
     flex: 1,
   },
-  productName: {
-    fontSize: 16,
-    fontWeight: "700",
-    lineHeight: 20,
+
+  // ── Hadith premium card ──────────────────────
+  hadithCard: {
+    width: "100%" as const,
+    marginTop: spacing.md,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: "hidden" as const,
   },
-  productBrand: {
-    fontSize: 13,
-    fontWeight: "500",
-    marginTop: 2,
+  hadithAccentLine: {
+    width: "40%" as const,
+    height: 1,
+    alignSelf: "center" as const,
+    marginBottom: spacing.sm,
   },
-  productBarcode: {
+  hadithText: {
     fontSize: 11,
-    marginTop: 2,
-    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+    fontWeight: fontWeightTokens.medium,
+    lineHeight: 18,
+    fontStyle: "italic" as const,
+    textAlign: "center" as const,
+  },
+  hadithSource: {
+    fontSize: 9,
+    fontWeight: fontWeightTokens.semiBold,
+    textAlign: "center" as const,
+    marginTop: spacing.xs,
+    letterSpacing: 0.4,
   },
 
   // ── Content ────────────────────────────────────
   contentContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingHorizontal: spacing["3xl"],
+    paddingTop: spacing["3xl"],
   },
 
   // ── Section title ──────────────────────────────
   sectionTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    marginBottom: 12,
-    marginTop: 8,
+    fontSize: fontSizeTokens.h4,
+    fontWeight: fontWeightTokens.bold,
+    marginBottom: spacing.lg,
+    marginTop: spacing.md,
   },
 
-  // ── Certifier card (2-column) ─────────────────
-  certifierCard: {
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 16,
-    marginBottom: 16,
+  // ── Analysis source (compact line) ─────────────
+  analysisSourceRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: spacing.xs,
+    marginBottom: spacing["2xl"],
   },
-  certifierTwoCol: {
+  analysisSourceText: {
+    fontSize: fontSizeTokens.micro,
+    fontWeight: fontWeightTokens.medium,
+  },
+
+
+  // ── Product details (labels, origins, analysis) ─
+  productDetailsSection: {
+    gap: spacing.md,
+    marginBottom: spacing["2xl"],
+  },
+  productDetailRow: {
     flexDirection: "row" as const,
     alignItems: "flex-start" as const,
+    gap: spacing.md,
+    paddingTop: spacing["2xs"],
   },
-  certifierCol: {
+  productDetailChips: {
+    flexDirection: "row" as const,
+    flexWrap: "wrap" as const,
+    gap: spacing.xs,
     flex: 1,
-    alignItems: "center" as const,
-    gap: 6,
   },
-  certifierDivider: {
-    width: 1,
-    alignSelf: "stretch" as const,
-    marginHorizontal: 12,
+  productDetailChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 3,
+    borderRadius: radius.full,
+    borderWidth: 1,
   },
-  certifierIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 2,
+  productDetailChipText: {
+    fontSize: fontSizeTokens.micro,
+    fontWeight: fontWeightTokens.medium,
+    textTransform: "capitalize" as const,
   },
-  certifierName: {
-    fontSize: 14,
-    fontWeight: "700",
-    textAlign: "center" as const,
-  },
-  certifierSource: {
-    fontSize: 12,
-    textAlign: "center" as const,
+  productDetailText: {
+    fontSize: fontSizeTokens.caption,
+    fontWeight: fontWeightTokens.medium,
+    flex: 1,
   },
 
-  // ── Boycott card ───────────────────────────────
+  // ── Boycott card (wrapped in GlowCard) ─────────
   boycottCard: {
-    borderRadius: 16,
-    borderWidth: 1,
     borderLeftWidth: 4,
-    borderLeftColor: "#ef4444",
-    padding: 16,
-    marginBottom: 16,
+    borderLeftColor: halalStatusTokens.haram.base,
+    marginBottom: spacing["3xl"],
   },
   boycottHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    marginBottom: 8,
+    gap: spacing.lg,
+    marginBottom: spacing.md,
   },
   boycottIconCircle: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: radius.lg,
     alignItems: "center",
     justifyContent: "center",
   },
   boycottTitle: {
-    fontSize: 15,
-    fontWeight: "800",
+    fontSize: fontSizeTokens.bodySmall,
+    fontWeight: fontWeightTokens.black,
   },
   boycottTarget: {
-    paddingVertical: 8,
+    paddingVertical: spacing.md,
   },
   boycottCompany: {
-    fontSize: 13,
-    fontWeight: "700",
+    fontSize: fontSizeTokens.caption,
+    fontWeight: fontWeightTokens.bold,
   },
   boycottReason: {
-    fontSize: 12,
-    marginTop: 2,
+    fontSize: fontSizeTokens.caption,
+    marginTop: spacing["2xs"],
     lineHeight: 17,
   },
   boycottSource: {
-    fontSize: 11,
-    marginTop: 4,
+    fontSize: fontSizeTokens.micro,
+    marginTop: spacing.xs,
   },
 
   // ── Collapsible ────────────────────────────────
   collapsibleContainer: {
-    borderRadius: 16,
+    borderRadius: radius.xl,
     borderWidth: 1,
-    marginBottom: 16,
+    marginBottom: spacing["3xl"],
     overflow: "hidden",
   },
   collapsibleHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: spacing["2xl"],
+    paddingVertical: spacing.xl,
   },
   collapsibleHeaderLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: spacing.md,
     flex: 1,
   },
   collapsibleTitle: {
-    fontSize: 15,
-    fontWeight: "700",
+    fontSize: fontSizeTokens.bodySmall,
+    fontWeight: fontWeightTokens.bold,
   },
   collapsibleBadge: {
-    paddingHorizontal: 8,
+    paddingHorizontal: spacing.md,
     paddingVertical: 3,
-    borderRadius: 8,
+    borderRadius: radius.sm,
   },
   collapsibleBadgeText: {
-    fontSize: 11,
-    fontWeight: "600",
+    fontSize: fontSizeTokens.micro,
+    fontWeight: fontWeightTokens.semiBold,
   },
   collapsibleContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingHorizontal: spacing["2xl"],
+    paddingBottom: spacing["2xl"],
   },
 
   // ── Reason rows ────────────────────────────────
   reasonRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 10,
-    paddingVertical: 10,
+    gap: spacing.lg,
+    paddingVertical: spacing.lg,
   },
   reasonName: {
-    fontSize: 13,
-    fontWeight: "700",
+    fontSize: fontSizeTokens.caption,
+    fontWeight: fontWeightTokens.bold,
   },
   reasonExplanation: {
-    fontSize: 12,
-    marginTop: 2,
+    fontSize: fontSizeTokens.caption,
+    marginTop: spacing["2xs"],
     lineHeight: 17,
   },
 
@@ -2831,8 +3044,8 @@ const styles = StyleSheet.create({
   additiveRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    paddingVertical: 10,
+    gap: spacing.lg,
+    paddingVertical: spacing.lg,
   },
   additiveDot: {
     width: 10,
@@ -2840,73 +3053,41 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   additiveName: {
-    fontSize: 13,
-    fontWeight: "600",
+    fontSize: fontSizeTokens.caption,
+    fontWeight: fontWeightTokens.semiBold,
   },
   additiveExplanation: {
-    fontSize: 11,
+    fontSize: fontSizeTokens.micro,
     marginTop: 1,
   },
   additiveStatus: {
-    fontSize: 11,
-    fontWeight: "800",
+    fontSize: fontSizeTokens.micro,
+    fontWeight: fontWeightTokens.black,
     textTransform: "uppercase",
-  },
-
-  // ── Nutrition ──────────────────────────────────
-  nutritionRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 16,
-  },
-  nutritionBadge: {
-    flex: 1,
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: 14,
-    alignItems: "center",
-    gap: 6,
-  },
-  nutritionIndicator: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 2,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  nutritionValue: {
-    fontSize: 18,
-    fontWeight: "900",
-    textTransform: "uppercase",
-  },
-  nutritionLabel: {
-    fontSize: 11,
-    fontWeight: "600",
   },
 
   // ── Allergens ──────────────────────────────────
   allergensRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 16,
+    flexDirection: "row" as const,
+    gap: spacing.md,
+    paddingRight: spacing.xl,
+    marginBottom: spacing.xl,
   },
   allergenChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.xl,
     borderWidth: 1,
   },
   allergenText: {
-    fontSize: 12,
-    fontWeight: "600",
+    fontSize: fontSizeTokens.caption,
+    fontWeight: fontWeightTokens.semiBold,
     textTransform: "capitalize",
   },
 
   // ── Ingredient row ─────────────────────────────
   ingredientRow: {
-    paddingVertical: 10,
+    paddingVertical: spacing.lg,
   },
   ingredientDot: {
     width: 6,
@@ -2914,18 +3095,18 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   ingredientName: {
-    fontSize: 13,
+    fontSize: fontSizeTokens.caption,
     flex: 1,
   },
 
   // ── New product banner ─────────────────────────
   newProductBanner: {
     flexDirection: "row",
-    gap: 12,
-    borderRadius: 16,
+    gap: spacing.lg,
+    borderRadius: radius.lg,
     borderWidth: 1,
-    padding: 16,
-    marginBottom: 16,
+    padding: spacing.xl,
+    marginBottom: spacing.xl,
   },
 
   // ── Loading state ──────────────────────────────
@@ -2933,19 +3114,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     flex: 1,
-    gap: 16,
+    gap: spacing.xl,
   },
   loadingTitle: {
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: fontSizeTokens.h4,
+    fontWeight: fontWeightTokens.bold,
     letterSpacing: 0.5,
   },
   loadingBarcode: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.sm,
   },
 
   // ── Error / Not Found states ───────────────────
@@ -2953,42 +3134,41 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 32,
+    paddingHorizontal: spacing["4xl"],
   },
   stateContent: {
     alignItems: "center",
-    gap: 16,
+    gap: spacing.xl,
   },
   stateIconCircle: {
     width: 80,
     height: 80,
-    borderRadius: 40,
+    borderRadius: radius.full,
     alignItems: "center",
     justifyContent: "center",
   },
   stateTitle: {
-    fontSize: 18,
-    fontWeight: "800",
+    fontSize: fontSizeTokens.h4,
+    fontWeight: fontWeightTokens.black,
     textAlign: "center",
   },
   stateDesc: {
-    fontSize: 14,
-    textAlign: "center",
-    lineHeight: 21,
+    ...textStyles.bodySmall,
+    textAlign: "center" as const,
   },
   stateButtons: {
     flexDirection: "row",
-    gap: 12,
-    marginTop: 8,
+    gap: spacing.lg,
+    marginTop: spacing.md,
   },
   stateButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
+    paddingHorizontal: spacing["3xl"],
+    paddingVertical: spacing.lg,
+    borderRadius: radius.md,
   },
   stateButtonText: {
-    fontSize: 14,
-    fontWeight: "700",
+    fontSize: fontSizeTokens.bodySmall,
+    fontWeight: fontWeightTokens.bold,
   },
 
   // ── Bottom action bar ──────────────────────────
@@ -3000,44 +3180,214 @@ const styles = StyleSheet.create({
   },
   actionBarBlur: {
     overflow: "hidden",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
   },
   actionBarInner: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    gap: spacing.xl,
+    paddingHorizontal: spacing["2xl"],
+    paddingVertical: spacing.xl,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   actionButton: {
     width: 46,
     height: 46,
-    borderRadius: 14,
+    borderRadius: radius.md,
     alignItems: "center",
     justifyContent: "center",
   },
   ctaButton: {
     flex: 1,
-    height: 46,
-    borderRadius: 14,
+    height: 50,
+    borderRadius: radius.lg,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 6,
-    // Green glow
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 6,
+    gap: spacing.sm,
+    overflow: "hidden",
   },
   ctaText: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: "#0d1b13",
+    fontSize: fontSizeTokens.bodySmall,
+    fontWeight: fontWeightTokens.black,
   },
+  // ── Vote card (wrapped in GlowCard) ────────
+  voteCard: {
+    marginBottom: spacing["3xl"],
+    alignItems: "center" as const,
+    gap: spacing.lg,
+  },
+  voteShieldIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    marginBottom: spacing["2xs"],
+  },
+  voteTitle: {
+    fontSize: fontSizeTokens.bodySmall,
+    fontWeight: fontWeightTokens.black,
+    letterSpacing: 0.3,
+  },
+  voteSubtitle: {
+    fontSize: fontSizeTokens.caption,
+    textAlign: "center" as const,
+    lineHeight: 18,
+    paddingHorizontal: spacing.lg,
+  },
+  voteButtonRow: {
+    flexDirection: "row" as const,
+    gap: spacing.xl,
+    marginTop: spacing.sm,
+  },
+  voteButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    borderWidth: 1,
+  },
+  voteThanks: {
+    fontSize: fontSizeTokens.caption,
+    color: brandTokens.gold,
+    fontWeight: fontWeightTokens.bold,
+    marginTop: spacing["2xs"],
+  },
+
+  // ── Alternatives section ───────────────────────
+  altSection: {
+    marginBottom: spacing["2xl"],
+  },
+  altHeader: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "space-between" as const,
+    marginBottom: spacing.lg,
+  },
+  altHeaderLeft: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: spacing.md,
+  },
+  altHeaderIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  altHeaderTitle: {
+    fontSize: fontSizeTokens.body,
+    fontWeight: fontWeightTokens.black,
+  },
+
+  // ── Alternatives cards ────────────────────────
+  altCard: {
+    width: 150,
+    padding: spacing.lg,
+    justifyContent: "space-between" as const,
+    overflow: "hidden" as const,
+  },
+  altLockOverlay: {
+    zIndex: 10,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    borderRadius: radius.lg,
+  },
+  altLockText: {
+    color: brandTokens.gold,
+    fontSize: fontSizeTokens.micro,
+    fontWeight: fontWeightTokens.black,
+    marginTop: spacing.xs,
+    textAlign: "center" as const,
+    letterSpacing: 1,
+  },
+  altImage: {
+    width: 70,
+    height: 70,
+    borderRadius: radius.md,
+    alignSelf: "center" as const,
+    marginBottom: spacing.md,
+  },
+  altImagePlaceholder: {
+    width: 70,
+    height: 70,
+    borderRadius: radius.md,
+    alignSelf: "center" as const,
+    marginBottom: spacing.md,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  altName: {
+    fontSize: fontSizeTokens.caption,
+    fontWeight: fontWeightTokens.bold,
+    marginBottom: spacing.xs,
+  },
+  altBuyBadge: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 3,
+    borderRadius: spacing.sm,
+    alignSelf: "flex-start" as const,
+  },
+  altBuyText: {
+    fontSize: fontSizeTokens.micro,
+    fontWeight: fontWeightTokens.bold,
+    color: brandTokens.primary,
+  },
+  altExploreCta: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: spacing.md,
+    marginTop: spacing.xl,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing["2xl"],
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  altExploreCtaText: {
+    fontSize: fontSizeTokens.bodySmall,
+    fontWeight: fontWeightTokens.bold,
+    color: brandTokens.gold,
+  },
+
+  // ── New product banner ─────────────────────────
+  newProductTitle: {
+    fontSize: fontSizeTokens.bodySmall,
+    fontWeight: fontWeightTokens.bold,
+  },
+  newProductDesc: {
+    fontSize: fontSizeTokens.caption,
+    marginTop: spacing["2xs"],
+    lineHeight: 18,
+  },
+
+  // ── Disclaimer ─────────────────────────────────
+  disclaimerRow: {
+    flexDirection: "row" as const,
+    alignItems: "flex-start" as const,
+    gap: spacing.md,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xs,
+    marginTop: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  disclaimerText: {
+    flex: 1,
+    fontSize: fontSizeTokens.micro,
+    lineHeight: 16,
+    opacity: 0.5,
+    fontStyle: "italic" as const,
+  },
+
   offScreen: {
     position: "absolute",
     left: -9999,

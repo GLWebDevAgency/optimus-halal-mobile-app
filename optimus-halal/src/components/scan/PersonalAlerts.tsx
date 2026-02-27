@@ -7,11 +7,14 @@
  */
 
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/hooks/useTranslation";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { semantic, halalStatus } from "@/theme/colors";
+import { spacing, radius } from "@/theme/spacing";
+import { fontSize, fontWeight } from "@/theme/typography";
 
 export interface PersonalAlert {
   type: "allergen" | "health" | "boycott";
@@ -28,45 +31,35 @@ const ALERT_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
 
 export function PersonalAlerts({ alerts }: { alerts: PersonalAlert[] }) {
   const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
   if (alerts.length === 0) return null;
 
   return (
-    <Animated.View entering={FadeInDown.delay(280).duration(500)} className="px-4 mt-6">
-      <Text
-        className="text-lg font-bold text-slate-900 dark:text-white mb-3"
-        accessibilityRole="header"
-      >
-        Alertes personnalis\u00E9es
-      </Text>
+    <Animated.View entering={FadeInDown.delay(280).duration(500)} style={styles.container}>
+      <View style={styles.headingRow}>
+        <MaterialIcons name="person-pin" size={18} color={semantic.danger.base} />
+        <Text
+          style={[styles.heading, { color: colors.textPrimary }]}
+          accessibilityRole="header"
+        >
+          {t.scanResult.personalAlerts}
+        </Text>
+      </View>
       {alerts.map((alert, i) => {
         const isHigh = alert.severity === "high";
         const accentColor = isHigh ? semantic.danger.base : halalStatus.doubtful.base;
-        const bgColor = isHigh
-          ? isDark
-            ? "rgba(239,68,68,0.1)"
-            : "rgba(239,68,68,0.06)"
-          : isDark
-            ? "rgba(249,115,22,0.1)"
-            : "rgba(249,115,22,0.06)";
-        const borderColor = isHigh
-          ? isDark
-            ? "rgba(239,68,68,0.25)"
-            : "rgba(239,68,68,0.15)"
-          : isDark
-            ? "rgba(249,115,22,0.25)"
-            : "rgba(249,115,22,0.15)";
 
         return (
           <View
             key={`${alert.type}-${i}`}
-            className="flex-row items-start gap-3 rounded-xl p-3 mb-2"
-            style={{
-              backgroundColor: bgColor,
-              borderWidth: 1,
-              borderColor: borderColor,
-              borderLeftWidth: 3,
-              borderLeftColor: accentColor,
-            }}
+            style={[
+              styles.alertCard,
+              {
+                backgroundColor: `${accentColor}${isDark ? "1A" : "0F"}`,
+                borderColor: `${accentColor}${isDark ? "40" : "26"}`,
+                borderLeftColor: accentColor,
+              },
+            ]}
             accessibilityRole="alert"
             accessibilityLabel={`${alert.title}. ${alert.description}`}
           >
@@ -74,13 +67,13 @@ export function PersonalAlerts({ alerts }: { alerts: PersonalAlert[] }) {
               name={ALERT_ICONS[alert.type] ?? "warning"}
               size={18}
               color={accentColor}
-              style={{ marginTop: 1 }}
+              style={styles.alertIcon}
             />
-            <View className="flex-1">
-              <Text className="text-sm font-semibold text-slate-900 dark:text-white">
+            <View style={styles.alertContent}>
+              <Text style={[styles.alertTitle, { color: colors.textPrimary }]}>
                 {alert.title}
               </Text>
-              <Text className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">
+              <Text style={[styles.alertDesc, { color: colors.textSecondary }]}>
                 {alert.description}
               </Text>
             </View>
@@ -90,3 +83,44 @@ export function PersonalAlerts({ alerts }: { alerts: PersonalAlert[] }) {
     </Animated.View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    marginBottom: spacing["3xl"],
+  },
+  headingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  heading: {
+    fontSize: fontSize.h4,
+    fontWeight: fontWeight.bold,
+  },
+  alertCard: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.lg,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderLeftWidth: 3,
+  },
+  alertIcon: {
+    marginTop: 1,
+  },
+  alertContent: {
+    flex: 1,
+  },
+  alertTitle: {
+    fontSize: fontSize.bodySmall,
+    fontWeight: fontWeight.semiBold,
+  },
+  alertDesc: {
+    fontSize: fontSize.caption,
+    marginTop: spacing["2xs"],
+    lineHeight: 18,
+  },
+});

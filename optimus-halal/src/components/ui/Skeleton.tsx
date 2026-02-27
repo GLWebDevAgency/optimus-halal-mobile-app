@@ -2,7 +2,9 @@
  * Skeleton Component
  *
  * Composant placeholder avec animation shimmer via Reanimated v4.
- * Respecte le mode reduced motion du systeme.
+ * Dark mode: gold-tinted (matches the luxury Naqiy design system).
+ * Light mode: warm neutral.
+ * Respecte le mode reduced motion du système.
  */
 
 import React, { useEffect } from "react";
@@ -17,6 +19,16 @@ import Animated, {
   Easing,
   useReducedMotion,
 } from "react-native-reanimated";
+
+// ---------------------------------------------------------------------------
+// Theme-aware skeleton colors
+// ---------------------------------------------------------------------------
+
+/** Dark: subtle gold tint matching glass.dark.highlight. Light: warm neutral. */
+const SKELETON_BG = {
+  dark: "rgba(207, 165, 51, 0.12)",
+  light: neutral[200],
+} as const;
 
 // ---------------------------------------------------------------------------
 // Base Skeleton
@@ -37,12 +49,12 @@ export const Skeleton: React.FC<SkeletonProps> = ({
 }) => {
   const { isDark } = useTheme();
   const reducedMotion = useReducedMotion();
-  const opacity = useSharedValue(0.3);
+  const opacity = useSharedValue(0.4);
 
   useEffect(() => {
     if (!reducedMotion) {
       opacity.value = withRepeat(
-        withTiming(0.7, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(0.8, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
         -1, // infinite
         true, // reverse
       );
@@ -57,7 +69,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
     width: width as ViewStyle["width"],
     height,
     borderRadius,
-    backgroundColor: isDark ? "rgba(255,255,255,0.08)" : neutral[200],
+    backgroundColor: isDark ? SKELETON_BG.dark : SKELETON_BG.light,
   };
 
   return (

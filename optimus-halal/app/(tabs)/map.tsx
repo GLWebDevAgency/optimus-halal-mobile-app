@@ -286,6 +286,7 @@ export default function MapScreen() {
         name: s.name,
         storeType: s.storeType,
         imageUrl: s.imageUrl,
+        logoUrl: s.logoUrl ?? null,
         address: s.address,
         city: s.city,
         phone: s.phone,

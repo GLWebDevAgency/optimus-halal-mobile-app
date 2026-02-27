@@ -713,8 +713,8 @@ const styles = StyleSheet.create({
 
   // Skeleton
   skeletonCard: {
-    borderColor: "rgba(0,0,0,0.06)",
-    backgroundColor: "rgba(0,0,0,0.02)",
+    borderColor: "transparent",
+    backgroundColor: "transparent",
     alignItems: "center",
   },
   skeletonGrid: {

@@ -20,6 +20,16 @@ sans intention juste n'a aucune valeur. Nous codons avec intention.
 
 ## Le vide que Naqiy comble
 
+Le Hadith
+عن النعمان بن بشير رضي الله عنهما قال: سمعت رسول الله ﷺ يقول:
+« الحلال بيّن والحرام بيّن، وبينهما أمور مشتبهات لا يعلمهنّ كثير من الناس، فمن اتّقى الشبهات فقد استبرأ لدينه وعرضه »
+
+« Le licite est clair et l'illicite est clair, et entre les deux il y a des choses douteuses que beaucoup de gens ne connaissent pas. Celui qui se garde des choses douteuses préserve sa religion et son honneur. »
+
+— Sahih al-Bukhari (52) & Sahih Muslim (1599)
+
+Ce hadith est la raison d'être de Naqiy. Les 3 statuts (halal ✓, douteux ⚠, haram ✗) en sont la traduction directe. Et le "la décision vous appartient" découle de "celui qui se garde" — c'est l'individu qui choisit.
+
 ### Le paysage avant Naqiy
 
 Le musulman francais qui veut manger halal en 2026 navigue dans un

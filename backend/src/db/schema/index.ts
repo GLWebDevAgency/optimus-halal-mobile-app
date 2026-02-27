@@ -12,3 +12,5 @@ export * from "./certifiers.js";
 export * from "./articles.js";
 export * from "./additives.js";
 export * from "./subscriptions.js";
+export * from "./ingredient-rulings.js";
+export * from "./scholarly.js";

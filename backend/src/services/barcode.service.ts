@@ -2,7 +2,8 @@ import { env } from "../lib/env.js";
 import { redis } from "../lib/redis.js";
 import { logger } from "../lib/logger.js";
 import { db } from "../db/index.js";
-import { additives, additiveMadhabRulings } from "../db/schema/index.js";
+import { additives, additiveMadhabRulings, ingredientRulings } from "../db/schema/index.js";
+import type { IngredientRuling } from "../db/schema/ingredient-rulings.js";
 import { eq, and, inArray } from "drizzle-orm";
 
 // ── OpenFoodFacts Types ─────────────────────────────────────
@@ -114,6 +115,7 @@ export interface HalalAnalysis {
   tier: HalalTier;
   reasons: HalalReason[];
   certifierName: string | null;
+  certifierId: string | null;
   analysisSource: string;
 }
 
@@ -122,6 +124,9 @@ export interface HalalReason {
   name: string;
   status: "haram" | "doubtful" | "halal";
   explanation: string;
+  scholarlyReference?: string | null;
+  fatwaSourceName?: string | null;
+  category?: string | null;
 }
 
 export interface HalalAnalysisOptions {
@@ -296,20 +301,159 @@ const ADDITIVES_HALAL_DB: Record<string, AdditiveInfo> = {
   "en:e966":  { name: "Lactitol", status: "halal", explanation: "Dérivé du lactose" },
 };
 
-// ── Halal Keywords ──────────────────────────────────────────
+// ── Ingredient Rulings Engine v4 — DB-Driven ────────────────
 
-const HARAM_INGREDIENTS = [
-  "porc", "pork", "gelatin", "gélatine", "lard", "saindoux",
-  "alcool", "alcohol", "ethanol", "éthanol", "wine", "vin",
-  "bière", "beer", "rhum", "rum", "whisky", "vodka", "brandy",
-  "carmine", "cochineal",
-];
+export interface MatchedIngredientRuling {
+  pattern: string;
+  ruling: HalalStatus;
+  confidence: number;
+  explanationFr: string;
+  explanationEn: string | null;
+  scholarlyReference: string | null;
+  fatwaSourceUrl: string | null;
+  fatwaSourceName: string | null;
+  category: string | null;
+  priority: number;
+  rulingHanafi: HalalStatus | null;
+  rulingShafii: HalalStatus | null;
+  rulingMaliki: HalalStatus | null;
+  rulingHanbali: HalalStatus | null;
+}
 
-const DOUBTFUL_INGREDIENTS = [
-  "mono-", "diglycerides", "monoglycérides",
-  "whey", "lactosérum",
-  "rennet", "présure",
-];
+// In-memory cache — 47 rows, refreshed every 10 min
+let _ingredientRulingsCache: IngredientRuling[] | null = null;
+let _ingredientRulingsCacheTs = 0;
+const INGREDIENT_RULINGS_CACHE_TTL = 600_000; // 10 minutes
+
+/** @internal — Exposed for test cleanup only */
+export function _resetIngredientRulingsCache(): void {
+  _ingredientRulingsCache = null;
+  _ingredientRulingsCacheTs = 0;
+}
+
+async function getIngredientRulings(): Promise<IngredientRuling[]> {
+  const now = Date.now();
+  if (_ingredientRulingsCache && now - _ingredientRulingsCacheTs < INGREDIENT_RULINGS_CACHE_TTL) {
+    return _ingredientRulingsCache;
+  }
+
+  const rulings = await db
+    .select()
+    .from(ingredientRulings)
+    .where(eq(ingredientRulings.isActive, true));
+
+  _ingredientRulingsCache = rulings;
+  _ingredientRulingsCacheTs = now;
+  return rulings;
+}
+
+export function testPattern(text: string, pattern: string, matchType: string): boolean {
+  switch (matchType) {
+    case "exact":
+      return text === pattern;
+    case "contains":
+      return text.includes(pattern);
+    case "word_boundary": {
+      // \b is ASCII-only — accented chars (é, è, ü…) create false boundaries.
+      // e.g. "lactosérum" would match \brum\b because é is not [a-zA-Z0-9_].
+      // Use Unicode-aware negative lookbehind/lookahead for word chars instead.
+      const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const UWB = String.raw`(?<![a-zA-ZÀ-ÿ\d])`;  // Unicode word boundary start
+      const UWE = String.raw`(?![a-zA-ZÀ-ÿ\d])`;    // Unicode word boundary end
+      return new RegExp(`${UWB}${escaped}${UWE}`, "i").test(text);
+    }
+    case "regex": {
+      try {
+        return new RegExp(pattern, "i").test(text);
+      } catch {
+        logger.warn("Regex invalide dans ingredient_rulings", { pattern });
+        return false;
+      }
+    }
+    default:
+      return false;
+  }
+}
+
+export function resolveRulingForMadhab(ruling: IngredientRuling, madhab: Madhab): HalalStatus {
+  if (madhab === "general") return ruling.rulingDefault as HalalStatus;
+
+  const madhabRuling = ({
+    hanafi: ruling.rulingHanafi,
+    shafii: ruling.rulingShafii,
+    maliki: ruling.rulingMaliki,
+    hanbali: ruling.rulingHanbali,
+  } as const)[madhab];
+
+  return (madhabRuling ?? ruling.rulingDefault) as HalalStatus;
+}
+
+export async function matchIngredientRulings(
+  ingredientsText: string,
+  madhab: Madhab,
+): Promise<MatchedIngredientRuling[]> {
+  const rulings = await getIngredientRulings();
+  const lower = ingredientsText.toLowerCase();
+
+  // Track which keywords are overridden by higher-priority compound matches
+  const overrideMap = new Map<string, number>(); // keyword → highest priority that overrides it
+  const directMatches: IngredientRuling[] = [];
+
+  for (const ruling of rulings) {
+    const pattern = ruling.compoundPattern.toLowerCase();
+    if (!testPattern(lower, pattern, ruling.matchType)) continue;
+
+    directMatches.push(ruling);
+
+    // If this ruling overrides a keyword, record it
+    if (ruling.overridesKeyword) {
+      const key = ruling.overridesKeyword.toLowerCase();
+      const existing = overrideMap.get(key) ?? 0;
+      if (ruling.priority > existing) {
+        overrideMap.set(key, ruling.priority);
+      }
+    }
+  }
+
+  // Sort by priority descending, deduplicate, and apply overrides
+  const sorted = directMatches.sort((a, b) => b.priority - a.priority);
+  const results: MatchedIngredientRuling[] = [];
+  const seenPatterns = new Set<string>();
+
+  for (const ruling of sorted) {
+    const patternKey = ruling.compoundPattern.toLowerCase();
+    if (seenPatterns.has(patternKey)) continue;
+
+    // Check if this low-priority keyword is overridden
+    const overridePriority = overrideMap.get(patternKey);
+    if (overridePriority !== undefined && overridePriority > ruling.priority) {
+      continue; // Overridden by a compound match
+    }
+
+    seenPatterns.add(patternKey);
+
+    results.push({
+      pattern: ruling.compoundPattern,
+      ruling: resolveRulingForMadhab(ruling, madhab),
+      confidence: ruling.confidence,
+      explanationFr: ruling.explanationFr,
+      explanationEn: ruling.explanationEn,
+      scholarlyReference: ruling.scholarlyReference,
+      fatwaSourceUrl: ruling.fatwaSourceUrl,
+      fatwaSourceName: ruling.fatwaSourceName,
+      category: ruling.category,
+      priority: ruling.priority,
+      rulingHanafi: ruling.rulingHanafi as HalalStatus | null,
+      rulingShafii: ruling.rulingShafii as HalalStatus | null,
+      rulingMaliki: ruling.rulingMaliki as HalalStatus | null,
+      rulingHanbali: ruling.rulingHanbali as HalalStatus | null,
+    });
+  }
+
+  return results;
+}
+
+// ── Halal Label Tags ────────────────────────────────────────
 
 const HALAL_LABEL_TAGS = [
   "en:halal",
@@ -322,6 +466,71 @@ const HALAL_LABEL_TAGS = [
   "fr:halal",
   "ar:halal",
 ];
+
+// ── OFF labels_tags → certifiers DB ID mapping ──────────────
+// Maps OpenFoodFacts certifier-specific label tags to our certifiers table IDs.
+// Source: manual cross-reference of OFF taxonomy with certification-list.json.
+
+export const LABEL_TAG_TO_CERTIFIER_ID: Record<string, string> = {
+  "fr:a-votre-service":                                       "avs-a-votre-service",
+  "fr:avs":                                                   "avs-a-votre-service",
+  "fr:achahada":                                              "achahada",
+  "fr:altakwa":                                               "altakwa",
+  "fr:association-rituelle-de-la-grande-mosquee-de-lyon":     "argml-mosquee-de-lyon",
+  "fr:mosquee-de-lyon":                                       "argml-mosquee-de-lyon",
+  "fr:argml":                                                 "argml-mosquee-de-lyon",
+  "fr:societe-francaise-de-controle-de-viande-halal":         "sfcvh-mosquee-de-paris",
+  "fr:sfcvh":                                                 "sfcvh-mosquee-de-paris",
+  "fr:mosquee-de-paris":                                      "sfcvh-mosquee-de-paris",
+  "fr:arrissala":                                             "arrissala",
+  "fr:halal-services":                                        "halal-services",
+  "fr:european-halal-trust":                                  "european-halal-trust",
+  "fr:halal-monitoring-committee":                            "halal-monitoring-committee",
+  "en:halal-monitoring-committee":                            "halal-monitoring-committee",
+  "fr:khalis-halal":                                          "khalis-halal",
+  "fr:sidq":                                                  "sidq",
+  "fr:muslim-conseil-international":                          "muslim-conseil-international-mci",
+  "fr:mci":                                                   "muslim-conseil-international-mci",
+  "fr:halal-correct":                                         "halal-correct",
+  "fr:halal-polska":                                          "halal-polska",
+  "fr:afcai":                                                 "afcai",
+  "fr:acmif":                                                 "acmif-mosquee-d-evry",
+  "fr:mosquee-d-evry":                                        "acmif-mosquee-d-evry",
+  "fr:alamane":                                               "alamane",
+  "fr:islamic-centre-aachen":                                 "islamic-centre-aachen",
+  "en:islamic-centre-aachen":                                 "islamic-centre-aachen",
+};
+
+// ── Vegetal origin context detection ────────────────────────
+// When the ingredients text explicitly states "(origine végétale)" near
+// an additive, upgrade its status from doubtful → halal.
+// Example: "mono - et diglycérides d'acides gras (origine végétale)"
+// This is pure regex — no NLP needed.
+const VEGETAL_QUALIFIERS_RE =
+  /\(\s*(?:d[''])?origine\s+v[ée]g[ée]tale\s*\)|\(\s*v[ée]g[ée]tal(?:e)?\s*\)|\(\s*(?:plant|vegetable)\s+(?:origin|source)\s*\)/i;
+
+function hasVegetalOriginContext(
+  ingredientsText: string | undefined,
+  searchTerms: string[],
+): boolean {
+  if (!ingredientsText) return false;
+  const textLower = ingredientsText.toLowerCase();
+
+  for (const rawTerm of searchTerms) {
+    const term = rawTerm.toLowerCase();
+    if (term.length < 3) continue;
+
+    const idx = textLower.indexOf(term);
+    if (idx === -1) continue;
+
+    // Check a window of 150 chars after the match for a vegetal qualifier
+    const windowEnd = Math.min(ingredientsText.length, idx + term.length + 150);
+    const window = ingredientsText.substring(idx, windowEnd);
+    if (VEGETAL_QUALIFIERS_RE.test(window)) return true;
+  }
+
+  return false;
+}
 
 // ── Main Analysis Function (v3 — async + madhab-aware) ─────
 
@@ -336,9 +545,23 @@ export async function analyzeHalalStatus(
 
   // ── TIER 1: Check halal certification labels ──────────────
   if (labelsTags?.length) {
-    const halalLabel = labelsTags.find((tag) =>
+    // 1a. Try certifier-specific label tags first (e.g. fr:a-votre-service → avs)
+    let matchedCertifierId: string | null = null;
+    let matchedCertifierTag: string | null = null;
+    for (const tag of labelsTags) {
+      const certId = LABEL_TAG_TO_CERTIFIER_ID[tag.toLowerCase()];
+      if (certId) {
+        matchedCertifierId = certId;
+        matchedCertifierTag = tag;
+        break;
+      }
+    }
+
+    // 1b. Fall back to generic halal labels
+    const halalLabel = matchedCertifierTag ?? labelsTags.find((tag) =>
       HALAL_LABEL_TAGS.includes(tag.toLowerCase())
     );
+
     if (halalLabel) {
       const certName = halalLabel
         .replace("en:", "")
@@ -351,7 +574,9 @@ export async function analyzeHalalStatus(
         type: "label",
         name: certName,
         status: "halal",
-        explanation: "Label halal certifié détecté sur le produit",
+        explanation: matchedCertifierId
+          ? `Certifié par un organisme halal reconnu (${certName})`
+          : "Label halal certifié détecté sur le produit",
       });
 
       return {
@@ -360,7 +585,10 @@ export async function analyzeHalalStatus(
         tier: "certified",
         reasons,
         certifierName: certName,
-        analysisSource: "Label certifié OpenFoodFacts",
+        certifierId: matchedCertifierId,
+        analysisSource: matchedCertifierId
+          ? "Naqiy · Certifieur identifié via OpenFoodFacts"
+          : "Naqiy · Label certifié via OpenFoodFacts",
       };
     }
   }
@@ -375,66 +603,80 @@ export async function analyzeHalalStatus(
     const additiveResults = await lookupAdditives(additivesTags, options.madhab);
 
     for (const add of additiveResults) {
+      let effectiveStatus = add.halalStatus as "halal" | "haram" | "doubtful";
+      let effectiveExplanation = add.madhabOverride
+        ? `${add.explanation} (selon école ${options.madhab})`
+        : add.explanation;
+
+      // Vegetal origin override: upgrade doubtful → halal when text specifies plant source
+      if (effectiveStatus === "doubtful" && hasVegetalOriginContext(
+        ingredientsText,
+        [add.code, ...add.name.split(/[/\s,()-]+/).filter((w) => w.length >= 4)],
+      )) {
+        effectiveStatus = "halal";
+        effectiveExplanation = `${add.name} — origine végétale précisée par le fabricant`;
+      }
+
       reasons.push({
         type: "additive",
         name: `${add.code} (${add.name})`,
-        status: add.halalStatus as "halal" | "haram" | "doubtful",
-        explanation: add.madhabOverride
-          ? `${add.explanation} (selon école ${options.madhab})`
-          : add.explanation,
+        status: effectiveStatus,
+        explanation: effectiveExplanation,
       });
 
-      if (add.halalStatus === "haram") {
+      if (effectiveStatus === "haram") {
         worstStatus = "haram";
         worstConfidence = Math.max(worstConfidence, 0.9);
-      } else if (add.halalStatus === "doubtful" && worstStatus !== "haram") {
+      } else if (effectiveStatus === "doubtful" && worstStatus !== "haram") {
         worstStatus = "doubtful";
         worstConfidence = Math.max(worstConfidence, 0.6);
       }
     }
   }
 
-  // Check ingredients text
+  // ── TIER 3: Check ingredients text via DB-driven rulings ──
   if (ingredientsText) {
-    const lower = ingredientsText.toLowerCase();
+    const matchedRulings = await matchIngredientRulings(
+      ingredientsText,
+      options.madhab,
+    );
 
-    for (const keyword of HARAM_INGREDIENTS) {
-      if (lower.includes(keyword)) {
-        reasons.push({
-          type: "ingredient",
-          name: keyword,
-          status: "haram",
-          explanation: getHaramExplanation(keyword),
-        });
-        worstStatus = "haram";
-        worstConfidence = Math.max(worstConfidence, 0.85);
+    const isVegan = ingredientsAnalysisTags?.includes("en:vegan");
+
+    for (const match of matchedRulings) {
+      let effectiveStatus = match.ruling;
+      let explanation = match.explanationFr;
+
+      // Vegan override: if product is vegan and ruling is doubtful, upgrade
+      if (isVegan && effectiveStatus === "doubtful") {
+        effectiveStatus = "halal";
+        explanation = `${match.pattern} — produit labellisé vegan, donc origine végétale`;
       }
-    }
+      // Vegetal origin override: text says "(origine végétale)" near the matched ingredient
+      else if (effectiveStatus === "doubtful" && hasVegetalOriginContext(
+        ingredientsText,
+        [match.pattern],
+      )) {
+        effectiveStatus = "halal";
+        explanation = `${match.pattern} — origine végétale précisée par le fabricant`;
+      }
 
-    if (worstStatus !== "haram") {
-      for (const keyword of DOUBTFUL_INGREDIENTS) {
-        if (lower.includes(keyword)) {
-          const isVegan = ingredientsAnalysisTags?.includes("en:vegan");
-          if (isVegan) {
-            reasons.push({
-              type: "ingredient",
-              name: keyword,
-              status: "halal",
-              explanation: `${keyword} — produit labellisé vegan, donc origine végétale`,
-            });
-          } else {
-            reasons.push({
-              type: "ingredient",
-              name: keyword,
-              status: "doubtful",
-              explanation: getDoubtfulExplanation(keyword),
-            });
-            if (worstStatus !== "doubtful") {
-              worstStatus = "doubtful";
-            }
-            worstConfidence = Math.max(worstConfidence, 0.6);
-          }
-        }
+      reasons.push({
+        type: "ingredient",
+        name: match.pattern,
+        status: effectiveStatus as "halal" | "haram" | "doubtful",
+        explanation,
+        scholarlyReference: match.scholarlyReference,
+        fatwaSourceName: match.fatwaSourceName,
+        category: match.category,
+      });
+
+      if (effectiveStatus === "haram") {
+        worstStatus = "haram";
+        worstConfidence = Math.max(worstConfidence, match.confidence);
+      } else if (effectiveStatus === "doubtful" && worstStatus !== "haram") {
+        worstStatus = "doubtful";
+        worstConfidence = Math.max(worstConfidence, match.confidence);
       }
     }
   }
@@ -448,7 +690,8 @@ export async function analyzeHalalStatus(
         tier: "doubtful",
         reasons: [{ type: "ingredient", name: "—", status: "doubtful", explanation: "Aucun ingrédient disponible" }],
         certifierName: null,
-        analysisSource: "Analyse automatique Naqiy",
+        certifierId: null,
+        analysisSource: "Analyse automatique Naqiy · Données OpenFoodFacts",
       },
       options.strictness
     );
@@ -463,7 +706,8 @@ export async function analyzeHalalStatus(
         tier: "haram",
         reasons,
         certifierName: null,
-        analysisSource: "Analyse automatique Naqiy",
+        certifierId: null,
+        analysisSource: "Analyse automatique Naqiy · Données OpenFoodFacts",
       },
       options.strictness
     );
@@ -477,7 +721,8 @@ export async function analyzeHalalStatus(
         tier: "doubtful",
         reasons,
         certifierName: null,
-        analysisSource: "Analyse automatique Naqiy",
+        certifierId: null,
+        analysisSource: "Analyse automatique Naqiy · Données OpenFoodFacts",
       },
       options.strictness
     );
@@ -496,7 +741,8 @@ export async function analyzeHalalStatus(
         explanation: "Aucun ingrédient haram ou douteux détecté",
       }],
       certifierName: null,
-      analysisSource: "Analyse automatique Naqiy",
+      certifierId: null,
+      analysisSource: "Analyse automatique Naqiy · Données OpenFoodFacts",
     },
     options.strictness
   );
@@ -533,44 +779,3 @@ function applyStrictnessOverlay(
   }
 }
 
-// ── Explanation helpers ─────────────────────────────────────
-
-function getHaramExplanation(keyword: string): string {
-  const explanations: Record<string, string> = {
-    porc: "Viande de porc — interdit (Sourate 2:173)",
-    pork: "Viande de porc — interdit (Sourate 2:173)",
-    gelatin: "Gélatine — généralement d'origine porcine",
-    "gélatine": "Gélatine — généralement d'origine porcine",
-    lard: "Graisse de porc",
-    saindoux: "Graisse de porc",
-    alcool: "Substance enivrante — interdit (Sourate 5:90)",
-    alcohol: "Substance enivrante — interdit (Sourate 5:90)",
-    ethanol: "Alcool éthylique — substance enivrante",
-    "éthanol": "Alcool éthylique — substance enivrante",
-    wine: "Vin — boisson alcoolisée",
-    vin: "Vin — boisson alcoolisée",
-    "bière": "Bière — boisson alcoolisée",
-    beer: "Bière — boisson alcoolisée",
-    rhum: "Rhum — boisson alcoolisée",
-    rum: "Rhum — boisson alcoolisée",
-    whisky: "Whisky — boisson alcoolisée",
-    vodka: "Vodka — boisson alcoolisée",
-    brandy: "Brandy — boisson alcoolisée",
-    carmine: "Colorant E120 — extrait d'insectes (cochenille)",
-    cochineal: "Cochenille — insecte utilisé comme colorant",
-  };
-  return explanations[keyword] ?? `Ingrédient haram détecté : ${keyword}`;
-}
-
-function getDoubtfulExplanation(keyword: string): string {
-  const explanations: Record<string, string> = {
-    "mono-": "Mono/diglycérides — origine animale ou végétale non précisée",
-    diglycerides: "Diglycérides — origine animale ou végétale non précisée",
-    "monoglycérides": "Monoglycérides — origine animale ou végétale non précisée",
-    whey: "Lactosérum (whey) — procédé peut impliquer présure animale",
-    "lactosérum": "Lactosérum — procédé peut impliquer présure animale",
-    rennet: "Présure — enzyme souvent d'origine animale",
-    "présure": "Présure — enzyme souvent d'origine animale",
-  };
-  return explanations[keyword] ?? `Ingrédient douteux : ${keyword}`;
-}

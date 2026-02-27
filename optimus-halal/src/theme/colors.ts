@@ -362,3 +362,14 @@ export type RamadanColors = typeof ramadan;
 export type Gradients = typeof gradients;
 export type StoreTypeColors = typeof storeTypeColors;
 export type Colors = typeof colors;
+
+// ---------------------------------------------------------------------------
+// Trust Score Color Utility
+// ---------------------------------------------------------------------------
+
+/** Returns the status color for a trust score: green ≥70, orange ≥40, red <40. */
+export function getTrustScoreColor(score: number): string {
+  if (score >= 70) return halalStatus.halal.base;
+  if (score >= 40) return halalStatus.doubtful.base;
+  return halalStatus.haram.base;
+}

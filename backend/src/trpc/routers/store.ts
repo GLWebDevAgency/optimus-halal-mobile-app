@@ -96,7 +96,7 @@ export const storeRouter = router({
       const ghPrecision = input.radiusKm <= 2 ? 6 : input.radiusKm <= 10 ? 5 : 4;
       const gh = ngeohash.encode(input.latitude, input.longitude, ghPrecision);
       const rBucket = Math.round(input.radiusKm * 2) / 2;
-      const cacheKey = `stores:v7:nearby:${gh}:r${rBucket}:l${input.limit}:t${input.storeType ?? "all"}:h${input.halalCertifiedOnly ? "1" : "0"}:o${input.openNow ? "1" : "0"}:mr${input.minRating ?? "x"}:q${input.query ?? ""}`;
+      const cacheKey = `stores:v8:nearby:${gh}:r${rBucket}:l${input.limit}:t${input.storeType ?? "all"}:h${input.halalCertifiedOnly ? "1" : "0"}:o${input.openNow ? "1" : "0"}:mr${input.minRating ?? "x"}:q${input.query ?? ""}`;
 
       // Reduce TTL when openNow filter is active (status changes in real-time)
       const ttl = input.openNow ? 60 : 300;
@@ -123,7 +123,7 @@ export const storeRouter = router({
         const rows = await ctx.db.execute(sql`
           WITH ranked AS (
             SELECT
-              s."id", s."name", s."store_type", s."image_url",
+              s."id", s."name", s."store_type", s."image_url", s."logo_url",
               s."address", s."city", s."phone",
               s."latitude", s."longitude",
               s."halal_certified", s."certifier", s."certifier_name",
@@ -176,6 +176,7 @@ export const storeRouter = router({
           name: row.name as string,
           storeType: row.store_type as string,
           imageUrl: row.image_url as string | null,
+          logoUrl: row.logo_url as string | null,
           address: row.address as string,
           city: row.city as string,
           phone: row.phone as string | null,

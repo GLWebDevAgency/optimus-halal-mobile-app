@@ -176,7 +176,7 @@ export default function ProfileScreen() {
   const { isPremium } = usePremium();
 
   // tRPC data
-  const { data: profile, isLoading: profileLoading } = useMe();
+  const { data: profile, isLoading: profileLoading, isError: profileError } = useMe();
   const { data: favoritesData } = useFavoritesList({ limit: 1 });
   const { data: loyalty } = useLoyaltyBalance();
   const logoutMutation = useLogout();
@@ -242,8 +242,31 @@ export default function ProfileScreen() {
     );
   }, [logoutMutation, t, impact]);
 
-  // Skeleton while profile data loads
-  if (profileLoading || !profile) return <ProfileSkeleton />;
+  // Skeleton only during the initial fetch — never block on error or stale cache
+  if (profileLoading && !profile) return <ProfileSkeleton />;
+
+  // Error fallback — query failed and no cached data
+  if (profileError && !profile) {
+    return (
+      <View style={{ flex: 1 }}>
+        <PremiumBackground />
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingTop: insets.top }}>
+          <MaterialIcons name="wifi-off" size={48} color={colors.textMuted} />
+          <Text style={{ marginTop: 16, fontSize: 16, fontWeight: "600", color: colors.textPrimary }}>
+            {t.errors.network}
+          </Text>
+          <PressableScale
+            onPress={() => {/* useMe auto-refetches on mount */
+              router.replace("/(tabs)/profile" as any);
+            }}
+            style={{ marginTop: 20, paddingHorizontal: 24, paddingVertical: 10, backgroundColor: colors.primary, borderRadius: 12 }}
+          >
+            <Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>{t.common.retry}</Text>
+          </PressableScale>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1">
@@ -468,12 +491,21 @@ export default function ProfileScreen() {
                 borderColor: isDark ? "rgba(212, 175, 55, 0.18)" : "rgba(212, 175, 55, 0.12)",
               }}
             >
-              <Image
-                source={require("@assets/images/logo_naqiy.webp")}
-                style={{ width: 24, height: 24 }}
-                contentFit="contain"
-                cachePolicy="memory-disk"
-              />
+              <View style={{
+                width: 38,
+                height: 38,
+                borderRadius: 10,
+                backgroundColor: isDark ? "rgba(212, 175, 55, 0.08)" : "rgba(212, 175, 55, 0.05)",
+                alignItems: "center",
+                justifyContent: "center",
+              }}>
+                <Image
+                  source={require("@assets/images/logo_naqiy.webp")}
+                  style={{ width: 30, height: 30 }}
+                  contentFit="contain"
+                  cachePolicy="memory-disk"
+                />
+              </View>
               <View style={{ flex: 1, marginStart: 12 }}>
                 <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: "700" }}>
                   Naqiy+
