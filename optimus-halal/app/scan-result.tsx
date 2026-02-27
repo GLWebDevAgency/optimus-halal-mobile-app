@@ -1644,7 +1644,9 @@ export default function ScanResultScreen() {
           {madhabVerdicts.length > 0 && (() => {
             // Detect unanimous verdict — all 4 schools agree with same status
             const statuses = madhabVerdicts.map((v) => v.status);
-            const isUnanimous = statuses.length === 4 && statuses.every((s) => s === statuses[0]);
+            // Unanimous text only for ingredient-based analysis (no certifier)
+            // When certifier is present, always show rings (per-madhab trust scores are valuable)
+            const isUnanimous = !certifierData_ && statuses.length === 4 && statuses.every((s) => s === statuses[0]);
             const unanimousStatus = statuses[0] as "halal" | "haram" | "doubtful";
 
             const unanimousTextMap = {
