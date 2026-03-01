@@ -24,6 +24,104 @@ export const ingredientRulingsSeed: NewIngredientRuling[] = [
   // ═══════════════════════════════════════════════════════════════
 
   {
+    compoundPattern: "vinaigre d'alcool",
+    matchType: "contains",
+    priority: 115,
+    rulingDefault: "halal",
+    rulingHanafi: "halal",
+    rulingShafii: "doubtful",
+    rulingMaliki: "doubtful",
+    rulingHanbali: "halal",
+    confidence: 0.8,
+    explanationFr:
+      "Le vinaigre d'alcool (vinaigre blanc) est produit par fermentation acétique d'éthanol de betterave ou de céréales. La question fiqhique n'est pas « le vinaigre est-il halal ? » (oui, par consensus — Muslim 2051), mais « le takhllil délibéré (transformer volontairement l'alcool en vinaigre) rend-il le produit impur ? »\n\n" +
+      "— Hanafites : HALAL. L'istihala (استحالة) est acceptée largement : quand une substance change de nature, le nouveau produit prend son propre statut. Le vinaigre n'est plus du khamr, qu'il se soit formé naturellement ou par intervention humaine. Le hadith de Muslim 1983 est interprété comme une recommandation de ne pas conserver du vin (pour éviter la tentation), non comme une interdiction du vinaigre résultant. (Al-Kasani, Bada'i al-Sana'i 5/113 ; Ibn Abidin, Radd al-Muhtar 1/316)\n\n" +
+      "— Hanbalites : HALAL (position prédominante). Ibn Uthaymeen : halal si le vinaigre est produit par des non-musulmans ou si la transformation est complète (Ash-Sharh al-Mumti' 1/415). Ibn Taymiyya : l'istihala purifie, même délibérée (Majmoo' al-Fataawa 21/483-502). Position minoritaire classique : takhllil makrouh. Le vinaigre d'alcool industriel : halal car produit dans un contexte non-musulman avec transformation complète.\n\n" +
+      "— Chafiites : DOUTEUX (position classique). Le vinaigre naturel est halal, mais le takhllil délibéré rend le vinaigre najis (impur). Fondement : Muslim 1983 — le Prophète ﷺ a dit « Non » quand Abu Talha lui a demandé de transformer le vin en vinaigre. (An-Nawawi, Al-Majmoo' 1/225 et 9/232 ; Ar-Ramli, Nihayat al-Muhtaj 1/242). Cependant, des savants Chafiites contemporains (Dar al-Ifta al-Misriyyah) acceptent le vinaigre industriel car l'éthanol de betterave n'est pas du khamr au sens classique.\n\n" +
+      "— Malikites : DOUTEUX (position classique). L'istihala du khamr par takhllil est interdite, le vinaigre résultant reste najis. (Ibn Rushd, Bidayat al-Mujtahid 1/79 ; Khalil, Mukhtasar — chapitre de la purification). Cependant, la position malikite concerne le khamr (vin de raisin). L'éthanol industriel de betterave/céréales n'est pas du khamr au sens strict. Des savants malikites contemporains (ECFR) considèrent le vinaigre d'alcool comme halal.\n\n" +
+      "Tableau — Takhllil délibéré :\n" +
+      "• Hanafi : Halal — Bada'i al-Sana'i 5/113\n" +
+      "• Hanbali : Halal (majorité) — Ibn Taymiyya, Majmoo' 21/483\n" +
+      "• Shafi'i : Najis classique / Halal contemporain — Nawawi, Majmoo' 9/232\n" +
+      "• Maliki : Najis classique / Halal contemporain — Bidayat al-Mujtahid 1/79",
+    explanationEn:
+      "Spirit vinegar (white vinegar) is produced by acetic fermentation of ethanol from sugar beet or grain. The fiqh question is not 'Is vinegar halal?' (yes, by consensus — Muslim 2051), but 'Does deliberate takhllil (intentionally turning alcohol into vinegar) render the product impure?'\n\n" +
+      "— Hanafi: HALAL. Istihala (استحالة) is broadly accepted: when a substance changes its essential nature, the new product takes its own ruling. Vinegar is no longer khamr, whether it formed naturally or through human intervention. The hadith (Muslim 1983) is interpreted as discouraging keeping wine (to avoid temptation), not as prohibiting the resulting vinegar. (Al-Kasani, Bada'i al-Sana'i 5/113; Ibn Abidin, Radd al-Muhtar 1/316)\n\n" +
+      "— Hanbali: HALAL (predominant view). Ibn Uthaymeen: halal if vinegar is produced by non-Muslims or if the transformation is complete (Ash-Sharh al-Mumti' 1/415). Ibn Taymiyya: istihala purifies even when deliberate (Majmoo' al-Fataawa 21/483-502). Minority classical position: takhllil is makrooh. Industrial spirit vinegar: halal as produced in a non-Muslim context with complete transformation.\n\n" +
+      "— Shafi'i: DOUBTFUL (classical position). Natural vinegar is halal, but deliberate takhllil renders vinegar najis (impure). Basis: Muslim 1983 — the Prophet ﷺ said 'No' when Abu Talha asked to turn wine into vinegar. (An-Nawawi, Al-Majmoo' 1/225 & 9/232; Ar-Ramli, Nihayat al-Muhtaj 1/242). However, contemporary Shafi'i scholars (Dar al-Ifta al-Misriyyah) accept industrial vinegar since beet ethanol is not khamr in the classical sense.\n\n" +
+      "— Maliki: DOUBTFUL (classical position). Istihala of khamr through takhllil is forbidden; the resulting vinegar remains najis. (Ibn Rushd, Bidayat al-Mujtahid 1/79; Khalil, Mukhtasar — purification chapter). However, the Maliki position concerns khamr (grape wine). Industrial ethanol from beet/grain is not khamr in the strict sense. Contemporary Maliki scholars (ECFR) consider spirit vinegar halal.\n\n" +
+      "Summary — Deliberate takhllil:\n" +
+      "• Hanafi: Halal — Bada'i al-Sana'i 5/113\n" +
+      "• Hanbali: Halal (majority) — Ibn Taymiyya, Majmoo' 21/483\n" +
+      "• Shafi'i: Najis classical / Halal contemporary — Nawawi, Majmoo' 9/232\n" +
+      "• Maliki: Najis classical / Halal contemporary — Bidayat al-Mujtahid 1/79",
+    explanationAr:
+      "خل الكحول (الخل الأبيض) يُنتج بالتخمّر الخلّي للإيثانول المستخرج من البنجر أو الحبوب. السؤال الفقهي ليس « هل الخل حلال؟ » (نعم بالإجماع — مسلم 2051)، بل « هل التخليل المتعمّد (تحويل الكحول إلى خل عمداً) يجعل المنتج نجساً؟ »\n\n" +
+      "— الحنفية: حلال. الاستحالة مقبولة على نطاق واسع: إذا تغيّرت طبيعة المادة، يأخذ المنتج الجديد حكمه الخاص. الخل لم يعد خمراً سواء تكوّن طبيعياً أو بتدخّل بشري. حديث مسلم 1983 يُفسَّر على أنه نهي عن الاحتفاظ بالخمر (لدرء الفتنة) لا نهي عن الخل الناتج. (الكاساني، بدائع الصنائع 5/113؛ ابن عابدين، ردّ المحتار 1/316)\n\n" +
+      "— الحنابلة: حلال (الرأي الراجح). ابن عثيمين: حلال إذا صنعه غير المسلمين أو إذا تمّت الاستحالة بالكامل (الشرح الممتع 1/415). ابن تيمية: الاستحالة تطهّر حتى لو كانت متعمّدة (مجموع الفتاوى 21/483-502). رأي أقلية كلاسيكي: التخليل مكروه. خل الكحول الصناعي: حلال لأنه يُنتج في سياق غير إسلامي مع استحالة كاملة.\n\n" +
+      "— الشافعية: مشكوك فيه (الرأي الكلاسيكي). الخل الطبيعي حلال، لكن التخليل المتعمّد يجعل الخل نجساً. الأساس: مسلم 1983 — قال النبي ﷺ « لا » عندما سأله أبو طلحة عن تحويل الخمر إلى خل. (النووي، المجموع 1/225 و9/232؛ الرملي، نهاية المحتاج 1/242). ومع ذلك، يقبل العلماء الشافعيون المعاصرون (دار الإفتاء المصرية) الخل الصناعي لأن إيثانول البنجر ليس خمراً بالمعنى الكلاسيكي.\n\n" +
+      "— المالكية: مشكوك فيه (الرأي الكلاسيكي). استحالة الخمر بالتخليل محرّمة، والخل الناتج يبقى نجساً. (ابن رشد، بداية المجتهد 1/79؛ خليل، المختصر — باب الطهارة). لكن الموقف المالكي يخصّ الخمر (نبيذ العنب). الإيثانول الصناعي من البنجر/الحبوب ليس خمراً بالمعنى الدقيق. العلماء المالكيون المعاصرون (المجلس الأوروبي للإفتاء) يعتبرون خل الكحول حلالاً.\n\n" +
+      "ملخّص — التخليل المتعمّد:\n" +
+      "• حنفي: حلال — بدائع الصنائع 5/113\n" +
+      "• حنبلي: حلال (الأغلبية) — ابن تيمية، المجموع 21/483\n" +
+      "• شافعي: نجس كلاسيكياً / حلال معاصراً — النووي، المجموع 9/232\n" +
+      "• مالكي: نجس كلاسيكياً / حلال معاصراً — بداية المجتهد 1/79",
+    scholarlyReference: "Muslim 2051, Muslim 1983, Abu Dawud 3675, Al-Kasani Bada'i al-Sana'i 5/113, Ibn Abidin Radd al-Muhtar 1/316, Ibn Taymiyya Majmoo' 21/483-502, Ibn Uthaymeen Ash-Sharh al-Mumti' 1/415, Nawawi Al-Majmoo' 9/232, Ar-Ramli Nihayat al-Muhtaj 1/242, Ibn Rushd Bidayat al-Mujtahid 1/79",
+    fatwaSourceUrl: "https://islamqa.info/en/answers/2283",
+    fatwaSourceName: "IslamQA #2283, ECFR, Dar al-Ifta al-Misriyyah",
+    overridesKeyword: "alcool",
+    category: "vinegar",
+  },
+  {
+    compoundPattern: "spirit vinegar",
+    matchType: "contains",
+    priority: 115,
+    rulingDefault: "halal",
+    rulingHanafi: "halal",
+    rulingShafii: "doubtful",
+    rulingMaliki: "doubtful",
+    rulingHanbali: "halal",
+    confidence: 0.8,
+    explanationFr:
+      "Le vinaigre d'alcool (spirit vinegar) est produit par fermentation acétique d'éthanol de betterave ou de céréales. La question fiqhique n'est pas « le vinaigre est-il halal ? » (oui, par consensus — Muslim 2051), mais « le takhllil délibéré (transformer volontairement l'alcool en vinaigre) rend-il le produit impur ? »\n\n" +
+      "— Hanafites : HALAL. L'istihala (استحالة) est acceptée largement : quand une substance change de nature, le nouveau produit prend son propre statut. Le vinaigre n'est plus du khamr, qu'il se soit formé naturellement ou par intervention humaine. (Al-Kasani, Bada'i al-Sana'i 5/113 ; Ibn Abidin, Radd al-Muhtar 1/316)\n\n" +
+      "— Hanbalites : HALAL (position prédominante). Ibn Uthaymeen : halal si le vinaigre est produit par des non-musulmans ou si la transformation est complète (Ash-Sharh al-Mumti' 1/415). Ibn Taymiyya : l'istihala purifie, même délibérée (Majmoo' al-Fataawa 21/483-502).\n\n" +
+      "— Chafiites : DOUTEUX (position classique). Le takhllil délibéré rend le vinaigre najis. Fondement : Muslim 1983 — le Prophète ﷺ a dit « Non » quand Abu Talha lui a demandé de transformer le vin en vinaigre. (Nawawi, Al-Majmoo' 9/232). Des contemporains (Dar al-Ifta) acceptent le vinaigre industriel.\n\n" +
+      "— Malikites : DOUTEUX (position classique). L'istihala du khamr par takhllil est interdite. (Ibn Rushd, Bidayat al-Mujtahid 1/79). Cependant, l'éthanol industriel n'est pas du khamr au sens strict. Des contemporains (ECFR) le considèrent halal.\n\n" +
+      "Tableau — Takhllil délibéré :\n" +
+      "• Hanafi : Halal — Bada'i al-Sana'i 5/113\n" +
+      "• Hanbali : Halal (majorité) — Ibn Taymiyya, Majmoo' 21/483\n" +
+      "• Shafi'i : Najis classique / Halal contemporain — Nawawi, Majmoo' 9/232\n" +
+      "• Maliki : Najis classique / Halal contemporain — Bidayat al-Mujtahid 1/79",
+    explanationEn:
+      "Spirit vinegar is produced by acetic fermentation of ethanol from sugar beet or grain. The fiqh question is not 'Is vinegar halal?' (yes, by consensus — Muslim 2051), but 'Does deliberate takhllil (intentionally turning alcohol into vinegar) render the product impure?'\n\n" +
+      "— Hanafi: HALAL. Istihala (استحالة) is broadly accepted: when a substance changes its essential nature, the new product takes its own ruling. Vinegar is no longer khamr. (Al-Kasani, Bada'i al-Sana'i 5/113; Ibn Abidin, Radd al-Muhtar 1/316)\n\n" +
+      "— Hanbali: HALAL (predominant view). Ibn Uthaymeen: halal if produced by non-Muslims or if transformation is complete (Ash-Sharh al-Mumti' 1/415). Ibn Taymiyya: istihala purifies even when deliberate (Majmoo' 21/483-502).\n\n" +
+      "— Shafi'i: DOUBTFUL (classical position). Deliberate takhllil renders vinegar najis. Basis: Muslim 1983 — the Prophet ﷺ said 'No' when asked to turn wine into vinegar. (Nawawi, Al-Majmoo' 9/232). Contemporary scholars (Dar al-Ifta) accept industrial vinegar.\n\n" +
+      "— Maliki: DOUBTFUL (classical position). Istihala of khamr through takhllil is forbidden. (Ibn Rushd, Bidayat al-Mujtahid 1/79). However, industrial ethanol is not khamr in the strict sense. Contemporary scholars (ECFR) consider it halal.\n\n" +
+      "Summary — Deliberate takhllil:\n" +
+      "• Hanafi: Halal — Bada'i al-Sana'i 5/113\n" +
+      "• Hanbali: Halal (majority) — Ibn Taymiyya, Majmoo' 21/483\n" +
+      "• Shafi'i: Najis classical / Halal contemporary — Nawawi, Majmoo' 9/232\n" +
+      "• Maliki: Najis classical / Halal contemporary — Bidayat al-Mujtahid 1/79",
+    explanationAr:
+      "خل الكحول يُنتج بالتخمّر الخلّي للإيثانول من البنجر أو الحبوب. السؤال الفقهي ليس « هل الخل حلال؟ » (نعم بالإجماع — مسلم 2051)، بل « هل التخليل المتعمّد يجعل المنتج نجساً؟ »\n\n" +
+      "— الحنفية: حلال. الاستحالة مقبولة: إذا تغيّرت طبيعة المادة يأخذ المنتج الجديد حكمه الخاص. (الكاساني، بدائع الصنائع 5/113؛ ابن عابدين، ردّ المحتار 1/316)\n\n" +
+      "— الحنابلة: حلال (الراجح). ابن عثيمين: حلال إذا صنعه غير المسلمين أو تمّت الاستحالة (الشرح الممتع 1/415). ابن تيمية: الاستحالة تطهّر حتى لو كانت متعمّدة (المجموع 21/483-502).\n\n" +
+      "— الشافعية: مشكوك فيه (كلاسيكياً). التخليل المتعمّد يجعل الخل نجساً. مسلم 1983 — قال النبي ﷺ « لا » لأبي طلحة. (النووي، المجموع 9/232). المعاصرون (دار الإفتاء) يقبلون الخل الصناعي.\n\n" +
+      "— المالكية: مشكوك فيه (كلاسيكياً). استحالة الخمر بالتخليل محرّمة. (ابن رشد، بداية المجتهد 1/79). لكن الإيثانول الصناعي ليس خمراً. المعاصرون (المجلس الأوروبي للإفتاء) يعتبرونه حلالاً.\n\n" +
+      "ملخّص — التخليل المتعمّد:\n" +
+      "• حنفي: حلال — بدائع الصنائع 5/113\n" +
+      "• حنبلي: حلال (الأغلبية) — ابن تيمية، المجموع 21/483\n" +
+      "• شافعي: نجس كلاسيكياً / حلال معاصراً — النووي، المجموع 9/232\n" +
+      "• مالكي: نجس كلاسيكياً / حلال معاصراً — بداية المجتهد 1/79",
+    scholarlyReference: "Muslim 2051, Muslim 1983, Abu Dawud 3675, Al-Kasani Bada'i al-Sana'i 5/113, Ibn Abidin Radd al-Muhtar 1/316, Ibn Taymiyya Majmoo' 21/483-502, Ibn Uthaymeen Ash-Sharh al-Mumti' 1/415, Nawawi Al-Majmoo' 9/232, Ar-Ramli Nihayat al-Muhtaj 1/242, Ibn Rushd Bidayat al-Mujtahid 1/79",
+    fatwaSourceUrl: "https://islamqa.info/en/answers/2283",
+    fatwaSourceName: "IslamQA #2283, ECFR, Dar al-Ifta al-Misriyyah",
+    overridesKeyword: "alcohol",
+    category: "vinegar",
+  },
+  {
     compoundPattern: "vinaigre de vin",
     matchType: "contains",
     priority: 110,

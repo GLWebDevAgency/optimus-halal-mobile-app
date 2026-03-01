@@ -228,8 +228,12 @@ function expandAbbreviations(text: string): string {
  * The original text structure is preserved — only noise is removed.
  */
 export function normalizeIngredientText(raw: string): string {
+  // Step 0: Normalize typographic quotes/apostrophes to ASCII
+  // OFF data may contain ' (U+2019), ' (U+2018), ʼ (U+02BC) — standardize to '
+  let text = raw.replace(/[\u2018\u2019\u02BC]/g, "'");
+
   // Step 1: OCR artifact repair
-  let text = fixOcrArtifacts(raw);
+  text = fixOcrArtifacts(text);
 
   // Step 2: Normalize E-codes (E.471 → e471)
   text = normalizeECodes(text);

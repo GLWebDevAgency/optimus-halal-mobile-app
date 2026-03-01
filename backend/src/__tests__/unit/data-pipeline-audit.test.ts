@@ -26,6 +26,8 @@ interface SimulatedRuling {
 // Subset of ingredient_rulings that are relevant for our test products
 const RELEVANT_RULINGS: SimulatedRuling[] = [
   // Safe compounds (priority 100+)
+  { compoundPattern: "vinaigre d'alcool", matchType: "contains", priority: 115, ruling: "halal", overridesKeyword: "alcool" },
+  { compoundPattern: "spirit vinegar", matchType: "contains", priority: 115, ruling: "halal", overridesKeyword: "alcohol" },
   { compoundPattern: "vinaigre de vin", matchType: "contains", priority: 110, ruling: "doubtful", overridesKeyword: "vin" },
   { compoundPattern: "vinaigre", matchType: "word_boundary", priority: 105, ruling: "halal", overridesKeyword: "vin" },
   { compoundPattern: "vinegar", matchType: "word_boundary", priority: 105, ruling: "halal", overridesKeyword: "wine" },
@@ -191,6 +193,34 @@ describe("Pipeline Audit — Accent matching (FIXED)", () => {
 
   it("'contains' match type also handles diacritics", () => {
     expect(testPattern("gelatine bovine halal", "gélatine bovine halal", "contains")).toBe(true);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// PRODUCTS WITH SPIRIT VINEGAR (vinaigre d'alcool)
+// ══════════════════════════════════════════════════════════════
+
+describe("Pipeline Audit — Spirit vinegar (vinaigre d'alcool)", () => {
+  it("'vinaigre d'alcool' is halal and overrides 'alcool' keyword", () => {
+    const results = simulateMatching("eau, sauce soja, fèves de soja, sel, vinaigre d'alcool, sucre");
+    const vinaigreMatch = results.find((r) => r.pattern === "vinaigre d'alcool");
+    expect(vinaigreMatch).toBeDefined();
+    expect(vinaigreMatch!.ruling).toBe("halal");
+    // "alcool" keyword should be overridden — NOT appear as haram
+    expect(results.find((r) => r.pattern === "alcool")).toBeUndefined();
+  });
+
+  it("'vinaigre d\u2019alcool' with typographic apostrophe matches after normalization", () => {
+    const normalized = normalizeIngredientText("eau, vinaigre d\u2019alcool, sucre");
+    expect(normalized).toContain("vinaigre d'alcool");
+  });
+
+  it("'spirit vinegar' in English text is halal and overrides 'alcohol'", () => {
+    const results = simulateMatching("water, soy sauce, spirit vinegar, sugar");
+    const match = results.find((r) => r.pattern === "spirit vinegar");
+    expect(match).toBeDefined();
+    expect(match!.ruling).toBe("halal");
+    expect(results.find((r) => r.pattern === "alcohol")).toBeUndefined();
   });
 });
 
