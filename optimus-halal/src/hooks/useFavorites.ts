@@ -1,17 +1,24 @@
 import { trpc } from "@/lib/trpc";
 import { useQueryClient } from "@tanstack/react-query";
 import { trackEvent } from "../lib/analytics";
+import { useMe } from "./useAuth";
 
 export function useFavoritesList(options?: {
   folderId?: string;
   limit?: number;
+  enabled?: boolean;
 }) {
+  const { data: me } = useMe();
   return trpc.favorites.list.useQuery(
     {
       folderId: options?.folderId,
       limit: options?.limit ?? 50,
     },
-    { staleTime: 1000 * 60 * 5 }
+    {
+      staleTime: 1000 * 60 * 5,
+      enabled: (options?.enabled ?? true) && !!me,
+      retry: false,
+    }
   );
 }
 
@@ -101,8 +108,11 @@ export function useRemoveFavorite() {
 }
 
 export function useFavoriteFolders() {
+  const { data: me } = useMe();
   return trpc.favorites.listFolders.useQuery(undefined, {
     staleTime: 1000 * 60 * 5,
+    enabled: !!me,
+    retry: false,
   });
 }
 

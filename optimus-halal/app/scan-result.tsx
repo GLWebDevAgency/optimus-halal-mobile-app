@@ -24,6 +24,8 @@ import {
   Platform,
   Alert,
   Linking,
+  Modal,
+  Pressable,
 } from "react-native";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
@@ -34,7 +36,11 @@ import { ImpactFeedbackStyle, NotificationFeedbackType } from "expo-haptics";
 import Animated, {
   FadeIn,
   FadeInDown,
-  SlideInUp,
+  FadeInUp,
+  FadeInLeft,
+  FadeInRight,
+  SlideInDown,
+  ZoomIn,
   useSharedValue,
   useAnimatedStyle,
   useAnimatedReaction,
@@ -59,16 +65,16 @@ import { ScoreDetailBottomSheet } from "@/components/scan/ScoreDetailBottomSheet
 import { ShareCardView, captureAndShareCard } from "@/components/scan/ShareCard";
 import { trpc } from "@/lib/trpc";
 import { useScanBarcode } from "@/hooks/useScan";
-import { useTranslation, useHaptics, useAddFavorite, useRemoveFavorite, useCreateReview } from "@/hooks";
+import { useTranslation, useHaptics, useAddFavorite, useRemoveFavorite, useCreateReview, useFavoritesList } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
 import { halalStatus as halalStatusTokens, brand as brandTokens, glass, lightTheme, semantic, gold } from "@/theme/colors";
 import { textStyles, fontSize as fontSizeTokens, fontWeight as fontWeightTokens } from "@/theme/typography";
 import { spacing, radius } from "@/theme/spacing";
-import { getShadows } from "@/theme/shadows";
 import { durations, easings, entryAnimations } from "@/theme/animations";
 import { GlowCard } from "@/components/ui/GlowCard";
 
 import { CertifierLogo } from "@/components/scan/CertifierLogo";
+import { ScanResultTabBar } from "@/components/scan/ScanResultTabBar";
 
 
 import { useFeatureFlagsStore } from "@/store";
@@ -154,6 +160,24 @@ const NOVA_COLORS: Record<number, string> = {
   2: "#eab308",
   3: halalStatusTokens.doubtful.base,
   4: halalStatusTokens.haram.base,
+};
+
+// Health Score color map by label (matches plan spec)
+const HEALTH_SCORE_COLORS: Record<string, string> = {
+  excellent: "#2DC653",
+  good: "#85C93B",
+  mediocre: "#FFC107",
+  poor: "#FF6F00",
+  very_poor: "#E53935",
+};
+
+// Map label → i18n key
+const HEALTH_SCORE_LABEL_KEYS: Record<string, "healthScoreExcellent" | "healthScoreGood" | "healthScoreMediocre" | "healthScorePoor" | "healthScoreVeryPoor"> = {
+  excellent: "healthScoreExcellent",
+  good: "healthScoreGood",
+  mediocre: "healthScoreMediocre",
+  poor: "healthScorePoor",
+  very_poor: "healthScoreVeryPoor",
 };
 
 const SUSPENSE_DURATION = 350;
@@ -252,46 +276,38 @@ const CollapsibleSection = React.memo(function CollapsibleSection({
     >
       <PressableScale
         onPress={toggle}
-        style={styles.collapsibleHeader}
         accessibilityRole="button"
         accessibilityLabel={title}
         accessibilityState={{ expanded: isOpen }}
       >
-        <View style={styles.collapsibleHeaderLeft}>
-          <Text
-            style={[styles.collapsibleTitle, { color: colors.textPrimary }]}
-          >
-            {title}
-          </Text>
-          {badge && (
-            <View
-              style={[
-                styles.collapsibleBadge,
-                {
-                  backgroundColor: isDark
-                    ? glass.dark.highlight
-                    : glass.light.bgSubtle,
-                },
-              ]}
+        <View style={styles.collapsibleHeader}>
+          <View style={styles.collapsibleHeaderLeft}>
+            <Text
+              style={[styles.collapsibleTitle, { color: colors.textPrimary }]}
+              numberOfLines={1}
             >
+              {title}
+            </Text>
+            {badge && (
               <Text
                 style={[
                   styles.collapsibleBadgeText,
-                  { color: colors.textSecondary },
+                  { color: colors.textMuted },
                 ]}
+                numberOfLines={1}
               >
                 {badge}
               </Text>
-            </View>
-          )}
+            )}
+          </View>
+          <Animated.View style={[styles.collapsibleChevron, chevronStyle]}>
+            <MaterialIcons
+              name="keyboard-arrow-down"
+              size={20}
+              color={colors.textMuted}
+            />
+          </Animated.View>
         </View>
-        <Animated.View style={chevronStyle}>
-          <MaterialIcons
-            name="expand-more"
-            size={24}
-            color={colors.textSecondary}
-          />
-        </Animated.View>
       </PressableScale>
       <Animated.View style={contentStyle}>
         <View
@@ -484,38 +500,250 @@ const ingredientStyles = StyleSheet.create({
   refText: { fontSize: fontSizeTokens.micro, fontStyle: "italic", flex: 1 },
 });
 
-// ── Loading Skeleton ────────────────────────────────────────
+// ── Loading Skeleton — "Le Scribe Sacré" ────────────────────
+// Storytelling loader: 4 animated steps narrate the analysis journey.
+// Each step activates → completes in sequence, turning the wait into
+// an informative micro-experience (Naqiy value: transparency).
+
+const SCRIBE_ICONS = [
+  "qr-code-scanner",
+  "inventory-2",
+  "science",
+  "balance",
+] as const;
+
+const MADHAB_CHIPS = ["Hanafi", "Shafi'i", "Maliki", "Hanbali"] as const;
+
+type ScribeStatus = "pending" | "active" | "completed";
+
+const ScribeStepNode = React.memo(function ScribeStepNode({
+  icon,
+  label,
+  status,
+  isLast,
+  reducedMotion,
+  isDark,
+  showMadhabs,
+}: {
+  icon: (typeof SCRIBE_ICONS)[number];
+  label: string;
+  status: ScribeStatus;
+  isLast: boolean;
+  reducedMotion: boolean;
+  isDark: boolean;
+  showMadhabs: boolean;
+}) {
+  // ── Shared values for smooth transitions ──
+  const nodeScale = useSharedValue(status === "pending" ? 0.85 : 1);
+  const glowOpacity = useSharedValue(0);
+  const checkScale = useSharedValue(0);
+
+  useEffect(() => {
+    if (status === "active") {
+      nodeScale.value = withSpring(1, { damping: 12, stiffness: 150 });
+      glowOpacity.value = withTiming(1, { duration: 350 });
+      if (!reducedMotion) {
+        // Subtle breathing pulse on active node
+        nodeScale.value = withRepeat(
+          withSequence(
+            withTiming(1.1, { duration: 800, easing: Easing.inOut(Easing.ease) }),
+            withTiming(1, { duration: 800, easing: Easing.inOut(Easing.ease) }),
+          ),
+          -1,
+          false,
+        );
+      }
+    } else if (status === "completed") {
+      nodeScale.value = withSpring(1, { damping: 15 });
+      glowOpacity.value = withTiming(0, { duration: 200 });
+      checkScale.value = withSpring(1, { damping: 8, stiffness: 200 });
+    }
+  }, [status, reducedMotion]);
+
+  const nodeAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: nodeScale.value }],
+  }));
+
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: glowOpacity.value,
+  }));
+
+  const checkStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: checkScale.value }],
+    opacity: checkScale.value,
+  }));
+
+  // ── Color logic ──
+  const isActive = status === "active";
+  const isDone = status === "completed";
+
+  const nodeBorder = isDone
+    ? halalStatusTokens.halal.base
+    : isActive
+      ? gold[500]
+      : isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)";
+
+  const nodeBg = isDone ? halalStatusTokens.halal.base : "transparent";
+
+  const iconColor = isDone
+    ? "#fff"
+    : isActive
+      ? gold[500]
+      : isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.15)";
+
+  const textColor = isActive
+    ? (isDark ? gold[400] : gold[600])
+    : isDone
+      ? (isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.45)")
+      : (isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.12)");
+
+  const lineColor = isDone
+    ? `${halalStatusTokens.halal.base}50`
+    : isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)";
+
+  return (
+    <View style={scribeStyles.stepRow}>
+      {/* ── Node column: circle + connecting line ── */}
+      <View style={scribeStyles.nodeColumn}>
+        {/* Glow ring (golden halo behind active node) */}
+        {isActive && (
+          <Animated.View
+            style={[
+              scribeStyles.nodeGlow,
+              { backgroundColor: `${gold[500]}20`, borderColor: `${gold[500]}30` },
+              glowStyle,
+            ]}
+          />
+        )}
+        <Animated.View
+          style={[
+            scribeStyles.node,
+            { borderColor: nodeBorder, backgroundColor: nodeBg },
+            nodeAnimStyle,
+          ]}
+        >
+          {isDone ? (
+            <Animated.View style={checkStyle}>
+              <MaterialIcons name="check" size={14} color="#fff" />
+            </Animated.View>
+          ) : (
+            <MaterialIcons name={icon} size={13} color={iconColor} />
+          )}
+        </Animated.View>
+
+        {/* Connecting line */}
+        {!isLast && (
+          <View style={[scribeStyles.line, { backgroundColor: lineColor }]} />
+        )}
+      </View>
+
+      {/* ── Label column ── */}
+      <View style={scribeStyles.labelColumn}>
+        <Text
+          style={[
+            scribeStyles.stepLabel,
+            { color: textColor },
+            isActive && scribeStyles.stepLabelActive,
+          ]}
+          numberOfLines={1}
+        >
+          {label}
+        </Text>
+
+        {/* Madhab mini-chips (step 4 only, revealed on active) */}
+        {showMadhabs && isActive && (
+          <Animated.View entering={FadeIn.duration(400)} style={scribeStyles.madhabRow}>
+            {MADHAB_CHIPS.map((name, i) => (
+              <Animated.View
+                key={name}
+                entering={FadeIn.delay(i * 120).duration(250)}
+                style={[
+                  scribeStyles.madhabChip,
+                  {
+                    backgroundColor: isDark ? `${gold[500]}15` : `${gold[500]}10`,
+                    borderColor: `${gold[500]}25`,
+                  },
+                ]}
+              >
+                <Text style={[scribeStyles.madhabChipText, { color: gold[500] }]}>
+                  {name}
+                </Text>
+              </Animated.View>
+            ))}
+          </Animated.View>
+        )}
+      </View>
+    </View>
+  );
+});
 
 const ScanLoadingSkeleton = React.memo(function ScanLoadingSkeleton({
   barcode,
+  onComplete,
 }: {
   barcode?: string;
+  /** Called when the stepper has finished all 4 steps (minimum dignity) */
+  onComplete?: () => void;
 }) {
-  const { isDark, colors } = useTheme();
+  const { isDark } = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
   const shimmer = useSharedValue(0.3);
-  const [dots, setDots] = useState("");
 
+  // ── Step state machine ──
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [dots, setDots] = useState("");
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+
+  // Animated dots on active step
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots((prev) => (prev.length >= 3 ? "" : prev + "."));
+    }, 400);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Step progression — adaptive timing:
+  // 350ms per step = 1.05s to reach step 3 + 200ms for madhab chips = ~1.25s total
+  // Fast enough to not slow down cached responses, slow enough for the eye to follow.
+  useEffect(() => {
+    if (reducedMotion) {
+      setActiveIndex(3);
+      onCompleteRef.current?.();
+      return;
+    }
+    const t1 = setTimeout(() => setActiveIndex(1), 350);
+    const t2 = setTimeout(() => setActiveIndex(2), 700);
+    const t3 = setTimeout(() => setActiveIndex(3), 1050);
+    // Signal completion after last step has settled (madhab chips visible)
+    const t4 = setTimeout(() => onCompleteRef.current?.(), 1250);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
+  }, [reducedMotion]);
+
+  // Shimmer for skeleton cards below hero
   useEffect(() => {
     if (!reducedMotion) {
       shimmer.value = withRepeat(
         withTiming(0.7, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
         -1,
-        true
+        true,
       );
     }
-    // Animated dots
-    const interval = setInterval(() => {
-      setDots((prev) => (prev.length >= 3 ? "" : prev + "."));
-    }, 400);
-    return () => clearInterval(interval);
   }, [reducedMotion]);
 
   const shimmerStyle = useAnimatedStyle(() => ({
     opacity: reducedMotion ? 0.5 : shimmer.value,
   }));
+
+  // Step labels from i18n
+  const stepLabels = [
+    t.scanResult.stepBarcode,
+    t.scanResult.stepProduct,
+    t.scanResult.stepIngredients,
+    t.scanResult.stepScholars,
+  ];
 
   const bgColors = isDark
     ? (["#0a1a10", "#0f2418", "#132a1a"] as const)
@@ -527,43 +755,13 @@ const ScanLoadingSkeleton = React.memo(function ScanLoadingSkeleton({
         colors={[...bgColors]}
         style={[styles.heroGradient, { height: HERO_HEIGHT, paddingTop: insets.top }]}
       >
-        <View style={styles.loadingContent}>
-          {/* Skeleton status circle */}
-          <Animated.View
-            style={[
-              skeletonStyles.circle,
-              {
-                backgroundColor: isDark
-                  ? halalStatusTokens.halal.bgDark
-                  : halalStatusTokens.halal.bg,
-                borderColor: isDark
-                  ? `${brandTokens.primary}33`
-                  : `${brandTokens.primary}40`,
-              },
-              shimmerStyle,
-            ]}
-          />
-
-          {/* Loading text */}
-          <Text
-            style={[
-              styles.loadingTitle,
-              { color: isDark ? colors.primary : colors.primaryDark },
-            ]}
-          >
-            {t.scanResult.analyzing.replace("...", "")}{dots}
-          </Text>
-
-          {/* Barcode chip */}
+        <View style={scribeStyles.container}>
+          {/* ── Barcode chip ── */}
           {barcode && (
             <View
               style={[
-                styles.loadingBarcode,
-                {
-                  backgroundColor: isDark
-                    ? "rgba(255,255,255,0.05)"
-                    : "rgba(0,0,0,0.04)",
-                },
+                scribeStyles.barcodeChip,
+                { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" },
               ]}
             >
               <MaterialIcons
@@ -572,36 +770,50 @@ const ScanLoadingSkeleton = React.memo(function ScanLoadingSkeleton({
                 color={isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)"}
               />
               <Text
-                style={[skeletonStyles.barcodeText, { color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)" }]}
+                style={[
+                  scribeStyles.barcodeText,
+                  { color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)" },
+                ]}
               >
                 {barcode}
               </Text>
             </View>
           )}
 
-          {/* Skeleton certifier badge placeholder */}
-          <Animated.View
-            style={[
-              skeletonStyles.badge,
-              { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)" },
-              shimmerStyle,
-            ]}
-          />
+          {/* ── 4-step scribe stepper ── */}
+          <View style={scribeStyles.stepper}>
+            {SCRIBE_ICONS.map((icon, i) => {
+              const status: ScribeStatus =
+                i < activeIndex ? "completed" : i === activeIndex ? "active" : "pending";
+              return (
+                <ScribeStepNode
+                  key={i}
+                  icon={icon}
+                  label={stepLabels[i] + (status === "active" ? dots : "")}
+                  status={status}
+                  isLast={i === 3}
+                  reducedMotion={reducedMotion ?? false}
+                  isDark={isDark}
+                  showMadhabs={i === 3}
+                />
+              );
+            })}
+          </View>
         </View>
       </LinearGradient>
 
       {/* Skeleton cards below hero */}
-      <View style={skeletonStyles.cardsWrap}>
+      <View style={scribeStyles.cardsWrap}>
         <Animated.View
           style={[
-            skeletonStyles.cardLarge,
+            scribeStyles.cardLarge,
             { backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)" },
             shimmerStyle,
           ]}
         />
         <Animated.View
           style={[
-            skeletonStyles.cardSmall,
+            scribeStyles.cardSmall,
             { backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)" },
             shimmerStyle,
           ]}
@@ -613,10 +825,100 @@ const ScanLoadingSkeleton = React.memo(function ScanLoadingSkeleton({
 
 // ── Error State ─────────────────────────────────────────────
 
-const skeletonStyles = StyleSheet.create({
-  circle: { width: 80, height: 80, borderRadius: 40, borderWidth: 3 },
-  barcodeText: { fontSize: fontSizeTokens.caption, fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace", marginStart: spacing.sm },
-  badge: { width: 160, height: 28, borderRadius: 14, marginTop: spacing.xl },
+const scribeStyles = StyleSheet.create({
+  // Container
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: spacing["3xl"],
+  },
+  // Barcode chip
+  barcodeChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "center",
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.sm,
+    marginBottom: spacing["3xl"],
+  },
+  barcodeText: {
+    fontSize: fontSizeTokens.caption,
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+    marginStart: spacing.sm,
+  },
+  // Stepper
+  stepper: {
+    paddingStart: spacing.lg,
+  },
+  stepRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  nodeColumn: {
+    alignItems: "center",
+    width: 32,
+    marginEnd: spacing.lg,
+  },
+  node: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+    zIndex: 2,
+  },
+  nodeGlow: {
+    position: "absolute",
+    top: -4,
+    left: -2,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    zIndex: 1,
+  },
+  line: {
+    width: 2,
+    height: 22,
+    borderRadius: 1,
+    marginVertical: 3,
+  },
+  // Labels
+  labelColumn: {
+    flex: 1,
+    justifyContent: "center",
+    minHeight: 28,
+    paddingTop: 3,
+  },
+  stepLabel: {
+    fontSize: fontSizeTokens.body,
+    fontWeight: fontWeightTokens.medium,
+    letterSpacing: 0.2,
+  },
+  stepLabelActive: {
+    fontWeight: fontWeightTokens.bold,
+  },
+  // Madhab chips
+  madhabRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+    flexWrap: "wrap",
+  },
+  madhabChip: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+  },
+  madhabChipText: {
+    fontSize: fontSizeTokens.micro,
+    fontWeight: fontWeightTokens.bold,
+    letterSpacing: 0.3,
+  },
+  // Skeleton cards (below hero)
   cardsWrap: { paddingHorizontal: spacing["2xl"], paddingTop: spacing["2xl"] },
   cardLarge: { height: 80, borderRadius: radius.lg },
   cardSmall: { height: 60, borderRadius: radius.lg, marginTop: spacing.lg },
@@ -757,6 +1059,8 @@ export default function ScanResultScreen() {
   const { data: userProfile } = trpc.profile.getProfile.useQuery();
   const hasFired = useRef(false);
   const shareCardRef = useRef<View>(null);
+  // Minimum dignity: stepper must finish all 4 steps before showing result
+  const [scribeComplete, setScribeComplete] = useState(false);
 
   useEffect(() => {
     if (barcode && !hasFired.current) {
@@ -771,6 +1075,7 @@ export default function ScanResultScreen() {
   const halalAnalysis = scanMutation.data?.halalAnalysis ?? null;
   const boycott = scanMutation.data?.boycott ?? null;
   const offExtras = scanMutation.data?.offExtras ?? null;
+  const healthScore = scanMutation.data?.healthScore ?? null;
   const madhabVerdicts = scanMutation.data?.madhabVerdicts ?? [];
   const ingredientRulings = useMemo(
     () => scanMutation.data?.ingredientRulings ?? [],
@@ -814,7 +1119,6 @@ export default function ScanResultScreen() {
     effectiveHeroStatus === "halal" && !certifierData_
       ? t.scanResult.compositionCompliant
       : t.scanResult[statusConfig.labelKey];
-  const shadows = getShadows(isDark);
   const ingredients: string[] = (product?.ingredients as string[]) ?? [];
 
   const haramReasons = useMemo(
@@ -836,12 +1140,13 @@ export default function ScanResultScreen() {
   const communityVerifiedCount = scanMutation.data?.communityVerifiedCount ?? 0;
   const certifierData = scanMutation.data?.certifierData ?? null;
 
-  // ── Halal Alternatives Query ──────────────────
+  // ── Feature Flags ────────────────────────────
   const { isFeatureEnabled } = useFeatureFlagsStore();
   const marketplaceEnabled = isFeatureEnabled("marketplaceEnabled");
+  const alternativesEnabled = isFeatureEnabled("alternativesEnabled");
   const alternativesQuery = trpc.product.getAlternatives.useQuery(
     { productId: product?.id ?? "", limit: 3 },
-    { enabled: !!product?.id }
+    { enabled: alternativesEnabled && !!product?.id }
   );
 
   // ── Level-Up Celebration ─────────────────────
@@ -873,6 +1178,9 @@ export default function ScanResultScreen() {
 
   const handleCloseMadhab = useCallback(() => setSelectedMadhab(null), []);
 
+  // ── 3-Tab Navigation ──────────────────────────
+  const [activeTab, setActiveTab] = useState(0);
+
   // ── Trust Score Bottom Sheet ─────────────────
   const [showTrustScoreSheet, setShowTrustScoreSheet] = useState(false);
   const handleCloseTrustScore = useCallback(() => setShowTrustScoreSheet(false), []);
@@ -880,6 +1188,9 @@ export default function ScanResultScreen() {
   // ── Score Detail Bottom Sheet ──────────────
   const [showScoreDetailSheet, setShowScoreDetailSheet] = useState(false);
   const handleCloseScoreDetail = useCallback(() => setShowScoreDetailSheet(false), []);
+
+  // ── Product Image Preview Modal ──────────────
+  const [showImagePreview, setShowImagePreview] = useState(false);
 
   // ── User Vote (backend-synced) ────────────────
   const [userVote, setUserVote] = useState<"up" | "down" | null>(null);
@@ -936,10 +1247,7 @@ export default function ScanResultScreen() {
   }, [haramReasons, doubtfulReasons, ingredientRulings]);
 
   // ── Favorites (backend-synced) ─────────────────
-  const favoritesQuery = trpc.favorites.list.useQuery(
-    { limit: 200 },
-    { staleTime: 1000 * 60 * 5 }
-  );
+  const favoritesQuery = useFavoritesList({ limit: 200 });
   const addFavoriteMutation = useAddFavorite();
   const removeFavoriteMutation = useRemoveFavorite();
   const productIsFavorite = useMemo(
@@ -1085,18 +1393,38 @@ export default function ScanResultScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [barcode, isViewOnly]);
 
-  // ── Favorite animation ─────────────────────────
+  // ── Favorite animation — premium double-pulse ──
   const favScale = useSharedValue(1);
+  const favRotate = useSharedValue(0);
   const handleFavAnimated = useCallback(() => {
+    const wasLiked = productIsFavorite;
     handleToggleFavorite();
-    favScale.value = withSequence(
-      withSpring(1.3, { damping: 6, stiffness: 300 }),
-      withSpring(1, { damping: 8, stiffness: 200 })
-    );
-  }, [handleToggleFavorite]);
+    if (wasLiked) {
+      // Remove: quick shrink → bounce back
+      favScale.value = withSequence(
+        withSpring(0.7, { damping: 12, stiffness: 400 }),
+        withSpring(1, { damping: 10, stiffness: 250 })
+      );
+    } else {
+      // Add: burst → overshoot → settle with micro-rotate
+      favScale.value = withSequence(
+        withSpring(1.4, { damping: 5, stiffness: 350 }),
+        withSpring(0.9, { damping: 8, stiffness: 300 }),
+        withSpring(1, { damping: 10, stiffness: 200 })
+      );
+      favRotate.value = withSequence(
+        withTiming(-8, { duration: 100 }),
+        withTiming(6, { duration: 80 }),
+        withSpring(0, { damping: 12, stiffness: 250 })
+      );
+    }
+  }, [handleToggleFavorite, productIsFavorite, favScale, favRotate]);
 
   const favAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: favScale.value }],
+    transform: [
+      { scale: favScale.value },
+      { rotate: `${favRotate.value}deg` },
+    ],
   }));
 
   // ── CTA shimmer animation ──────────────────────
@@ -1200,8 +1528,16 @@ export default function ScanResultScreen() {
   }));
 
   // ── RENDER: Loading ────────────────────────────
-  if (scanMutation.isPending) {
-    return <ScanLoadingSkeleton barcode={barcode} />;
+  // Two conditions: mutation still running OR stepper hasn't completed.
+  // This ensures the 4-step storytelling always plays through fully
+  // (minimum ~1.25s) even when the response arrives from cache in <200ms.
+  if (scanMutation.isPending || !scribeComplete) {
+    return (
+      <ScanLoadingSkeleton
+        barcode={barcode}
+        onComplete={() => setScribeComplete(true)}
+      />
+    );
   }
 
   // ── RENDER: Error ──────────────────────────────
@@ -1219,14 +1555,12 @@ export default function ScanResultScreen() {
     ? statusConfig.gradientDark
     : statusConfig.gradientLight;
 
-  const actionButtonBg = isDark ? glass.dark.bg : glass.light.border;
-
   // Shared action bar buttons — rendered once, used in both iOS (BlurView) and Android (View) wrappers
   const actionBarButtons = (
     <View
       style={[
         styles.actionBarInner,
-        { borderColor: isDark ? glass.dark.border : glass.light.border },
+        { borderColor: isDark ? glass.dark.border : `${statusConfig.glowColor}12` },
       ]}
     >
       {/* Favorite */}
@@ -1236,7 +1570,9 @@ export default function ScanResultScreen() {
         style={[
           styles.actionButton,
           {
-            backgroundColor: actionButtonBg,
+            backgroundColor: productIsFavorite
+              ? `${halalStatusTokens.haram.base}14`
+              : isDark ? glass.dark.bg : `${colors.textMuted}08`,
             opacity: isFavMutating ? 0.5 : 1,
           },
         ]}
@@ -1251,8 +1587,8 @@ export default function ScanResultScreen() {
         <Animated.View style={favAnimatedStyle}>
           <MaterialIcons
             name={productIsFavorite ? "favorite" : "favorite-border"}
-            size={24}
-            color={productIsFavorite ? halalStatusTokens.haram.base : colors.textSecondary}
+            size={22}
+            color={productIsFavorite ? halalStatusTokens.haram.base : colors.textMuted}
           />
         </Animated.View>
       </PressableScale>
@@ -1260,18 +1596,28 @@ export default function ScanResultScreen() {
       {/* Share */}
       <PressableScale
         onPress={handleShare}
-        style={[styles.actionButton, { backgroundColor: actionButtonBg }]}
+        style={[styles.actionButton, { backgroundColor: isDark ? glass.dark.bg : `${colors.textMuted}08` }]}
         accessibilityRole="button"
         accessibilityLabel={t.scanResult.shareProduct}
       >
-        <MaterialIcons name="share" size={22} color={colors.textSecondary} />
+        <MaterialIcons name="share" size={20} color={colors.textMuted} />
       </PressableScale>
 
       {/* Primary CTA — contextual: halal → "Où acheter ?", haram/doubtful → "Scanner un autre" */}
       {halalStatus === "halal" ? (
         <PressableScale
           onPress={handleFindStores}
-          style={[styles.ctaButton, { backgroundColor: colors.primary, ...shadows.float, shadowColor: colors.primary }]}
+          style={[
+            styles.ctaButton,
+            {
+              backgroundColor: colors.primary,
+              shadowColor: colors.primary,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 6,
+            },
+          ]}
           accessibilityRole="button"
           accessibilityLabel={t.scanResult.whereToBuy}
           accessibilityHint={t.scanResult.findStores}
@@ -1280,37 +1626,51 @@ export default function ScanResultScreen() {
             style={[
               StyleSheet.absoluteFill,
               shimmerStyle,
-              { width: 60, backgroundColor: "rgba(255,255,255,0.15)" },
+              { width: 60, backgroundColor: "rgba(255,255,255,0.18)" },
             ]}
             pointerEvents="none"
           />
-          <MaterialIcons name={marketplaceEnabled ? "shopping-cart" : "location-on"} size={20} color={lightTheme.textPrimary} />
-          <Text style={[styles.ctaText, { color: lightTheme.textPrimary }]}>
-            {marketplaceEnabled ? t.scanResult.viewOnMarketplace : t.scanResult.whereToBuy}
-          </Text>
+          <View style={styles.ctaContent}>
+            <MaterialIcons name={marketplaceEnabled ? "shopping-cart" : "location-on"} size={18} color={lightTheme.textPrimary} />
+            <Text style={[styles.ctaText, { color: lightTheme.textPrimary }]}>
+              {marketplaceEnabled ? t.scanResult.viewOnMarketplace : t.scanResult.whereToBuy}
+            </Text>
+          </View>
         </PressableScale>
       ) : (
         <PressableScale
           onPress={handleGoBack}
-          style={[styles.ctaButton, { backgroundColor: colors.primary, ...shadows.float, shadowColor: colors.primary }]}
+          style={[
+            styles.ctaButton,
+            {
+              backgroundColor: colors.primary,
+              shadowColor: colors.primary,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 6,
+            },
+          ]}
           accessibilityRole="button"
           accessibilityLabel={t.scanResult.scanAnother}
         >
-          <MaterialIcons name="qr-code-scanner" size={20} color={lightTheme.textPrimary} />
-          <Text style={[styles.ctaText, { color: lightTheme.textPrimary }]}>
-            {t.scanResult.scanAnother}
-          </Text>
+          <View style={styles.ctaContent}>
+            <MaterialIcons name="qr-code-scanner" size={18} color={lightTheme.textPrimary} />
+            <Text style={[styles.ctaText, { color: lightTheme.textPrimary }]}>
+              {t.scanResult.scanAnother}
+            </Text>
+          </View>
         </PressableScale>
       )}
 
       {/* Report */}
       <PressableScale
         onPress={handleReport}
-        style={[styles.actionButton, { backgroundColor: actionButtonBg }]}
+        style={[styles.actionButton, { backgroundColor: isDark ? glass.dark.bg : `${colors.textMuted}08` }]}
         accessibilityRole="button"
         accessibilityLabel={t.scanResult.report}
       >
-        <MaterialIcons name="flag" size={22} color={colors.textSecondary} />
+        <MaterialIcons name="flag" size={20} color={colors.textMuted} />
       </PressableScale>
     </View>
   );
@@ -1319,7 +1679,8 @@ export default function ScanResultScreen() {
     <View style={{ flex: 1 }}>
       <PremiumBackground />
       {/* ── Floating Back Button (absolute, above everything) ── */}
-      <View
+      <Animated.View
+        entering={FadeInLeft.delay(200).duration(350)}
         style={[
           styles.floatingBackButton,
           { top: insets.top + 8 },
@@ -1332,11 +1693,12 @@ export default function ScanResultScreen() {
           color={isDark ? brandTokens.white : lightTheme.textPrimary}
           accessibilityLabel={t.common.back}
         />
-      </View>
+      </Animated.View>
 
       {/* ── Floating Info Button (top-right, certified products only) ── */}
       {certifierData && (
-        <View
+        <Animated.View
+          entering={FadeInRight.delay(200).duration(350)}
           style={[
             styles.floatingInfoButton,
             { top: insets.top + 8 },
@@ -1352,7 +1714,7 @@ export default function ScanResultScreen() {
             color={isDark ? brandTokens.white : lightTheme.textPrimary}
             accessibilityLabel={t.scanResult.trustScoreExplainTitle}
           />
-        </View>
+        </Animated.View>
       )}
 
       <ScrollView
@@ -1436,7 +1798,7 @@ export default function ScanResultScreen() {
                   pointerEvents="none"
                 />
                 <Animated.View
-                  entering={FadeIn.delay(SUSPENSE_DURATION).duration(400)}
+                  entering={ZoomIn.delay(SUSPENSE_DURATION).duration(400).springify().damping(26).stiffness(120)}
                   style={[
                     styles.heroImageWrapper,
                     {
@@ -1446,13 +1808,26 @@ export default function ScanResultScreen() {
                   ]}
                 >
                 {product.imageUrl ? (
-                  <Image
-                    source={{ uri: product.imageUrl }}
-                    style={styles.heroImage}
-                    contentFit="cover"
-                    transition={200}
+                  <Pressable
+                    onPress={() => { impact(); setShowImagePreview(true); }}
+                    accessibilityRole="button"
                     accessibilityLabel={product.name}
-                  />
+                    accessibilityHint={t.scanResult.tapToZoom}
+                  >
+                    <Image
+                      source={{ uri: product.imageUrl }}
+                      style={styles.heroImage}
+                      contentFit="cover"
+                      transition={200}
+                    />
+                    {/* Zoom badge — bottom-right corner */}
+                    <View style={[
+                      styles.zoomBadge,
+                      { backgroundColor: isDark ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.85)" },
+                    ]}>
+                      <MaterialIcons name="zoom-in" size={12} color={isDark ? "#ffffffcc" : "#000000aa"} />
+                    </View>
+                  </Pressable>
                 ) : (
                   <MaterialIcons name="image-not-supported" size={24} color={colors.textMuted} />
                 )}
@@ -1484,7 +1859,7 @@ export default function ScanResultScreen() {
 
               {/* Certifier trust score bar OR verdict fallback */}
               <Animated.View
-                entering={FadeInDown.delay(SUSPENSE_DURATION + 100).duration(500)}
+                entering={FadeInRight.delay(SUSPENSE_DURATION + 100).duration(450)}
                 style={styles.heroScoreRow}
               >
                 {certifierData ? (
@@ -1640,89 +2015,72 @@ export default function ScanResultScreen() {
             </Animated.View>
           )}
 
-          {/* ── ROW 3: Madhab Score Rings or Unanimous Text ── */}
+          {/* ── ROW 3: Madhab Score Rings — always 4 pillars ── */}
           {madhabVerdicts.length > 0 && (() => {
-            // Detect unanimous verdict — all 4 schools agree with same status
-            const statuses = madhabVerdicts.map((v) => v.status);
-            // Unanimous text only for ingredient-based analysis (no certifier)
-            // When certifier is present, always show rings (per-madhab trust scores are valuable)
-            const isUnanimous = !certifierData_ && statuses.length === 4 && statuses.every((s) => s === statuses[0]);
-            const unanimousStatus = statuses[0] as "halal" | "haram" | "doubtful";
-
-            const unanimousTextMap = {
-              haram: t.scanResult.madhabUnanimousHaram,
-              halal: t.scanResult.madhabUnanimousHalal,
-              doubtful: t.scanResult.madhabUnanimousDoubtful,
-            };
-            const unanimousColorMap = {
-              haram: halalStatusTokens.haram.base,
-              halal: halalStatusTokens.halal.base,
-              doubtful: halalStatusTokens.doubtful.base,
+            // Verdict label map — translated status text under each ring
+            const VERDICT_LABEL: Record<string, string> = {
+              halal: t.scanResult.verdictHalal,
+              doubtful: t.scanResult.verdictDoubtful,
+              haram: t.scanResult.verdictHaram,
             };
 
             return (
             <Animated.View
-              entering={FadeIn.delay(SUSPENSE_DURATION + 550).duration(500)}
+              entering={FadeInUp.delay(SUSPENSE_DURATION + 400).duration(500)}
               style={[
                 styles.madhabRow,
                 { borderTopColor: isDark ? glass.dark.border : glass.light.border },
               ]}
             >
-              {isUnanimous ? (
-                // Unanimous: single text with ijma' — no rings needed
-                <View style={styles.unanimousContainer}>
-                  <MaterialIcons
-                    name={unanimousStatus === "halal" ? "check-circle" : unanimousStatus === "haram" ? "cancel" : "help"}
-                    size={18}
-                    color={unanimousColorMap[unanimousStatus]}
-                  />
-                  <Text style={[styles.unanimousText, { color: unanimousColorMap[unanimousStatus] }]}>
-                    {unanimousTextMap[unanimousStatus]}
+              {madhabVerdicts.map((v, i) => {
+                const labelKey = MADHAB_LABEL_KEY[v.madhab as keyof typeof MADHAB_LABEL_KEY];
+                const label = labelKey ? t.scanResult[labelKey] : v.madhab;
+
+                const trustKey = MADHAB_TRUST_KEY[v.madhab as keyof typeof MADHAB_TRUST_KEY];
+                const madhabTrustScore = certifierData_ && trustKey
+                  ? (certifierData_ as Record<string, unknown>)[trustKey] as number | null ?? null
+                  : null;
+
+                return (
+                  <PressableScale
+                    key={v.madhab}
+                    onPress={() => {
+                      impact();
+                      setSelectedMadhab(v);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${label}: ${v.status}${madhabTrustScore !== null ? `, ${t.scanResult.madhabTrustScoreLabel} ${madhabTrustScore}/100` : ""}`}
+                  >
+                    <MadhabScoreRing
+                      label={label}
+                      verdict={v.status as "halal" | "doubtful" | "haram"}
+                      trustScore={madhabTrustScore}
+                      verdictLabel={!certifierData_ ? VERDICT_LABEL[v.status] : undefined}
+                      conflictCount={v.conflictingAdditives.length + (v.conflictingIngredients?.length ?? 0)}
+                      isUserSchool={userMadhab === v.madhab}
+                      staggerIndex={i}
+                    />
+                  </PressableScale>
+                );
+              })}
+
+              {/* ── Tap hint (non-certifier only) ── */}
+              {!certifierData_ && (
+                <View style={styles.madhabTapHint}>
+                  <MaterialIcons name="touch-app" size={11} color={colors.textMuted} style={{ marginTop: 1 }} />
+                  <Text style={[styles.madhabInfoNoteText, { color: colors.textMuted }]}>
+                    {t.scanResult.madhabTapHint}
                   </Text>
                 </View>
-              ) : (
-                // Divergence between schools — show individual rings
-                madhabVerdicts.map((v, i) => {
-                  const labelKey = MADHAB_LABEL_KEY[v.madhab as keyof typeof MADHAB_LABEL_KEY];
-                  const label = labelKey ? t.scanResult[labelKey] : v.madhab;
-
-                  const trustKey = MADHAB_TRUST_KEY[v.madhab as keyof typeof MADHAB_TRUST_KEY];
-                  const madhabTrustScore = certifierData_ && trustKey
-                    ? (certifierData_ as Record<string, unknown>)[trustKey] as number | null ?? null
-                    : null;
-
-                  return (
-                    <PressableScale
-                      key={v.madhab}
-                      onPress={() => {
-                        impact();
-                        setSelectedMadhab(v);
-                      }}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${label}: ${v.status}${madhabTrustScore !== null ? `, ${t.scanResult.madhabTrustScoreLabel} ${madhabTrustScore}/100` : ""}`}
-                    >
-                      <MadhabScoreRing
-                        label={label}
-                        verdict={v.status as "halal" | "doubtful" | "haram"}
-                        trustScore={madhabTrustScore}
-                        conflictCount={v.conflictingAdditives.length + (v.conflictingIngredients?.length ?? 0)}
-                        isUserSchool={userMadhab === v.madhab}
-                        staggerIndex={i}
-                      />
-                    </PressableScale>
-                  );
-                })
               )}
 
               {/* ── Info note below ── */}
               <View style={styles.madhabInfoNote}>
                 <MaterialIcons name="info-outline" size={11} color={colors.textMuted} style={{ marginTop: 1 }} />
                 <Text style={[styles.madhabInfoNoteText, { color: colors.textMuted }]}>
-                  {isUnanimous
-                    ? t.scanResult.madhabAlgoNote
-                    : certifierData_?.name
-                      ? t.scanResult.madhabCertifierNote.replace("{{certifier}}", certifierData_.name)
-                      : t.scanResult.madhabAlgoNote}
+                  {certifierData_?.name
+                    ? t.scanResult.madhabCertifierNote.replace("{{certifier}}", certifierData_.name)
+                    : t.scanResult.madhabAlgoNote}
                 </Text>
               </View>
 
@@ -1778,101 +2136,98 @@ export default function ScanResultScreen() {
         </View>
 
         {/* ════════════════════════════════════════════════════
-            CONTENT SECTIONS (below the fold)
+            TAB BAR — 3 onglets inline
+            ════════════════════════════════════════════════════ */}
+        <Animated.View entering={FadeIn.delay(SUSPENSE_DURATION + 600).duration(400)}>
+          <ScanResultTabBar activeTab={activeTab} onTabChange={setActiveTab} />
+        </Animated.View>
+
+        {/* ════════════════════════════════════════════════════
+            TAB CONTENT — conditional rendering per section
             ════════════════════════════════════════════════════ */}
         <View style={styles.contentContainer}>
-          {/* ── Halal Alternatives (Contextual Cross-Selling) ── */}
-          {(halalStatus === "haram" || halalStatus === "doubtful") &&
-            alternativesQuery.data && alternativesQuery.data.length > 0 && (
-            <Animated.View entering={entryAnimations.fadeInDown(1)} style={styles.altSection}>
-              <View style={styles.altHeader}>
-                <View style={styles.altHeaderLeft}>
-                  <View style={[styles.altHeaderIcon, { backgroundColor: isDark ? `${brandTokens.gold}25` : `${brandTokens.gold}1A` }]}>
-                    <MaterialIcons name="swap-horiz" size={14} color={brandTokens.gold} />
+
+          {/* ═══ TAB 3 — Alternatives ═══ */}
+          {activeTab === 2 && (halalStatus === "haram" || halalStatus === "doubtful") && (
+            alternativesEnabled && alternativesQuery.data && alternativesQuery.data.length > 0 ? (
+              <Animated.View entering={entryAnimations.slideInUp(1)} style={styles.altSection}>
+                <View style={styles.altHeader}>
+                  <View style={styles.altHeaderLeft}>
+                    <View style={[styles.altHeaderIcon, { backgroundColor: isDark ? `${brandTokens.gold}25` : `${brandTokens.gold}1A` }]}>
+                      <MaterialIcons name="swap-horiz" size={14} color={brandTokens.gold} />
+                    </View>
+                    <Text style={[styles.altHeaderTitle, { color: colors.textPrimary }]}>
+                      {t.scanResult.halalAlternatives}
+                    </Text>
                   </View>
-                  <Text style={[styles.altHeaderTitle, { color: colors.textPrimary }]}>
-                    {t.scanResult.halalAlternatives}
-                  </Text>
+                  <MaterialIcons name={marketplaceEnabled ? "storefront" : "local-mall"} size={20} color={brandTokens.gold} />
                 </View>
-                <MaterialIcons name={marketplaceEnabled ? "storefront" : "local-mall"} size={20} color={brandTokens.gold} />
-              </View>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.lg, paddingBottom: spacing.xs }}>
-                {alternativesQuery.data.slice(0, 3).map((alt: any, index: number) => (
-                    <PressableScale
-                      key={alt.id}
-                      onPress={() => {
-                        if (marketplaceEnabled) {
-                          router.navigate({ pathname: "/(marketplace)/product/[id]", params: { id: alt.id } } as any);
-                        } else {
-                          router.navigate({ pathname: "/scan-result", params: { barcode: alt.barcode } });
-                        }
-                      }}
-                    >
-                      <GlowCard
-                        glowColor={brandTokens.gold}
-                        glowIntensity="subtle"
-                        style={{ ...styles.altCard, backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#ffffff" }}
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.lg, paddingBottom: spacing.xs }}>
+                  {alternativesQuery.data.slice(0, 3).map((alt: any) => (
+                      <PressableScale
+                        key={alt.id}
+                        onPress={() => {
+                          if (marketplaceEnabled) {
+                            router.navigate({ pathname: "/(marketplace)/product/[id]", params: { id: alt.id } } as any);
+                          } else {
+                            router.navigate({ pathname: "/scan-result", params: { barcode: alt.barcode } });
+                          }
+                        }}
                       >
-                        <View>
-                          {alt.imageUrl ? (
-                            <Image source={{ uri: alt.imageUrl }} style={styles.altImage} contentFit="cover" transition={200} />
-                          ) : (
-                            <View style={[styles.altImagePlaceholder, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)" }]}>
-                              <MaterialIcons name="image" size={24} color={colors.textMuted} />
-                            </View>
-                          )}
-                          <Text style={[styles.altName, { color: colors.textPrimary }]} numberOfLines={2}>
-                            {alt.name}
-                          </Text>
-                          <StatusPill status={(alt.halalStatus ?? "halal") as "halal" | "haram" | "doubtful" | "unknown"} size="sm" animated={false} />
-                          {marketplaceEnabled && (
-                            <View style={[styles.altBuyBadge, { backgroundColor: isDark ? `${brandTokens.primary}1A` : `${brandTokens.primary}14` }]}>
-                              <MaterialIcons name="shopping-cart" size={11} color={brandTokens.primary} />
-                              <Text style={styles.altBuyText}>{t.scanResult.buyAlternative}</Text>
-                            </View>
-                          )}
-                        </View>
-                      </GlowCard>
-                    </PressableScale>
-                ))}
-              </ScrollView>
-              {/* ── "Explore marketplace" CTA — shop halal alternatives by category ── */}
-              <PressableScale
-                onPress={() => {
-                  impact();
-                  if (marketplaceEnabled) {
-                    router.navigate({
-                      pathname: "/(marketplace)/catalog",
-                      params: {
-                        ...(product?.category ? { search: product.category } : {}),
-                      },
-                    } as any);
-                  } else {
-                    router.navigate("/(marketplace)/" as any);
-                  }
-                }}
-                accessibilityRole="button"
-                accessibilityLabel={t.scanResult.shopHalalAlternatives}
-                style={[
-                  styles.altExploreCta,
-                  {
-                    backgroundColor: isDark ? `${brandTokens.gold}0F` : `${brandTokens.gold}0A`,
-                    borderColor: isDark ? `${brandTokens.gold}33` : `${brandTokens.gold}26`,
-                  },
-                ]}
-              >
-                <MaterialIcons name="storefront" size={18} color={brandTokens.gold} />
-                <Text style={styles.altExploreCtaText}>
-                  {marketplaceEnabled ? t.scanResult.shopHalalAlternatives : t.scanResult.shopOnMarketplace}
-                </Text>
-                <MaterialIcons name="arrow-forward" size={16} color={brandTokens.gold} />
-              </PressableScale>
-            </Animated.View>
+                        <GlowCard
+                          glowColor={brandTokens.gold}
+                          glowIntensity="subtle"
+                          style={{ ...styles.altCard, backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#ffffff" }}
+                        >
+                          <View>
+                            {alt.imageUrl ? (
+                              <Image source={{ uri: alt.imageUrl }} style={styles.altImage} contentFit="cover" transition={200} />
+                            ) : (
+                              <View style={[styles.altImagePlaceholder, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)" }]}>
+                                <MaterialIcons name="image" size={24} color={colors.textMuted} />
+                              </View>
+                            )}
+                            <Text style={[styles.altName, { color: colors.textPrimary }]} numberOfLines={2}>
+                              {alt.name}
+                            </Text>
+                            <StatusPill status={(alt.halalStatus ?? "halal") as "halal" | "haram" | "doubtful" | "unknown"} size="sm" animated={false} />
+                          </View>
+                        </GlowCard>
+                      </PressableScale>
+                  ))}
+                </ScrollView>
+              </Animated.View>
+            ) : !alternativesEnabled ? (
+              /* ── Teaser — alternatives coming soon ── */
+              <Animated.View entering={entryAnimations.slideInUp(1)}>
+                <View
+                  style={[
+                    styles.altTeaser,
+                    {
+                      backgroundColor: isDark ? `${statusConfig.glowColor}08` : `${statusConfig.glowColor}06`,
+                      borderColor: isDark ? `${statusConfig.glowColor}18` : `${statusConfig.glowColor}10`,
+                    },
+                  ]}
+                >
+                  <View style={[styles.altTeaserIcon, { backgroundColor: `${statusConfig.glowColor}15` }]}>
+                    <MaterialIcons name="auto-awesome" size={16} color={statusConfig.glowColor} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.altTeaserTitle, { color: colors.textPrimary }]}>
+                      {t.scanResult.alternativesComingSoon}
+                    </Text>
+                    <Text style={[styles.altTeaserDesc, { color: colors.textSecondary }]} numberOfLines={2}>
+                      {t.scanResult.alternativesComingSoonDesc}
+                    </Text>
+                  </View>
+                </View>
+              </Animated.View>
+            ) : null
           )}
 
-          {/* ── Boycott Alert (highest priority after verdict) ── */}
-          {boycott?.isBoycotted && (
-            <Animated.View entering={entryAnimations.fadeInDown(2)}>
+          {/* ═══ TAB 2 — Boycott Alert ═══ */}
+          {activeTab === 1 && boycott?.isBoycotted && (
+            <Animated.View entering={entryAnimations.slideInUp(2)}>
               <GlowCard
                 glowColor={halalStatusTokens.haram.base}
                 glowIntensity="medium"
@@ -1948,15 +2303,127 @@ export default function ScanResultScreen() {
             </Animated.View>
           )}
 
-          {/* ── Personal Alerts ── */}
-          {personalAlerts.length > 0 && (
+          {/* ═══ TAB 2 — Naqiy Health Score ═══ */}
+          {activeTab === 1 && (
+            <Animated.View entering={entryAnimations.slideInUp(1)}>
+              <View
+                style={[
+                  styles.healthScoreCard,
+                  {
+                    backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.02)",
+                    borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+                  },
+                ]}
+              >
+                {/* Header */}
+                <View style={styles.healthScoreHeader}>
+                  <MaterialIcons name="favorite" size={18} color={colors.textSecondary} />
+                  <Text style={[styles.healthScoreHeaderText, { color: colors.textPrimary }]}>
+                    {t.scanResult.healthScoreTitle}
+                  </Text>
+                </View>
+
+                {healthScore?.score != null ? (
+                  <>
+                    {/* Score circle + label */}
+                    <View style={styles.healthScoreMain}>
+                      <View
+                        style={[
+                          styles.healthScoreCircle,
+                          {
+                            borderColor: HEALTH_SCORE_COLORS[healthScore.label ?? "mediocre"],
+                            backgroundColor: `${HEALTH_SCORE_COLORS[healthScore.label ?? "mediocre"]}15`,
+                          },
+                        ]}
+                        accessible
+                        accessibilityRole="text"
+                        accessibilityLabel={`${t.scanResult.healthScoreTitle}: ${healthScore.score}/100, ${t.scanResult[HEALTH_SCORE_LABEL_KEYS[healthScore.label ?? "mediocre"]]}`}
+                      >
+                        <Text
+                          style={[
+                            styles.healthScoreValue,
+                            { color: HEALTH_SCORE_COLORS[healthScore.label ?? "mediocre"] },
+                          ]}
+                        >
+                          {healthScore.score}
+                        </Text>
+                        <Text style={[styles.healthScoreMax, { color: colors.textMuted }]}>/100</Text>
+                      </View>
+                      <View style={styles.healthScoreLabelColumn}>
+                        <Text
+                          style={[
+                            styles.healthScoreLabel,
+                            { color: HEALTH_SCORE_COLORS[healthScore.label ?? "mediocre"] },
+                          ]}
+                        >
+                          {t.scanResult[HEALTH_SCORE_LABEL_KEYS[healthScore.label ?? "mediocre"]]}
+                        </Text>
+                        <Text style={[styles.healthScoreConfidence, { color: colors.textMuted }]}>
+                          {healthScore.dataConfidence === "high" ? "●●●" : healthScore.dataConfidence === "medium" ? "●●○" : "●○○"}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* 4 axis bars */}
+                    <View style={styles.healthScoreAxes}>
+                      {([
+                        { key: "nutrition" as const, labelKey: "axisNutrition" as const, axis: healthScore.axes.nutrition },
+                        { key: "additives" as const, labelKey: "axisAdditives" as const, axis: healthScore.axes.additives },
+                        { key: "processing" as const, labelKey: "axisProcessing" as const, axis: healthScore.axes.processing },
+                        { key: "transparency" as const, labelKey: "axisTransparency" as const, axis: healthScore.axes.transparency },
+                      ] as const).map(({ key, labelKey, axis }) => {
+                        const pct = axis ? (axis.score / axis.max) * 100 : 0;
+                        const barColor = axis
+                          ? pct >= 70 ? "#2DC653" : pct >= 40 ? "#FFC107" : "#E53935"
+                          : colors.textMuted;
+                        return (
+                          <View key={key} style={styles.healthAxisRow}>
+                            <Text
+                              style={[styles.healthAxisLabel, { color: colors.textSecondary }]}
+                              numberOfLines={1}
+                            >
+                              {t.scanResult[labelKey]}
+                            </Text>
+                            <View style={[styles.healthAxisBarBg, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }]}>
+                              <View
+                                style={[
+                                  styles.healthAxisBarFill,
+                                  {
+                                    backgroundColor: axis ? barColor : "transparent",
+                                    width: axis ? `${pct}%` : "0%",
+                                  },
+                                ]}
+                              />
+                            </View>
+                            <Text style={[styles.healthAxisFraction, { color: colors.textMuted }]}>
+                              {axis ? `${axis.score}/${axis.max}` : "—"}
+                            </Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  </>
+                ) : (
+                  <View style={styles.healthScoreInsufficient}>
+                    <MaterialIcons name="info-outline" size={20} color={colors.textMuted} />
+                    <Text style={[styles.healthScoreInsufficientText, { color: colors.textMuted }]}>
+                      {t.scanResult.healthScoreInsufficient}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </Animated.View>
+          )}
+
+          {/* ═══ TAB 1 — Personal Alerts ═══ */}
+          {activeTab === 0 && personalAlerts.length > 0 && (
             <PersonalAlerts alerts={personalAlerts} />
           )}
 
-          {/* ── Analysis Source (compact line) ── */}
-          {halalAnalysis?.analysisSource && (
+          {/* ═══ TAB 1 — Analysis Source (compact line) ═══ */}
+          {activeTab === 0 && halalAnalysis?.analysisSource && (
             <Animated.View
-              entering={entryAnimations.fadeInDown(3)}
+              entering={entryAnimations.slideInUp(3)}
               style={styles.analysisSourceRow}
             >
               <MaterialIcons name="info-outline" size={13} color={colors.textMuted} />
@@ -1966,8 +2433,8 @@ export default function ScanResultScreen() {
             </Animated.View>
           )}
 
-          {/* ── Product Details (Labels, Origins, Analysis Tags) ── */}
-          {offExtras && (
+          {/* ═══ TAB 1 — Product Details (Labels, Origins, Analysis Tags) ═══ */}
+          {activeTab === 0 && offExtras && (
             (() => {
               const labelChips = (offExtras.labelsTags ?? [])
                 .map((tag: string) => tag.replace(/^en:/, "").replace(/-/g, " "))
@@ -1979,7 +2446,7 @@ export default function ScanResultScreen() {
               const hasContent = labelChips.length > 0 || offExtras.manufacturingPlaces || offExtras.origins || analysisTags.length > 0;
               if (!hasContent) return null;
               return (
-                <Animated.View entering={entryAnimations.fadeInDown(3)} style={styles.productDetailsSection}>
+                <Animated.View entering={entryAnimations.slideInUp(3)} style={styles.productDetailsSection}>
                   {/* P1: Quality labels */}
                   {labelChips.length > 0 && (
                     <View style={styles.productDetailRow}>
@@ -2052,10 +2519,10 @@ export default function ScanResultScreen() {
             })()
           )}
 
-          {/* ── Why This Status ── */}
-          {halalAnalysis &&
+          {/* ═══ TAB 1 — Why This Status ═══ */}
+          {activeTab === 0 && halalAnalysis &&
             (haramReasons.length > 0 || doubtfulReasons.length > 0) && (
-              <Animated.View entering={entryAnimations.fadeInDown(4)}>
+              <Animated.View entering={entryAnimations.slideInUp(4)}>
                 <CollapsibleSection
                   title={t.scanResult.whyThisStatus}
                   defaultOpen={true}
@@ -2158,9 +2625,9 @@ export default function ScanResultScreen() {
               </Animated.View>
             )}
 
-          {/* ── Additives ── */}
-          {additiveReasons.length > 0 && (
-            <Animated.View entering={entryAnimations.fadeInDown(5)}>
+          {/* ═══ TAB 1 — Additives ═══ */}
+          {activeTab === 0 && additiveReasons.length > 0 && (
+            <Animated.View entering={entryAnimations.slideInUp(5)}>
               <CollapsibleSection
                 title={t.scanResult.additivesDetected}
                 badge={`${additiveReasons.length} ${t.scanResult.additive}${additiveReasons.length > 1 ? "s" : ""}`}
@@ -2227,10 +2694,10 @@ export default function ScanResultScreen() {
             </Animated.View>
           )}
 
-          {/* ── Sources Savantes ── */}
-          {ingredientRulings.length > 0 &&
+          {/* ═══ TAB 1 — Sources Savantes ═══ */}
+          {activeTab === 0 && ingredientRulings.length > 0 &&
             ingredientRulings.some((r: any) => r.fatwaSourceName) && (
-              <Animated.View entering={entryAnimations.fadeInDown(6)}>
+              <Animated.View entering={entryAnimations.slideInUp(6)}>
                 <CollapsibleSection
                   title={t.scanResult.scholarlyReferences}
                   badge={`${new Set(ingredientRulings.filter((r: any) => r.fatwaSourceName).map((r: any) => r.fatwaSourceName)).size} ${t.scanResult.sourceLabel}`}
@@ -2268,10 +2735,10 @@ export default function ScanResultScreen() {
               </Animated.View>
             )}
 
-          {/* ── Nutrition & Impact ── */}
-          {offExtras &&
+          {/* ═══ TAB 2 — Nutrition & Impact ═══ */}
+          {activeTab === 1 && offExtras &&
             (offExtras.nutriscoreGrade || offExtras.novaGroup || offExtras.ecoscoreGrade) && (
-              <Animated.View entering={entryAnimations.fadeInDown(7)}>
+              <Animated.View entering={entryAnimations.slideInUp(1)}>
                 <CollapsibleSection
                   title={t.scanResult.nutritionEnvironment}
                   badge={[
@@ -2279,7 +2746,7 @@ export default function ScanResultScreen() {
                     offExtras.novaGroup && `NOVA ${offExtras.novaGroup}`,
                     offExtras.ecoscoreGrade && `Eco ${offExtras.ecoscoreGrade.toUpperCase()}`,
                   ].filter(Boolean).join(" · ")}
-                  defaultOpen={false}
+                  defaultOpen={true}
                 >
                   {offExtras.nutriscoreGrade && (
                     <NutritionCard
@@ -2309,9 +2776,9 @@ export default function ScanResultScreen() {
               </Animated.View>
             )}
 
-          {/* ── Allergens ── */}
-          {allergensTags.length > 0 && (
-            <Animated.View entering={entryAnimations.fadeInDown(8)}>
+          {/* ═══ TAB 2 — Allergens ═══ */}
+          {activeTab === 1 && allergensTags.length > 0 && (
+            <Animated.View entering={entryAnimations.slideInUp(2)}>
               <Text
                 style={[
                   styles.sectionTitle,
@@ -2360,9 +2827,9 @@ export default function ScanResultScreen() {
             </Animated.View>
           )}
 
-          {/* ── Ingredients (Collapsible) ── */}
-          {ingredients.length > 0 && (
-            <Animated.View entering={entryAnimations.fadeInDown(9)}>
+          {/* ═══ TAB 1 — Ingredients (Collapsible) ═══ */}
+          {activeTab === 0 && ingredients.length > 0 && (
+            <Animated.View entering={entryAnimations.slideInUp(7)}>
               <CollapsibleSection
                 title={t.scanResult.composition}
                 badge={`${ingredients.length} ${t.scanResult.ingredients}`}
@@ -2401,9 +2868,9 @@ export default function ScanResultScreen() {
           )}
 
 
-          {/* ── Votre Avis Compte (community trust) ── */}
-          {product && (
-            <Animated.View entering={entryAnimations.fadeInDown(10)}>
+          {/* ═══ TAB 1 — Votre Avis Compte (community trust) ═══ */}
+          {activeTab === 0 && product && (
+            <Animated.View entering={entryAnimations.slideInUp(8)}>
               <GlowCard
                 glowColor={brandTokens.gold}
                 glowIntensity="subtle"
@@ -2495,9 +2962,9 @@ export default function ScanResultScreen() {
             </Animated.View>
           )}
 
-          {/* ── New Product Banner ── */}
-          {scanMutation.data?.isNewProduct && (
-            <Animated.View entering={entryAnimations.fadeInDown(11)}>
+          {/* ═══ TAB 1 — New Product Banner ═══ */}
+          {activeTab === 0 && scanMutation.data?.isNewProduct && (
+            <Animated.View entering={entryAnimations.slideInUp(9)}>
               <View
                 style={[
                   styles.newProductBanner,
@@ -2555,7 +3022,7 @@ export default function ScanResultScreen() {
           FIXED BOTTOM ACTION BAR — glass-morphism
           ════════════════════════════════════════════════════ */}
       <Animated.View
-        entering={SlideInUp.delay(500).duration(400)}
+        entering={SlideInDown.delay(800).duration(500).springify().damping(28).stiffness(120)}
         style={[
           styles.actionBarOuter,
           {
@@ -2587,6 +3054,69 @@ export default function ScanResultScreen() {
           </View>
         )}
       </Animated.View>
+
+      {/* ── Product Image Preview Modal ── */}
+      <Modal
+        visible={showImagePreview}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setShowImagePreview(false)}
+      >
+        <Pressable
+          style={styles.imageModalBackdrop}
+          onPress={() => setShowImagePreview(false)}
+        >
+          <Animated.View
+            entering={ZoomIn.duration(300).springify().damping(26).stiffness(120)}
+            style={[
+              styles.imageModalCard,
+              {
+                backgroundColor: isDark ? "#1a1a1a" : "#ffffff",
+                borderColor: isDark ? glass.dark.borderStrong : glass.light.borderStrong,
+              },
+            ]}
+          >
+            {product.imageUrl ? (
+              <Image
+                source={{ uri: product.imageUrl }}
+                style={styles.imageModalPhoto}
+                contentFit="contain"
+                transition={200}
+                accessibilityLabel={product.name}
+              />
+            ) : null}
+            <View style={styles.imageModalFooter}>
+              <Text
+                style={[styles.imageModalName, { color: isDark ? "#ffffffee" : "#000000dd" }]}
+                numberOfLines={2}
+              >
+                {product.name}
+              </Text>
+              {product.brand && (
+                <Text
+                  style={[styles.imageModalBrand, { color: isDark ? "#ffffff88" : "#00000066" }]}
+                  numberOfLines={1}
+                >
+                  {product.brand}
+                </Text>
+              )}
+            </View>
+            {/* Close hint */}
+            <Pressable
+              onPress={() => setShowImagePreview(false)}
+              style={[
+                styles.imageModalClose,
+                { backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)" },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={t.common.close}
+            >
+              <MaterialIcons name="close" size={18} color={isDark ? "#ffffff99" : "#00000077"} />
+            </Pressable>
+          </Animated.View>
+        </Pressable>
+      </Modal>
 
       {/* ── Level-Up Celebration Overlay ── */}
       {showLevelUp && levelUp && (
@@ -2894,11 +3424,19 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 20,
   },
+  madhabTapHint: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+    width: "100%" as const,
+  },
   madhabInfoNote: {
     flexDirection: "row" as const,
     alignItems: "flex-start" as const,
     gap: spacing.xs,
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
     paddingHorizontal: spacing.md,
     width: "100%" as const,
   },
@@ -3042,6 +3580,99 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
 
+  // ── Health Score Card ────────────────────────────
+  healthScoreCard: {
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    padding: spacing["2xl"],
+    marginBottom: spacing["3xl"],
+    gap: spacing.xl,
+  },
+  healthScoreHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  healthScoreHeaderText: {
+    fontSize: fontSizeTokens.bodySmall,
+    fontWeight: fontWeightTokens.bold,
+  },
+  healthScoreMain: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xl,
+  },
+  healthScoreCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 3,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  healthScoreValue: {
+    fontSize: fontSizeTokens.h2,
+    fontWeight: fontWeightTokens.black,
+    lineHeight: 30,
+  },
+  healthScoreMax: {
+    fontSize: fontSizeTokens.micro,
+    fontWeight: fontWeightTokens.medium,
+    marginTop: -2,
+  },
+  healthScoreLabelColumn: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  healthScoreLabel: {
+    fontSize: fontSizeTokens.body,
+    fontWeight: fontWeightTokens.bold,
+  },
+  healthScoreConfidence: {
+    fontSize: fontSizeTokens.caption,
+    letterSpacing: 2,
+  },
+  healthScoreAxes: {
+    gap: spacing.md,
+  },
+  healthAxisRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  healthAxisLabel: {
+    width: 100,
+    fontSize: fontSizeTokens.micro,
+    fontWeight: fontWeightTokens.medium,
+  },
+  healthAxisBarBg: {
+    flex: 1,
+    height: 6,
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  healthAxisBarFill: {
+    height: 6,
+    borderRadius: 3,
+  },
+  healthAxisFraction: {
+    width: 40,
+    fontSize: fontSizeTokens.micro,
+    fontWeight: fontWeightTokens.semiBold,
+    textAlign: "right",
+  },
+  healthScoreInsufficient: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    paddingVertical: spacing.md,
+  },
+  healthScoreInsufficientText: {
+    fontSize: fontSizeTokens.caption,
+    fontWeight: fontWeightTokens.medium,
+    flex: 1,
+  },
+
   // ── Collapsible ────────────────────────────────
   collapsibleContainer: {
     borderRadius: radius.xl,
@@ -3054,26 +3685,31 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: spacing["2xl"],
-    paddingVertical: spacing.xl,
+    paddingVertical: spacing.lg,
+    minHeight: 52,
+    gap: spacing.md,
   },
   collapsibleHeaderLeft: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
-    flex: 1,
+    gap: spacing.lg,
   },
   collapsibleTitle: {
     fontSize: fontSizeTokens.bodySmall,
     fontWeight: fontWeightTokens.bold,
   },
-  collapsibleBadge: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 3,
-    borderRadius: radius.sm,
-  },
   collapsibleBadgeText: {
     fontSize: fontSizeTokens.micro,
-    fontWeight: fontWeightTokens.semiBold,
+    fontWeight: fontWeightTokens.medium,
+    letterSpacing: 0.2,
+  },
+  collapsibleChevron: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
   },
   collapsibleContent: {
     paddingHorizontal: spacing["2xl"],
@@ -3166,26 +3802,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
 
-  // ── Loading state ──────────────────────────────
-  loadingContent: {
-    alignItems: "center",
-    justifyContent: "center",
-    flex: 1,
-    gap: spacing.xl,
-  },
-  loadingTitle: {
-    fontSize: fontSizeTokens.h4,
-    fontWeight: fontWeightTokens.bold,
-    letterSpacing: 0.5,
-  },
-  loadingBarcode: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.sm,
-  },
-
   // ── Error / Not Found states ───────────────────
   stateContainer: {
     flex: 1,
@@ -3237,38 +3853,45 @@ const styles = StyleSheet.create({
   },
   actionBarBlur: {
     overflow: "hidden",
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
+    borderTopLeftRadius: radius["2xl"],
+    borderTopRightRadius: radius["2xl"],
   },
   actionBarInner: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: spacing.xl,
+    gap: spacing.lg,
     paddingHorizontal: spacing["2xl"],
-    paddingVertical: spacing.xl,
+    paddingVertical: spacing.lg,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   actionButton: {
-    width: 46,
-    height: 46,
-    borderRadius: radius.md,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
   },
   ctaButton: {
     flex: 1,
-    height: 50,
-    borderRadius: radius.lg,
+    height: 48,
+    borderRadius: radius.xl,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.sm,
     overflow: "hidden",
   },
+  ctaContent: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: spacing.sm,
+  },
   ctaText: {
     fontSize: fontSizeTokens.bodySmall,
-    fontWeight: fontWeightTokens.black,
+    fontWeight: fontWeightTokens.bold,
+    letterSpacing: 0.3,
   },
   // ── Vote card (wrapped in GlowCard) ────────
   voteCard: {
@@ -3313,6 +3936,34 @@ const styles = StyleSheet.create({
     color: brandTokens.gold,
     fontWeight: fontWeightTokens.bold,
     marginTop: spacing["2xs"],
+  },
+
+  // ── Alternatives teaser ────────────────────────
+  altTeaser: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    marginBottom: spacing["3xl"],
+    gap: spacing.lg,
+  },
+  altTeaserIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  altTeaserTitle: {
+    fontSize: fontSizeTokens.bodySmall,
+    fontWeight: fontWeightTokens.bold,
+  },
+  altTeaserDesc: {
+    fontSize: fontSizeTokens.micro,
+    lineHeight: 15,
   },
 
   // ── Alternatives section ───────────────────────
@@ -3450,5 +4101,63 @@ const styles = StyleSheet.create({
     left: -9999,
     top: 0,
     opacity: 1,
+  },
+
+  // ── Product Image Zoom Badge ──
+  zoomBadge: {
+    position: "absolute" as const,
+    bottom: 4,
+    right: 4,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+
+  // ── Product Image Preview Modal ──
+  imageModalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+  },
+  imageModalCard: {
+    width: 280,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    overflow: "hidden" as const,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.35,
+    shadowRadius: 24,
+    elevation: 16,
+  },
+  imageModalPhoto: {
+    width: 280,
+    height: 280,
+  },
+  imageModalFooter: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    gap: 2,
+  },
+  imageModalName: {
+    fontSize: fontSizeTokens.body,
+    fontWeight: fontWeightTokens.semiBold,
+  },
+  imageModalBrand: {
+    fontSize: fontSizeTokens.caption,
+    fontWeight: fontWeightTokens.medium,
+  },
+  imageModalClose: {
+    position: "absolute" as const,
+    top: spacing.sm,
+    right: spacing.sm,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
   },
 });

@@ -57,6 +57,8 @@ interface MadhabScoreRingProps {
   verdict: "halal" | "doubtful" | "haram";
   /** Per-madhab trust score (0-100). Null = no certifier → ring hidden */
   trustScore: number | null;
+  /** Translated verdict label: "halal" / "douteux" / "haram" */
+  verdictLabel?: string;
   /** Number of conflicting additives for this school (shown when no trust score) */
   conflictCount?: number;
   /** Whether this is the user's preferred school */
@@ -73,6 +75,7 @@ export const MadhabScoreRing = React.memo(function MadhabScoreRing({
   label,
   verdict,
   trustScore,
+  verdictLabel,
   conflictCount = 0,
   isUserSchool = false,
   staggerIndex = 0,
@@ -212,8 +215,18 @@ export const MadhabScoreRing = React.memo(function MadhabScoreRing({
         </Text>
       )}
 
-      {/* ── Sub-label (score or conflict count) ── */}
-      {label !== "" && subLabel !== null && (
+      {/* ── Verdict label (halal/douteux/haram) ── */}
+      {label !== "" && verdictLabel && (
+        <Text
+          style={[styles.verdictLabel, { color: verdictConfig.color }]}
+          numberOfLines={1}
+        >
+          {verdictLabel}
+        </Text>
+      )}
+
+      {/* ── Sub-label (score or conflict count) — only when no verdictLabel ── */}
+      {label !== "" && !verdictLabel && subLabel !== null && (
         <Text style={[styles.subLabel, { color: subLabelColor }]}>
           {hasTrustScore ? subLabel : `${subLabel} ⚠`}
         </Text>
@@ -262,6 +275,13 @@ const styles = StyleSheet.create({
   },
   labelHighlight: {
     fontWeight: "700",
+  },
+  verdictLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    marginTop: 2,
+    textTransform: "lowercase" as const,
+    letterSpacing: 0.1,
   },
   subLabel: {
     fontSize: 10,
