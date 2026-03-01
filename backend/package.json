@@ -18,6 +18,7 @@
     "db:seed:dev": "tsx --env-file=.env src/db/seeds/dev-seed.ts",
     "db:seed:additives": "tsx --env-file=.env src/db/seeds/additives-seed.ts",
     "test": "vitest run",
+    "test:unit": "vitest run --config vitest.unit.config.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "fetch:stores": "tsx scripts/fetch-store-data.ts",

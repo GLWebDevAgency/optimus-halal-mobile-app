@@ -860,9 +860,9 @@ export const ingredientRulingsSeed: NewIngredientRuling[] = [
     rulingHanbali: "halal",
     confidence: 0.6,
     explanationFr:
-      "Lactosérum (whey) : le statut suit celui de la présure du fromage source. Hanafites : halal (présure halal). Hanbalites : halal (Ibn Taymiyyah — présure halal). Chafiites : douteux (présure haram si non-zabiha). Malikites : douteux (présure haram, mais le lactosérum étant un sous-produit dilué, le principe du qadr al-yasir atténue à douteux plutôt que haram).",
+      "Petit-lait issu de la fabrication du fromage. Le point clé : la présure utilisée. Présure végétale ou microbienne → halal. Présure animale → dépend de votre école. Hanafites/Hanbalites considèrent la présure pure. Chafiites/Malikites recommandent la prudence. Sans mention « présure microbienne » sur l'emballage, le doute subsiste.",
     explanationEn:
-      "Whey: status follows the rennet of the source cheese. Hanafi: halal (rennet is halal). Hanbali: halal (Ibn Taymiyyah — rennet is halal). Shafi'i: doubtful (rennet haram if non-zabiha). Maliki: doubtful (rennet haram, but whey being a dilute by-product, qadr al-yasir principle mitigates to doubtful rather than haram).",
+      "By-product of cheese making. The key factor: the rennet used. Vegetable or microbial rennet → halal. Animal rennet → depends on your school. Hanafi/Hanbali consider rennet pure. Shafi'i/Maliki advise caution. Without \"microbial rennet\" on the label, doubt remains.",
     scholarlyReference:
       "IslamWeb #198295, #321622, IslamQA #115306, Ibn Taymiyyah",
     fatwaSourceUrl: "https://www.islamweb.net/en/fatwa/198295",
@@ -880,10 +880,10 @@ export const ingredientRulingsSeed: NewIngredientRuling[] = [
     rulingHanbali: "halal",
     confidence: 0.6,
     explanationFr:
-      "Lactosérum : voir « whey ». Le statut dépend de la présure du fromage source.",
+      "Petit-lait issu de la fabrication du fromage. Le point clé : la présure utilisée. Présure végétale ou microbienne → halal. Présure animale → dépend de votre école. Hanafites/Hanbalites considèrent la présure pure. Chafiites/Malikites recommandent la prudence. Sans mention « présure microbienne » sur l'emballage, le doute subsiste.",
     explanationEn:
-      "Whey: see 'whey'. Status depends on the rennet used in the source cheese.",
-    scholarlyReference: "IslamWeb #198295",
+      "By-product of cheese making. The key factor: the rennet used. Vegetable or microbial rennet → halal. Animal rennet → depends on your school. Hanafi/Hanbali consider rennet pure. Shafi'i/Maliki advise caution. Without \"microbial rennet\" on the label, doubt remains.",
+    scholarlyReference: "IslamWeb #198295, #321622, IslamQA #115306, Ibn Taymiyyah",
     fatwaSourceUrl: "https://www.islamweb.net/en/fatwa/198295",
     fatwaSourceName: "IslamWeb #198295",
     category: "rennet",
@@ -962,13 +962,14 @@ export const ingredientRulingsSeed: NewIngredientRuling[] = [
     rulingHanbali: null,
     confidence: 0.9,
     explanationFr:
-      "E471 (mono- et diglycérides d'acides gras) : ⚠️ En Europe, ~95 % des E471 sans mention d'origine sont dérivés de graisses animales (principalement porc). IslamQA (#114129) recommande la prudence en pays non-musulman. Si « origine végétale » est indiqué sur l'emballage : halal.",
+      "E471 (Mono/diglycérides d'acides gras) : ⚠️ En Europe, ~95 % des E471 sans mention d'origine sont dérivés de graisses animales (principalement porc). IslamQA (#114129) recommande la prudence en pays non-musulman. Si « origine végétale » est indiqué sur l'emballage : halal.",
     explanationEn:
       "E471 (mono- and diglycerides of fatty acids): ⚠️ In Europe, ~95% of E471 without a stated origin is derived from animal fats (mainly pork). IslamQA (#114129) advises caution in non-Muslim countries. If 'plant origin' is stated on the packaging: halal.",
     scholarlyReference: "IslamWeb #387325, IslamQA #97541, #114129",
     fatwaSourceUrl: "https://www.islamweb.net/en/fatwa/387325",
     fatwaSourceName: "IslamWeb #387325, IslamQA #97541",
     category: "emulsifier",
+    overridesKeyword: "mono-",
   },
 
   // ═══════════════════════════════════════════════════════════════
