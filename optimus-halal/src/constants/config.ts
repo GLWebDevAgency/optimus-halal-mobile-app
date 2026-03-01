@@ -44,6 +44,8 @@ export interface FeatureFlags {
   socialSharing: boolean;
   // Analytics
   analyticsEnabled: boolean;
+  // Halal alternatives (haram/doubtful scan results)
+  alternativesEnabled: boolean;
   // Premium gates
   paywallEnabled: boolean;
   favoritesLimitEnabled: boolean;
@@ -62,6 +64,7 @@ export const defaultFeatureFlags: FeatureFlags = {
   gamificationEnabled: true,
   socialSharing: true,
   analyticsEnabled: true,
+  alternativesEnabled: false, // Désactivé — V2, alternatives certifiées à venir
   paywallEnabled: false,
   favoritesLimitEnabled: false,
   scanHistoryLimitEnabled: false,

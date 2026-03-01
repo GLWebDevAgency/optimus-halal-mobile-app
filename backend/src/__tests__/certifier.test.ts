@@ -22,20 +22,39 @@ async function seedCertifier(
 
 // Flush certifier cache keys before each test to avoid stale cached responses
 beforeEach(async () => {
-  const keys = await redis.keys("certifiers:*");
+  // Flush both legacy "certifiers:*" and runtime score cache "certifier:*"
+  const keys = await redis.keys("certifier*");
   if (keys.length > 0) await redis.del(...keys);
 });
 
 describe("certifier router", () => {
   describe("ranking", () => {
     it("returns certifiers ordered by trust score descending", async () => {
-      await seedCertifier("cert-low", { name: "Low Trust", trustScore: 30 });
-      await seedCertifier("cert-high", { name: "High Trust", trustScore: 90 });
-      await seedCertifier("cert-mid", { name: "Mid Trust", trustScore: 60 });
+      // Scores are computed from practice flags, not the trustScore column.
+      // More positive practices → higher score.
+      await seedCertifier("cert-low", {
+        name: "Low Trust",
+        acceptsMechanicalSlaughter: true,
+        acceptsStunning: true,
+        acceptsElectronarcosis: true,
+      });
+      await seedCertifier("cert-high", {
+        name: "High Trust",
+        controllersAreEmployees: true,
+        hasSalariedSlaughterers: true,
+        controllersPresentEachProduction: true,
+        transparencyPublicCharter: true,
+        transparencyAuditReports: true,
+        transparencyCompanyList: true,
+      });
+      await seedCertifier("cert-mid", {
+        name: "Mid Trust",
+        controllersAreEmployees: true,
+        hasSalariedSlaughterers: true,
+      });
       // Inactive — should be excluded
       await seedCertifier("cert-inactive", {
         name: "Inactive",
-        trustScore: 100,
         isActive: false,
       });
 
@@ -78,17 +97,17 @@ describe("certifier router", () => {
       await seedCertifier("trusted-1", {
         name: "Trusted A",
         halalAssessment: true,
-        trustScore: 80,
+        controllersAreEmployees: true,
+        hasSalariedSlaughterers: true,
+        transparencyPublicCharter: true,
       });
       await seedCertifier("trusted-2", {
         name: "Trusted B",
         halalAssessment: true,
-        trustScore: 70,
       });
       await seedCertifier("untrusted-1", {
         name: "Untrusted C",
         halalAssessment: false,
-        trustScore: 40,
       });
 
       const caller = createTestCaller();

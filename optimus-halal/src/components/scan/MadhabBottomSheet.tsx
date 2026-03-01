@@ -135,7 +135,7 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
       backdropOpacity.value = withTiming(1, { duration: 200 });
       translateY.value = reducedMotion
         ? 0
-        : withSpring(0, { damping: 20, stiffness: 200 });
+        : withSpring(0, { damping: 28, stiffness: 120 });
     } else if (isMounted) {
       backdropOpacity.value = withTiming(0, { duration: 150 });
       translateY.value = withTiming(
@@ -324,7 +324,7 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
             </>
           )}
 
-          {/* ── SECTION 2: Conflicting Additives & Ingredients ── */}
+          {/* ── SECTION 2: Unified conflicting elements ── */}
           {hasConflicts ? (
             <>
               <Text
@@ -333,173 +333,88 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
                 {t.scanResult.madhabConflictExplain}
               </Text>
 
-              {/* Additives */}
-              {conflictingAdditives.map((add) => (
-                <View
-                  key={add.code}
-                  style={[
-                    styles.additiveCard,
-                    {
-                      backgroundColor: isDark
-                        ? "rgba(255,255,255,0.03)"
-                        : "rgba(0,0,0,0.02)",
-                      borderColor: isDark
-                        ? "rgba(255,255,255,0.06)"
-                        : "rgba(0,0,0,0.06)",
-                    },
-                  ]}
-                >
-                  <View style={styles.additiveHeader}>
-                    <Text
-                      style={[styles.additiveCode, { color: colors.textPrimary }]}
-                    >
-                      {add.code}
-                    </Text>
-                    <Text
-                      style={[styles.additiveName, { color: colors.textSecondary }]}
-                    >
-                      {add.name}
-                    </Text>
-                    <View
-                      style={[
-                        styles.rulingBadge,
-                        {
-                          backgroundColor:
-                            `${STATUS_COLORS[add.ruling as keyof typeof STATUS_COLORS] ?? neutral[500]}15`,
-                        },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.rulingText,
-                          {
-                            color:
-                              STATUS_COLORS[add.ruling as keyof typeof STATUS_COLORS] ??
-                              neutral[500],
-                          },
-                        ]}
-                      >
-                        {add.ruling === "haram"
-                          ? t.scanResult.haram
-                          : add.ruling === "doubtful"
-                            ? t.scanResult.doubtful
-                            : t.scanResult.halal}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text
+              {/* Unified list: additives first, then ingredients — same card format */}
+              {[
+                ...conflictingAdditives.map((add) => ({
+                  key: `add-${add.code}`,
+                  title: add.name && add.name !== add.code
+                    ? `${add.code} (${add.name})`
+                    : add.code,
+                  ruling: add.ruling,
+                  explanation: add.explanation,
+                  scholarlyReference: add.scholarlyReference,
+                })),
+                ...conflictingIngredients.map((ing) => ({
+                  key: `ing-${ing.pattern}`,
+                  title: ing.pattern,
+                  ruling: ing.ruling,
+                  explanation: ing.explanation,
+                  scholarlyReference: ing.scholarlyReference,
+                })),
+              ].map((item) => {
+                const itemColor = STATUS_COLORS[item.ruling as keyof typeof STATUS_COLORS] ?? neutral[500];
+                return (
+                  <View
+                    key={item.key}
                     style={[
-                      styles.additiveExplanation,
-                      { color: colors.textSecondary },
+                      styles.additiveCard,
+                      {
+                        backgroundColor: isDark
+                          ? "rgba(255,255,255,0.03)"
+                          : "rgba(0,0,0,0.02)",
+                        borderColor: isDark
+                          ? "rgba(255,255,255,0.06)"
+                          : "rgba(0,0,0,0.06)",
+                      },
                     ]}
                   >
-                    {add.explanation}
-                  </Text>
-                  {add.scholarlyReference && (
-                    <View style={styles.refRow}>
-                      <MaterialIcons
-                        name="menu-book"
-                        size={12}
-                        color={colors.textMuted}
-                      />
+                    <View style={styles.additiveHeader}>
                       <Text
-                        style={[styles.refText, { color: colors.textMuted }]}
+                        style={[styles.additiveCode, { color: itemColor }]}
                       >
-                        {add.scholarlyReference}
+                        {item.title}
                       </Text>
-                    </View>
-                  )}
-                </View>
-              ))}
-
-              {/* Ingredients */}
-              {conflictingIngredients.length > 0 && (
-                <>
-                  {conflictingAdditives.length > 0 && (
-                    <Text
-                      style={[
-                        styles.sectionLabel,
-                        { color: colors.textSecondary, marginTop: 12 },
-                      ]}
-                    >
-                      {t.scanResult.ingredientsConcerned}
-                    </Text>
-                  )}
-                  {conflictingIngredients.map((ing) => (
-                    <View
-                      key={ing.pattern}
-                      style={[
-                        styles.additiveCard,
-                        {
-                          backgroundColor: isDark
-                            ? "rgba(255,255,255,0.03)"
-                            : "rgba(0,0,0,0.02)",
-                          borderColor: isDark
-                            ? "rgba(255,255,255,0.06)"
-                            : "rgba(0,0,0,0.06)",
-                        },
-                      ]}
-                    >
-                      <View style={styles.additiveHeader}>
-                        <Text
-                          style={[styles.additiveCode, { color: colors.textPrimary }]}
-                        >
-                          {ing.pattern}
-                        </Text>
-                        <View style={{ flex: 1 }} />
-                        <View
-                          style={[
-                            styles.rulingBadge,
-                            {
-                              backgroundColor:
-                                `${STATUS_COLORS[ing.ruling as keyof typeof STATUS_COLORS] ?? neutral[500]}15`,
-                            },
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.rulingText,
-                              {
-                                color:
-                                  STATUS_COLORS[ing.ruling as keyof typeof STATUS_COLORS] ??
-                                  neutral[500],
-                              },
-                            ]}
-                          >
-                            {ing.ruling === "haram"
-                              ? t.scanResult.haram
-                              : ing.ruling === "doubtful"
-                                ? t.scanResult.doubtful
-                                : t.scanResult.halal}
-                          </Text>
-                        </View>
-                      </View>
-                      <Text
+                      <View style={{ flex: 1 }} />
+                      <View
                         style={[
-                          styles.additiveExplanation,
-                          { color: colors.textSecondary },
+                          styles.rulingBadge,
+                          { backgroundColor: `${itemColor}15` },
                         ]}
                       >
-                        {ing.explanation}
-                      </Text>
-                      {ing.scholarlyReference && (
-                        <View style={styles.refRow}>
-                          <MaterialIcons
-                            name="menu-book"
-                            size={12}
-                            color={colors.textMuted}
-                          />
-                          <Text
-                            style={[styles.refText, { color: colors.textMuted }]}
-                          >
-                            {ing.scholarlyReference}
-                          </Text>
-                        </View>
-                      )}
+                        <Text style={[styles.rulingText, { color: itemColor }]}>
+                          {item.ruling === "haram"
+                            ? t.scanResult.haram
+                            : item.ruling === "doubtful"
+                              ? t.scanResult.doubtful
+                              : t.scanResult.halal}
+                        </Text>
+                      </View>
                     </View>
-                  ))}
-                </>
-              )}
+                    <Text
+                      style={[
+                        styles.additiveExplanation,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      {item.explanation}
+                    </Text>
+                    {item.scholarlyReference && (
+                      <View style={styles.refRow}>
+                        <MaterialIcons
+                          name="menu-book"
+                          size={12}
+                          color={colors.textMuted}
+                        />
+                        <Text
+                          style={[styles.refText, { color: colors.textMuted }]}
+                        >
+                          {item.scholarlyReference}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
             </>
           ) : !hasTrustScore ? (
             <Text style={[styles.noDataText, { color: colors.textSecondary }]}>

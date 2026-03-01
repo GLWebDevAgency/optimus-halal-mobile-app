@@ -27,6 +27,13 @@ const envSchema = z.object({
   SENTRY_ENVIRONMENT: z.string().default("development"),
   // Internal cron endpoints
   CRON_SECRET: z.string().min(32).optional(),
+  // AI ingredient extraction (provider-agnostic)
+  AI_EXTRACT_PROVIDER: z.enum(["gemini", "openai", "anthropic"]).default("gemini"),
+  GEMINI_API_KEY: z.string().min(1).optional(),
+  OPENAI_API_KEY: z.string().min(1).optional(),
+  OPENAI_MODEL: z.string().default("gpt-4o-mini"),
+  ANTHROPIC_API_KEY: z.string().min(1).optional(),
+  ANTHROPIC_MODEL: z.string().default("claude-haiku-4-5-20251001"),
   // Cloudflare R2
   R2_ACCOUNT_ID: z.string().min(1).optional(),
   R2_ACCESS_KEY_ID: z.string().min(1).optional(),

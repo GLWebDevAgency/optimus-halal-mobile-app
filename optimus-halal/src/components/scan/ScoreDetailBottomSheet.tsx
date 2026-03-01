@@ -102,7 +102,7 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
       backdropOpacity.value = withTiming(1, { duration: 200 });
       translateY.value = reducedMotion
         ? 0
-        : withSpring(0, { damping: 20, stiffness: 200 });
+        : withSpring(0, { damping: 28, stiffness: 120 });
     } else if (isMounted) {
       backdropOpacity.value = withTiming(0, { duration: 150 });
       translateY.value = withTiming(

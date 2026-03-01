@@ -14,12 +14,17 @@ import {
   lookupBarcode,
   analyzeHalalStatus,
   matchIngredientRulings,
+  extractIngredientList,
+  smartExtractIngredients,
   type HalalAnalysis,
   type MatchedIngredientRuling,
+  type OpenFoodFactsProduct,
 } from "../../services/barcode.service.js";
 import { matchAllergens } from "../../services/allergen.service.js";
+import { computeHealthScore, type AdditiveForScore } from "../../services/health-score.service.js";
 import { getCertifierScores, getAllCertifierScores } from "../../services/certifier-score.service.js";
 import { notFound } from "../../lib/errors.js";
+import { logger } from "../../lib/logger.js";
 
 // ── Level thresholds ──────────────────────────────────────────
 // XP required to REACH each level (index = level - 1)
@@ -111,12 +116,19 @@ async function computeMadhabVerdicts(
     }));
   }
 
-  // Extract additive codes from analysis reasons (format: "E441 (Gélatine)")
-  // Validate format with regex to avoid querying with garbage codes
-  const additiveCodes = halalAnalysis.reasons
-    .filter((r) => r.type === "additive" && r.status !== "halal")
+  // Extract ALL additive codes from analysis reasons (format: "E441 (Gélatine)")
+  // allAdditiveCodes: used to suppress Tier 3 patterns that alias Tier 2 additives
+  // nonHalalAdditiveCodes: used for madhab-specific DB lookup
+  const allAdditiveCodes = halalAnalysis.reasons
+    .filter((r) => r.type === "additive")
     .map((r) => r.name.split(" ")[0])
     .filter((code) => /^E\d+[a-z]?$/i.test(code));
+  const additiveCodes = allAdditiveCodes.filter((code) => {
+    const reason = halalAnalysis.reasons.find(
+      (r) => r.type === "additive" && r.name.split(" ")[0] === code,
+    );
+    return reason?.status !== "halal";
+  });
 
   // Fetch all madhab rulings + additive names in one join query
   let additivesByMadhab = new Map<string, RulingRow[]>();
@@ -156,22 +168,51 @@ async function computeMadhabVerdicts(
     hanbali: "rulingHanbali",
   } as const;
 
+  // ── Tier 2→3 deduplication (computed once, shared across all 4 madhabs) ──
+  // When an additive is evaluated by Tier 2 (with per-madhab rulings from
+  // additive_madhab_rulings), its Tier 3 text aliases must be suppressed
+  // to avoid double-counting. E.g., E471 already has precise per-madhab
+  // rulings → suppress "mono-", "diglycerides", "monoglycerides" from Tier 3.
+  const allAdditiveLower = new Set(allAdditiveCodes.map((c) => c.toLowerCase()));
+  const E_CODE_ALIASES: Record<string, string[]> = {
+    e471: ["mono-", "diglycerides", "monoglycerides", "diglycérides", "monoglycérides"],
+    e441: ["gélatine", "gelatin", "gelatine"],
+    e120: ["carmine", "cochineal", "carmin", "cochenille"],
+    e542: ["phosphite"],
+  };
+  const suppressedPatterns = new Set<string>();
+  for (const code of allAdditiveLower) {
+    suppressedPatterns.add(code);
+    for (const alias of E_CODE_ALIASES[code] ?? []) {
+      suppressedPatterns.add(alias.toLowerCase());
+    }
+  }
+
   return MADHAB_SCHOOLS.map((madhab) => {
     // ── Additive conflicts ──
     const schoolRulings = additivesByMadhab.get(madhab) ?? [];
     const conflictingAdditives = schoolRulings.filter((r: RulingRow) => r.ruling !== "halal");
 
+    // Start from neutral "halal" — let per-madhab additive + ingredient conflicts
+    // determine the worst status. Previously this fell back to halalAnalysis.status
+    // (the GLOBAL verdict) which caused all madhabs to show "doubtful" even when
+    // a specific school considers the conflicting ingredient halal.
     let worstStatus: "halal" | "doubtful" | "haram" = schoolRulings.length > 0
       ? schoolRulings.reduce((worst: "halal" | "doubtful" | "haram", r: RulingRow) => {
           const w = STATUS_WEIGHT[r.ruling as keyof typeof STATUS_WEIGHT] ?? 0;
           const cw = STATUS_WEIGHT[worst as keyof typeof STATUS_WEIGHT] ?? 0;
           return w > cw ? (r.ruling as "halal" | "doubtful" | "haram") : worst;
         }, "halal" as "halal" | "doubtful" | "haram")
-      : (halalAnalysis.status as "halal" | "doubtful" | "haram");
-
-    // ── Ingredient conflicts ──
+      : "halal";
     const conflictingIngredients = ingredientRulingsData
       .filter((ir) => {
+        const patternLower = ir.pattern.toLowerCase();
+        // Skip if this pattern is an E-number already covered by Tier 2
+        if (allAdditiveLower.has(patternLower)) return false;
+        // Skip if this pattern is an alias of a Tier 2 additive
+        if (suppressedPatterns.has(patternLower)) return false;
+        // Skip partial-match patterns (e.g. "mono-") that are substrings of a suppressed alias
+        if ([...suppressedPatterns].some((sp) => patternLower.includes(sp) || sp.includes(patternLower))) return false;
         const madhabRuling = (ir[MADHAB_FIELD[madhab]] ?? ir.ruling) as string;
         return madhabRuling !== "halal";
       })
@@ -247,6 +288,7 @@ export const scanRouter = router({
 
       let halalAnalysis: HalalAnalysis | null = null;
       let offData: Record<string, unknown> | null = null;
+      let aiEnrichment: import("../../services/ai-extract/index.js").ExtractionResult | null = null;
 
       const analysisOptions = {
         madhab: userProfile?.madhab ?? ("general" as const),
@@ -270,6 +312,9 @@ export const scanRouter = router({
             analysisOptions,
           );
 
+          const newExtraction = await smartExtractIngredients(off as OpenFoodFactsProduct);
+          aiEnrichment = newExtraction.aiEnrichment;
+
           const [newProduct] = await ctx.db
             .insert(products)
             .values({
@@ -277,9 +322,7 @@ export const scanRouter = router({
               name: off.product_name ?? "Produit inconnu",
               brand: off.brands,
               category: off.categories?.split(",")[0]?.trim(),
-              ingredients: off.ingredients_text
-                ? off.ingredients_text.split(",").map((i) => i.trim())
-                : [],
+              ingredients: newExtraction.ingredients,
               halalStatus: halalAnalysis.status,
               confidenceScore: halalAnalysis.confidence,
               certifierName: halalAnalysis.certifierName,
@@ -295,7 +338,46 @@ export const scanRouter = router({
         }
       } else {
         // Product exists — re-run analysis with user's madhab preferences
-        const storedOff = product.offData as Record<string, unknown> | null;
+        let storedOff = product.offData as Record<string, unknown> | null;
+
+        // Legacy product backfill: if offData is missing, re-fetch from OFF
+        // and persist so future scans don't need to re-fetch.
+        if (!storedOff) {
+          const offResult = await lookupBarcode(input.barcode);
+          if (offResult.found && offResult.product) {
+            const off = offResult.product;
+            storedOff = off as unknown as Record<string, unknown>;
+            offData = storedOff;
+
+            // Backfill: persist OFF data + update product metadata
+            await ctx.db
+              .update(products)
+              .set({
+                offData: off,
+                name: off.product_name ?? product.name,
+                brand: off.brands ?? product.brand,
+                imageUrl: off.image_front_url ?? off.image_url ?? product.imageUrl,
+                nutritionFacts: off.nutriments ?? product.nutritionFacts,
+                lastSyncedAt: new Date(),
+              })
+              .where(eq(products.id, product.id));
+
+            product = {
+              ...product,
+              offData: off as any,
+              name: off.product_name ?? product.name,
+              brand: off.brands ?? product.brand,
+              imageUrl: off.image_front_url ?? off.image_url ?? product.imageUrl,
+              nutritionFacts: (off.nutriments ?? product.nutritionFacts) as any,
+            };
+
+            logger.info("Legacy product backfilled with OFF data", {
+              barcode: input.barcode,
+              productId: product.id,
+            });
+          }
+        }
+
         if (storedOff) {
           halalAnalysis = await analyzeHalalStatus(
             storedOff.ingredients_text as string | undefined,
@@ -304,6 +386,28 @@ export const scanRouter = router({
             storedOff.ingredients_analysis_tags as string[] | undefined,
             analysisOptions,
           );
+
+          // Always refresh ingredients via AI — Redis cache (7d) makes this free
+          // after the first call. Ensures all legacy products get clean data.
+          if (storedOff.ingredients_text) {
+            const extraction = await smartExtractIngredients(storedOff as unknown as OpenFoodFactsProduct);
+            aiEnrichment = extraction.aiEnrichment;
+            if (extraction.ingredients.length > 0) {
+              const current = product.ingredients as string[] | null;
+              const changed = !current || current.length !== extraction.ingredients.length
+                || current.some((v, i) => v !== extraction.ingredients[i]);
+              if (changed) {
+                product = { ...product, ingredients: extraction.ingredients };
+                // Persist to DB (fire-and-forget — don't block response)
+                ctx.db
+                  .update(products)
+                  .set({ ingredients: extraction.ingredients })
+                  .where(eq(products.id, product.id))
+                  .then(() => {})
+                  .catch(() => {});
+              }
+            }
+          }
 
           // Sync product record if analysis result changed (status, certifier, or confidence)
           if (halalAnalysis && (
@@ -376,6 +480,8 @@ export const scanRouter = router({
       }
 
       // 4b. Health warnings (pregnant/children + risky additives)
+      let healthScoreAdditives: AdditiveForScore[] = [];
+
       if (offProduct?.additives_tags?.length) {
         const codes = [
           ...new Set(
@@ -393,6 +499,15 @@ export const scanRouter = router({
           .from(additivesTable)
           .where(inArray(additivesTable.code, codes))
           .orderBy(additivesTable.code);
+
+        // Map for health score computation
+        healthScoreAdditives = riskyAdditives.map((a) => ({
+          code: a.code,
+          toxicityLevel: a.toxicityLevel as AdditiveForScore["toxicityLevel"],
+          efsaStatus: a.efsaStatus as AdditiveForScore["efsaStatus"],
+          adiMgPerKg: a.adiMgPerKg,
+          bannedCountries: a.bannedCountries,
+        }));
 
         for (const add of riskyAdditives) {
           if (add.riskPregnant && userProfile?.isPregnant) {
@@ -519,11 +634,16 @@ export const scanRouter = router({
       }
 
       // 6. Build enriched OFF extras for the mobile app
+      // OFF returns "unknown"/"not-applicable" as strings instead of null — normalize to null
       const storedOff = (product?.offData ?? offData) as Record<string, unknown> | null;
+      const offGrade = (v: unknown): string | null => {
+        const s = v as string | undefined;
+        return s && s !== "unknown" && s !== "not-applicable" ? s : null;
+      };
       const offExtras = storedOff ? {
-        nutriscoreGrade: (storedOff.nutriscore_grade as string) ?? null,
+        nutriscoreGrade: offGrade(storedOff.nutriscore_grade),
         novaGroup: (storedOff.nova_group as number) ?? null,
-        ecoscoreGrade: (storedOff.ecoscore_grade as string) ?? null,
+        ecoscoreGrade: offGrade(storedOff.ecoscore_grade),
         allergensTags: (storedOff.allergens_tags as string[]) ?? [],
         tracesTags: (storedOff.traces_tags as string[]) ?? [],
         additivesTags: (storedOff.additives_tags as string[]) ?? [],
@@ -532,6 +652,26 @@ export const scanRouter = router({
         manufacturingPlaces: (storedOff.manufacturing_places as string) ?? null,
         origins: (storedOff.origins as string) ?? null,
       } : null;
+
+      // 6b. Naqiy Health Score — 4-axis nutritional formula
+      // OFF is always prioritary; AI enrichment fills gaps
+      const healthScore = computeHealthScore({
+        nutriscoreGrade: offExtras?.nutriscoreGrade ?? null,
+        novaGroup: offExtras?.novaGroup ?? aiEnrichment?.novaEstimate ?? null,
+        additives: healthScoreAdditives,
+        hasIngredientsList: !!(storedOff?.ingredients_text),
+        hasNutritionFacts: !!(storedOff?.nutriments && Object.keys(storedOff.nutriments as object).length > 0),
+        hasAllergens: (offExtras?.allergensTags?.length ?? 0) > 0 || (aiEnrichment?.allergenHints?.length ?? 0) > 0,
+        hasOrigin: !!(offExtras?.origins || offExtras?.manufacturingPlaces),
+      });
+
+      logger.info("Health score computed", {
+        barcode: input.barcode,
+        score: healthScore.score,
+        label: healthScore.label,
+        confidence: healthScore.dataConfidence,
+        novaSource: offExtras?.novaGroup ? "off" : aiEnrichment?.novaEstimate ? "ai" : "none",
+      });
 
       // 7. Community scan count — how many OTHER users verified this product
       const [communityCount] = await ctx.db
@@ -608,6 +748,13 @@ export const scanRouter = router({
         halalAnalysis,
         boycott: boycottResult,
         offExtras,
+        healthScore,
+        aiEnrichment: aiEnrichment ? {
+          novaEstimate: aiEnrichment.novaEstimate ?? null,
+          allergenHints: aiEnrichment.allergenHints ?? [],
+          containsAlcohol: aiEnrichment.containsAlcohol ?? false,
+          isOrganic: aiEnrichment.isOrganic ?? false,
+        } : null,
         personalAlerts,
         communityVerifiedCount: communityCount?.count ?? 0,
         madhabVerdicts,

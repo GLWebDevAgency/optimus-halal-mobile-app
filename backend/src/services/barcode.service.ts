@@ -5,6 +5,8 @@ import { db } from "../db/index.js";
 import { additives, additiveMadhabRulings, ingredientRulings } from "../db/schema/index.js";
 import type { IngredientRuling } from "../db/schema/ingredient-rulings.js";
 import { eq, and, inArray } from "drizzle-orm";
+import { normalizeIngredientText, stripDiacritics } from "./ingredient-normalizer.js";
+import { aiExtractIngredients, type ExtractionResult } from "./ai-extract/index.js";
 
 // ── OpenFoodFacts Types ─────────────────────────────────────
 
@@ -14,6 +16,7 @@ export interface OpenFoodFactsProduct {
   brands?: string;
   categories?: string;
   ingredients_text?: string;
+  ingredients?: { text?: string; id?: string; percent?: number }[];
   image_url?: string;
   image_front_url?: string;
   nutriments?: Record<string, number | string>;
@@ -31,6 +34,153 @@ export interface OpenFoodFactsProduct {
   ingredients_analysis_tags?: string[];
   manufacturing_places?: string;
   origins?: string;
+}
+
+/**
+ * Extracts a clean, flat list of top-level ingredient names from OFF data.
+ *
+ * Strategy:
+ *   1. Prefer OFF's pre-parsed `ingredients[]` array (structured, hierarchy-aware)
+ *   2. Fallback: smart split of `ingredients_text` on comma, dash, semicolon
+ *
+ * OFF's `ingredients_text` uses mixed separators:
+ *   - Dashes (`-`) for top-level ingredients
+ *   - Commas (`,`) for sub-ingredients inside brackets `[...]`
+ *   - Semicolons (`;`) occasionally
+ *
+ * A naive `.split(",")` merges hierarchy levels, producing broken entries like
+ * `"Chocolat noir 28% [sucre"` and `"masse de cacao"` as separate items.
+ */
+export function extractIngredientList(off: OpenFoodFactsProduct): string[] {
+  // Strategy 1: Use structured ingredients array (best quality)
+  if (off.ingredients && off.ingredients.length > 0) {
+    return off.ingredients
+      .map((ing) => ing.text?.trim())
+      .filter((t): t is string => !!t && t.length > 0);
+  }
+
+  // Strategy 2: Smart-split ingredients_text
+  if (off.ingredients_text) {
+    return splitIngredientText(off.ingredients_text);
+  }
+
+  return [];
+}
+
+/**
+ * Splits raw ingredient text respecting brackets and mixed separators.
+ * Handles OFF patterns like:
+ *   "Farine de blé 29% - Chocolat noir 28% [sucre, cacao] - Sucre"
+ */
+function splitIngredientText(text: string): string[] {
+  const results: string[] = [];
+  let current = "";
+  let depth = 0; // bracket nesting depth
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === "[" || ch === "(") {
+      depth++;
+      current += ch;
+    } else if (ch === "]" || ch === ")") {
+      depth = Math.max(0, depth - 1);
+      current += ch;
+    } else if (depth === 0 && (ch === "," || ch === ";" || ch === "-")) {
+      // At top level, split on separators
+      const trimmed = current.trim();
+      if (trimmed) results.push(trimmed);
+      current = "";
+    } else {
+      current += ch;
+    }
+  }
+
+  // Don't forget the last segment
+  const trimmed = current.trim();
+  if (trimmed) results.push(trimmed);
+
+  // Clean up: remove leading/trailing punctuation artifacts like trailing "."
+  return results
+    .map((s) => s.replace(/^\.\s*/, "").replace(/\.\s*$/, "").trim())
+    .filter((s) => s.length > 1);
+}
+
+/**
+ * Smart ingredient extraction — priority: AI → OFF structured → regex.
+ *
+ * AI (Gemini) is ALWAYS preferred when ingredients_text is available because:
+ *   - OFF structured ingredients[] only has top-level items (loses sub-ingredients)
+ *   - OFF keeps markdown underscores (_blé_), category prefixes, duplicates
+ *   - AI flattens, cleans, deduplicates, and separates E-codes into additives
+ *
+ * Falls back to OFF structured → regex only when AI is unavailable.
+ */
+export interface SmartExtractionResult {
+  ingredients: string[];
+  aiEnrichment: ExtractionResult | null;
+}
+
+export async function smartExtractIngredients(
+  off: OpenFoodFactsProduct,
+): Promise<SmartExtractionResult> {
+  // Strategy 1: AI extraction from raw text (Gemini/GPT/Claude — always preferred)
+  if (off.ingredients_text) {
+    const aiResult = await aiExtractIngredients(off.ingredients_text);
+    if (aiResult && aiResult.ingredients.length > 0) {
+      logger.info("Ingredients extracted via AI", {
+        count: aiResult.ingredients.length,
+        additives: aiResult.additives.length,
+        lang: aiResult.lang,
+        nova: aiResult.novaEstimate ?? null,
+      });
+      return { ingredients: aiResult.ingredients, aiEnrichment: aiResult };
+    }
+  }
+
+  // Strategy 2: OFF structured ingredients[] — flatten all levels
+  if (off.ingredients && off.ingredients.length > 0) {
+    const flat = flattenOffIngredients(off.ingredients);
+    if (flat.length > 0) return { ingredients: flat, aiEnrichment: null };
+  }
+
+  // Strategy 3: Regex fallback on raw text
+  if (off.ingredients_text) {
+    return { ingredients: splitIngredientText(off.ingredients_text), aiEnrichment: null };
+  }
+
+  return { ingredients: [], aiEnrichment: null };
+}
+
+/**
+ * Recursively flatten OFF's nested ingredients[] tree into a clean flat list.
+ * Cleans markdown underscores and deduplicates.
+ */
+function flattenOffIngredients(
+  ingredients: Array<{ text?: string; ingredients?: Array<{ text?: string; ingredients?: any[] }> }>,
+): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  function walk(items: typeof ingredients) {
+    for (const item of items) {
+      const raw = item.text?.trim();
+      if (raw) {
+        // Clean OFF markdown: _blé_ → blé
+        const clean = raw.replace(/_/g, "").trim().toLowerCase();
+        if (clean.length > 1 && !seen.has(clean)) {
+          seen.add(clean);
+          result.push(clean);
+        }
+      }
+      // Recurse into sub-ingredients
+      if (item.ingredients?.length) {
+        walk(item.ingredients);
+      }
+    }
+  }
+
+  walk(ingredients);
+  return result;
 }
 
 export interface BarcodeResult {
@@ -253,7 +403,7 @@ interface AdditiveInfo {
 const ADDITIVES_HALAL_DB: Record<string, AdditiveInfo> = {
   "en:e100":  { name: "Curcumine", status: "halal", explanation: "Origine végétale" },
   "en:e101":  { name: "Riboflavine", status: "halal", explanation: "Synthétique ou végétal" },
-  "en:e120":  { name: "Carmine / Cochenille", status: "haram", explanation: "Colorant extrait d'insectes (cochenille)" },
+  "en:e120":  { name: "Carmine / Cochenille", status: "haram", explanation: "Colorant rouge 100 % insecte (cochenille). Haram consensus hanafite/chafiite/hanbalite. Exception malikite (Coran 6:145)." },
   "en:e122":  { name: "Azorubine", status: "halal", explanation: "Colorant synthétique" },
   "en:e133":  { name: "Bleu brillant", status: "halal", explanation: "Colorant synthétique" },
   "en:e150a": { name: "Caramel", status: "halal", explanation: "Sucre caramélisé" },
@@ -277,27 +427,27 @@ const ADDITIVES_HALAL_DB: Record<string, AdditiveInfo> = {
   "en:e415":  { name: "Gomme xanthane", status: "halal", explanation: "Fermentation bactérienne" },
   "en:e420":  { name: "Sorbitol", status: "halal", explanation: "Origine végétale" },
   "en:e440":  { name: "Pectine", status: "halal", explanation: "Origine végétale (fruits)" },
-  "en:e441":  { name: "Gélatine", status: "haram", explanation: "Généralement d'origine porcine" },
+  "en:e441":  { name: "Gélatine", status: "haram", explanation: "Collagène animal : ~50 % porcin, ~35 % bovin dans la production mondiale. Porcine = haram (consensus). Bovine = haram si non-zabiha (majorité). ECFR/Qaradawi acceptent l'istihalah (minorité)." },
   "en:e460":  { name: "Cellulose", status: "halal", explanation: "Origine végétale" },
-  "en:e471":  { name: "Mono/diglycérides", status: "doubtful", explanation: "Origine animale ou végétale non précisée" },
-  "en:e472a": { name: "Esters acétiques", status: "doubtful", explanation: "Origine animale ou végétale non précisée" },
-  "en:e472b": { name: "Esters lactiques", status: "doubtful", explanation: "Origine animale ou végétale non précisée" },
-  "en:e472c": { name: "Esters citriques", status: "doubtful", explanation: "Origine animale ou végétale non précisée" },
-  "en:e472e": { name: "Esters diacétyl-tartriques", status: "doubtful", explanation: "Origine animale ou végétale non précisée" },
-  "en:e473":  { name: "Esters de sucrose", status: "doubtful", explanation: "Origine animale ou végétale non précisée" },
-  "en:e474":  { name: "Sucroglycérides", status: "doubtful", explanation: "Origine animale ou végétale non précisée" },
-  "en:e475":  { name: "Esters polyglycérol", status: "doubtful", explanation: "Origine animale ou végétale non précisée" },
+  "en:e471":  { name: "Mono/diglycérides", status: "doubtful", explanation: "Émulsifiant d'origine végétale (soja, palme) ou animale (dont porc). En Europe, ~95 % des E471 sans mention d'origine sont dérivés de graisses animales. Seule la mention « origine végétale » sur l'emballage garantit une source licite." },
+  "en:e472a": { name: "Esters acétiques", status: "doubtful", explanation: "Dérivé E471 — acides gras d'origine animale ou végétale non précisée" },
+  "en:e472b": { name: "Esters lactiques", status: "doubtful", explanation: "Dérivé E471 — acides gras d'origine animale ou végétale non précisée" },
+  "en:e472c": { name: "Esters citriques", status: "doubtful", explanation: "Dérivé E471 — acides gras d'origine animale ou végétale non précisée" },
+  "en:e472e": { name: "Esters DATEM", status: "doubtful", explanation: "Dérivé E471 — acides gras d'origine animale ou végétale non précisée" },
+  "en:e473":  { name: "Esters de saccharose", status: "doubtful", explanation: "Acides gras d'origine animale ou végétale — vérifier la source" },
+  "en:e474":  { name: "Sucroglycérides", status: "doubtful", explanation: "Mélange E473 + E471 — double source potentiellement animale" },
+  "en:e475":  { name: "Esters polyglycérol", status: "doubtful", explanation: "Acides gras d'origine animale ou végétale — vérifier la source" },
   "en:e476":  { name: "Polyricinoléate", status: "halal", explanation: "Huile de ricin" },
-  "en:e481":  { name: "Stéaroyl lactylate de sodium", status: "doubtful", explanation: "Acide stéarique — origine variable" },
-  "en:e491":  { name: "Monostéarate de sorbitan", status: "doubtful", explanation: "Acide stéarique — origine variable" },
+  "en:e481":  { name: "Stéaroyl lactylate de sodium", status: "doubtful", explanation: "Acide stéarique d'origine animale (suif) ou végétale (palme, coco) — vérifier la source" },
+  "en:e491":  { name: "Monostéarate de sorbitan", status: "doubtful", explanation: "Acide stéarique d'origine animale (suif) ou végétale (palme, coco) — vérifier la source" },
   "en:e500":  { name: "Bicarbonate de sodium", status: "halal", explanation: "Minéral" },
-  "en:e542":  { name: "Phosphate d'os", status: "haram", explanation: "Origine animale (os)" },
-  "en:e570":  { name: "Acide stéarique", status: "doubtful", explanation: "Origine animale ou végétale non précisée" },
-  "en:e631":  { name: "Inosinate disodique", status: "doubtful", explanation: "Peut être d'origine animale" },
-  "en:e635":  { name: "Ribonucléotides", status: "doubtful", explanation: "Peut être d'origine animale" },
+  "en:e542":  { name: "Phosphate d'os", status: "haram", explanation: "100 % d'origine animale (os). Haram si porc (consensus) ou bovin non-zabiha (majorité)." },
+  "en:e570":  { name: "Acide stéarique", status: "doubtful", explanation: "Acide gras saturé : suif (~25 %), beurre de cacao (~35 %), palme ou coco. Source animale courante aux USA." },
+  "en:e631":  { name: "Inosinate disodique", status: "doubtful", explanation: "Exhausteur umami : historiquement animal (sardines, porc), de plus en plus par fermentation végétale." },
+  "en:e635":  { name: "Ribonucléotides", status: "doubtful", explanation: "Mélange E627+E631. Le E631 peut être d'origine animale — vérifier la source." },
   "en:e901":  { name: "Cire d'abeille", status: "halal", explanation: "Produit d'abeille — halal par consensus" },
-  "en:e904":  { name: "Shellac", status: "doubtful", explanation: "Résine d'insecte (lac)" },
-  "en:e920":  { name: "L-Cystéine", status: "doubtful", explanation: "Peut être extraite de plumes ou cheveux" },
+  "en:e904":  { name: "Shellac", status: "halal", explanation: "Résine sécrétée par l'insecte lac — halal (consensus : Darul Uloom Karachi, Al-Azhar, MUI, JAKIM). Analogie avec le miel." },
+  "en:e920":  { name: "L-Cystéine", status: "doubtful", explanation: "~80 % plumes de canard, ~10 % synthèse, reste poils de porc/cheveux. Haram si porc/cheveux. Débat pour plumes." },
   "en:e966":  { name: "Lactitol", status: "halal", explanation: "Dérivé du lactose" },
 };
 
@@ -348,19 +498,30 @@ async function getIngredientRulings(): Promise<IngredientRuling[]> {
 }
 
 export function testPattern(text: string, pattern: string, matchType: string): boolean {
+  // Strip diacritics from both sides so "lactosérum" matches "lactoserum"
+  // (OFF often provides uppercase-then-lowercased text without accents).
+  // Try the original first for exact accent matches, then fallback to stripped.
+  const textStripped = stripDiacritics(text);
+  const patternStripped = stripDiacritics(pattern);
+
   switch (matchType) {
     case "exact":
-      return text === pattern;
+      return text === pattern || textStripped === patternStripped;
     case "contains":
-      return text.includes(pattern);
+      return text.includes(pattern) || textStripped.includes(patternStripped);
     case "word_boundary": {
       // \b is ASCII-only — accented chars (é, è, ü…) create false boundaries.
-      // e.g. "lactosérum" would match \brum\b because é is not [a-zA-Z0-9_].
       // Use Unicode-aware negative lookbehind/lookahead for word chars instead.
+      const UWB = String.raw`(?<![a-zA-ZÀ-ÿ\d])`;
+      const UWE = String.raw`(?![a-zA-ZÀ-ÿ\d])`;
+      // Try original (accented) first
       const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const UWB = String.raw`(?<![a-zA-ZÀ-ÿ\d])`;  // Unicode word boundary start
-      const UWE = String.raw`(?![a-zA-ZÀ-ÿ\d])`;    // Unicode word boundary end
-      return new RegExp(`${UWB}${escaped}${UWE}`, "i").test(text);
+      if (new RegExp(`${UWB}${escaped}${UWE}`, "i").test(text)) return true;
+      // Fallback: stripped (accent-insensitive) comparison
+      const escapedStripped = patternStripped.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const UWB_ASCII = String.raw`(?<![a-zA-Z\d])`;
+      const UWE_ASCII = String.raw`(?![a-zA-Z\d])`;
+      return new RegExp(`${UWB_ASCII}${escapedStripped}${UWE_ASCII}`, "i").test(textStripped);
     }
     case "regex": {
       try {
@@ -393,7 +554,13 @@ export async function matchIngredientRulings(
   madhab: Madhab,
 ): Promise<MatchedIngredientRuling[]> {
   const rulings = await getIngredientRulings();
-  const lower = ingredientsText.toLowerCase();
+
+  // Normalize ingredient text: fix OCR artifacts, standardize E-codes,
+  // expand abbreviations, inject multilingual synonym canonical forms.
+  // This runs before pattern matching so "gé1atine" → "gélatine",
+  // "E.471" → "e471", "Schweinefett" → text + " | graisse de porc", etc.
+  const normalized = normalizeIngredientText(ingredientsText);
+  const lower = normalized.toLowerCase();
 
   // Track which keywords are overridden by higher-priority compound matches
   const overrideMap = new Map<string, number>(); // keyword → highest priority that overrides it
@@ -470,6 +637,9 @@ const HALAL_LABEL_TAGS = [
 // ── OFF labels_tags → certifiers DB ID mapping ──────────────
 // Maps OpenFoodFacts certifier-specific label tags to our certifiers table IDs.
 // Source: manual cross-reference of OFF taxonomy with certification-list.json.
+//
+// OFF taxonomy quirk: many products use "fr:certification-X" instead of "fr:X".
+// normalizeCertifierTag() strips known prefixes to resolve both forms.
 
 export const LABEL_TAG_TO_CERTIFIER_ID: Record<string, string> = {
   "fr:a-votre-service":                                       "avs-a-votre-service",
@@ -500,6 +670,35 @@ export const LABEL_TAG_TO_CERTIFIER_ID: Record<string, string> = {
   "fr:islamic-centre-aachen":                                 "islamic-centre-aachen",
   "en:islamic-centre-aachen":                                 "islamic-centre-aachen",
 };
+
+// ── OFF tag normalizer ───────────────────────────────────────
+// OpenFoodFacts labels_tags use inconsistent formats for the same certifier:
+//   "fr:avs", "fr:certification-avs", "fr:certification-a-votre-service"
+// This normalizer strips known noise prefixes so the lookup table stays minimal.
+// Order matters: longest prefix first to avoid partial matches.
+const CERTIFIER_TAG_PREFIXES = [
+  "certification-halal-",  // e.g. fr:certification-halal-achahada
+  "certification-",        // e.g. fr:certification-avs
+  "certifie-",             // e.g. fr:certifie-avs
+  "certifié-",             // e.g. fr:certifié-avs (accented)
+];
+
+function normalizeCertifierTag(tag: string): string[] {
+  const lower = tag.toLowerCase();
+  const variants = [lower];
+  // For each known prefix, generate a stripped variant
+  const colonIdx = lower.indexOf(":");
+  if (colonIdx !== -1) {
+    const lang = lower.slice(0, colonIdx + 1); // "fr:" or "en:"
+    const body = lower.slice(colonIdx + 1);     // "certification-avs"
+    for (const prefix of CERTIFIER_TAG_PREFIXES) {
+      if (body.startsWith(prefix)) {
+        variants.push(lang + body.slice(prefix.length));
+      }
+    }
+  }
+  return variants;
+}
 
 // ── Vegetal origin context detection ────────────────────────
 // When the ingredients text explicitly states "(origine végétale)" near
@@ -546,15 +745,20 @@ export async function analyzeHalalStatus(
   // ── TIER 1: Check halal certification labels ──────────────
   if (labelsTags?.length) {
     // 1a. Try certifier-specific label tags first (e.g. fr:a-votre-service → avs)
+    // Uses normalizeCertifierTag to handle OFF taxonomy variants like "fr:certification-avs"
     let matchedCertifierId: string | null = null;
     let matchedCertifierTag: string | null = null;
     for (const tag of labelsTags) {
-      const certId = LABEL_TAG_TO_CERTIFIER_ID[tag.toLowerCase()];
-      if (certId) {
-        matchedCertifierId = certId;
-        matchedCertifierTag = tag;
-        break;
+      const variants = normalizeCertifierTag(tag);
+      for (const variant of variants) {
+        const certId = LABEL_TAG_TO_CERTIFIER_ID[variant];
+        if (certId) {
+          matchedCertifierId = certId;
+          matchedCertifierTag = tag;
+          break;
+        }
       }
+      if (matchedCertifierId) break;
     }
 
     // 1b. Fall back to generic halal labels
@@ -643,7 +847,20 @@ export async function analyzeHalalStatus(
 
     const isVegan = ingredientsAnalysisTags?.includes("en:vegan");
 
+    // Build a set of additive codes already in reasons to deduplicate
+    // e.g. if E471 additive is already present, skip "mono-" ingredient ruling
+    const additiveCodesInReasons = new Set(
+      reasons
+        .filter((r) => r.type === "additive")
+        .map((r) => r.name.toLowerCase().match(/^(e\d{3,4}[a-z]?)/)?.[1])
+        .filter(Boolean),
+    );
+
     for (const match of matchedRulings) {
+      // Skip ingredient rulings that duplicate an additive already captured.
+      // The additive system provides the same info (E471 = mono-/diglycerides).
+      if (match.category === "emulsifier" && additiveCodesInReasons.has("e471")) continue;
+
       let effectiveStatus = match.ruling;
       let explanation = match.explanationFr;
 
