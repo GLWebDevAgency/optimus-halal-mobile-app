@@ -22,7 +22,8 @@ async function seedCertifier(
 
 // Flush certifier cache keys before each test to avoid stale cached responses
 beforeEach(async () => {
-  const keys = await redis.keys("certifiers:*");
+  // Flush both legacy "certifiers:*" and runtime score cache "certifier:*"
+  const keys = await redis.keys("certifier*");
   if (keys.length > 0) await redis.del(...keys);
 });
 
