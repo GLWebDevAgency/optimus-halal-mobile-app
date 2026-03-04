@@ -1070,4 +1070,4 @@ C'est un oubli identifie (P0-A). Le champ est stocke en DB mais pas encore integ
 ---
 
 *Document genere le 24 fevrier 2026 — Naqiy (نقيّ) v1.0*
-*"Ton halal, en toute clarte."*
+*"Scanne. Comprends. Choisis."*

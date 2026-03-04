@@ -22,6 +22,7 @@ interface MapRegion {
 
 interface UseMapStoresOptions {
   storeType?: "supermarket" | "butcher" | "restaurant" | "bakery" | "abattoir" | "wholesaler" | "online" | "other";
+  certifiers?: ("avs" | "achahada" | "argml" | "mosquee_de_paris" | "mosquee_de_lyon" | "other")[];
   halalCertifiedOnly?: boolean;
   openNow?: boolean;
   minRating?: number;
@@ -33,7 +34,7 @@ export function useMapStores(
   region: MapRegion | null,
   options: UseMapStoresOptions = {},
 ) {
-  const { storeType, halalCertifiedOnly = false, openNow = false, minRating, query: searchQuery, limit = 50 } = options;
+  const { storeType, certifiers, halalCertifiedOnly = false, openNow = false, minRating, query: searchQuery, limit = 50 } = options;
 
   const result = trpc.store.nearby.useQuery(
     {
@@ -41,6 +42,7 @@ export function useMapStores(
       longitude: region?.longitude ?? 0,
       radiusKm: region?.radiusKm ?? 5,
       storeType,
+      certifiers,
       halalCertifiedOnly,
       openNow,
       minRating,

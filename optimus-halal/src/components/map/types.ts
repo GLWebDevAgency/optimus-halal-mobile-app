@@ -48,6 +48,45 @@ export function openStatusColor(status: string, isDark = false): string {
   return isDark ? "#f87171" : "#dc2626";
 }
 
+// Maps store `certifier` DB enum → certifiers table ID (used by CertifierLogo)
+export const STORE_CERTIFIER_TO_ID: Record<string, string> = {
+  avs: "avs-a-votre-service",
+  achahada: "achahada",
+  argml: "argml-mosquee-de-lyon",
+  mosquee_de_paris: "sfcvh-mosquee-de-paris",
+  mosquee_de_lyon: "argml-mosquee-de-lyon",
+};
+
+// ── Map Filter System ──────────────────────────────────────
+export type MapFilterCategory = "type" | "certifier" | "attribute";
+
+type StoreType = "supermarket" | "butcher" | "restaurant" | "bakery" | "abattoir" | "wholesaler" | "online" | "other";
+type CertifierId = "avs" | "achahada" | "argml" | "mosquee_de_paris" | "mosquee_de_lyon" | "other";
+
+export type MapFilter =
+  | { id: string; filterKey: string; category: "type"; storeType: StoreType }
+  | { id: string; filterKey: string; category: "certifier"; certifierIds: CertifierId[] }
+  | { id: string; filterKey: string; category: "attribute"; halalOnly?: boolean; openNow?: boolean; minRating?: number };
+
+export const MAP_FILTERS: MapFilter[] = [
+  // Store types (mutually exclusive)
+  { id: "butcher", filterKey: "butchers", category: "type", storeType: "butcher" },
+  { id: "restaurant", filterKey: "restaurants", category: "type", storeType: "restaurant" },
+  { id: "supermarket", filterKey: "grocery", category: "type", storeType: "supermarket" },
+  { id: "bakery", filterKey: "bakery", category: "type", storeType: "bakery" },
+  { id: "wholesaler", filterKey: "wholesalers", category: "type", storeType: "wholesaler" },
+  { id: "abattoir", filterKey: "abattoirs", category: "type", storeType: "abattoir" },
+  // Certifiers (multi-select) — ARGML unifies both "argml" + "mosquee_de_lyon" enum values
+  { id: "cert-avs", filterKey: "certAvs", category: "certifier", certifierIds: ["avs"] },
+  { id: "cert-achahada", filterKey: "certAchahada", category: "certifier", certifierIds: ["achahada"] },
+  { id: "cert-argml", filterKey: "certArgml", category: "certifier", certifierIds: ["argml", "mosquee_de_lyon"] },
+  { id: "cert-paris", filterKey: "certSfcvh", category: "certifier", certifierIds: ["mosquee_de_paris"] },
+  // Attributes (independent toggles)
+  { id: "openNow", filterKey: "openNow", category: "attribute", openNow: true },
+  { id: "certified", filterKey: "certified", category: "attribute", halalOnly: true },
+  { id: "rating", filterKey: "rating", category: "attribute", minRating: 4 },
+];
+
 export function openStatusBg(status: string, isDark = false): string {
   if (status === "open" || status === "opening_soon") return isDark ? "rgba(74,222,128,0.12)" : "rgba(22,163,74,0.10)";
   if (status === "closing_soon") return isDark ? "rgba(251,191,36,0.12)" : "rgba(217,119,6,0.10)";

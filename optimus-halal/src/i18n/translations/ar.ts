@@ -586,7 +586,7 @@ export const ar: TranslationKeys = {
   map: {
     title: "الخريطة",
     searchPlaceholder: "ابحث عن كباب، واغيو...",
-    filters: { butchers: "جزارون", restaurants: "مطاعم", grocery: "بقالة", certified: "معتمد", rating: "تقييم 4.0+", bakery: "مخابز", openNow: "مفتوح" },
+    filters: { butchers: "جزارون", restaurants: "مطاعم", grocery: "بقالة", bakery: "مخابز", wholesalers: "تجار جملة", abattoirs: "مسالخ", certAvs: "AVS", certAchahada: "الشهادة", certArgml: "ARGML", certSfcvh: "SFCVH", openNow: "مفتوح", certified: "معتمد", rating: "تقييم 4+" },
     nearYou: "بالقرب منك",
     distance: "{{distance}} كم",
     open: "مفتوح",
@@ -626,6 +626,10 @@ export const ar: TranslationKeys = {
     storeResults: "المتاجر",
     noResults: "لا توجد نتائج",
     anonymousUser: "مجهول",
+    googleReviews: "تقييمات جوجل",
+    googlePhotos: "الصور",
+    openOnGoogleMaps: "فتح على خرائط جوجل",
+    photoCount: "{{count}} صور",
     days: {
       dim: "الأحد",
       lun: "الاثنين",

@@ -33,7 +33,7 @@ export const MapMarkerLayer = React.memo(function MapMarkerLayer({
       clusterMaxZoomLevel={14}
       onPress={onPress}
     >
-      {/* Cluster circles */}
+      {/* Cluster circles — smooth transitions on zoom split/merge */}
       <CircleLayer
         id="clusters"
         filter={["has", "point_count"]}
@@ -49,6 +49,8 @@ export const MapMarkerLayer = React.memo(function MapMarkerLayer({
           circleOpacity: 0.85,
           circleStrokeWidth: 2,
           circleStrokeColor: "#ffffff",
+          circleRadiusTransition: { duration: 400, delay: 0 },
+          circleOpacityTransition: { duration: 300, delay: 0 },
         }}
       />
 
@@ -106,6 +108,10 @@ export const MapMarkerLayer = React.memo(function MapMarkerLayer({
             0.5,
             0.95,
           ],
+          circleRadiusTransition: { duration: 300, delay: 0 },
+          circleOpacityTransition: { duration: 250, delay: 0 },
+          circleColorTransition: { duration: 200, delay: 0 },
+          circleStrokeWidthTransition: { duration: 200, delay: 0 },
         }}
       />
 
@@ -122,6 +128,8 @@ export const MapMarkerLayer = React.memo(function MapMarkerLayer({
           circleStrokeWidth: 2.5,
           circleStrokeColor: primaryColor,
           circleStrokeOpacity: isDark ? 0.8 : 0.6,
+          circleRadiusTransition: { duration: 350, delay: 0 },
+          circleStrokeOpacityTransition: { duration: 300, delay: 0 },
         }}
       />
     </ShapeSource>

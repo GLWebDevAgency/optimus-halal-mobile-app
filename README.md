@@ -1,5 +1,5 @@
 # Naqiy — نقي
 
-> Ton halal, en toute clarté.
+> Scanne. Comprends. Choisis.
 
 Application mobile de référence pour la consommation halal éthique et transparente.

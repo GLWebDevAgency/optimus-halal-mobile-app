@@ -239,7 +239,7 @@ La confiance se construit lentement et se detruit instantanement. Chaque decisio
 
 ### 4. Marque et positionnement
 
-"Naqiy" (purete, transparence) est un nom qui resonne avec la communaute cible. Le positionnement "ton halal, en toute clarte" combine authenticite culturelle et modernite. Ce capital de marque se renforce avec chaque interaction positive.
+"Naqiy" (purete, transparence) est un nom qui resonne avec la communaute cible. Le positionnement "Scanne. Comprends. Choisis." combine authenticite culturelle et modernite. Ce capital de marque se renforce avec chaque interaction positive.
 
 ### 5. Avance technologique
 

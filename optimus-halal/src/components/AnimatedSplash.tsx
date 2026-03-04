@@ -1,25 +1,18 @@
 /**
  * AnimatedSplash — Cinematic splash → app handoff
  *
- * Takes over from the static native splash (identical visuals)
- * and runs a premium entrance → hold → exit sequence.
- *
- * Entrance (auto):
- *   - Logo scales 0.8→1.0 (spring, damping 14)
- *   - Logo fades in (500ms)
- *   - Gold glow ring pulses around logo
- *   - App name fades in below (delay 500ms)
- *
- * Exit (triggered by `isReady`):
- *   - Logo scales 1.0→1.15 + fades out (400ms)
- *   - Background fades out (300ms)
- *   - Calls `onFinish` when complete
+ * Matches the Remotion LogoReveal video:
+ *   - PremiumBackground (7-layer brushed metal, theme-aware)
+ *   - Logo scale entrance with gold glow ring
+ *   - "NAQIY" brand name in gold gradient
+ *   - "Scanne. Comprends. Choisis." tagline
+ *   - Exit: scale up + fade out → calls onFinish
  *
  * Pattern: Revolut / Airbnb / Duolingo cinematic splash
  */
 
 import React, { useEffect, useCallback } from "react";
-import { View, StyleSheet, Dimensions } from "react-native";
+import { View, StyleSheet, Dimensions, Text } from "react-native";
 import { Image } from "expo-image";
 import Animated, {
   useSharedValue,
@@ -34,9 +27,10 @@ import Animated, {
   interpolate,
 } from "react-native-reanimated";
 import { PremiumBackground } from "@/components/ui";
+import { useTheme } from "@/hooks";
 
 const { width: SW } = Dimensions.get("window");
-const LOGO_SIZE = SW * 0.22; // ~22% screen width
+const LOGO_SIZE = SW * 0.22;
 const GLOW_SIZE = LOGO_SIZE + 40;
 
 const logoSource = require("@assets/images/logo_naqiy.webp");
@@ -47,29 +41,29 @@ interface AnimatedSplashProps {
 }
 
 export function AnimatedSplash({ isReady, onFinish }: AnimatedSplashProps) {
+  const { isDark } = useTheme();
+
   // ── Shared values ──
   const logoScale = useSharedValue(0.8);
   const logoOpacity = useSharedValue(0);
   const glowOpacity = useSharedValue(0);
   const glowScale = useSharedValue(0.9);
+  const brandOpacity = useSharedValue(0);
+  const brandTranslateY = useSharedValue(20);
+  const taglineOpacity = useSharedValue(0);
+  const taglineTranslateY = useSharedValue(15);
   const containerOpacity = useSharedValue(1);
 
   // ── Entrance sequence ──
   useEffect(() => {
-    // Logo entrance: scale + fade
-    logoScale.value = withSpring(1, {
-      damping: 14,
-      stiffness: 90,
-      mass: 1,
-    });
+    // Logo: scale + fade
+    logoScale.value = withSpring(1, { damping: 14, stiffness: 90, mass: 1 });
     logoOpacity.value = withTiming(1, {
       duration: 500,
       easing: Easing.out(Easing.cubic),
     });
 
-    // Glow ring: fade in (600ms) → then infinite pulse
-    // NOTE: Easing functions crash inside worklet callbacks — use withDelay
-    // to sequence fade-in + pulse instead of a completion callback.
+    // Glow ring: fade in → infinite pulse
     glowOpacity.value = withDelay(
       300,
       withSequence(
@@ -77,48 +71,67 @@ export function AnimatedSplash({ isReady, onFinish }: AnimatedSplashProps) {
         withRepeat(
           withSequence(
             withTiming(0.4, { duration: 1500 }),
-            withTiming(1, { duration: 1500 })
+            withTiming(1, { duration: 1500 }),
           ),
           -1,
-          true
-        )
-      )
+          true,
+        ),
+      ),
     );
     glowScale.value = withDelay(
       900,
       withRepeat(
         withSequence(
           withTiming(1.08, { duration: 1500 }),
-          withTiming(0.95, { duration: 1500 })
+          withTiming(0.95, { duration: 1500 }),
         ),
         -1,
-        true
-      )
+        true,
+      ),
+    );
+
+    // Brand name: fade in + slide up (delay 800ms)
+    brandOpacity.value = withDelay(
+      800,
+      withTiming(1, { duration: 600, easing: Easing.out(Easing.cubic) }),
+    );
+    brandTranslateY.value = withDelay(
+      800,
+      withSpring(0, { damping: 16, stiffness: 120, mass: 0.6 }),
+    );
+
+    // Tagline: fade in + slide up (delay 1200ms)
+    taglineOpacity.value = withDelay(
+      1200,
+      withTiming(1, { duration: 500, easing: Easing.out(Easing.cubic) }),
+    );
+    taglineTranslateY.value = withDelay(
+      1200,
+      withSpring(0, { damping: 16, stiffness: 120, mass: 0.6 }),
     );
   }, []);
 
-  // ── Exit sequence (triggered when app is ready) ──
+  // ── Exit sequence ──
   const triggerExit = useCallback(() => {
-    // Logo: scale up slightly + fade out
     logoScale.value = withTiming(1.15, {
       duration: 400,
       easing: Easing.in(Easing.cubic),
     });
     logoOpacity.value = withTiming(0, { duration: 350 });
     glowOpacity.value = withTiming(0, { duration: 300 });
+    brandOpacity.value = withTiming(0, { duration: 300 });
+    taglineOpacity.value = withTiming(0, { duration: 250 });
 
-    // Container: fade out, then signal done
     containerOpacity.value = withDelay(
       200,
       withTiming(0, { duration: 350, easing: Easing.in(Easing.quad) }, () => {
         runOnJS(onFinish)();
-      })
+      }),
     );
-  }, [onFinish, logoScale, logoOpacity, glowOpacity, containerOpacity]);
+  }, [onFinish]);
 
   useEffect(() => {
     if (isReady) {
-      // Small hold to let the user see the brand (min 800ms total)
       const timer = setTimeout(triggerExit, 600);
       return () => clearTimeout(timer);
     }
@@ -139,13 +152,25 @@ export function AnimatedSplash({ isReady, onFinish }: AnimatedSplashProps) {
     transform: [{ scale: glowScale.value }],
   }));
 
+  const brandAnimStyle = useAnimatedStyle(() => ({
+    opacity: brandOpacity.value,
+    transform: [{ translateY: brandTranslateY.value }],
+  }));
+
+  const taglineAnimStyle = useAnimatedStyle(() => ({
+    opacity: taglineOpacity.value,
+    transform: [{ translateY: taglineTranslateY.value }],
+  }));
+
+  const textColor = isDark ? "#FFFFFF" : "#0d1b13";
+  const mutedColor = isDark ? "#6b7280" : "#9ca3af";
+
   return (
     <Animated.View style={[StyleSheet.absoluteFill, containerStyle]}>
       <PremiumBackground />
 
-      {/* Centered logo container */}
       <View style={styles.center}>
-        {/* Gold glow ring — pulsing behind logo */}
+        {/* Gold glow ring */}
         <Animated.View style={[styles.glowRing, glowAnimStyle]}>
           <View style={styles.glowInner} />
         </Animated.View>
@@ -160,6 +185,18 @@ export function AnimatedSplash({ isReady, onFinish }: AnimatedSplashProps) {
               cachePolicy="memory-disk"
             />
           </View>
+        </Animated.View>
+
+        {/* Brand name */}
+        <Animated.View style={[styles.brandRow, brandAnimStyle]}>
+          <Text style={[styles.brandText, { color: "#D4AF37" }]}>NAQIY</Text>
+        </Animated.View>
+
+        {/* Tagline */}
+        <Animated.View style={[styles.taglineRow, taglineAnimStyle]}>
+          <Text style={[styles.taglineText, { color: mutedColor }]}>
+            Scanne. Comprends. Choisis.
+          </Text>
         </Animated.View>
       </View>
     </Animated.View>
@@ -199,5 +236,21 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(212, 175, 55, 0.12)",
     borderWidth: 1.5,
     borderColor: "rgba(212, 175, 55, 0.15)",
+  },
+  brandRow: {
+    marginTop: 24,
+  },
+  brandText: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 32,
+    letterSpacing: 12,
+  },
+  taglineRow: {
+    marginTop: 10,
+  },
+  taglineText: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 15,
+    letterSpacing: 1,
   },
 });

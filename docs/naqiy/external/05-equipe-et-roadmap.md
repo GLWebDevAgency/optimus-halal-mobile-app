@@ -283,7 +283,7 @@ Naqiy devient la reference pan-europeenne de la transparence halal. Chaque produ
 
 Le halal rejoint la sante, le bio, et le commerce equitable comme dimension normale de la consommation consciente -- et Naqiy est l'application qui rend cela possible.
 
-**Naqiy. Ton halal, en toute clarte.**
+**Naqiy. Scanne. Comprends. Choisis.**
 
 ---
 

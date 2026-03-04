@@ -16,17 +16,9 @@ import Animated, {
 import { LinearGradient } from "expo-linear-gradient";
 import { storeTypeColors } from "@/theme/colors";
 import type { SearchResult } from "@/hooks";
-import { STORE_TYPE_ICON, type ThemeColors } from "./types";
+import { STORE_TYPE_ICON, STORE_CERTIFIER_TO_ID, type ThemeColors, type MapFilter } from "./types";
 import { PressableScale } from "../ui/PressableScale";
-
-interface FilterConfig {
-  id: string;
-  filterKey: string;
-  storeType?: string;
-  halalOnly?: boolean;
-  openNow?: boolean;
-  minRating?: number;
-}
+import { CertifierLogo } from "../scan/CertifierLogo";
 
 interface Props {
   colors: ThemeColors;
@@ -37,7 +29,7 @@ interface Props {
   showSuggestions: boolean;
   searchResults: SearchResult[];
   activeFilters: string[];
-  filters: FilterConfig[];
+  filters: MapFilter[];
   onSearchTextChange: (text: string) => void;
   onClearSearch: () => void;
   onShowSuggestions: (show: boolean) => void;
@@ -281,60 +273,85 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
           </Animated.View>
         )}
 
-        {/* Filter Chips */}
+        {/* Filter Chips — 3 categories with visual separators */}
         <Animated.ScrollView
           entering={FadeInRight.delay(200).duration(400)}
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 6 }}
+          contentContainerStyle={{ gap: 6, alignItems: "center" }}
         >
-          {filters.map((filter) => {
+          {filters.map((filter, index) => {
             const isActive = activeFilters.includes(filter.id);
             const filterLabel = t.filters[filter.filterKey];
+            const prevFilter = index > 0 ? filters[index - 1] : null;
+            const showSeparator = prevFilter && prevFilter.category !== filter.category;
+
             return (
-              <PressableScale
-                key={filter.id}
-                onPress={() => onToggleFilter(filter.id)}
-                accessibilityRole="button"
-                accessibilityLabel={`${filterLabel}${isActive ? `, ${t.selected}` : ""}`}
-              >
-                <View
-                  className="h-7 flex-row items-center gap-1 px-3 rounded-full"
-                  style={{
-                    backgroundColor: isActive
-                      ? colors.primary
-                      : isDark
-                        ? "rgba(30,41,59,0.8)"
-                        : "rgba(255,255,255,0.9)",
-                    borderWidth: isActive ? 0 : 1,
-                    borderColor: colors.border,
-                  }}
+              <React.Fragment key={filter.id}>
+                {showSeparator && (
+                  <View style={{
+                    width: 1,
+                    height: 16,
+                    backgroundColor: colors.border,
+                    marginHorizontal: 2,
+                  }} />
+                )}
+                <PressableScale
+                  onPress={() => onToggleFilter(filter.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${filterLabel}${isActive ? `, ${t.selected}` : ""}`}
                 >
-                  {'storeType' in filter && filter.storeType ? (
-                    <View
-                      style={{
-                        width: 6,
-                        height: 6,
-                        borderRadius: 3,
-                        backgroundColor: isActive ? "#ffffff" : (storeTypeColors[filter.storeType as keyof typeof storeTypeColors]?.base ?? colors.textMuted),
-                      }}
-                    />
-                  ) : 'openNow' in filter ? (
-                    <MaterialIcons name="schedule" size={12} color={isActive ? "#ffffff" : "#22c55e"} />
-                  ) : 'minRating' in filter ? (
-                    <MaterialIcons name="star" size={12} color={isActive ? "#ffffff" : "#fbbf24"} />
-                  ) : null}
-                  <Text
-                    className={`text-xs ${isActive ? "font-semibold" : "font-medium"}`}
-                    style={{ color: isActive ? "#ffffff" : colors.textPrimary }}
+                  <View
+                    className="h-7 flex-row items-center gap-1 px-3 rounded-full"
+                    style={{
+                      backgroundColor: isActive
+                        ? colors.primary
+                        : isDark
+                          ? "rgba(30,41,59,0.8)"
+                          : "rgba(255,255,255,0.9)",
+                      borderWidth: isActive ? 0 : 1,
+                      borderColor: colors.border,
+                    }}
                   >
-                    {filterLabel}
-                  </Text>
-                  {isActive && (
-                    <MaterialIcons name="close" size={12} color="#ffffff" />
-                  )}
-                </View>
-              </PressableScale>
+                    {filter.category === "type" ? (
+                      <View
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: 3,
+                          backgroundColor: isActive
+                            ? "#ffffff"
+                            : (storeTypeColors[filter.storeType as keyof typeof storeTypeColors]?.base ?? colors.textMuted),
+                        }}
+                      />
+                    ) : filter.category === "certifier" ? (
+                      isActive ? (
+                        <MaterialIcons name="verified" size={13} color="#ffffff" />
+                      ) : (
+                        <CertifierLogo
+                          certifierId={STORE_CERTIFIER_TO_ID[filter.certifierIds[0]] ?? filter.certifierIds[0]}
+                          size={14}
+                        />
+                      )
+                    ) : 'openNow' in filter && filter.openNow ? (
+                      <MaterialIcons name="schedule" size={12} color={isActive ? "#ffffff" : "#22c55e"} />
+                    ) : 'halalOnly' in filter && filter.halalOnly ? (
+                      <MaterialIcons name="verified" size={12} color={isActive ? "#ffffff" : colors.primary} />
+                    ) : 'minRating' in filter && filter.minRating ? (
+                      <MaterialIcons name="star" size={12} color={isActive ? "#ffffff" : "#fbbf24"} />
+                    ) : null}
+                    <Text
+                      className={`text-xs ${isActive ? "font-semibold" : "font-medium"}`}
+                      style={{ color: isActive ? "#ffffff" : colors.textPrimary }}
+                    >
+                      {filterLabel}
+                    </Text>
+                    {isActive && (
+                      <MaterialIcons name="close" size={12} color="#ffffff" />
+                    )}
+                  </View>
+                </PressableScale>
+              </React.Fragment>
             );
           })}
         </Animated.ScrollView>

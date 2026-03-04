@@ -101,7 +101,7 @@ La profondeur (154 additifs, 22 rulings madhab, base de commerces geolocates) es
 
 ### 3.2 Le Tagline
 
-**"Ton halal, en toute clarte."**
+**"Scanne. Comprends. Choisis."**
 
 Six mots. Deux concepts. "Ton" — personnel, intime, pas generaliste. "Halal" — le coeur de metier. "En toute clarte" — la promesse de transparence et de limpidite. Le tagline fonctionne en francais courant, s'adresse directement a l'utilisateur (tutoiement), et evite le jargon religieux.
 
@@ -263,7 +263,7 @@ Pourquoi elle :
 | **Inclusif** | "Nous presentons les avis des 4 ecoles" | "La seule vraie reponse est..." |
 | **Humble** | "Notre analyse peut contenir des erreurs" | "Faites-nous confiance a 100%" |
 | **Constructif** | "Voici 3 alternatives certifiees" | "Ce produit est mauvais, evitez-le" |
-| **Direct** | "Ton halal, en toute clarte." | "La solution holistique et disruptive pour l'ecosysteme halal" |
+| **Direct** | "Scanne. Comprends. Choisis." | "La solution holistique et disruptive pour l'ecosysteme halal" |
 
 ### 7.2 Communication de Crise
 

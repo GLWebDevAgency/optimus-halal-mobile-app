@@ -78,7 +78,7 @@ export const defaultFeatureFlags: FeatureFlags = {
  */
 export const APP_CONFIG = {
   APP_NAME: "Naqiy",
-  TAGLINE: "Ton halal, en toute clarté.",
+  TAGLINE: "Scanne. Comprends. Choisis.",
   VERSION: "1.0.0",
   MIN_VERSION_REQUIRED: "1.0.0",
   SUPPORT_EMAIL: "support@naqiy.com",

@@ -40,6 +40,7 @@ import {
   CARD_WIDTH,
 } from "@/components/map";
 import type { StoreFeatureProperties } from "@/components/map";
+import { STORE_CERTIFIER_TO_ID, MAP_FILTERS } from "@/components/map/types";
 import { trackEvent } from "@/lib/analytics";
 import Animated, {
   FadeIn,
@@ -87,16 +88,6 @@ const FOCUSED_ZOOM = 13;
 let _hasAnimatedToUser = false;
 let _lastViewport: { center: [number, number]; zoom: number } | null = null;
 
-// Filter → storeType mapping (backend enum values)
-const FILTER_IDS = [
-  { id: "butcher", filterKey: "butchers" as const, storeType: "butcher" as const },
-  { id: "restaurant", filterKey: "restaurants" as const, storeType: "restaurant" as const },
-  { id: "supermarket", filterKey: "grocery" as const, storeType: "supermarket" as const },
-  { id: "bakery", filterKey: "bakery" as const, storeType: "bakery" as const },
-  { id: "certified", filterKey: "certified" as const, halalOnly: true },
-  { id: "openNow", filterKey: "openNow" as const, openNow: true },
-  { id: "rating", filterKey: "rating" as const, minRating: 4 },
-];
 
 // ── Helpers ────────────────────────────────────────────────
 function openDirections(lat: number, lon: number, name: string) {
@@ -158,12 +149,20 @@ export default function MapScreen() {
 
   // Build filter options for useMapStores
   const storeTypeFilter = useMemo(() => {
-    for (const f of FILTER_IDS) {
-      if (activeFilters.includes(f.id) && "storeType" in f) {
-        return f.storeType;
-      }
+    for (const f of MAP_FILTERS) {
+      if (f.category === "type" && activeFilters.includes(f.id)) return f.storeType;
     }
     return undefined;
+  }, [activeFilters]);
+
+  // Certifiers: multi-select — flatten certifierIds arrays (ARGML = ["argml", "mosquee_de_lyon"])
+  type CertifierId = "avs" | "achahada" | "argml" | "mosquee_de_paris" | "mosquee_de_lyon" | "other";
+  const certifierFilters = useMemo(() => {
+    const certs: CertifierId[] = [];
+    for (const f of MAP_FILTERS) {
+      if (f.category === "certifier" && activeFilters.includes(f.id)) certs.push(...f.certifierIds);
+    }
+    return certs.length > 0 ? certs : undefined;
   }, [activeFilters]);
 
   const halalCertifiedOnly = activeFilters.includes("certified");
@@ -173,6 +172,7 @@ export default function MapScreen() {
   // Fetch stores — mapRegion is always non-null (initialized with France center)
   const storesQuery = useMapStores(mapRegion, {
     storeType: storeTypeFilter,
+    certifiers: certifierFilters,
     halalCertifiedOnly,
     openNow: openNowFilter,
     minRating: minRatingFilter,
@@ -181,10 +181,27 @@ export default function MapScreen() {
 
   const stores = useMemo(() => storesQuery.data ?? [], [storesQuery.data]);
 
-  // Dynamic peek height: compact when list is empty, full when store cards visible
+  // Certifier trust scores — cached 30min, used for fused badge in StoreDetailCard
+  const certifierRankingQuery = trpc.certifier.ranking.useQuery(undefined, {
+    staleTime: 30 * 60_000,
+    refetchOnWindowFocus: false,
+  });
+  const certifierScoreMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const c of certifierRankingQuery.data ?? []) {
+      map.set(c.id, c.trustScore);
+    }
+    return map;
+  }, [certifierRankingQuery.data]);
+
+  // Dynamic peek height — 3 levels:
+  // Detail card (3 rows): 320px | Store list (header + cards): 220px | Empty (header + message): 150px
   const isListLoading = storesQuery.isLoading || locationLoading || (storesQuery.isFetching && stores.length === 0);
-  const hasSheetContent = stores.length > 0 || isListLoading || !!selectedStoreId;
-  const peekHeight = hasSheetContent ? 240 + insets.bottom : 130 + insets.bottom;
+  const peekHeight = selectedStoreId
+    ? 320 + insets.bottom
+    : (stores.length > 0 || isListLoading)
+      ? 220 + insets.bottom
+      : 150 + insets.bottom;
   const snapPoints = useMemo(() => [peekHeight, "50%", "90%"], [peekHeight]);
 
   const hasShownListRef = useRef(false);
@@ -257,6 +274,13 @@ export default function MapScreen() {
     if (!selectedStoreId) return null;
     return stores.find((s) => s.id === selectedStoreId) ?? null;
   }, [selectedStoreId, stores]);
+
+  // Certifier trust score for the selected store's certifier
+  const selectedCertifierScore = useMemo(() => {
+    if (!selectedStore) return null;
+    const certId = STORE_CERTIFIER_TO_ID[selectedStore.certifier];
+    return certId ? (certifierScoreMap.get(certId) ?? null) : null;
+  }, [selectedStore, certifierScoreMap]);
 
   // Sheet expanded = user pulled up → fetch full store detail (hours, reviews)
   const [sheetExpanded, setSheetExpanded] = useState(false);
@@ -470,16 +494,17 @@ export default function MapScreen() {
     impact();
     setActiveFilters((prev) => {
       const wasActive = prev.includes(filterId);
-      const isTypeFilter = FILTER_IDS.some((f) => f.id === filterId && "storeType" in f);
+      const filter = MAP_FILTERS.find((f) => f.id === filterId);
 
       let next: string[];
       if (wasActive) {
         next = prev.filter((id) => id !== filterId);
-      } else if (isTypeFilter) {
+      } else if (filter?.category === "type") {
         // Type filters are mutually exclusive — deselect other types first
-        const otherTypeIds = FILTER_IDS.filter((f) => "storeType" in f && f.id !== filterId).map((f) => f.id);
+        const otherTypeIds = MAP_FILTERS.filter((f) => f.category === "type" && f.id !== filterId).map((f) => f.id);
         next = [...prev.filter((id) => !otherTypeIds.includes(id)), filterId];
       } else {
+        // Certifiers + attributes: additive
         next = [...prev, filterId];
       }
 
@@ -771,7 +796,7 @@ export default function MapScreen() {
           showSuggestions={showSuggestions}
           searchResults={searchResults}
           activeFilters={activeFilters}
-          filters={FILTER_IDS}
+          filters={MAP_FILTERS}
           onSearchTextChange={handleSearchTextChange}
           onClearSearch={handleClearSearch}
           onShowSuggestions={setShowSuggestions}
@@ -875,6 +900,8 @@ export default function MapScreen() {
                 detail={storeDetailQuery.data}
                 isDetailLoading={storeDetailQuery.isLoading && sheetExpanded}
                 isExpanded={sheetExpanded}
+                animatedSheetIndex={animatedSheetIndex}
+                certifierTrustScore={selectedCertifierScore}
                 onDirections={handleDirections}
                 onCall={handleCallStore}
                 onShare={handleShareStore}
@@ -935,6 +962,7 @@ export default function MapScreen() {
                 <Animated.View entering={FadeIn.duration(250)}>
                   <FlatList
                     horizontal
+                    nestedScrollEnabled
                     data={stores}
                     keyExtractor={(item) => item.id}
                     renderItem={({ item, index }) => (

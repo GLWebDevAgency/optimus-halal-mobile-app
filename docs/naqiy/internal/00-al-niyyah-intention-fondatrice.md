@@ -66,7 +66,7 @@ valeur en un seul mot :
 - **Limpide** : comme l'information que nous vous donnons.
 - **Transparent** : comme notre methode, notre code, notre ethique.
 
-Le tagline -- *"Ton halal, en toute clarte"* -- complete cette promesse.
+Le tagline -- *"Scanne. Comprends. Choisis."* -- complete cette promesse.
 Nous ne disons pas "le halal" (universel, dogmatique). Nous disons
 "ton halal" (personnel, respectueux de ta pratique).
 

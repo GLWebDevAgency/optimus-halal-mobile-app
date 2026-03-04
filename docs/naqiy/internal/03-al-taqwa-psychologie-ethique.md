@@ -271,10 +271,10 @@ et porteur de sens positif cree un ancrage emotionnel immediat.
 "Naqiy" se prononce de la meme maniere en francais, en anglais,
 et en arabe. Il est universel par design.
 
-Le tagline "Ton halal, en toute clarte" renforce l'ancrage :
+Le tagline "Scanne. Comprends. Choisis." renforce l'ancrage :
 - "Ton" : personnalisation, respect de l'individu
 - "halal" : le domaine, directement
-- "en toute clarte" : la promesse, sans ambiguite
+- "Comprends" et "Choisis" : le parcours utilisateur complet
 
 ### Le contraste avec la concurrence
 

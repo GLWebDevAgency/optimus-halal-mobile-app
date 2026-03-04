@@ -1,6 +1,6 @@
 # Naqiy -- Vision et Mission
 
-**Naqiy** (en arabe : pure, limpide, transparent) | *Ton halal, en toute clarte.*
+**Naqiy** (en arabe : pure, limpide, transparent) | *Scanne. Comprends. Choisis.*
 
 ---
 
@@ -198,6 +198,6 @@ Ce modele permet une cadence de developpement equivalente a une equipe de 3-5 de
 
 ---
 
-*Ton halal, en toute clarte.*
+*Scanne. Comprends. Choisis.*
 
 *Contact : contact@naqiy.app*

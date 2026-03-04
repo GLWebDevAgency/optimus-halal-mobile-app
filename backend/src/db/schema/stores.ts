@@ -23,6 +23,12 @@ export const certifierEnum = pgEnum("certifier", [
   "none",
 ]);
 
+export const storePlanEnum = pgEnum("store_plan", [
+  "free",
+  "essential",
+  "premium",
+]);
+
 export const stores = pgTable(
   "stores",
   {
@@ -51,6 +57,17 @@ export const stores = pgTable(
     sourceId: t.varchar("source_id", { length: 100 }),
     sourceType: t.varchar("source_type", { length: 50 }),
     rawData: t.jsonb("raw_data"),
+    // Google Places enrichment
+    googlePlaceId: t.varchar("google_place_id", { length: 255 }),
+    googleMapsUrl: t.text("google_maps_url"),
+    googleRating: t.real("google_rating"),
+    googleReviewCount: t.integer("google_review_count"),
+    googlePhotos: t.jsonb("google_photos").$type<string[]>().default([]),
+    googleEnrichedAt: t.timestamp("google_enriched_at", { withTimezone: true }),
+    // B2B plan
+    planLevel: storePlanEnum("plan_level").default("free").notNull(),
+    planExpiresAt: t.timestamp("plan_expires_at", { withTimezone: true }),
+    planClaimedBy: t.uuid("plan_claimed_by").references(() => users.id),
     createdAt: t
       .timestamp("created_at", { withTimezone: true })
       .defaultNow()
@@ -67,6 +84,8 @@ export const stores = pgTable(
     t.index("stores_certifier_idx").on(table.certifier),
     t.index("stores_location_idx").on(table.latitude, table.longitude),
     t.uniqueIndex("stores_source_id_idx").on(table.sourceId),
+    t.uniqueIndex("stores_google_place_id_idx").on(table.googlePlaceId),
+    t.index("stores_plan_level_idx").on(table.planLevel),
   ]
 );
 

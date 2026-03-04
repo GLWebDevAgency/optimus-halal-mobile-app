@@ -10,13 +10,17 @@ export interface Context {
   db: typeof db;
   redis: typeof redis;
   userId: string | null;
+  deviceId: string | null;
+  isAnonymous: boolean;
   subscriptionTier: "free" | "premium";
+  remainingScans: number | null;
   requestId: string;
   [key: string]: unknown;
 }
 
 export async function createContext(c: HonoContext): Promise<Context> {
   const authorization = c.req.header("authorization");
+  const deviceId = c.req.header("x-device-id") ?? null;
   let userId: string | null = null;
 
   if (authorization?.startsWith("Bearer ")) {
@@ -45,7 +49,10 @@ export async function createContext(c: HonoContext): Promise<Context> {
     db,
     redis,
     userId,
+    deviceId,
+    isAnonymous: !userId,
     subscriptionTier,
+    remainingScans: null,
     requestId: crypto.randomUUID(),
   };
 }

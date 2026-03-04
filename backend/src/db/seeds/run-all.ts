@@ -6,6 +6,7 @@
  *
  * Pipeline:
  *   1. Certifiers (18 French halal certifiers — raw flags only)
+ *   1.5. Brand Certifiers (brand → certifier mappings for Tier 1c fallback)
  *   2. Stores (AVS + Achahada halal stores)
  *   3. Boycott targets (BDS movement data)
  *   4. Additives + Madhab rulings (200+ E-numbers)
@@ -42,6 +43,18 @@ export async function seedReferenceData(db: PostgresJsDatabase): Promise<SeedSta
     console.log(`    Certifiers: ${count} upserted (${Date.now() - t1}ms)`);
   } catch (err) {
     console.warn(`    Certifiers: skipped (${(err as Error).message})`);
+  }
+
+  // ── Phase 1.5: Brand Certifiers ────────────────────────
+  // Must run AFTER certifiers (FK dependency)
+  const t15 = Date.now();
+  try {
+    const { seedBrandCertifiers } = await import("./seed-brand-certifiers.js");
+    const count = await seedBrandCertifiers(db);
+    stats.push({ phase: "Brand Certifiers", count, durationMs: Date.now() - t15 });
+    console.log(`    Brand Certifiers: ${count} upserted (${Date.now() - t15}ms)`);
+  } catch (err) {
+    console.warn(`    Brand Certifiers: skipped (${(err as Error).message})`);
   }
 
   // ── Phase 2: Stores ─────────────────────────────────────

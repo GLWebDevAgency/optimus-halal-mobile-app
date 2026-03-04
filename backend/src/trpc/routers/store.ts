@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { eq, and, ilike, or, desc, sql } from "drizzle-orm";
 import { router, publicProcedure, protectedProcedure } from "../trpc.js";
-import { stores, storeHours, storeSubscriptions, reviews, users } from "../../db/schema/index.js";
+import { stores, storeHours, storeSubscriptions, reviews, users, googleReviews } from "../../db/schema/index.js";
 import { notFound, conflict } from "../../lib/errors.js";
 import { withCache } from "../../lib/cache.js";
 import ngeohash from "ngeohash";
@@ -84,6 +84,9 @@ export const storeRouter = router({
             "abattoir", "wholesaler", "online", "other",
           ])
           .optional(),
+        certifiers: z
+          .array(z.enum(["avs", "achahada", "argml", "mosquee_de_paris", "mosquee_de_lyon", "other"]))
+          .optional(),
         halalCertifiedOnly: z.boolean().default(false),
         openNow: z.boolean().default(false),
         minRating: z.number().min(0).max(5).optional(),
@@ -96,7 +99,7 @@ export const storeRouter = router({
       const ghPrecision = input.radiusKm <= 2 ? 6 : input.radiusKm <= 10 ? 5 : 4;
       const gh = ngeohash.encode(input.latitude, input.longitude, ghPrecision);
       const rBucket = Math.round(input.radiusKm * 2) / 2;
-      const cacheKey = `stores:v8:nearby:${gh}:r${rBucket}:l${input.limit}:t${input.storeType ?? "all"}:h${input.halalCertifiedOnly ? "1" : "0"}:o${input.openNow ? "1" : "0"}:mr${input.minRating ?? "x"}:q${input.query ?? ""}`;
+      const cacheKey = `stores:v10:nearby:${gh}:r${rBucket}:l${input.limit}:t${input.storeType ?? "all"}:h${input.halalCertifiedOnly ? "1" : "0"}:o${input.openNow ? "1" : "0"}:mr${input.minRating ?? "x"}:c${(input.certifiers ?? []).sort().join(",")}:q${input.query ?? ""}`;
 
       // Reduce TTL when openNow filter is active (status changes in real-time)
       const ttl = input.openNow ? 60 : 300;
@@ -111,6 +114,9 @@ export const storeRouter = router({
         ];
 
         if (input.storeType) conditions.push(sql`s."store_type" = ${input.storeType}`);
+        if (input.certifiers && input.certifiers.length > 0) {
+          conditions.push(sql`s."certifier" IN (${sql.join(input.certifiers.map(c => sql`${c}`), sql`, `)})`);
+        }
         if (input.halalCertifiedOnly) conditions.push(sql`s."halal_certified" = true`);
         if (input.minRating) conditions.push(sql`s."average_rating" >= ${input.minRating}`);
         if (input.query) {
@@ -120,8 +126,26 @@ export const storeRouter = router({
 
         // CTE: compute ST_Distance ONCE + LEFT JOIN store_hours for open status
         // Timezone: Europe/Paris (G2 fix — UTC would be wrong at 1am Paris)
+        // DISTINCT ON (s.id): stores with split periods (e.g. 09-12:30 + 14-18)
+        //   produce multiple rows; pick the most relevant period (open > upcoming > closed)
         const rows = await ctx.db.execute(sql`
-          WITH ranked AS (
+          WITH today_hours AS (
+            SELECT DISTINCT ON (sh."store_id")
+              sh."store_id", sh."open_time", sh."close_time", sh."is_closed",
+              CASE
+                WHEN sh."is_closed" THEN 4
+                WHEN to_char(NOW() AT TIME ZONE 'Europe/Paris', 'HH24:MI') >= sh."open_time"
+                     AND to_char(NOW() AT TIME ZONE 'Europe/Paris', 'HH24:MI') < sh."close_time"
+                THEN 0
+                WHEN to_char(NOW() AT TIME ZONE 'Europe/Paris', 'HH24:MI') < sh."open_time"
+                THEN 1
+                ELSE 3
+              END AS period_priority
+            FROM "store_hours" sh
+            WHERE sh."day_of_week" = EXTRACT(DOW FROM NOW() AT TIME ZONE 'Europe/Paris')::int
+            ORDER BY sh."store_id", period_priority
+          ),
+          ranked AS (
             SELECT
               s."id", s."name", s."store_type", s."image_url", s."logo_url",
               s."address", s."city", s."phone",
@@ -130,30 +154,28 @@ export const storeRouter = router({
               s."average_rating", s."review_count",
               round(ST_Distance(s."location", ${point}))::float8 AS distance,
               EXTRACT(EPOCH FROM NOW() - COALESCE(s."updated_at", s."created_at")) AS age_seconds,
-              sh."open_time", sh."close_time", sh."is_closed",
+              th."open_time", th."close_time", th."is_closed",
               CASE
-                WHEN sh."id" IS NULL THEN 'unknown'
-                WHEN sh."is_closed" THEN 'closed'
-                WHEN to_char(NOW() AT TIME ZONE 'Europe/Paris', 'HH24:MI') >= sh."open_time"
-                     AND to_char(NOW() AT TIME ZONE 'Europe/Paris', 'HH24:MI') < sh."close_time"
+                WHEN th."store_id" IS NULL THEN 'unknown'
+                WHEN th."is_closed" THEN 'closed'
+                WHEN to_char(NOW() AT TIME ZONE 'Europe/Paris', 'HH24:MI') >= th."open_time"
+                     AND to_char(NOW() AT TIME ZONE 'Europe/Paris', 'HH24:MI') < th."close_time"
                 THEN
                   CASE
-                    WHEN sh."close_time" IS NOT NULL
-                         AND (sh."close_time"::time - (NOW() AT TIME ZONE 'Europe/Paris')::time) < interval '30 minutes'
-                         AND (sh."close_time"::time - (NOW() AT TIME ZONE 'Europe/Paris')::time) > interval '0 minutes'
+                    WHEN th."close_time" IS NOT NULL
+                         AND (th."close_time"::time - (NOW() AT TIME ZONE 'Europe/Paris')::time) < interval '30 minutes'
+                         AND (th."close_time"::time - (NOW() AT TIME ZONE 'Europe/Paris')::time) > interval '0 minutes'
                     THEN 'closing_soon'
                     ELSE 'open'
                   END
-                WHEN sh."open_time" IS NOT NULL
-                     AND ((sh."open_time"::time - (NOW() AT TIME ZONE 'Europe/Paris')::time) < interval '30 minutes')
-                     AND ((sh."open_time"::time - (NOW() AT TIME ZONE 'Europe/Paris')::time) > interval '0 minutes')
+                WHEN th."open_time" IS NOT NULL
+                     AND ((th."open_time"::time - (NOW() AT TIME ZONE 'Europe/Paris')::time) < interval '30 minutes')
+                     AND ((th."open_time"::time - (NOW() AT TIME ZONE 'Europe/Paris')::time) > interval '0 minutes')
                 THEN 'opening_soon'
                 ELSE 'closed'
               END AS open_status
             FROM "stores" s
-            LEFT JOIN "store_hours" sh
-              ON sh."store_id" = s."id"
-              AND sh."day_of_week" = EXTRACT(DOW FROM NOW() AT TIME ZONE 'Europe/Paris')::int
+            LEFT JOIN today_hours th ON th."store_id" = s."id"
             WHERE ${sql.join(conditions, sql` AND `)}
           )
           SELECT
@@ -204,8 +226,8 @@ export const storeRouter = router({
       });
       if (!store) throw notFound("Magasin introuvable");
 
-      // Parallel fetch: hours + top reviews + rating distribution
-      const [hours, topReviews, ratingDist] = await Promise.all([
+      // Parallel fetch: hours + top reviews + rating distribution + Google reviews
+      const [hours, topReviews, ratingDist, googleRatingDist, googleReviewsData] = await Promise.all([
         ctx.db.query.storeHours.findMany({
           where: eq(storeHours.storeId, input.id),
           orderBy: (h, { asc }) => [asc(h.dayOfWeek)],
@@ -233,15 +255,40 @@ export const storeRouter = router({
           .from(reviews)
           .where(eq(reviews.storeId, input.id))
           .groupBy(reviews.rating),
+        ctx.db
+          .select({
+            rating: googleReviews.rating,
+            count: sql<number>`count(*)::int`,
+          })
+          .from(googleReviews)
+          .where(eq(googleReviews.storeId, input.id))
+          .groupBy(googleReviews.rating),
+        ctx.db
+          .select({
+            id: googleReviews.id,
+            authorName: googleReviews.authorName,
+            authorPhotoUri: googleReviews.authorPhotoUri,
+            rating: googleReviews.rating,
+            text: googleReviews.text,
+            relativeTime: googleReviews.relativeTime,
+            languageCode: googleReviews.languageCode,
+          })
+          .from(googleReviews)
+          .where(eq(googleReviews.storeId, input.id))
+          .orderBy(desc(googleReviews.rating), desc(googleReviews.publishTime))
+          .limit(5),
       ]);
 
-      // Build rating histogram { 1: count, 2: count, ... 5: count }
+      // Build rating histogram — merge internal + Google reviews
       const ratingHistogram: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
       for (const row of ratingDist) {
-        ratingHistogram[row.rating] = row.count;
+        ratingHistogram[row.rating] = (ratingHistogram[row.rating] ?? 0) + row.count;
+      }
+      for (const row of googleRatingDist) {
+        ratingHistogram[row.rating] = (ratingHistogram[row.rating] ?? 0) + row.count;
       }
 
-      return { ...store, hours, topReviews, ratingHistogram };
+      return { ...store, hours, topReviews, ratingHistogram, googleReviewsData };
     }),
 
   subscribe: protectedProcedure

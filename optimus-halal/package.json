@@ -1,7 +1,7 @@
 {
   "name": "naqiy",
   "version": "1.0.0",
-  "description": "Naqiy — Ton halal, en toute clarté",
+  "description": "Naqiy — Scanne. Comprends. Choisis.",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",

@@ -23,6 +23,7 @@ import {
 import { matchAllergens } from "../../services/allergen.service.js";
 import { computeHealthScore, type AdditiveForScore } from "../../services/health-score.service.js";
 import { getCertifierScores, getAllCertifierScores } from "../../services/certifier-score.service.js";
+import { lookupBrandCertifier } from "../../services/brand-certifier.service.js";
 import { notFound } from "../../lib/errors.js";
 import { logger } from "../../lib/logger.js";
 
@@ -312,6 +313,21 @@ export const scanRouter = router({
             analysisOptions,
           );
 
+          // Tier 1c: Brand-based certifier fallback
+          // When OFF has a generic halal label but no specific certifier tag,
+          // look up the brand in our curated brand_certifiers table.
+          if (halalAnalysis.status === "halal" && !halalAnalysis.certifierId && off.brands) {
+            const brandMatch = await lookupBrandCertifier(ctx.db, off.brands);
+            if (brandMatch) {
+              halalAnalysis = {
+                ...halalAnalysis,
+                certifierId: brandMatch.certifierId,
+                certifierName: brandMatch.certifierName,
+                analysisSource: "Naqiy · Certifieur identifié via marque connue",
+              };
+            }
+          }
+
           const newExtraction = await smartExtractIngredients(off as OpenFoodFactsProduct);
           aiEnrichment = newExtraction.aiEnrichment;
 
@@ -386,6 +402,22 @@ export const scanRouter = router({
             storedOff.ingredients_analysis_tags as string[] | undefined,
             analysisOptions,
           );
+
+          // Tier 1c: Brand-based certifier fallback (same logic as new product path)
+          if (halalAnalysis.status === "halal" && !halalAnalysis.certifierId) {
+            const brandString = (storedOff.brands as string | undefined) ?? product.brand;
+            if (brandString) {
+              const brandMatch = await lookupBrandCertifier(ctx.db, brandString);
+              if (brandMatch) {
+                halalAnalysis = {
+                  ...halalAnalysis,
+                  certifierId: brandMatch.certifierId,
+                  certifierName: brandMatch.certifierName,
+                  analysisSource: "Naqiy · Certifieur identifié via marque connue",
+                };
+              }
+            }
+          }
 
           // Always refresh ingredients via AI — Redis cache (7d) makes this free
           // after the first call. Ensures all legacy products get clean data.

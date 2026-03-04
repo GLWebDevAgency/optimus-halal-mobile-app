@@ -86,7 +86,7 @@ export const StoreCard = React.memo(function StoreCard({
             {store.imageUrl ? (
               <Image
                 source={{ uri: store.imageUrl }}
-                className="w-full h-full"
+                style={{ width: "100%", height: "100%" }}
                 contentFit="cover"
                 transition={200}
               />
