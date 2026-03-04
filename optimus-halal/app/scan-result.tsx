@@ -77,7 +77,8 @@ import { CertifierLogo } from "@/components/scan/CertifierLogo";
 import { ScanResultTabBar } from "@/components/scan/ScanResultTabBar";
 
 
-import { useFeatureFlagsStore } from "@/store";
+import { useFeatureFlagsStore, useQuotaStore } from "@/store";
+import { isAuthenticated as hasStoredTokens } from "@/services/api";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const HERO_HEIGHT = SCREEN_HEIGHT * 0.5;
@@ -1082,6 +1083,17 @@ export default function ScanResultScreen() {
     [scanMutation.data?.ingredientRulings]
   );
   const levelUp = scanMutation.data?.levelUp ?? null;
+  const remainingScans = scanMutation.data?.remainingScans ?? null;
+  const isGuest = !hasStoredTokens();
+
+  // Increment local quota counter after a successful anonymous scan
+  const quotaIncremented = useRef(false);
+  useEffect(() => {
+    if (scanMutation.isSuccess && isGuest && !quotaIncremented.current && !isViewOnly) {
+      quotaIncremented.current = true;
+      useQuotaStore.getState().incrementScan();
+    }
+  }, [scanMutation.isSuccess, isGuest, isViewOnly]);
 
   const halalStatus: HalalStatusKey =
     (product?.halalStatus as HalalStatusKey) ?? "unknown";
@@ -3017,6 +3029,49 @@ export default function ScanResultScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* Quota banner — anonymous users only */}
+      {isGuest && remainingScans !== null && remainingScans !== undefined && (
+        <Animated.View
+          entering={FadeInUp.delay(1000).duration(400)}
+          style={{
+            position: "absolute",
+            left: 16,
+            right: 16,
+            bottom: insets.bottom + 80,
+            zIndex: 50,
+          }}
+        >
+          <PressableScale
+            onPress={() => router.push("/paywall" as any)}
+            accessibilityRole="button"
+            accessibilityLabel={t.guest.dailyScans}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                paddingVertical: 10,
+                paddingHorizontal: 16,
+                borderRadius: 12,
+                backgroundColor: isDark ? "rgba(212, 175, 55, 0.1)" : "rgba(212, 175, 55, 0.08)",
+                borderWidth: 1,
+                borderColor: isDark ? "rgba(212, 175, 55, 0.2)" : "rgba(212, 175, 55, 0.12)",
+              }}
+            >
+              <MaterialIcons name="all-inclusive" size={16} color={colors.primary} />
+              <Text style={{ color: colors.textPrimary, fontSize: 13, fontWeight: "600" }}>
+                {remainingScans > 0
+                  ? t.guest.scansRemaining.replace("{{count}}", String(remainingScans))
+                  : t.guest.noScansLeft}
+              </Text>
+              <MaterialIcons name="chevron-right" size={16} color={colors.textSecondary} />
+            </View>
+          </PressableScale>
+        </Animated.View>
+      )}
 
       {/* ════════════════════════════════════════════════════
           FIXED BOTTOM ACTION BAR — glass-morphism

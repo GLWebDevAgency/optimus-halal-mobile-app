@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { eq, desc, sql, and, inArray } from "drizzle-orm";
-import { router, protectedProcedure } from "../trpc.js";
+import { router, publicProcedure, protectedProcedure, quotaCheckedProcedure } from "../trpc.js";
 import {
   scans,
   products,
@@ -260,7 +260,23 @@ type RulingRow = {
 };
 
 export const scanRouter = router({
-  scanBarcode: protectedProcedure
+  // ── Quota check — anonymous users can check remaining scans ──
+  getQuota: publicProcedure.query(async ({ ctx }) => {
+    // Authenticated users → unlimited
+    if (ctx.userId) {
+      return { used: 0, limit: null, remaining: null, unlimited: true };
+    }
+    if (!ctx.deviceId) {
+      return { used: 0, limit: 5, remaining: 5, unlimited: false };
+    }
+    const today = new Date().toISOString().slice(0, 10);
+    const key = `scan:quota:${ctx.deviceId}:${today}`;
+    const usedRaw = await ctx.redis.get(key);
+    const used = parseInt(usedRaw ?? "0", 10);
+    return { used, limit: 5, remaining: Math.max(0, 5 - used), unlimited: false };
+  }),
+
+  scanBarcode: quotaCheckedProcedure
     .input(
       z.object({
         barcode: z.string().regex(/^[0-9]{4,14}$/, "Code-barres invalide"),
@@ -271,8 +287,9 @@ export const scanRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       // 0. Fetch user profile for madhab-aware analysis + personal alerts
-      const userProfile = await ctx.db.query.users.findFirst({
-        where: eq(users.id, ctx.userId),
+      // Anonymous users: skip profile fetch, analyze for all madhabs
+      const userProfile = ctx.isAnonymous ? null : await ctx.db.query.users.findFirst({
+        where: eq(users.id, ctx.userId!),
         columns: {
           madhab: true,
           halalStrictness: true,
@@ -575,15 +592,16 @@ export const scanRouter = router({
         levelUp: { previousLevel: number; newLevel: number; newXp: number } | null;
       };
 
-      if (input.viewOnly) {
-        // View-only mode: no scan record, no XP, no streak update
+      if (input.viewOnly || ctx.isAnonymous || !ctx.userId) {
+        // View-only or anonymous mode: no scan record, no XP, no streak update
         result = { scan: null, levelUp: null };
       } else {
+        const userId = ctx.userId; // narrowed to string
         result = await ctx.db.transaction(async (tx) => {
           const [scan] = await tx
             .insert(scans)
             .values({
-              userId: ctx.userId,
+              userId,
               productId: product?.id,
               barcode: input.barcode,
               halalStatus: scanHalalStatus,
@@ -595,7 +613,7 @@ export const scanRouter = router({
 
           const now = new Date();
           const user = await tx.query.users.findFirst({
-            where: eq(users.id, ctx.userId),
+            where: eq(users.id, userId),
             columns: {
               lastScanDate: true,
               currentStreak: true,
@@ -654,7 +672,7 @@ export const scanRouter = router({
                   }
                 : {}),
             })
-            .where(eq(users.id, ctx.userId));
+            .where(eq(users.id, userId));
 
           return {
             scan,
@@ -706,15 +724,14 @@ export const scanRouter = router({
       });
 
       // 7. Community scan count — how many OTHER users verified this product
+      const communityConditions = [eq(scans.barcode, input.barcode)];
+      if (ctx.userId) {
+        communityConditions.push(sql`${scans.userId} != ${ctx.userId}`);
+      }
       const [communityCount] = await ctx.db
         .select({ count: sql<number>`count(DISTINCT ${scans.userId})::int` })
         .from(scans)
-        .where(
-          and(
-            eq(scans.barcode, input.barcode),
-            sql`${scans.userId} != ${ctx.userId}`
-          )
-        );
+        .where(and(...communityConditions));
 
       // 8. Ingredient rulings — enriched scholarly data for UI
       const ingredientsText = storedOff?.ingredients_text as string | undefined;
@@ -773,6 +790,18 @@ export const scanRouter = router({
         }
       }
 
+      // Increment quota counter for anonymous users (Redis pipeline: INCR + EXPIRE)
+      let remainingScans: number | null = null;
+      if (ctx.isAnonymous && ctx.deviceId && !input.viewOnly) {
+        const today = new Date().toISOString().slice(0, 10);
+        const key = `scan:quota:${ctx.deviceId}:${today}`;
+        const pipeline = ctx.redis.pipeline();
+        pipeline.incr(key);
+        pipeline.expire(key, 86400);
+        await pipeline.exec();
+        remainingScans = (ctx.remainingScans ?? 1) - 1;
+      }
+
       return {
         scan: result.scan,
         product: product ?? null,
@@ -793,6 +822,7 @@ export const scanRouter = router({
         ingredientRulings: ingredientRulingsData,
         certifierData,
         levelUp: result.levelUp,
+        remainingScans,
       };
     }),
 

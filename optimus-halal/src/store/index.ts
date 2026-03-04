@@ -383,4 +383,64 @@ export const useRamadanStore = create<RamadanState>()(
   )
 );
 
+/**
+ * Scan Quota State (Anonymous users)
+ *
+ * Miroir local du quota Redis backend.
+ * Permet un feedback UI instantané sans attendre le réseau.
+ * Le backend reste la source de vérité.
+ */
+const DAILY_SCAN_LIMIT = 5;
 
+function getToday(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+interface QuotaState {
+  dailyScansUsed: number;
+  lastScanDate: string;
+  incrementScan: () => void;
+  getRemainingScans: () => number;
+  resetIfNewDay: () => void;
+  syncFromServer: (used: number) => void;
+}
+
+export const useQuotaStore = create<QuotaState>()(
+  persist(
+    (set, get) => ({
+      dailyScansUsed: 0,
+      lastScanDate: getToday(),
+
+      incrementScan: () => {
+        const state = get();
+        const today = getToday();
+        if (state.lastScanDate !== today) {
+          set({ dailyScansUsed: 1, lastScanDate: today });
+        } else {
+          set({ dailyScansUsed: state.dailyScansUsed + 1 });
+        }
+      },
+
+      getRemainingScans: () => {
+        const state = get();
+        if (state.lastScanDate !== getToday()) return DAILY_SCAN_LIMIT;
+        return Math.max(0, DAILY_SCAN_LIMIT - state.dailyScansUsed);
+      },
+
+      resetIfNewDay: () => {
+        const state = get();
+        if (state.lastScanDate !== getToday()) {
+          set({ dailyScansUsed: 0, lastScanDate: getToday() });
+        }
+      },
+
+      syncFromServer: (used: number) => {
+        set({ dailyScansUsed: used, lastScanDate: getToday() });
+      },
+    }),
+    {
+      name: "quota-storage",
+      storage: createJSONStorage(() => mmkvStorage),
+    }
+  )
+);

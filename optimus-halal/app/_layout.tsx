@@ -21,7 +21,7 @@ import {
 } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { AnimatedSplash } from "@/components/AnimatedSplash";
-import { useLanguageStore } from "@/store";
+import { useLanguageStore, useQuotaStore } from "@/store";
 import { useTheme, useTranslation } from "@/hooks";
 import { initializeTokens, isAuthenticated as hasStoredTokens, clearTokens, setApiLanguage, setOnAuthFailure } from "@/services/api";
 import { useMe } from "@/hooks/useAuth";
@@ -31,6 +31,7 @@ import { useColorScheme as useNativeWindColorScheme } from "nativewind";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/ui";
 import { logger } from "@/lib/logger";
+import { initPurchases } from "@/services/purchases";
 import { initSentry } from "../src/lib/sentry";
 import { initAnalytics } from "../src/lib/analytics";
 import { setNavigationBarTheme } from "@/lib/navigationBar";
@@ -151,6 +152,12 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
       clearTokens().catch(() => {});
       queryClient.clear();
     });
+
+    // Reset quota counter if new day (anonymous scan limit)
+    useQuotaStore.getState().resetIfNewDay();
+
+    // Initialize RevenueCat (works anonymously, identified after login)
+    initPurchases().catch((e) => logger.warn("AppInit", "RevenueCat init failed", String(e)));
 
     logger.info("AppInit", "useEffect: loading tokens from SecureStore");
     initializeTokens()
@@ -363,6 +370,16 @@ export default function RootLayout() {
                     options={{
                       animation: "fade_from_bottom",
                       animationDuration: 300,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="paywall"
+                    options={{
+                      presentation: "modal",
+                      animation: "slide_from_bottom",
+                      animationDuration: 350,
+                      gestureEnabled: true,
+                      gestureDirection: "vertical",
                     }}
                   />
                 </Stack>

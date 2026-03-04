@@ -37,7 +37,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import Svg, { Path } from "react-native-svg";
 
 import { Avatar, PremiumBackground } from "@/components/ui";
-const logoSource = require("@assets/images/logo_naqiy.webp");
 import { PressableScale } from "@/components/ui/PressableScale";
 import { HomeSkeleton } from "@/components/skeletons";
 import { useMe } from "@/hooks/useAuth";
@@ -47,8 +46,12 @@ import { useTheme } from "@/hooks/useTheme";
 import { brand, glass, lightTheme, darkTheme } from "@/theme/colors";
 import { useHaptics, useUserLocation, useMapStores } from "@/hooks";
 import { trpc } from "@/lib/trpc";
+import { useQuotaStore } from "@/store";
+import { isAuthenticated as hasStoredTokens } from "@/services/api";
 
+const logoSource = require("@assets/images/logo_naqiy.webp");
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const DAILY_SCAN_LIMIT = 5;
 const STAGGER_MS = 60;
 
 
@@ -542,10 +545,13 @@ export default function HomeScreen() {
   const { impact } = useHaptics();
   const { t } = useTranslation();
 
+  // ---- Guest detection ----
+  const isGuest = !hasStoredTokens();
+
   // ---- Data ----
-  const meQuery = useMe();
+  const meQuery = useMe({ enabled: !isGuest });
   const me = meQuery.data;
-  const isReady = !meQuery.isLoading;
+  const isReady = isGuest || !meQuery.isLoading;
 
   // ---- Map Stores (Around You) ----
   const { location: userLocation } = useUserLocation();
@@ -566,24 +572,28 @@ export default function HomeScreen() {
   );
   const nearbyStores = useMemo(() => storesQuery.data ?? [], [storesQuery.data]);
 
-  const favoritesQuery = useFavoritesList({ limit: 8 });
+  const favoritesQuery = useFavoritesList({ limit: 8, enabled: !isGuest });
 
   const dashboardQuery = trpc.stats.userDashboard.useQuery(undefined, {
-    enabled: isReady,
+    enabled: isReady && !isGuest,
     staleTime: 60_000,
   });
   const unreadQuery = trpc.notification.getUnreadCount.useQuery(undefined, {
-    enabled: isReady,
+    enabled: isReady && !isGuest,
     staleTime: 30_000,
   });
   const alertsQuery = trpc.alert.list.useQuery(
     { limit: 5 },
-    { enabled: isReady, staleTime: 60_000 },
+    { enabled: isReady && !isGuest, staleTime: 60_000 },
   );
   const articlesQuery = trpc.article.list.useQuery(
     { limit: 5 },
-    { enabled: isReady, staleTime: 120_000 },
+    { enabled: isReady && !isGuest, staleTime: 120_000 },
   );
+
+  // ---- Quota (anonymous) ----
+  const quotaRemaining = useQuotaStore((s) => s.getRemainingScans());
+  const quotaUsed = useQuotaStore((s) => s.dailyScansUsed);
 
   // ---- Derived data ----
   const userName = useMemo(() => {
@@ -954,6 +964,71 @@ export default function HomeScreen() {
             )}
           </Animated.View>
         </Animated.View>
+
+        {/* Quota Widget — anonymous users only */}
+        {isGuest && (
+          <Animated.View
+            entering={FadeInDown.delay(STAGGER_MS * 2).duration(500).springify().damping(18)}
+            style={{ paddingHorizontal: 20, marginBottom: 16 }}
+          >
+            <PressableScale
+              onPress={() => {
+                impact();
+                router.push("/paywall" as any);
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={t.guest.dailyScans}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  padding: 14,
+                  borderRadius: 16,
+                  backgroundColor: isDark ? "rgba(212, 175, 55, 0.06)" : "rgba(212, 175, 55, 0.04)",
+                  borderWidth: 1,
+                  borderColor: isDark ? "rgba(212, 175, 55, 0.15)" : "rgba(212, 175, 55, 0.1)",
+                }}
+              >
+                <View
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 12,
+                    backgroundColor: isDark ? "rgba(212, 175, 55, 0.1)" : "rgba(212, 175, 55, 0.08)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <MaterialIcons name="qr-code-scanner" size={20} color={colors.primary} />
+                </View>
+                <View style={{ flex: 1, marginStart: 12 }}>
+                  <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: "700" }}>
+                    {quotaRemaining}/{DAILY_SCAN_LIMIT} {t.guest.scansToday}
+                  </Text>
+                  <View
+                    style={{
+                      height: 4,
+                      borderRadius: 2,
+                      marginTop: 6,
+                      backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+                    }}
+                  >
+                    <View
+                      style={{
+                        height: "100%",
+                        borderRadius: 2,
+                        width: `${Math.round((quotaUsed / DAILY_SCAN_LIMIT) * 100)}%`,
+                        backgroundColor: quotaRemaining > 0 ? colors.primary : "#ef4444",
+                      }}
+                    />
+                  </View>
+                </View>
+                <MaterialIcons name="chevron-right" size={20} color={colors.textSecondary} style={{ marginStart: 8 }} />
+              </View>
+            </PressableScale>
+          </Animated.View>
+        )}
 
         {/* ====================================================
             SECTION 2: QUICK ACTIONS (2x2 grid)

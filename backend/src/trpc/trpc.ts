@@ -92,3 +92,46 @@ const isPremium = middleware(async ({ ctx, next }) => {
 });
 
 export const premiumProcedure = t.procedure.use(isAuthenticated).use(isPremium);
+
+// ── Quota-checked procedure (anonymous + authenticated) ──────────
+// Allows both guest and authenticated users.
+// Guests: enforces daily scan quota via Redis (5/day per deviceId).
+// Authenticated (Naqiy+): unlimited, skips quota check.
+const DAILY_SCAN_LIMIT = 5;
+
+const quotaChecked = middleware(async ({ ctx, next }) => {
+  // Authenticated users bypass quota entirely
+  if (ctx.userId) {
+    return next({ ctx: { ...ctx, remainingScans: null } });
+  }
+
+  // Anonymous: require deviceId
+  if (!ctx.deviceId) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Device ID requis (header X-Device-Id)",
+    });
+  }
+
+  // Check daily quota in Redis
+  const today = new Date().toISOString().slice(0, 10);
+  const key = `scan:quota:${ctx.deviceId}:${today}`;
+  const usedRaw = await ctx.redis.get(key);
+  const used = parseInt(usedRaw ?? "0", 10);
+
+  if (used >= DAILY_SCAN_LIMIT) {
+    throw new TRPCError({
+      code: "TOO_MANY_REQUESTS",
+      message: JSON.stringify({
+        type: "SCAN_QUOTA_EXCEEDED",
+        used,
+        limit: DAILY_SCAN_LIMIT,
+        resetsAt: "midnight",
+      }),
+    });
+  }
+
+  return next({ ctx: { ...ctx, remainingScans: DAILY_SCAN_LIMIT - used } });
+});
+
+export const quotaCheckedProcedure = t.procedure.use(quotaChecked);

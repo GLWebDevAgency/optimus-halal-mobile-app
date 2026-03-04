@@ -60,22 +60,28 @@ Avant de placer quoi que ce soit derriere un mur payant, on applique ce test en 
 La frontiere entre gratuit et premium est limpide. Le gratuit repond a la question "Est-ce halal ?". Le premium repond a la question "Comment puis-je aller plus loin, plus vite, plus confortablement ?".
 
 ```
-                GRATUIT (a vie)                         NAQIY+ (Premium)
+          ANONYME (gratuit, 0 euros)                    NAQIY+ (2,99 euros/mois)
 ┌──────────────────────────────────────┐  ┌──────────────────────────────────────┐
-│ Scan illimite + verdict complet      │  │ Tout le gratuit +                    │
+│ 5 scans/jour + verdict COMPLET      │  │ Scans ILLIMITES                      │
 │ Ingredients + additifs + sources     │  │ Details avances (analyse chimique)    │
-│ Avis madhab personnalise             │  │ Historique complet de scans           │
-│ Score de confiance                   │  │ Filtres avances sur la carte          │
-│ Carte des commerces (consultation)   │  │ Mode hors-ligne (cache local)        │
-│ Alertes sanitaires                   │  │ Themes visuels exclusifs              │
-│ Gamification de base                 │  │ Badges et recompenses premium         │
-│ 1 signalement/jour                   │  │ Signalements illimites                │
-│ Favoris (limite 20)                  │  │ Favoris illimites                     │
+│ Avis madhab (toutes ecoles)          │  │ Historique complet (cloud sync)      │
+│ Score de confiance                   │  │ Favoris illimites (cloud sync)       │
+│ Carte des commerces (consultation)   │  │ Mode hors-ligne (100 produits)       │
+│ Alertes sanitaires                   │  │ Filtres avances sur la carte          │
+│ Aucun compte requis                  │  │ Gamification complete (cloud)         │
+│ Historique local (3 derniers)        │  │ Badges et recompenses premium         │
 │                                      │  │ Alertes push personnalisees           │
 │                                      │  │ Profil sante avance                   │
 │                                      │  │ Support prioritaire                   │
+│                                      │  │ Creation de compte = souscription     │
 └──────────────────────────────────────┘  └──────────────────────────────────────┘
 ```
+
+> **Changement majeur V2** : Suppression de l'auth wall obligatoire. L'utilisateur
+> accede directement a l'app apres l'onboarding. Pas de creation de compte
+> necessaire. Le quota de 5 scans/jour est gere par deviceId via Redis (backend)
+> et MMKV (local). La creation de compte n'intervient QU'au moment de la
+> souscription Naqiy+. Pas de tier "compte gratuit" — c'est anonyme OU premium.
 
 ### 2.2 Le Critere de Partition
 
@@ -104,16 +110,17 @@ La frontiere entre gratuit et premium est limpide. Le gratuit repond a la questi
 Le systeme de feature flags controle les portes entre gratuit et premium :
 
 ```typescript
-// Gates premium (toutes desactivees en V1)
-paywallEnabled: false,         // Le paywall n'est pas encore actif
-favoritesLimitEnabled: false,  // Pas de limite de favoris en V1
-scanHistoryLimitEnabled: false, // Pas de limite d'historique en V1
-offlineCacheEnabled: false,    // Hors-ligne pas encore ready
-premiumMapEnabled: false,      // Filtres carte avances
-healthProfileEnabled: false,   // Profil sante
+// Gates premium (V2 — freemium actif)
+paymentsEnabled: true,          // RevenueCat actif
+paywallEnabled: true,           // Soft paywall apres 5 scans/jour
+favoritesLimitEnabled: true,    // Favoris = Naqiy+ only
+scanHistoryLimitEnabled: false, // Historique local gratuit (3 derniers)
+offlineCacheEnabled: false,     // Hors-ligne = Naqiy+ (a venir)
+premiumMapEnabled: false,       // Filtres carte avances
+healthProfileEnabled: false,    // Profil sante
 ```
 
-**Strategie V1** : TOUT est gratuit. Le premium n'est pas encore active. Pourquoi ? Parce qu'il faut d'abord prouver la valeur avant de demander de l'argent. Un utilisateur qui n'a jamais ete impressionne par le gratuit ne paiera jamais pour le premium. On offre tout, on mesure la satisfaction, et seulement ensuite on introduit la barriere.
+**Strategie V2** : Le verdict est gratuit pour toujours (5 scans/jour). Le confort est premium. L'utilisateur anonyme decouvre la valeur sans friction. Le soft paywall apparait au 6eme scan avec un bouton "Plus tard" TOUJOURS visible — pas de dark pattern. La creation de compte n'intervient qu'au moment de l'achat via RevenueCat.
 
 ---
 

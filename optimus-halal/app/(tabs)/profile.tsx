@@ -31,8 +31,9 @@ import { Image } from "expo-image";
 import { Card, Avatar, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { ProfileSkeleton } from "@/components/skeletons";
-import { useThemeStore, usePreferencesStore } from "@/store";
+import { useThemeStore, usePreferencesStore, useQuotaStore } from "@/store";
 import { useTranslation } from "@/hooks/useTranslation";
+import { isAuthenticated as hasStoredTokens } from "@/services/api";
 
 interface MenuItemProps {
   icon: keyof typeof MaterialIcons.glyphMap;
@@ -172,14 +173,20 @@ export default function ProfileScreen() {
   const { impact } = useHaptics();
   const { t, language } = useTranslation();
 
+  const isGuest = !hasStoredTokens();
+
   // Premium status
   const { isPremium } = usePremium();
 
-  // tRPC data
-  const { data: profile, isLoading: profileLoading, isError: profileError } = useMe();
-  const { data: favoritesData } = useFavoritesList({ limit: 1 });
-  const { data: loyalty } = useLoyaltyBalance();
+  // tRPC data — skip for anonymous users
+  const { data: profile, isLoading: profileLoading, isError: profileError } = useMe({ enabled: !isGuest });
+  const { data: favoritesData } = useFavoritesList({ limit: 1, enabled: !isGuest });
+  const { data: loyalty } = useLoyaltyBalance({ enabled: !isGuest });
   const logoutMutation = useLogout();
+
+  // Quota (anonymous)
+  const remainingScans = useQuotaStore((s) => s.getRemainingScans());
+  const dailyScansUsed = useQuotaStore((s) => s.dailyScansUsed);
 
   const { theme } = useThemeStore();
   const { certifications } = usePreferencesStore();
@@ -241,6 +248,197 @@ export default function ProfileScreen() {
       ]
     );
   }, [logoutMutation, t, impact]);
+
+  // ── Guest Mode ──────────────────────────────────
+  if (isGuest) {
+    return (
+      <View className="flex-1">
+        <PremiumBackground />
+
+        {/* Header */}
+        <Animated.View entering={FadeIn.duration(400)} style={{ paddingTop: insets.top }}>
+          <View className="flex-row items-center justify-between p-4">
+            <View className="w-10" />
+            <Text accessibilityRole="header" className="text-lg font-bold tracking-tight" style={{ color: colors.textPrimary }}>
+              {t.profile.title}
+            </Text>
+            <Pressable onPress={handleSettings} accessibilityRole="button" accessibilityLabel={t.common.settings}>
+              <MaterialIcons name="settings" size={24} color={colors.iconSecondary} />
+            </Pressable>
+          </View>
+        </Animated.View>
+
+        <ScrollView contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+          {/* Guest Hero */}
+          <Animated.View entering={FadeInDown.delay(50).duration(500)} className="items-center pt-8 pb-6 px-6">
+            <View
+              className="w-24 h-24 rounded-full items-center justify-center mb-5"
+              style={{
+                backgroundColor: isDark ? "rgba(212, 175, 55, 0.08)" : "rgba(212, 175, 55, 0.06)",
+                borderWidth: 2,
+                borderColor: isDark ? "rgba(212, 175, 55, 0.2)" : "rgba(212, 175, 55, 0.15)",
+              }}
+            >
+              <MaterialIcons name="explore" size={40} color={colors.primary} />
+            </View>
+            <Text className="text-2xl font-bold mb-1" style={{ color: colors.textPrimary }}>
+              {t.guest.discoveryMode}
+            </Text>
+            <Text className="text-sm text-center px-4 mb-6" style={{ color: colors.textSecondary }}>
+              {t.guest.discoveryDescription}
+            </Text>
+          </Animated.View>
+
+          {/* Quota Card */}
+          <Animated.View entering={FadeInUp.delay(100).duration(500)} className="mx-4 mb-6">
+            <View
+              className="p-4 rounded-2xl"
+              style={{
+                backgroundColor: colors.card,
+                borderWidth: 1,
+                borderColor: colors.cardBorder,
+              }}
+            >
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
+                  {t.guest.dailyScans}
+                </Text>
+                <Text className="text-sm font-bold" style={{ color: remainingScans > 0 ? colors.primary : "#ef4444" }}>
+                  {remainingScans}/5
+                </Text>
+              </View>
+              <View className="h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: colors.backgroundSecondary }}>
+                <View
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${Math.round((dailyScansUsed / 5) * 100)}%`,
+                    backgroundColor: remainingScans > 0 ? colors.primary : "#ef4444",
+                  }}
+                />
+              </View>
+              <Text className="text-xs mt-2" style={{ color: colors.textMuted }}>
+                {t.guest.scansResetAtMidnight}
+              </Text>
+            </View>
+          </Animated.View>
+
+          {/* Naqiy+ CTA */}
+          <Animated.View entering={FadeInUp.delay(150).duration(500)} className="mx-4 mb-6">
+            <PressableScale
+              onPress={() => {
+                impact();
+                router.push("/settings/premium" as any);
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Naqiy+"
+            >
+              <View
+                className="p-5 rounded-2xl items-center"
+                style={{
+                  backgroundColor: isDark ? "rgba(212, 175, 55, 0.08)" : "rgba(212, 175, 55, 0.05)",
+                  borderWidth: 1,
+                  borderColor: isDark ? "rgba(212, 175, 55, 0.2)" : "rgba(212, 175, 55, 0.12)",
+                }}
+              >
+                <Image
+                  source={require("@assets/images/logo_naqiy.webp")}
+                  style={{ width: 40, height: 40, marginBottom: 12 }}
+                  contentFit="contain"
+                  cachePolicy="memory-disk"
+                />
+                <Text className="text-lg font-bold mb-1" style={{ color: colors.textPrimary }}>
+                  {t.guest.upgradeTitle}
+                </Text>
+                <Text className="text-sm text-center mb-4" style={{ color: colors.textSecondary }}>
+                  {t.guest.upgradeDescription}
+                </Text>
+                <View
+                  className="h-11 px-8 rounded-full items-center justify-center"
+                  style={{ backgroundColor: isDark ? colors.primary : "#0f172a" }}
+                >
+                  <Text className="font-bold text-sm" style={{ color: isDark ? "#0f172a" : "#fff" }}>
+                    {t.guest.subscribeNaqiyPlus}
+                  </Text>
+                </View>
+              </View>
+            </PressableScale>
+          </Animated.View>
+
+          {/* Settings (accessible to guests) */}
+          <Animated.View entering={FadeInUp.delay(200).duration(500)} className="px-4 mb-6">
+            <Text accessibilityRole="header" className="text-base font-bold px-2 mb-3" style={{ color: colors.textPrimary }}>
+              {t.profile.preferences}
+            </Text>
+            <Card variant="elevated" className="overflow-hidden p-0">
+              <MenuItem
+                icon="palette"
+                iconBgColor={isDark ? "rgba(168,85,247,0.1)" : "#faf5ff"}
+                iconColor={isDark ? "#c084fc" : "#a855f7"}
+                title={t.profile.appearance}
+                subtitle={theme === "system" ? t.profile.appearanceAuto : theme === "light" ? t.profile.appearanceLight : t.profile.appearanceDark}
+                onPress={() => router.push("/settings/appearance" as any)}
+              />
+              <MenuItem
+                icon="language"
+                iconBgColor={isDark ? "rgba(255,255,255,0.05)" : "#f1f5f9"}
+                iconColor={isDark ? "#94a3b8" : "#475569"}
+                title={t.profile.language}
+                subtitle={t.language.languages[language]}
+                onPress={() => router.push("/settings/language" as any)}
+              />
+              <MenuItem
+                icon="help"
+                iconBgColor={isDark ? "rgba(255,255,255,0.05)" : "#f1f5f9"}
+                iconColor={isDark ? "#94a3b8" : "#475569"}
+                title={t.profile.helpCenter}
+                onPress={() => Alert.alert(t.common.comingSoon)}
+              />
+              <MenuItem
+                icon="report-problem"
+                iconBgColor={isDark ? "rgba(255,255,255,0.05)" : "#f1f5f9"}
+                iconColor={isDark ? "#94a3b8" : "#475569"}
+                title={t.profile.reportProblem}
+                isLast
+                onPress={() => router.push("/report" as any)}
+              />
+            </Card>
+          </Animated.View>
+
+          {/* Login CTA */}
+          <Animated.View entering={FadeInUp.delay(250).duration(500)} className="px-4 mb-8">
+            <PressableScale
+              onPress={() => {
+                impact();
+                router.push("/(auth)/welcome" as any);
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={t.guest.loginExistingAccount}
+            >
+              <View
+                className="w-full rounded-2xl p-3.5 flex-row items-center justify-center gap-2"
+                style={{
+                  backgroundColor: colors.card,
+                  borderWidth: 1,
+                  borderColor: colors.cardBorder,
+                }}
+              >
+                <MaterialIcons name="login" size={18} color={colors.primary} />
+                <Text className="font-bold text-sm" style={{ color: colors.primary }}>
+                  {t.guest.loginExistingAccount}
+                </Text>
+              </View>
+            </PressableScale>
+
+            <Text className="text-center text-xs mt-6" style={{ color: colors.textMuted }}>
+              {t.common.version} 2.1.0
+            </Text>
+          </Animated.View>
+        </ScrollView>
+      </View>
+    );
+  }
+
+  // ── Authenticated Profile ──────────────────────────────────
 
   // Skeleton only during the initial fetch — never block on error or stale cache
   if (profileLoading && !profile) return <ProfileSkeleton />;

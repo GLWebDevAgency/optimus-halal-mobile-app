@@ -8,22 +8,25 @@
  * user is authenticated; otherwise they're redirected to welcome/login.
  */
 
+/**
+ * Entry Point - Router Redirect
+ *
+ * Redirige vers l'écran approprié selon l'état de l'application.
+ * Auth is NOT required — anonymous users go directly to tabs.
+ * Account creation only happens during Naqiy+ subscription.
+ */
+
 import React from "react";
 import { Redirect } from "expo-router";
 import { useOnboardingStore } from "@/store";
-import { useMe } from "@/hooks/useAuth";
 
 export default function Index() {
   const { hasCompletedOnboarding } = useOnboardingStore();
-  const { data: me } = useMe();
 
   if (!hasCompletedOnboarding) {
     return <Redirect href="/(onboarding)" />;
   }
 
-  if (!me) {
-    return <Redirect href="/(auth)/welcome" />;
-  }
-
+  // Direct access to tabs — anonymous mode with 5 scans/day
   return <Redirect href="/(tabs)" />;
 }

@@ -1,8 +1,9 @@
 import { trpc } from "@/lib/trpc";
 
-export function useLoyaltyBalance() {
+export function useLoyaltyBalance(options?: { enabled?: boolean }) {
   return trpc.loyalty.getBalance.useQuery(undefined, {
     staleTime: 1000 * 60 * 5,
+    enabled: options?.enabled,
   });
 }
 

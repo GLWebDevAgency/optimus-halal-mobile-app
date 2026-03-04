@@ -14,6 +14,7 @@ import {
   Pressable,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -29,10 +30,12 @@ import { useHaptics } from "@/hooks/useHaptics";
 import { usePremium } from "@/hooks/usePremium";
 import { useFeatureFlagsStore } from "@/store";
 import { trackEvent } from "@/lib/analytics";
+import { getOfferings, purchasePackage, restorePurchases } from "@/services/purchases";
+import type { PurchasesPackage } from "react-native-purchases";
 
 const GOLD = "#d4af37";
 
-type PlanId = "monthly" | "annual" | "lifetime";
+type PlanId = "monthly" | "annual";
 
 interface Plan {
   id: PlanId;
@@ -40,6 +43,7 @@ interface Plan {
   period: string;
   savings?: string;
   badge?: string;
+  rcPackage?: PurchasesPackage;
 }
 
 export default function PremiumPaywallScreen() {
@@ -49,13 +53,22 @@ export default function PremiumPaywallScreen() {
   const { isPremium } = usePremium();
   const { flags } = useFeatureFlagsStore();
   const [selectedPlan, setSelectedPlan] = useState<PlanId>("annual");
+  const [purchasing, setPurchasing] = useState(false);
+  const [rcPackages, setRcPackages] = useState<{ monthly?: PurchasesPackage; annual?: PurchasesPackage }>({});
 
-  // Analytics: track paywall shown
+  // Load RevenueCat offerings
   useEffect(() => {
     trackEvent("premium_paywall_shown", { trigger: "settings" });
+    getOfferings().then((offerings) => {
+      if (offerings?.current) {
+        setRcPackages({
+          monthly: offerings.current.monthly ?? undefined,
+          annual: offerings.current.annual ?? undefined,
+        });
+      }
+    }).catch(() => {});
   }, []);
 
-  // Analytics: track paywall closed on unmount
   const handleClose = useCallback(() => {
     trackEvent("premium_paywall_closed", { selected_plan: selectedPlan });
     router.back();
@@ -64,24 +77,22 @@ export default function PremiumPaywallScreen() {
   const plans: Plan[] = [
     {
       id: "monthly",
-      price: "4,99 \u20ac",
+      price: rcPackages.monthly?.product?.priceString ?? "2,99 \u20ac",
       period: t.premium.perMonth,
+      rcPackage: rcPackages.monthly,
     },
     {
       id: "annual",
-      price: "29,99 \u20ac",
+      price: rcPackages.annual?.product?.priceString ?? "24,99 \u20ac",
       period: t.premium.perYear,
-      savings: t.premium.save50,
+      savings: "-30%",
       badge: t.premium.bestValue,
-    },
-    {
-      id: "lifetime",
-      price: "79,99 \u20ac",
-      period: t.premium.oneTime,
+      rcPackage: rcPackages.annual,
     },
   ];
 
   const features = [
+    { icon: "all-inclusive" as const, label: t.paywall.featureUnlimitedScans },
     { icon: "favorite" as const, label: t.premium.unlimitedFavorites },
     { icon: "history" as const, label: t.premium.fullHistory },
     { icon: "mosque" as const, label: t.premium.madhabAlerts },
@@ -166,16 +177,42 @@ export default function PremiumPaywallScreen() {
     );
   }
 
-  const handlePurchase = () => {
+  const handlePurchase = async () => {
     impact();
     trackEvent("premium_purchase_started", { product_id: selectedPlan });
-    // TODO: Replace with actual RevenueCat purchase flow
-    Alert.alert("Naqiy+", t.premium.purchaseComingSoon);
+
+    const plan = plans.find((p) => p.id === selectedPlan);
+    if (!plan?.rcPackage) {
+      Alert.alert("Naqiy+", t.premium.purchaseComingSoon);
+      return;
+    }
+
+    try {
+      setPurchasing(true);
+      await purchasePackage(plan.rcPackage);
+      trackEvent("premium_purchase_completed", { product_id: selectedPlan });
+      router.back();
+    } catch (err: any) {
+      if (!err?.userCancelled) {
+        Alert.alert("Naqiy+", err?.message ?? "Erreur lors de l'achat");
+      }
+    } finally {
+      setPurchasing(false);
+    }
   };
 
-  const handleRestore = () => {
+  const handleRestore = async () => {
     impact();
-    Alert.alert("Naqiy+", t.premium.restoreComingSoon);
+    try {
+      setPurchasing(true);
+      await restorePurchases();
+      Alert.alert("Naqiy+", t.premium.enjoyFeatures);
+      router.back();
+    } catch (err: any) {
+      Alert.alert("Naqiy+", err?.message ?? "Aucun achat à restaurer");
+    } finally {
+      setPurchasing(false);
+    }
   };
 
   return (

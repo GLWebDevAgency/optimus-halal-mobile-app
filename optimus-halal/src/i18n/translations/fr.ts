@@ -1259,6 +1259,41 @@ export const fr = {
     notHalal: "Non Halal",
     unknown: "Inconnu",
   },
+
+  // Guest Mode (Anonymous)
+  guest: {
+    discoveryMode: "Mode Découverte",
+    discoveryDescription: "Scannez jusqu'à 5 produits par jour gratuitement. Passez à Naqiy+ pour un accès illimité.",
+    dailyScans: "Scans du jour",
+    scansToday: "scans aujourd'hui",
+    scansRemaining: "{{count}} scans restants — Naqiy+ pour l'illimité",
+    noScansLeft: "Plus de scans — Naqiy+ pour continuer",
+    scansResetAtMidnight: "Vos scans se rechargent chaque jour à minuit",
+    upgradeTitle: "Passez à Naqiy+",
+    upgradeDescription: "Scans illimités, favoris cloud, historique complet et mode hors ligne.",
+    subscribeNaqiyPlus: "S'abonner à Naqiy+",
+    loginExistingAccount: "J'ai déjà un compte",
+  },
+
+  // Paywall (Quota exceeded)
+  paywall: {
+    title: "Vous avez utilisé vos 5 scans du jour",
+    subtitle: "Passez à Naqiy+ pour scanner sans limite et profiter de toutes les fonctionnalités premium.",
+    featureUnlimitedScans: "Scans illimités, chaque jour",
+    featureFavorites: "Favoris et listes synchronisées",
+    featureHistory: "Historique complet de vos scans",
+    featureOffline: "Mode hors ligne (100 produits)",
+    monthly: "Mensuel",
+    annual: "Annuel",
+    perMonth: "€/mois",
+    perYear: "€/an",
+    cancelAnytime: "Sans engagement, résiliable à tout moment",
+    freeTrialDays: "7 jours d'essai gratuit",
+    subscribe: "S'abonner à Naqiy+",
+    later: "Plus tard",
+    scansResetInfo: "Vos 5 scans gratuits se rechargent demain à 00h00",
+    existingAccount: "J'ai déjà un compte Naqiy+",
+  },
 };
 
 export type TranslationKeys = typeof fr;

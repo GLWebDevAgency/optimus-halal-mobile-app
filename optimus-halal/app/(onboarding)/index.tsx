@@ -68,14 +68,14 @@ export default function OnboardingScreen() {
     } else {
       // Complete onboarding
       setOnboardingComplete(true);
-      router.replace("/(auth)/welcome");
+      router.replace("/(tabs)");
     }
   }, [currentIndex, setOnboardingComplete]);
 
   const handleSkip = useCallback(async () => {
     impact();
     setOnboardingComplete(true);
-    router.replace("/(auth)/welcome");
+    router.replace("/(tabs)");
   }, [setOnboardingComplete]);
 
   const isLastSlide = currentIndex === onboardingSlides.length - 1;

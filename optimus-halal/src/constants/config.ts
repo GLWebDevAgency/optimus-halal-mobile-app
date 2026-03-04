@@ -57,7 +57,7 @@ export interface FeatureFlags {
 
 export const defaultFeatureFlags: FeatureFlags = {
   marketplaceEnabled: false, // Désactivé — pas de vrais produits, Coming Soon par défaut
-  paymentsEnabled: false,
+  paymentsEnabled: true,
   offlineMode: true,
   pushNotifications: true,
   aiScanner: false,
@@ -65,8 +65,8 @@ export const defaultFeatureFlags: FeatureFlags = {
   socialSharing: true,
   analyticsEnabled: true,
   alternativesEnabled: false, // Désactivé — V2, alternatives certifiées à venir
-  paywallEnabled: false,
-  favoritesLimitEnabled: false,
+  paywallEnabled: true,
+  favoritesLimitEnabled: true,
   scanHistoryLimitEnabled: false,
   offlineCacheEnabled: false,
   premiumMapEnabled: false,

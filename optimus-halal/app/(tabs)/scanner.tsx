@@ -48,6 +48,8 @@ import { BlurView } from "expo-blur";
 import { useTranslation } from "@/hooks/useTranslation";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { brand } from "@/theme/colors";
+import { useQuotaStore } from "@/store";
+import { isAuthenticated as hasStoredTokens } from "@/services/api";
 
 const GOLD = "#d4af37";
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -163,6 +165,16 @@ export default function ScannerScreen() {
   const processScan = useCallback(
     async (barcode: string) => {
       if (scanned) return;
+
+      // Quota gate for anonymous users
+      if (!hasStoredTokens()) {
+        const remaining = useQuotaStore.getState().getRemainingScans();
+        if (remaining <= 0) {
+          impact(ImpactFeedbackStyle.Medium);
+          router.push("/paywall" as any);
+          return;
+        }
+      }
 
       setScanned(true);
       setIsScanning(false);
