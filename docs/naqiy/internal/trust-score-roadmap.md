@@ -329,18 +329,49 @@ Table `certifier_snapshots` avec historique complet par periode, scores recalcul
 |---|---|---|---|---|---|
 | ~~P0~~ | ~~A~~ | ~~Integrer `acceptsPostSlaughterElectrocution`~~ | ~~10 min~~ | ~~Corrige un champ fantome~~ | **ANNULE** — post-abattage, aucun impact fiqhi sur la validite halal |
 | ~~P0~~ | ~~B~~ | ~~Penaliser `null` sur positifs (-3)~~ | ~~10 min~~ | ~~Score ARGML plus juste~~ | **FAIT** — `NULL_POSITIVE_PENALTY = -3`, applique aux 3 indicateurs positifs |
-| **P1** | A | Indicateurs transparence/audit | 3-4 jours | Differencie le Tier F | A planifier |
-| ~~P1~~ | ~~B~~ | ~~Justifier les poids (source fiqh)~~ | ~~3-5 jours~~ | ~~Credibilite~~ | **FAIT** — integre dans P2-A (sources inline dans le code) |
-| ~~P2~~ | ~~A~~ | ~~Score par madhab~~ | ~~4-5 jours~~ | ~~Killer feature~~ | **FAIT** — 4 colonnes + poids par madhab + frontend + docs |
-| ~~P2~~ | ~~B~~ | ~~Normalisation sigmoide~~ | ~~15 min~~ | ~~Meilleure distribution~~ | **FAIT** — sigmoide centree (k=0.08) + renormalisation min/max |
-| **P3** | — | Versioning temporel (Niv. 1→3) | 30min→1sem | Tracabilite | A faire (Niv. 1) |
+| ~~P1~~ | ~~A~~ | ~~Indicateurs transparence/audit~~ | ~~3-4 jours~~ | ~~Differencie le Tier F~~ | **FAIT (V4)** — 3 indicateurs transparence (+5 chacun) + controversy penalty avec decay |
+| ~~P1~~ | ~~B~~ | ~~Justifier les poids (source fiqh)~~ | ~~3-5 jours~~ | ~~Credibilite~~ | **FAIT (V5.1)** — classification epistemologique A/B/C, sources fiqh inline dans le code |
+| ~~P2~~ | ~~A~~ | ~~Score par madhab~~ | ~~4-5 jours~~ | ~~Killer feature~~ | **FAIT (V3)** — 4 colonnes + poids par madhab + frontend + docs |
+| ~~P2~~ | ~~B~~ | ~~Normalisation sigmoide~~ | ~~15 min~~ | ~~Meilleure distribution~~ | **FAIT (V4)** — sigmoide centree (k=0.06) + renormalisation min/max |
+| ~~P3~~ | ~~—~~ | ~~Versioning temporel (Niv. 1)~~ | ~~30 min~~ | ~~Tracabilite~~ | **FAIT** — `last_verified_at` + `data_source_url` + badge "Données anciennes" |
+
+### Evolutions V5 — FAIT (2026-03-06)
+
+| Changement | Statut |
+|---|---|
+| Renommage "universal" → "editorial Naqiy" | **FAIT** |
+| Caps/guardrails (3 critiques→35, 2→55, 0 positifs→45) | **FAIT** |
+| 4 blocs semantiques (rituel/ops/tayyib/transparence) | **FAIT** |
+| Niveau de preuve (evidence_level) | **FAIT** |
+| Tiers Strong/Moderate/Caution/Weak | **FAIT** |
+| Classification A/B/C epistemologique (V5.1) | **FAIT** |
+| Re-evaluation poids madhab post-challenge (V5.1) | **FAIT** |
+| Hero downgrade correle au trust score | **FAIT** |
+| Documentation scindee en 4 artefacts | **FAIT** |
+
+### Roadmap V6+
+
+| Amelioration | Description | Prerequis |
+|---|---|---|
+| Risk levels (0-3) au lieu de booleens | Granularite fine pour stunning/mechanical | Refonte schema DB + JSON + seed + frontend |
+| Indicateurs manquants (tasmiya, vitalite, tracabilite) | Donnees non collectees | Enquete terrain |
+| Gouvernance / impartialite (ISO 17065) | Metriques pas definies | Recherche |
+| Sous-types de stunning | Electrique vs bolt vs gaz | Recherche par certifieur |
+| UI multi-couche (score + profil + preuves) | Frontend avance | V5 blocks comme fondation |
+| ~~P3 Niveau 1 — lastVerifiedAt~~ | ~~Badge "donnees anciennes"~~ | **FAIT** |
+| P3 Niveau 2 — changelog certifieur | Diff automatique au seed | Flux de donnees actif |
 
 ### Ordre d'execution recommande
 
 ```
 FAIT :       P0-B null penalty (-3)
-FAIT :       P2-B sigmoide (k=0.08, centree sur raw=0)
-Sprint +1 :  P3 Niveau 1 — lastVerifiedAt (30 min)
-Sprint +2 :  P1-A nouveaux indicateurs (3-4 jours recherche)
+FAIT :       P2-B sigmoide (k=0.06)
+FAIT :       P2-A score par madhab
+FAIT :       P1-A transparence + controversy
+FAIT :       P1-B justification poids (A/B/C)
+FAIT :       V5 refonte architecturale (caps, blocs, evidence, tiers, hero)
+FAIT :       V5.1 re-evaluation madhab post-challenge
+FAIT :       P3 Niveau 1 — lastVerifiedAt + stale badge
+Sprint +2 :  V6 risk levels (refonte schema)
 Sprint +3 :  P3 Niveau 2 changelog (quand flux de donnees en place)
 ```

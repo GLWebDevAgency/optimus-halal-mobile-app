@@ -33,6 +33,12 @@ interface CertificationEntry {
   transparencyCompanyList: boolean | null;
   "halal-assessment": boolean | null;
   controversyPenalty: number;
+  // V5: Evidence level
+  evidenceLevel?: string;
+  evidenceSources?: string[];
+  // P3: Data provenance
+  lastVerifiedAt?: string | null;
+  dataSourceUrl?: string | null;
   notes: string[];
 }
 
@@ -57,6 +63,10 @@ function transformCertifier(entry: CertificationEntry): NewCertifier {
     transparencyCompanyList: entry.transparencyCompanyList ?? null,
     // Static controversy penalty from JSON (legacy — runtime uses certifier_events)
     controversyPenalty: entry.controversyPenalty ?? 0,
+    // V5: Evidence level
+    evidenceLevel: entry.evidenceLevel ?? "declared",
+    lastVerifiedAt: entry.lastVerifiedAt ?? null,
+    dataSourceUrl: entry.dataSourceUrl ?? null,
     halalAssessment: entry["halal-assessment"] ?? false,
     // Score columns default to 0 — runtime engine is the source of truth
     trustScore: 0,

@@ -779,6 +779,18 @@ export const scanRouter = router({
           transparencyAuditReports: boolean | null;
           transparencyCompanyList: boolean | null;
         };
+        detail: {
+          score: number;
+          blocks: {
+            ritualValidity: number;
+            operationalAssurance: number;
+            productQuality: number;
+            transparency: number;
+          };
+          cap?: number;
+          evidenceLevel: 'verified' | 'declared' | 'inferred' | 'unknown';
+        };
+        lastVerifiedAt: string | null;
       } | null = null;
 
       if (halalAnalysis?.certifierId) {
@@ -795,6 +807,8 @@ export const scanRouter = router({
             website: scored.website,
             halalAssessment: scored.halalAssessment,
             practices: scored.practices,
+            detail: scored.detail,
+            lastVerifiedAt: scored.lastVerifiedAt,
           };
           // Override certifierName with the real DB name
           halalAnalysis.certifierName = scored.name;

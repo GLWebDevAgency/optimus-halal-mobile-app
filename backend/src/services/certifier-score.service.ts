@@ -23,8 +23,10 @@ import {
   certifiers,
   certifierEvents,
   computeAllTrustScores,
+  computeTrustScoreDetail,
   computeControversyPenalty,
   type MadhabKey,
+  type TrustScoreDetail,
 } from "../db/schema/certifiers.js";
 import { withCache } from "../lib/cache.js";
 import { logger } from "../lib/logger.js";
@@ -59,6 +61,8 @@ export interface CertifierWithScores {
   halalAssessment: boolean;
   scores: CertifierScores;
   practices: CertifierPractices;
+  detail: TrustScoreDetail;
+  lastVerifiedAt: string | null;
 }
 
 /**
@@ -98,6 +102,7 @@ export async function getCertifierScores(
         transparencyPublicCharter: true,
         transparencyAuditReports: true,
         transparencyCompanyList: true,
+        lastVerifiedAt: true,
       },
     });
 
@@ -123,7 +128,7 @@ export async function getCertifierScores(
     );
 
     // 4. Compute all trust scores with live penalty
-    const scores = computeAllTrustScores({
+    const practiceInputs = {
       controllersAreEmployees: certifier.controllersAreEmployees,
       controllersPresentEachProduction: certifier.controllersPresentEachProduction,
       hasSalariedSlaughterers: certifier.hasSalariedSlaughterers,
@@ -136,7 +141,10 @@ export async function getCertifierScores(
       transparencyAuditReports: certifier.transparencyAuditReports,
       transparencyCompanyList: certifier.transparencyCompanyList,
       controversyPenalty: dynamicPenalty,
-    });
+    };
+
+    const scores = computeAllTrustScores(practiceInputs);
+    const detail = computeTrustScoreDetail(practiceInputs);
 
     return {
       id: certifier.id,
@@ -160,6 +168,8 @@ export async function getCertifierScores(
         transparencyAuditReports: certifier.transparencyAuditReports,
         transparencyCompanyList: certifier.transparencyCompanyList,
       },
+      detail,
+      lastVerifiedAt: certifier.lastVerifiedAt ?? null,
     };
   });
 }
@@ -168,7 +178,7 @@ export async function getCertifierScores(
  * Batch-compute scores for all active certifiers.
  * Used by the ranking endpoint and the materialization pipeline.
  *
- * Returns certifiers sorted by universal trustScore descending.
+ * Returns certifiers sorted by editorial trustScore descending.
  */
 export async function getAllCertifierScores(
   db: Database,
@@ -195,6 +205,7 @@ export async function getAllCertifierScores(
         transparencyPublicCharter: certifiers.transparencyPublicCharter,
         transparencyAuditReports: certifiers.transparencyAuditReports,
         transparencyCompanyList: certifiers.transparencyCompanyList,
+        lastVerifiedAt: certifiers.lastVerifiedAt,
       })
       .from(certifiers)
       .where(eq(certifiers.isActive, true));
@@ -228,7 +239,7 @@ export async function getAllCertifierScores(
         })),
       );
 
-      const scores = computeAllTrustScores({
+      const practiceInputs = {
         controllersAreEmployees: c.controllersAreEmployees,
         controllersPresentEachProduction: c.controllersPresentEachProduction,
         hasSalariedSlaughterers: c.hasSalariedSlaughterers,
@@ -241,7 +252,10 @@ export async function getAllCertifierScores(
         transparencyAuditReports: c.transparencyAuditReports,
         transparencyCompanyList: c.transparencyCompanyList,
         controversyPenalty: dynamicPenalty,
-      });
+      };
+
+      const scores = computeAllTrustScores(practiceInputs);
+      const detail = computeTrustScoreDetail(practiceInputs);
 
       return {
         id: c.id,
@@ -265,10 +279,12 @@ export async function getAllCertifierScores(
           transparencyAuditReports: c.transparencyAuditReports,
           transparencyCompanyList: c.transparencyCompanyList,
         },
+        detail,
+        lastVerifiedAt: c.lastVerifiedAt ?? null,
       };
     });
 
-    // Sort by universal trustScore descending
+    // Sort by editorial trustScore descending
     results.sort((a, b) => b.scores.trustScore - a.scores.trustScore);
 
     return results;
