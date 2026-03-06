@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { randomInt, timingSafeEqual } from "crypto";
+import { randomBytes, timingSafeEqual } from "node:crypto";
 import { eq, and, gt, sql } from "drizzle-orm";
 import { router, publicProcedure, protectedProcedure } from "../trpc.js";
 import { users, refreshTokens, safeUserColumns } from "../../db/schema/index.js";
@@ -250,7 +250,8 @@ export const authRouter = router({
       // Always return success (don't leak email existence)
       if (!user) return { success: true };
 
-      const resetCode = randomInt(100000, 1000000).toString();
+      // 3 random bytes → 6 hex chars (16.7M possibilities vs 900K with randomInt)
+      const resetCode = randomBytes(3).toString("hex");
       const emailKey = input.email.toLowerCase().trim();
       const attemptsKey = `pwd-reset-attempts:${emailKey}`;
 
@@ -283,7 +284,7 @@ export const authRouter = router({
       if (attempts === 1) {
         await ctx.redis.expire(attemptsKey, 900);
       }
-      if (attempts > 5) {
+      if (attempts > 3) {
         await ctx.redis.del(key);
         await ctx.redis.del(attemptsKey);
         throw badRequest("Trop de tentatives. Veuillez demander un nouveau code.");
@@ -292,7 +293,7 @@ export const authRouter = router({
       const storedCode = await ctx.redis.get(key);
 
       // Constant-time comparison to prevent timing attacks
-      if (!storedCode || !safeCompare(storedCode, input.code)) {
+      if (!storedCode || !safeCompare(storedCode, input.code.toLowerCase())) {
         throw badRequest("Code invalide ou expiré");
       }
 

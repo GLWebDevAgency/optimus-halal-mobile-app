@@ -46,6 +46,8 @@ pnpm-debug.log*
 *.jks
 *.mobileprovision
 *.keystore
+**/credentials.json
+*.secret
 
 # ── TypeScript ───────────────────────────────────────────────
 *.tsbuildinfo
