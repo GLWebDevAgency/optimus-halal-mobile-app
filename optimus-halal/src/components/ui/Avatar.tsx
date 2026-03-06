@@ -7,6 +7,7 @@
 import React from "react";
 import { View, ViewProps, Text } from "react-native";
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { brand } from "@/theme/colors";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -17,6 +18,8 @@ export interface AvatarProps extends ViewProps {
   borderColor?: "primary" | "gold" | "white" | "none";
   showBadge?: boolean;
   badgeColor?: string;
+  /** Renders a premium gold gradient ring around the avatar */
+  premiumRing?: boolean;
 }
 
 const sizeConfig = {
@@ -35,6 +38,8 @@ const borderColors = {
   none: "border-transparent",
 };
 
+const RING_PADDING = 3;
+
 export const Avatar: React.FC<AvatarProps> = ({
   source,
   size = "md",
@@ -42,6 +47,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   borderColor = "none",
   showBadge = false,
   badgeColor = brand.primary,
+  premiumRing = false,
   className = "",
   ...props
 }) => {
@@ -54,15 +60,11 @@ export const Avatar: React.FC<AvatarProps> = ({
     .toUpperCase()
     .slice(0, 2);
 
-  return (
-    <View
-      className={`relative ${className}`}
-      style={{
-        width: config.container,
-        height: config.container,
-      }}
-      {...props}
-    >
+  const ringWidth = Math.max(1.5, config.border);
+  const outerSize = config.container + (RING_PADDING + ringWidth) * 2;
+
+  const avatarContent = (
+    <>
       {source ? (
         <Image
           source={{ uri: source }}
@@ -70,9 +72,9 @@ export const Avatar: React.FC<AvatarProps> = ({
             width: config.container,
             height: config.container,
             borderRadius: config.container / 2,
-            borderWidth: config.border,
+            borderWidth: premiumRing ? 0 : config.border,
           }}
-          className={`${borderColors[borderColor]}`}
+          className={premiumRing ? "" : `${borderColors[borderColor]}`}
           contentFit="cover"
           transition={200}
         />
@@ -80,13 +82,13 @@ export const Avatar: React.FC<AvatarProps> = ({
         <View
           className={`
             items-center justify-center
-            ${borderColors[borderColor]}
+            ${premiumRing ? "" : borderColors[borderColor]}
           `}
           style={{
             width: config.container,
             height: config.container,
             borderRadius: config.container / 2,
-            borderWidth: config.border,
+            borderWidth: premiumRing ? 0 : config.border,
             backgroundColor: isDark ? "rgba(212, 175, 55, 0.1)" : colors.backgroundSecondary,
           }}
         >
@@ -109,6 +111,59 @@ export const Avatar: React.FC<AvatarProps> = ({
           }}
         />
       )}
+    </>
+  );
+
+  if (premiumRing) {
+    return (
+      <View
+        className={`relative ${className}`}
+        style={{ width: outerSize, height: outerSize }}
+        {...props}
+      >
+        {/* Gold gradient ring */}
+        <LinearGradient
+          colors={["#D4AF37", "#F5E6A3", "#CFA533", "#D4AF37"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            width: outerSize,
+            height: outerSize,
+            borderRadius: outerSize / 2,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {/* Inner background spacer */}
+          <View
+            style={{
+              width: outerSize - ringWidth * 2,
+              height: outerSize - ringWidth * 2,
+              borderRadius: (outerSize - ringWidth * 2) / 2,
+              backgroundColor: isDark ? "#0C0C0C" : "#f3f1ed",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <View style={{ width: config.container, height: config.container, position: "relative" }}>
+              {avatarContent}
+            </View>
+          </View>
+        </LinearGradient>
+      </View>
+    );
+  }
+
+  return (
+    <View
+      className={`relative ${className}`}
+      style={{
+        width: config.container,
+        height: config.container,
+      }}
+      {...props}
+    >
+      {avatarContent}
     </View>
   );
 };

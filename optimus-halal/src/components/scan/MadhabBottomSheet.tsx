@@ -55,7 +55,7 @@ interface MadhabBottomSheetProps {
   visible: boolean;
   madhab: string;
   madhabLabel: string;
-  status: "halal" | "doubtful" | "haram";
+  status: "halal" | "doubtful" | "haram" | "unknown";
   conflictingAdditives: ConflictingAdditive[];
   conflictingIngredients?: ConflictingIngredient[];
   certifierName: string | null;
@@ -68,6 +68,7 @@ const STATUS_COLORS = {
   halal: halalStatus.halal.base,
   doubtful: halalStatus.doubtful.base,
   haram: halalStatus.haram.base,
+  unknown: halalStatus.unknown.base,
 } as const;
 
 // STATUS_ICONS removed — replaced by MadhabScoreRing verdict icons
@@ -213,7 +214,9 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
                   ? t.scanResult.halal
                   : status === "doubtful"
                     ? t.scanResult.doubtful
-                    : t.scanResult.haram}
+                    : status === "unknown"
+                      ? t.scanResult.verdictUnknown
+                      : t.scanResult.haram}
                 {hasTrustScore && (
                   ` · ${certifierTrustScore}/100`
                 )}

@@ -46,6 +46,10 @@ export interface FeatureFlags {
   analyticsEnabled: boolean;
   // Halal alternatives (haram/doubtful scan results)
   alternativesEnabled: boolean;
+  // Alertes éthiques (veille halal)
+  alertsEnabled: boolean;
+  // Section "À la une" (articles featured sur le home)
+  featuredArticlesEnabled: boolean;
   // Premium gates
   paywallEnabled: boolean;
   favoritesLimitEnabled: boolean;
@@ -65,6 +69,8 @@ export const defaultFeatureFlags: FeatureFlags = {
   socialSharing: true,
   analyticsEnabled: true,
   alternativesEnabled: false, // Désactivé — V2, alternatives certifiées à venir
+  alertsEnabled: false, // Désactivé — feature en cours de développement
+  featuredArticlesEnabled: false, // Désactivé — section "À la une" masquée
   paywallEnabled: true,
   favoritesLimitEnabled: true,
   scanHistoryLimitEnabled: false,

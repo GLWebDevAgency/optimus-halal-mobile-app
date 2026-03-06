@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { eq, and, ilike, or, desc, sql } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
 import { router, publicProcedure, protectedProcedure } from "../trpc.js";
-import { stores, storeHours, storeSubscriptions, reviews, users, googleReviews } from "../../db/schema/index.js";
+import { stores, storeHours, storeSubscriptions, storeFavorites, reviews, users, googleReviews } from "../../db/schema/index.js";
 import { notFound, conflict } from "../../lib/errors.js";
 import { withCache } from "../../lib/cache.js";
 import ngeohash from "ngeohash";
@@ -331,4 +332,107 @@ export const storeRouter = router({
 
     return subs.map((s) => ({ ...s.store, subscribedAt: s.subscription.createdAt }));
   }),
+
+  // ── Store Favorites ─────────────────────────────────────
+
+  listFavorites: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100).default(50),
+        offset: z.number().min(0).default(0),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const items = await ctx.db
+        .select({
+          favoriteId: storeFavorites.id,
+          createdAt: storeFavorites.createdAt,
+          store: {
+            id: stores.id,
+            name: stores.name,
+            storeType: stores.storeType,
+            imageUrl: stores.imageUrl,
+            logoUrl: stores.logoUrl,
+            address: stores.address,
+            city: stores.city,
+            phone: stores.phone,
+            halalCertified: stores.halalCertified,
+            certifier: stores.certifier,
+            certifierName: stores.certifierName,
+            averageRating: stores.averageRating,
+            reviewCount: stores.reviewCount,
+            latitude: stores.latitude,
+            longitude: stores.longitude,
+          },
+        })
+        .from(storeFavorites)
+        .innerJoin(stores, eq(storeFavorites.storeId, stores.id))
+        .where(eq(storeFavorites.userId, ctx.userId))
+        .orderBy(desc(storeFavorites.createdAt))
+        .limit(input.limit)
+        .offset(input.offset);
+
+      return items;
+    }),
+
+  addFavorite: protectedProcedure
+    .input(z.object({ storeId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      // Premium gate: free users limited to 5 store favorites
+      if (ctx.subscriptionTier !== "premium") {
+        const countResult = await ctx.db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(storeFavorites)
+          .where(eq(storeFavorites.userId, ctx.userId))
+          .then((r) => r[0] ?? { count: 0 });
+        if (countResult.count >= 5) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message:
+              "Limite de 5 magasins favoris atteinte. Passez a Naqiy+ pour des favoris illimites.",
+          });
+        }
+      }
+
+      const existing = await ctx.db.query.storeFavorites.findFirst({
+        where: and(
+          eq(storeFavorites.userId, ctx.userId),
+          eq(storeFavorites.storeId, input.storeId)
+        ),
+      });
+      if (existing) throw conflict("Ce magasin est déjà dans vos favoris");
+
+      const [fav] = await ctx.db
+        .insert(storeFavorites)
+        .values({ userId: ctx.userId, storeId: input.storeId })
+        .returning();
+
+      return fav;
+    }),
+
+  removeFavorite: protectedProcedure
+    .input(z.object({ storeId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .delete(storeFavorites)
+        .where(
+          and(
+            eq(storeFavorites.userId, ctx.userId),
+            eq(storeFavorites.storeId, input.storeId)
+          )
+        );
+      return { success: true };
+    }),
+
+  isStoreFavorite: protectedProcedure
+    .input(z.object({ storeId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const existing = await ctx.db.query.storeFavorites.findFirst({
+        where: and(
+          eq(storeFavorites.userId, ctx.userId),
+          eq(storeFavorites.storeId, input.storeId)
+        ),
+      });
+      return { isFavorite: !!existing };
+    }),
 });

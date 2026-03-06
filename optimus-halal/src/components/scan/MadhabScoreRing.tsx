@@ -53,8 +53,8 @@ function getRingColor(score: number): string {
 interface MadhabScoreRingProps {
   /** School name displayed below the ring */
   label: string;
-  /** Ingredient verdict: halal / doubtful / haram */
-  verdict: "halal" | "doubtful" | "haram";
+  /** Ingredient verdict: halal / doubtful / haram / unknown */
+  verdict: "halal" | "doubtful" | "haram" | "unknown";
   /** Per-madhab trust score (0-100). Null = no certifier → ring hidden */
   trustScore: number | null;
   /** Translated verdict label: "halal" / "douteux" / "haram" */

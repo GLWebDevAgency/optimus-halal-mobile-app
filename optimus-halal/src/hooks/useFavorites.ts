@@ -28,14 +28,14 @@ export function useAddFavorite() {
   return trpc.favorites.add.useMutation({
     onMutate: async (variables) => {
       // Cancel outgoing refetches so they don't overwrite our optimistic update
-      await queryClient.cancelQueries({ queryKey: [["favorites"]] });
+      await queryClient.cancelQueries({ queryKey: [["favorites", "list"]] });
 
       // Snapshot previous value for rollback
-      const previousData = queryClient.getQueriesData({ queryKey: [["favorites"]] });
+      const previousData = queryClient.getQueriesData({ queryKey: [["favorites", "list"]] });
 
       // Optimistically add to every favorites list cache
       queryClient.setQueriesData(
-        { queryKey: [["favorites"]] },
+        { queryKey: [["favorites", "list"]] },
         (old: any) => {
           if (!Array.isArray(old)) return old;
           // Prevent duplicates
@@ -69,7 +69,7 @@ export function useAddFavorite() {
     },
     onSettled: () => {
       // Always refetch to get server truth
-      queryClient.invalidateQueries({ queryKey: [["favorites"]] });
+      queryClient.invalidateQueries({ queryKey: [["favorites", "list"]] });
     },
   });
 }
@@ -79,13 +79,13 @@ export function useRemoveFavorite() {
 
   return trpc.favorites.remove.useMutation({
     onMutate: async (variables) => {
-      await queryClient.cancelQueries({ queryKey: [["favorites"]] });
+      await queryClient.cancelQueries({ queryKey: [["favorites", "list"]] });
 
-      const previousData = queryClient.getQueriesData({ queryKey: [["favorites"]] });
+      const previousData = queryClient.getQueriesData({ queryKey: [["favorites", "list"]] });
 
       // Optimistically remove from every favorites list cache
       queryClient.setQueriesData(
-        { queryKey: [["favorites"]] },
+        { queryKey: [["favorites", "list"]] },
         (old: any) => {
           if (!Array.isArray(old)) return old;
           return old.filter((f: any) => f.productId !== variables.productId);
@@ -102,7 +102,7 @@ export function useRemoveFavorite() {
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: [["favorites"]] });
+      queryClient.invalidateQueries({ queryKey: [["favorites", "list"]] });
     },
   });
 }
@@ -121,7 +121,7 @@ export function useCreateFavoriteFolder() {
 
   return trpc.favorites.createFolder.useMutation({
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [["favorites"]] });
+      queryClient.invalidateQueries({ queryKey: [["favorites", "list"]] });
     },
   });
 }
@@ -131,7 +131,7 @@ export function useMoveFavoriteToFolder() {
 
   return trpc.favorites.moveToFolder.useMutation({
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [["favorites"]] });
+      queryClient.invalidateQueries({ queryKey: [["favorites", "list"]] });
     },
   });
 }

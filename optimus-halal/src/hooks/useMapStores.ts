@@ -28,13 +28,15 @@ interface UseMapStoresOptions {
   minRating?: number;
   query?: string;
   limit?: number;
+  /** Polling interval (ms) to keep open/closed status fresh */
+  refetchInterval?: number;
 }
 
 export function useMapStores(
   region: MapRegion | null,
   options: UseMapStoresOptions = {},
 ) {
-  const { storeType, certifiers, halalCertifiedOnly = false, openNow = false, minRating, query: searchQuery, limit = 50 } = options;
+  const { storeType, certifiers, halalCertifiedOnly = false, openNow = false, minRating, query: searchQuery, limit = 50, refetchInterval } = options;
 
   const result = trpc.store.nearby.useQuery(
     {
@@ -55,6 +57,8 @@ export function useMapStores(
       staleTime: openNow ? 15_000 : 30_000,
       placeholderData: (prev) => prev,
       refetchOnWindowFocus: false,
+      refetchInterval,
+      refetchIntervalInBackground: false,
     },
   );
 

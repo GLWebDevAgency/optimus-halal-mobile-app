@@ -9,10 +9,10 @@ export function useScanBarcode() {
   });
 }
 
-export function useScanHistory(options?: { limit?: number }) {
+export function useScanHistory(options?: { limit?: number; enabled?: boolean }) {
   return trpc.scan.getHistory.useQuery(
     { limit: options?.limit ?? 20 },
-    { staleTime: 1000 * 60 * 2 }
+    { staleTime: 1000 * 60 * 2, enabled: options?.enabled ?? true }
   );
 }
 

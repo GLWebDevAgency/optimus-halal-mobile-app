@@ -30,7 +30,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     package: "com.naqiy.app",
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
-      backgroundColor: "#0C0C0C",
+      backgroundColor: "#f3f1ed",
     },
     edgeToEdgeEnabled: true,
     permissions: [
@@ -71,6 +71,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     "@rnmapbox/maps",
+    "expo-video",
     [
       "expo-system-ui",
       {

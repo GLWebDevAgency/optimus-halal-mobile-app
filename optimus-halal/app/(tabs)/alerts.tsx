@@ -1,40 +1,49 @@
 /**
- * Ethical Alerts Feed Screen
+ * Ethical Alerts Screen — Premium World-Class Design
  *
- * Flux d'alertes temps réel depuis l'API avec:
- * - Filtres par sévérité (Tous, Critique, Avertissement, Info)
- * - Timeline avec carte d'alerte stylée par sévérité
- * - Pull-to-refresh + pagination cursor
+ * Timeline-inspired layout with glass-morphism cards, severity gradients,
+ * gold accents, staggered animations, and premium filter system.
+ *
+ * Features:
+ * - Infinite scroll with cursor-based pagination
+ * - Dual filter: category chips + severity pills
+ * - Read/unread visual state (bold + glow dot for unread)
+ * - "Mark all as read" header action
+ * - Card tap → detail screen with haptic
+ * - Pull-to-refresh
  */
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
   ScrollView,
   Pressable,
   RefreshControl,
-  Linking,
+  StyleSheet,
+  ActivityIndicator,
 } from "react-native";
 import { Image } from "expo-image";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import Animated, {
-  FadeIn,
-  FadeInLeft,
-} from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
+import { Shadow } from "react-native-shadow-2";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 
-import { Card, EmptyState, PremiumBackground } from "@/components/ui";
+import { EmptyState, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { AlertsSkeleton } from "@/components/skeletons";
 import { useTranslation, useHaptics, useTheme } from "@/hooks";
+import { useMe } from "@/hooks/useAuth";
 import type { TranslationKeys } from "@/hooks/useTranslation";
 import { trpc } from "@/lib/trpc";
-import { semantic } from "@/theme/colors";
+import { brand, glass, gold } from "@/theme/colors";
 
-// ── Severity → Visual Config ────────────────────────────────
+const STAGGER_MS = 50;
+
+// ── Severity Config ────────────────────────────────────────
 
 type Severity = "critical" | "warning" | "info";
 
@@ -43,36 +52,59 @@ const SEVERITY_CONFIG: Record<
   {
     icon: keyof typeof MaterialIcons.glyphMap;
     color: string;
-    bgColor: string;
+    bg: string;
+    gradient: [string, string];
+    glowDark: string;
+    glowLight: string;
   }
 > = {
   critical: {
     icon: "error",
-    color: semantic.danger.base,
-    bgColor: "rgba(239,68,68,0.1)",
+    color: "#ef4444",
+    bg: "rgba(239,68,68,0.10)",
+    gradient: ["rgba(239,68,68,0.15)", "rgba(239,68,68,0.03)"],
+    glowDark: "rgba(239,68,68,0.20)",
+    glowLight: "rgba(239,68,68,0.08)",
   },
   warning: {
     icon: "warning",
-    color: semantic.warning.base,
-    bgColor: "rgba(245,158,11,0.15)",
+    color: "#f59e0b",
+    bg: "rgba(245,158,11,0.10)",
+    gradient: ["rgba(245,158,11,0.12)", "rgba(245,158,11,0.02)"],
+    glowDark: "rgba(245,158,11,0.18)",
+    glowLight: "rgba(245,158,11,0.06)",
   },
   info: {
     icon: "info",
-    color: semantic.info.base,
-    bgColor: "rgba(59,130,246,0.1)",
+    color: "#3b82f6",
+    bg: "rgba(59,130,246,0.10)",
+    gradient: ["rgba(59,130,246,0.10)", "rgba(59,130,246,0.02)"],
+    glowDark: "rgba(59,130,246,0.15)",
+    glowLight: "rgba(59,130,246,0.05)",
   },
 };
 
-// ── Locale Map ──────────────────────────────────────────────
+const CATEGORY_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
+  recall: "warning",
+  fraud: "gavel",
+  boycott: "block",
+  certification: "verified",
+  community: "groups",
+};
 
 const LOCALE_MAP: Record<string, string> = { fr: "fr-FR", en: "en-US", ar: "ar-SA" };
 
-// ── Relative Time Helper ────────────────────────────────────
+const SEVERITY_FILTERS: { id: string; severity?: Severity }[] = [
+  { id: "all" },
+  { id: "critical", severity: "critical" },
+  { id: "warning", severity: "warning" },
+  { id: "info", severity: "info" },
+];
 
-function formatRelativeTime(date: string | Date, t: any, locale: string): string {
-  const now = Date.now();
-  const then = new Date(date).getTime();
-  const diffMs = now - then;
+// ── Relative Time ──────────────────────────────────────────
+
+function formatRelativeTime(date: string | Date, t: TranslationKeys, locale: string): string {
+  const diffMs = Date.now() - new Date(date).getTime();
   const diffMin = Math.floor(diffMs / 60_000);
   const diffHours = Math.floor(diffMs / 3_600_000);
   const diffDays = Math.floor(diffMs / 86_400_000);
@@ -81,13 +113,10 @@ function formatRelativeTime(date: string | Date, t: any, locale: string): string
   if (diffMin < 60) return t.alerts.timeAgoMinutes.replace("{{count}}", String(diffMin));
   if (diffHours < 24) return t.alerts.timeAgoHours.replace("{{count}}", String(diffHours));
   if (diffDays < 7) return t.alerts.timeAgoDays.replace("{{count}}", String(diffDays));
-  return new Date(date).toLocaleDateString(locale, {
-    day: "numeric",
-    month: "short",
-  });
+  return new Date(date).toLocaleDateString(locale, { day: "numeric", month: "short" });
 }
 
-// ── Alert Card ──────────────────────────────────────────────
+// ── Premium Alert Card ──────────────────────────────────────
 
 interface AlertItem {
   id: string;
@@ -100,195 +129,188 @@ interface AlertItem {
   categoryId: string | null;
 }
 
-/** Theme colors subset needed by AlertCard */
-interface ThemeColors {
-  textPrimary: string;
-  textSecondary: string;
-  textMuted: string;
-  borderLight: string;
-  buttonSecondary: string;
-}
-
 interface AlertCardProps {
   alert: AlertItem;
   index: number;
   isDark: boolean;
-  colors: ThemeColors;
+  colors: { textPrimary: string; textSecondary: string; textMuted: string; border: string };
   t: TranslationKeys;
   locale: string;
+  isRead: boolean;
+  categoryName: string;
+  onPress: (id: string) => void;
 }
 
-const AlertCard = React.memo(function AlertCard({ alert, index, isDark, colors, t, locale }: AlertCardProps) {
+const AlertCard = React.memo(function AlertCard({
+  alert,
+  index,
+  isDark,
+  colors,
+  t,
+  locale,
+  isRead,
+  categoryName,
+  onPress,
+}: AlertCardProps) {
   const severity = (alert.severity as Severity) || "info";
   const config = SEVERITY_CONFIG[severity] ?? SEVERITY_CONFIG.info;
-  const severityLabel = t.alerts.severity[severity] ?? t.alerts.severity.info;
 
   return (
     <Animated.View
-      entering={FadeInLeft.delay(100 + index * 80).duration(400)}
-      className="flex-row"
+      entering={FadeInDown.delay(80 + index * STAGGER_MS)
+        .duration(450)
+        .springify()
+        .damping(20)}
     >
-      {/* Timeline Icon */}
-      <View className="items-center w-14 pt-1">
-        <View
-          className="w-14 h-14 rounded-full items-center justify-center border-4"
-          style={{
-            backgroundColor: config.bgColor,
-            borderColor: isDark ? "#112116" : "#f6f8f6",
-          }}
+      <Shadow
+        distance={isDark ? 6 : 8}
+        startColor={isDark ? config.glowDark : "rgba(0,0,0,0.04)"}
+        offset={[0, 2]}
+        style={{ borderRadius: 20, width: "100%", marginBottom: 14 }}
+      >
+        <PressableScale
+          onPress={() => onPress(alert.id)}
+          style={[
+            styles.card,
+            {
+              backgroundColor: isDark ? glass.dark.bg : glass.light.bg,
+              borderColor: isDark ? glass.dark.border : glass.light.border,
+            },
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel={alert.title}
         >
-          <MaterialIcons name={config.icon} size={24} color={config.color} />
-        </View>
-        {/* Timeline line */}
-        <View
-          className="flex-1 w-0.5 mt-2"
-          style={{ backgroundColor: isDark ? "#334155" : "#e2e8f0" }}
-        />
-      </View>
+          {/* Severity gradient glow — top edge */}
+          <LinearGradient
+            colors={config.gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={styles.cardGlow}
+            pointerEvents="none"
+          />
 
-      {/* Card Content */}
-      <View className="flex-1 pl-3 pb-8">
-        {/* Badge & Time */}
-        <View className="flex-row items-center justify-between mb-2">
-          <View
-            className="px-2 py-0.5 rounded"
-            style={{ backgroundColor: config.bgColor }}
-          >
-            <Text
-              className="text-xs font-bold uppercase tracking-wider"
-              style={{ color: config.color }}
-            >
-              {severityLabel}
-            </Text>
-          </View>
-          <Text
-            className="text-xs font-medium"
-            style={{ color: colors.textMuted }}
-          >
-            {formatRelativeTime(alert.publishedAt, t, locale)}
-          </Text>
-        </View>
+          {/* Left severity accent bar */}
+          <View style={[styles.severityBar, { backgroundColor: config.color }]} />
 
-        {/* Card */}
-        <Card variant="outlined" className="overflow-hidden">
-          {/* Image for critical alerts */}
-          {severity === "critical" && alert.imageUrl && (
-            <View className="h-40 w-full relative overflow-hidden">
-              <Image
-                source={{ uri: alert.imageUrl }}
-                className="w-full h-full"
-                contentFit="cover"
-                transition={200}
-                accessibilityLabel={`${alert.title}`}
-              />
-              <View className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              <Text className="absolute bottom-3 left-4 text-white text-lg font-bold">
-                {alert.title}
-              </Text>
-            </View>
-          )}
-
-          <View className="p-4">
-            {/* Title (non-critical, or critical without image) */}
-            {(severity !== "critical" || !alert.imageUrl) && (
-              <View className="flex-row gap-4 mb-3">
-                <View className="flex-1">
-                  <Text
-                    className="font-bold text-lg leading-tight mb-2"
-                    style={{ color: colors.textPrimary }}
-                  >
-                    {alert.title}
-                  </Text>
-                  <Text
-                    className="text-sm leading-relaxed"
-                    style={{ color: colors.textSecondary }}
-                  >
-                    {alert.summary}
-                  </Text>
-                </View>
-                {severity !== "critical" && alert.imageUrl && (
-                  <View
-                    className="w-24 h-24 rounded-lg overflow-hidden"
-                    style={{ backgroundColor: colors.buttonSecondary }}
-                  >
-                    <Image
-                      source={{ uri: alert.imageUrl }}
-                      className="w-full h-full"
-                      contentFit="cover"
-                      transition={200}
-                      accessibilityLabel={`Image : ${alert.title}`}
-                    />
+          <View style={styles.cardInner}>
+            {/* Top row: unread glow dot + severity badge + category + time */}
+            <View style={styles.cardTopRow}>
+              <View style={styles.cardTopLeft}>
+                {!isRead && (
+                  <View style={styles.unreadDotWrap}>
+                    <View style={[styles.unreadDotGlow, { backgroundColor: config.color }]} />
+                    <View style={[styles.unreadDot, { backgroundColor: config.color }]} />
                   </View>
                 )}
-              </View>
-            )}
-
-            {/* Summary for critical with image */}
-            {severity === "critical" && alert.imageUrl && (
-              <Text
-                className="text-sm leading-relaxed mb-3"
-                style={{ color: colors.textSecondary }}
-              >
-                {alert.summary}
-              </Text>
-            )}
-
-            {/* Source link */}
-            {alert.sourceUrl && (
-              <View
-                className="pt-3 flex-row items-center justify-between"
-                style={{ borderTopWidth: 1, borderTopColor: colors.borderLight }}
-              >
-                <View className="flex-row items-center gap-2">
-                  <View
-                    className="w-5 h-5 rounded-full items-center justify-center"
-                    style={{ backgroundColor: colors.buttonSecondary }}
-                  >
-                    <MaterialIcons name="public" size={12} color="#64748b" />
-                  </View>
-                  <Text
-                    className="text-xs font-semibold"
-                    style={{ color: colors.textMuted }}
-                  >
-                    {t.alerts.source}
+                <View style={[styles.severityPill, { backgroundColor: config.bg }]}>
+                  <MaterialIcons name={config.icon} size={11} color={config.color} />
+                  <Text style={[styles.severityText, { color: config.color }]}>
+                    {t.alerts.severity[severity]}
                   </Text>
                 </View>
-                <PressableScale
-                  accessibilityRole="link"
-                  accessibilityLabel={`${t.alerts.viewSource} - ${alert.title}`}
-                  onPress={() => {
-                    if (alert.sourceUrl) Linking.openURL(alert.sourceUrl);
-                  }}
-                >
-                  <View className="flex-row items-center gap-1">
-                    <Text
-                      className="text-xs font-bold"
-                      style={{ color: config.color }}
-                    >
-                      {t.alerts.viewSource}
+                {categoryName ? (
+                  <View style={[
+                    styles.categoryPill,
+                    {
+                      backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)",
+                      borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)",
+                    },
+                  ]}>
+                    <MaterialIcons
+                      name={CATEGORY_ICONS[alert.categoryId ?? ""] ?? "info"}
+                      size={10}
+                      color={isDark ? "#d1d5db" : "#64748b"}
+                    />
+                    <Text style={[styles.categoryText, { color: isDark ? "#d1d5db" : "#64748b" }]}>
+                      {categoryName}
                     </Text>
-                    <MaterialIcons name="arrow-forward" size={14} color={config.color} />
                   </View>
-                </PressableScale>
+                ) : null}
               </View>
-            )}
+              <Text style={[styles.timeText, { color: colors.textMuted }]}>
+                {formatRelativeTime(alert.publishedAt, t, locale)}
+              </Text>
+            </View>
+
+            {/* Title + optional thumbnail */}
+            <View style={styles.titleRow}>
+              <View style={styles.titleWrap}>
+                <Text
+                  style={[
+                    styles.cardTitle,
+                    {
+                      color: colors.textPrimary,
+                      fontWeight: isRead ? "500" : "700",
+                      opacity: isRead ? 0.8 : 1,
+                    },
+                  ]}
+                  numberOfLines={2}
+                >
+                  {alert.title}
+                </Text>
+                <Text
+                  style={[styles.cardSummary, { color: colors.textSecondary }]}
+                  numberOfLines={2}
+                >
+                  {alert.summary}
+                </Text>
+              </View>
+
+              {alert.imageUrl && (
+                <View style={styles.thumbWrap}>
+                  <Image
+                    source={{ uri: alert.imageUrl }}
+                    style={styles.thumb}
+                    contentFit="cover"
+                    transition={200}
+                  />
+                  {/* Subtle gold frame on image */}
+                  <View
+                    style={[
+                      styles.thumbFrame,
+                      {
+                        borderColor: isDark
+                          ? "rgba(207,165,51,0.20)"
+                          : "rgba(0,0,0,0.08)",
+                      },
+                    ]}
+                  />
+                </View>
+              )}
+            </View>
+
+            {/* Source domain + chevron */}
+            <View style={styles.cardFooter}>
+              {alert.sourceUrl ? (
+                <View style={styles.sourceRow}>
+                  <MaterialIcons name="language" size={12} color={colors.textMuted} />
+                  <Text
+                    style={[styles.sourceText, { color: colors.textMuted }]}
+                    numberOfLines={1}
+                  >
+                    {(() => {
+                      try { return new URL(alert.sourceUrl).hostname.replace("www.", ""); }
+                      catch { return ""; }
+                    })()}
+                  </Text>
+                </View>
+              ) : (
+                <View />
+              )}
+              <MaterialIcons
+                name="arrow-forward-ios"
+                size={12}
+                color={isDark ? "rgba(207,165,51,0.40)" : "rgba(0,0,0,0.20)"}
+              />
+            </View>
           </View>
-        </Card>
-      </View>
+        </PressableScale>
+      </Shadow>
     </Animated.View>
   );
 });
 
-// ── Main Screen ─────────────────────────────────────────────
-
-const FILTERS: { id: string; severity?: "critical" | "warning" | "info" }[] = [
-  { id: "all" },
-  { id: "critical", severity: "critical" },
-  { id: "warning", severity: "warning" },
-  { id: "info", severity: "info" },
-];
-
-// Filter labels are resolved from t.alerts.severity + t.common.all inside the component
+// ── Main Screen ────────────────────────────────────────────
 
 export default function AlertsScreen() {
   const insets = useSafeAreaInsets();
@@ -296,183 +318,409 @@ export default function AlertsScreen() {
   const { impact } = useHaptics();
   const { t, language } = useTranslation();
   const locale = LOCALE_MAP[language] ?? "fr-FR";
+  const { data: me } = useMe();
+  const utils = trpc.useUtils();
 
-  const [activeFilter, setActiveFilter] = useState("all");
+  const [activeSeverity, setActiveSeverity] = useState("all");
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  const filterLabels: Record<string, string> = {
+  const selectedSeverity = SEVERITY_FILTERS.find((f) => f.id === activeSeverity)?.severity;
+
+  // ── Data ──
+  const alertsQuery = trpc.alert.list.useInfiniteQuery(
+    {
+      limit: 20,
+      ...(selectedSeverity ? { severity: selectedSeverity } : {}),
+      ...(activeCategory ? { category: activeCategory } : {}),
+    },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+      staleTime: 60_000,
+    },
+  );
+
+  const categoriesQuery = trpc.alert.getCategories.useQuery(undefined, { staleTime: 300_000 });
+  const categories = useMemo(() => categoriesQuery.data ?? [], [categoriesQuery.data]);
+
+  const readStatusQuery = trpc.alert.getReadAlertIds.useQuery(undefined, {
+    enabled: !!me,
+    staleTime: 30_000,
+  });
+  const readIds = useMemo(
+    () => new Set(readStatusQuery.data?.readIds ?? []),
+    [readStatusQuery.data?.readIds],
+  );
+  const dismissedIds = useMemo(
+    () => new Set(readStatusQuery.data?.dismissedIds ?? []),
+    [readStatusQuery.data?.dismissedIds],
+  );
+
+  const allItems = useMemo(
+    () => (alertsQuery.data?.pages.flatMap((p) => p.items) ?? []) as AlertItem[],
+    [alertsQuery.data?.pages],
+  );
+
+  const visibleItems = useMemo(
+    () => (me ? allItems.filter((a) => !dismissedIds.has(a.id)) : allItems),
+    [allItems, dismissedIds, me],
+  );
+
+  const getCategoryName = useCallback(
+    (categoryId: string | null) => {
+      if (!categoryId) return "";
+      const cat = categories.find((c) => c.id === categoryId);
+      if (!cat) return categoryId;
+      if (language === "ar") return cat.nameAr ?? cat.nameFr ?? cat.name;
+      if (language === "fr") return cat.nameFr ?? cat.name;
+      return cat.name;
+    },
+    [categories, language],
+  );
+
+  // ── Mark all as read ──
+  const markAllMutation = trpc.alert.markAllAsRead.useMutation({
+    onSuccess: () => {
+      utils.alert.getUnreadCount.invalidate();
+      utils.alert.getReadAlertIds.invalidate();
+    },
+  });
+
+  const handleMarkAllRead = useCallback(() => {
+    impact();
+    markAllMutation.mutate();
+  }, [impact, markAllMutation]);
+
+  // ── Navigation ──
+  const handleBack = useCallback(() => {
+    impact();
+    router.back();
+  }, [impact]);
+
+  const handleAlertPress = useCallback(
+    (alertId: string) => {
+      impact();
+      router.push(`/alerts/${alertId}`);
+    },
+    [impact],
+  );
+
+  const handleSeverityChange = useCallback(
+    (filterId: string) => {
+      impact();
+      setActiveSeverity(filterId);
+    },
+    [impact],
+  );
+
+  const handleCategoryChange = useCallback(
+    (catId: string | null) => {
+      impact();
+      setActiveCategory((prev) => (prev === catId ? null : catId));
+    },
+    [impact],
+  );
+
+  const handleRefresh = useCallback(() => {
+    alertsQuery.refetch();
+    readStatusQuery.refetch();
+  }, [alertsQuery, readStatusQuery]);
+
+  const handleEndReached = useCallback(() => {
+    if (alertsQuery.hasNextPage && !alertsQuery.isFetchingNextPage) {
+      alertsQuery.fetchNextPage();
+    }
+  }, [alertsQuery]);
+
+  const severityLabels: Record<string, string> = {
     all: t.common.all,
     critical: t.alerts.severity.critical,
     warning: t.alerts.severity.warning,
     info: t.alerts.severity.info,
   };
 
-  const selectedSeverity = FILTERS.find((f) => f.id === activeFilter)?.severity;
-
-  const alertsQuery = trpc.alert.list.useQuery(
-    {
-      limit: 20,
-      ...(selectedSeverity ? { severity: selectedSeverity } : {}),
-    },
-    { staleTime: 60_000 }
-  );
-
-  const alertItems = (alertsQuery.data?.items ?? []) as AlertItem[];
-
-  const handleFilterChange = useCallback(
-    (filterId: string) => {
-      impact();
-      setActiveFilter(filterId);
-    },
-    [impact]
-  );
-
-  const handleRefresh = useCallback(() => {
-    alertsQuery.refetch();
-  }, [alertsQuery]);
-
-  // Loading state
+  // ── Loading ──
   if (alertsQuery.isPending) {
     return <AlertsSkeleton />;
   }
 
   return (
-    <View className="flex-1">
+    <View style={styles.root}>
       <PremiumBackground />
 
-      {/* Header */}
+      {/* ── Premium Header ── */}
       <Animated.View
         entering={FadeIn.duration(400)}
-        style={{
-          paddingTop: insets.top,
-          backgroundColor: isDark ? "rgba(10,26,16,0.95)" : "rgba(248,250,249,0.95)",
-          borderBottomWidth: 1,
-          borderBottomColor: colors.borderLight,
-        }}
+        style={[styles.header, { paddingTop: insets.top }]}
       >
-        <View className="flex-row items-center justify-between px-4 py-3">
-          <View className="flex-row items-center gap-3">
-            <View
-              className="w-8 h-8 rounded-full items-center justify-center"
-              style={{
-                backgroundColor: colors.primary,
-                shadowColor: colors.primary,
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.3,
-                shadowRadius: 4,
-              }}
-            >
-              <MaterialIcons name="security" size={20} color="#0d1b13" />
-            </View>
-            <Text
-              accessibilityRole="header"
-              className="text-xl font-bold tracking-tight"
-              style={{ color: colors.textPrimary }}
-            >
-              {t.alerts.title}
-            </Text>
-          </View>
-          <Pressable
-            onPress={() => router.push("/settings/notifications")}
-            style={{ padding: 8 }}
-            accessibilityRole="button"
-            accessibilityLabel={t.common.settings}
-            accessibilityHint={t.common.notifications}
-          >
-            <MaterialIcons
-              name="settings"
-              size={24}
-              color={isDark ? "#d1d5db" : "#475569"}
-            />
-          </Pressable>
-        </View>
-
-        {/* Filter Chips */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 12, gap: 8 }}
+        {/* Title row with glass bg */}
+        <View
+          style={[
+            styles.headerGlass,
+            {
+              backgroundColor: isDark ? "rgba(12,12,12,0.92)" : "rgba(243,241,237,0.92)",
+              borderBottomColor: isDark ? glass.dark.border : glass.light.border,
+            },
+          ]}
         >
-          {FILTERS.map((filter) => {
-            const isActive = activeFilter === filter.id;
-            return (
-              <PressableScale
-                key={filter.id}
-                onPress={() => handleFilterChange(filter.id)}
-                style={
-                  isActive
-                    ? { height: 36, paddingHorizontal: 20, borderRadius: 9999, alignItems: "center", justifyContent: "center", backgroundColor: isDark ? "#ffffff" : "#0f172a" }
-                    : { height: 36, paddingHorizontal: 20, borderRadius: 9999, alignItems: "center", justifyContent: "center", backgroundColor: colors.card, borderWidth: 1, borderColor: colors.borderLight }
-                }
+          <View style={styles.headerRow}>
+            <View style={styles.headerLeft}>
+              <Pressable
+                onPress={handleBack}
+                style={[
+                  styles.headerIconBtn,
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(255,255,255,0.06)"
+                      : "rgba(0,0,0,0.04)",
+                  },
+                ]}
                 accessibilityRole="button"
-                accessibilityLabel={`${filterLabels[filter.id]}${
-                  isActive ? `, ${t.common.selected}` : ""
-                }`}
+                accessibilityLabel={t.common.back}
               >
+                <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
+              </Pressable>
+              <View style={styles.headerTitleWrap}>
+                <MaterialIcons
+                  name="shield"
+                  size={20}
+                  color={isDark ? gold[500] : brand.primary}
+                />
                 <Text
-                  className={`text-sm ${isActive ? "font-semibold" : "font-medium"}`}
-                  style={{
-                    color: isActive
-                      ? (isDark ? "#0f172a" : "#ffffff")
-                      : colors.textSecondary,
-                  }}
+                  accessibilityRole="header"
+                  style={[styles.headerTitle, { color: colors.textPrimary }]}
                 >
-                  {filterLabels[filter.id]}
+                  {t.alerts.title}
                 </Text>
-              </PressableScale>
-            );
-          })}
-        </ScrollView>
+              </View>
+            </View>
 
+            {me && (
+              <Pressable
+                onPress={handleMarkAllRead}
+                style={[
+                  styles.headerIconBtn,
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(255,255,255,0.06)"
+                      : "rgba(0,0,0,0.04)",
+                  },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={t.alerts.markAllRead}
+              >
+                <MaterialIcons
+                  name="done-all"
+                  size={20}
+                  color={isDark ? gold[500] : brand.primary}
+                />
+              </Pressable>
+            )}
+          </View>
+
+          {/* Category chips — scrollable row with glass pills */}
+          {categories.length > 0 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filtersRow}
+            >
+              {categories.map((cat) => {
+                const isActive = activeCategory === cat.id;
+                const catName =
+                  language === "ar"
+                    ? cat.nameAr ?? cat.nameFr ?? cat.name
+                    : language === "fr"
+                      ? cat.nameFr ?? cat.name
+                      : cat.name;
+
+                return (
+                  <PressableScale
+                    key={cat.id}
+                    onPress={() => handleCategoryChange(cat.id)}
+                    style={[
+                      styles.filterChip,
+                      isActive
+                        ? {
+                            backgroundColor: cat.color ?? brand.primary,
+                            borderWidth: 1,
+                            borderColor: "transparent",
+                          }
+                        : {
+                            backgroundColor: isDark
+                              ? "rgba(255,255,255,0.04)"
+                              : "rgba(0,0,0,0.03)",
+                            borderWidth: 1,
+                            borderColor: isDark
+                              ? "rgba(255,255,255,0.08)"
+                              : "rgba(0,0,0,0.06)",
+                          },
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${catName}${isActive ? `, ${t.common.selected}` : ""}`}
+                  >
+                    <View style={styles.filterChipInner}>
+                      <MaterialIcons
+                        name={CATEGORY_ICONS[cat.id] ?? "info"}
+                        size={13}
+                        color={isActive ? "#fff" : (isDark ? "#a0a0a0" : "#64748b")}
+                      />
+                      <Text
+                        style={[
+                          styles.filterText,
+                          {
+                            color: isActive ? "#fff" : (isDark ? "#a0a0a0" : "#64748b"),
+                            fontWeight: isActive ? "700" : "500",
+                          },
+                        ]}
+                      >
+                        {catName}
+                      </Text>
+                    </View>
+                  </PressableScale>
+                );
+              })}
+            </ScrollView>
+          )}
+
+          {/* Severity pills row */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={[styles.filtersRow, { paddingBottom: 14 }]}
+          >
+            {SEVERITY_FILTERS.map((filter) => {
+              const isActive = activeSeverity === filter.id;
+              const sevConfig = filter.severity ? SEVERITY_CONFIG[filter.severity] : null;
+
+              return (
+                <PressableScale
+                  key={filter.id}
+                  onPress={() => handleSeverityChange(filter.id)}
+                  style={[
+                    styles.filterChip,
+                    isActive
+                      ? {
+                          backgroundColor: sevConfig?.color ?? (isDark ? "#ffffff" : "#0f172a"),
+                          borderWidth: 1,
+                          borderColor: "transparent",
+                        }
+                      : {
+                          backgroundColor: isDark
+                            ? "rgba(255,255,255,0.04)"
+                            : "rgba(0,0,0,0.03)",
+                          borderWidth: 1,
+                          borderColor: isDark
+                            ? "rgba(255,255,255,0.08)"
+                            : "rgba(0,0,0,0.06)",
+                        },
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${severityLabels[filter.id]}${isActive ? `, ${t.common.selected}` : ""}`}
+                >
+                  <View style={styles.filterChipInner}>
+                    {sevConfig && (
+                      <View
+                        style={[
+                          styles.severityDotSmall,
+                          { backgroundColor: isActive ? "#fff" : sevConfig.color },
+                        ]}
+                      />
+                    )}
+                    <Text
+                      style={[
+                        styles.filterText,
+                        {
+                          color: isActive
+                            ? "#ffffff"
+                            : isDark ? "#a0a0a0" : "#64748b",
+                          fontWeight: isActive ? "700" : "500",
+                        },
+                      ]}
+                    >
+                      {severityLabels[filter.id]}
+                    </Text>
+                  </View>
+                </PressableScale>
+              );
+            })}
+          </ScrollView>
+        </View>
       </Animated.View>
 
-      {/* Error State */}
+      {/* ── Error State ── */}
       {alertsQuery.isError && (
-        <View className="flex-1 items-center justify-center p-8">
-          <MaterialIcons
-            name="cloud-off"
-            size={48}
-            color={isDark ? "#475569" : "#94a3b8"}
-          />
-          <Text
-            className="text-base font-medium mt-4 text-center"
-            style={{ color: colors.textMuted }}
+        <View style={styles.errorWrap}>
+          <View
+            style={[
+              styles.errorIconWrap,
+              {
+                backgroundColor: isDark
+                  ? "rgba(239,68,68,0.12)"
+                  : "rgba(239,68,68,0.08)",
+              },
+            ]}
           >
+            <MaterialIcons name="cloud-off" size={32} color="#ef4444" />
+          </View>
+          <Text style={[styles.errorText, { color: colors.textSecondary }]}>
             {t.alerts.loadError}
           </Text>
           <PressableScale
             onPress={() => alertsQuery.refetch()}
-            style={{ marginTop: 16, paddingHorizontal: 24, paddingVertical: 10, borderRadius: 9999, backgroundColor: colors.primary }}
+            style={[styles.retryBtn, { backgroundColor: brand.primary }]}
+            accessibilityRole="button"
+            accessibilityLabel={t.common.retry}
           >
-            <Text className="font-bold text-sm" style={{ color: "#0d1b13" }}>{t.common.retry}</Text>
+            <Text style={styles.retryText}>{t.common.retry}</Text>
           </PressableScale>
         </View>
       )}
 
-      {/* Content */}
+      {/* ── List ── */}
       {!alertsQuery.isError && (
         <FlashList
-          data={alertItems}
+          data={visibleItems}
           keyExtractor={(item) => item.id}
           renderItem={({ item, index }) => (
-            <AlertCard alert={item} index={index} isDark={isDark} colors={colors} t={t} locale={locale} />
+            <AlertCard
+              alert={item}
+              index={index}
+              isDark={isDark}
+              colors={colors}
+              t={t}
+              locale={locale}
+              isRead={readIds.has(item.id)}
+              categoryName={getCategoryName(item.categoryId)}
+              onPress={handleAlertPress}
+            />
           )}
           contentContainerStyle={{
-            padding: 16,
-            paddingBottom: 100,
+            paddingHorizontal: 16,
+            paddingTop: 16,
+            paddingBottom: insets.bottom + 100,
           }}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <EmptyState
               icon="notifications-off"
-              title={t.common.noResults}
-              message={t.common.noResults}
+              title={t.alerts.empty}
+              message={t.alerts.noAlerts}
             />
           }
+          ListFooterComponent={
+            alertsQuery.isFetchingNextPage ? (
+              <View style={styles.footerLoader}>
+                <ActivityIndicator size="small" color={isDark ? gold[500] : brand.primary} />
+              </View>
+            ) : null
+          }
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.3}
           refreshControl={
             <RefreshControl
               refreshing={alertsQuery.isFetching && !alertsQuery.isPending}
               onRefresh={handleRefresh}
-              tintColor={isDark ? colors.primary : "#059669"}
+              tintColor={isDark ? gold[500] : brand.primary}
             />
           }
         />
@@ -480,3 +728,143 @@ export default function AlertsScreen() {
     </View>
   );
 }
+
+// ── Styles ──────────────────────────────────────────────────
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+
+  // Header
+  header: { zIndex: 10 },
+  headerGlass: { borderBottomWidth: 1 },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  headerLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
+  headerIconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerTitleWrap: { flexDirection: "row", alignItems: "center", gap: 8 },
+  headerTitle: { fontSize: 22, fontWeight: "800", letterSpacing: -0.5 },
+
+  // Filters
+  filtersRow: { paddingHorizontal: 16, paddingTop: 6, gap: 8 },
+  filterChip: {
+    height: 34,
+    paddingHorizontal: 14,
+    borderRadius: 17,
+    justifyContent: "center",
+  },
+  filterChipInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  filterText: { fontSize: 13, lineHeight: 16, includeFontPadding: false },
+  severityDotSmall: { width: 6, height: 6, borderRadius: 3 },
+
+  // Card
+  card: {
+    borderRadius: 20,
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  cardGlow: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 60,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  severityBar: {
+    width: 3,
+    position: "absolute",
+    left: 0,
+    top: 8,
+    bottom: 8,
+    borderRadius: 2,
+  },
+  cardInner: { paddingVertical: 16, paddingLeft: 18, paddingRight: 16 },
+
+  // Card top
+  cardTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  cardTopLeft: { flexDirection: "row", alignItems: "center", gap: 8 },
+  unreadDotWrap: { width: 10, height: 10, alignItems: "center", justifyContent: "center" },
+  unreadDotGlow: { position: "absolute", width: 10, height: 10, borderRadius: 5, opacity: 0.4 },
+  unreadDot: { width: 6, height: 6, borderRadius: 3 },
+  severityPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  severityText: { fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
+  categoryPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  categoryText: { fontSize: 10, fontWeight: "600" },
+  timeText: { fontSize: 11, fontWeight: "500" },
+
+  // Card title
+  titleRow: { flexDirection: "row", gap: 14 },
+  titleWrap: { flex: 1, gap: 6 },
+  cardTitle: { fontSize: 15, lineHeight: 21, letterSpacing: -0.2 },
+  cardSummary: { fontSize: 13, lineHeight: 19, opacity: 0.85 },
+
+  // Thumbnail
+  thumbWrap: { position: "relative" },
+  thumb: { width: 76, height: 76, borderRadius: 14 },
+  thumbFrame: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+
+  // Card footer
+  cardFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 12,
+    paddingTop: 10,
+  },
+  sourceRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+  sourceText: { fontSize: 11, fontWeight: "500", maxWidth: 180 },
+
+  // Error
+  errorWrap: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32 },
+  errorIconWrap: { width: 72, height: 72, borderRadius: 36, alignItems: "center", justifyContent: "center" },
+  errorText: { fontSize: 15, fontWeight: "500", marginTop: 16, textAlign: "center" },
+  retryBtn: { marginTop: 16, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 20 },
+  retryText: { color: "#0d1b13", fontWeight: "700", fontSize: 14 },
+
+  // Footer
+  footerLoader: { paddingVertical: 24, alignItems: "center" },
+});

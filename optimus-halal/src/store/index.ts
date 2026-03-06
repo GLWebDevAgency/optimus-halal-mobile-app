@@ -6,7 +6,7 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { User, ScanRecord, Store, EthicalAlert } from "@/types";
+import type { User, ScanRecord, Store } from "@/types";
 import type { Language } from "@/i18n";
 import { defaultFeatureFlags, type FeatureFlags } from "@constants/config";
 import { mmkvStorage } from "@/lib/storage";
@@ -144,32 +144,6 @@ export const useScanHistoryStore = create<ScanHistoryState>()(
     }
   )
 );
-
-/**
- * Alerts State
- */
-interface AlertsState {
-  alerts: EthicalAlert[];
-  unreadCount: number;
-  setAlerts: (alerts: EthicalAlert[]) => void;
-  markAsRead: (alertId: string) => void;
-  markAllAsRead: () => void;
-}
-
-export const useLocalAlertsStore = create<AlertsState>()((set) => ({
-  alerts: [],
-  unreadCount: 0,
-  setAlerts: (alerts) =>
-    set({
-      alerts,
-      unreadCount: alerts.filter((a) => !a.expiresAt).length,
-    }),
-  markAsRead: (alertId) =>
-    set((state) => ({
-      unreadCount: Math.max(0, state.unreadCount - 1),
-    })),
-  markAllAsRead: () => set({ unreadCount: 0 }),
-}));
 
 /**
  * Location State
@@ -440,6 +414,190 @@ export const useQuotaStore = create<QuotaState>()(
     }),
     {
       name: "quota-storage",
+      storage: createJSONStorage(() => mmkvStorage),
+    }
+  )
+);
+
+/**
+ * Local Favorites Store — Guest mode (3 max, MMKV)
+ *
+ * Allows anonymous users to save up to 3 favorites locally.
+ * When they create a Naqiy+ account, these migrate to cloud.
+ */
+const LOCAL_FAVORITES_LIMIT = 3;
+
+export interface LocalFavorite {
+  productId: string;
+  name: string;
+  imageUrl: string | null;
+  halalStatus: string;
+  addedAt: string;
+}
+
+interface LocalFavoritesState {
+  favorites: LocalFavorite[];
+  addFavorite: (fav: Omit<LocalFavorite, "addedAt">) => boolean;
+  removeFavorite: (productId: string) => void;
+  isFavorite: (productId: string) => boolean;
+  isFull: () => boolean;
+  clear: () => void;
+}
+
+export const useLocalFavoritesStore = create<LocalFavoritesState>()(
+  persist(
+    (set, get) => ({
+      favorites: [],
+
+      addFavorite: (fav) => {
+        const state = get();
+        if (state.favorites.length >= LOCAL_FAVORITES_LIMIT) return false;
+        if (state.favorites.some((f) => f.productId === fav.productId)) return true;
+        set({
+          favorites: [
+            { ...fav, addedAt: new Date().toISOString() },
+            ...state.favorites,
+          ],
+        });
+        return true;
+      },
+
+      removeFavorite: (productId) => {
+        set({ favorites: get().favorites.filter((f) => f.productId !== productId) });
+      },
+
+      isFavorite: (productId) => {
+        return get().favorites.some((f) => f.productId === productId);
+      },
+
+      isFull: () => {
+        return get().favorites.length >= LOCAL_FAVORITES_LIMIT;
+      },
+
+      clear: () => set({ favorites: [] }),
+    }),
+    {
+      name: "local-favorites-storage",
+      storage: createJSONStorage(() => mmkvStorage),
+    }
+  )
+);
+
+/**
+ * Local Store Favorites Store — Guest mode (3 max, MMKV)
+ *
+ * Allows anonymous users to save up to 3 store favorites locally.
+ * When they create a Naqiy+ account, these migrate to cloud.
+ */
+const LOCAL_STORE_FAVORITES_LIMIT = 3;
+
+export interface LocalStoreFavorite {
+  storeId: string;
+  name: string;
+  storeType: string;
+  imageUrl: string | null;
+  certifier: string;
+  city: string;
+  addedAt: string;
+}
+
+interface LocalStoreFavoritesState {
+  favorites: LocalStoreFavorite[];
+  addFavorite: (fav: Omit<LocalStoreFavorite, "addedAt">) => boolean;
+  removeFavorite: (storeId: string) => void;
+  isFavorite: (storeId: string) => boolean;
+  isFull: () => boolean;
+  clear: () => void;
+}
+
+export const useLocalStoreFavoritesStore = create<LocalStoreFavoritesState>()(
+  persist(
+    (set, get) => ({
+      favorites: [],
+
+      addFavorite: (fav) => {
+        const state = get();
+        if (state.favorites.length >= LOCAL_STORE_FAVORITES_LIMIT) return false;
+        if (state.favorites.some((f) => f.storeId === fav.storeId)) return true;
+        set({
+          favorites: [
+            { ...fav, addedAt: new Date().toISOString() },
+            ...state.favorites,
+          ],
+        });
+        return true;
+      },
+
+      removeFavorite: (storeId) => {
+        set({ favorites: get().favorites.filter((f) => f.storeId !== storeId) });
+      },
+
+      isFavorite: (storeId) => {
+        return get().favorites.some((f) => f.storeId === storeId);
+      },
+
+      isFull: () => {
+        return get().favorites.length >= LOCAL_STORE_FAVORITES_LIMIT;
+      },
+
+      clear: () => set({ favorites: [] }),
+    }),
+    {
+      name: "local-store-favorites-storage",
+      storage: createJSONStorage(() => mmkvStorage),
+    }
+  )
+);
+
+/**
+ * Local Scan History Store — Guest mode (3 derniers, MMKV)
+ *
+ * Stores last 3 scan results for anonymous users.
+ * Naqiy+ users get unlimited cloud history.
+ */
+const LOCAL_HISTORY_LIMIT = 3;
+
+export interface LocalScanHistoryItem {
+  barcode: string;
+  productId: string;
+  name: string;
+  brand: string | null;
+  imageUrl: string | null;
+  halalStatus: string;
+  confidenceScore: number | null;
+  certifierId: string | null;
+  certifierName: string | null;
+  scannedAt: string;
+}
+
+interface LocalScanHistoryState {
+  scans: LocalScanHistoryItem[];
+  addScan: (scan: Omit<LocalScanHistoryItem, "scannedAt">) => void;
+  clear: () => void;
+}
+
+export const useLocalScanHistoryStore = create<LocalScanHistoryState>()(
+  persist(
+    (set, get) => ({
+      scans: [],
+
+      addScan: (scan) => {
+        const state = get();
+        // Remove duplicate if same barcode was scanned before
+        const filtered = state.scans.filter((s) => s.barcode !== scan.barcode);
+        // Prepend new scan, keep only last N
+        set({
+          scans: [
+            { ...scan, scannedAt: new Date().toISOString() },
+            ...filtered,
+          ].slice(0, LOCAL_HISTORY_LIMIT),
+        });
+      },
+
+      clear: () => set({ scans: [] }),
+    }),
+    {
+      name: "local-scan-history-storage",
       storage: createJSONStorage(() => mmkvStorage),
     }
   )

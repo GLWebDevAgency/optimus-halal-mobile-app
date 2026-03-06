@@ -20,12 +20,14 @@ import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
-import { useScanHistory } from "@/hooks";
+import { useScanHistory, useMe } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { trpc } from "@/lib/trpc";
 import { EmptyState, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
+import { useLocalScanHistoryStore } from "@/store";
+import { isAuthenticated as hasStoredTokens } from "@/services/api";
 import { MadhabScoreRing } from "@/components/scan/MadhabScoreRing";
 import { CertifierLogo } from "@/components/scan/CertifierLogo";
 import { halalStatus as halalStatusTokens, gold } from "@/theme/colors";
@@ -396,11 +398,47 @@ const scanKeyExtractor = (item: ScanItem) => item.id;
 export default function ScanHistoryScreen() {
   const { isDark, colors } = useTheme();
   const { t, language } = useTranslation();
-  const { data, isLoading, isError, refetch } = useScanHistory({ limit: 50 });
-  const { data: userProfile } = trpc.profile.getProfile.useQuery();
+
+  // ── Guest detection ──
+  const hasTokens = hasStoredTokens();
+  const meQuery = useMe({ enabled: hasTokens });
+  const me = meQuery.data;
+  const isGuest = !hasTokens && !me;
+
+  // ── Cloud history (Naqiy+ only) ──
+  const { data, isLoading, isError, refetch } = useScanHistory({ limit: 50, enabled: !!me });
+  const { data: userProfile } = trpc.profile.getProfile.useQuery(undefined, { enabled: !!me });
+
+  // ── Local history (guests) ──
+  const localScans = useLocalScanHistoryStore((s) => s.scans);
 
   const userMadhab = (userProfile?.madhab as string) ?? "general";
-  const scans = useMemo(() => (data?.items ?? []) as ScanItem[], [data]);
+
+  // Merge: guests use local, auth users use cloud
+  const scans = useMemo(() => {
+    if (isGuest) {
+      return localScans.map((s) => ({
+        id: s.barcode,
+        barcode: s.barcode,
+        halalStatus: s.halalStatus,
+        confidenceScore: s.confidenceScore,
+        scannedAt: new Date(s.scannedAt),
+        product: {
+          id: s.productId,
+          name: s.name,
+          brand: s.brand,
+          imageUrl: s.imageUrl,
+          category: null,
+          halalStatus: s.halalStatus,
+          confidenceScore: s.confidenceScore,
+          certifierId: s.certifierId,
+          certifierName: s.certifierName,
+        },
+        certifier: null,
+      })) as ScanItem[];
+    }
+    return (data?.items ?? []) as ScanItem[];
+  }, [isGuest, localScans, data]);
 
   const renderItem = useCallback(
     ({ item, index }: { item: ScanItem; index: number }) => (
@@ -417,8 +455,8 @@ export default function ScanHistoryScreen() {
     [isDark, colors, t, language, userMadhab],
   );
 
-  // Loading
-  if (isLoading) {
+  // Loading (only for authenticated users)
+  if (!isGuest && isLoading) {
     return (
       <View style={styles.screen}>
         <PremiumBackground />
@@ -433,8 +471,8 @@ export default function ScanHistoryScreen() {
     );
   }
 
-  // Error
-  if (isError) {
+  // Error (only for authenticated users)
+  if (!isGuest && isError) {
     return (
       <View style={styles.screen}>
         <PremiumBackground />
@@ -475,18 +513,27 @@ export default function ScanHistoryScreen() {
           <EmptyState
             icon="history"
             title={t.scanHistory.noScans}
-            message={t.scanHistory.noScansDesc}
+            message={isGuest ? t.scanHistory.guestDesc : t.scanHistory.noScansDesc}
             actionLabel={t.scanHistory.scanProduct}
             onAction={() => router.navigate("/(tabs)/scanner")}
           />
         ) : (
-          <FlashList
-            data={scans}
-            keyExtractor={scanKeyExtractor}
-            renderItem={renderItem}
-            contentContainerStyle={{ paddingTop: 8, paddingBottom: 100 }}
-            showsVerticalScrollIndicator={false}
-          />
+          <>
+            {isGuest && (
+              <Animated.View entering={FadeIn.duration(300)} style={styles.guestBanner}>
+                <Text style={[styles.guestBannerText, { color: colors.textSecondary }]}>
+                  {t.scanHistory.guestLimit}
+                </Text>
+              </Animated.View>
+            )}
+            <FlashList
+              data={scans}
+              keyExtractor={scanKeyExtractor}
+              renderItem={renderItem}
+              contentContainerStyle={{ paddingTop: 8, paddingBottom: 100 }}
+              showsVerticalScrollIndicator={false}
+            />
+          </>
         )}
       </SafeAreaView>
     </View>
@@ -557,6 +604,10 @@ const styles = StyleSheet.create({
   headerSubRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 3 },
   goldDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: gold[500] },
   headerCount: { fontSize: 12, fontWeight: "600" },
+
+  // Guest banner
+  guestBanner: { paddingHorizontal: 20, paddingVertical: 8 },
+  guestBannerText: { fontSize: 12, textAlign: "center", fontStyle: "italic" },
 
   // Loading / Error
   loadingText: { marginTop: 12, fontSize: 13 },

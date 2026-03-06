@@ -16,6 +16,7 @@ import {
   ActivityIndicator,
   StyleSheet,
   Clipboard,
+  Platform,
 } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
@@ -994,7 +995,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "800",
     fontFamily: "monospace",
-    letterSpacing: 2,
+    letterSpacing: Platform.OS === "android" ? 0.3 : 2,
   },
 
   // Empty state

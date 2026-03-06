@@ -9,6 +9,7 @@
  */
 
 import React, { useCallback, useMemo } from "react";
+import { defaultFeatureFlags } from "@/constants/config";
 import {
   View,
   Text,
@@ -173,20 +174,24 @@ export default function ProfileScreen() {
   const { impact } = useHaptics();
   const { t, language } = useTranslation();
 
-  const isGuest = !hasStoredTokens();
+  // Auth / Guest detection — combine token state with query data
+  // to handle async token loading race condition
+  const hasTokens = hasStoredTokens();
+  const { data: profile, isLoading: profileLoading, isError: profileError } = useMe({ enabled: hasTokens });
+  const isGuest = !hasTokens && !profile;
 
   // Premium status
   const { isPremium } = usePremium();
 
   // tRPC data — skip for anonymous users
-  const { data: profile, isLoading: profileLoading, isError: profileError } = useMe({ enabled: !isGuest });
-  const { data: favoritesData } = useFavoritesList({ limit: 1, enabled: !isGuest });
-  const { data: loyalty } = useLoyaltyBalance({ enabled: !isGuest });
+  const { data: favoritesData } = useFavoritesList({ limit: 1, enabled: !!profile });
+  const { data: loyalty } = useLoyaltyBalance({ enabled: !!profile });
   const logoutMutation = useLogout();
 
-  // Quota (anonymous)
-  const remainingScans = useQuotaStore((s) => s.getRemainingScans());
+  // Quota (anonymous) — use dailyScansUsed for display consistency with home screen
   const dailyScansUsed = useQuotaStore((s) => s.dailyScansUsed);
+  const DAILY_SCAN_LIMIT = 5;
+  const quotaExhausted = dailyScansUsed >= DAILY_SCAN_LIMIT;
 
   const { theme } = useThemeStore();
   const { certifications } = usePreferencesStore();
@@ -279,7 +284,7 @@ export default function ProfileScreen() {
                 borderColor: isDark ? "rgba(212, 175, 55, 0.2)" : "rgba(212, 175, 55, 0.15)",
               }}
             >
-              <MaterialIcons name="explore" size={40} color={colors.primary} />
+              <MaterialIcons name="travel-explore" size={40} color={colors.primary} />
             </View>
             <Text className="text-2xl font-bold mb-1" style={{ color: colors.textPrimary }}>
               {t.guest.discoveryMode}
@@ -303,16 +308,16 @@ export default function ProfileScreen() {
                 <Text className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
                   {t.guest.dailyScans}
                 </Text>
-                <Text className="text-sm font-bold" style={{ color: remainingScans > 0 ? colors.primary : "#ef4444" }}>
-                  {remainingScans}/5
+                <Text className="text-sm font-bold" style={{ color: quotaExhausted ? "#ef4444" : colors.primary }}>
+                  {dailyScansUsed}/{DAILY_SCAN_LIMIT}
                 </Text>
               </View>
               <View className="h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: colors.backgroundSecondary }}>
                 <View
                   className="h-full rounded-full"
                   style={{
-                    width: `${Math.round((dailyScansUsed / 5) * 100)}%`,
-                    backgroundColor: remainingScans > 0 ? colors.primary : "#ef4444",
+                    width: `${Math.round((dailyScansUsed / DAILY_SCAN_LIMIT) * 100)}%`,
+                    backgroundColor: quotaExhausted ? "#ef4444" : colors.primary,
                   }}
                 />
               </View>
@@ -476,19 +481,23 @@ export default function ProfileScreen() {
         style={{ paddingTop: insets.top }}
       >
         <View className="flex-row items-center justify-between p-4">
-          <Pressable
-            onPress={() => router.navigate("/(tabs)/alerts" as any)}
-            accessibilityRole="button"
-            accessibilityLabel={t.common.notifications}
-            accessibilityHint={t.common.viewAlerts}
-            className="w-10 h-10 items-center justify-center"
-          >
-            <MaterialIcons
-              name="notifications"
-              size={24}
-              color={colors.iconSecondary}
-            />
-          </Pressable>
+          {defaultFeatureFlags.alertsEnabled ? (
+            <Pressable
+              onPress={() => router.navigate("/(tabs)/alerts" as any)}
+              accessibilityRole="button"
+              accessibilityLabel={t.common.notifications}
+              accessibilityHint={t.common.viewAlerts}
+              className="w-10 h-10 items-center justify-center"
+            >
+              <MaterialIcons
+                name="notifications"
+                size={24}
+                color={colors.iconSecondary}
+              />
+            </Pressable>
+          ) : (
+            <View className="w-10 h-10" />
+          )}
           <Text accessibilityRole="header" className="text-lg font-bold tracking-tight" style={{ color: colors.textPrimary }}>
             {t.profile.title}
           </Text>
@@ -520,20 +529,18 @@ export default function ProfileScreen() {
           >
             <View className="relative mb-5">
               <View
-                className="w-28 h-28 rounded-full overflow-hidden"
                 style={{
-                  borderWidth: 4,
-                  borderColor: colors.card,
-                  shadowColor: colors.primary,
+                  shadowColor: isPremium ? "#D4AF37" : colors.primary,
                   shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: isDark ? 0.15 : 0,
-                  shadowRadius: 15,
+                  shadowOpacity: isPremium ? 0.3 : (isDark ? 0.15 : 0),
+                  shadowRadius: isPremium ? 20 : 15,
                 }}
               >
                 <Avatar
                   size="2xl"
                   source={profile?.avatarUrl ?? undefined}
                   fallback={userName}
+                  premiumRing={isPremium}
                 />
               </View>
               <View className="absolute bottom-0 right-0 rounded-full p-2" style={{ backgroundColor: colors.primary, borderWidth: 4, borderColor: colors.background }}>
@@ -684,9 +691,13 @@ export default function ProfileScreen() {
                 alignItems: "center",
                 padding: 16,
                 borderRadius: 16,
-                backgroundColor: isDark ? "rgba(212, 175, 55, 0.08)" : "rgba(212, 175, 55, 0.05)",
+                backgroundColor: isPremium
+                  ? isDark ? "rgba(212, 175, 55, 0.12)" : "rgba(212, 175, 55, 0.08)"
+                  : isDark ? "rgba(212, 175, 55, 0.08)" : "rgba(212, 175, 55, 0.05)",
                 borderWidth: 1,
-                borderColor: isDark ? "rgba(212, 175, 55, 0.18)" : "rgba(212, 175, 55, 0.12)",
+                borderColor: isPremium
+                  ? isDark ? "rgba(212, 175, 55, 0.3)" : "rgba(212, 175, 55, 0.2)"
+                  : isDark ? "rgba(212, 175, 55, 0.18)" : "rgba(212, 175, 55, 0.12)",
               }}
             >
               <View style={{
@@ -705,14 +716,32 @@ export default function ProfileScreen() {
                 />
               </View>
               <View style={{ flex: 1, marginStart: 12 }}>
-                <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: "700" }}>
-                  Naqiy+
-                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: "700" }}>
+                    Naqiy+
+                  </Text>
+                  {isPremium && (
+                    <View style={{
+                      backgroundColor: "rgba(212, 175, 55, 0.15)",
+                      paddingHorizontal: 6,
+                      paddingVertical: 2,
+                      borderRadius: 6,
+                    }}>
+                      <Text style={{ color: "#D4AF37", fontSize: 10, fontWeight: "800" }}>
+                        {t.premium.active ?? "ACTIF"}
+                      </Text>
+                    </View>
+                  )}
+                </View>
                 <Text style={{ color: colors.textSecondary, fontSize: 12 }} numberOfLines={1}>
                   {isPremium ? t.premium.enjoyFeatures : t.premium.subtitle}
                 </Text>
               </View>
-              <MaterialIcons name="chevron-right" size={20} color={colors.textSecondary} />
+              {isPremium ? (
+                <MaterialIcons name="verified" size={22} color="#D4AF37" />
+              ) : (
+                <MaterialIcons name="chevron-right" size={20} color={colors.textSecondary} />
+              )}
             </View>
           </PressableScale>
         </Animated.View>

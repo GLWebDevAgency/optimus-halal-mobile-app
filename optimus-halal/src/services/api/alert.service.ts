@@ -1,5 +1,6 @@
 /**
- * Alert Service — Mobile BFF adapter
+ * @deprecated Use tRPC React Query hooks directly (trpc.alert.*) instead.
+ * This service layer is no longer used — all alert screens call tRPC hooks directly.
  *
  * BFF routes: alert.list, alert.getById, alert.getCategories,
  *             alert.markAsRead, alert.dismiss, alert.getUnreadCount

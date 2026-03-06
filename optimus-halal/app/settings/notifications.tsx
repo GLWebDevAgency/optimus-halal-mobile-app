@@ -11,6 +11,7 @@ import {
   Switch,
   StatusBar,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -484,7 +485,7 @@ export default function NotificationsScreen() {
             style={{
               fontSize: 12,
               fontWeight: "700",
-              letterSpacing: 1,
+              letterSpacing: Platform.OS === "android" ? 0.2 : 1,
               textTransform: "uppercase",
               color: GOLD,
               marginBottom: 16,
@@ -519,7 +520,7 @@ export default function NotificationsScreen() {
             style={{
               fontSize: 12,
               fontWeight: "700",
-              letterSpacing: 1,
+              letterSpacing: Platform.OS === "android" ? 0.2 : 1,
               textTransform: "uppercase",
               color: GOLD,
               marginBottom: 16,
@@ -554,7 +555,7 @@ export default function NotificationsScreen() {
             style={{
               fontSize: 12,
               fontWeight: "700",
-              letterSpacing: 1,
+              letterSpacing: Platform.OS === "android" ? 0.2 : 1,
               textTransform: "uppercase",
               color: GOLD,
               marginBottom: 16,

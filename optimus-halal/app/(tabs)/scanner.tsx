@@ -50,6 +50,7 @@ import { PressableScale } from "@/components/ui/PressableScale";
 import { brand } from "@/theme/colors";
 import { useQuotaStore } from "@/store";
 import { isAuthenticated as hasStoredTokens } from "@/services/api";
+import { trackEvent } from "@/lib/analytics";
 
 const GOLD = "#d4af37";
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -171,6 +172,7 @@ export default function ScannerScreen() {
         const remaining = useQuotaStore.getState().getRemainingScans();
         if (remaining <= 0) {
           impact(ImpactFeedbackStyle.Medium);
+          trackEvent("guest_quota_reached", { trigger: "scan" });
           router.push("/paywall" as any);
           return;
         }
@@ -742,7 +744,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "700",
     color: "rgba(212,175,55,0.75)",
-    letterSpacing: 1,
+    letterSpacing: Platform.OS === "android" ? 0.2 : 1,
   },
   captureButtonContainer: {
     alignItems: "center",

@@ -119,32 +119,10 @@ async function main() {
   console.log("\n▶ Phase 3: Boycott Targets (BDS seed data)");
   console.log(`  Loaded ${BDS_SEED_DATA.length} targets`);
 
-  let boycottInserted = 0;
-  for (const target of BDS_SEED_DATA) {
-    await db
-      .insert(boycottTargets)
-      .values(target)
-      .onConflictDoUpdate({
-        target: boycottTargets.id,
-        set: {
-          companyName: target.companyName,
-          brands: target.brands,
-          parentCompany: target.parentCompany,
-          sector: target.sector,
-          boycottLevel: target.boycottLevel,
-          severity: target.severity,
-          reason: target.reason,
-          reasonSummary: target.reasonSummary,
-          sourceUrl: target.sourceUrl,
-          sourceName: target.sourceName,
-          verifiedBy: target.verifiedBy,
-          isActive: target.isActive,
-          updatedAt: new Date(),
-        },
-      });
-    boycottInserted++;
-  }
-  console.log(`  Upserted: ${boycottInserted} boycott targets`);
+  // Clean slate + re-insert (seed data = single source of truth)
+  await db.delete(boycottTargets);
+  await db.insert(boycottTargets).values(BDS_SEED_DATA);
+  console.log(`  Inserted: ${BDS_SEED_DATA.length} boycott targets (clean)`);
 
   // ── Summary ─────────────────────────────────────────────
   const [certCount] = await db.select({ count: sql<number>`count(*)::int` }).from(certifiers);

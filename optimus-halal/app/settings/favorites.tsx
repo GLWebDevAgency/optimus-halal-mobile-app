@@ -1,6 +1,8 @@
 /**
- * Favorites Screen - Mes Favoris
- * Wired to tRPC favorites.list backend (Sprint 9)
+ * Favorites Screen — Refonte Premium 2-onglets (Produits | Magasins)
+ *
+ * Auth users  → tRPC favorites.list + store.listFavorites
+ * Guest users → MMKV local stores (3 max each)
  */
 
 import React, { useState, useMemo, useCallback } from "react";
@@ -11,24 +13,39 @@ import {
   ScrollView,
   Dimensions,
   ActivityIndicator,
+  StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Image } from "expo-image";
 import { FlashList } from "@shopify/flash-list";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useFavoritesList, useRemoveFavorite } from "@/hooks/useFavorites";
+import {
+  useStoreFavoritesList,
+  useRemoveStoreFavorite,
+} from "@/hooks/useStoreFavorites";
+import { useMe } from "@/hooks/useAuth";
+import {
+  useLocalFavoritesStore,
+  useLocalStoreFavoritesStore,
+} from "@/store";
+import {
+  FavoritesTabBar,
+  ProductFavoriteCard,
+  CARD_WIDTH,
+  StoreFavoriteCard,
+} from "@/components/favorites";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 
 const { width } = Dimensions.get("window");
-const CARD_WIDTH = (width - 48) / 2;
 
-// Categories pour le filtre - dynamic with i18n
-function getCategories(t: ReturnType<typeof useTranslation>["t"]) {
+// ── Filter Categories ────────────────────────────────
+
+function getProductCategories(t: ReturnType<typeof useTranslation>["t"]) {
   return [
     { id: "all", label: t.favorites.categories.all },
     { id: "food", label: t.favorites.categories.food },
@@ -37,63 +54,15 @@ function getCategories(t: ReturnType<typeof useTranslation>["t"]) {
   ];
 }
 
-type StatusType = "excellent" | "bon" | "moyen" | "mauvais";
-
-interface StatusConfig {
-  label: string;
-  bgColor: string;
-  textColor: string;
-}
-
-const getStatusConfig = (status: StatusType, isDark: boolean, t: ReturnType<typeof useTranslation>["t"], themeColors: ReturnType<typeof useTheme>["colors"]): StatusConfig => {
-  switch (status) {
-    case "excellent":
-      return {
-        label: t.favorites.status.excellent,
-        bgColor: isDark ? "rgba(34,197,94,0.2)" : "rgba(34,197,94,0.15)",
-        textColor: isDark ? "#4ade80" : "#15803d",
-      };
-    case "bon":
-      return {
-        label: t.favorites.status.good,
-        bgColor: isDark ? "rgba(19,236,106,0.2)" : "rgba(19,236,106,0.15)",
-        textColor: isDark ? themeColors.primary : themeColors.primaryDark,
-      };
-    case "moyen":
-      return {
-        label: t.favorites.status.average,
-        bgColor: isDark ? "rgba(249,115,22,0.2)" : "rgba(249,115,22,0.15)",
-        textColor: isDark ? "#fb923c" : "#c2410c",
-      };
-    case "mauvais":
-      return {
-        label: t.favorites.status.bad,
-        bgColor: isDark ? "rgba(239,68,68,0.2)" : "rgba(239,68,68,0.15)",
-        textColor: isDark ? "#f87171" : "#dc2626",
-      };
-    default:
-      return {
-        label: t.favorites.status.unknown,
-        bgColor: isDark ? "rgba(156,163,175,0.2)" : "rgba(156,163,175,0.15)",
-        textColor: isDark ? "#9ca3af" : "#6b7280",
-      };
-  }
-};
-
-// ── Data Mapping ──────────────────────────────────────
-
-/** Map backend halalStatus to UI display status */
-function mapHalalToStatus(halalStatus: string | null | undefined): StatusType {
-  switch (halalStatus) {
-    case "halal":
-      return "excellent";
-    case "doubtful":
-      return "moyen";
-    case "haram":
-      return "mauvais";
-    default:
-      return "bon"; // unknown = needs analysis, neutral display
-  }
+function getStoreCategories(t: ReturnType<typeof useTranslation>["t"]) {
+  return [
+    { id: "all", label: t.favorites.storeCategories.all },
+    { id: "butcher", label: t.favorites.storeCategories.butcher },
+    { id: "restaurant", label: t.favorites.storeCategories.restaurant },
+    { id: "supermarket", label: t.favorites.storeCategories.supermarket },
+    { id: "bakery", label: t.favorites.storeCategories.bakery },
+    { id: "wholesaler", label: t.favorites.storeCategories.wholesaler },
+  ];
 }
 
 /** Map product category string to filter category */
@@ -108,251 +77,282 @@ function mapToFilterCategory(category: string | null | undefined): string {
     lower.includes("soin")
   )
     return "cosmetic";
-  if (
-    lower.includes("halal certifié") ||
-    lower.includes("halal certified")
-  )
+  if (lower.includes("halal certifié") || lower.includes("halal certified"))
     return "halal";
   return "food";
 }
 
-// ── Types ─────────────────────────────────────────────
+// ── Types ──────────────────────────────────────────────
 
-interface MappedFavorite {
+interface MappedProduct {
   id: string;
-  productId: string;
   barcode: string;
   name: string;
-  brand: string;
-  image: string;
-  status: StatusType;
-  category: string;
-  addedAt: string;
+  brand: string | null;
+  imageUrl: string | null;
+  halalStatus: string | null;
+  category: string | null;
+  filterCategory: string;
+  confidenceScore: number | null;
+  certifierName: string | null;
+  certifierLogo: string | null;
 }
 
-// ── Product Card ──────────────────────────────────────
+interface MappedStore {
+  id: string;
+  name: string;
+  storeType: string;
+  imageUrl: string | null;
+  logoUrl: string | null;
+  address: string;
+  city: string;
+  phone: string | null;
+  halalCertified: boolean;
+  certifier: string;
+  certifierName: string | null;
+  averageRating: number;
+  reviewCount: number;
+  latitude: number;
+  longitude: number;
+}
 
-interface ProductCardProps {
-  product: MappedFavorite;
-  index: number;
-  onRemove: () => void;
-  onView: () => void;
-  onScan: () => void;
+// ── Filter Chips Component ────────────────────────────
+
+interface FilterChipsProps {
+  categories: { id: string; label: string }[];
+  selected: string;
+  onSelect: (id: string) => void;
   isDark: boolean;
   colors: ReturnType<typeof useTheme>["colors"];
-  t: ReturnType<typeof useTranslation>["t"];
 }
 
-const favoriteKeyExtractor = (item: MappedFavorite) => item.id;
-
-const ProductCard = React.memo(function ProductCard({ product, index, onRemove, onView, onScan, isDark, colors, t }: ProductCardProps) {
-  const statusConfig = getStatusConfig(product.status, isDark, t, colors);
-
+const FilterChips = React.memo(function FilterChips({
+  categories,
+  selected,
+  onSelect,
+  isDark,
+  colors,
+}: FilterChipsProps) {
   return (
-    <Animated.View
-      entering={FadeInDown.delay(index * 100).duration(400)}
-      style={{
-        width: CARD_WIDTH,
-        backgroundColor: colors.card,
-        borderColor: colors.borderLight,
-        borderWidth: 1,
-        borderRadius: 16,
-        overflow: "hidden",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: isDark ? 0 : 0.05,
-        shadowRadius: 8,
-        elevation: isDark ? 0 : 2,
-      }}
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}
+      style={{ paddingBottom: 12, paddingTop: 4 }}
     >
-      {/* Favorite Button */}
-      <Pressable
-        onPress={onRemove}
-        style={{
-          position: "absolute",
-          right: 8,
-          top: 8,
-          zIndex: 10,
-          height: 44,
-          width: 44,
-          alignItems: "center",
-          justifyContent: "center",
-          borderRadius: 22,
-          backgroundColor: isDark ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.9)",
-        }}
-        accessibilityRole="button"
-        accessibilityLabel={`${t.favorites.removeConfirm} ${product.name}`}
-      >
-        <MaterialIcons name="favorite" size={18} color={colors.primary} />
-      </Pressable>
-
-      {/* Product Image */}
-      <View
-        style={{ aspectRatio: 4/3, width: "100%", backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#f3f4f6" }}
-        accessible={false}
-        accessibilityElementsHidden={true}
-      >
-        {product.image ? (
-          <Image
-            source={{ uri: product.image }}
-            style={{ width: "100%", height: "100%" }}
-            contentFit="cover"
-            transition={200}
-            accessible={false}
-          />
-        ) : (
-          <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-            <MaterialIcons name="inventory-2" size={40} color={colors.textMuted} />
-          </View>
-        )}
-      </View>
-
-      {/* Product Info */}
-      <View style={{ padding: 12 }}>
-        {/* Status Badge */}
-        <View style={{ marginBottom: 6, flexDirection: "row", alignItems: "center" }}>
-          <View style={{
-            backgroundColor: statusConfig.bgColor,
-            borderRadius: 4,
-            paddingHorizontal: 6,
-            paddingVertical: 2
-          }}>
-            <Text style={{
-              fontSize: 10,
-              fontWeight: "700",
-              textTransform: "uppercase",
-              letterSpacing: 0.5,
-              color: statusConfig.textColor
-            }}>
-              {statusConfig.label}
+      {categories.map((cat) => {
+        const isSelected = selected === cat.id;
+        return (
+          <PressableScale
+            key={cat.id}
+            onPress={() => onSelect(cat.id)}
+            style={{
+              paddingHorizontal: 14,
+              paddingVertical: 6,
+              borderRadius: 20,
+              backgroundColor: isSelected ? colors.primary : colors.card,
+              borderColor: isSelected ? colors.primary : colors.borderLight,
+              borderWidth: 1,
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={cat.label}
+          >
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: isSelected ? "700" : "500",
+                color: isSelected
+                  ? isDark
+                    ? "#102217"
+                    : "#0d1b13"
+                  : colors.textSecondary,
+              }}
+            >
+              {cat.label}
             </Text>
-          </View>
-        </View>
-
-        {/* Name & Brand */}
-        <Text
-          style={{ fontSize: 14, fontWeight: "700", color: colors.textPrimary, marginBottom: 2 }}
-          numberOfLines={1}
-        >
-          {product.name}
-        </Text>
-        <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 12 }}>
-          {product.brand}
-        </Text>
-
-        {/* Action Buttons */}
-        <View style={{ flexDirection: "row", gap: 8 }}>
-          <PressableScale
-            onPress={onView}
-            style={{
-              flex: 1,
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: 8,
-              backgroundColor: colors.buttonSecondary,
-              paddingVertical: 8
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={`Voir ${product.name}`}
-          >
-            <MaterialIcons name="visibility" size={18} color={colors.textPrimary} />
           </PressableScale>
-          <PressableScale
-            onPress={onScan}
-            style={{
-              flex: 1,
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: 8,
-              backgroundColor: colors.primaryLight,
-              paddingVertical: 8
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={`Re-scanner ${product.name}`}
-          >
-            <MaterialIcons name="qr-code-scanner" size={18} color={colors.primary} />
-          </PressableScale>
-        </View>
-      </View>
-    </Animated.View>
+        );
+      })}
+    </ScrollView>
   );
 });
 
-// ── Main Screen ───────────────────────────────────────
+// ── Main Screen ──────────────────────────────────────
 
 export default function FavoritesScreen() {
   const { isDark, colors } = useTheme();
   const { t } = useTranslation();
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const params = useLocalSearchParams<{ tab?: string }>();
 
-  // tRPC: fetch favorites from backend
-  const { data: rawFavorites, isLoading, isError, refetch } = useFavoritesList();
-  const removeMutation = useRemoveFavorite();
+  // Tab state — support ?tab=stores deep link from home
+  const [activeTab, setActiveTab] = useState(params.tab === "stores" ? 1 : 0);
+  const [productCategory, setProductCategory] = useState("all");
+  const [storeCategory, setStoreCategory] = useState("all");
 
-  // Map backend data → UI-ready shape
-  const favorites: MappedFavorite[] = useMemo(() => {
-    if (!rawFavorites) return [];
-    return rawFavorites
-      .filter((fav) => fav.product !== null)
-      .map((fav) => ({
-        id: fav.id,
-        productId: fav.productId,
-        barcode: fav.product!.barcode,
-        name: fav.product!.name,
-        brand: fav.product!.brand ?? t.favorites.unknownBrand,
-        image: fav.product!.imageUrl ?? "",
-        status: mapHalalToStatus(fav.product!.halalStatus),
-        category: mapToFilterCategory(fav.product!.category),
-        addedAt: String(fav.createdAt),
+  // Auth state
+  const { data: me } = useMe();
+  const isAuth = !!me;
+
+  // ── Product Favorites (Auth) ──
+  const {
+    data: rawProductFavorites,
+    isLoading: productsLoading,
+    isError: productsError,
+    refetch: refetchProducts,
+  } = useFavoritesList({ enabled: isAuth });
+  const removeProductMutation = useRemoveFavorite();
+
+  // ── Product Favorites (Guest) ──
+  const localProducts = useLocalFavoritesStore((s) => s.favorites);
+  const removeLocalProduct = useLocalFavoritesStore((s) => s.removeFavorite);
+
+  // ── Store Favorites (Auth) ──
+  const {
+    data: rawStoreFavorites,
+    isLoading: storesLoading,
+    isError: storesError,
+    refetch: refetchStores,
+  } = useStoreFavoritesList({ enabled: isAuth });
+  const removeStoreMutation = useRemoveStoreFavorite();
+
+  // ── Store Favorites (Guest) ──
+  const localStores = useLocalStoreFavoritesStore((s) => s.favorites);
+  const removeLocalStore = useLocalStoreFavoritesStore((s) => s.removeFavorite);
+
+  // ── Map products ──
+  const products: MappedProduct[] = useMemo(() => {
+    if (isAuth) {
+      if (!rawProductFavorites) return [];
+      return rawProductFavorites
+        .filter((fav) => fav.product !== null)
+        .map((fav) => ({
+          id: fav.productId,
+          barcode: fav.product!.barcode,
+          name: fav.product!.name,
+          brand: fav.product!.brand ?? null,
+          imageUrl: fav.product!.imageUrl ?? null,
+          halalStatus: fav.product!.halalStatus ?? null,
+          category: fav.product!.category ?? null,
+          filterCategory: mapToFilterCategory(fav.product!.category),
+          confidenceScore: fav.product!.confidenceScore ?? null,
+          certifierName: fav.product!.certifierName ?? null,
+          certifierLogo: fav.product!.certifierLogo ?? null,
+        }));
+    }
+    // Guest: map from local MMKV store
+    return localProducts.map((fav) => ({
+      id: fav.productId,
+      barcode: "", // guest can't navigate to scan-result without barcode
+      name: fav.name,
+      brand: null,
+      imageUrl: fav.imageUrl,
+      halalStatus: fav.halalStatus,
+      category: null,
+      filterCategory: "food",
+      confidenceScore: null,
+      certifierName: null,
+      certifierLogo: null,
+    }));
+  }, [isAuth, rawProductFavorites, localProducts]);
+
+  // ── Map stores ──
+  const stores: MappedStore[] = useMemo(() => {
+    if (isAuth) {
+      if (!rawStoreFavorites) return [];
+      return rawStoreFavorites.map((fav) => ({
+        id: fav.store.id,
+        name: fav.store.name,
+        storeType: fav.store.storeType,
+        imageUrl: fav.store.imageUrl,
+        logoUrl: fav.store.logoUrl,
+        address: fav.store.address,
+        city: fav.store.city,
+        phone: fav.store.phone,
+        halalCertified: fav.store.halalCertified,
+        certifier: fav.store.certifier,
+        certifierName: fav.store.certifierName,
+        averageRating: Number(fav.store.averageRating) || 0,
+        reviewCount: fav.store.reviewCount ?? 0,
+        latitude: Number(fav.store.latitude),
+        longitude: Number(fav.store.longitude),
       }));
-  }, [rawFavorites, t]);
+    }
+    // Guest: limited store data
+    return localStores.map((fav) => ({
+      id: fav.storeId,
+      name: fav.name,
+      storeType: fav.storeType,
+      imageUrl: fav.imageUrl,
+      logoUrl: null,
+      address: "",
+      city: fav.city,
+      phone: null,
+      halalCertified: !!fav.certifier,
+      certifier: fav.certifier,
+      certifierName: null,
+      averageRating: 0,
+      reviewCount: 0,
+      latitude: 0,
+      longitude: 0,
+    }));
+  }, [isAuth, rawStoreFavorites, localStores]);
 
-  const filteredFavorites = useMemo(() =>
-    selectedCategory === "all"
-      ? favorites
-      : favorites.filter((p) => p.category === selectedCategory),
-    [selectedCategory, favorites]
+  // ── Filtered data ──
+  const filteredProducts = useMemo(
+    () =>
+      productCategory === "all"
+        ? products
+        : products.filter((p) => p.filterCategory === productCategory),
+    [productCategory, products]
   );
 
-  const handleRemove = useCallback(
+  const filteredStores = useMemo(
+    () =>
+      storeCategory === "all"
+        ? stores
+        : stores.filter((s) => s.storeType === storeCategory),
+    [storeCategory, stores]
+  );
+
+  // ── Handlers ──
+  const handleRemoveProduct = useCallback(
     (productId: string) => {
-      removeMutation.mutate({ productId });
+      if (isAuth) {
+        removeProductMutation.mutate({ productId });
+      } else {
+        removeLocalProduct(productId);
+      }
     },
-    [removeMutation]
+    [isAuth, removeProductMutation, removeLocalProduct]
   );
 
-  // Loading state
+  const handleRemoveStore = useCallback(
+    (storeId: string) => {
+      if (isAuth) {
+        removeStoreMutation.mutate({ storeId });
+      } else {
+        removeLocalStore(storeId);
+      }
+    },
+    [isAuth, removeStoreMutation, removeLocalStore]
+  );
+
+  const isLoading = isAuth && (productsLoading || storesLoading);
+  const isError = isAuth && (productsError || storesError);
+
+  const productCategories = useMemo(() => getProductCategories(t), [t]);
+  const storeCategoriesList = useMemo(() => getStoreCategories(t), [t]);
+
+  // ── Loading state ──
   if (isLoading) {
     return (
-      <View style={{ flex: 1 }}>
+      <View style={styles.flex}>
         <PremiumBackground />
-        <SafeAreaView style={{ flex: 1 }}>
-          <View style={{ paddingHorizontal: 20, paddingTop: 16, flexDirection: "row", alignItems: "center" }}>
-            <PressableScale
-              onPress={() => router.back()}
-              style={{
-                marginRight: 12,
-                height: 40,
-                width: 40,
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 20,
-                backgroundColor: colors.card,
-                borderColor: colors.borderLight,
-                borderWidth: 1,
-              }}
-              accessibilityRole="button"
-              accessibilityLabel={t.common.back}
-            >
-              <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
-            </PressableScale>
-            <Text style={{ fontSize: 24, fontWeight: "700", color: colors.textPrimary }}>
-              {t.favorites.title}
-            </Text>
-          </View>
-          <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <SafeAreaView style={styles.flex}>
+          <Header colors={colors} t={t} isDark={isDark} />
+          <View style={styles.centered}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={{ color: colors.textSecondary, marginTop: 12 }}>
+            <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
               {t.favorites.loadingFavorites}
             </Text>
           </View>
@@ -361,53 +361,40 @@ export default function FavoritesScreen() {
     );
   }
 
-  // Error state
+  // ── Error state ──
   if (isError) {
     return (
-      <View style={{ flex: 1 }}>
+      <View style={styles.flex}>
         <PremiumBackground />
-        <SafeAreaView style={{ flex: 1 }}>
-          <View style={{ paddingHorizontal: 20, paddingTop: 16, flexDirection: "row", alignItems: "center" }}>
-            <PressableScale
-              onPress={() => router.back()}
-              style={{
-                marginRight: 12,
-                height: 40,
-                width: 40,
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 20,
-                backgroundColor: colors.card,
-                borderColor: colors.borderLight,
-                borderWidth: 1,
-              }}
-              accessibilityRole="button"
-              accessibilityLabel={t.common.back}
-            >
-              <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
-            </PressableScale>
-            <Text style={{ fontSize: 24, fontWeight: "700", color: colors.textPrimary }}>
-              {t.favorites.title}
-            </Text>
-          </View>
-          <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
+        <SafeAreaView style={styles.flex}>
+          <Header colors={colors} t={t} isDark={isDark} />
+          <View style={[styles.centered, { paddingHorizontal: 32 }]}>
             <MaterialIcons name="cloud-off" size={64} color={colors.textMuted} />
-            <Text style={{ color: colors.textSecondary, fontSize: 16, marginTop: 16, textAlign: "center" }}>
+            <Text
+              style={{
+                color: colors.textSecondary,
+                fontSize: 16,
+                marginTop: 16,
+                textAlign: "center",
+              }}
+            >
               {t.favorites.loadError}
             </Text>
             <PressableScale
-              onPress={() => refetch()}
-              style={{
-                marginTop: 20,
-                backgroundColor: colors.primary,
-                paddingHorizontal: 24,
-                paddingVertical: 12,
-                borderRadius: 12,
+              onPress={() => {
+                refetchProducts();
+                refetchStores();
               }}
+              style={[styles.retryBtn, { backgroundColor: colors.primary }]}
               accessibilityRole="button"
               accessibilityLabel={t.common.retry}
             >
-              <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
+              <Text
+                style={{
+                  color: isDark ? "#102217" : "#0d1b13",
+                  fontWeight: "700",
+                }}
+              >
                 {t.common.retry}
               </Text>
             </PressableScale>
@@ -417,246 +404,487 @@ export default function FavoritesScreen() {
     );
   }
 
+  // ── Subtitle ──
+  const subtitle = t.favorites.combinedCount
+    .replace("{{products}}", String(products.length))
+    .replace("{{stores}}", String(stores.length));
+
   return (
-    <View style={{ flex: 1 }}>
-    <PremiumBackground />
-    <SafeAreaView style={{ flex: 1 }}>
-      {/* Header */}
-      <Animated.View
-        entering={FadeIn.duration(400)}
-        style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16 }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <PressableScale
-              onPress={() => router.back()}
-              style={{
-                marginRight: 12,
-                height: 40,
-                width: 40,
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 20,
-                backgroundColor: colors.card,
-                borderColor: colors.borderLight,
-                borderWidth: 1,
-              }}
-              accessibilityRole="button"
-              accessibilityLabel={t.common.back}
-            >
-              <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
-            </PressableScale>
-            <View>
-              <Text
-                style={{ fontSize: 24, fontWeight: "700", letterSpacing: -0.5, color: colors.textPrimary }}
-                accessibilityRole="header"
-              >
-                {t.favorites.title}
-              </Text>
-              <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
-                {(favorites.length > 1 ? t.favorites.productCountPlural : t.favorites.productCount).replace("{{count}}", String(favorites.length))}
-              </Text>
-            </View>
-          </View>
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            <Pressable
-              style={{
-                height: 40,
-                width: 40,
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 20,
-                backgroundColor: colors.card,
-                borderColor: colors.borderLight,
-                borderWidth: 1,
-              }}
-              accessibilityRole="button"
-              accessibilityLabel={t.common.search}
-            >
-              <MaterialIcons name="search" size={22} color={colors.textPrimary} />
-            </Pressable>
-            <Pressable
-              style={{
-                height: 40,
-                width: 40,
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 20,
-                backgroundColor: colors.card,
-                borderColor: colors.borderLight,
-                borderWidth: 1,
-              }}
-              accessibilityRole="button"
-              accessibilityLabel="Filtrer"
-            >
-              <MaterialIcons name="filter-list" size={22} color={colors.textPrimary} />
-            </Pressable>
-          </View>
-        </View>
-      </Animated.View>
-
-      {/* Category Filter */}
-      <Animated.View entering={FadeIn.delay(100).duration(400)}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
-          style={{ paddingBottom: 16, paddingTop: 4 }}
+    <View style={styles.flex}>
+      <PremiumBackground />
+      <SafeAreaView style={styles.flex}>
+        {/* Header */}
+        <Animated.View
+          entering={FadeIn.duration(400)}
+          style={styles.headerContainer}
         >
-          {getCategories(t).map((cat) => {
-            const isSelected = selectedCategory === cat.id;
-            return (
+          <View style={styles.headerRow}>
+            <View style={styles.headerLeft}>
               <PressableScale
-                key={cat.id}
-                onPress={() => setSelectedCategory(cat.id)}
-                style={{
-                  paddingHorizontal: 16,
-                  paddingVertical: 6,
-                  borderRadius: 20,
-                  backgroundColor: isSelected ? colors.primary : colors.card,
-                  borderColor: isSelected ? colors.primary : colors.borderLight,
-                  borderWidth: 1,
-                  shadowColor: isSelected ? colors.primary : "transparent",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: isSelected ? 0.3 : 0,
-                  shadowRadius: 8,
-                }}
+                onPress={() => router.back()}
+                style={[
+                  styles.backBtn,
+                  {
+                    backgroundColor: colors.card,
+                    borderColor: colors.borderLight,
+                  },
+                ]}
                 accessibilityRole="button"
-                accessibilityLabel={`Filtre ${cat.label}`}
+                accessibilityLabel={t.common.back}
               >
+                <MaterialIcons
+                  name="arrow-back"
+                  size={20}
+                  color={colors.textPrimary}
+                />
+              </PressableScale>
+              <View>
                 <Text
-                  style={{
-                    fontSize: 12,
-                    fontWeight: isSelected ? "700" : "500",
-                    color: isSelected ? (isDark ? "#102217" : "#0d1b13") : colors.textSecondary,
-                  }}
+                  style={[styles.title, { color: colors.textPrimary }]}
+                  accessibilityRole="header"
                 >
-                  {cat.label}
+                  {t.favorites.title}
                 </Text>
-              </PressableScale>
-            );
-          })}
-        </ScrollView>
-      </Animated.View>
-
-      {/* Products Grid */}
-      {filteredFavorites.length === 0 ? (
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 80 }}>
-          <MaterialIcons name="favorite-border" size={64} color={colors.textMuted} />
-          <Text style={{ color: colors.textSecondary, fontSize: 18, marginTop: 16 }}>
-            {t.favorites.empty}
-          </Text>
-          <Text style={{ color: colors.textMuted, fontSize: 14, marginTop: 8, textAlign: "center", paddingHorizontal: 32 }}>
-            {t.favorites.emptyHint}
-          </Text>
-          <PressableScale
-            onPress={() => router.navigate("/(tabs)/scanner")}
-            style={{
-              marginTop: 24,
-              backgroundColor: colors.primary,
-              paddingHorizontal: 24,
-              paddingVertical: 12,
-              borderRadius: 12,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
-              shadowColor: colors.primary,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={t.favorites.scanProduct}
-          >
-            <MaterialIcons name="qr-code-scanner" size={18} color={isDark ? "#102217" : "#0d1b13"} />
-            <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
-              {t.favorites.scanProduct}
-            </Text>
-          </PressableScale>
-        </View>
-      ) : (
-        <FlashList
-          data={filteredFavorites}
-          keyExtractor={favoriteKeyExtractor}
-          numColumns={2}
-          renderItem={({ item, index }) => (
-            <View style={{ flex: 1, paddingHorizontal: 4, marginBottom: 16 }}>
-              <ProductCard
-                product={item}
-                index={index}
-                onRemove={() => handleRemove(item.productId)}
-                onView={() => router.push(`/scan-result?barcode=${item.barcode}&viewOnly=1`)}
-                onScan={() => router.navigate("/(tabs)/scanner")}
-                isDark={isDark}
-                colors={colors}
-                t={t}
-              />
-            </View>
-          )}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
-          showsVerticalScrollIndicator={false}
-          ListFooterComponent={
-            <Animated.View
-              entering={FadeInDown.delay(500).duration(400)}
-              style={{
-                marginTop: 24,
-                borderRadius: 16,
-                borderWidth: 1,
-                borderStyle: "dashed",
-                borderColor: colors.borderLight,
-                backgroundColor: colors.card,
-                padding: 24,
-                alignItems: "center",
-              }}
-            >
-              <View style={{
-                marginBottom: 12,
-                height: 48,
-                width: 48,
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 24,
-                backgroundColor: colors.buttonSecondary,
-                borderColor: colors.borderLight,
-                borderWidth: 1,
-              }}>
-                <MaterialIcons name="add-a-photo" size={24} color={colors.textSecondary} />
+                <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+                  {subtitle}
+                </Text>
               </View>
-              <Text style={{ fontSize: 14, fontWeight: "700", color: colors.textPrimary, textAlign: "center" }}>
-                {t.favorites.incompleteList}
-              </Text>
-              <Text style={{ marginTop: 4, fontSize: 12, color: colors.textSecondary, textAlign: "center" }}>
-                {t.favorites.incompleteListHint}
-              </Text>
-              <PressableScale
-                onPress={() => router.navigate("/(tabs)/scanner")}
-                style={{
-                  marginTop: 16,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 8,
-                  borderRadius: 12,
-                  backgroundColor: colors.primary,
-                  paddingHorizontal: 16,
-                  paddingVertical: 12,
-                  shadowColor: colors.primary,
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 8,
-                }}
-                accessibilityRole="button"
-                accessibilityLabel={t.favorites.scanProduct}
-              >
-                <MaterialIcons name="qr-code-scanner" size={18} color={isDark ? "#102217" : "#0d1b13"} />
-                <Text style={{ fontSize: 12, fontWeight: "700", color: isDark ? "#102217" : "#0d1b13" }}>
-                  {t.favorites.scanProduct}
-                </Text>
-              </PressableScale>
-            </Animated.View>
-          }
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* Tab Bar */}
+        <FavoritesTabBar
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          productCount={products.length}
+          storeCount={stores.length}
         />
-      )}
-    </SafeAreaView>
+
+        {/* ── Tab: Products ── */}
+        <View style={[styles.flex, { display: activeTab === 0 ? "flex" : "none" }]}>
+          <Animated.View entering={FadeIn.delay(100).duration(300)}>
+            <FilterChips
+              categories={productCategories}
+              selected={productCategory}
+              onSelect={setProductCategory}
+              isDark={isDark}
+              colors={colors}
+            />
+          </Animated.View>
+
+          {filteredProducts.length === 0 ? (
+            <EmptyProducts colors={colors} isDark={isDark} t={t} />
+          ) : (
+            <FlashList
+              data={filteredProducts}
+              keyExtractor={(item) => item.id}
+              numColumns={2}
+              renderItem={({ item, index }) => (
+                <View style={styles.gridItem}>
+                  <ProductFavoriteCard
+                    product={item}
+                    index={index}
+                    onRemove={handleRemoveProduct}
+                  />
+                </View>
+              )}
+              contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+              showsVerticalScrollIndicator={false}
+              ListFooterComponent={
+                <ProductsFooter colors={colors} isDark={isDark} t={t} />
+              }
+            />
+          )}
+        </View>
+
+        {/* ── Tab: Stores ── */}
+        <View style={[styles.flex, { display: activeTab === 1 ? "flex" : "none" }]}>
+          <Animated.View entering={FadeIn.delay(100).duration(300)}>
+            <FilterChips
+              categories={storeCategoriesList}
+              selected={storeCategory}
+              onSelect={setStoreCategory}
+              isDark={isDark}
+              colors={colors}
+            />
+          </Animated.View>
+
+          {filteredStores.length === 0 ? (
+            <EmptyStores colors={colors} isDark={isDark} t={t} />
+          ) : (
+            <FlashList
+              data={filteredStores}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item, index }) => (
+                <View style={{ marginBottom: 12 }}>
+                  <StoreFavoriteCard
+                    store={item}
+                    index={index}
+                    onRemove={handleRemoveStore}
+                  />
+                </View>
+              )}
+              contentContainerStyle={{ paddingBottom: 100 }}
+              showsVerticalScrollIndicator={false}
+              ListFooterComponent={
+                <StoresFooter colors={colors} isDark={isDark} t={t} />
+              }
+            />
+          )}
+        </View>
+      </SafeAreaView>
     </View>
   );
 }
+
+// ── Sub-Components ──────────────────────────────────
+
+function Header({
+  colors,
+  t,
+  isDark,
+}: {
+  colors: ReturnType<typeof useTheme>["colors"];
+  t: ReturnType<typeof useTranslation>["t"];
+  isDark: boolean;
+}) {
+  return (
+    <View style={styles.headerContainer}>
+      <View style={styles.headerLeft}>
+        <PressableScale
+          onPress={() => router.back()}
+          style={[
+            styles.backBtn,
+            {
+              backgroundColor: colors.card,
+              borderColor: colors.borderLight,
+            },
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel={t.common.back}
+        >
+          <MaterialIcons
+            name="arrow-back"
+            size={20}
+            color={colors.textPrimary}
+          />
+        </PressableScale>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>
+          {t.favorites.title}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+function EmptyProducts({
+  colors,
+  isDark,
+  t,
+}: {
+  colors: ReturnType<typeof useTheme>["colors"];
+  isDark: boolean;
+  t: ReturnType<typeof useTranslation>["t"];
+}) {
+  return (
+    <View style={styles.emptyContainer}>
+      <MaterialIcons name="favorite-border" size={56} color={colors.textMuted} />
+      <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
+        {t.favorites.empty}
+      </Text>
+      <Text style={[styles.emptyHint, { color: colors.textMuted }]}>
+        {t.favorites.emptyHint}
+      </Text>
+      <PressableScale
+        onPress={() => router.navigate("/(tabs)/scanner")}
+        style={[styles.emptyCta, { backgroundColor: colors.primary }]}
+        accessibilityRole="button"
+        accessibilityLabel={t.favorites.scanProduct}
+      >
+        <MaterialIcons
+          name="qr-code-scanner"
+          size={18}
+          color={isDark ? "#102217" : "#0d1b13"}
+        />
+        <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
+          {t.favorites.scanProduct}
+        </Text>
+      </PressableScale>
+    </View>
+  );
+}
+
+function EmptyStores({
+  colors,
+  isDark,
+  t,
+}: {
+  colors: ReturnType<typeof useTheme>["colors"];
+  isDark: boolean;
+  t: ReturnType<typeof useTranslation>["t"];
+}) {
+  return (
+    <View style={styles.emptyContainer}>
+      <MaterialIcons name="store" size={56} color={colors.textMuted} />
+      <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
+        {t.favorites.emptyStores}
+      </Text>
+      <Text style={[styles.emptyHint, { color: colors.textMuted }]}>
+        {t.favorites.emptyStoresHint}
+      </Text>
+      <PressableScale
+        onPress={() => router.navigate("/(tabs)/map")}
+        style={[styles.emptyCta, { backgroundColor: colors.primary }]}
+        accessibilityRole="button"
+        accessibilityLabel={t.favorites.exploreMap}
+      >
+        <MaterialIcons
+          name="map"
+          size={18}
+          color={isDark ? "#102217" : "#0d1b13"}
+        />
+        <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
+          {t.favorites.exploreMap}
+        </Text>
+      </PressableScale>
+    </View>
+  );
+}
+
+function ProductsFooter({
+  colors,
+  isDark,
+  t,
+}: {
+  colors: ReturnType<typeof useTheme>["colors"];
+  isDark: boolean;
+  t: ReturnType<typeof useTranslation>["t"];
+}) {
+  return (
+    <Animated.View
+      entering={FadeInDown.delay(400).duration(400)}
+      style={[
+        styles.footerCard,
+        {
+          borderColor: colors.borderLight,
+          backgroundColor: colors.card,
+        },
+      ]}
+    >
+      <View
+        style={[
+          styles.footerIcon,
+          {
+            backgroundColor: colors.buttonSecondary,
+            borderColor: colors.borderLight,
+          },
+        ]}
+      >
+        <MaterialIcons name="add-a-photo" size={22} color={colors.textSecondary} />
+      </View>
+      <Text style={[styles.footerTitle, { color: colors.textPrimary }]}>
+        {t.favorites.incompleteList}
+      </Text>
+      <Text style={[styles.footerHint, { color: colors.textSecondary }]}>
+        {t.favorites.incompleteListHint}
+      </Text>
+      <PressableScale
+        onPress={() => router.navigate("/(tabs)/scanner")}
+        style={[styles.footerBtn, { backgroundColor: colors.primary }]}
+        accessibilityRole="button"
+        accessibilityLabel={t.favorites.scanProduct}
+      >
+        <MaterialIcons
+          name="qr-code-scanner"
+          size={16}
+          color={isDark ? "#102217" : "#0d1b13"}
+        />
+        <Text
+          style={{
+            fontSize: 12,
+            fontWeight: "700",
+            color: isDark ? "#102217" : "#0d1b13",
+          }}
+        >
+          {t.favorites.scanProduct}
+        </Text>
+      </PressableScale>
+    </Animated.View>
+  );
+}
+
+function StoresFooter({
+  colors,
+  isDark,
+  t,
+}: {
+  colors: ReturnType<typeof useTheme>["colors"];
+  isDark: boolean;
+  t: ReturnType<typeof useTranslation>["t"];
+}) {
+  return (
+    <Animated.View
+      entering={FadeInDown.delay(400).duration(400)}
+      style={[
+        styles.footerCard,
+        {
+          borderColor: colors.borderLight,
+          backgroundColor: colors.card,
+          marginHorizontal: 16,
+        },
+      ]}
+    >
+      <View
+        style={[
+          styles.footerIcon,
+          {
+            backgroundColor: colors.buttonSecondary,
+            borderColor: colors.borderLight,
+          },
+        ]}
+      >
+        <MaterialIcons name="add-location" size={22} color={colors.textSecondary} />
+      </View>
+      <Text style={[styles.footerTitle, { color: colors.textPrimary }]}>
+        {t.favorites.storeIncompleteList}
+      </Text>
+      <Text style={[styles.footerHint, { color: colors.textSecondary }]}>
+        {t.favorites.storeIncompleteListHint}
+      </Text>
+      <PressableScale
+        onPress={() => router.navigate("/(tabs)/map")}
+        style={[styles.footerBtn, { backgroundColor: colors.primary }]}
+        accessibilityRole="button"
+        accessibilityLabel={t.favorites.exploreMap}
+      >
+        <MaterialIcons
+          name="map"
+          size={16}
+          color={isDark ? "#102217" : "#0d1b13"}
+        />
+        <Text
+          style={{
+            fontSize: 12,
+            fontWeight: "700",
+            color: isDark ? "#102217" : "#0d1b13",
+          }}
+        >
+          {t.favorites.exploreMap}
+        </Text>
+      </PressableScale>
+    </Animated.View>
+  );
+}
+
+// ── Styles ──────────────────────────────────────────
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
+  loadingText: { marginTop: 12 },
+  headerContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  backBtn: {
+    marginRight: 12,
+    height: 40,
+    width: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  retryBtn: {
+    marginTop: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  gridItem: {
+    flex: 1,
+    paddingHorizontal: 4,
+    marginBottom: 16,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 60,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    marginTop: 16,
+  },
+  emptyHint: {
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: "center",
+    paddingHorizontal: 32,
+  },
+  emptyCta: {
+    marginTop: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  footerCard: {
+    marginTop: 24,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    padding: 24,
+    alignItems: "center",
+  },
+  footerIcon: {
+    marginBottom: 12,
+    height: 44,
+    width: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 22,
+    borderWidth: 1,
+  },
+  footerTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  footerHint: {
+    marginTop: 4,
+    fontSize: 12,
+    textAlign: "center",
+  },
+  footerBtn: {
+    marginTop: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+});

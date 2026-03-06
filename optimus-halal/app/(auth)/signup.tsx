@@ -1,12 +1,12 @@
 /**
  * Sign Up Screen
- * 
+ *
  * Écran d'inscription avec:
- * - Numéro de téléphone (identifiant principal)
  * - Nom complet
- * - Email (optionnel)
+ * - Email (identifiant principal)
  * - Localisation (ville française avec géolocalisation)
  * - Mot de passe
+ * - Option "Explorer sans compte" pour le mode guest
  */
 
 import React, { useState, useCallback } from "react";
@@ -24,10 +24,12 @@ import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
 import { Image } from "expo-image";
-import { Button, Input, IconButton, PhoneInput, LocationPicker, validateFrenchPhone, PremiumBackground } from "@/components/ui";
+import { Button, Input, IconButton, LocationPicker, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { useLocalAuthStore } from "@/store";
 import { authService } from "@/services/api/auth.service";
+import { clearTokens } from "@/services/api";
+import { useQueryClient } from "@tanstack/react-query";
 import { City } from "@/constants/locations";
 import { useTranslation, useHaptics, useTheme } from "@/hooks";
 
@@ -41,8 +43,6 @@ export default function SignUpScreen() {
 
   // Form state
   const [fullName, setFullName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [fullPhoneNumber, setFullPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
@@ -50,6 +50,7 @@ export default function SignUpScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const { setUser } = useLocalAuthStore();
+  const queryClient = useQueryClient();
 
   const validateForm = useCallback(() => {
     const newErrors: Record<string, string> = {};
@@ -58,14 +59,9 @@ export default function SignUpScreen() {
       newErrors.fullName = t.auth.signup.errors.fullNameRequired;
     }
 
-    if (!phoneNumber) {
-      newErrors.phoneNumber = t.editProfile.phone;
-    } else if (!validateFrenchPhone(phoneNumber)) {
-      newErrors.phoneNumber = t.errors.validation;
-    }
-
-    // Email optionnel mais validé si renseigné
-    if (email && !/\S+@\S+\.\S+/.test(email)) {
+    if (!email.trim()) {
+      newErrors.email = t.auth.signup.errors.emailRequired;
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = t.auth.signup.errors.emailInvalid;
     }
 
@@ -77,12 +73,7 @@ export default function SignUpScreen() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [fullName, phoneNumber, email, password]);
-
-  const handlePhoneChange = useCallback((formatted: string, full: string) => {
-    setPhoneNumber(formatted);
-    setFullPhoneNumber(full);
-  }, []);
+  }, [fullName, email, password, t]);
 
   const handleCitySelect = useCallback((city: City) => {
     setSelectedCity(city);
@@ -97,10 +88,9 @@ export default function SignUpScreen() {
     try {
       // Real API call to Railway backend
       const response = await authService.register({
-        email: email || undefined,
+        email: email.trim().toLowerCase(),
         password,
         displayName: fullName,
-        phoneNumber: fullPhoneNumber,
         preferredLanguage: "fr",
       });
 
@@ -138,7 +128,7 @@ export default function SignUpScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [fullName, phoneNumber, fullPhoneNumber, email, password, selectedCity, validateForm, setUser]);
+  }, [fullName, email, password, selectedCity, validateForm, setUser, impact, notification, t]);
 
   const handleSocialAuth = useCallback(async (provider: "google" | "apple") => {
     impact();
@@ -217,16 +207,6 @@ export default function SignUpScreen() {
             entering={FadeInUp.delay(300).duration(600)}
             className="gap-5"
           >
-            {/* Phone Number - Primary Identifier */}
-            <PhoneInput
-              label={t.editProfile.phone}
-              value={phoneNumber}
-              onChangeText={handlePhoneChange}
-              error={errors.phoneNumber}
-              hint={t.editProfile.phoneHint}
-              defaultCountryCode="FR"
-            />
-
             {/* Full Name */}
             <Input
               label={t.auth.signup.fullName}
@@ -239,19 +219,19 @@ export default function SignUpScreen() {
               accessibilityHint={t.auth.signup.fullNamePlaceholder}
             />
 
-            {/* Email - Optional */}
+            {/* Email - Required */}
             <Input
               label={t.auth.signup.email}
-              placeholder={t.auth.signup.emailOptionalPlaceholder}
+              placeholder={t.auth.signup.emailPlaceholder}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
               error={errors.email}
-              hint={t.auth.signup.emailOptionalHint}
-              accessibilityLabel={t.auth.signup.emailOptionalLabel}
-              accessibilityHint={t.auth.signup.emailOptionalHint}
+              leftIcon="mail"
+              accessibilityLabel={t.auth.signup.email}
+              accessibilityHint={t.auth.signup.emailPlaceholder}
             />
 
             {/* Location - City Picker */}
@@ -358,10 +338,49 @@ export default function SignUpScreen() {
             </PressableScale>
           </Animated.View>
 
-          {/* Login Link */}
+          {/* Explore Mode */}
           <Animated.View
             entering={FadeIn.delay(600).duration(400)}
-            className="items-center mt-8"
+            className="items-center mt-6"
+          >
+            <PressableScale
+              onPress={async () => {
+                await clearTokens();
+                queryClient.clear();
+                router.replace("/(tabs)");
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={t.auth.signup.exploreMode}
+            >
+              <View style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                paddingVertical: 14,
+                paddingHorizontal: 28,
+                borderRadius: 12,
+                borderWidth: 1.5,
+                borderColor: isDark ? "rgba(148,163,184,0.25)" : "rgba(100,116,139,0.2)",
+                borderStyle: "dashed",
+                backgroundColor: isDark ? "rgba(148,163,184,0.06)" : "rgba(100,116,139,0.04)",
+              }}>
+                <MaterialIcons name="travel-explore" size={20} color={isDark ? "#94a3b8" : "#64748b"} />
+                <Text style={{ fontSize: 15, fontWeight: "600", color: isDark ? "#94a3b8" : "#64748b" }}>
+                  {t.auth.signup.exploreMode}
+                </Text>
+                <MaterialIcons name="arrow-forward" size={16} color={isDark ? "#94a3b8" : "#64748b"} />
+              </View>
+            </PressableScale>
+            <Text style={{ fontSize: 12, color: colors.textTertiary, textAlign: "center", marginTop: 8 }}>
+              {t.auth.signup.exploreModeHint}
+            </Text>
+          </Animated.View>
+
+          {/* Login Link */}
+          <Animated.View
+            entering={FadeIn.delay(700).duration(400)}
+            className="items-center mt-4"
           >
             <Text className="text-sm text-slate-500 dark:text-slate-400">
               {t.auth.signup.hasAccount}{" "}

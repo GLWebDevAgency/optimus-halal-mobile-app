@@ -90,6 +90,9 @@ export const fr = {
     alertsSection: "Alertes & Vigilance",
     alertsSeeAll: "Toutes les alertes",
     noAlerts: "Aucune alerte en cours",
+    ethicalWatch: "Veille éthique",
+    criticalAlerts: "{{count}} alerte(s) critique(s)",
+    criticalAlertsBanner: "Voir les alertes",
     communityNews: "Actu de la Communauté",
     readArticle: "Lire",
     readOnSource: "Lire sur la source",
@@ -262,6 +265,36 @@ export const fr = {
     premiumLimitTitle: "Limite atteinte",
     premiumLimitMessage: "Vous avez atteint la limite de 5 favoris. Passez à Naqiy+ pour des favoris illimités.",
     alreadyFavorite: "Ce produit est déjà dans vos favoris",
+    // Tabs
+    productsTab: "Produits",
+    storesTab: "Magasins",
+    // Store counts
+    storeCount: "{{count}} magasin enregistré",
+    storeCountPlural: "{{count}} magasins enregistrés",
+    combinedCount: "{{products}} produits · {{stores}} magasins",
+    // Store favorites
+    emptyStores: "Aucun magasin favori",
+    emptyStoresHint: "Explorez la carte et ajoutez vos magasins halal préférés.",
+    exploreMap: "Explorer la carte",
+    addStoreError: "Impossible d'ajouter ce magasin aux favoris",
+    removeStoreError: "Impossible de retirer ce magasin des favoris",
+    alreadyStoreFavorite: "Ce magasin est déjà dans vos favoris",
+    storeCategories: {
+      all: "Tout",
+      butcher: "Boucheries",
+      restaurant: "Restaurants",
+      supermarket: "Supermarchés",
+      bakery: "Boulangeries",
+      wholesaler: "Grossistes",
+    },
+    premiumStoreLimitTitle: "Limite atteinte",
+    premiumStoreLimitMessage: "Vous avez atteint la limite de 5 magasins favoris. Passez à Naqiy+ pour des favoris illimités.",
+    // Home quick favorites toggle
+    quickFavProducts: "Produits",
+    quickFavStores: "Magasins",
+    viewAll: "Voir tout",
+    storeIncompleteList: "Vous connaissez un bon plan ?",
+    storeIncompleteListHint: "Explorez la carte pour ajouter vos magasins préférés.",
   },
 
   // Certifications
@@ -594,6 +627,7 @@ export const fr = {
     verdictHalal: "halal",
     verdictDoubtful: "douteux",
     verdictHaram: "haram",
+    verdictUnknown: "inconnu",
     madhabUnanimousHaram: "Unanimement considéré non-conforme par les 4 écoles juridiques (حرام إجماعاً)",
     madhabUnanimousHalal: "Unanimement considéré conforme par les 4 écoles juridiques (حلال إجماعاً)",
     madhabUnanimousDoubtful: "Considéré douteux par les 4 écoles juridiques (مشتبه)",
@@ -771,12 +805,20 @@ export const fr = {
   // Alerts
   alerts: {
     title: "Alertes éthiques",
+    detailTitle: "Détail de l'alerte",
     filters: {
       all: "Tous",
       boycotts: "Boycotts",
       certifications: "Certifications",
       health: "Santé",
       policy: "Politique",
+    },
+    categories: {
+      recall: "Rappel Produit",
+      fraud: "Fraude Halal",
+      boycott: "Boycott",
+      certification: "Certification",
+      community: "Communauté",
     },
     severity: {
       critical: "Critique",
@@ -796,6 +838,15 @@ export const fr = {
     viewSource: "Voir la source",
     timeAgo: "Il y a {{time}}",
     loadError: "Impossible de charger les alertes",
+    markAllRead: "Tout marquer comme lu",
+    share: "Partager",
+    relatedAlerts: "Alertes similaires",
+    publishedOn: "Publié le {{date}}",
+    notFound: "Alerte introuvable",
+    unreadCount: "{{count}} non lue(s)",
+    swipeToDismiss: "Glisser pour masquer",
+    noAlerts: "Aucune alerte pour le moment",
+    empty: "Vous êtes à jour !",
   },
 
   // Report
@@ -881,6 +932,8 @@ export const fr = {
       biometric: "Connexion avec Face ID",
       noAccount: "Pas encore de compte ?",
       createAccount: "Créer un compte",
+      exploreMode: "Explorer l'application",
+      exploreModeHint: "5 scans gratuits par jour, sans compte",
       errors: {
         emailRequired: "L'email est requis",
         emailInvalid: "Email invalide",
@@ -914,6 +967,8 @@ export const fr = {
       and: "et la",
       privacyLink: "politique de confidentialité",
       submit: "S'inscrire",
+      exploreMode: "Explorer sans compte",
+      exploreModeHint: "5 scans gratuits par jour",
       hasAccount: "Déjà un compte ?",
       loginLink: "Se connecter",
       errors: {
@@ -1174,6 +1229,8 @@ export const fr = {
     analysisHaram: "élément interdit détecté",
     analysisDoubtful: "élément à vérifier",
     analysisUnknown: "données insuffisantes",
+    guestDesc: "Scannez un produit pour le retrouver ici. Vos 3 derniers scans sont conservés.",
+    guestLimit: "3 derniers scans conservés — Naqiy+ pour un historique illimité",
   },
 
   // Boycott
@@ -1245,6 +1302,7 @@ export const fr = {
     prioritySupport: "Support prioritaire",
     subscribe: "S'abonner a Naqiy+",
     restorePurchases: "Restaurer mes achats",
+    active: "ACTIF",
     alreadyPremium: "Vous etes Naqiy+",
     enjoyFeatures: "Profitez de toutes les fonctionnalites premium",
     purchaseComingSoon: "L'achat in-app sera bientot disponible",
@@ -1273,12 +1331,16 @@ export const fr = {
     upgradeDescription: "Scans illimités, favoris cloud, historique complet et mode hors ligne.",
     subscribeNaqiyPlus: "S'abonner à Naqiy+",
     loginExistingAccount: "J'ai déjà un compte",
+    favoritesLocked: "3 favoris max — Naqiy+ pour l'illimité",
+    favoritesHint: "Passez à Naqiy+ pour sauvegarder plus de favoris",
   },
 
   // Paywall (Quota exceeded)
   paywall: {
     title: "Vous avez utilisé vos 5 scans du jour",
+    titleRemaining: "Il vous reste {n} scans gratuits",
     subtitle: "Passez à Naqiy+ pour scanner sans limite et profiter de toutes les fonctionnalités premium.",
+    subtitleRemaining: "Passez à Naqiy+ pour scanner sans limite, synchroniser vos favoris et bien plus.",
     featureUnlimitedScans: "Scans illimités, chaque jour",
     featureFavorites: "Favoris et listes synchronisées",
     featureHistory: "Historique complet de vos scans",

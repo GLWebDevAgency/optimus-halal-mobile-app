@@ -65,7 +65,7 @@ import { ScoreDetailBottomSheet } from "@/components/scan/ScoreDetailBottomSheet
 import { ShareCardView, captureAndShareCard } from "@/components/scan/ShareCard";
 import { trpc } from "@/lib/trpc";
 import { useScanBarcode } from "@/hooks/useScan";
-import { useTranslation, useHaptics, useAddFavorite, useRemoveFavorite, useCreateReview, useFavoritesList } from "@/hooks";
+import { useTranslation, useHaptics, useAddFavorite, useRemoveFavorite, useCreateReview, useFavoritesList, useMe } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
 import { halalStatus as halalStatusTokens, brand as brandTokens, glass, lightTheme, semantic, gold } from "@/theme/colors";
 import { textStyles, fontSize as fontSizeTokens, fontWeight as fontWeightTokens } from "@/theme/typography";
@@ -77,8 +77,9 @@ import { CertifierLogo } from "@/components/scan/CertifierLogo";
 import { ScanResultTabBar } from "@/components/scan/ScanResultTabBar";
 
 
-import { useFeatureFlagsStore, useQuotaStore } from "@/store";
+import { useFeatureFlagsStore, useQuotaStore, useLocalFavoritesStore, useLocalScanHistoryStore } from "@/store";
 import { isAuthenticated as hasStoredTokens } from "@/services/api";
+import { trackEvent } from "@/lib/analytics";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const HERO_HEIGHT = SCREEN_HEIGHT * 0.5;
@@ -1057,7 +1058,7 @@ export default function ScanResultScreen() {
 
   // ── tRPC Mutation ──────────────────────────────
   const scanMutation = useScanBarcode();
-  const { data: userProfile } = trpc.profile.getProfile.useQuery();
+  const { data: userProfile } = trpc.profile.getProfile.useQuery(undefined, { enabled: hasStoredTokens() });
   const hasFired = useRef(false);
   const shareCardRef = useRef<View>(null);
   // Minimum dignity: stepper must finish all 4 steps before showing result
@@ -1083,17 +1084,51 @@ export default function ScanResultScreen() {
     [scanMutation.data?.ingredientRulings]
   );
   const levelUp = scanMutation.data?.levelUp ?? null;
-  const remainingScans = scanMutation.data?.remainingScans ?? null;
-  const isGuest = !hasStoredTokens();
+  const meQuery = useMe({ enabled: hasStoredTokens() });
+  const isGuest = !hasStoredTokens() && !meQuery.data;
+  // Fallback to local quota store when backend doesn't return remainingScans
+  const localRemaining = useQuotaStore((s) => {
+    if (s.lastScanDate !== new Date().toISOString().slice(0, 10)) return 5;
+    return Math.max(0, 5 - s.dailyScansUsed);
+  });
+  const remainingScans = scanMutation.data?.remainingScans ?? (isGuest ? localRemaining : null);
 
-  // Increment local quota counter after a successful anonymous scan
+  // Increment local quota counter + save to local history after a successful anonymous scan
   const quotaIncremented = useRef(false);
   useEffect(() => {
-    if (scanMutation.isSuccess && isGuest && !quotaIncremented.current && !isViewOnly) {
+    if (!scanMutation.isSuccess || isViewOnly) return;
+
+    const p = scanMutation.data?.product;
+
+    // Track scan result view for all users (guest + premium)
+    if (!quotaIncremented.current) {
+      trackEvent("scan_result_viewed", {
+        barcode,
+        halal_status: p?.halalStatus ?? "unknown",
+        is_guest: isGuest,
+        is_new_product: scanMutation.data?.isNewProduct ?? false,
+      });
+    }
+
+    if (isGuest && !quotaIncremented.current) {
       quotaIncremented.current = true;
       useQuotaStore.getState().incrementScan();
+      // Save to local scan history (3 derniers)
+      if (p) {
+        useLocalScanHistoryStore.getState().addScan({
+          barcode: p.barcode ?? barcode,
+          productId: p.id,
+          name: p.name,
+          brand: p.brand ?? null,
+          imageUrl: p.imageUrl ?? null,
+          halalStatus: p.halalStatus ?? "unknown",
+          confidenceScore: p.confidenceScore ?? null,
+          certifierId: p.certifierId ?? null,
+          certifierName: p.certifierName ?? null,
+        });
+      }
     }
-  }, [scanMutation.isSuccess, isGuest, isViewOnly]);
+  }, [scanMutation.isSuccess, isGuest, isViewOnly, scanMutation.data, barcode]);
 
   const halalStatus: HalalStatusKey =
     (product?.halalStatus as HalalStatusKey) ?? "unknown";
@@ -1172,7 +1207,7 @@ export default function ScanResultScreen() {
   // ── Madhab Bottom Sheet ─────────────────────
   const [selectedMadhab, setSelectedMadhab] = useState<{
     madhab: string;
-    status: "halal" | "doubtful" | "haram";
+    status: "halal" | "doubtful" | "haram" | "unknown";
     conflictingAdditives: Array<{
       code: string;
       name: string;
@@ -1258,14 +1293,26 @@ export default function ScanResultScreen() {
     return names;
   }, [haramReasons, doubtfulReasons, ingredientRulings]);
 
-  // ── Favorites (backend-synced) ─────────────────
+  // ── Favorites (backend-synced OR local for guests) ─────────────────
   const favoritesQuery = useFavoritesList({ limit: 200 });
   const addFavoriteMutation = useAddFavorite();
   const removeFavoriteMutation = useRemoveFavorite();
-  const productIsFavorite = useMemo(
-    () => favoritesQuery.data?.some((f: any) => f.productId === product?.id) ?? false,
-    [favoritesQuery.data, product?.id]
+  const localFavIsFavorite = useLocalFavoritesStore((s) =>
+    product?.id ? s.isFavorite(product.id) : false
   );
+  // Local optimistic override — instant visual feedback when toggling
+  const [favOverride, setFavOverride] = useState<boolean | null>(null);
+  // Reset override when server data arrives (query refetched after mutation settles)
+  const prevFavData = useRef(favoritesQuery.data);
+  if (favoritesQuery.data !== prevFavData.current) {
+    prevFavData.current = favoritesQuery.data;
+    if (favOverride !== null) setFavOverride(null);
+  }
+  const productIsFavorite = useMemo(() => {
+    if (favOverride !== null) return favOverride;
+    if (isGuest) return localFavIsFavorite;
+    return favoritesQuery.data?.some((f: any) => f.productId === product?.id) ?? false;
+  }, [favOverride, isGuest, localFavIsFavorite, favoritesQuery.data, product?.id]);
 
   // ── Haptic orchestration on verdict ────────────
   // Context-aware two-phase haptic: each verdict gets a distinct tactile signature.
@@ -1338,13 +1385,34 @@ export default function ScanResultScreen() {
   const isFavMutating = addFavoriteMutation.isPending || removeFavoriteMutation.isPending;
 
   const handleToggleFavorite = useCallback(() => {
-    if (isFavMutating || !product?.id) return;
+    if (!product?.id) return;
     impact(ImpactFeedbackStyle.Medium);
+    if (isGuest) {
+      const store = useLocalFavoritesStore.getState();
+      if (store.isFavorite(product.id)) {
+        store.removeFavorite(product.id);
+      } else {
+        const added = store.addFavorite({
+          productId: product.id,
+          name: product.name,
+          imageUrl: product.imageUrl ?? null,
+          halalStatus: product.halalStatus ?? "unknown",
+        });
+        if (!added) {
+          router.push("/paywall" as any);
+        }
+      }
+      return;
+    }
+    if (isFavMutating) return;
+    // Instant visual feedback via local override
+    setFavOverride(!productIsFavorite);
     if (productIsFavorite) {
       removeFavoriteMutation.mutate(
         { productId: product.id },
         {
           onError: () => {
+            setFavOverride(null); // revert on error
             Alert.alert(t.favorites.removeError);
           },
         }
@@ -1354,6 +1422,7 @@ export default function ScanResultScreen() {
         { productId: product.id },
         {
           onError: (err) => {
+            setFavOverride(null); // revert on error
             if (err.data?.code === "FORBIDDEN") {
               Alert.alert(
                 t.favorites.premiumLimitTitle,
@@ -1369,7 +1438,7 @@ export default function ScanResultScreen() {
         }
       );
     }
-  }, [isFavMutating, product, productIsFavorite, addFavoriteMutation, removeFavoriteMutation, impact, t]);
+  }, [isFavMutating, product, productIsFavorite, addFavoriteMutation, removeFavoriteMutation, impact, t, isGuest]);
 
   const handleFindStores = useCallback(() => {
     impact();
@@ -1757,13 +1826,22 @@ export default function ScanResultScreen() {
               }]}
             />
           ) : (
-            <View style={[StyleSheet.absoluteFill, {
-              backgroundColor: isDark ? "rgba(12,12,12,0.92)" : "rgba(243,241,237,0.92)",
-            }]} />
+            /* Android: simulated frosted glass.
+               iOS BlurView at intensity 60 washes out gradient colors to a warm cream;
+               we replicate that with a neutral warm gradient, letting L2 (accent wash)
+               and L4 (orb) provide status-specific tinting on top. */
+            <LinearGradient
+              colors={isDark
+                ? [statusConfig.gradientDark[0], statusConfig.gradientDark[1], statusConfig.gradientDark[2]]
+                : ["#fdfaf4", "#f9f4ea", "#f6f1e5"]
+              }
+              locations={[0, 0.45, 1]}
+              style={StyleSheet.absoluteFill}
+            />
           )}
-          {/* L2: Subtle status-colored accent wash */}
+          {/* L2: Subtle status-colored accent wash (slightly stronger on Android to compensate for opaque base) */}
           <View style={[StyleSheet.absoluteFill, {
-            backgroundColor: `${statusConfig.glowColor}08`,
+            backgroundColor: `${statusConfig.glowColor}${Platform.OS === "android" ? "10" : "08"}`,
           }]} />
           {/* L4: Ambient orb — drifting slowly */}
           <Animated.View
@@ -2034,6 +2112,7 @@ export default function ScanResultScreen() {
               halal: t.scanResult.verdictHalal,
               doubtful: t.scanResult.verdictDoubtful,
               haram: t.scanResult.verdictHaram,
+              unknown: t.scanResult.verdictUnknown,
             };
 
             return (
@@ -2065,7 +2144,7 @@ export default function ScanResultScreen() {
                   >
                     <MadhabScoreRing
                       label={label}
-                      verdict={v.status as "halal" | "doubtful" | "haram"}
+                      verdict={v.status as "halal" | "doubtful" | "haram" | "unknown"}
                       trustScore={madhabTrustScore}
                       verdictLabel={!certifierData_ ? VERDICT_LABEL[v.status] : undefined}
                       conflictCount={v.conflictingAdditives.length + (v.conflictingIngredients?.length ?? 0)}
@@ -2104,12 +2183,13 @@ export default function ScanResultScreen() {
                     styles.hadithCard,
                     {
                       backgroundColor: isDark ? `${gold[500]}0C` : `${gold[500]}08`,
-                      borderColor: isDark ? `${gold[500]}20` : `${gold[500]}15`,
-                      shadowColor: gold[500],
-                      shadowOpacity: isDark ? 0.12 : 0.06,
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowRadius: 8,
-                      elevation: 3,
+                      borderColor: isDark ? `${gold[500]}20` : `${gold[500]}12`,
+                      ...(Platform.OS === "ios" && {
+                        shadowColor: gold[500],
+                        shadowOpacity: isDark ? 0.12 : 0.06,
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowRadius: 8,
+                      }),
                     },
                   ]}
                 >
@@ -3280,11 +3360,14 @@ const styles = StyleSheet.create({
     overflow: "hidden" as const,
     alignItems: "center" as const,
     justifyContent: "center" as const,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    ...(Platform.OS === "ios" ? {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 8,
+    } : {
+      elevation: 4,
+    }),
   },
   heroImage: {
     width: 80,
@@ -3313,7 +3396,7 @@ const styles = StyleSheet.create({
   heroScoreLabelText: {
     fontSize: fontSizeTokens.micro,
     fontWeight: fontWeightTokens.semiBold,
-    letterSpacing: 1.5,
+    letterSpacing: Platform.OS === "android" ? 0.3 : 1.5,
     textTransform: "uppercase" as const,
   },
 
@@ -3506,7 +3589,7 @@ const styles = StyleSheet.create({
   hadithCard: {
     width: "100%" as const,
     marginTop: spacing.md,
-    paddingTop: spacing.xs,
+    paddingTop: spacing.sm,
     paddingBottom: spacing.md,
     paddingHorizontal: spacing.lg,
     borderRadius: radius.md,
@@ -3520,18 +3603,18 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   hadithText: {
-    fontSize: 11,
-    fontWeight: fontWeightTokens.medium,
-    lineHeight: 18,
+    fontSize: Platform.OS === "android" ? 12 : 11,
+    fontWeight: Platform.OS === "android" ? fontWeightTokens.regular : fontWeightTokens.medium,
+    lineHeight: Platform.OS === "android" ? 20 : 18,
     fontStyle: "italic" as const,
     textAlign: "center" as const,
   },
   hadithSource: {
-    fontSize: 9,
+    fontSize: Platform.OS === "android" ? 10 : 9,
     fontWeight: fontWeightTokens.semiBold,
     textAlign: "center" as const,
     marginTop: spacing.xs,
-    letterSpacing: 0.4,
+    letterSpacing: Platform.OS === "android" ? 0.2 : 0.4,
   },
 
   // ── Content ────────────────────────────────────
@@ -3685,7 +3768,7 @@ const styles = StyleSheet.create({
   },
   healthScoreConfidence: {
     fontSize: fontSizeTokens.caption,
-    letterSpacing: 2,
+    letterSpacing: Platform.OS === "android" ? 0.3 : 2,
   },
   healthScoreAxes: {
     gap: spacing.md,
@@ -4067,7 +4150,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeightTokens.black,
     marginTop: spacing.xs,
     textAlign: "center" as const,
-    letterSpacing: 1,
+    letterSpacing: Platform.OS === "android" ? 0.2 : 1,
   },
   altImage: {
     width: 70,
@@ -4182,11 +4265,14 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     borderWidth: 1,
     overflow: "hidden" as const,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.35,
-    shadowRadius: 24,
-    elevation: 16,
+    ...(Platform.OS === "ios" ? {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 0.35,
+      shadowRadius: 24,
+    } : {
+      elevation: 16,
+    }),
   },
   imageModalPhoto: {
     width: 280,

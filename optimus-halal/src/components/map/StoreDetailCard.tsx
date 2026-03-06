@@ -81,6 +81,8 @@ interface Props {
   isExpanded?: boolean;
   animatedSheetIndex: SharedValue<number>;
   certifierTrustScore?: number | null;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
   onDirections: () => void;
   onCall: () => void;
   onShare: () => void;
@@ -118,6 +120,8 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
   isExpanded,
   animatedSheetIndex,
   certifierTrustScore,
+  isFavorite,
+  onToggleFavorite,
   onDirections,
   onCall,
   onShare,
@@ -210,6 +214,21 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
             </View>
           </View>
           <View className="flex-row items-center gap-1.5">
+            {onToggleFavorite && (
+              <Pressable
+                onPress={onToggleFavorite}
+                className="w-8 h-8 rounded-full items-center justify-center"
+                style={{ backgroundColor: isFavorite ? `${colors.primary}15` : colors.buttonSecondary }}
+                accessibilityRole="button"
+                accessibilityLabel={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+              >
+                <MaterialIcons
+                  name={isFavorite ? "favorite" : "favorite-border"}
+                  size={16}
+                  color={isFavorite ? "#ef4444" : colors.textSecondary}
+                />
+              </Pressable>
+            )}
             <Pressable
               onPress={onShare}
               className="w-8 h-8 rounded-full items-center justify-center"

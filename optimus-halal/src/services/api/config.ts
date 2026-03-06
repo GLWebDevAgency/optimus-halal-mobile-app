@@ -7,6 +7,8 @@
  */
 
 import Constants from "expo-constants";
+import * as Device from "expo-device";
+import { Platform } from "react-native";
 
 // ============================================
 // ENVIRONMENT DETECTION
@@ -23,9 +25,17 @@ const isDevelopment = __DEV__;
  *
  * Constants.expoConfig.hostUri = "192.168.x.x:8081" (metro port)
  * We strip the port and reuse the hostname for our backend on :3000.
+ *
+ * Android emulator caveat: the emulator runs in a separate virtual network
+ * and cannot reach LAN IPs. We use 10.0.2.2 (host loopback alias) instead.
+ *
  * Falls back to EXPO_PUBLIC_API_HOST env var, then localhost.
  */
 function getDevApiUrl(): string {
+  // Android emulator → use 10.0.2.2 (host loopback alias)
+  const isAndroidEmulator = Platform.OS === "android" && !Device.isDevice;
+  if (isAndroidEmulator) return "http://10.0.2.2:3000";
+
   // 1. Expo metro bundler knows the correct LAN IP
   const hostUri = Constants.expoConfig?.hostUri;
   if (hostUri) {

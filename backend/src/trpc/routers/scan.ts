@@ -84,7 +84,7 @@ const MADHAB_SCHOOLS = ["hanafi", "shafii", "maliki", "hanbali"] as const;
 
 export interface MadhabVerdictItem {
   madhab: (typeof MADHAB_SCHOOLS)[number];
-  status: "halal" | "doubtful" | "haram";
+  status: "halal" | "doubtful" | "haram" | "unknown";
   conflictingAdditives: Array<{
     code: string;
     name: string;
@@ -106,6 +106,17 @@ async function computeMadhabVerdicts(
   ingredientRulingsData: MatchedIngredientRuling[] = [],
 ): Promise<MadhabVerdictItem[]> {
   if (!halalAnalysis) return [];
+
+  // If analysis concluded "unknown" (no ingredients/additives to analyze),
+  // all schools have insufficient data — never default to "halal"
+  if (halalAnalysis.status === "unknown") {
+    return MADHAB_SCHOOLS.map((m) => ({
+      madhab: m,
+      status: "unknown" as const,
+      conflictingAdditives: [],
+      conflictingIngredients: [],
+    }));
+  }
 
   // If product is certified halal → all schools agree
   if (halalAnalysis.tier === "certified") {

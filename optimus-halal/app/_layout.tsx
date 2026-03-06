@@ -11,8 +11,9 @@ import { Stack, SplashScreen } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { focusManager, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  AppState,
   I18nManager,
   View,
   Text,
@@ -32,8 +33,9 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/ui";
 import { logger } from "@/lib/logger";
 import { initPurchases } from "@/services/purchases";
-import { initSentry } from "../src/lib/sentry";
-import { initAnalytics } from "../src/lib/analytics";
+import { initSentry, setGuestContext, setUserContext } from "../src/lib/sentry";
+import { initAnalytics, identifyUser, setSuperProperties } from "../src/lib/analytics";
+import { getDeviceId } from "@/services/api/client";
 import { setNavigationBarTheme } from "@/lib/navigationBar";
 import {
   useFonts,
@@ -46,6 +48,16 @@ import {
 
 initSentry();
 initAnalytics();
+
+// ── Pause React Query polling when app is backgrounded ────
+// Without this, refetchInterval keeps firing in the background,
+// wasting battery and data. Also triggers a refetch on foreground.
+focusManager.setEventListener((handleFocus) => {
+  const sub = AppState.addEventListener("change", (state) => {
+    handleFocus(state === "active");
+  });
+  return () => sub.remove();
+});
 
 // Prevent the splash screen from auto-hiding before theme and state are ready
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -159,6 +171,15 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
     // Initialize RevenueCat (works anonymously, identified after login)
     initPurchases().catch((e) => logger.warn("AppInit", "RevenueCat init failed", String(e)));
 
+    // Set Sentry guest context + PostHog super properties with device ID
+    getDeviceId().then((deviceId) => {
+      setGuestContext(deviceId);
+      setSuperProperties({
+        app_version: "1.0.0",
+        tier: "guest",
+      });
+    }).catch(() => {});
+
     logger.info("AppInit", "useEffect: loading tokens from SecureStore");
     initializeTokens()
       .catch((e) => logger.error("AppInit", "initializeTokens() threw", String(e)))
@@ -188,6 +209,20 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
   // - tokens loaded AND has tokens AND meQuery resolved → done
   // - forceReady → user bypassed timeout
   const isInitializing = !forceReady && (!tokensReady || (shouldFetchMe && meQuery.isLoading));
+
+  // Upgrade Sentry + PostHog context when returning user is identified
+  useEffect(() => {
+    if (meQuery.data) {
+      const user = meQuery.data;
+      setUserContext(user.id, user.email);
+      identifyUser(user.id, {
+        email: user.email,
+        display_name: user.displayName,
+        tier: "premium",
+      });
+      setSuperProperties({ tier: "premium" });
+    }
+  }, [meQuery.data]);
 
   // Clear timeout as soon as init completes
   useEffect(() => {

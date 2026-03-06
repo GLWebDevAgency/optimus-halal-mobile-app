@@ -18,25 +18,42 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useHaptics } from "@/hooks";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
+import { useQuotaStore } from "@/store";
+import { trackEvent } from "@/lib/analytics";
+
+const DAILY_SCAN_LIMIT = 5;
 
 export default function PaywallScreen() {
   const insets = useSafeAreaInsets();
   const { isDark, colors } = useTheme();
   const { t } = useTranslation();
   const { impact } = useHaptics();
+  const remaining = useQuotaStore((s) => s.getRemainingScans());
+  const quotaExhausted = remaining <= 0;
+
+  // Track paywall view once on mount
+  React.useEffect(() => {
+    trackEvent("paywall_viewed", {
+      remaining_scans: remaining,
+      quota_exhausted: quotaExhausted,
+    });
+  }, []);
 
   const handleSubscribe = () => {
     impact();
+    trackEvent("paywall_subscribe_tapped");
     router.replace("/settings/premium" as any);
   };
 
   const handleLater = () => {
     impact();
+    trackEvent("paywall_dismissed");
     router.back();
   };
 
   const handleLogin = () => {
     impact();
+    trackEvent("paywall_login_tapped");
     router.push("/(auth)/welcome" as any);
   };
 
@@ -81,17 +98,19 @@ export default function PaywallScreen() {
           />
         </Animated.View>
 
-        {/* Title */}
+        {/* Title — adapts to remaining scans */}
         <Animated.View entering={FadeInDown.delay(200).duration(600)} className="items-center mb-3">
           <Text className="text-2xl font-bold text-center" style={{ color: colors.textPrimary }}>
-            {t.paywall.title}
+            {quotaExhausted
+              ? t.paywall.title
+              : t.paywall.titleRemaining.replace("{n}", String(remaining))}
           </Text>
         </Animated.View>
 
         {/* Subtitle */}
         <Animated.View entering={FadeInDown.delay(300).duration(600)} className="items-center mb-8">
           <Text className="text-sm text-center leading-5" style={{ color: colors.textSecondary }}>
-            {t.paywall.subtitle}
+            {quotaExhausted ? t.paywall.subtitle : t.paywall.subtitleRemaining}
           </Text>
         </Animated.View>
 

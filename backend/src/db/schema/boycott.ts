@@ -42,6 +42,7 @@ export const boycottTargets = pgTable(
     verifiedBy: t.varchar("verified_by", { length: 100 }),
   },
   (table) => [
+    t.uniqueIndex("boycott_targets_company_name_idx").on(table.companyName),
     t.index("boycott_targets_level_idx").on(table.boycottLevel),
     t.index("boycott_targets_active_idx").on(table.isActive),
   ]

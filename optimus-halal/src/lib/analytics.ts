@@ -24,4 +24,9 @@ export function resetUser() {
   posthog?.reset();
 }
 
+/** Set properties appended to every subsequent event (tier, app_version, etc.) */
+export function setSuperProperties(props: Record<string, string | number | boolean | null>) {
+  posthog?.register(props);
+}
+
 export { posthog };

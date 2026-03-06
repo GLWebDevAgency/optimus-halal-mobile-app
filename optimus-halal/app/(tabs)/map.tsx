@@ -14,7 +14,6 @@ import React, { useState, useCallback, useMemo, useRef, useEffect } from "react"
 import {
   View,
   Text,
-  FlatList,
   Dimensions,
   ActivityIndicator,
   Linking,
@@ -22,6 +21,7 @@ import {
   Keyboard,
   Share,
 } from "react-native";
+import { FlatList } from "react-native-gesture-handler";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -30,6 +30,13 @@ import { useHaptics, useUserLocation, useMapStores, useMapSearch } from "@/hooks
 import type { SearchResult } from "@/hooks";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTheme } from "@/hooks/useTheme";
+import { useMe } from "@/hooks/useAuth";
+import {
+  useIsStoreFavorite,
+  useAddStoreFavorite,
+  useRemoveStoreFavorite,
+} from "@/hooks/useStoreFavorites";
+import { useLocalStoreFavoritesStore } from "@/store";
 import { trpc } from "@/lib/trpc";
 import {
   StoreCard,
@@ -177,6 +184,7 @@ export default function MapScreen() {
     openNow: openNowFilter,
     minRating: minRatingFilter,
     limit: 100,
+    refetchInterval: 60_000,
   });
 
   const stores = useMemo(() => storesQuery.data ?? [], [storesQuery.data]);
@@ -281,6 +289,46 @@ export default function MapScreen() {
     const certId = STORE_CERTIFIER_TO_ID[selectedStore.certifier];
     return certId ? (certifierScoreMap.get(certId) ?? null) : null;
   }, [selectedStore, certifierScoreMap]);
+
+  // ── Store Favorite State ──────────────────────
+  const { data: me } = useMe();
+  const isAuth = !!me;
+  const storeFavQuery = useIsStoreFavorite(selectedStoreId);
+  const addStoreFavMutation = useAddStoreFavorite();
+  const removeStoreFavMutation = useRemoveStoreFavorite();
+  const localStoreFavs = useLocalStoreFavoritesStore();
+
+  const isStoreFavorite = useMemo(() => {
+    if (!selectedStoreId) return false;
+    if (isAuth) return storeFavQuery.data?.isFavorite ?? false;
+    return localStoreFavs.isFavorite(selectedStoreId);
+  }, [selectedStoreId, isAuth, storeFavQuery.data, localStoreFavs]);
+
+  const handleToggleStoreFavorite = useCallback(() => {
+    if (!selectedStore) return;
+    if (isStoreFavorite) {
+      if (isAuth) {
+        removeStoreFavMutation.mutate({ storeId: selectedStore.id });
+      } else {
+        localStoreFavs.removeFavorite(selectedStore.id);
+      }
+      trackEvent("remove_store_favorite", { store_id: selectedStore.id });
+    } else {
+      if (isAuth) {
+        addStoreFavMutation.mutate({ storeId: selectedStore.id });
+      } else {
+        localStoreFavs.addFavorite({
+          storeId: selectedStore.id,
+          name: selectedStore.name,
+          storeType: selectedStore.storeType,
+          imageUrl: selectedStore.imageUrl ?? null,
+          certifier: selectedStore.certifier,
+          city: selectedStore.city,
+        });
+      }
+      trackEvent("add_store_favorite", { store_id: selectedStore.id });
+    }
+  }, [selectedStore, isStoreFavorite, isAuth, addStoreFavMutation, removeStoreFavMutation, localStoreFavs]);
 
   // Sheet expanded = user pulled up → fetch full store detail (hours, reviews)
   const [sheetExpanded, setSheetExpanded] = useState(false);
@@ -902,6 +950,8 @@ export default function MapScreen() {
                 isExpanded={sheetExpanded}
                 animatedSheetIndex={animatedSheetIndex}
                 certifierTrustScore={selectedCertifierScore}
+                isFavorite={isStoreFavorite}
+                onToggleFavorite={handleToggleStoreFavorite}
                 onDirections={handleDirections}
                 onCall={handleCallStore}
                 onShare={handleShareStore}
@@ -962,10 +1012,9 @@ export default function MapScreen() {
                 <Animated.View entering={FadeIn.duration(250)}>
                   <FlatList
                     horizontal
-                    nestedScrollEnabled
                     data={stores}
-                    keyExtractor={(item) => item.id}
-                    renderItem={({ item, index }) => (
+                    keyExtractor={(item: StoreFeatureProperties) => item.id}
+                    renderItem={({ item, index }: { item: StoreFeatureProperties; index: number }) => (
                       <Animated.View
                         entering={hasShownListRef.current ? undefined : FadeInRight.delay(Math.min(index * 80, 400)).duration(300)}
                       >
@@ -982,7 +1031,7 @@ export default function MapScreen() {
                     contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
                     snapToInterval={CARD_WIDTH + 12}
                     decelerationRate="fast"
-                    getItemLayout={(_, index) => ({
+                    getItemLayout={(_: any, index: number) => ({
                       length: CARD_WIDTH + 12,
                       offset: (CARD_WIDTH + 12) * index,
                       index,

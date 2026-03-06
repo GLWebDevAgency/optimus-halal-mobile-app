@@ -39,28 +39,26 @@ import Svg, { Path } from "react-native-svg";
 import { Avatar, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { HomeSkeleton } from "@/components/skeletons";
+import { CertifierLogo } from "@/components/scan/CertifierLogo";
+import { openStatusColor, openStatusLabel, STORE_CERTIFIER_TO_ID } from "@/components/map/types";
+import type { StoreFeatureProperties } from "@/components/map/types";
 import { useMe } from "@/hooks/useAuth";
 import { useFavoritesList } from "@/hooks/useFavorites";
+import { useStoreFavoritesList } from "@/hooks/useStoreFavorites";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTheme } from "@/hooks/useTheme";
-import { brand, glass, lightTheme, darkTheme } from "@/theme/colors";
-import { useHaptics, useUserLocation, useMapStores } from "@/hooks";
+import { brand, glass, lightTheme, darkTheme, storeTypeColors } from "@/theme/colors";
+import { useHaptics, useUserLocation, useMapStores, usePremium } from "@/hooks";
 import { trpc } from "@/lib/trpc";
-import { useQuotaStore } from "@/store";
+import { useQuotaStore, useLocalFavoritesStore, useLocalStoreFavoritesStore } from "@/store";
 import { isAuthenticated as hasStoredTokens } from "@/services/api";
+import { defaultFeatureFlags } from "@/constants/config";
 
 const logoSource = require("@assets/images/logo_naqiy.webp");
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const DAILY_SCAN_LIMIT = 5;
 const STAGGER_MS = 60;
 
-
-// Severity mappings for alerts
-const SEVERITY_ACCENT: Record<string, string> = {
-  critical: "#ef4444",
-  warning: "#f59e0b",
-  info: "#3b82f6",
-};
 
 // ---------------------------------------------------------------------------
 // Animated ScrollView wrapper
@@ -381,7 +379,7 @@ const FeaturedCard = React.memo(function FeaturedCard({
 
 // ---- Discover Store Card (Map Preview) ----
 interface DiscoverStoreCardProps {
-  store: any;
+  store: StoreFeatureProperties;
   isDark: boolean;
   colors: any;
   index: number;
@@ -396,18 +394,23 @@ const DiscoverStoreCard = React.memo(function DiscoverStoreCard({
   onPress,
 }: DiscoverStoreCardProps) {
   const { impact } = useHaptics();
+  const { t } = useTranslation();
 
   const handlePress = useCallback(() => {
     impact();
     onPress();
   }, [impact, onPress]);
 
+  const hasOpenStatus = store.openStatus && store.openStatus !== "unknown";
+  const statusColor = hasOpenStatus ? openStatusColor(store.openStatus!, isDark) : undefined;
+  const certifierId = STORE_CERTIFIER_TO_ID[store.certifier];
+
   return (
     <Animated.View entering={FadeInRight.delay(400 + index * 80).duration(500)}>
       <PressableScale
         onPress={handlePress}
         accessibilityRole="button"
-        accessibilityLabel={store.name}
+        accessibilityLabel={`${store.name}${hasOpenStatus ? `, ${openStatusLabel(store.openStatus!, t)}` : ""}`}
       >
         <View
           className="w-[200px] h-[120px] rounded-[18px] overflow-hidden p-3 justify-end"
@@ -434,13 +437,57 @@ const DiscoverStoreCard = React.memo(function DiscoverStoreCard({
             locations={[0, 0.8]}
             style={StyleSheet.absoluteFill}
           />
-          <View className="relative z-10">
-            <Text className="text-sm font-bold mb-0.5" style={{ color: colors.textPrimary }} numberOfLines={1}>
+
+          {/* ── Open/Closed badge — top right corner ── */}
+          {hasOpenStatus && (
+            <View style={{
+              position: "absolute", top: 8, right: 8, zIndex: 20,
+              flexDirection: "row", alignItems: "center", gap: 3,
+              paddingHorizontal: 6, paddingVertical: 3,
+              borderRadius: 6,
+              backgroundColor: isDark ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.85)",
+            }}>
+              <View style={{
+                width: 5, height: 5, borderRadius: 2.5,
+                backgroundColor: statusColor,
+              }} />
+              <Text style={{
+                fontSize: 9, fontWeight: "700",
+                color: statusColor,
+                textTransform: "uppercase",
+                letterSpacing: 0.2,
+              }}>
+                {openStatusLabel(store.openStatus!, t)}
+              </Text>
+            </View>
+          )}
+
+          {/* ── Text overlay — bottom ── */}
+          <View style={{ position: "relative", zIndex: 10, gap: 2 }}>
+            {/* Row 1: Store name — full width */}
+            <Text
+              style={{ fontSize: 14, fontWeight: "700", color: colors.textPrimary }}
+              numberOfLines={1}
+            >
               {store.name}
             </Text>
-            <Text className="text-[10px] font-medium" style={{ color: brand.gold }} numberOfLines={1}>
-              {store.storeType.toUpperCase()} {store.halalCertified ? "• CERTIFIÉ" : ""}
-            </Text>
+
+            {/* Row 2: Category + CERTIFIÉ + certifier micro-logo */}
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Text style={{ fontSize: 10, fontWeight: "500", color: brand.gold }} numberOfLines={1}>
+                {store.storeType.toUpperCase()}
+                {store.halalCertified ? " • CERTIFIÉ" : ""}
+              </Text>
+              {certifierId && (
+                <View style={{
+                  width: 16, height: 16, borderRadius: 4,
+                  backgroundColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)",
+                  alignItems: "center", justifyContent: "center",
+                }}>
+                  <CertifierLogo certifierId={certifierId} size={12} />
+                </View>
+              )}
+            </View>
           </View>
         </View>
       </PressableScale>
@@ -528,7 +575,103 @@ const FavoriteCircle = React.memo(function FavoriteCircle({
           ]}
           numberOfLines={2}
         >
-          {name.length > 12 ? name.split(" ")[0] : name}
+          {name}
+        </Text>
+      </PressableScale>
+    </Animated.View>
+  );
+});
+
+// ---- Favorite Store Circle (store type colored ring) ----
+interface FavoriteStoreCircleProps {
+  id: string;
+  name: string;
+  image: string;
+  storeType: string;
+  isDark: boolean;
+  index: number;
+  onPress: () => void;
+}
+
+const STORE_TYPE_RING_COLORS: Record<string, string[]> = {
+  butcher: ["#ef4444", "#f87171", "#fca5a5"],
+  restaurant: ["#f97316", "#fb923c", "#fdba74"],
+  supermarket: ["#3b82f6", "#60a5fa", "#93c5fd"],
+  bakery: ["#D4AF37", "#e6c04b", "#fde68a"],
+  wholesaler: ["#06b6d4", "#22d3ee", "#67e8f9"],
+  abattoir: ["#8b5cf6", "#a78bfa", "#c4b5fd"],
+  online: ["#10b981", "#34d399", "#6ee7b7"],
+  other: ["#6b7280", "#9ca3af", "#d1d5db"],
+};
+
+const FavoriteStoreCircle = React.memo(function FavoriteStoreCircle({
+  name,
+  image,
+  storeType,
+  isDark,
+  index,
+  onPress,
+}: FavoriteStoreCircleProps) {
+  const ringColors = STORE_TYPE_RING_COLORS[storeType] ?? STORE_TYPE_RING_COLORS.other;
+  const storeIcon = storeTypeColors[storeType as keyof typeof storeTypeColors]?.icon ?? "store";
+
+  return (
+    <Animated.View
+      entering={FadeInRight.delay(540 + index * 70).duration(400)}
+    >
+      <PressableScale
+        accessibilityRole="button"
+        accessibilityLabel={name}
+        onPress={onPress}
+        style={styles.favCircleTouch}
+      >
+        <LinearGradient
+          colors={ringColors as [string, string, ...string[]]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.favGradientRing}
+        >
+          <View
+            style={[
+              styles.favInnerRing,
+              { backgroundColor: isDark ? darkTheme.background : lightTheme.background },
+            ]}
+          >
+            {image ? (
+              <Image
+                source={{ uri: image }}
+                style={styles.favImage}
+                contentFit="cover"
+                transition={200}
+              />
+            ) : (
+              <View
+                style={[
+                  styles.favImage,
+                  {
+                    backgroundColor: isDark ? darkTheme.card : "#f3f4f6",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  },
+                ]}
+              >
+                <MaterialIcons
+                  name={storeIcon}
+                  size={22}
+                  color={ringColors[0]}
+                />
+              </View>
+            )}
+          </View>
+        </LinearGradient>
+        <Text
+          style={[
+            styles.favName,
+            { color: isDark ? darkTheme.textSecondary : lightTheme.textSecondary },
+          ]}
+          numberOfLines={2}
+        >
+          {name}
         </Text>
       </PressableScale>
     </Animated.View>
@@ -544,14 +687,20 @@ export default function HomeScreen() {
   const { isDark, isRamadan, colors } = useTheme();
   const { impact } = useHaptics();
   const { t } = useTranslation();
+  const { isPremium } = usePremium();
 
-  // ---- Guest detection ----
-  const isGuest = !hasStoredTokens();
-
-  // ---- Data ----
-  const meQuery = useMe({ enabled: !isGuest });
+  // ---- Auth / Guest detection ----
+  // hasStoredTokens() is synchronous but unreliable during initial render
+  // (tokens load async from SecureStore). We combine it with meQuery.data
+  // so that cached user data also prevents guest UI from flashing.
+  const hasTokens = hasStoredTokens();
+  const meQuery = useMe({ enabled: hasTokens });
   const me = meQuery.data;
-  const isReady = isGuest || !meQuery.isLoading;
+  const isGuest = !hasTokens && !me;
+  const isReady = !!me || (isGuest && !meQuery.isLoading);
+
+  // ---- Quick Favorites tab (products | stores) ----
+  const [favTab, setFavTab] = useState<"products" | "stores">("products");
 
   // ---- Map Stores (Around You) ----
   const { location: userLocation } = useUserLocation();
@@ -568,31 +717,34 @@ export default function HomeScreen() {
           longitude: 2.3522,
           radiusKm: 20,
         },
-    { limit: 5 }
+    { limit: 5, refetchInterval: 2 * 60_000 }
   );
   const nearbyStores = useMemo(() => storesQuery.data ?? [], [storesQuery.data]);
 
-  const favoritesQuery = useFavoritesList({ limit: 8, enabled: !isGuest });
+  const favoritesQuery = useFavoritesList({ limit: 8, enabled: !!me });
+  const localFavorites = useLocalFavoritesStore((s) => s.favorites);
+  const localFavFull = useLocalFavoritesStore((s) => s.isFull());
+  const storeFavoritesQuery = useStoreFavoritesList({ limit: 8, enabled: !!me });
+  const localStoreFavorites = useLocalStoreFavoritesStore((s) => s.favorites);
 
   const dashboardQuery = trpc.stats.userDashboard.useQuery(undefined, {
-    enabled: isReady && !isGuest,
+    enabled: !!me,
     staleTime: 60_000,
   });
   const unreadQuery = trpc.notification.getUnreadCount.useQuery(undefined, {
-    enabled: isReady && !isGuest,
+    enabled: !!me,
     staleTime: 30_000,
   });
-  const alertsQuery = trpc.alert.list.useQuery(
-    { limit: 5 },
-    { enabled: isReady && !isGuest, staleTime: 60_000 },
-  );
+  const alertUnreadQuery = trpc.alert.getUnreadCount.useQuery(undefined, {
+    enabled: !!me && defaultFeatureFlags.alertsEnabled,
+    staleTime: 30_000,
+  });
   const articlesQuery = trpc.article.list.useQuery(
     { limit: 5 },
-    { enabled: isReady && !isGuest, staleTime: 120_000 },
+    { enabled: !!me, staleTime: 120_000 },
   );
 
   // ---- Quota (anonymous) ----
-  const quotaRemaining = useQuotaStore((s) => s.getRemainingScans());
   const quotaUsed = useQuotaStore((s) => s.dailyScansUsed);
 
   // ---- Derived data ----
@@ -606,46 +758,48 @@ export default function HomeScreen() {
   const userLevel = me?.level ?? 1;
   const currentStreak = me?.currentStreak ?? 0;
   const unreadCount = unreadQuery.data?.count ?? 0;
+  const alertUnreadCount = alertUnreadQuery.data?.count ?? 0;
 
-  const favoriteProducts = useMemo(
-    () =>
-      (favoritesQuery.data ?? [])
-        .filter((f) => f.product !== null)
-        .map((f) => ({
-          id: f.id,
-          name: f.product!.name,
-          image: f.product!.imageUrl ?? "",
-        })),
-    [favoritesQuery.data],
-  );
+  const favoriteProducts = useMemo(() => {
+    if (isGuest) {
+      return localFavorites.map((f) => ({
+        id: f.productId,
+        name: f.name,
+        image: f.imageUrl ?? "",
+      }));
+    }
+    return (favoritesQuery.data ?? [])
+      .filter((f) => f.product !== null)
+      .map((f) => ({
+        id: f.id,
+        name: f.product!.name,
+        image: f.product!.imageUrl ?? "",
+      }));
+  }, [isGuest, localFavorites, favoritesQuery.data]);
 
-  // ---- Featured content: merge alerts + articles ----
+  const favoriteStores = useMemo(() => {
+    if (isGuest) {
+      return localStoreFavorites.map((f) => ({
+        id: f.storeId,
+        name: f.name,
+        image: f.imageUrl ?? "",
+        storeType: f.storeType,
+      }));
+    }
+    return (storeFavoritesQuery.data ?? []).map((f) => ({
+      id: f.store.id,
+      name: f.store.name,
+      image: f.store.imageUrl ?? f.store.logoUrl ?? "",
+      storeType: f.store.storeType,
+    }));
+  }, [isGuest, localStoreFavorites, storeFavoritesQuery.data]);
+
+  // ---- Featured content: articles only (alerts are in Veille éthique) ----
   const featuredItems = useMemo<FeaturedCardData[]>(() => {
     const items: FeaturedCardData[] = [];
 
-    // Alerts first (max 3)
-    const alerts = alertsQuery.data?.items ?? [];
-    for (const alert of alerts.slice(0, 3)) {
-      items.push({
-        id: `alert-${alert.id}`,
-        type: "alert",
-        title: alert.title,
-        subtitle: alert.summary,
-        coverImage: null,
-        badgeLabel:
-          alert.severity === "critical"
-            ? "Urgent"
-            : alert.severity === "warning"
-              ? "Alerte"
-              : "Info",
-        badgeColor: SEVERITY_ACCENT[alert.severity] ?? "#3b82f6",
-        accentColor: SEVERITY_ACCENT[alert.severity] ?? "#3b82f6",
-      });
-    }
-
-    // Articles
     const articles = articlesQuery.data?.items ?? [];
-    for (const article of articles.slice(0, 4)) {
+    for (const article of articles.slice(0, 5)) {
       items.push({
         id: `article-${article.id}`,
         type: "article",
@@ -672,7 +826,7 @@ export default function HomeScreen() {
     }
 
     return items;
-  }, [alertsQuery.data?.items, articlesQuery.data?.items, t, colors.primary]);
+  }, [articlesQuery.data?.items, t, colors.primary]);
 
   const hasApiError = dashboardQuery.isError && meQuery.isError;
 
@@ -684,7 +838,7 @@ export default function HomeScreen() {
       meQuery.refetch(),
       dashboardQuery.refetch(),
       unreadQuery.refetch(),
-      alertsQuery.refetch(),
+      alertUnreadQuery.refetch(),
       articlesQuery.refetch(),
       favoritesQuery.refetch(),
     ]);
@@ -693,7 +847,7 @@ export default function HomeScreen() {
     meQuery,
     dashboardQuery,
     unreadQuery,
-    alertsQuery,
+    alertUnreadQuery,
     articlesQuery,
     favoritesQuery,
   ]);
@@ -727,15 +881,17 @@ export default function HomeScreen() {
 
   // ---- Navigation handlers ----
   const handleNavigate = useCallback(
-    (route: string) => {
+    (route: string, params?: Record<string, string>) => {
       impact();
       if (route === "scanner") router.navigate("/(tabs)/scanner");
       else if (route === "map") router.navigate("/(tabs)/map");
       else if (route === "alerts") router.navigate("/(tabs)/alerts");
       else if (route === "history")
         router.push("/settings/scan-history" as any);
-      else if (route === "favorites")
-        router.push("/settings/favorites" as any);
+      else if (route === "favorites") {
+        const query = params ? `?${new URLSearchParams(params).toString()}` : "";
+        router.push(`/settings/favorites${query}` as any);
+      }
     },
     [impact],
   );
@@ -743,9 +899,7 @@ export default function HomeScreen() {
   const handleFeaturedPress = useCallback(
     (item: FeaturedCardData) => {
       impact();
-      if (item.type === "alert") {
-        router.navigate("/(tabs)/alerts");
-      } else if (item.type === "article") {
+      if (item.type === "article") {
         const articleId = item.id.replace("article-", "");
         router.push(`/articles/${articleId}`);
       }
@@ -794,7 +948,8 @@ export default function HomeScreen() {
                 size="lg"
                 source={me?.avatarUrl ?? undefined}
                 fallback={userName}
-                borderColor="primary"
+                borderColor={isPremium ? "none" : "primary"}
+                premiumRing={isPremium}
               />
               <View style={{ marginStart: 12 }}>
                 <Text
@@ -838,45 +993,50 @@ export default function HomeScreen() {
                   />
                 </View>
                 <Text style={[styles.brandMarkText, { color: colors.textPrimary }]}>
-                  Naqiy
+                  Naqiy{isPremium && (
+                    <Text style={{ color: brand.gold, fontWeight: "800" }}>+</Text>
+                  )}
                 </Text>
               </View>
 
-              {/* Notification Bell */}
-              <Pressable
-                onPress={() => router.navigate("/(tabs)/alerts")}
-                accessibilityRole="button"
-                accessibilityLabel={t.common.notifications}
-                accessibilityHint={t.common.viewAlerts}
-                style={[
-                  styles.bellButton,
-                  {
-                    backgroundColor: isDark
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(255,255,255,0.7)",
-                    borderColor: isDark
-                      ? "rgba(207,165,51,0.15)"
-                      : "rgba(212,175,55,0.12)",
-                  },
-                ]}
-              >
-                <MaterialIcons
-                  name="notifications-none"
-                  size={22}
-                  color={isDark ? brand.gold : colors.textPrimary}
-                />
-                {unreadCount > 0 && (
-                  <View style={styles.bellBadge}>
-                    <Text style={styles.bellBadgeText}>
-                      {unreadCount > 9 ? "9+" : unreadCount}
-                    </Text>
-                  </View>
-                )}
-              </Pressable>
+              {/* Notification Bell — hidden when alerts feature flag is off */}
+              {defaultFeatureFlags.alertsEnabled && (
+                <Pressable
+                  onPress={() => router.navigate("/(tabs)/alerts")}
+                  accessibilityRole="button"
+                  accessibilityLabel={t.common.notifications}
+                  accessibilityHint={t.common.viewAlerts}
+                  style={[
+                    styles.bellButton,
+                    {
+                      backgroundColor: isDark
+                        ? "rgba(255,255,255,0.06)"
+                        : "rgba(255,255,255,0.7)",
+                      borderColor: isDark
+                        ? "rgba(207,165,51,0.15)"
+                        : "rgba(212,175,55,0.12)",
+                    },
+                  ]}
+                >
+                  <MaterialIcons
+                    name="notifications-none"
+                    size={22}
+                    color={isDark ? brand.gold : colors.textPrimary}
+                  />
+                  {(unreadCount + alertUnreadCount) > 0 && (
+                    <View style={styles.bellBadge}>
+                      <Text style={styles.bellBadgeText}>
+                        {(unreadCount + alertUnreadCount) > 9 ? "9+" : unreadCount + alertUnreadCount}
+                      </Text>
+                    </View>
+                  )}
+                </Pressable>
+              )}
             </View>
           </Animated.View>
 
-          {/* Impact Stats Pill */}
+          {/* Impact Stats Pill — authenticated users only */}
+          {!isGuest && (
           <Animated.View
             entering={FadeInDown.delay(STAGGER_MS)
               .duration(500)
@@ -963,6 +1123,7 @@ export default function HomeScreen() {
               </>
             )}
           </Animated.View>
+          )}
         </Animated.View>
 
         {/* Quota Widget — anonymous users only */}
@@ -1004,7 +1165,7 @@ export default function HomeScreen() {
                 </View>
                 <View style={{ flex: 1, marginStart: 12 }}>
                   <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: "700" }}>
-                    {quotaRemaining}/{DAILY_SCAN_LIMIT} {t.guest.scansToday}
+                    {quotaUsed}/{DAILY_SCAN_LIMIT} {t.guest.scansToday}
                   </Text>
                   <View
                     style={{
@@ -1019,7 +1180,7 @@ export default function HomeScreen() {
                         height: "100%",
                         borderRadius: 2,
                         width: `${Math.round((quotaUsed / DAILY_SCAN_LIMIT) * 100)}%`,
-                        backgroundColor: quotaRemaining > 0 ? colors.primary : "#ef4444",
+                        backgroundColor: quotaUsed < DAILY_SCAN_LIMIT ? colors.primary : "#ef4444",
                       }}
                     />
                   </View>
@@ -1095,8 +1256,8 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* API Error Banner */}
-        {hasApiError && (
+        {/* API Error Banner — auth only */}
+        {!isGuest && hasApiError && (
           <Animated.View
             entering={FadeIn.duration(300)}
             style={{ paddingHorizontal: 20, marginBottom: 8 }}
@@ -1198,7 +1359,7 @@ export default function HomeScreen() {
         {/* ====================================================
             SECTION 3: FEATURED CONTENT (horizontal carousel)
             ==================================================== */}
-        {featuredItems.length > 0 && (
+        {defaultFeatureFlags.featuredArticlesEnabled && !isGuest && featuredItems.length > 0 && (
           <Animated.View
             entering={FadeInDown.delay(360).duration(500)}
             style={{ marginTop: 24 }}
@@ -1255,13 +1416,14 @@ export default function HomeScreen() {
         )}
 
         {/* ====================================================
-            SECTION 4: QUICK FAVORITES (stories-style)
+            SECTION 4: QUICK FAVORITES (stories-style + toggle)
             ==================================================== */}
+        {(
         <Animated.View
           entering={FadeInDown.delay(480).duration(500)}
           style={{ marginTop: 24 }}
         >
-          {/* Section header */}
+          {/* Section header with mini segment control */}
           <View style={styles.sectionHeader}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <Text
@@ -1277,21 +1439,77 @@ export default function HomeScreen() {
                 <Path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke={brand.gold} strokeWidth={1.5} fill="none" opacity={0.7} />
               </Svg>
             </View>
-            {favoriteProducts.length > 0 && (
-              <Pressable
-                onPress={() => handleNavigate("favorites")}
-                accessibilityRole="link"
-                accessibilityLabel={`${t.home.viewAll} ${t.home.favorites}`}
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              {/* Mini segment: Produits | Magasins */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  borderRadius: 10,
+                  overflow: "hidden",
+                  backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                }}
               >
-                <Text
-                  style={[styles.seeAllText, { color: brand.gold }]}
+                <Pressable
+                  onPress={() => setFavTab("products")}
+                  style={{
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
+                    borderRadius: 10,
+                    backgroundColor: favTab === "products"
+                      ? isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)"
+                      : "transparent",
+                  }}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: favTab === "products" }}
                 >
-                  {t.home.viewAll} ({favoriteProducts.length})
-                </Text>
-              </Pressable>
-            )}
+                  <Text style={{
+                    fontSize: 11,
+                    fontWeight: favTab === "products" ? "700" : "500",
+                    color: favTab === "products" ? colors.textPrimary : colors.textMuted,
+                  }}>
+                    {t.favorites.quickFavProducts}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setFavTab("stores")}
+                  style={{
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
+                    borderRadius: 10,
+                    backgroundColor: favTab === "stores"
+                      ? isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)"
+                      : "transparent",
+                  }}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: favTab === "stores" }}
+                >
+                  <Text style={{
+                    fontSize: 11,
+                    fontWeight: favTab === "stores" ? "700" : "500",
+                    color: favTab === "stores" ? colors.textPrimary : colors.textMuted,
+                  }}>
+                    {t.favorites.quickFavStores}
+                  </Text>
+                </Pressable>
+              </View>
+              {/* View All link */}
+              {((favTab === "products" && favoriteProducts.length > 0) ||
+                (favTab === "stores" && favoriteStores.length > 0)) && !isGuest && (
+                <Pressable
+                  onPress={() => handleNavigate("favorites", favTab === "stores" ? { tab: "stores" } : undefined)}
+                  accessibilityRole="link"
+                  accessibilityLabel={`${t.home.viewAll} ${t.home.favorites}`}
+                >
+                  <Text style={[styles.seeAllText, { color: brand.gold }]}>
+                    {t.favorites.viewAll}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
           </View>
 
+          {/* Products stories */}
+          {favTab === "products" && (
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -1319,21 +1537,23 @@ export default function HomeScreen() {
                     },
                   ]}
                 >
-                  <MaterialIcons
-                    name="favorite-border"
-                    size={24}
-                    color={isDark ? "#6b7280" : "#94a3b8"}
-                  />
-                  <Text
-                    style={[
-                      styles.emptyFavText,
-                      {
-                        color: colors.textSecondary,
-                      },
-                    ]}
-                  >
-                    {t.home.emptyFavorites}
-                  </Text>
+                  <View style={styles.emptyFavContent}>
+                    <MaterialIcons
+                      name="favorite-border"
+                      size={24}
+                      color={isDark ? "#6b7280" : "#94a3b8"}
+                    />
+                    <Text
+                      style={[
+                        styles.emptyFavText,
+                        {
+                          color: colors.textSecondary,
+                        },
+                      ]}
+                    >
+                      {t.home.emptyFavorites}
+                    </Text>
+                  </View>
                 </PressableScale>
               </Animated.View>
             ) : (
@@ -1359,7 +1579,7 @@ export default function HomeScreen() {
               <PressableScale
                 accessibilityRole="button"
                 accessibilityLabel={t.home.addFavorite}
-                onPress={() => router.navigate("/(tabs)/scanner")}
+                onPress={() => (isGuest && localFavFull) ? router.push("/paywall" as any) : router.navigate("/(tabs)/scanner")}
                 style={styles.favCircleTouch}
               >
                 <View
@@ -1376,7 +1596,7 @@ export default function HomeScreen() {
                   ]}
                 >
                   <MaterialIcons
-                    name="add"
+                    name={(isGuest && localFavFull) ? "lock-outline" : "add"}
                     size={26}
                     color={isDark ? "#6b7280" : "#94a3b8"}
                   />
@@ -1388,13 +1608,114 @@ export default function HomeScreen() {
                       color: colors.textSecondary,
                     },
                   ]}
+                  numberOfLines={2}
+                >
+                  {(isGuest && localFavFull) ? "Naqiy+" : t.home.add}
+                </Text>
+              </PressableScale>
+            </Animated.View>
+          </ScrollView>
+          )}
+
+          {/* Stores stories */}
+          {favTab === "stores" && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: 20,
+              gap: 16,
+            }}
+          >
+            {favoriteStores.length === 0 ? (
+              <Animated.View entering={FadeInRight.delay(540).duration(400)}>
+                <PressableScale
+                  accessibilityRole="button"
+                  accessibilityLabel={t.favorites.exploreMap}
+                  onPress={() => router.navigate("/(tabs)/map")}
+                  style={[
+                    styles.emptyFavCard,
+                    {
+                      backgroundColor: isDark
+                        ? "rgba(255,255,255,0.03)"
+                        : "rgba(212,175,55,0.03)",
+                      borderColor: isDark
+                        ? "rgba(207,165,51,0.12)"
+                        : "rgba(212,175,55,0.15)",
+                    },
+                  ]}
+                >
+                  <View style={styles.emptyFavContent}>
+                    <MaterialIcons
+                      name="store"
+                      size={24}
+                      color={isDark ? "#6b7280" : "#94a3b8"}
+                    />
+                    <Text
+                      style={[
+                        styles.emptyFavText,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      {t.favorites.emptyStores}
+                    </Text>
+                  </View>
+                </PressableScale>
+              </Animated.View>
+            ) : (
+              favoriteStores.slice(0, 8).map((item, index) => (
+                <FavoriteStoreCircle
+                  key={item.id}
+                  id={item.id}
+                  name={item.name}
+                  image={item.image}
+                  storeType={item.storeType}
+                  isDark={isDark}
+                  index={index}
+                  onPress={() => handleNavigate("favorites", { tab: "stores" })}
+                />
+              ))
+            )}
+
+            {/* Add store circle */}
+            <Animated.View
+              entering={FadeInRight.delay(
+                540 + favoriteStores.length * 70,
+              ).duration(400)}
+            >
+              <PressableScale
+                accessibilityRole="button"
+                accessibilityLabel={t.favorites.exploreMap}
+                onPress={() => router.navigate("/(tabs)/map")}
+                style={styles.favCircleTouch}
+              >
+                <View
+                  style={[
+                    styles.addCircle,
+                    {
+                      borderColor: isDark
+                        ? "rgba(207,165,51,0.15)"
+                        : "rgba(212,175,55,0.18)",
+                      backgroundColor: isDark
+                        ? "rgba(255,255,255,0.04)"
+                        : "rgba(212,175,55,0.03)",
+                    },
+                  ]}
+                >
+                  <MaterialIcons name="add-location" size={26} color={isDark ? "#6b7280" : "#94a3b8"} />
+                </View>
+                <Text
+                  style={[styles.favName, { color: colors.textSecondary }]}
+                  numberOfLines={2}
                 >
                   {t.home.add}
                 </Text>
               </PressableScale>
             </Animated.View>
           </ScrollView>
+          )}
         </Animated.View>
+        )}
       </AnimatedScrollView>
     </View>
   );
@@ -1643,7 +1964,7 @@ const styles = StyleSheet.create({
   // ---- Favorites ----
   favCircleTouch: {
     alignItems: "center",
-    width: CIRCLE_SIZE + 12,
+    width: CIRCLE_SIZE + 20,
     gap: 6,
   },
   favGradientRing: {
@@ -1689,8 +2010,11 @@ const styles = StyleSheet.create({
     borderStyle: "dashed",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
     paddingHorizontal: 16,
+  },
+  emptyFavContent: {
+    alignItems: "center",
+    gap: 8,
   },
   emptyFavText: {
     fontSize: 11,
@@ -1712,4 +2036,5 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     flex: 1,
   },
+
 });

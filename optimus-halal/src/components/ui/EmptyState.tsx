@@ -6,10 +6,12 @@
  */
 
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "@/hooks";
+import { brand } from "@/theme/colors";
 import { PressableScale } from "./PressableScale";
 
 export interface EmptyStateProps {
@@ -71,13 +73,37 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           accessibilityRole="button"
           accessibilityLabel={actionLabel}
         >
-          <View className="bg-primary px-6 py-3 rounded-xl">
-            <Text className="font-bold text-sm text-white">{actionLabel}</Text>
+          <View style={btnStyles.cta}>
+            <LinearGradient
+              colors={isDark ? ["#FDE08B", "#CFA533"] : [brand.primary, "#0ea64b"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[StyleSheet.absoluteFill, { borderRadius: 14 }]}
+            />
+            <Text style={[btnStyles.ctaText, { color: isDark ? "#1A1A1A" : "#ffffff" }]}>
+              {actionLabel}
+            </Text>
           </View>
         </PressableScale>
       ) : null}
     </Animated.View>
   );
 };
+
+const btnStyles = StyleSheet.create({
+  cta: {
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: 14,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ctaText: {
+    fontSize: 15,
+    fontWeight: "800",
+    letterSpacing: -0.2,
+  },
+});
 
 export default EmptyState;

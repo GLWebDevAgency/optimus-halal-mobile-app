@@ -137,12 +137,19 @@ export async function setTokens(
 }
 
 export async function clearTokens(): Promise<void> {
+  // Clear in-memory tokens immediately (synchronous, cannot fail)
   accessToken = null;
   refreshToken = null;
-  await Promise.all([
-    SecureStore.deleteItemAsync(STORAGE_KEYS.ACCESS_TOKEN),
-    SecureStore.deleteItemAsync(STORAGE_KEYS.REFRESH_TOKEN),
-  ]);
+  // Persist deletion to SecureStore — wrapped in try/catch so callers
+  // (e.g. useLogout onSuccess) are never blocked by keychain errors.
+  try {
+    await Promise.all([
+      SecureStore.deleteItemAsync(STORAGE_KEYS.ACCESS_TOKEN),
+      SecureStore.deleteItemAsync(STORAGE_KEYS.REFRESH_TOKEN),
+    ]);
+  } catch (error) {
+    logger.warn("Auth", "clearTokens: SecureStore delete failed (tokens already cleared in memory)", String(error));
+  }
 }
 
 export function getAccessToken(): string | null {

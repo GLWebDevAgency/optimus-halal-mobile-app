@@ -11,6 +11,7 @@ import {
   Switch,
   Modal,
   Pressable,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -417,7 +418,7 @@ export default function CertificationsScreen() {
               fontSize: 12,
               fontWeight: "700",
               textTransform: "uppercase",
-              letterSpacing: 1,
+              letterSpacing: Platform.OS === "android" ? 0.2 : 1,
               color: GOLD,
               marginBottom: 12,
               paddingHorizontal: 4,

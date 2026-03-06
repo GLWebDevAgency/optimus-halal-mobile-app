@@ -35,6 +35,10 @@ export const favoritesRouter = router({
             imageUrl: products.imageUrl,
             halalStatus: products.halalStatus,
             category: products.category,
+            confidenceScore: products.confidenceScore,
+            certifierId: products.certifierId,
+            certifierName: products.certifierName,
+            certifierLogo: products.certifierLogo,
           },
         })
         .from(favorites)

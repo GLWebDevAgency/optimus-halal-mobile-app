@@ -69,6 +69,17 @@ export {
 } from './useFavorites';
 
 // ============================================
+// STORE FAVORITES HOOKS (tRPC)
+// ============================================
+
+export {
+  useStoreFavoritesList,
+  useAddStoreFavorite,
+  useRemoveStoreFavorite,
+  useIsStoreFavorite,
+} from './useStoreFavorites';
+
+// ============================================
 // LOYALTY HOOKS (tRPC)
 // ============================================
 
