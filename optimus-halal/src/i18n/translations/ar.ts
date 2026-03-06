@@ -960,7 +960,37 @@ export const ar: TranslationKeys = {
   onboarding: {
     skip: "تخطي",
     next: "التالي",
-    start: "ابدأ",
+    start: "استكشف التطبيق",
+    createAccount: "إنشاء حساب",
+    exploreMode: "استكشاف بدون حساب",
+    exploreModeHint: "٥ عمليات مسح مجانية يومياً",
+    slides: {
+      brand: {
+        title: "مرحباً بك في",
+        highlight: "نقيّ",
+        description: "تطبيق الحلال الموثوق. امسح. افهم. اختر.",
+      },
+      scanner: {
+        title: "امسح أي",
+        highlight: "منتج",
+        description: "حكم حلال فوري، مؤشر ثقة نقيّ، تحليل كل مكوّن.",
+      },
+      madhab: {
+        title: "مخصّص وفق",
+        highlight: "مذهبك الفقهي",
+        description: "حنفي، شافعي، مالكي أو حنبلي — كل إضافة محلّلة حسب المذاهب الأربعة.",
+      },
+      map: {
+        title: "الحلال",
+        highlight: "من حولك",
+        description: "مجازر، مطاعم وبقالات معتمدة. خريطة تفاعلية مع فلاتر.",
+      },
+      cta: {
+        title: "ابدأ",
+        highlight: "مجاناً",
+        description: "٥ عمليات مسح يومياً في وضع الاستكشاف. نقيّ+ للمزيد.",
+      },
+    },
   },
 
   location: {

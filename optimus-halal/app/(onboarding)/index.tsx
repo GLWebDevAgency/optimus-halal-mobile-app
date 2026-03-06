@@ -1,104 +1,172 @@
 /**
- * Onboarding Screen
- * 
- * Écran d'introduction avec 3 slides animés
+ * Onboarding Screen — World-class 5-slide experience
+ *
+ * Architecture:
+ * - Animated.ScrollView (horizontal, paging) for full parallax support
+ * - scrollX SharedValue → AnimatedPageIndicator + per-slide choreography
+ * - PremiumBackground as single backdrop (not per-slide)
+ * - Haptic on every slide transition via useAnimatedReaction
+ * - Skip button always visible (hidden on CTA slide)
+ * - Footer: AnimatedPageIndicator + Next button (fades on CTA slide)
  */
 
-import React, { useRef, useState, useCallback } from "react";
+import React, { useCallback, useRef } from "react";
 import {
   View,
   Text,
   Pressable,
   Dimensions,
-  FlatList,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
+  Platform,
+  StyleSheet,
 } from "react-native";
-import { PressableScale } from "@/components/ui/PressableScale";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, {
   useSharedValue,
+  useAnimatedScrollHandler,
+  useDerivedValue,
+  useAnimatedReaction,
   useAnimatedStyle,
-  withSpring,
   FadeIn,
+  interpolate,
+  Extrapolation,
 } from "react-native-reanimated";
-import { useHaptics, useTheme, useTranslation } from "@/hooks";
 
+import { useHaptics, useTheme, useTranslation } from "@/hooks";
 import { OnboardingSlide } from "@/components/onboarding";
-import { PremiumBackground, PageIndicator } from "@/components/ui";
-import { onboardingSlides } from "@constants/onboarding";
+import { PremiumBackground, AnimatedPageIndicator } from "@/components/ui";
+import { PressableScale } from "@/components/ui/PressableScale";
+import { ONBOARDING_SLIDES } from "@constants/onboarding";
 import { useOnboardingStore } from "@/store";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const SLIDE_COUNT = ONBOARDING_SLIDES.length;
+const LAST_INDEX = SLIDE_COUNT - 1;
 
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const { isDark, colors } = useTheme();
-  const { impact } = useHaptics();
+  const { impact, notification } = useHaptics();
   const { t } = useTranslation();
-  
-  const flatListRef = useRef<FlatList>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const scrollViewRef = useRef<Animated.ScrollView>(null);
   const scrollX = useSharedValue(0);
-  
   const { setOnboardingComplete } = useOnboardingStore();
 
-  const handleScroll = useCallback(
-    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const offsetX = event.nativeEvent.contentOffset.x;
-      scrollX.value = offsetX;
-      const newIndex = Math.round(offsetX / SCREEN_WIDTH);
-      if (newIndex !== currentIndex && newIndex >= 0 && newIndex < onboardingSlides.length) {
-        setCurrentIndex(newIndex);
-      }
-    },
-    [currentIndex]
+  // ── Derived active index (UI thread) ──
+  const activeIndex = useDerivedValue(
+    () => Math.round(scrollX.value / SCREEN_WIDTH),
   );
 
-  const handleNext = useCallback(async () => {
+  // ── Scroll handler (UI thread) ──
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollX.value = event.contentOffset.x;
+    },
+  });
+
+  // ── Haptic on slide change ──
+  const triggerHaptic = useCallback(() => {
     impact();
-    
-    if (currentIndex < onboardingSlides.length - 1) {
-      flatListRef.current?.scrollToIndex({
-        index: currentIndex + 1,
+  }, [impact]);
+
+  useAnimatedReaction(
+    () => activeIndex.value,
+    (current, previous) => {
+      if (previous !== null && current !== previous) {
+        triggerHaptic();
+      }
+    },
+  );
+
+  // ── Navigation actions ──
+  const scrollToIndex = useCallback(
+    (index: number) => {
+      scrollViewRef.current?.scrollTo({
+        x: index * SCREEN_WIDTH,
         animated: true,
       });
-    } else {
-      // Complete onboarding
-      setOnboardingComplete(true);
-      router.replace("/(tabs)");
-    }
-  }, [currentIndex, setOnboardingComplete]);
+    },
+    [],
+  );
 
-  const handleSkip = useCallback(async () => {
+  const handleNext = useCallback(() => {
+    const current = Math.round(scrollX.value / SCREEN_WIDTH);
+    if (current < LAST_INDEX) {
+      scrollToIndex(current + 1);
+    }
+  }, [scrollToIndex, scrollX]);
+
+  const handleSkip = useCallback(() => {
     impact();
     setOnboardingComplete(true);
     router.replace("/(tabs)");
-  }, [setOnboardingComplete]);
+  }, [impact, setOnboardingComplete]);
 
-  const isLastSlide = currentIndex === onboardingSlides.length - 1;
+  const handleCreateAccount = useCallback(() => {
+    notification();
+    setOnboardingComplete(true);
+    router.replace("/(auth)/signup");
+  }, [notification, setOnboardingComplete]);
 
-  // Animated button scale
-  const buttonScale = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: withSpring(1) }],
-    };
-  });
+  const handleExplore = useCallback(() => {
+    impact();
+    setOnboardingComplete(true);
+    router.replace("/(tabs)");
+  }, [impact, setOnboardingComplete]);
+
+  // ── Animated skip button opacity (fade out on last slide) ──
+  const skipStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      scrollX.value,
+      [(LAST_INDEX - 1) * SCREEN_WIDTH, LAST_INDEX * SCREEN_WIDTH],
+      [1, 0],
+      Extrapolation.CLAMP,
+    ),
+  }));
+
+  // ── Animated footer (hide Next button on CTA slide) ──
+  const nextButtonStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      scrollX.value,
+      [(LAST_INDEX - 1) * SCREEN_WIDTH, LAST_INDEX * SCREEN_WIDTH],
+      [1, 0],
+      Extrapolation.CLAMP,
+    ),
+    transform: [
+      {
+        translateY: interpolate(
+          scrollX.value,
+          [(LAST_INDEX - 1) * SCREEN_WIDTH, LAST_INDEX * SCREEN_WIDTH],
+          [0, 20],
+          Extrapolation.CLAMP,
+        ),
+      },
+    ],
+  }));
 
   return (
-    <View className="flex-1">
+    <View style={styles.container}>
       <PremiumBackground />
-      {/* Skip Button */}
+
+      {/* Skip Button — top right */}
       <Animated.View
         entering={FadeIn.delay(300)}
-        className="absolute z-10 right-0"
-        style={{ top: insets.top + 12, right: 16 }}
+        style={[
+          styles.skipContainer,
+          skipStyle,
+          { top: insets.top + 12 },
+        ]}
       >
         <Pressable onPress={handleSkip} hitSlop={8}>
-          <View className="flex-row items-center gap-1 py-2 px-3 rounded-full">
-            <Text className="text-slate-600 dark:text-slate-400 text-sm font-semibold tracking-wide">
+          <View style={styles.skipPill}>
+            <Text
+              style={[
+                styles.skipText,
+                { color: "#64748b" },
+              ]}
+            >
               {t.onboarding.skip}
             </Text>
           </View>
@@ -106,68 +174,85 @@ export default function OnboardingScreen() {
       </Animated.View>
 
       {/* Slides */}
-      <FlatList
-        ref={flatListRef}
-        data={onboardingSlides}
-        keyExtractor={(item) => item.id}
+      <Animated.ScrollView
+        ref={scrollViewRef}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         bounces={false}
-        onScroll={handleScroll}
+        onScroll={scrollHandler}
         scrollEventThrottle={16}
-        renderItem={({ item, index }) => (
-          <OnboardingSlide slide={item} index={index} />
-        )}
+        decelerationRate="fast"
+        style={styles.scrollView}
         contentContainerStyle={{
           paddingTop: insets.top + 60,
         }}
-      />
+      >
+        {ONBOARDING_SLIDES.map((config, index) => (
+          <OnboardingSlide
+            key={config.id}
+            config={config}
+            index={index}
+            scrollX={scrollX}
+            activeIndex={activeIndex}
+            onCreateAccount={handleCreateAccount}
+            onExplore={handleExplore}
+          />
+        ))}
+      </Animated.ScrollView>
 
       {/* Footer */}
       <Animated.View
         entering={FadeIn.delay(500)}
-        className="w-full px-6 pb-4"
-        style={{ paddingBottom: insets.bottom + 16 }}
+        style={[
+          styles.footer,
+          { paddingBottom: insets.bottom + 16 },
+        ]}
       >
-        {/* Page Indicators */}
-        <View className="items-center mb-8">
-          <PageIndicator
-            count={onboardingSlides.length}
-            currentIndex={currentIndex}
+        {/* Animated Page Indicator */}
+        <View style={styles.indicatorContainer}>
+          <AnimatedPageIndicator
+            count={SLIDE_COUNT}
+            scrollX={scrollX}
+            pageWidth={SCREEN_WIDTH}
             activeColor={colors.primary}
             inactiveColor={isDark ? "#334155" : "#e2e8f0"}
           />
         </View>
 
-        {/* Action Button */}
-        <Animated.View style={buttonScale}>
+        {/* Next Button — fades out on last slide */}
+        <Animated.View style={nextButtonStyle}>
           <PressableScale
             onPress={handleNext}
             style={{
-              shadowColor: colors.primary,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.2,
-              shadowRadius: 12,
-              elevation: 8,
+              ...(Platform.OS === "ios"
+                ? {
+                    shadowColor: colors.primary,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 12,
+                  }
+                : { elevation: 6 }),
             }}
           >
             <View
-              className={`
-                w-full h-14 rounded-2xl items-center justify-center flex-row gap-2
-                ${isDark ? "bg-primary-500" : "bg-slate-900"}
-                shadow-lg
-              `}
+              style={[
+                styles.nextButton,
+                {
+                  backgroundColor: isDark ? colors.primary : "#0d1b13",
+                },
+              ]}
             >
               <Text
-                className={`text-lg font-bold tracking-wide ${
-                  isDark ? "text-slate-900" : "text-white"
-                }`}
+                style={[
+                  styles.nextText,
+                  { color: isDark ? "#0d1b13" : "#ffffff" },
+                ]}
               >
-                {isLastSlide ? t.onboarding.start : t.onboarding.next}
+                {t.onboarding.next}
               </Text>
               <MaterialIcons
-                name={isLastSlide ? "check" : "arrow-forward"}
+                name="arrow-forward"
                 size={20}
                 color={isDark ? "#0d1b13" : colors.primary}
               />
@@ -178,3 +263,53 @@ export default function OnboardingScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  skipContainer: {
+    position: "absolute",
+    right: 16,
+    zIndex: 10,
+  },
+  skipPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+  },
+  skipText: {
+    fontSize: 14,
+    fontWeight: "600",
+    letterSpacing: Platform.OS === "android" ? 0.1 : 0.3,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  footer: {
+    width: "100%",
+    paddingHorizontal: 24,
+    paddingTop: 4,
+  },
+  indicatorContainer: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  nextButton: {
+    width: "100%",
+    height: 54,
+    borderRadius: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  nextText: {
+    fontSize: 17,
+    fontWeight: "700",
+    letterSpacing: Platform.OS === "android" ? 0.1 : 0.3,
+  },
+});

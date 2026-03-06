@@ -1090,7 +1090,37 @@ export const fr = {
   onboarding: {
     skip: "Passer",
     next: "Suivant",
-    start: "Commencer",
+    start: "Explorer l'application",
+    createAccount: "Créer un compte",
+    exploreMode: "Explorer sans compte",
+    exploreModeHint: "5 scans gratuits par jour",
+    slides: {
+      brand: {
+        title: "Bienvenue sur",
+        highlight: "Naqiy",
+        description: "L'application halal de confiance. Scanne. Comprends. Choisis.",
+      },
+      scanner: {
+        title: "Scannez n'importe quel",
+        highlight: "produit",
+        description: "Verdict halal instantané, score de confiance Naqiy, analyse de chaque ingrédient.",
+      },
+      madhab: {
+        title: "Adapté à votre",
+        highlight: "école juridique",
+        description: "Hanafi, Shafi'i, Maliki ou Hanbali — chaque additif analysé selon les 4 écoles.",
+      },
+      map: {
+        title: "Le halal",
+        highlight: "autour de vous",
+        description: "Boucheries, restaurants et épiceries certifiés. Carte interactive avec filtres.",
+      },
+      cta: {
+        title: "Commencez",
+        highlight: "gratuitement",
+        description: "5 scans par jour en mode découverte. Naqiy+ pour aller plus loin.",
+      },
+    },
   },
 
   // Location Picker

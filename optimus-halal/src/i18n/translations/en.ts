@@ -1086,7 +1086,37 @@ export const en: TranslationKeys = {
   onboarding: {
     skip: "Skip",
     next: "Next",
-    start: "Get started",
+    start: "Explore the app",
+    createAccount: "Create an account",
+    exploreMode: "Explore without account",
+    exploreModeHint: "5 free scans per day",
+    slides: {
+      brand: {
+        title: "Welcome to",
+        highlight: "Naqiy",
+        description: "The trusted halal app. Scan. Understand. Choose.",
+      },
+      scanner: {
+        title: "Scan any",
+        highlight: "product",
+        description: "Instant halal verdict, Naqiy trust score, every ingredient analysed.",
+      },
+      madhab: {
+        title: "Tailored to your",
+        highlight: "school of thought",
+        description: "Hanafi, Shafi'i, Maliki or Hanbali — each additive reviewed by all 4 schools.",
+      },
+      map: {
+        title: "Halal",
+        highlight: "around you",
+        description: "Certified butchers, restaurants and grocery stores. Interactive map with filters.",
+      },
+      cta: {
+        title: "Start for",
+        highlight: "free",
+        description: "5 scans per day in discovery mode. Naqiy+ to go further.",
+      },
+    },
   },
 
   location: {
