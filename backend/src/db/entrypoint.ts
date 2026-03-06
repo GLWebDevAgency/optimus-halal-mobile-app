@@ -91,7 +91,20 @@ try {
     ORDER BY table_name
   `);
   const tables = result.map((r: Record<string, unknown>) => r.table_name as string);
-  const requiredTables = ["users", "products", "refresh_tokens", "scans", "additives", "stores"];
+  const requiredTables = [
+    // Core
+    "users", "products", "refresh_tokens", "scans", "additives", "stores",
+    // Trust & Certification
+    "certifiers", "certifier_events", "brand_certifiers", "scholarly_sources",
+    // Content & Engagement
+    "alerts", "alert_categories", "alert_read_status", "articles",
+    // Social & Commerce
+    "reviews", "favorites", "favorite_folders", "store_hours",
+    // Enrichment
+    "google_reviews",
+    // Subscriptions & Boycott
+    "boycott_targets", "ingredient_rulings",
+  ];
   const missing = requiredTables.filter((t) => !tables.includes(t));
 
   if (missing.length > 0) {
@@ -100,7 +113,7 @@ try {
     process.exit(1);
   }
 
-  console.log(`  ✅ ${tables.length} tables verified (${requiredTables.length} required present)\n`);
+  console.log(`  ✅ ${tables.length} tables verified (${requiredTables.length - missing.length}/${requiredTables.length} required present)\n`);
 } catch (err) {
   console.error("  ❌ Schema verification failed:", err);
   await client.end();

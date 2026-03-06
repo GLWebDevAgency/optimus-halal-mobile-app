@@ -23,6 +23,17 @@ import {
 import { matchAllergens } from "../../services/allergen.service.js";
 import { computeHealthScore, type AdditiveForScore } from "../../services/health-score.service.js";
 import { getCertifierScores, getAllCertifierScores } from "../../services/certifier-score.service.js";
+
+// ── Input Sanitization ─────────────────────────────────────
+// Strip control characters, BOM, and normalize Unicode before
+// passing user-provided or OCR text to AI extraction services
+function sanitizeIngredients(text: string): string {
+  return text
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "") // control chars
+    .replace(/\uFEFF/g, "") // BOM
+    .normalize("NFC") // Unicode normalization
+    .trim();
+}
 import { lookupBrandCertifier } from "../../services/brand-certifier.service.js";
 import { notFound } from "../../lib/errors.js";
 import { logger } from "../../lib/logger.js";
@@ -334,7 +345,7 @@ export const scanRouter = router({
 
           // v3 analysis: async, madhab-aware, DB-backed
           halalAnalysis = await analyzeHalalStatus(
-            off.ingredients_text,
+            sanitizeIngredients(off.ingredients_text || ""),
             off.additives_tags,
             off.labels_tags,
             off.ingredients_analysis_tags,
@@ -424,7 +435,7 @@ export const scanRouter = router({
 
         if (storedOff) {
           halalAnalysis = await analyzeHalalStatus(
-            storedOff.ingredients_text as string | undefined,
+            sanitizeIngredients((storedOff.ingredients_text as string) || ""),
             storedOff.additives_tags as string[] | undefined,
             storedOff.labels_tags as string[] | undefined,
             storedOff.ingredients_analysis_tags as string[] | undefined,

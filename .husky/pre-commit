@@ -1,0 +1,44 @@
+#!/bin/sh
+
+# ── Naqiy Pre-Commit Hook: Block Secrets ────────────────────
+# Prevents accidental commits of API keys, tokens, and credentials.
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACM)
+
+if [ -z "$STAGED" ]; then
+  exit 0
+fi
+
+# Patterns that should NEVER appear in committed code
+BLOCKED_PATTERNS=(
+  'sk_live_'           # Stripe live key
+  'sk_test_'           # Stripe test key
+  'AKIA[0-9A-Z]'       # AWS access key
+  'AIza[0-9A-Za-z]'    # Google API key
+  'ghp_[0-9a-zA-Z]'    # GitHub personal token
+  'DATABASE_URL=postgres' # Connection string
+  'JWT_SECRET='        # JWT secret assignment
+  'BREVO_API_KEY='     # Email API key
+  'R2_SECRET_ACCESS'   # R2 credentials
+  'OPENAI_API_KEY='    # OpenAI key
+  'ANTHROPIC_API_KEY=' # Anthropic key
+  'GEMINI_API_KEY='    # Gemini key
+  'keystorePassword'   # Keystore password in JSON
+)
+
+FOUND=0
+for PATTERN in "${BLOCKED_PATTERNS[@]}"; do
+  MATCHES=$(echo "$STAGED" | xargs grep -l "$PATTERN" 2>/dev/null | grep -v node_modules | grep -v '.env.example')
+  if [ -n "$MATCHES" ]; then
+    echo "🚫 BLOCKED: Secret pattern '$PATTERN' found in:"
+    echo "$MATCHES" | sed 's/^/   /'
+    FOUND=1
+  fi
+done
+
+if [ "$FOUND" -eq 1 ]; then
+  echo ""
+  echo "❌ Commit rejected — remove secrets before committing."
+  echo "   If this is a false positive, use: git commit --no-verify"
+  exit 1
+fi

@@ -99,6 +99,34 @@
       "when": 1772524800000,
       "tag": "0013_store_favorites",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1772611200000,
+      "tag": "0014_boycott_unique_company_name",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1772870400000,
+      "tag": "0015_geospatial_gist_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1772870400001,
+      "tag": "0016_missing_fk_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1772956800000,
+      "tag": "0017_certifiers_last_verified_at",
+      "breakpoints": true
     }
   ]
 }

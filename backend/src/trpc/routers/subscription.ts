@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { router, protectedProcedure } from "../trpc.js";
 import { users, subscriptionEvents } from "../../db/schema/index.js";
@@ -58,22 +57,7 @@ export const subscriptionRouter = router({
     });
   }),
 
-  /** Verify a purchase receipt from mobile (provider-agnostic) */
-  verifyPurchase: protectedProcedure
-    .input(
-      z.object({
-        provider: z.enum(["revenuecat", "stripe"]),
-        productId: z.string().trim().max(100),
-        receiptData: z.string().max(10000),
-      })
-    )
-    .mutation(async () => {
-      // SECURITY: Receipt validation not yet implemented.
-      // Enabling this without server-side receipt verification (RevenueCat/Stripe)
-      // would allow any authenticated user to self-grant premium (CVSS 8.1).
-      // Use the RevenueCat webhook endpoint instead.
-      throw new Error(
-        "Vérification d'achat non disponible. Utilisez le processus d'achat in-app."
-      );
-    }),
+  // NOTE: Receipt verification is handled exclusively via RevenueCat webhooks
+  // (see routes/webhook.ts). No client-side receipt endpoint is exposed
+  // to prevent self-grant premium attacks (CVSS 8.1).
 });

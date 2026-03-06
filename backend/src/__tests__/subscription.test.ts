@@ -15,19 +15,6 @@ describe("subscription router", () => {
     expect(status.productId).toBeNull();
   });
 
-  it("verifyPurchase rejects (no server-side validation yet)", async () => {
-    const user = await seedTestUser();
-    const caller = createAuthenticatedCaller(user.id);
-
-    await expect(
-      caller.subscription.verifyPurchase({
-        provider: "revenuecat",
-        productId: "premium_monthly",
-        receiptData: "mock-receipt-data",
-      })
-    ).rejects.toThrow("Vérification d'achat non disponible");
-  });
-
   it("getHistory returns subscription events", async () => {
     const user = await seedTestUser();
     const caller = createAuthenticatedCaller(user.id);

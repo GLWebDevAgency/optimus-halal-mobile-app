@@ -37,8 +37,14 @@ app.use("*", cors({
 
 app.use("*", requestLogger);
 
-// Rate limit: 100 req/min on auth routes, 300 req/min global
+// ── Rate Limiting (most specific first) ────────────────────
+// Expensive endpoints get tighter limits to prevent abuse
+app.use("/trpc/scan.analyze*", rateLimit({ windowMs: 60_000, max: 20, keyPrefix: "rl:analyze" }));
+app.use("/trpc/store.nearby", rateLimit({ windowMs: 60_000, max: 60, keyPrefix: "rl:nearby" }));
+app.use("/trpc/product.search", rateLimit({ windowMs: 60_000, max: 60, keyPrefix: "rl:search" }));
+app.use("/trpc/store.search", rateLimit({ windowMs: 60_000, max: 60, keyPrefix: "rl:search" }));
 app.use("/trpc/auth.*", rateLimit({ windowMs: 60_000, max: 100, keyPrefix: "rl:auth" }));
+// General fallback
 app.use("/trpc/*", rateLimit({ windowMs: 60_000, max: 300, keyPrefix: "rl:api" }));
 
 // ── Health Check ──────────────────────────────────────────

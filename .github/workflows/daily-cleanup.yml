@@ -1,0 +1,49 @@
+name: Daily Cleanup
+
+on:
+  schedule:
+    # Daily at 4:00 AM CET (3:00 UTC)
+    - cron: '0 3 * * *'
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  cleanup:
+    name: Cleanup Expired Tokens
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    strategy:
+      matrix:
+        environment: [preview, production]
+
+    steps:
+      - name: Cleanup expired refresh tokens
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          API_URL: ${{ matrix.environment == 'production' && secrets.PRODUCTION_API_URL || secrets.PREVIEW_API_URL }}
+          ENV_NAME: ${{ matrix.environment }}
+        run: |
+          if [ -z "$API_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "Skipping ${ENV_NAME} — secrets not configured"
+            exit 0
+          fi
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -H "Content-Type: application/json" \
+            "${API_URL}/internal/cleanup-tokens")
+
+          BODY=$(echo "$RESPONSE" | head -n -1)
+          STATUS=$(echo "$RESPONSE" | tail -n 1)
+
+          echo "HTTP Status: ${STATUS}"
+          echo "Response: ${BODY}"
+
+          if [ "${STATUS}" = "200" ]; then
+            DELETED=$(echo "${BODY}" | jq -r '.deleted // 0')
+            echo "Cleaned up ${DELETED} expired tokens on ${ENV_NAME}"
+          else
+            echo "Cleanup failed on ${ENV_NAME} (HTTP ${STATUS})"
+            exit 1
+          fi
