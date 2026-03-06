@@ -4,20 +4,55 @@ on:
   schedule:
     # Weekly: Monday 3:00 AM CET (2:00 UTC)
     - cron: '0 2 * * 1'
-  workflow_dispatch: # Manual trigger from GitHub UI
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - all
+          - preview
+          - production
+        default: all
 
 jobs:
   refresh:
-    name: Trigger Store Refresh
+    name: Refresh Stores
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
 
+    strategy:
+      matrix:
+        environment: [preview, production]
+      fail-fast: false
+
+    # On schedule: run all. On manual: filter by input.
     steps:
-      - name: Trigger refresh endpoint
+      - name: Check if should run
+        id: should-run
+        env:
+          INPUT_ENV: ${{ github.event.inputs.environment || 'all' }}
+          MATRIX_ENV: ${{ matrix.environment }}
+        run: |
+          if [ "$INPUT_ENV" = "all" ] || [ "$INPUT_ENV" = "$MATRIX_ENV" ]; then
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Trigger store refresh
+        if: steps.should-run.outputs.skip != 'true'
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
-          API_URL: ${{ secrets.PRODUCTION_API_URL }}
+          API_URL: ${{ matrix.environment == 'production' && secrets.PRODUCTION_API_URL || secrets.PREVIEW_API_URL }}
+          ENV_NAME: ${{ matrix.environment }}
         run: |
+          if [ -z "$API_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "Skipping ${ENV_NAME} — secrets not configured"
+            exit 0
+          fi
+
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
             -X POST \
             -H "Authorization: Bearer ${CRON_SECRET}" \
@@ -27,32 +62,39 @@ jobs:
           echo "HTTP Status: ${RESPONSE}"
 
           if [ "${RESPONSE}" = "202" ]; then
-            echo "Refresh triggered successfully"
+            echo "Refresh triggered successfully on ${ENV_NAME}"
           elif [ "${RESPONSE}" = "409" ]; then
-            echo "Refresh already in progress — skipping"
+            echo "Refresh already in progress on ${ENV_NAME} — skipping"
           else
-            echo "Unexpected response: ${RESPONSE}"
+            echo "Unexpected response on ${ENV_NAME}: ${RESPONSE}"
             exit 1
           fi
 
       - name: Wait for pipeline completion
+        if: steps.should-run.outputs.skip != 'true'
         run: sleep 90
 
       - name: Check refresh status
+        if: steps.should-run.outputs.skip != 'true'
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
-          API_URL: ${{ secrets.PRODUCTION_API_URL }}
+          API_URL: ${{ matrix.environment == 'production' && secrets.PRODUCTION_API_URL || secrets.PREVIEW_API_URL }}
+          ENV_NAME: ${{ matrix.environment }}
         run: |
+          if [ -z "$API_URL" ]; then
+            exit 0
+          fi
+
           STATUS=$(curl -s \
             -H "Authorization: Bearer ${CRON_SECRET}" \
             "${API_URL}/internal/refresh-stores/status")
 
-          echo "Refresh status:"
+          echo "Refresh status on ${ENV_NAME}:"
           echo "${STATUS}" | jq .
 
           SUCCESS=$(echo "${STATUS}" | jq -r '.lastRun.success // false')
           if [ "${SUCCESS}" != "true" ]; then
-            echo "Refresh did not complete successfully"
+            echo "Refresh did not complete successfully on ${ENV_NAME}"
             ERRORS=$(echo "${STATUS}" | jq -r '.lastRun.errors // []')
             echo "Errors: ${ERRORS}"
             exit 1

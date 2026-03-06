@@ -1,12 +1,15 @@
 /**
  * Internal routes — cron/admin endpoints protected by CRON_SECRET.
  *
- * POST /refresh-stores   — trigger async store data refresh (202 Accepted)
+ * POST /refresh-stores        — trigger async store data refresh (202 Accepted)
  * GET  /refresh-stores/status — last run result from Redis
+ * POST /cleanup-tokens        — delete expired refresh tokens
  */
 
 import { Hono } from "hono";
+import { sql } from "drizzle-orm";
 import { env } from "../lib/env.js";
+import { db } from "../db/index.js";
 import { redis } from "../lib/redis.js";
 import { logger } from "../lib/logger.js";
 import { Sentry } from "../lib/sentry.js";
@@ -87,4 +90,30 @@ internalRoutes.get("/refresh-stores/status", async (c) => {
     lastRun: lastRun ? JSON.parse(lastRun) : null,
     isRunning: lockActive !== null,
   });
+});
+
+// ── POST /cleanup-tokens ─────────────────────────────────────
+// Deletes expired refresh tokens. Called daily by GitHub Actions cron.
+
+internalRoutes.post("/cleanup-tokens", async (c) => {
+  if (!verifyCronSecret(c)) {
+    return c.json({ error: "Non autorisé" }, 401);
+  }
+
+  try {
+    const result = await db.execute(sql`
+      DELETE FROM refresh_tokens WHERE expires_at < NOW()
+    `);
+    const deleted = (result as unknown as { rowCount?: number }).rowCount ?? 0;
+
+    logger.info("Tokens expirés nettoyés", { deleted });
+
+    return c.json({ success: true, deleted });
+  } catch (err) {
+    logger.error("Nettoyage tokens échoué", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    Sentry.captureException(err);
+    return c.json({ error: "Cleanup failed" }, 500);
+  }
 });

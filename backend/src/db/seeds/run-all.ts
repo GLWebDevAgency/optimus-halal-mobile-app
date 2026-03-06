@@ -8,6 +8,7 @@
  *   1. Certifiers (18 French halal certifiers — raw flags only)
  *   1.5. Brand Certifiers (brand → certifier mappings for Tier 1c fallback)
  *   2. Stores (AVS + Achahada halal stores)
+ *   2.5. Google Places (pre-exported ratings, photos, reviews, hours)
  *   3. Boycott targets (BDS movement data)
  *   4. Additives + Madhab rulings (200+ E-numbers)
  *   5. Alert categories + Alerts (Al-Kanz + RappelConso)
@@ -66,6 +67,19 @@ export async function seedReferenceData(db: PostgresJsDatabase): Promise<SeedSta
     console.log(`    Stores: ${count} upserted (${Date.now() - t2}ms)`);
   } catch (err) {
     console.warn(`    Stores: skipped (${(err as Error).message})`);
+  }
+
+  // ── Phase 2.5: Google Places enrichment data ───────────
+  // Seeds pre-exported Google data (ratings, photos, reviews, hours)
+  // so preview/production environments match dev without needing API key
+  const t25 = Date.now();
+  try {
+    const { seedGooglePlaces } = await import("./seed-google-places.js");
+    const count = await seedGooglePlaces(db);
+    stats.push({ phase: "Google Places", count, durationMs: Date.now() - t25 });
+    console.log(`    Google Places: ${count} stores enriched (${Date.now() - t25}ms)`);
+  } catch (err) {
+    console.warn(`    Google Places: skipped (${(err as Error).message})`);
   }
 
   // ── Phase 3: Boycott targets ────────────────────────────
