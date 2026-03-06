@@ -67,7 +67,7 @@ export function AnimatedSplash({ isReady, onFinish }: AnimatedSplashProps) {
 
   const player = useVideoPlayer(source, (p) => {
     p.loop = false;
-    // autoPlay is true by default — no need to call p.play()
+    p.play();
   });
 
   // ── Exit: fade out → onFinish ──
