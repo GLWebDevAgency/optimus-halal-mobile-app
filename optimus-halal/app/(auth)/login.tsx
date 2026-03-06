@@ -414,7 +414,7 @@ export default function LoginScreen() {
                 <MaterialIcons name="arrow-forward" size={16} color={isDark ? "#94a3b8" : "#64748b"} />
               </View>
             </PressableScale>
-            <Text style={{ fontSize: 12, color: colors.textTertiary, textAlign: "center", marginTop: 8 }}>
+            <Text style={{ fontSize: 12, color: colors.textMuted, textAlign: "center", marginTop: 8 }}>
               {t.auth.login.exploreModeHint}
             </Text>
           </Animated.View>
