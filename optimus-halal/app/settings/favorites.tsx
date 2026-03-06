@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FlashList } from "@shopify/flash-list";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useFavoritesList, useRemoveFavorite } from "@/hooks/useFavorites";
@@ -214,6 +214,17 @@ export default function FavoritesScreen() {
     refetch: refetchStores,
   } = useStoreFavoritesList({ enabled: isAuth });
   const removeStoreMutation = useRemoveStoreFavorite();
+
+  // Refetch favorites when screen regains focus (e.g. returning from scan-result
+  // after toggling a favorite) — ensures the list is always fresh
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuth) {
+        refetchProducts();
+        refetchStores();
+      }
+    }, [isAuth, refetchProducts, refetchStores])
+  );
 
   // ── Store Favorites (Guest) ──
   const localStores = useLocalStoreFavoritesStore((s) => s.favorites);

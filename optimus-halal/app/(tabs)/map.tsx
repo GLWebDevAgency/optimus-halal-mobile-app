@@ -23,7 +23,7 @@ import {
 } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import { PressableScale } from "@/components/ui/PressableScale";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useHaptics, useUserLocation, useMapStores, useMapSearch } from "@/hooks";
@@ -117,6 +117,19 @@ export default function MapScreen() {
   const { t } = useTranslation();
   const { isDark, colors } = useTheme();
 
+  // Pause polling when map tab is not visible — saves battery & network
+  const [isTabFocused, setIsTabFocused] = useState(true);
+  useFocusEffect(
+    useCallback(() => {
+      setIsTabFocused(true);
+      return () => {
+        setIsTabFocused(false);
+        // Reset deep-link guard so the same store can be re-selected from Home
+        deepLinkHandledRef.current = null;
+      };
+    }, [])
+  );
+
   // Deep-link params from home carousel "Autour de vous"
   const { storeId: deepLinkStoreId, storeLat, storeLng, storeName } =
     useLocalSearchParams<{
@@ -184,7 +197,7 @@ export default function MapScreen() {
     openNow: openNowFilter,
     minRating: minRatingFilter,
     limit: 100,
-    refetchInterval: 60_000,
+    refetchInterval: isTabFocused ? 60_000 : undefined,
   });
 
   const stores = useMemo(() => storesQuery.data ?? [], [storesQuery.data]);
@@ -679,6 +692,9 @@ export default function MapScreen() {
   useEffect(() => {
     if (!isStyleLoaded || !cameraRef.current) return;
 
+    // Skip viewport restore when a deep-link will handle camera positioning
+    if (deepLinkStoreId && deepLinkHandledRef.current !== deepLinkStoreId) return;
+
     // Returning to map tab — restore last viewport instantly (no animation)
     if (_hasAnimatedToUser && _lastViewport) {
       cameraRef.current.setCamera({
@@ -700,7 +716,7 @@ export default function MapScreen() {
         animationMode: "flyTo",
       });
     }
-  }, [userLocation, hasAnimatedToUser, isStyleLoaded]);
+  }, [userLocation, hasAnimatedToUser, isStyleLoaded, deepLinkStoreId]);
 
   // Show "search this area" as manual retry when auto-fetch returned 0 results
   // and the user has interacted with the map (not initial load)
@@ -739,14 +755,31 @@ export default function MapScreen() {
     _hasAnimatedToUser = true;
     setHasAnimatedToUser(true);
 
-    // Fly to store with padding for bottom sheet
-    cameraRef.current.setCamera({
-      centerCoordinate: [lng, lat],
-      zoomLevel: 15,
-      animationDuration: 1200,
-      animationMode: "flyTo",
-      padding: { bottom: SCREEN_HEIGHT * 0.3, top: 0, left: 0, right: 0 },
-    });
+    // Immediately update mapRegion so useMapStores fetches stores around the
+    // deep-linked coordinates WITHOUT waiting for the camera animation to
+    // complete + handleCameraChanged debounce. This ensures `stores` contains
+    // the target store by the time the fly-to finishes.
+    const quantLat = Math.round(lat * 1000) / 1000;
+    const quantLng = Math.round(lng * 1000) / 1000;
+    setMapRegion({ latitude: quantLat, longitude: quantLng, radiusKm: 5 });
+    lastCenterRef.current = [quantLng, quantLat];
+    lastCommittedCenterRef.current = [quantLng, quantLat];
+
+    // Update _lastViewport so restore-viewport effect won't fight us
+    _lastViewport = { center: [lng, lat], zoom: 15 };
+
+    // Defer setCamera to next frame — ensures all synchronous React effects
+    // (especially restore-viewport) have settled before we animate. Mapbox iOS
+    // silently drops setCamera calls that collide with others in the same frame.
+    const timer = setTimeout(() => {
+      cameraRef.current?.setCamera({
+        centerCoordinate: [lng, lat],
+        zoomLevel: 15,
+        animationDuration: 1200,
+        animationMode: "flyTo",
+        padding: { bottom: SCREEN_HEIGHT * 0.3, top: 0, left: 0, right: 0 },
+      });
+    }, 50);
 
     // Select the store to open bottom sheet detail card
     setSelectedStoreId(deepLinkStoreId);
@@ -757,6 +790,8 @@ export default function MapScreen() {
       store_name: storeName ?? "",
       source: "home_carousel",
     });
+
+    return () => clearTimeout(timer);
   }, [isStyleLoaded, deepLinkStoreId, storeLat, storeLng, storeName, impact, hasAnimatedToUser]);
 
   // ── Render ─────────────────────────────────────────────
@@ -1057,7 +1092,7 @@ export default function MapScreen() {
             backgroundColor: isDark ? "rgba(239,68,68,0.15)" : "rgba(239,68,68,0.1)",
             borderWidth: 1,
             borderColor: "rgba(239,68,68,0.3)",
-            zIndex: 15,
+            zIndex: 20,
           }}
         >
           <Text className="text-sm font-semibold" style={{ color: "#ef4444" }}>

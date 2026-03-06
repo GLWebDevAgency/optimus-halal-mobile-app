@@ -1,16 +1,16 @@
 /**
- * ScoreDetailBottomSheet — Per-theme breakdown of a certifier's trust score.
+ * ScoreDetailBottomSheet — V5.1 Enhanced certifier trust score breakdown.
  *
- * Shows the actual indicator-level compliance for the scanned product's certifier,
- * organized into 3 themes aligned with trust-score-complete.md:
- *   1. Rigueur du contrôle (الأمانة — Al-Amanah) — 3 positive indicators
- *   2. Conformité de l'abattage (الذبيحة — Al-Dhabiha) — 5 negative indicators (inverted)
- *   3. Transparence organisationnelle (الشفافية — Al-Shafafiyya) — 3 transparency indicators
+ * Two-layer information architecture:
+ *   Layer 1 — 4-block semantic bars (ritual, ops, tayyib, transparency)
+ *             + evidence level badge. Gives instant visual read.
+ *   Layer 2 — Granular indicator checklist (met/not-met/unknown).
+ *             Full transparency for the expert user.
  *
- * This sheet shows FACTS (met/not-met), NOT a fatwa or halal/haram verdict.
+ * Data flow: scan.ts → certifierData.detail → this component
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -18,15 +18,18 @@ import {
   Dimensions,
   Pressable,
   ScrollView,
+  Platform,
 } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   withSpring,
+  withDelay,
   Easing,
   runOnJS,
   useReducedMotion,
+  interpolateColor,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -36,6 +39,8 @@ import { halalStatus, darkTheme, lightTheme, getTrustScoreColor } from "@/theme/
 import { CertifierLogo } from "./CertifierLogo";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+
+// ── Types ────────────────────────────────────────────────
 
 export interface CertifierPracticesUI {
   controllersAreEmployees: boolean | null;
@@ -51,14 +56,79 @@ export interface CertifierPracticesUI {
   transparencyCompanyList: boolean | null;
 }
 
+export interface TrustScoreDetailUI {
+  score: number;
+  blocks: {
+    ritualValidity: number;
+    operationalAssurance: number;
+    productQuality: number;
+    transparency: number;
+  };
+  cap?: number;
+  evidenceLevel: "verified" | "declared" | "inferred" | "unknown";
+}
+
 interface ScoreDetailBottomSheetProps {
   visible: boolean;
   certifierId: string | null;
   certifierName: string | null;
   trustScore: number | null;
   practices: CertifierPracticesUI | null;
+  detail: TrustScoreDetailUI | null;
   onClose: () => void;
 }
+
+// ── Evidence level config ────────────────────────────────
+
+const EVIDENCE_CONFIG = {
+  verified: { icon: "verified" as const, color: "#22c55e", labelFr: "Verifie", labelEn: "Verified" },
+  declared: { icon: "fact-check" as const, color: "#3b82f6", labelFr: "Declare", labelEn: "Declared" },
+  inferred: { icon: "psychology" as const, color: "#f59e0b", labelFr: "Infere", labelEn: "Inferred" },
+  unknown: { icon: "help-outline" as const, color: "#6b7280", labelFr: "Inconnu", labelEn: "Unknown" },
+} as const;
+
+// ── Block config ─────────────────────────────────────────
+
+const BLOCK_CONFIG = [
+  {
+    key: "ritualValidity" as const,
+    icon: "mosque" as const,      // MaterialIcons doesn't have mosque, use alternative
+    fallbackIcon: "auto-awesome" as const,
+    labelFr: "Validite rituelle",
+    labelEn: "Ritual Validity",
+    subtitleFr: "Tasmiya, coupe, vitalite",
+    subtitleEn: "Tasmiya, cut, vitality",
+  },
+  {
+    key: "operationalAssurance" as const,
+    icon: "shield" as const,
+    fallbackIcon: "shield" as const,
+    labelFr: "Assurance operationnelle",
+    labelEn: "Operational Assurance",
+    subtitleFr: "Controleurs, sacrificateurs",
+    subtitleEn: "Controllers, slaughterers",
+  },
+  {
+    key: "productQuality" as const,
+    icon: "eco" as const,
+    fallbackIcon: "eco" as const,
+    labelFr: "Qualite produit (Tayyib)",
+    labelEn: "Product Quality (Tayyib)",
+    subtitleFr: "VSM, matieres premieres",
+    subtitleEn: "MSM, raw materials",
+  },
+  {
+    key: "transparency" as const,
+    icon: "visibility" as const,
+    fallbackIcon: "visibility" as const,
+    labelFr: "Transparence",
+    labelEn: "Transparency",
+    subtitleFr: "Charte, audits, liste",
+    subtitleEn: "Charter, audits, list",
+  },
+] as const;
+
+// ── Helpers ──────────────────────────────────────────────
 
 type IndicatorStatus = "met" | "notMet" | "unknown";
 
@@ -68,7 +138,6 @@ function getPositiveStatus(value: boolean | null): IndicatorStatus {
   return "unknown";
 }
 
-/** Negative indicators are INVERTED: false = conforme (met), true = non-conforme */
 function getNegativeStatus(value: boolean | null): IndicatorStatus {
   if (value === false) return "met";
   if (value === true) return "notMet";
@@ -79,12 +148,86 @@ function countMet(statuses: IndicatorStatus[]): number {
   return statuses.filter((s) => s === "met").length;
 }
 
+function getBlockColor(value: number): string {
+  if (value >= 80) return "#22c55e";  // green
+  if (value >= 50) return "#f59e0b";  // amber
+  if (value >= 20) return "#f97316";  // orange
+  return "#ef4444";                    // red
+}
+
+// ── Animated Block Bar ───────────────────────────────────
+
+const BlockBar = React.memo(function BlockBar({
+  label,
+  subtitle,
+  value,
+  icon,
+  staggerIndex,
+  isDark,
+  colors,
+}: {
+  label: string;
+  subtitle: string;
+  value: number;
+  icon: keyof typeof MaterialIcons.glyphMap;
+  staggerIndex: number;
+  isDark: boolean;
+  colors: any;
+}) {
+  const progress = useSharedValue(0);
+  const opacity = useSharedValue(0);
+
+  useEffect(() => {
+    opacity.value = withDelay(staggerIndex * 80, withTiming(1, { duration: 300 }));
+    progress.value = withDelay(
+      staggerIndex * 80 + 150,
+      withSpring(value / 100, { damping: 18, stiffness: 90 }),
+    );
+  }, [value, staggerIndex, opacity, progress]);
+
+  const barColor = getBlockColor(value);
+
+  const barStyle = useAnimatedStyle(() => ({
+    width: `${progress.value * 100}%`,
+    backgroundColor: barColor,
+  }));
+
+  const containerStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  return (
+    <Animated.View style={[styles.blockRow, containerStyle]}>
+      <View style={styles.blockHeader}>
+        <View style={styles.blockLabelRow}>
+          <MaterialIcons name={icon} size={14} color={barColor} />
+          <Text style={[styles.blockLabel, { color: colors.textPrimary }]} numberOfLines={1}>
+            {label}
+          </Text>
+        </View>
+        <Text style={[styles.blockValue, { color: barColor }]}>
+          {value}
+        </Text>
+      </View>
+      <View style={[styles.blockBarBg, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }]}>
+        <Animated.View style={[styles.blockBarFill, barStyle]} />
+      </View>
+      <Text style={[styles.blockSubtitle, { color: colors.textMuted }]} numberOfLines={1}>
+        {subtitle}
+      </Text>
+    </Animated.View>
+  );
+});
+
+// ── Main Component ───────────────────────────────────────
+
 export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet({
   visible,
   certifierId,
   certifierName,
   trustScore,
   practices,
+  detail,
   onClose,
 }: ScoreDetailBottomSheetProps) {
   const { isDark, colors } = useTheme();
@@ -96,9 +239,13 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
   const translateY = useSharedValue(SCREEN_HEIGHT);
   const backdropOpacity = useSharedValue(0);
 
+  // Toggle between summary (blocks) and detail (indicators) view
+  const [showIndicators, setShowIndicators] = useState(false);
+
   useEffect(() => {
     if (visible) {
       setIsMounted(true);
+      setShowIndicators(false);
       backdropOpacity.value = withTiming(1, { duration: 200 });
       translateY.value = reducedMotion
         ? 0
@@ -127,8 +274,28 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
 
   if (!isMounted) return null;
 
-  // Build indicator statuses from practices
-  const controlIndicators = practices
+  // ── Build indicator data (V5.1 — aligned with 4 semantic blocks) ──
+
+  // Bloc A — Validite rituelle (4 negative indicators: mechanical, electronarcosis, stunning, post-slaughter)
+  const ritualIndicators = practices
+    ? [
+        { label: t.scanResult.detailRitual1, status: getNegativeStatus(practices.acceptsMechanicalSlaughter) },
+        { label: t.scanResult.detailRitual2, status: getNegativeStatus(practices.acceptsElectronarcosis) },
+        { label: t.scanResult.detailRitual3, status: getNegativeStatus(practices.acceptsStunning) },
+        { label: t.scanResult.detailRitual4, status: getNegativeStatus(practices.acceptsPostSlaughterElectrocution) },
+      ]
+    : [];
+
+  const ritualMetCount = countMet(ritualIndicators.map((i) => i.status));
+  const ritualThemeColor =
+    ritualMetCount === ritualIndicators.length
+      ? halalStatus.halal.base
+      : ritualMetCount === 0
+        ? halalStatus.haram.base
+        : halalStatus.doubtful.base;
+
+  // Bloc B — Assurance operationnelle (3 positive indicators: controllers, present, salaried)
+  const opsIndicators = practices
     ? [
         { label: t.scanResult.trustScorePositive1, status: getPositiveStatus(practices.controllersAreEmployees) },
         { label: t.scanResult.trustScorePositive2, status: getPositiveStatus(practices.controllersPresentEachProduction) },
@@ -136,32 +303,14 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
       ]
     : [];
 
-  // Dhabiha compliance — 3 indicators that directly impact halal validity
-  const dhabihaIndicators = practices
+  // Bloc C — Qualite produit Tayyib (1 negative indicator: VSM)
+  const tayyibIndicators = practices
     ? [
-        { label: t.scanResult.detailDhabiha1, status: getNegativeStatus(practices.acceptsMechanicalSlaughter) },
-        { label: t.scanResult.detailDhabiha2, status: getNegativeStatus(practices.acceptsElectronarcosis) },
-        { label: t.scanResult.detailDhabiha3, status: getNegativeStatus(practices.acceptsStunning) },
+        { label: t.scanResult.detailTayyib1, status: getNegativeStatus(practices.acceptsVsm) },
       ]
     : [];
 
-  // Industrial rigor — 2 post-slaughter processing indicators
-  const industrialIndicators = practices
-    ? [
-        { label: t.scanResult.detailIndustrial1, status: getNegativeStatus(practices.acceptsPostSlaughterElectrocution) },
-        { label: t.scanResult.detailIndustrial2, status: getNegativeStatus(practices.acceptsVsm) },
-      ]
-    : [];
-
-  // Dynamic color for dhabiha theme: green if all met, red if all notMet, orange if mixed
-  const dhabihaMetCount = countMet(dhabihaIndicators.map((i) => i.status));
-  const dhabihaThemeColor =
-    dhabihaMetCount === dhabihaIndicators.length
-      ? halalStatus.halal.base
-      : dhabihaMetCount === 0
-        ? halalStatus.haram.base
-        : halalStatus.doubtful.base;
-
+  // Bloc D — Transparence (3 positive indicators: charter, audits, company list)
   const transparencyIndicators = practices
     ? [
         { label: t.scanResult.trustScoreTransparency1, status: getPositiveStatus(practices.transparencyPublicCharter) },
@@ -228,6 +377,9 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
     );
   };
 
+  // Evidence config
+  const evidence = detail ? EVIDENCE_CONFIG[detail.evidenceLevel] : null;
+
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
       {/* Backdrop */}
@@ -242,7 +394,7 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
           {
             backgroundColor: isDark ? darkTheme.background : lightTheme.backgroundSecondary,
             paddingBottom: insets.bottom + 20,
-            maxHeight: SCREEN_HEIGHT * 0.85,
+            maxHeight: SCREEN_HEIGHT * 0.88,
           },
           sheetStyle,
         ]}
@@ -269,26 +421,48 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
           </Text>
         </View>
 
-        {/* Current certifier score */}
+        {/* Current certifier score + evidence badge */}
         {certifierName && trustScore != null && (
-          <View
-            style={[
-              styles.currentScore,
-              {
-                backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
-                borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-              },
-            ]}
-          >
-            {certifierId && (
-              <CertifierLogo certifierId={certifierId} size={22} fallbackColor={scoreColor} />
-            )}
-            <Text style={[styles.currentScoreName, { color: colors.textPrimary }]}>
-              {certifierName}
-            </Text>
-            <Text style={[styles.currentScoreValue, { color: scoreColor }]}>
-              {trustScore}/100
-            </Text>
+          <View style={styles.certifierHeaderSection}>
+            <View
+              style={[
+                styles.currentScore,
+                {
+                  backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
+                  borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                },
+              ]}
+            >
+              {certifierId && (
+                <CertifierLogo certifierId={certifierId} size={22} fallbackColor={scoreColor} />
+              )}
+              <Text style={[styles.currentScoreName, { color: colors.textPrimary }]}>
+                {certifierName}
+              </Text>
+              <Text style={[styles.currentScoreValue, { color: scoreColor }]}>
+                {trustScore}/100
+              </Text>
+            </View>
+
+            {/* Evidence level badge + cap indicator */}
+            <View style={styles.metaBadgeRow}>
+              {evidence && (
+                <View style={[styles.evidenceBadge, { backgroundColor: `${evidence.color}15`, borderColor: `${evidence.color}30` }]}>
+                  <MaterialIcons name={evidence.icon} size={12} color={evidence.color} />
+                  <Text style={[styles.evidenceBadgeText, { color: evidence.color }]}>
+                    {evidence.labelFr}
+                  </Text>
+                </View>
+              )}
+              {detail?.cap != null && (
+                <View style={[styles.capBadge, { backgroundColor: isDark ? "rgba(239,68,68,0.12)" : "rgba(239,68,68,0.08)", borderColor: "rgba(239,68,68,0.25)" }]}>
+                  <MaterialIcons name="block" size={11} color="#ef4444" />
+                  <Text style={[styles.capBadgeText, { color: "#ef4444" }]}>
+                    Cap {detail.cap}
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
         )}
 
@@ -297,22 +471,70 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
           bounces={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {practices ? (
-            <>
+          {/* ════════════════════════════════════════════
+              LAYER 1 — 4-Block Semantic Breakdown
+              ════════════════════════════════════════════ */}
+          {detail && (
+            <View style={styles.blocksContainer}>
+              {BLOCK_CONFIG.map((block, i) => (
+                <BlockBar
+                  key={block.key}
+                  label={block.labelFr}
+                  subtitle={block.subtitleFr}
+                  value={detail.blocks[block.key]}
+                  icon={block.fallbackIcon}
+                  staggerIndex={i}
+                  isDark={isDark}
+                  colors={colors}
+                />
+              ))}
+            </View>
+          )}
+
+          {/* Toggle to indicator detail */}
+          {practices && (
+            <Pressable
+              onPress={() => setShowIndicators(!showIndicators)}
+              style={[
+                styles.toggleButton,
+                {
+                  backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
+                  borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+                },
+              ]}
+            >
+              <MaterialIcons
+                name={showIndicators ? "expand-less" : "expand-more"}
+                size={18}
+                color={colors.textMuted}
+              />
+              <Text style={[styles.toggleText, { color: colors.textSecondary }]}>
+                {showIndicators
+                  ? t.scanResult.hideIndicators ?? "Masquer le detail"
+                  : t.scanResult.showIndicators ?? "Voir le detail par indicateur"}
+              </Text>
+            </Pressable>
+          )}
+
+          {/* ════════════════════════════════════════════
+              LAYER 2 — Granular Indicator Checklist
+              ════════════════════════════════════════════ */}
+          {showIndicators && practices && (
+            <View style={styles.indicatorsSection}>
               {renderSection(
-                t.scanResult.themeControl,
-                controlIndicators,
-                colors.textSecondary,
+                t.scanResult.themeRitual,
+                ritualIndicators,
+                ritualThemeColor,
                 true,
               )}
               {renderSection(
-                t.scanResult.themeDhabiha,
-                dhabihaIndicators,
-                dhabihaThemeColor,
+                t.scanResult.themeOps,
+                opsIndicators,
+                colors.textSecondary,
               )}
               {renderSection(
-                t.scanResult.themeIndustrial,
-                industrialIndicators,
+                t.scanResult.themeTayyib,
+                tayyibIndicators,
                 colors.textMuted,
               )}
               {renderSection(
@@ -320,11 +542,7 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
                 transparencyIndicators,
                 colors.textSecondary,
               )}
-            </>
-          ) : (
-            <Text style={[styles.noPractices, { color: colors.textMuted }]}>
-              {t.scanResult.noCertifierScore}
-            </Text>
+            </View>
           )}
 
           {/* Footer — factual, no fatwa */}
@@ -336,6 +554,8 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
     </View>
   );
 });
+
+// ── Styles ───────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   backdrop: {
@@ -373,6 +593,9 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     flex: 1,
   },
+  certifierHeaderSection: {
+    marginBottom: 4,
+  },
   currentScore: {
     flexDirection: "row",
     alignItems: "center",
@@ -380,7 +603,6 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 12,
     borderWidth: 1,
-    marginBottom: 8,
   },
   currentScoreName: {
     fontSize: 14,
@@ -391,8 +613,111 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "800",
   },
+  metaBadgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 8,
+    marginBottom: 4,
+    paddingLeft: 2,
+  },
+  evidenceBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  evidenceBadgeText: {
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 0.3,
+  },
+  capBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  capBadgeText: {
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 0.2,
+  },
   scrollContent: {
     paddingBottom: 8,
+  },
+
+  // ── Block bars ─────────────────────────────────────────
+  blocksContainer: {
+    gap: 14,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  blockRow: {
+    gap: 3,
+  },
+  blockHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  blockLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flex: 1,
+  },
+  blockLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    flex: 1,
+  },
+  blockValue: {
+    fontSize: 14,
+    fontWeight: "800",
+    minWidth: 28,
+    textAlign: "right",
+  },
+  blockBarBg: {
+    height: 6,
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  blockBarFill: {
+    height: 6,
+    borderRadius: 3,
+  },
+  blockSubtitle: {
+    fontSize: 11,
+    marginTop: 1,
+  },
+
+  // ── Toggle button ──────────────────────────────────────
+  toggleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  toggleText: {
+    fontSize: 13,
+    fontWeight: "500",
+  },
+
+  // ── Indicators (Layer 2) ───────────────────────────────
+  indicatorsSection: {
+    marginTop: 8,
   },
   section: {
     marginTop: 0,

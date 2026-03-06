@@ -411,6 +411,8 @@ export const ar: TranslationKeys = {
     unknown: "غير معروف",
     certifiedHalal: "شهادة حلال مكتشفة",
     compositionCompliant: "تركيبة مطابقة",
+    weakCertification: "شهادة غير موثوقة",
+    cautionCertification: "شهادة تحتاج تحقق",
     haramDetected: "عنصر محظور مكتشف",
     doubtfulStatus: "تركيبة تحتاج تحقق",
     unverified: "بيانات غير كافية",
@@ -497,19 +499,32 @@ export const ar: TranslationKeys = {
     trustScoreTransparency3: "قائمة الشركات المعتمدة متاحة",
     trustScoreNote: "كلما ارتفعت النتيجة، كانت إجراءات جهة الاعتماد أكثر صرامة.",
     trustScoreMadhabNote: "النتيجة مرجّحة وفق المذهب {{madhab}}. تختلف الأوزان حسب المواقف الفقهية لكل مذهب في الذبح.",
+    showIndicators: "عرض تفاصيل المؤشرات",
+    hideIndicators: "إخفاء التفاصيل",
     scoreDetailTitle: "تفصيل النقاط",
-    themeControl: "صرامة الرقابة (الأمانة)",
-    themeDhabiha: "مطابقة الذبيحة",
-    themeIndustrial: "الصرامة الصناعية",
-    themeTransparency: "الشفافية التنظيمية",
+    // V5.1 — 4 كتل متوافقة مع محرك التقييم
+    themeRitual: "صحة الذبيحة الشرعية",
+    themeOps: "ضمان الرقابة (الأمانة)",
+    themeTayyib: "جودة المنتج — الطيّب",
+    themeTransparency: "الشفافية والحوكمة",
+    // للتوافق مع الإصدارات السابقة
+    themeControl: "ضمان الرقابة (الأمانة)",
+    themeDhabiha: "صحة الذبيحة الشرعية",
+    themeIndustrial: "جودة المنتج — الطيّب",
     indicatorMet: "مطابق",
     indicatorNotMet: "غير مطابق",
     indicatorUnknown: "غير متحقق",
-    // مطابقة الذبيحة — 3 مؤشرات تؤثر على صحة الحلال
+    // الكتلة أ — صحة الذبيحة (4 مؤشرات)
+    detailRitual1: "ذبح يدوي فقط (التسمية مستحيلة بالآلة)",
+    detailRitual2: "بدون صعق كهربائي قبل الذبح (خطر الميتة)",
+    detailRitual3: "بدون تخدير الأبقار والأغنام",
+    detailRitual4: "بدون صعق كهربائي بعد النزف",
+    // الكتلة ج — الطيّب (مؤشر واحد)
+    detailTayyib1: "بدون لحوم مفصولة آلياً (VSM)",
+    // مفاتيح قديمة
     detailDhabiha1: "ذبح يدوي فقط (التسمية مستحيلة بالآلة)",
     detailDhabiha2: "بدون صعق كهربائي قبل الذبح (خطر الميتة)",
     detailDhabiha3: "بدون تخدير الأبقار والأغنام",
-    // الإتقان الصناعي — مؤشران بعد الذبح
     detailIndustrial1: "بدون صعق كهربائي بعد النزف",
     detailIndustrial2: "بدون لحوم مفصولة آلياً (VSM)",
     noCertifierScore: "لم يتم تحديد جهة اعتماد لهذا المنتج.",
@@ -577,6 +592,7 @@ export const ar: TranslationKeys = {
     tierAnalyzed: "تم التحليل",
     tierDoubtful: "غير مؤكد",
     tierUnknown: "غير محقق",
+    staleData: "بيانات قديمة",
     shareBoycotted: "منتج مقاطع",
     shareTagline: "تطبيق الحلال الموثوق",
     // Marketplace integration

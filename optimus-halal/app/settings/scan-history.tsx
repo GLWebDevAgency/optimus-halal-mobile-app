@@ -403,7 +403,7 @@ export default function ScanHistoryScreen() {
   const hasTokens = hasStoredTokens();
   const meQuery = useMe({ enabled: hasTokens });
   const me = meQuery.data;
-  const isGuest = !hasTokens && !me;
+  const isGuest = !me && (!hasTokens || meQuery.isError);
 
   // ── Cloud history (Naqiy+ only) ──
   const { data, isLoading, isError, refetch } = useScanHistory({ limit: 50, enabled: !!me });

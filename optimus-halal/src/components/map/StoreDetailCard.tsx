@@ -137,8 +137,8 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
   const typeColor =
     storeTypeColors[store.storeType as keyof typeof storeTypeColors]?.base ?? colors.primary;
 
-  // Current day of week (Paris timezone approximation — JS Date uses device locale)
-  const today = new Date().getDay();
+  // Current day of week in Europe/Paris (matches backend EXTRACT(DOW FROM NOW() AT TIME ZONE 'Europe/Paris'))
+  const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" })).getDay();
 
   // Google photos from detail (enriched data)
   const googlePhotos = detail?.googlePhotos?.filter(Boolean) ?? [];

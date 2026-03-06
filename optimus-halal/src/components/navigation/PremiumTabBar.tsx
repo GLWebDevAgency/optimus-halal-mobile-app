@@ -266,7 +266,8 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
       cancelAnimation(glowScale);
       cancelAnimation(innerGlow);
     };
-  }, [reducedMotion, pulseScale, glowOpacity, scale, rotation, glowScale, innerGlow]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- SharedValues are stable refs
+  }, [reducedMotion]);
 
   // Scanning animation when active
   useEffect(() => {

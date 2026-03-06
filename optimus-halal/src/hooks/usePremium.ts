@@ -21,7 +21,7 @@ export function usePremium(): PremiumState {
   const { flags } = useFeatureFlagsStore();
   const hasTokens = hasStoredTokens();
   const meQuery = useMe({ enabled: hasTokens });
-  const isGuest = !hasTokens && !meQuery.data;
+  const isGuest = !meQuery.data && (!hasTokens || meQuery.isError);
 
   // RevenueCat local entitlement (works for both anonymous & identified users)
   const [rcPremium, setRcPremium] = useState(false);

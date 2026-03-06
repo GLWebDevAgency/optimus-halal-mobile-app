@@ -54,7 +54,7 @@ export default function PaywallScreen() {
   const handleLogin = () => {
     impact();
     trackEvent("paywall_login_tapped");
-    router.push("/(auth)/welcome" as any);
+    router.replace("/(auth)/welcome" as any);
   };
 
   return (

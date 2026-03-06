@@ -189,7 +189,7 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
             ]}
           />
           <Image
-            source={require("@/../../assets/images/logo_naqiy.webp")}
+            source={require("@assets/images/logo_naqiy.webp")}
             style={styles.heroLogo}
             contentFit="contain"
             transition={200}

@@ -20,7 +20,7 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import { Shadow } from "react-native-shadow-2";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import Animated, {
@@ -689,6 +689,15 @@ export default function HomeScreen() {
   const { t } = useTranslation();
   const { isPremium } = usePremium();
 
+  // Pause store polling when home tab is not visible — saves battery & network
+  const [isTabFocused, setIsTabFocused] = useState(true);
+  useFocusEffect(
+    useCallback(() => {
+      setIsTabFocused(true);
+      return () => setIsTabFocused(false);
+    }, [])
+  );
+
   // ---- Auth / Guest detection ----
   // hasStoredTokens() is synchronous but unreliable during initial render
   // (tokens load async from SecureStore). We combine it with meQuery.data
@@ -696,7 +705,7 @@ export default function HomeScreen() {
   const hasTokens = hasStoredTokens();
   const meQuery = useMe({ enabled: hasTokens });
   const me = meQuery.data;
-  const isGuest = !hasTokens && !me;
+  const isGuest = !me && (!hasTokens || meQuery.isError);
   const isReady = !!me || (isGuest && !meQuery.isLoading);
 
   // ---- Quick Favorites tab (products | stores) ----
@@ -717,7 +726,7 @@ export default function HomeScreen() {
           longitude: 2.3522,
           radiusKm: 20,
         },
-    { limit: 5, refetchInterval: 2 * 60_000 }
+    { limit: 5, refetchInterval: isTabFocused ? 2 * 60_000 : undefined }
   );
   const nearbyStores = useMemo(() => storesQuery.data ?? [], [storesQuery.data]);
 
@@ -1291,7 +1300,7 @@ export default function HomeScreen() {
         {/* ====================================================
             SECTION 2.5: DISCOVER AROUND YOU (Social Map Preview)
             ==================================================== */}
-        {nearbyStores.length > 0 && (
+        {(nearbyStores.length > 0 || storesQuery.isError) && (
           <Animated.View
             entering={FadeInDown.delay(320).duration(500)}
             style={{ marginTop: 24 }}
@@ -1321,6 +1330,30 @@ export default function HomeScreen() {
               </Pressable>
             </View>
 
+            {storesQuery.isError ? (
+              <Pressable
+                onPress={() => storesQuery.refetch()}
+                style={{
+                  marginHorizontal: 20,
+                  paddingVertical: 20,
+                  paddingHorizontal: 16,
+                  borderRadius: 16,
+                  borderWidth: 1,
+                  borderStyle: "dashed",
+                  borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+                  backgroundColor: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={t.common.retry}
+              >
+                <MaterialIcons name="refresh" size={20} color={colors.textMuted} />
+                <Text style={{ color: colors.textMuted, fontSize: 13, fontWeight: "500" }}>
+                  {t.errors.network} · {t.common.retry}
+                </Text>
+              </Pressable>
+            ) : (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -1353,13 +1386,14 @@ export default function HomeScreen() {
                 />
               ))}
             </ScrollView>
+            )}
           </Animated.View>
         )}
 
         {/* ====================================================
             SECTION 3: FEATURED CONTENT (horizontal carousel)
             ==================================================== */}
-        {defaultFeatureFlags.featuredArticlesEnabled && !isGuest && featuredItems.length > 0 && (
+        {defaultFeatureFlags.featuredArticlesEnabled && !isGuest && (featuredItems.length > 0 || articlesQuery.isError) && (
           <Animated.View
             entering={FadeInDown.delay(360).duration(500)}
             style={{ marginTop: 24 }}
@@ -1391,6 +1425,30 @@ export default function HomeScreen() {
               </Pressable>
             </View>
 
+            {articlesQuery.isError ? (
+              <Pressable
+                onPress={() => articlesQuery.refetch()}
+                style={{
+                  marginHorizontal: 20,
+                  paddingVertical: 20,
+                  paddingHorizontal: 16,
+                  borderRadius: 16,
+                  borderWidth: 1,
+                  borderStyle: "dashed",
+                  borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+                  backgroundColor: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={t.common.retry}
+              >
+                <MaterialIcons name="refresh" size={20} color={colors.textMuted} />
+                <Text style={{ color: colors.textMuted, fontSize: 13, fontWeight: "500" }}>
+                  {t.errors.network} · {t.common.retry}
+                </Text>
+              </Pressable>
+            ) : (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -1412,6 +1470,7 @@ export default function HomeScreen() {
                 />
               ))}
             </ScrollView>
+            )}
           </Animated.View>
         )}
 

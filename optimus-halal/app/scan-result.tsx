@@ -1085,7 +1085,7 @@ export default function ScanResultScreen() {
   );
   const levelUp = scanMutation.data?.levelUp ?? null;
   const meQuery = useMe({ enabled: hasStoredTokens() });
-  const isGuest = !hasStoredTokens() && !meQuery.data;
+  const isGuest = !meQuery.data && (!hasStoredTokens() || meQuery.isError);
   // Fallback to local quota store when backend doesn't return remainingScans
   const localRemaining = useQuotaStore((s) => {
     if (s.lastScanDate !== new Date().toISOString().slice(0, 10)) return 5;
@@ -1135,7 +1135,7 @@ export default function ScanResultScreen() {
 
   // ── Per-madhab trust score selection ──
   // If user has a madhab preference (hanafi/shafii/maliki/hanbali), use
-  // the school-specific score. Otherwise fall back to universal score.
+  // the school-specific score. Otherwise fall back to editorial score.
   const userMadhab = (userProfile?.madhab as "hanafi" | "shafii" | "maliki" | "hanbali" | "general" | null) ?? "general";
   const certifierData_ = scanMutation.data?.certifierData;
   const certifierTrustScore = useMemo(() => {
@@ -1152,20 +1152,41 @@ export default function ScanResultScreen() {
     return certifierData_.trustScore;
   }, [certifierData_, userMadhab]);
 
+  // P3: Stale data detection — badge when certifier data is older than 12 months
+  const isStaleData = useMemo(() => {
+    const verified = certifierData_?.lastVerifiedAt;
+    if (!verified) return false;
+    const verifiedDate = new Date(verified);
+    const twelveMonthsAgo = new Date();
+    twelveMonthsAgo.setFullYear(twelveMonthsAgo.getFullYear() - 1);
+    return verifiedDate < twelveMonthsAgo;
+  }, [certifierData_]);
+
   // ── Hero color rule: combine halal status + certifier trust score ──
-  // For halal products, if the certifier has a trust score < 70, downgrade
-  // the hero to "doubtful" visuals (orange) so color matches the bar.
+  // V5.1: 3-tier downgrade aligned with scoring tiers:
+  //   >= 70 (Strong/Moderate): green halal — certifier is trustworthy
+  //   20-69 (Caution):         orange doubtful — certifier rigor insufficient
+  //   < 20  (Weak):            orange doubtful + specific weak label — certification unreliable
   const effectiveHeroStatus: HalalStatusKey =
     halalStatus === "halal" && certifierTrustScore !== null && certifierTrustScore < 70
       ? "doubtful"
       : halalStatus;
   const statusConfig = STATUS_CONFIG[effectiveHeroStatus] ?? STATUS_CONFIG.unknown;
-  // Dynamic hero label: "Certification Détectée" only when a certifier exists,
-  // otherwise "Composition Conforme" for halal-by-analysis products (e.g. bread)
+  // Dynamic hero label logic:
+  //   - Halal with no certifier → "Composition Conforme" (analysis-based)
+  //   - Halal downgraded, score < 20 → "Certification Peu Fiable" (weak certifier)
+  //   - Halal downgraded, score 20-69 → "Certification a Verifier" (caution)
+  //   - Otherwise → default status label
+  const isWeakCertifier = halalStatus === "halal" && certifierTrustScore !== null && certifierTrustScore < 20;
+  const isCautionCertifier = halalStatus === "halal" && certifierTrustScore !== null && certifierTrustScore < 70 && certifierTrustScore >= 20;
   const heroLabel =
     effectiveHeroStatus === "halal" && !certifierData_
       ? t.scanResult.compositionCompliant
-      : t.scanResult[statusConfig.labelKey];
+      : isWeakCertifier
+        ? t.scanResult.weakCertification
+        : isCautionCertifier
+          ? t.scanResult.cautionCertification
+          : t.scanResult[statusConfig.labelKey];
   const ingredients: string[] = (product?.ingredients as string[]) ?? [];
 
   const haramReasons = useMemo(
@@ -1466,6 +1487,7 @@ export default function ScanResultScreen() {
   const handleRetry = useCallback(() => {
     hasFired.current = false;
     hasFiredHaptic.current = false;
+    setScribeComplete(false);
     scanMutation.reset();
     if (barcode) {
       hasFired.current = true;
@@ -2008,6 +2030,7 @@ export default function ScanResultScreen() {
                           {halalAnalysis.tier === "certified" ? "1" : halalAnalysis.tier === "analyzed_clean" ? "2" : halalAnalysis.tier === "doubtful" ? "3" : "4"}
                           {" · "}
                           {halalAnalysis.tier === "certified" ? t.scanResult.tierCertified : halalAnalysis.tier === "analyzed_clean" ? t.scanResult.tierAnalyzed : halalAnalysis.tier === "doubtful" ? t.scanResult.tierDoubtful : t.scanResult.tierUnknown}
+                          {isStaleData && ` · ${t.scanResult.staleData}`}
                         </Text>
                       )}
                     </View>
@@ -3279,6 +3302,7 @@ export default function ScanResultScreen() {
         certifierName={certifierData?.name ?? null}
         trustScore={certifierTrustScore}
         practices={certifierData?.practices ?? null}
+        detail={certifierData?.detail ?? null}
         onClose={handleCloseScoreDetail}
       />
 
@@ -3302,7 +3326,7 @@ export default function ScanResultScreen() {
             ? ((certifierData_ as Record<string, unknown>)[MADHAB_TRUST_KEY[selectedMadhab.madhab as keyof typeof MADHAB_TRUST_KEY]] as number | null) ?? null
             : null
         }
-        certifierTrustScoreUniversal={certifierData_?.trustScore ?? null}
+        certifierTrustScoreEditorial={certifierData_?.trustScore ?? null}
         onClose={handleCloseMadhab}
       />
 

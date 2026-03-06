@@ -174,11 +174,13 @@ export default function ProfileScreen() {
   const { impact } = useHaptics();
   const { t, language } = useTranslation();
 
-  // Auth / Guest detection — combine token state with query data
-  // to handle async token loading race condition
+  // Auth / Guest detection — combine token state with query data.
+  // hasStoredTokens() reads the in-memory accessToken (not reactive),
+  // so we also check the query error: if auth.me returns 401 and
+  // token refresh failed, the user is effectively a guest.
   const hasTokens = hasStoredTokens();
   const { data: profile, isLoading: profileLoading, isError: profileError } = useMe({ enabled: hasTokens });
-  const isGuest = !hasTokens && !profile;
+  const isGuest = !profile && (!hasTokens || profileError);
 
   // Premium status
   const { isPremium } = usePremium();

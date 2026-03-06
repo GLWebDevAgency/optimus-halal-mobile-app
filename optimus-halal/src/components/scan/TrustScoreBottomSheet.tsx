@@ -165,9 +165,25 @@ export const TrustScoreBottomSheet = React.memo(function TrustScoreBottomSheet({
           </Text>
         )}
 
-        {/* Positive indicators */}
-        <Text style={[styles.sectionTitle, { color: halalStatus.halal.base }]}>
-          {t.scanResult.trustScorePositiveTitle}
+        {/* Bloc A — Validite rituelle */}
+        <Text style={[styles.sectionTitle, { color: halalStatus.haram.base }]}>
+          {t.scanResult.themeRitual}
+        </Text>
+        {[
+          t.scanResult.trustScoreNegative1,
+          t.scanResult.trustScoreNegative2,
+          t.scanResult.trustScoreNegative3,
+          t.scanResult.trustScoreNegative5,
+        ].map((label, i) => (
+          <View key={i} style={styles.indicatorRow}>
+            <MaterialIcons name="remove-circle-outline" size={16} color={halalStatus.haram.base} />
+            <Text style={[styles.indicatorText, { color: colors.textSecondary }]}>{label}</Text>
+          </View>
+        ))}
+
+        {/* Bloc B — Assurance operationnelle */}
+        <Text style={[styles.sectionTitle, { color: halalStatus.halal.base, marginTop: 16 }]}>
+          {t.scanResult.themeOps}
         </Text>
         {[
           t.scanResult.trustScorePositive1,
@@ -180,26 +196,22 @@ export const TrustScoreBottomSheet = React.memo(function TrustScoreBottomSheet({
           </View>
         ))}
 
-        {/* Negative indicators */}
-        <Text style={[styles.sectionTitle, { color: halalStatus.haram.base, marginTop: 16 }]}>
-          {t.scanResult.trustScoreNegativeTitle}
+        {/* Bloc C — Qualite produit (Tayyib) */}
+        <Text style={[styles.sectionTitle, { color: colors.textMuted, marginTop: 16 }]}>
+          {t.scanResult.themeTayyib}
         </Text>
         {[
-          t.scanResult.trustScoreNegative1,
-          t.scanResult.trustScoreNegative2,
-          t.scanResult.trustScoreNegative3,
           t.scanResult.trustScoreNegative4,
-          t.scanResult.trustScoreNegative5,
         ].map((label, i) => (
           <View key={i} style={styles.indicatorRow}>
-            <MaterialIcons name="remove-circle-outline" size={16} color={halalStatus.haram.base} />
+            <MaterialIcons name="remove-circle-outline" size={16} color={colors.textMuted} />
             <Text style={[styles.indicatorText, { color: colors.textSecondary }]}>{label}</Text>
           </View>
         ))}
 
-        {/* V4: Transparency indicators */}
+        {/* Bloc D — Transparence */}
         <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginTop: 16 }]}>
-          {t.scanResult.trustScoreTransparencyTitle}
+          {t.scanResult.themeTransparency}
         </Text>
         {[
           t.scanResult.trustScoreTransparency1,

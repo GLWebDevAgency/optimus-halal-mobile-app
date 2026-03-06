@@ -20,7 +20,7 @@ import {
   Platform,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useHaptics, useTheme } from "@/hooks";
@@ -70,6 +70,27 @@ export default function ScannerScreen() {
   const [isFlashOn, setIsFlashOn] = useState(false);
   const [isScanning, setIsScanning] = useState(true);
   const [scanned, setScanned] = useState(false);
+  const [isFocused, setIsFocused] = useState(true);
+
+  // Barcode confidence: require 2 consecutive identical reads to filter partial/blurry misreads
+  const lastBarcodeRef = useRef<string | null>(null);
+  const barcodeCountRef = useRef(0);
+  const BARCODE_CONFIDENCE_THRESHOLD = 2;
+
+  // Activate camera only when scanner tab is focused — prevents black screen on return
+  useFocusEffect(
+    useCallback(() => {
+      setIsFocused(true);
+      setScanned(false);
+      setIsScanning(true);
+      lastBarcodeRef.current = null;
+      barcodeCountRef.current = 0;
+      return () => {
+        setIsFocused(false);
+        setIsFlashOn(false);
+      };
+    }, [])
+  );
 
   const reducedMotion = useReducedMotion();
 
@@ -188,10 +209,7 @@ export default function ScannerScreen() {
         params: { barcode },
       });
 
-      setTimeout(() => {
-        setScanned(false);
-        setIsScanning(true);
-      }, 2000);
+      // State reset is handled by useFocusEffect when returning to this screen
     },
     [scanned, impact]
   );
@@ -231,6 +249,22 @@ export default function ScannerScreen() {
   const handleBarcodeScanned = useCallback(
     ({ data, type }: { data: string; type: string }) => {
       if (scanned || !isScanning) return;
+
+      // Barcode confidence gate: require consecutive identical reads
+      // to filter out partial/blurry misreads from the camera
+      if (data === lastBarcodeRef.current) {
+        barcodeCountRef.current += 1;
+      } else {
+        lastBarcodeRef.current = data;
+        barcodeCountRef.current = 1;
+      }
+
+      if (barcodeCountRef.current < BARCODE_CONFIDENCE_THRESHOLD) return;
+
+      // Reset for next scan
+      lastBarcodeRef.current = null;
+      barcodeCountRef.current = 0;
+
       processScan(data);
     },
     [scanned, isScanning, processScan]
@@ -301,16 +335,21 @@ export default function ScannerScreen() {
       <StatusBar style="light" />
 
       {/* Camera View - Full Screen */}
-      <CameraView
-        ref={cameraRef}
-        style={StyleSheet.absoluteFillObject}
-        facing="back"
-        enableTorch={isFlashOn}
-        barcodeScannerSettings={{
-          barcodeTypes: ["ean13", "ean8", "upc_a", "upc_e", "code128", "code39", "qr"],
-        }}
-        onBarcodeScanned={isScanning ? handleBarcodeScanned : undefined}
-      />
+      {/* Camera: on iOS use `active` prop to pause session without unmount;
+          on Android unmount entirely to release the camera resource */}
+      {(Platform.OS === "android" ? isFocused : true) && (
+        <CameraView
+          ref={cameraRef}
+          style={StyleSheet.absoluteFillObject}
+          facing="back"
+          active={isFocused}
+          enableTorch={isFlashOn}
+          barcodeScannerSettings={{
+            barcodeTypes: ["ean13", "ean8", "upc_a", "upc_e", "code128", "code39", "qr"],
+          }}
+          onBarcodeScanned={isScanning && isFocused ? handleBarcodeScanned : undefined}
+        />
+      )}
 
       {/* Dark Overlay Mask with Cutout */}
       <View style={StyleSheet.absoluteFillObject} pointerEvents="none">

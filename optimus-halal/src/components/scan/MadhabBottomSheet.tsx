@@ -60,7 +60,7 @@ interface MadhabBottomSheetProps {
   conflictingIngredients?: ConflictingIngredient[];
   certifierName: string | null;
   certifierTrustScore: number | null;
-  certifierTrustScoreUniversal: number | null;
+  certifierTrustScoreEditorial: number | null;
   onClose: () => void;
 }
 
@@ -117,7 +117,7 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
   conflictingIngredients = [],
   certifierName,
   certifierTrustScore,
-  certifierTrustScoreUniversal,
+  certifierTrustScoreEditorial,
   onClose,
 }: MadhabBottomSheetProps) {
   const { isDark, colors } = useTheme();
@@ -277,9 +277,9 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
                     {certifierTrustScore}/100
                   </Text>
                 </View>
-                {certifierTrustScoreUniversal != null && certifierTrustScoreUniversal !== certifierTrustScore && (
-                  <Text style={[styles.trustScoreUniversal, { color: colors.textMuted }]}>
-                    Universel : {certifierTrustScoreUniversal}/100
+                {certifierTrustScoreEditorial != null && certifierTrustScoreEditorial !== certifierTrustScore && (
+                  <Text style={[styles.trustScoreEditorial, { color: colors.textMuted }]}>
+                    Score Naqiy : {certifierTrustScoreEditorial}/100
                   </Text>
                 )}
               </View>
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "800",
   },
-  trustScoreUniversal: {
+  trustScoreEditorial: {
     fontSize: 11,
     marginTop: 4,
     textAlign: "right",
