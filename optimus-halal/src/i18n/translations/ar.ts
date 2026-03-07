@@ -140,6 +140,9 @@ export const ar: TranslationKeys = {
     points: "نقاط",
     logout: "تسجيل الخروج",
     logoutConfirm: "هل أنت متأكد من تسجيل الخروج؟",
+    legalSection: "المعلومات القانونية",
+    termsOfService: "شروط الاستخدام",
+    privacyPolicy: "سياسة الخصوصية",
   },
   editProfile: {
     title: "تعديل الملف",

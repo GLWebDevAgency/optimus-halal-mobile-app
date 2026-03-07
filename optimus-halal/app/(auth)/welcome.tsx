@@ -12,6 +12,7 @@ import {
   View,
   Text,
   ScrollView,
+  Linking,
 } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { router } from "expo-router";
@@ -20,7 +21,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
-import { AUTH_CONFIG } from "@/constants/config";
+import { AUTH_CONFIG, APP_CONFIG } from "@/constants/config";
 import { PremiumBackground } from "@/components/ui";
 import { useTranslation, useHaptics, useTheme } from "@/hooks";
 
@@ -281,8 +282,20 @@ export default function AuthWelcomeScreen() {
         >
           <Text style={{ fontSize: 12, color: colors.textMuted, textAlign: "center", lineHeight: 18 }}>
             {t.common.signUpWith}{"\n"}
-            <Text style={{ textDecorationLine: "underline" }}>{t.auth.signup.termsLink}</Text> {t.common.and}{" "}
-            <Text style={{ textDecorationLine: "underline" }}>{t.auth.signup.privacyLink}</Text>
+            <Text
+              style={{ textDecorationLine: "underline" }}
+              onPress={() => Linking.openURL(APP_CONFIG.TERMS_URL)}
+              accessibilityRole="link"
+            >
+              {t.auth.signup.termsLink}
+            </Text> {t.common.and}{" "}
+            <Text
+              style={{ textDecorationLine: "underline" }}
+              onPress={() => Linking.openURL(APP_CONFIG.PRIVACY_POLICY_URL)}
+              accessibilityRole="link"
+            >
+              {t.auth.signup.privacyLink}
+            </Text>
           </Text>
         </Animated.View>
       </ScrollView>

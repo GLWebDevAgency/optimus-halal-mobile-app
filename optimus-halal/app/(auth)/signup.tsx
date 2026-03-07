@@ -17,6 +17,7 @@ import {
   Platform,
   ScrollView,
   Alert,
+  Linking,
 } from "react-native";
 import { router, Link } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -32,6 +33,7 @@ import { clearTokens } from "@/services/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { City } from "@/constants/locations";
 import { useTranslation, useHaptics, useTheme } from "@/hooks";
+import { APP_CONFIG } from "@/constants/config";
 
 const logoSource = require("@assets/images/logo_naqiy.webp");
 
@@ -275,11 +277,19 @@ export default function SignUpScreen() {
             {/* Terms */}
             <Text className="text-center text-xs text-slate-500 dark:text-slate-400 leading-relaxed px-4">
               {t.common.signUpWith}{" "}
-              <Text className="text-slate-900 dark:text-white underline">
+              <Text
+                className="text-slate-900 dark:text-white underline"
+                onPress={() => Linking.openURL(APP_CONFIG.TERMS_URL)}
+                accessibilityRole="link"
+              >
                 {t.auth.signup.termsLink}
               </Text>{" "}
               {t.auth.signup.and}{" "}
-              <Text className="text-slate-900 dark:text-white underline">
+              <Text
+                className="text-slate-900 dark:text-white underline"
+                onPress={() => Linking.openURL(APP_CONFIG.PRIVACY_POLICY_URL)}
+                accessibilityRole="link"
+              >
                 {t.auth.signup.privacyLink}
               </Text>
               .

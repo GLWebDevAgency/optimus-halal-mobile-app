@@ -9,13 +9,14 @@
  */
 
 import React, { useCallback, useMemo } from "react";
-import { defaultFeatureFlags } from "@/constants/config";
+import { defaultFeatureFlags, APP_CONFIG } from "@/constants/config";
 import {
   View,
   Text,
   ScrollView,
   Pressable,
   Alert,
+  Linking,
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -410,8 +411,32 @@ export default function ProfileScreen() {
             </Card>
           </Animated.View>
 
+          {/* Legal Section */}
+          <Animated.View entering={FadeInUp.delay(250).duration(500)} className="px-4 mb-6">
+            <Text accessibilityRole="header" className="text-base font-bold px-2 mb-3" style={{ color: colors.textPrimary }}>
+              {t.profile.legalSection}
+            </Text>
+            <Card variant="elevated" className="overflow-hidden p-0">
+              <MenuItem
+                icon="description"
+                iconBgColor={isDark ? "rgba(59,130,246,0.1)" : "#eff6ff"}
+                iconColor={isDark ? "#60a5fa" : "#2563eb"}
+                title={t.profile.termsOfService}
+                onPress={() => Linking.openURL(APP_CONFIG.TERMS_URL)}
+              />
+              <MenuItem
+                icon="privacy-tip"
+                iconBgColor={isDark ? "rgba(34,197,94,0.1)" : "#ecfdf5"}
+                iconColor={isDark ? "#4ade80" : "#16a34a"}
+                title={t.profile.privacyPolicy}
+                isLast
+                onPress={() => Linking.openURL(APP_CONFIG.PRIVACY_POLICY_URL)}
+              />
+            </Card>
+          </Animated.View>
+
           {/* Login CTA */}
-          <Animated.View entering={FadeInUp.delay(250).duration(500)} className="px-4 mb-8">
+          <Animated.View entering={FadeInUp.delay(300).duration(500)} className="px-4 mb-8">
             <PressableScale
               onPress={() => {
                 impact();
@@ -874,9 +899,36 @@ export default function ProfileScreen() {
           </Card>
         </Animated.View>
 
-        {/* Logout Button */}
+        {/* Legal Section */}
         <Animated.View
           entering={FadeInUp.delay(350).duration(500)}
+          className="px-4 mb-6"
+        >
+          <Text accessibilityRole="header" className="text-base font-bold px-2 mb-3" style={{ color: colors.textPrimary }}>
+            {t.profile.legalSection}
+          </Text>
+          <Card variant="elevated" className="overflow-hidden p-0">
+            <MenuItem
+              icon="description"
+              iconBgColor={isDark ? "rgba(59,130,246,0.1)" : "#eff6ff"}
+              iconColor={isDark ? "#60a5fa" : "#2563eb"}
+              title={t.profile.termsOfService}
+              onPress={() => Linking.openURL(APP_CONFIG.TERMS_URL)}
+            />
+            <MenuItem
+              icon="privacy-tip"
+              iconBgColor={isDark ? "rgba(34,197,94,0.1)" : "#ecfdf5"}
+              iconColor={isDark ? "#4ade80" : "#16a34a"}
+              title={t.profile.privacyPolicy}
+              isLast
+              onPress={() => Linking.openURL(APP_CONFIG.PRIVACY_POLICY_URL)}
+            />
+          </Card>
+        </Animated.View>
+
+        {/* Logout Button */}
+        <Animated.View
+          entering={FadeInUp.delay(400).duration(500)}
           className="px-4 mb-8"
         >
           <PressableScale

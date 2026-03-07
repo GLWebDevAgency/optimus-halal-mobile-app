@@ -15,6 +15,7 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -31,6 +32,7 @@ import { usePremium } from "@/hooks/usePremium";
 import { useFeatureFlagsStore } from "@/store";
 import { trackEvent } from "@/lib/analytics";
 import { getOfferings, purchasePackage, restorePurchases } from "@/services/purchases";
+import { APP_CONFIG } from "@/constants/config";
 import type { PurchasesPackage } from "react-native-purchases";
 
 const GOLD = "#d4af37";
@@ -395,7 +397,22 @@ export default function PremiumPaywallScreen() {
         {/* Legal */}
         <View style={{ alignItems: "center", marginTop: 16, paddingHorizontal: 32 }}>
           <Text style={{ color: colors.textSecondary, fontSize: 11, textAlign: "center", lineHeight: 16, opacity: 0.7 }}>
-            {t.premium.legal}
+            {t.premium.legal}{" "}
+            <Text
+              style={{ textDecorationLine: "underline" }}
+              onPress={() => Linking.openURL(APP_CONFIG.TERMS_URL)}
+              accessibilityRole="link"
+            >
+              {t.profile.termsOfService}
+            </Text>
+            {" & "}
+            <Text
+              style={{ textDecorationLine: "underline" }}
+              onPress={() => Linking.openURL(APP_CONFIG.PRIVACY_POLICY_URL)}
+              accessibilityRole="link"
+            >
+              {t.profile.privacyPolicy}
+            </Text>
           </Text>
           </View>
         </ScrollView>
