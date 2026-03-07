@@ -42,8 +42,15 @@ Delegue a la Protection des Donnees (DPO) : dpo@naqiy.com
 | Preferences alimentaires | Personnalisation des alertes et analyses | Consentement |
 | Ecole juridique (madhab) | Adaptation des avis halal selon l'ecole | Consentement |
 | Allergenes et restrictions | Alertes ingredients personnalisees | Consentement |
+| Biographie (optionnel) | Personnalisation du profil | Consentement |
+| Ville / localisation (optionnel) | Personnalisation du profil | Consentement |
+| Statut de grossesse (optionnel) | Adaptation des alertes ingredients | Consentement explicite |
+| Presence d'enfants (optionnel) | Adaptation des alertes ingredients | Consentement explicite |
+| Adresse de livraison (nom, telephone, adresse, coordonnees) | Fonctionnalite marketplace | Execution du contrat |
 | Avis et notes sur les magasins | Contribution communautaire | Execution du contrat |
 | Signalements de produits | Amelioration de la base de donnees | Interet legitime |
+| Photos de produits (demande d'analyse) | Analyse manuelle de conformite halal | Consentement |
+| Notes accompagnant une demande d'analyse | Contexte pour l'analyse | Consentement |
 
 ### 3.2. Donnees collectees automatiquement
 
@@ -55,11 +62,15 @@ Delegue a la Protection des Donnees (DPO) : dpo@naqiy.com
 | Donnees de geolocalisation | Localisation des magasins a proximite | Consentement |
 | Historique des scans (codes-barres) | Historique personnel, statistiques | Execution du contrat |
 | Journaux d'erreur anonymises | Amelioration de la stabilite | Interet legitime |
-| Interactions avec l'application | Amelioration de l'experience utilisateur | Interet legitime |
+| Coordonnees GPS associees a un scan (optionnel) | Contextualisation geographique du scan | Consentement |
+| Interactions avec l'application (evenements anonymises) | Amelioration de l'experience utilisateur | Interet legitime |
+| Donnees de gamification (XP, niveau, serie de scans) | Systeme de recompenses et engagement | Execution du contrat |
 
 ### 3.3. Donnees sensibles
 
-L'Application traite des donnees relatives aux **convictions religieuses** (preferences halal, ecole juridique islamique). Ces donnees constituent des donnees sensibles au sens de l'article 9 du RGPD. Leur traitement est fonde sur votre **consentement explicite**, recueilli lors de la configuration de vos preferences.
+L'Application traite des donnees relatives aux **convictions religieuses** (preferences halal, ecole juridique islamique, niveau de strictesse). Ces donnees constituent des donnees sensibles au sens de l'article 9 du RGPD. Leur traitement est fonde sur votre **consentement explicite**, recueilli lors de la configuration de vos preferences.
+
+L'Application collecte egalement, de maniere facultative, des informations relatives a la **grossesse** et a la **presence d'enfants** dans le foyer. Ces donnees, bien qu'elles ne constituent pas des donnees de sante au sens medical, sont traitees avec le meme niveau de protection et sur la base de votre consentement explicite. Elles servent exclusivement a adapter les alertes relatives aux ingredients potentiellement deconseilles.
 
 Vous pouvez a tout moment retirer ce consentement et supprimer ces preferences depuis les parametres de l'application.
 
@@ -71,7 +82,7 @@ Nous ne collectons **jamais** :
 - Vos messages ou communications
 - Vos informations bancaires ou de paiement (traitees exclusivement par Apple/Google via RevenueCat)
 - Votre historique de navigation web
-- Vos donnees de sante (au sens medical)
+- Vos donnees de sante (au sens medical du RGPD — les informations de grossesse et enfants collectees sont de nature alimentaire, non medicale)
 - Le contenu de votre appareil photo (seul le code-barres scanne est traite)
 
 ---
@@ -106,6 +117,7 @@ Nous faisons appel aux sous-traitants suivants pour le fonctionnement de l'Appli
 | **Expo** (650 Industries Inc.) | Etats-Unis | Mises a jour OTA, notifications push | Token de notification, identifiant appareil | CCT |
 | **Google** (Google LLC) | Etats-Unis | Enrichissement de donnees magasins (Places API) | Noms et adresses de magasins publics | CCT, certifie ISO 27001/27017/27018 |
 | **OpenFoodFacts** (association loi 1901) | France | Base de donnees produits alimentaires | Codes-barres scannes (via API publique) | Donnees ouvertes (Open Database License) |
+| **PostHog** (PostHog Inc.) | Union Europeenne | Analyse d'usage produit (analytics) | Identifiant utilisateur anonymise, evenements d'usage, version de l'app | Hebergement UE, conforme RGPD, pas de replay de session |
 | **Upstash** (Upstash Inc.) | Union Europeenne | Cache Redis (sessions, rate limiting) | Jetons de session chiffres, compteurs | Hebergement UE |
 
 **Transferts hors UE** : Pour les sous-traitants situes aux Etats-Unis, les transferts sont encadres par des Clauses Contractuelles Types (CCT) conformement aux articles 46(2)(c) du RGPD, ou par le Data Privacy Framework (DPF) UE-US lorsque applicable.
@@ -125,7 +137,11 @@ Nous ne vendons **jamais** vos donnees personnelles a des tiers.
 | Jetons d'authentification (refresh tokens) | 7 jours apres expiration (purge automatique quotidienne) |
 | Donnees de geolocalisation | Non conservees cote serveur (traitement en temps reel uniquement) |
 | Notifications push (tokens) | Jusqu'a deconnexion ou desactivation |
-| Donnees d'abonnement | Duree de l'abonnement + 1 an (obligations fiscales) |
+| Donnees d'abonnement (evenements RevenueCat) | Duree de l'abonnement + 1 an (obligations fiscales) |
+| Adresses de livraison | Jusqu'a suppression par l'utilisateur ou suppression du compte |
+| Demandes d'analyse (photos, notes) | 1 an apres traitement de la demande |
+| Donnees d'analytics (PostHog) | 90 jours (retention configuree) |
+| Codes de reinitialisation de mot de passe | 15 minutes (expiration automatique Redis) |
 
 Apres suppression de votre compte, vos donnees sont anonymisees ou supprimees dans un delai de **30 jours**, sauf obligation legale de conservation plus longue.
 
@@ -186,9 +202,10 @@ L'Application mobile **n'utilise pas de cookies**. Toutefois, les technologies s
 |-------------|------|----------|--------------|
 | **MMKV** (stockage local) | Necessaire | Stockage des preferences et jetons d'authentification | Non requis (strictement necessaire) |
 | **SecureStore** (Expo) | Necessaire | Stockage securise des jetons d'acces | Non requis (strictement necessaire) |
-| **Sentry SDK** | Mesure d'audience | Collecte anonymisee d'erreurs techniques | Interet legitime |
+| **Sentry SDK** | Mesure technique | Collecte anonymisee d'erreurs techniques | Interet legitime |
+| **PostHog SDK** | Mesure d'audience | Evenements d'usage anonymises (sans replay de session) | Interet legitime |
 
-Aucun traceur publicitaire, pixel de suivi ou outil de profilage n'est utilise dans l'Application.
+Aucun traceur publicitaire, pixel de suivi ou outil de profilage n'est utilise dans l'Application. Le replay de session (enregistrement d'ecran) est **desactive**.
 
 ---
 
