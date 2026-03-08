@@ -20,7 +20,7 @@ L'utilisation de l'Application implique l'acceptation pleine et entiere des pres
 **SIRET** : [A completer]
 **Siege social** : [Adresse a completer]
 **Directeur de la publication** : [Nom a completer]
-**Email** : contact@naqiy.com
+**Email** : contact@naqiy.app
 **Hebergement** : Railway Corp., 548 Market St, San Francisco, CA 94104, USA
 
 ---
@@ -90,7 +90,7 @@ L'Utilisateur s'engage a fournir des informations exactes et a les maintenir a j
 
 ### 4.4. Securite du compte
 
-L'Utilisateur est seul responsable de la confidentialite de ses identifiants de connexion. Toute utilisation de l'Application effectuee depuis son compte est presumee realisee par lui. En cas d'utilisation non autorisee de son compte, l'Utilisateur doit en informer l'Editeur immediatement a l'adresse contact@naqiy.com.
+L'Utilisateur est seul responsable de la confidentialite de ses identifiants de connexion. Toute utilisation de l'Application effectuee depuis son compte est presumee realisee par lui. En cas d'utilisation non autorisee de son compte, l'Utilisateur doit en informer l'Editeur immediatement a l'adresse contact@naqiy.app.
 
 ---
 
@@ -231,7 +231,7 @@ Pour les fonctionnalites incluses dans l'abonnement Naqiy+, toute suppression su
 
 Le traitement des donnees personnelles de l'Utilisateur est regi par notre **Politique de Confidentialite**, accessible dans l'Application et a l'adresse [politique de confidentialite]. Cette Politique de Confidentialite fait partie integrante des presentes CGU.
 
-Pour toute question relative a vos donnees personnelles, contactez notre Delegue a la Protection des Donnees : dpo@naqiy.com.
+Pour toute question relative a vos donnees personnelles, contactez notre Delegue a la Protection des Donnees : dpo@naqiy.app.
 
 ---
 
@@ -354,7 +354,7 @@ Les presentes CGU, la Politique de Confidentialite et, le cas echeant, les condi
 
 Pour toute question relative aux presentes Conditions Generales d'Utilisation :
 
-- **Email** : contact@naqiy.com
+- **Email** : contact@naqiy.app
 - **Objet** : [CGU] Votre demande
 
 ---

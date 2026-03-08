@@ -24,8 +24,8 @@ Nous nous engageons a respecter la reglementation en vigueur en matiere de prote
 
 **GL Web Dev Agency**
 [Adresse postale a completer]
-Email de contact : contact@naqiy.com
-Delegue a la Protection des Donnees (DPO) : dpo@naqiy.com
+Email de contact : contact@naqiy.app
+Delegue a la Protection des Donnees (DPO) : dpo@naqiy.app
 
 ---
 
@@ -179,12 +179,12 @@ Conformement au RGPD et a la Loi Informatique et Libertes, vous disposez des dro
 
 | Droit | Description | Comment l'exercer |
 |-------|-------------|-------------------|
-| **Droit d'acces** (art. 15 RGPD) | Obtenir une copie de vos donnees personnelles | Email a dpo@naqiy.com |
-| **Droit de rectification** (art. 16 RGPD) | Corriger vos donnees inexactes ou incompletes | Parametres de l'app ou email a dpo@naqiy.com |
+| **Droit d'acces** (art. 15 RGPD) | Obtenir une copie de vos donnees personnelles | Email a dpo@naqiy.app |
+| **Droit de rectification** (art. 16 RGPD) | Corriger vos donnees inexactes ou incompletes | Parametres de l'app ou email a dpo@naqiy.app |
 | **Droit a l'effacement** (art. 17 RGPD) | Supprimer votre compte et vos donnees | Parametres > Supprimer mon compte |
-| **Droit a la portabilite** (art. 20 RGPD) | Recevoir vos donnees dans un format structure (JSON) | Email a dpo@naqiy.com |
-| **Droit d'opposition** (art. 21 RGPD) | Vous opposer au traitement fonde sur l'interet legitime | Email a dpo@naqiy.com |
-| **Droit a la limitation** (art. 18 RGPD) | Limiter temporairement le traitement | Email a dpo@naqiy.com |
+| **Droit a la portabilite** (art. 20 RGPD) | Recevoir vos donnees dans un format structure (JSON) | Email a dpo@naqiy.app |
+| **Droit d'opposition** (art. 21 RGPD) | Vous opposer au traitement fonde sur l'interet legitime | Email a dpo@naqiy.app |
+| **Droit a la limitation** (art. 18 RGPD) | Limiter temporairement le traitement | Email a dpo@naqiy.app |
 | **Droit au retrait du consentement** | Retirer votre consentement a tout moment | Parametres de l'app |
 
 Nous repondons a toute demande dans un delai de **30 jours** maximum. Si vous estimez que vos droits ne sont pas respectes, vous pouvez introduire une reclamation aupres de la **Commission Nationale de l'Informatique et des Libertes (CNIL)** :
@@ -213,7 +213,7 @@ Aucun traceur publicitaire, pixel de suivi ou outil de profilage n'est utilise d
 
 L'Application n'est pas destinee aux enfants de moins de **16 ans**. Nous ne collectons pas sciemment de donnees personnelles aupres de mineurs de moins de 16 ans.
 
-Si vous etes un parent ou tuteur legal et que vous pensez que votre enfant nous a fourni des donnees personnelles, veuillez nous contacter a dpo@naqiy.com afin que nous procedions a leur suppression.
+Si vous etes un parent ou tuteur legal et que vous pensez que votre enfant nous a fourni des donnees personnelles, veuillez nous contacter a dpo@naqiy.app afin que nous procedions a leur suppression.
 
 ---
 
@@ -245,8 +245,8 @@ L'utilisation continue de l'Application apres modification vaut acceptation de l
 
 Pour toute question relative a la protection de vos donnees personnelles :
 
-- **Email** : dpo@naqiy.com
-- **Email general** : contact@naqiy.com
+- **Email** : dpo@naqiy.app
+- **Email general** : contact@naqiy.app
 - **Objet** : [RGPD] Votre demande
 
 Nous nous engageons a accuser reception de votre demande sous **48 heures** et a y repondre dans un delai de **30 jours**.

@@ -25,7 +25,7 @@ const BARCODES_TO_SEED = [
 // ── OFF fetch ───────────────────────────────────────────────
 async function fetchOFF(barcode: string) {
   const res = await fetch(`${OFF_API}/${barcode}.json`, {
-    headers: { "User-Agent": "Naqiy/1.0 (contact@naqiy.com)" },
+    headers: { "User-Agent": "Naqiy/1.0 (contact@naqiy.app)" },
   });
   const data = await res.json();
   if (data.status !== 1) throw new Error(`Product ${barcode} not found on OpenFoodFacts`);

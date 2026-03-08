@@ -18,14 +18,14 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk",
-        "credentialsSource": "local"
+        "credentialsSource": "remote"
       },
       "ios": {
         "simulator": false
       },
       "env": {
         "APP_VARIANT": "preview",
-        "EXPO_PUBLIC_API_URL": "https://mobile-bff-preview.up.railway.app",
+        "EXPO_PUBLIC_API_URL": "https://api-preview.naqiy.app",
         "EXPO_PUBLIC_SENTRY_DSN": "$SENTRY_DSN",
         "EXPO_PUBLIC_POSTHOG_KEY": "$POSTHOG_API_KEY",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true"
@@ -35,7 +35,7 @@
       "autoIncrement": true,
       "env": {
         "APP_VARIANT": "production",
-        "EXPO_PUBLIC_API_URL": "https://mobile-bff-production-aefc.up.railway.app",
+        "EXPO_PUBLIC_API_URL": "https://api.naqiy.app",
         "EXPO_PUBLIC_SENTRY_DSN": "$SENTRY_DSN",
         "EXPO_PUBLIC_POSTHOG_KEY": "$POSTHOG_API_KEY"
       }

@@ -70,7 +70,7 @@ export const defaultFeatureFlags: FeatureFlags = {
   analyticsEnabled: true,
   alternativesEnabled: false, // Désactivé — V2, alternatives certifiées à venir
   alertsEnabled: false, // Désactivé — feature en cours de développement
-  featuredArticlesEnabled: false, // Désactivé — section "À la une" masquée
+  featuredArticlesEnabled: true,
   paywallEnabled: true,
   favoritesLimitEnabled: true,
   scanHistoryLimitEnabled: false,
@@ -87,9 +87,9 @@ export const APP_CONFIG = {
   TAGLINE: "Scanne. Comprends. Choisis.",
   VERSION: "1.0.0",
   MIN_VERSION_REQUIRED: "1.0.0",
-  SUPPORT_EMAIL: "support@naqiy.com",
-  PRIVACY_POLICY_URL: "https://naqiy.com/privacy",
-  TERMS_URL: "https://naqiy.com/terms",
+  SUPPORT_EMAIL: "support@naqiy.app",
+  PRIVACY_POLICY_URL: "https://naqiy.app/privacy",
+  TERMS_URL: "https://naqiy.app/terms",
 } as const;
 
 /**

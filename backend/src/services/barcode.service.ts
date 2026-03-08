@@ -201,7 +201,7 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeResult> {
     const url = `${env.OPENFOODFACTS_API_URL}/product/${barcode}.json`;
     const response = await fetch(url, {
       headers: {
-        "User-Agent": "Naqiy/1.0 (contact@naqiy.com)",
+        "User-Agent": "Naqiy/1.0 (contact@naqiy.app)",
       },
     });
 

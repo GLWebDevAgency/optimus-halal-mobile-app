@@ -174,7 +174,7 @@ Extraire en composants :
   - Pas de vente à des tiers
   - Droit de suppression du compte
 - [ ] Rédiger les CGU (conditions d'utilisation)
-- [ ] Héberger sur `naqiy.com/privacy` et `naqiy.com/terms`
+- [ ] Héberger sur `naqiy.app/privacy` et `naqiy.app/terms`
 - [ ] Ajouter les liens dans `app.config.ts` :
   ```typescript
   ios: { infoPlist: { NSPrivacyTracking: false } }
@@ -215,18 +215,18 @@ android: {
     autoVerify: true,
     data: [
       { scheme: "naqiy" },
-      { scheme: "https", host: "naqiy.com", pathPrefix: "/store" },
-      { scheme: "https", host: "naqiy.com", pathPrefix: "/scan" },
+      { scheme: "https", host: "naqiy.app", pathPrefix: "/store" },
+      { scheme: "https", host: "naqiy.app", pathPrefix: "/scan" },
     ]
   }]
 },
 ios: {
-  associatedDomains: ["applinks:naqiy.com"]
+  associatedDomains: ["applinks:naqiy.app"]
 }
 ```
 
-- [ ] Configurer `naqiy.com/.well-known/apple-app-site-association`
-- [ ] Configurer `naqiy.com/.well-known/assetlinks.json`
+- [ ] Configurer `naqiy.app/.well-known/apple-app-site-association`
+- [ ] Configurer `naqiy.app/.well-known/assetlinks.json`
 
 ### [OBLIGATOIRE] I6. Sentry & PostHog — Configurer les DSN
 

@@ -12,7 +12,7 @@ import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Use Mobile BFF routes (tRPC backend)
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://mobile-bff-production-aefc.up.railway.app';
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://api.naqiy.app';
 
 const STORAGE_KEYS = {
   ACCESS_TOKEN: '@auth:access_token',

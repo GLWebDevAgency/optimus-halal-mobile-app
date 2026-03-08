@@ -74,7 +74,7 @@ OpenFoodFacts via `lookupBarcode()` dans `barcode.service.ts`.
 
 **Points techniques :**
 
-- **User-Agent identifie** : `Naqiy/1.0 (contact@naqiy.com)` --
+- **User-Agent identifie** : `Naqiy/1.0 (contact@naqiy.app)` --
   conformement aux bonnes pratiques OFF.
 - **Cache Redis 24h** : Chaque reponse OFF est cachee sous la cle
   `off:{barcode}` avec un TTL de 86400 secondes. Cela reduit la

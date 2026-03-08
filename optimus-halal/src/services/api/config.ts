@@ -54,7 +54,7 @@ function getDevApiUrl(): string {
 const DEV_API_URL = getDevApiUrl();
 
 /** Production API base URL (fallback) */
-const PROD_API_URL = "https://mobile-bff-production-aefc.up.railway.app";
+const PROD_API_URL = "https://api.naqiy.app";
 
 /**
  * Resolve API base URL.
