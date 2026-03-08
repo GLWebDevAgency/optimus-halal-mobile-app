@@ -150,6 +150,7 @@ export const fr = {
     points: "Points",
     logout: "Déconnexion",
     logoutConfirm: "Êtes-vous sûr de vouloir vous déconnecter ?",
+    replayOnboarding: "Revoir l'introduction",
     legalSection: "Informations légales",
     termsOfService: "Conditions d'utilisation",
     privacyPolicy: "Politique de confidentialité",

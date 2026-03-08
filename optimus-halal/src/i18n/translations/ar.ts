@@ -140,6 +140,7 @@ export const ar: TranslationKeys = {
     points: "نقاط",
     logout: "تسجيل الخروج",
     logoutConfirm: "هل أنت متأكد من تسجيل الخروج؟",
+    replayOnboarding: "إعادة مشاهدة المقدمة",
     legalSection: "المعلومات القانونية",
     termsOfService: "شروط الاستخدام",
     privacyPolicy: "سياسة الخصوصية",

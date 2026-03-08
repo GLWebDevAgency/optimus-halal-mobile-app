@@ -42,7 +42,7 @@ import { HomeSkeleton } from "@/components/skeletons";
 import { CertifierLogo } from "@/components/scan/CertifierLogo";
 import { openStatusColor, openStatusLabel, STORE_CERTIFIER_TO_ID } from "@/components/map/types";
 import type { StoreFeatureProperties } from "@/components/map/types";
-import { useMe } from "@/hooks/useAuth";
+import { useAuth } from "../_layout";
 import { useFavoritesList } from "@/hooks/useFavorites";
 import { useStoreFavoritesList } from "@/hooks/useStoreFavorites";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -51,7 +51,6 @@ import { brand, glass, lightTheme, darkTheme, storeTypeColors } from "@/theme/co
 import { useHaptics, useUserLocation, useMapStores, usePremium } from "@/hooks";
 import { trpc } from "@/lib/trpc";
 import { useQuotaStore, useLocalFavoritesStore, useLocalStoreFavoritesStore } from "@/store";
-import { isAuthenticated as hasStoredTokens } from "@/services/api";
 import { defaultFeatureFlags } from "@/constants/config";
 
 const logoSource = require("@assets/images/logo_naqiy.webp");
@@ -698,15 +697,9 @@ export default function HomeScreen() {
     }, [])
   );
 
-  // ---- Auth / Guest detection ----
-  // hasStoredTokens() is synchronous but unreliable during initial render
-  // (tokens load async from SecureStore). We combine it with meQuery.data
-  // so that cached user data also prevents guest UI from flashing.
-  const hasTokens = hasStoredTokens();
-  const meQuery = useMe({ enabled: hasTokens });
-  const me = meQuery.data;
-  const isGuest = !me && (!hasTokens || meQuery.isError);
-  const isReady = !!me || (isGuest && !meQuery.isLoading);
+  // ---- Auth state from context (reactive, provided by AppInitializer) ----
+  const { user: me, isGuest, isAuthLoading, isAuthError, refetchAuth } = useAuth();
+  const isReady = !!me || (isGuest && !isAuthLoading);
 
   // ---- Quick Favorites tab (products | stores) ----
   const [favTab, setFavTab] = useState<"products" | "stores">("products");
@@ -837,14 +830,14 @@ export default function HomeScreen() {
     return items;
   }, [articlesQuery.data?.items, t, colors.primary]);
 
-  const hasApiError = dashboardQuery.isError && meQuery.isError;
+  const hasApiError = dashboardQuery.isError && isAuthError;
 
   // ---- Pull-to-refresh ----
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await Promise.all([
-      meQuery.refetch(),
+      refetchAuth(),
       dashboardQuery.refetch(),
       unreadQuery.refetch(),
       alertUnreadQuery.refetch(),
@@ -853,7 +846,7 @@ export default function HomeScreen() {
     ]);
     setRefreshing(false);
   }, [
-    meQuery,
+    refetchAuth,
     dashboardQuery,
     unreadQuery,
     alertUnreadQuery,

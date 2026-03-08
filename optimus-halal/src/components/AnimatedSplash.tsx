@@ -41,6 +41,9 @@ const SAFETY_TIMEOUT_MS = 6_000;
 // Fallback logo animation duration before triggering exit
 const LOGO_ANIM_DURATION_MS = 2_800;
 
+// Minimum time the splash must stay visible (prevents flash on fast re-init)
+const MIN_DISPLAY_MS = 1_500;
+
 interface AnimatedSplashProps {
   isReady: boolean;
   onFinish: () => void;
@@ -54,6 +57,7 @@ export function AnimatedSplash({ isReady, onFinish }: AnimatedSplashProps) {
   const containerOpacity = useSharedValue(1);
   const videoFinished = useRef(false);
   const exitTriggered = useRef(false);
+  const mountTime = useRef(Date.now());
 
   // ── Video state ──
   const [firstFrameReady, setFirstFrameReady] = useState(false);
@@ -67,12 +71,21 @@ export function AnimatedSplash({ isReady, onFinish }: AnimatedSplashProps) {
 
   const player = useVideoPlayer(source, (p) => {
     p.loop = false;
+    p.currentTime = 0;
     p.play();
   });
 
   // ── Exit: fade out → onFinish ──
+  // Enforces MIN_DISPLAY_MS so the splash never flashes away on fast re-init
   const triggerExit = useCallback(() => {
     if (exitTriggered.current) return;
+
+    const elapsed = Date.now() - mountTime.current;
+    if (elapsed < MIN_DISPLAY_MS) {
+      setTimeout(triggerExit, MIN_DISPLAY_MS - elapsed);
+      return;
+    }
+
     exitTriggered.current = true;
 
     containerOpacity.value = withTiming(

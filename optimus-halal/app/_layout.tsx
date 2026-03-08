@@ -6,7 +6,7 @@
  */
 
 import "../global.css";
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Stack, SplashScreen } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -45,6 +45,31 @@ import {
   Inter_700Bold,
   Inter_900Black,
 } from "@expo-google-fonts/inter";
+
+// ── Auth Context — single source of truth for auth state across all screens ──
+// Pattern: Clerk / NextAuth / Firebase Auth — one provider, consumed everywhere.
+// Eliminates stale hasStoredTokens() reads and duplicate useMe() calls.
+type AuthUser = NonNullable<ReturnType<typeof useMe>["data"]>;
+
+interface AuthContextValue {
+  user: AuthUser | null;
+  isGuest: boolean;
+  isAuthLoading: boolean;
+  isAuthError: boolean;
+  refetchAuth: () => Promise<unknown>;
+}
+
+const AuthContext = React.createContext<AuthContextValue>({
+  user: null,
+  isGuest: true,
+  isAuthLoading: true,
+  isAuthError: false,
+  refetchAuth: () => Promise.resolve(),
+});
+
+export function useAuth() {
+  return React.useContext(AuthContext);
+}
 
 initSentry();
 initAnalytics();
@@ -210,6 +235,19 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
   // - forceReady → user bypassed timeout
   const isInitializing = !forceReady && (!tokensReady || (shouldFetchMe && meQuery.isLoading));
 
+  // ── Auth context value — reactive, single source of truth ──
+  const authValue = useMemo<AuthContextValue>(() => {
+    const hasTokens = tokensReady && hasStoredTokens();
+    const isLoading = !tokensReady || (hasTokens && meQuery.isLoading);
+    return {
+      user: (meQuery.data as AuthUser | undefined) ?? null,
+      isGuest: !isLoading && !meQuery.data,
+      isAuthLoading: isLoading,
+      isAuthError: meQuery.isError,
+      refetchAuth: meQuery.refetch,
+    };
+  }, [tokensReady, meQuery.data, meQuery.isLoading, meQuery.isError, meQuery.refetch]);
+
   // Upgrade Sentry + PostHog context when returning user is identified
   useEffect(() => {
     if (meQuery.data) {
@@ -281,7 +319,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <>
+    <AuthContext.Provider value={authValue}>
       {children}
       {/* AnimatedSplash overlays content — renders on top, exits when ready */}
       {!splashDone && (
@@ -296,7 +334,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
           />
         </Pressable>
       )}
-    </>
+    </AuthContext.Provider>
   );
 }
 

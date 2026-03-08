@@ -31,6 +31,7 @@ import Animated, {
   FadeIn,
   interpolate,
   Extrapolation,
+  runOnJS,
 } from "react-native-reanimated";
 
 import { useHaptics, useTheme, useTranslation } from "@/hooks";
@@ -75,7 +76,7 @@ export default function OnboardingScreen() {
     () => activeIndex.value,
     (current, previous) => {
       if (previous !== null && current !== previous) {
-        triggerHaptic();
+        runOnJS(triggerHaptic)();
       }
     },
   );

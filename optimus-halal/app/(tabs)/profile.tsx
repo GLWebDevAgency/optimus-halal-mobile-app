@@ -21,7 +21,7 @@ import {
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useHaptics, useTheme, useMe, useLogout, useFavoritesList, useLoyaltyBalance, usePremium } from "@/hooks";
+import { useHaptics, useTheme, useLogout, useFavoritesList, useLoyaltyBalance, usePremium } from "@/hooks";
 import { ImpactFeedbackStyle } from "expo-haptics";
 import Animated, {
   FadeIn,
@@ -33,9 +33,9 @@ import { Image } from "expo-image";
 import { Card, Avatar, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { ProfileSkeleton } from "@/components/skeletons";
-import { useThemeStore, usePreferencesStore, useQuotaStore } from "@/store";
+import { useThemeStore, usePreferencesStore, useQuotaStore, useOnboardingStore } from "@/store";
 import { useTranslation } from "@/hooks/useTranslation";
-import { isAuthenticated as hasStoredTokens } from "@/services/api";
+import { useAuth } from "../_layout";
 
 interface MenuItemProps {
   icon: keyof typeof MaterialIcons.glyphMap;
@@ -175,12 +175,9 @@ export default function ProfileScreen() {
   const { impact } = useHaptics();
   const { t, language } = useTranslation();
 
-  // Auth / Guest detection — short-circuit to guest view BEFORE any query.
-  // This prevents the "blank screen" timing issue where profileLoading=true
-  // shows an invisible skeleton while useMe resolves.
-  const hasTokens = hasStoredTokens();
-  const { data: profile, isLoading: profileLoading, isError: profileError } = useMe({ enabled: hasTokens });
-  const isGuest = !hasTokens || (!profile && profileError);
+  // Auth state from context (reactive, provided by AppInitializer)
+  const { user: profile, isGuest, isAuthLoading: profileLoading, isAuthError: profileError } = useAuth();
+  const { setOnboardingComplete } = useOnboardingStore();
 
   // Premium status
   const { isPremium } = usePremium();
@@ -255,6 +252,12 @@ export default function ProfileScreen() {
       ]
     );
   }, [logoutMutation, t, impact]);
+
+  const handleReplayOnboarding = useCallback(() => {
+    impact();
+    setOnboardingComplete(false);
+    router.replace("/(onboarding)");
+  }, [impact, setOnboardingComplete]);
 
   // ── Guest Mode ──────────────────────────────────
   if (isGuest) {
@@ -405,8 +408,15 @@ export default function ProfileScreen() {
                 iconBgColor={isDark ? "rgba(255,255,255,0.05)" : "#f1f5f9"}
                 iconColor={isDark ? "#94a3b8" : "#475569"}
                 title={t.profile.reportProblem}
-                isLast
                 onPress={() => router.push("/report" as any)}
+              />
+              <MenuItem
+                icon="play-circle-outline"
+                iconBgColor={isDark ? "rgba(59,130,246,0.1)" : "#eff6ff"}
+                iconColor={isDark ? "#60a5fa" : "#2563eb"}
+                title={t.profile.replayOnboarding}
+                isLast
+                onPress={handleReplayOnboarding}
               />
             </Card>
           </Animated.View>
@@ -893,8 +903,15 @@ export default function ProfileScreen() {
               iconBgColor={isDark ? "rgba(255,255,255,0.05)" : "#f1f5f9"}
               iconColor={isDark ? "#94a3b8" : "#475569"}
               title={t.profile.reportProblem}
-              isLast
               onPress={() => router.push("/report" as any)}
+            />
+            <MenuItem
+              icon="play-circle-outline"
+              iconBgColor={isDark ? "rgba(59,130,246,0.1)" : "#eff6ff"}
+              iconColor={isDark ? "#60a5fa" : "#2563eb"}
+              title={t.profile.replayOnboarding}
+              isLast
+              onPress={handleReplayOnboarding}
             />
           </Card>
         </Animated.View>

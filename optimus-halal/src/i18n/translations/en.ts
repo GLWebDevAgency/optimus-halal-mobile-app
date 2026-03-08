@@ -152,6 +152,7 @@ export const en: TranslationKeys = {
     points: "Points",
     logout: "Logout",
     logoutConfirm: "Are you sure you want to logout?",
+    replayOnboarding: "Replay introduction",
     legalSection: "Legal information",
     termsOfService: "Terms of Service",
     privacyPolicy: "Privacy Policy",

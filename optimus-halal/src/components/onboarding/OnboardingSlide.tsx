@@ -174,20 +174,6 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
     if (isBrandOrCta) {
       return (
         <View style={styles.heroLogoContainer}>
-          {/* Glow ring */}
-          <View
-            style={[
-              styles.glowRing,
-              {
-                borderColor: config.accentColor,
-                shadowColor: config.accentColor,
-                shadowOpacity: isDark ? 0.4 : 0.2,
-                shadowRadius: 30,
-                shadowOffset: { width: 0, height: 0 },
-                ...(Platform.OS === "android" ? { elevation: 8 } : {}),
-              },
-            ]}
-          />
           <Image
             source={require("@assets/images/logo_naqiy.webp")}
             style={styles.heroLogo}
