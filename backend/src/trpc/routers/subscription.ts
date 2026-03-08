@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { router, protectedProcedure } from "../trpc.js";
 import { users, subscriptionEvents } from "../../db/schema/index.js";
+import { invalidateUserTierCache } from "../context.js";
 
 export const subscriptionRouter = router({
   /** Get current user's subscription status */
@@ -32,6 +33,7 @@ export const subscriptionRouter = router({
         .update(users)
         .set({ subscriptionTier: "free", subscriptionExpiresAt: null })
         .where(eq(users.id, ctx.userId));
+      await invalidateUserTierCache(ctx.userId);
       return {
         tier: "free" as const,
         expiresAt: null,

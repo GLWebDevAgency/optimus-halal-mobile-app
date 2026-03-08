@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { users, subscriptionEvents } from "../db/schema/index.js";
 import { logger } from "../lib/logger.js";
+import { invalidateUserTierCache } from "../trpc/context.js";
 
 const REVENUECAT_SECRET = process.env.REVENUECAT_WEBHOOK_SECRET ?? "";
 
@@ -84,6 +85,7 @@ webhookRoutes.post("/revenuecat", async (c) => {
         subscriptionProductId: event.product_id,
       })
       .where(eq(users.id, userId));
+    await invalidateUserTierCache(userId);
   } else if (revokeAccess.includes(event.type)) {
     await db
       .update(users)
@@ -92,6 +94,7 @@ webhookRoutes.post("/revenuecat", async (c) => {
         subscriptionExpiresAt: null,
       })
       .where(eq(users.id, userId));
+    await invalidateUserTierCache(userId);
   }
   // CANCELLATION: do NOT revoke — user has access until expiration_at_ms
 
