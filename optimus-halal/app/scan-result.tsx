@@ -26,6 +26,7 @@ import {
   Linking,
   Modal,
   Pressable,
+  ActivityIndicator,
 } from "react-native";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
@@ -55,7 +56,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
-import { IconButton, StatusPill, LevelUpCelebration, PremiumBackground } from "@/components/ui";
+import { IconButton, LevelUpCelebration, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PersonalAlerts, type PersonalAlert } from "@/components/scan/PersonalAlerts";
 import { MadhabBottomSheet } from "@/components/scan/MadhabBottomSheet";
@@ -75,9 +76,17 @@ import { GlowCard } from "@/components/ui/GlowCard";
 
 import { CertifierLogo } from "@/components/scan/CertifierLogo";
 import { ScanResultTabBar } from "@/components/scan/ScanResultTabBar";
+import { CriteriaCard } from "@/components/scan/CriteriaCard";
+import { NutrientBar } from "@/components/scan/NutrientBar";
+import { DietaryChip } from "@/components/scan/DietaryChip";
+import { AlternativeProductCard } from "@/components/scan/AlternativeProductCard";
+import { NutrientDetailSheet } from "@/components/scan/NutrientDetailSheet";
+import { HealthEffectBadge } from "@/components/scan/HealthEffectBadge";
+import { HalalActionCard } from "@/components/scan/HalalActionCard";
+import type { HealthEffectType, NutrientLevel } from "@/services/api/types";
 
 
-import { useFeatureFlagsStore, useQuotaStore, useLocalFavoritesStore, useLocalScanHistoryStore } from "@/store";
+import { useFeatureFlagsStore, useQuotaStore, useLocalFavoritesStore, useLocalScanHistoryStore, useLocalNutritionProfileStore } from "@/store";
 import { isAuthenticated as hasStoredTokens } from "@/services/api";
 import { trackEvent } from "@/lib/analytics";
 
@@ -1064,10 +1073,16 @@ export default function ScanResultScreen() {
   // Minimum dignity: stepper must finish all 4 steps before showing result
   const [scribeComplete, setScribeComplete] = useState(false);
 
+  const nutritionProfile = useLocalNutritionProfileStore((s) => s.profile);
+
   useEffect(() => {
     if (barcode && !hasFired.current) {
       hasFired.current = true;
-      scanMutation.mutate({ barcode, viewOnly: isViewOnly || undefined });
+      scanMutation.mutate({
+        barcode,
+        viewOnly: isViewOnly || undefined,
+        nutritionProfile: nutritionProfile !== "standard" ? nutritionProfile : undefined,
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- hasFired ref guards re-fire
   }, [barcode, isViewOnly]);
@@ -1084,6 +1099,12 @@ export default function ScanResultScreen() {
     [scanMutation.data?.ingredientRulings]
   );
   const levelUp = scanMutation.data?.levelUp ?? null;
+  // V3 enrichments
+  const dietaryAnalysis = scanMutation.data?.dietaryAnalysis ?? null;
+  const nutrientBreakdown = scanMutation.data?.nutrientBreakdown ?? null;
+  const specialProduct = scanMutation.data?.specialProduct ?? null;
+  const scoreExclusion = scanMutation.data?.scoreExclusion ?? null;
+  const additiveHealthEffects = scanMutation.data?.additiveHealthEffects ?? {};
   const meQuery = useMe({ enabled: hasStoredTokens() });
   const isGuest = !meQuery.data && (!hasStoredTokens() || meQuery.isError);
   // Fallback to local quota store when backend doesn't return remainingScans
@@ -1211,10 +1232,9 @@ export default function ScanResultScreen() {
   // ── Feature Flags ────────────────────────────
   const { isFeatureEnabled } = useFeatureFlagsStore();
   const marketplaceEnabled = isFeatureEnabled("marketplaceEnabled");
-  const alternativesEnabled = isFeatureEnabled("alternativesEnabled");
   const alternativesQuery = trpc.product.getAlternatives.useQuery(
-    { productId: product?.id ?? "", limit: 3 },
-    { enabled: alternativesEnabled && !!product?.id }
+    { productId: product?.id ?? "", limit: 10 },
+    { enabled: !!product?.id }
   );
 
   // ── Level-Up Celebration ─────────────────────
@@ -1256,6 +1276,13 @@ export default function ScanResultScreen() {
   // ── Score Detail Bottom Sheet ──────────────
   const [showScoreDetailSheet, setShowScoreDetailSheet] = useState(false);
   const handleCloseScoreDetail = useCallback(() => setShowScoreDetailSheet(false), []);
+
+  // ── Nutrient Detail Bottom Sheet ─────────────
+  const [selectedNutrient, setSelectedNutrient] = useState<{
+    nutrient: string; value: number; unit: string; level: NutrientLevel;
+    dailyValuePercent: number; isNegative: boolean;
+  } | null>(null);
+  const handleCloseNutrientDetail = useCallback(() => setSelectedNutrient(null), []);
 
   // ── Product Image Preview Modal ──────────────
   const [showImagePreview, setShowImagePreview] = useState(false);
@@ -1491,7 +1518,11 @@ export default function ScanResultScreen() {
     scanMutation.reset();
     if (barcode) {
       hasFired.current = true;
-      scanMutation.mutate({ barcode, viewOnly: isViewOnly || undefined });
+      scanMutation.mutate({
+        barcode,
+        viewOnly: isViewOnly || undefined,
+        nutritionProfile: nutritionProfile !== "standard" ? nutritionProfile : undefined,
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [barcode, isViewOnly]);
@@ -1575,9 +1606,9 @@ export default function ScanResultScreen() {
     (val) => runOnJS(setDisplayedScore)(val),
   );
 
-  // Bar fill via scaleX — GPU-only, no layout recalc
+  // Bar fill via width percentage — RN doesn't support transformOrigin
   const animatedBarStyle = useAnimatedStyle(() => ({
-    transform: [{ scaleX: barScale.value }],
+    width: `${barScale.value * 100}%`,
   }));
 
   // ── Hero: Image glow pulse (opacity overlay, not shadowOpacity) ──
@@ -2011,8 +2042,7 @@ export default function ScanResultScreen() {
                           style={[
                             styles.heroCertifierBarFill,
                             {
-                              width: "100%",
-                              transformOrigin: "left",
+                              // width is animated via animatedBarStyle
                               backgroundColor: certifierTrustScore! >= 70
                                 ? halalStatusTokens.halal.base
                                 : certifierTrustScore! >= 40
@@ -2263,81 +2293,79 @@ export default function ScanResultScreen() {
         <View style={styles.contentContainer}>
 
           {/* ═══ TAB 3 — Alternatives ═══ */}
-          {activeTab === 2 && (halalStatus === "haram" || halalStatus === "doubtful") && (
-            alternativesEnabled && alternativesQuery.data && alternativesQuery.data.length > 0 ? (
-              <Animated.View entering={entryAnimations.slideInUp(1)} style={styles.altSection}>
-                <View style={styles.altHeader}>
-                  <View style={styles.altHeaderLeft}>
-                    <View style={[styles.altHeaderIcon, { backgroundColor: isDark ? `${brandTokens.gold}25` : `${brandTokens.gold}1A` }]}>
-                      <MaterialIcons name="swap-horiz" size={14} color={brandTokens.gold} />
-                    </View>
+          {activeTab === 2 && (
+            <Animated.View entering={entryAnimations.slideInUp(1)}>
+              {/* Header */}
+              <View style={styles.altHeader}>
+                <View style={styles.altHeaderLeft}>
+                  <View style={[styles.altHeaderIcon, { backgroundColor: isDark ? `${brandTokens.gold}25` : `${brandTokens.gold}1A` }]}>
+                    <MaterialIcons name="swap-horiz" size={14} color={brandTokens.gold} />
+                  </View>
+                  <View>
                     <Text style={[styles.altHeaderTitle, { color: colors.textPrimary }]}>
-                      {t.scanResult.halalAlternatives}
+                      {t.scanResult.alternativesTitle}
+                    </Text>
+                    <Text style={[{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }]}>
+                      {t.scanResult.alternativesSubtitle}
                     </Text>
                   </View>
-                  <MaterialIcons name={marketplaceEnabled ? "storefront" : "local-mall"} size={20} color={brandTokens.gold} />
                 </View>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.lg, paddingBottom: spacing.xs }}>
-                  {alternativesQuery.data.slice(0, 3).map((alt: any) => (
-                      <PressableScale
-                        key={alt.id}
-                        onPress={() => {
-                          if (marketplaceEnabled) {
-                            router.navigate({ pathname: "/(marketplace)/product/[id]", params: { id: alt.id } } as any);
-                          } else {
-                            router.navigate({ pathname: "/scan-result", params: { barcode: alt.barcode } });
-                          }
-                        }}
-                      >
-                        <GlowCard
-                          glowColor={brandTokens.gold}
-                          glowIntensity="subtle"
-                          style={{ ...styles.altCard, backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#ffffff" }}
-                        >
-                          <View>
-                            {alt.imageUrl ? (
-                              <Image source={{ uri: alt.imageUrl }} style={styles.altImage} contentFit="cover" transition={200} />
-                            ) : (
-                              <View style={[styles.altImagePlaceholder, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)" }]}>
-                                <MaterialIcons name="image" size={24} color={colors.textMuted} />
-                              </View>
-                            )}
-                            <Text style={[styles.altName, { color: colors.textPrimary }]} numberOfLines={2}>
-                              {alt.name}
-                            </Text>
-                            <StatusPill status={(alt.halalStatus ?? "halal") as "halal" | "haram" | "doubtful" | "unknown"} size="sm" animated={false} />
-                          </View>
-                        </GlowCard>
-                      </PressableScale>
+              </View>
+
+              {/* Loading state */}
+              {alternativesQuery.isLoading && (
+                <View style={styles.altLoadingContainer}>
+                  <ActivityIndicator size="small" color={brandTokens.gold} />
+                  <Text style={[styles.altLoadingText, { color: colors.textSecondary }]}>
+                    {t.scanResult.alternativesLoading}
+                  </Text>
+                </View>
+              )}
+
+              {/* Results list */}
+              {alternativesQuery.data && alternativesQuery.data.length > 0 && (
+                <View style={{ marginTop: spacing.md }}>
+                  {alternativesQuery.data.map((alt: any, idx: number) => (
+                    <AlternativeProductCard
+                      key={alt.id}
+                      id={alt.id}
+                      barcode={alt.barcode}
+                      name={alt.name}
+                      brand={alt.brand}
+                      imageUrl={alt.imageUrl}
+                      halalStatus={alt.halalStatus}
+                      confidenceScore={alt.confidenceScore}
+                      nutriscoreGrade={alt.nutriscoreGrade}
+                      novaGroup={alt.novaGroup}
+                      isBetterChoice={idx === 0}
+                      betterChoiceLabel={t.scanResult.alternativesBetterChoice}
+                      index={idx}
+                      onPress={(_id, barcode) => {
+                        if (barcode) {
+                          router.navigate({ pathname: "/scan-result", params: { barcode } });
+                        }
+                      }}
+                    />
                   ))}
-                </ScrollView>
-              </Animated.View>
-            ) : !alternativesEnabled ? (
-              /* ── Teaser — alternatives coming soon ── */
-              <Animated.View entering={entryAnimations.slideInUp(1)}>
-                <View
-                  style={[
-                    styles.altTeaser,
-                    {
-                      backgroundColor: isDark ? `${statusConfig.glowColor}08` : `${statusConfig.glowColor}06`,
-                      borderColor: isDark ? `${statusConfig.glowColor}18` : `${statusConfig.glowColor}10`,
-                    },
-                  ]}
-                >
-                  <View style={[styles.altTeaserIcon, { backgroundColor: `${statusConfig.glowColor}15` }]}>
-                    <MaterialIcons name="auto-awesome" size={16} color={statusConfig.glowColor} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.altTeaserTitle, { color: colors.textPrimary }]}>
-                      {t.scanResult.alternativesComingSoon}
-                    </Text>
-                    <Text style={[styles.altTeaserDesc, { color: colors.textSecondary }]} numberOfLines={2}>
-                      {t.scanResult.alternativesComingSoonDesc}
-                    </Text>
-                  </View>
                 </View>
-              </Animated.View>
-            ) : null
+              )}
+
+              {/* Empty state */}
+              {alternativesQuery.data && alternativesQuery.data.length === 0 && (
+                <View style={[styles.altEmptyContainer, {
+                  backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
+                  borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+                }]}>
+                  <MaterialIcons name="search-off" size={40} color={colors.textMuted} />
+                  <Text style={[styles.altEmptyTitle, { color: colors.textPrimary }]}>
+                    {t.scanResult.alternativesEmpty}
+                  </Text>
+                  <Text style={[styles.altEmptyDesc, { color: colors.textSecondary }]}>
+                    {t.scanResult.alternativesEmptyDesc}
+                  </Text>
+                </View>
+              )}
+            </Animated.View>
           )}
 
           {/* ═══ TAB 2 — Boycott Alert ═══ */}
@@ -2418,8 +2446,46 @@ export default function ScanResultScreen() {
             </Animated.View>
           )}
 
+          {/* ═══ TAB 2 — Score Exclusion (replaces Health Score) ═══ */}
+          {activeTab === 1 && scoreExclusion && (
+            <Animated.View entering={entryAnimations.slideInUp(1)}>
+              <View
+                style={[
+                  styles.scoreExclusionCard,
+                  {
+                    backgroundColor: isDark ? `${semantic.info.base}0A` : `${semantic.info.base}08`,
+                    borderColor: isDark ? `${semantic.info.base}25` : `${semantic.info.base}18`,
+                  },
+                ]}
+              >
+                <MaterialIcons name="info" size={24} color={semantic.info.base} />
+                <View style={{ flex: 1, marginLeft: spacing.lg }}>
+                  <Text style={[styles.scoreExclusionTitle, { color: colors.textPrimary }]}>
+                    {t.scanResult.scoreNotAvailable ?? "Score non disponible"}
+                  </Text>
+                  <Text style={[styles.scoreExclusionDesc, { color: colors.textSecondary }]}>
+                    {(() => {
+                      const EXCLUSION_DESC_KEYS: Record<string, string> = {
+                        missing_nutrition_data: "scoreExclusionMissingDataDesc",
+                        not_food: "scoreExclusionNotFoodDesc",
+                        too_generic: "scoreExclusionTooGenericDesc",
+                        alcohol: "scoreExclusionAlcoholDesc",
+                        baby_food: "scoreExclusionBabyFoodDesc",
+                        water: "scoreExclusionWaterDesc",
+                      };
+                      const key = EXCLUSION_DESC_KEYS[scoreExclusion];
+                      return key
+                        ? (t.scanResult[key as keyof typeof t.scanResult] as string)
+                        : scoreExclusion.replace(/_/g, " ");
+                    })()}
+                  </Text>
+                </View>
+              </View>
+            </Animated.View>
+          )}
+
           {/* ═══ TAB 2 — Naqiy Health Score ═══ */}
-          {activeTab === 1 && (
+          {activeTab === 1 && !scoreExclusion && (
             <Animated.View entering={entryAnimations.slideInUp(1)}>
               <View
                 style={[
@@ -2545,6 +2611,46 @@ export default function ScanResultScreen() {
               <Text style={[styles.analysisSourceText, { color: colors.textMuted }]}>
                 {t.scanResult.source}: {halalAnalysis.analysisSource}
               </Text>
+            </Animated.View>
+          )}
+
+          {/* ═══ TAB 1 — Special Product (Honey, Salt, Chocolate…) ═══ */}
+          {activeTab === 0 && specialProduct && (
+            <Animated.View entering={entryAnimations.slideInUp(3)}>
+              <View
+                style={[
+                  styles.specialProductBanner,
+                  {
+                    backgroundColor: isDark ? `${gold[500]}0A` : `${gold[500]}08`,
+                    borderColor: isDark ? `${gold[500]}25` : `${gold[500]}18`,
+                  },
+                ]}
+              >
+                <View style={styles.specialProductHeader}>
+                  <MaterialIcons name="auto-awesome" size={18} color={gold[500]} />
+                  <Text style={[styles.specialProductTitle, { color: isDark ? gold[300] : gold[700] }]}>
+                    {t.scanResult[specialProduct.typeLabelKey as keyof typeof t.scanResult] ?? specialProduct.type}
+                  </Text>
+                </View>
+                {specialProduct.criteria.map((criterion: { labelKey: string; pass: boolean; descriptionKey: string; icon: string }, idx: number) => (
+                  <CriteriaCard
+                    key={criterion.labelKey}
+                    title={t.scanResult[criterion.labelKey as keyof typeof t.scanResult] ?? criterion.labelKey}
+                    description={t.scanResult[criterion.descriptionKey as keyof typeof t.scanResult] ?? criterion.descriptionKey}
+                    pass={criterion.pass}
+                    icon={criterion.icon as keyof typeof MaterialIcons.glyphMap}
+                    index={idx}
+                  />
+                ))}
+                {specialProduct.bypassNutriScore && (
+                  <View style={styles.specialProductNote}>
+                    <MaterialIcons name="info-outline" size={13} color={colors.textMuted} />
+                    <Text style={[styles.specialProductNoteText, { color: colors.textMuted }]}>
+                      {t.scanResult.nutriScoreNotRelevant ?? "Le NutriScore n'est pas adapté à ce type de produit"}
+                    </Text>
+                  </View>
+                )}
+              </View>
             </Animated.View>
           )}
 
@@ -2787,6 +2893,21 @@ export default function ScanResultScreen() {
                       >
                         {additive.explanation}
                       </Text>
+                      {/* V3: Health effect badge */}
+                      {(() => {
+                        const code = additive.name.split(" ")[0];
+                        const effect = additiveHealthEffects[code];
+                        if (!effect) return null;
+                        return (
+                          <View style={{ marginTop: spacing.xs }}>
+                            <HealthEffectBadge
+                              type={effect.type as HealthEffectType}
+                              confirmed={effect.confirmed}
+                              compact
+                            />
+                          </View>
+                        );
+                      })()}
                     </View>
                     <Text
                       style={[
@@ -2891,6 +3012,82 @@ export default function ScanResultScreen() {
               </Animated.View>
             )}
 
+          {/* ═══ TAB 2 — Qualitative Indicators (Bio, Palm Oil, Sweeteners, Additives) ═══ */}
+          {activeTab === 1 && (offExtras || dietaryAnalysis) && (
+            <Animated.View entering={entryAnimations.slideInUp(2)}>
+              <Text
+                style={[styles.sectionTitle, { color: colors.textPrimary }]}
+                accessibilityRole="header"
+              >
+                {t.scanResult.qualitativeIndicators ?? "Indicateurs qualitatifs"}
+              </Text>
+              {/* Bio / Organic */}
+              {offExtras?.labelsTags && (
+                <CriteriaCard
+                  title={t.scanResult.bioOrganic ?? "Bio / Agriculture Biologique"}
+                  description={
+                    offExtras.labelsTags.some((l: string) =>
+                      ["en:organic", "fr:bio", "fr:agriculture-biologique", "en:eu-organic"].includes(l.toLowerCase())
+                    )
+                      ? (t.scanResult.bioOrganicPass ?? "Ce produit est issu de l'agriculture biologique")
+                      : (t.scanResult.bioOrganicFail ?? "Ce produit n'est pas certifié bio")
+                  }
+                  pass={offExtras.labelsTags.some((l: string) =>
+                    ["en:organic", "fr:bio", "fr:agriculture-biologique", "en:eu-organic"].includes(l.toLowerCase())
+                  )}
+                  icon="eco"
+                  index={0}
+                />
+              )}
+              {/* Palm Oil */}
+              {dietaryAnalysis?.containsPalmOil != null && (
+                <CriteriaCard
+                  title={t.scanResult.palmOilIndicator ?? "Huile de palme"}
+                  description={
+                    dietaryAnalysis.containsPalmOil
+                      ? (t.scanResult.containsPalmOilDesc ?? "Ce produit contient de l'huile de palme")
+                      : (t.scanResult.palmOilFreeDesc ?? "Ce produit ne contient pas d'huile de palme")
+                  }
+                  pass={!dietaryAnalysis.containsPalmOil}
+                  icon="park"
+                  index={1}
+                />
+              )}
+              {/* Sweeteners */}
+              {offExtras?.additivesTags && (
+                <CriteriaCard
+                  title={t.scanResult.sweetenersIndicator ?? "Édulcorants"}
+                  description={
+                    offExtras.additivesTags.some((a: string) =>
+                      /e950|e951|e952|e954|e955|e960|e961|e962|e967|e968|aspartame|sucralose|stevia/i.test(a)
+                    )
+                      ? (t.scanResult.sweetenersDetected ?? "Ce produit contient des édulcorants")
+                      : (t.scanResult.noSweeteners ?? "Aucun édulcorant détecté")
+                  }
+                  pass={!offExtras.additivesTags.some((a: string) =>
+                    /e950|e951|e952|e954|e955|e960|e961|e962|e967|e968|aspartame|sucralose|stevia/i.test(a)
+                  )}
+                  icon="science"
+                  index={2}
+                />
+              )}
+              {/* No Additives */}
+              {offExtras?.additivesTags && (
+                <CriteriaCard
+                  title={t.scanResult.additivesIndicator ?? "Additifs"}
+                  description={
+                    offExtras.additivesTags.length === 0
+                      ? (t.scanResult.noAdditivesDesc ?? "Ce produit ne contient aucun additif")
+                      : (t.scanResult.hasAdditivesDesc ?? `Ce produit contient ${offExtras.additivesTags.length} additif(s)`)
+                  }
+                  pass={offExtras.additivesTags.length === 0}
+                  icon="check-circle"
+                  index={3}
+                />
+              )}
+            </Animated.View>
+          )}
+
           {/* ═══ TAB 2 — Allergens ═══ */}
           {activeTab === 1 && allergensTags.length > 0 && (
             <Animated.View entering={entryAnimations.slideInUp(2)}>
@@ -2939,6 +3136,94 @@ export default function ScanResultScreen() {
                   );
                 })}
               </ScrollView>
+            </Animated.View>
+          )}
+
+          {/* ═══ TAB 2 — Dietary Analysis Chips ═══ */}
+          {activeTab === 1 && dietaryAnalysis && (
+            <Animated.View entering={entryAnimations.slideInUp(3)}>
+              <Text
+                style={[styles.sectionTitle, { color: colors.textPrimary }]}
+                accessibilityRole="header"
+              >
+                {t.scanResult.dietaryAnalysis ?? "Analyse diététique"}
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.dietaryChipsRow}
+              >
+                {dietaryAnalysis.containsGluten != null && (
+                  <DietaryChip
+                    label={dietaryAnalysis.containsGluten ? (t.scanResult.containsGluten ?? "Gluten") : (t.scanResult.glutenFree ?? "Sans gluten")}
+                    status={dietaryAnalysis.containsGluten ? "contains" : "safe"}
+                    icon="grain"
+                    index={0}
+                  />
+                )}
+                {dietaryAnalysis.containsLactose != null && (
+                  <DietaryChip
+                    label={dietaryAnalysis.containsLactose ? (t.scanResult.containsLactose ?? "Lactose") : (t.scanResult.lactoseFree ?? "Sans lactose")}
+                    status={dietaryAnalysis.containsLactose ? "contains" : "safe"}
+                    icon="water-drop"
+                    index={1}
+                  />
+                )}
+                {dietaryAnalysis.containsPalmOil != null && (
+                  <DietaryChip
+                    label={dietaryAnalysis.containsPalmOil ? (t.scanResult.containsPalmOil ?? "Huile de palme") : (t.scanResult.palmOilFree ?? "Sans huile de palme")}
+                    status={dietaryAnalysis.containsPalmOil ? "contains" : "safe"}
+                    icon="park"
+                    index={2}
+                  />
+                )}
+                {dietaryAnalysis.isVegetarian != null && (
+                  <DietaryChip
+                    label={dietaryAnalysis.isVegetarian ? (t.scanResult.vegetarian ?? "Végétarien") : (t.scanResult.notVegetarian ?? "Non végétarien")}
+                    status={dietaryAnalysis.isVegetarian ? "safe" : "contains"}
+                    icon="eco"
+                    index={3}
+                  />
+                )}
+                {dietaryAnalysis.isVegan != null && (
+                  <DietaryChip
+                    label={dietaryAnalysis.isVegan ? (t.scanResult.vegan ?? "Végan") : (t.scanResult.notVegan ?? "Non végan")}
+                    status={dietaryAnalysis.isVegan ? "safe" : "contains"}
+                    icon="spa"
+                    index={4}
+                  />
+                )}
+              </ScrollView>
+            </Animated.View>
+          )}
+
+          {/* ═══ TAB 2 — Nutrient Breakdown Bars ═══ */}
+          {activeTab === 1 && nutrientBreakdown && nutrientBreakdown.length > 0 && (
+            <Animated.View entering={entryAnimations.slideInUp(4)}>
+              <Text
+                style={[styles.sectionTitle, { color: colors.textPrimary }]}
+                accessibilityRole="header"
+              >
+                {t.scanResult.nutrientBreakdown ?? "Détail nutritionnel"}
+              </Text>
+              <View style={styles.nutrientBarsContainer}>
+                {nutrientBreakdown.map((nb: { nutrient: string; labelKey: string; value: number; unit: string; level: NutrientLevel; dailyValuePercent: number; isNegative: boolean }, idx: number) => (
+                  <NutrientBar
+                    key={nb.nutrient}
+                    label={t.scanResult[nb.labelKey as keyof typeof t.scanResult] ?? nb.nutrient.replace(/_/g, " ")}
+                    value={nb.value}
+                    unit={nb.unit}
+                    level={nb.level}
+                    dailyValuePercent={nb.dailyValuePercent}
+                    isNegative={nb.isNegative}
+                    index={idx}
+                    onPress={() => setSelectedNutrient({
+                      nutrient: nb.nutrient, value: nb.value, unit: nb.unit,
+                      level: nb.level, dailyValuePercent: nb.dailyValuePercent, isNegative: nb.isNegative,
+                    })}
+                  />
+                ))}
+              </View>
             </Animated.View>
           )}
 
@@ -3074,6 +3359,31 @@ export default function ScanResultScreen() {
                   </Animated.View>
                 )}
               </GlowCard>
+            </Animated.View>
+          )}
+
+          {/* ═══ TAB 1 — Community Actions (Report / Share) ═══ */}
+          {activeTab === 0 && product && (
+            <Animated.View entering={entryAnimations.slideInUp(9)}>
+              {halalStatus === "doubtful" && (
+                <HalalActionCard
+                  type="report"
+                  productName={product.name}
+                  productBarcode={product.barcode}
+                  reportLabel={t.scanResult.reportProduct}
+                  reportDesc={t.scanResult.reportProductDesc}
+                />
+              )}
+              {halalStatus === "halal" && (
+                <HalalActionCard
+                  type="share"
+                  productName={product.name}
+                  productBarcode={product.barcode}
+                  shareLabel={t.scanResult.shareAnalysis}
+                  shareDesc={t.scanResult.shareAnalysisDesc}
+                  shareTagline={t.scanResult.shareTagline}
+                />
+              )}
             </Animated.View>
           )}
 
@@ -3328,6 +3638,18 @@ export default function ScanResultScreen() {
         }
         certifierTrustScoreEditorial={certifierData_?.trustScore ?? null}
         onClose={handleCloseMadhab}
+      />
+
+      {/* ── Nutrient Detail Bottom Sheet ── */}
+      <NutrientDetailSheet
+        visible={!!selectedNutrient}
+        nutrient={selectedNutrient?.nutrient ?? null}
+        value={selectedNutrient?.value ?? null}
+        unit={selectedNutrient?.unit ?? "g"}
+        level={selectedNutrient?.level ?? null}
+        dailyValuePercent={selectedNutrient?.dailyValuePercent ?? null}
+        isNegative={selectedNutrient?.isNegative}
+        onClose={handleCloseNutrientDetail}
       />
 
       {/* ── Off-screen Share Card (captured as image) ── */}
@@ -3940,6 +4262,69 @@ const styles = StyleSheet.create({
     textTransform: "capitalize",
   },
 
+  // ── V3: Dietary Chips row ──────────────────────
+  dietaryChipsRow: {
+    flexDirection: "row" as const,
+    gap: spacing.md,
+    paddingRight: spacing.xl,
+    marginBottom: spacing.xl,
+  },
+
+  // ── V3: Nutrient Bars container ────────────────
+  nutrientBarsContainer: {
+    paddingHorizontal: spacing.xs,
+    marginBottom: spacing.xl,
+  },
+
+  // ── V3: Special Product Banner ─────────────────
+  specialProductBanner: {
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    padding: spacing.xl,
+    marginBottom: spacing.xl,
+  },
+  specialProductHeader: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  specialProductTitle: {
+    fontSize: fontSizeTokens.body,
+    fontWeight: fontWeightTokens.bold,
+  },
+  specialProductNote: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: spacing.sm,
+    marginTop: spacing.lg,
+    paddingTop: spacing.lg,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "rgba(255,255,255,0.1)",
+  },
+  specialProductNoteText: {
+    fontSize: fontSizeTokens.caption,
+    flex: 1,
+  },
+
+  // ── V3: Score Exclusion Card ───────────────────
+  scoreExclusionCard: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    padding: spacing.xl,
+    marginBottom: spacing.xl,
+  },
+  scoreExclusionTitle: {
+    fontSize: fontSizeTokens.body,
+    fontWeight: fontWeightTokens.semiBold,
+    marginBottom: spacing.xs,
+  },
+  scoreExclusionDesc: {
+    fontSize: fontSizeTokens.caption,
+  },
+
   // ── Ingredient row ─────────────────────────────
   ingredientRow: {
     paddingVertical: spacing.lg,
@@ -4197,6 +4582,39 @@ const styles = StyleSheet.create({
     fontWeight: fontWeightTokens.bold,
     marginBottom: spacing.xs,
   },
+  // ── Alternatives V3 — loading & empty ────────
+  altLoadingContainer: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: spacing.md,
+    paddingVertical: spacing["3xl"],
+  },
+  altLoadingText: {
+    fontSize: fontSizeTokens.bodySmall,
+  },
+  altEmptyContainer: {
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    paddingVertical: spacing["3xl"],
+    paddingHorizontal: spacing.xl,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    marginTop: spacing.lg,
+  },
+  altEmptyTitle: {
+    fontSize: fontSizeTokens.body,
+    fontWeight: fontWeightTokens.bold,
+    marginTop: spacing.lg,
+    textAlign: "center" as const,
+  },
+  altEmptyDesc: {
+    fontSize: fontSizeTokens.caption,
+    textAlign: "center" as const,
+    marginTop: spacing.sm,
+    lineHeight: 18,
+  },
+
   altBuyBadge: {
     flexDirection: "row" as const,
     alignItems: "center" as const,

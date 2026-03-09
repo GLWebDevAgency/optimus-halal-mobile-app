@@ -29,8 +29,8 @@
     },
     {
         "id": "acmif-mosquee-d-evry",
-        "name": "ACMIF - Mosquee d'Evry",
-        "website": "https://www.mosquee-evry.fr",
+        "name": "ACMIF - Mosquée d'Evry-Courcouronnes",
+        "website": "https://mosquee-evry.fr",
         "creationYear": 1996,
         "controllersAreEmployees": false,
         "controllersPresentEachProduction": false,
@@ -40,21 +40,27 @@
         "acceptsPoultryElectrocutionPostSlaughter": true,
         "acceptsStunningForCattleCalvesLambs": true,
         "acceptsVsm": true,
-        "transparencyPublicCharter": false,
+        "transparencyPublicCharter": true,
         "transparencyAuditReports": false,
         "transparencyCompanyList": false,
         "halal-assessment": false,
-        "controversyPenalty": 0,
-        "evidenceLevel": "inferred",
+        "controversyPenalty": -15,
+        "evidenceLevel": "verified",
         "evidenceSources": [
-            "questionhalal.com — rapport communautaire",
-            "mosquee-evry.fr"
+            "mosquee-evry.fr/wp-content/uploads/2022/05/Cahier_des_charges_HALAL.pdf — cahier des charges officiel (6 dec. 2004, signe Merroun Khalil)",
+            "yabiladi.com/articles/details/4580 — enquete sur le controle de la mosquee d'Evry (2011)",
+            "al-kanz.org — enquetes porc El Saada (2011, 2016), depart Oriental Viandes (2023)",
+            "JORF 29 juin 1996, NOR:AGRG 9601129A — agrement ministeriel"
         ],
         "notes": [
-            "Meme cahier des charges que la Mosquee de Paris (SFCVH). Controleurs non salaries — choisis parmi les employes de l'entreprise certifiee ou detaches par la mosquee (questionhalal.com)."
+            "Association Culturelle des Musulmans d'Ile-de-France (ACMIF). Siege : 20 rue Georges Brassens, 91080 Courcouronnes. President fondateur : Khalil Merroun. Contact halal : M. Sedouki (01 60 77 14 19). Agreee par arrete ministeriel du 27 juin 1996 (JORF 29/06/1996).",
+            "Cahier des charges identique a celui de la Mosquee de Paris (SFCVH). Point 9 : l'electronarcose est explicitement 'toleree, du moment que ce procede ne provoque pas la mort'. Aucune interdiction de l'abattage mecanique ni du VSM.",
+            "Controleurs NON salaries par l'ACMIF : 'choisis parmi les employes de l'etablissement producteur ou distributeur, ou delegues par la Mosquee sur la base d'une prestation forfaitaire' (cahier des charges p.6-7). Conflit d'interets structurel majeur.",
+            "2011 : 4 produits El Saada sur 5 analyses contiennent de l'ADN de porc — l'ACMIF continue de certifier El Saada. 2016 : le magazine Capital revele a nouveau du porc dans des produits certifies par la Mosquee d'Evry. Aucune mesure corrective documentee.",
+            "2023 : Oriental Viandes quitte la certification de la Mosquee d'Evry pour la Mosquee de Paris. Perte de client majeur, signe de defiance du marche."
         ],
-        "lastVerifiedAt": "2026-02-24",
-        "dataSourceUrl": "https://www.mosquee-evry.fr"
+        "lastVerifiedAt": "2026-03-09",
+        "dataSourceUrl": "https://mosquee-evry.fr/halal"
     },
     {
         "id": "afcai",

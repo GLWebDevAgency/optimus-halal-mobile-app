@@ -602,3 +602,89 @@ export const useLocalScanHistoryStore = create<LocalScanHistoryState>()(
     }
   )
 );
+
+/**
+ * Nutrition Profile State
+ * Persisted user preference for Health Score V2 profile axis.
+ * Sent to scanBarcode mutation as `nutritionProfile`.
+ */
+export type NutritionProfile = "standard" | "pregnant" | "child" | "athlete" | "elderly";
+
+interface NutritionProfileState {
+  profile: NutritionProfile;
+  setProfile: (profile: NutritionProfile) => void;
+}
+
+export const useLocalNutritionProfileStore = create<NutritionProfileState>()(
+  persist(
+    (set) => ({
+      profile: "standard",
+      setProfile: (profile) => set({ profile }),
+    }),
+    {
+      name: "nutrition-profile-storage",
+      storage: createJSONStorage(() => mmkvStorage),
+    }
+  )
+);
+
+/**
+ * Dietary Preferences State
+ * Persisted user preferences for dietary restrictions and allergens.
+ * Used by the alternatives engine to filter recommendations.
+ */
+export interface DietaryPreferences {
+  glutenFree: boolean;
+  lactoseFree: boolean;
+  palmOilFree: boolean;
+  vegetarian: boolean;
+  vegan: boolean;
+}
+
+interface DietaryPreferencesState {
+  preferences: DietaryPreferences;
+  allergens: string[];
+  setPreference: <K extends keyof DietaryPreferences>(key: K, value: boolean) => void;
+  setAllergens: (allergens: string[]) => void;
+  addAllergen: (allergen: string) => void;
+  removeAllergen: (allergen: string) => void;
+  resetPreferences: () => void;
+}
+
+const DEFAULT_DIETARY_PREFS: DietaryPreferences = {
+  glutenFree: false,
+  lactoseFree: false,
+  palmOilFree: false,
+  vegetarian: false,
+  vegan: false,
+};
+
+export const useLocalDietaryPreferencesStore = create<DietaryPreferencesState>()(
+  persist(
+    (set) => ({
+      preferences: DEFAULT_DIETARY_PREFS,
+      allergens: [],
+      setPreference: (key, value) =>
+        set((state) => ({
+          preferences: { ...state.preferences, [key]: value },
+        })),
+      setAllergens: (allergens) => set({ allergens }),
+      addAllergen: (allergen) =>
+        set((state) => ({
+          allergens: state.allergens.includes(allergen)
+            ? state.allergens
+            : [...state.allergens, allergen],
+        })),
+      removeAllergen: (allergen) =>
+        set((state) => ({
+          allergens: state.allergens.filter((a) => a !== allergen),
+        })),
+      resetPreferences: () =>
+        set({ preferences: DEFAULT_DIETARY_PREFS, allergens: [] }),
+    }),
+    {
+      name: "naqiy.dietary-preferences",
+      storage: createJSONStorage(() => mmkvStorage),
+    }
+  )
+);

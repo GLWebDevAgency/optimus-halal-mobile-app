@@ -66,6 +66,13 @@ export const additives = pgTable("additives", {
   healthEffectsEn: t.text("health_effects_en"),
   efsaStatus: efsaStatusEnum("efsa_status").default("approved").notNull(),
   bannedCountries: t.text("banned_countries").array(),
+  // V2: vegetarian/vegan flags (NULL = unknown, distinct from false)
+  isVegetarian: t.boolean("is_vegetarian"),
+  isVegan: t.boolean("is_vegan"),
+  // V3: health effect classification (Yuka HealthEffect pattern)
+  healthEffectType: t.varchar("health_effect_type", { length: 30 }),
+  healthEffectConfirmed: t.boolean("health_effect_confirmed").default(true),
+  dataSource: t.varchar("data_source", { length: 50 }).default("naqiy"),
   isActive: t.boolean("is_active").default(true).notNull(),
   createdAt: t
     .timestamp("created_at", { withTimezone: true })

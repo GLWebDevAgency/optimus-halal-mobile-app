@@ -754,8 +754,6 @@ export const NAQIY_EDITORIAL_WEIGHTS: WeightSet = {
   transparencyBonus: 5,
 };
 
-/** @deprecated Use NAQIY_EDITORIAL_WEIGHTS instead */
-export const UNIVERSAL_WEIGHTS = NAQIY_EDITORIAL_WEIGHTS;
 
 // ================================================================
 // TRUST SCORE COMPUTATION (V4)

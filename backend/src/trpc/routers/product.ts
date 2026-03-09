@@ -3,6 +3,7 @@ import { eq, ilike, or, desc, sql } from "drizzle-orm";
 import { router, publicProcedure, protectedProcedure } from "../trpc.js";
 import { products, categories } from "../../db/schema/index.js";
 import { notFound } from "../../lib/errors.js";
+import { findAlternatives } from "../../services/recommendation.service.js";
 
 function escapeLike(str: string): string {
   return str.replace(/[%_\\]/g, "\\$&");
@@ -89,7 +90,17 @@ export const productRouter = router({
     .input(
       z.object({
         productId: z.string().uuid(),
-        limit: z.number().min(1).max(20).default(5),
+        limit: z.number().min(1).max(20).default(10),
+        /** User allergen tags (e.g. ["en:gluten", "en:milk"]) */
+        userAllergens: z.array(z.string()).optional(),
+        /** Dietary preference filters */
+        userDietaryPrefs: z.object({
+          glutenFree: z.boolean().optional(),
+          lactoseFree: z.boolean().optional(),
+          palmOilFree: z.boolean().optional(),
+          vegetarian: z.boolean().optional(),
+          vegan: z.boolean().optional(),
+        }).optional(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -98,18 +109,14 @@ export const productRouter = router({
       });
       if (!product) throw notFound("Produit introuvable");
 
-      // Find halal alternatives in same category
-      const alternatives = await ctx.db
-        .select()
-        .from(products)
-        .where(
-          sql`${products.category} = ${product.category}
-            AND ${products.halalStatus} = 'halal'
-            AND ${products.id} != ${product.id}`
-        )
-        .orderBy(desc(products.confidenceScore))
-        .limit(input.limit);
-
-      return alternatives;
+      return findAlternatives(ctx.db, {
+        productId: product.id,
+        productCategory: product.category,
+        productCategoryId: product.categoryId,
+        productBarcode: product.barcode,
+        userAllergens: input.userAllergens,
+        userDietaryPrefs: input.userDietaryPrefs,
+        limit: input.limit,
+      });
     }),
 });
