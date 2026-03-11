@@ -790,6 +790,22 @@ export const ar: TranslationKeys = {
     // V3 — Unknown status action
     unknownStatusReport: "ساهم في التحليل",
     unknownStatusReportDesc: "هذا المنتج لم يتم التحقق منه بعد. ساعد المجتمع!",
+    // V6 — Bento tile keys
+    viewDetail: "عرض التفاصيل",
+    alertSingular: "تنبيه",
+    alertPlural: "تنبيهات",
+    noAlerts: "لا توجد تنبيهات",
+    allGood: "كل شيء على ما يرام",
+    alternativesPriority: "توجد بدائل",
+    alternativesDiscover: "اكتشف أيضاً",
+    madhabConsensus: "إجماع",
+    seeAll: "عرض الكل",
+    loadingAlternatives: "جاري التحميل...",
+    noAlternatives: "لا توجد بدائل",
+    products: "منتجات",
+    favorite: "المفضلة",
+    healthScore: "نتيجة الصحة",
+    share: "مشاركة",
   },
   map: {
     title: "الخريطة",

@@ -881,6 +881,22 @@ export const en: TranslationKeys = {
     // V3 — Unknown status action
     unknownStatusReport: "Help analyze this product",
     unknownStatusReportDesc: "This product hasn't been verified yet. Help the community!",
+    // V6 — Bento tile keys
+    viewDetail: "View details",
+    alertSingular: "alert",
+    alertPlural: "alerts",
+    noAlerts: "No alerts",
+    allGood: "All good",
+    alternativesPriority: "Alternatives available",
+    alternativesDiscover: "Discover more",
+    madhabConsensus: "Unanimous",
+    seeAll: "See all",
+    loadingAlternatives: "Loading...",
+    noAlternatives: "No alternatives found",
+    products: "products",
+    favorite: "Favorite",
+    healthScore: "Health score",
+    share: "Share",
   },
 
   // Map

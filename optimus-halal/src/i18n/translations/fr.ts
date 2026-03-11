@@ -880,6 +880,22 @@ export const fr = {
     // V3 — Unknown status action
     unknownStatusReport: "Contribuer à l'analyse",
     unknownStatusReportDesc: "Ce produit n'a pas encore été vérifié. Aidez la communauté !",
+    // V6 — Bento tile keys
+    viewDetail: "Voir le détail",
+    alertSingular: "alerte",
+    alertPlural: "alertes",
+    noAlerts: "Aucune alerte",
+    allGood: "Tout est bon",
+    alternativesPriority: "Des alternatives existent",
+    alternativesDiscover: "Découvrir aussi",
+    madhabConsensus: "Unanime",
+    seeAll: "Voir tout",
+    loadingAlternatives: "Chargement...",
+    noAlternatives: "Aucune alternative trouvée",
+    products: "produits",
+    favorite: "Favori",
+    healthScore: "Score santé",
+    share: "Partager",
   },
 
   // Map
