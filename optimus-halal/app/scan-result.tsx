@@ -1,12 +1,12 @@
 /**
  * Scan Result Screen — Orchestrator
  *
- * Continuous scroll layout replacing the former 3-tab design.
- * All visual sections are extracted to dedicated components:
- *   VerdictHero, AlertStrip, MadhabVerdictCard, HalalAnalysisSection,
- *   HealthNutritionSection, AlternativesSection, ScanActionBar, StickyVerdictHeader.
+ * BentoGrid dashboard layout with tile-triggered @gorhom bottom sheets.
+ * Hero → BentoGrid tiles → detail sheets for halal, health, alerts, alternatives.
+ * CompactStickyHeader (scroll-interpolated) + ScanBottomBar (glass action bar).
  *
- * Conditional ordering: haram/doubtful → alternatives BEFORE health (Al-Taqwa).
+ * Section components (HalalAnalysisSection, HealthNutritionSection, AlternativesSection,
+ * AlertStrip, MadhabVerdictCard) are rendered inside bottom sheets as detail views.
  *
  * @module app/scan-result
  */
@@ -32,8 +32,9 @@ import Animated, {
   FadeInRight,
   ZoomIn,
   useAnimatedScrollHandler,
-  runOnJS,
+  useSharedValue,
 } from "react-native-reanimated";
+import BottomSheet, { BottomSheetScrollView, BottomSheetBackdrop } from "@gorhom/bottom-sheet";
 import { IconButton, LevelUpCelebration, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { type PersonalAlert } from "@/components/scan/PersonalAlerts";
@@ -48,8 +49,9 @@ import { HalalAnalysisSection } from "@/components/scan/HalalAnalysisSection";
 import { HealthNutritionSection } from "@/components/scan/HealthNutritionSection";
 import { AlternativesSection } from "@/components/scan/AlternativesSection";
 import { VerdictHero } from "@/components/scan/VerdictHero";
-import { ScanActionBar } from "@/components/scan/ScanActionBar";
-import { StickyVerdictHeader } from "@/components/scan/StickyVerdictHeader";
+import { BentoGrid } from "@/components/scan/BentoGrid";
+import { ScanBottomBar } from "@/components/scan/ScanBottomBar";
+import { CompactStickyHeader } from "@/components/scan/CompactStickyHeader";
 import { ScanLoadingSkeleton } from "@/components/scan/ScanLoadingSkeleton";
 import { ScanErrorState, ScanNotFoundState } from "@/components/scan/ScanStates";
 import {
@@ -63,7 +65,7 @@ import { trpc } from "@/lib/trpc";
 import { useScanBarcode } from "@/hooks/useScan";
 import { useTranslation, useHaptics, useAddFavorite, useRemoveFavorite, useCreateReview, useFavoritesList, useMe } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
-import { brand as brandTokens, glass, lightTheme } from "@/theme/colors";
+import { brand as brandTokens, glass, gold, lightTheme } from "@/theme/colors";
 import { fontSize as fontSizeTokens, fontWeight as fontWeightTokens } from "@/theme/typography";
 import { spacing, radius } from "@/theme/spacing";
 import type { NutrientLevel } from "@/services/api/types";
@@ -267,14 +269,17 @@ export default function ScanResultScreen() {
   } | null>(null);
   const handleCloseNutrientDetail = useCallback(() => setSelectedNutrient(null), []);
 
-  // ── Sticky Header Scroll Tracking ──────────────
-  const [scrolledPastHero, setScrolledPastHero] = useState(false);
+  // ── Sheet Refs (BentoGrid tile → detail sheets) ──
+  const halalSheetRef = useRef<BottomSheet>(null);
+  const healthSheetRef = useRef<BottomSheet>(null);
+  const alertsSheetRef = useRef<BottomSheet>(null);
+  const alternativesSheetRef = useRef<BottomSheet>(null);
+
+  // ── Scroll-Interpolated Sticky Header ──────────────
+  const scrollY = useSharedValue(0);
   const scrollHandler = useAnimatedScrollHandler({
     onScroll(event) {
-      const y = event.contentOffset.y;
-      const threshold = HERO_HEIGHT * 0.6;
-      const pastHero = y > threshold;
-      runOnJS(setScrolledPastHero)(pastHero);
+      scrollY.value = event.contentOffset.y;
     },
   });
 
@@ -445,6 +450,27 @@ export default function ScanResultScreen() {
     });
   }, [product, impact]);
 
+  // ── BentoGrid → Sheet Callbacks ─────────────────
+  const handleOpenHalalSheet = useCallback(() => {
+    impact();
+    halalSheetRef.current?.snapToIndex(0);
+  }, [impact]);
+
+  const handleOpenHealthSheet = useCallback(() => {
+    impact();
+    healthSheetRef.current?.snapToIndex(0);
+  }, [impact]);
+
+  const handleOpenAlertsSheet = useCallback(() => {
+    impact();
+    alertsSheetRef.current?.snapToIndex(0);
+  }, [impact]);
+
+  const handleOpenAlternativesSheet = useCallback(() => {
+    impact();
+    alternativesSheetRef.current?.snapToIndex(0);
+  }, [impact]);
+
   const handleRetry = useCallback(() => {
     hasFired.current = false;
     hasFiredHaptic.current = false;
@@ -549,91 +575,46 @@ export default function ScanResultScreen() {
           />
         </View>
 
-        {/* ── Personal Alerts (Al-Taqwa: informative, not alarmist) ── */}
-        {personalAlerts.length > 0 && (
-          <View style={{ paddingHorizontal: spacing["3xl"] }}>
-            <AlertStrip alerts={personalAlerts} />
-          </View>
-        )}
-
-        {/* ── Madhab Verdict Card ── */}
-        <MadhabVerdictCard
+        {/* ── BentoGrid Dashboard (replaces inline sections) ── */}
+        <BentoGrid
+          prioritizeAlternatives={effectiveHeroStatus === "haram" || effectiveHeroStatus === "doubtful"}
+          halalAnalysis={halalAnalysis ? {
+            status: halalAnalysis.status ?? "unknown",
+            trustScore: certifierTrustScore,
+            analysisSource: halalAnalysis.analysisSource ?? null,
+          } : null}
           madhabVerdicts={madhabVerdicts}
-          certifierData={certifierData_}
+          certifierData={certifierData ? { name: certifierData.name, id: certifierData.id } : null}
+          product={{
+            ingredients: Array.isArray(product.ingredients) ? (product.ingredients as string[]).join(", ") : (product.ingredients as string | null),
+            additives: (product as any).additives ?? null,
+          }}
           userMadhab={userMadhab}
           effectiveHeroStatus={effectiveHeroStatus}
-          onSelectMadhab={(v) => {
-            impact();
-            setSelectedMadhab(v);
-          }}
+          healthScore={healthScore?.score != null ? { score: healthScore.score, label: healthScore.label ?? "unknown" } : null}
+          offExtras={offExtras}
+          personalAlerts={personalAlerts.map((a) => ({
+            type: a.type,
+            severity: a.severity === "high" ? "danger" as const : a.severity === "medium" ? "warning" as const : "info" as const,
+            title: a.title,
+            message: a.description,
+          }))}
+          alternativesData={(alternativesQuery.data ?? []).map((a: any) => ({
+            id: a.id,
+            name: a.name,
+            brand: a.brand ?? null,
+            imageUrl: a.imageUrl ?? null,
+            halalStatus: a.halalStatus ?? "unknown",
+          }))}
+          alternativesLoading={alternativesQuery.isLoading}
+          onOpenHalalSheet={handleOpenHalalSheet}
+          onOpenHealthSheet={handleOpenHealthSheet}
+          onOpenAlertsSheet={handleOpenAlertsSheet}
+          onOpenAlternativesSheet={handleOpenAlternativesSheet}
         />
 
-        {/* ── CONTINUOUS SCROLL ── */}
+        {/* ── Community Vote (preserved) ── */}
         <View style={styles.contentContainer}>
-
-          {/* ═══ Halal Analysis ═══ */}
-          <HalalAnalysisSection
-            boycott={boycott}
-            halalAnalysis={halalAnalysis}
-            specialProduct={specialProduct}
-            dietaryAnalysis={dietaryAnalysis}
-            offExtras={offExtras}
-            ingredientRulings={ingredientRulings}
-            ingredients={ingredients}
-            additiveHealthEffects={additiveHealthEffects}
-            product={product}
-            halalStatus={halalStatus}
-            isNewProduct={!!scanMutation.data?.isNewProduct}
-            onVote={(vote) => {
-              impact();
-              setUserVote(vote);
-              if (vote && product?.id) {
-                reviewMutation.mutate({ productId: product.id, rating: vote === "up" ? 5 : 1 });
-              }
-            }}
-            userVote={userVote}
-          />
-
-          {/* ═══ Alternatives (haram/doubtful: promoted BEFORE health — Al-Taqwa) ═══ */}
-          {(halalStatus === "haram" || halalStatus === "doubtful") && (
-            <AlternativesSection
-              variant="priority"
-              alternativesQuery={alternativesQuery}
-              onAlternativePress={(_id, barcode) => {
-                if (barcode) {
-                  router.navigate({ pathname: "/scan-result", params: { barcode } });
-                }
-              }}
-            />
-          )}
-
-          {/* ═══ Health & Nutrition ═══ */}
-          <HealthNutritionSection
-            healthScore={healthScore}
-            offExtras={offExtras}
-            scoreExclusion={scoreExclusion}
-            dietaryAnalysis={dietaryAnalysis}
-            allergensTags={allergensTags}
-            nutrientBreakdown={nutrientBreakdown}
-            onNutrientPress={(nb) => setSelectedNutrient({
-              nutrient: nb.nutrient, value: nb.value, unit: nb.unit,
-              level: nb.level, dailyValuePercent: nb.dailyValuePercent, isNegative: nb.isNegative,
-            })}
-          />
-
-          {/* ═══ Alternatives (halal: discover, after health) ═══ */}
-          {halalStatus === "halal" && (
-            <AlternativesSection
-              variant="discover"
-              alternativesQuery={alternativesQuery}
-              onAlternativePress={(_id, barcode) => {
-                if (barcode) {
-                  router.navigate({ pathname: "/scan-result", params: { barcode } });
-                }
-              }}
-            />
-          )}
-
           {/* ── Legal Disclaimer ── */}
           <View style={styles.disclaimerRow}>
             <InfoIcon size={14}
@@ -689,19 +670,25 @@ export default function ScanResultScreen() {
         </Animated.View>
       )}
 
-      {/* ── Sticky Verdict Header ── */}
-      <StickyVerdictHeader
-        visible={scrolledPastHero}
+      {/* ── Compact Sticky Header (scroll-interpolated) ── */}
+      <CompactStickyHeader
+        scrollY={scrollY}
+        heroHeight={HERO_HEIGHT}
         productName={product?.name ?? ""}
         brand={product?.brand ?? null}
-        effectiveHeroStatus={effectiveHeroStatus}
+        imageUrl={product?.imageUrl ?? null}
+        effectiveHeroStatus={effectiveHeroStatus as HalalStatusKey}
         heroLabel={heroLabel}
+        certifierData={certifierData ? { name: certifierData.name } : null}
+        onTrustScorePress={certifierData ? () => {
+          impact();
+          setShowTrustScoreSheet(true);
+        } : undefined}
       />
 
       {/* ── Fixed Bottom Action Bar ── */}
-      <ScanActionBar
-        halalStatus={halalStatus}
-        effectiveHeroStatus={effectiveHeroStatus}
+      <ScanBottomBar
+        effectiveHeroStatus={effectiveHeroStatus as HalalStatusKey}
         productIsFavorite={productIsFavorite}
         isFavMutating={isFavMutating}
         marketplaceEnabled={marketplaceEnabled}
@@ -836,6 +823,145 @@ export default function ScanResultScreen() {
         isNegative={selectedNutrient?.isNegative}
         onClose={handleCloseNutrientDetail}
       />
+
+      {/* ── BentoGrid Detail Sheets ── */}
+      <BottomSheet
+        ref={halalSheetRef}
+        index={-1}
+        snapPoints={["70%", "95%"]}
+        enableDynamicSizing={false}
+        enablePanDownToClose
+        backgroundStyle={{
+          backgroundColor: isDark ? "rgba(18,18,18,1)" : "#ffffff",
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+        }}
+        handleIndicatorStyle={{ backgroundColor: isDark ? gold[500] : gold[700] }}
+        backdropComponent={(props) => (
+          <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.5} />
+        )}
+      >
+        <BottomSheetScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}>
+          <HalalAnalysisSection
+            boycott={boycott}
+            halalAnalysis={halalAnalysis}
+            specialProduct={specialProduct}
+            dietaryAnalysis={dietaryAnalysis}
+            offExtras={offExtras}
+            ingredientRulings={ingredientRulings}
+            ingredients={ingredients}
+            additiveHealthEffects={additiveHealthEffects}
+            product={product}
+            halalStatus={halalStatus}
+            isNewProduct={!!scanMutation.data?.isNewProduct}
+            onVote={(vote) => {
+              impact();
+              setUserVote(vote);
+              if (vote && product?.id) {
+                reviewMutation.mutate({ productId: product.id, rating: vote === "up" ? 5 : 1 });
+              }
+            }}
+            userVote={userVote}
+          />
+          <MadhabVerdictCard
+            madhabVerdicts={madhabVerdicts}
+            certifierData={certifierData_}
+            userMadhab={userMadhab}
+            effectiveHeroStatus={effectiveHeroStatus}
+            onSelectMadhab={(v) => {
+              impact();
+              setSelectedMadhab(v);
+            }}
+          />
+        </BottomSheetScrollView>
+      </BottomSheet>
+
+      <BottomSheet
+        ref={healthSheetRef}
+        index={-1}
+        snapPoints={["60%", "90%"]}
+        enableDynamicSizing={false}
+        enablePanDownToClose
+        backgroundStyle={{
+          backgroundColor: isDark ? "rgba(18,18,18,1)" : "#ffffff",
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+        }}
+        handleIndicatorStyle={{ backgroundColor: isDark ? gold[500] : gold[700] }}
+        backdropComponent={(props) => (
+          <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.5} />
+        )}
+      >
+        <BottomSheetScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}>
+          <HealthNutritionSection
+            healthScore={healthScore}
+            offExtras={offExtras}
+            scoreExclusion={scoreExclusion}
+            dietaryAnalysis={dietaryAnalysis}
+            allergensTags={allergensTags}
+            nutrientBreakdown={nutrientBreakdown}
+            onNutrientPress={(nb) => setSelectedNutrient({
+              nutrient: nb.nutrient, value: nb.value, unit: nb.unit,
+              level: nb.level, dailyValuePercent: nb.dailyValuePercent, isNegative: nb.isNegative,
+            })}
+          />
+        </BottomSheetScrollView>
+      </BottomSheet>
+
+      <BottomSheet
+        ref={alertsSheetRef}
+        index={-1}
+        snapPoints={["45%"]}
+        enableDynamicSizing={false}
+        enablePanDownToClose
+        backgroundStyle={{
+          backgroundColor: isDark ? "rgba(18,18,18,1)" : "#ffffff",
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+        }}
+        handleIndicatorStyle={{ backgroundColor: isDark ? gold[500] : gold[700] }}
+        backdropComponent={(props) => (
+          <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.5} />
+        )}
+      >
+        <BottomSheetScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}>
+          {personalAlerts.length > 0 && (
+            <View style={{ paddingHorizontal: spacing["3xl"] }}>
+              <AlertStrip alerts={personalAlerts} />
+            </View>
+          )}
+        </BottomSheetScrollView>
+      </BottomSheet>
+
+      <BottomSheet
+        ref={alternativesSheetRef}
+        index={-1}
+        snapPoints={["55%", "85%"]}
+        enableDynamicSizing={false}
+        enablePanDownToClose
+        backgroundStyle={{
+          backgroundColor: isDark ? "rgba(18,18,18,1)" : "#ffffff",
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+        }}
+        handleIndicatorStyle={{ backgroundColor: isDark ? gold[500] : gold[700] }}
+        backdropComponent={(props) => (
+          <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.5} />
+        )}
+      >
+        <BottomSheetScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}>
+          <AlternativesSection
+            variant={effectiveHeroStatus === "haram" || effectiveHeroStatus === "doubtful" ? "priority" : "discover"}
+            alternativesQuery={alternativesQuery}
+            onAlternativePress={(_id, bc) => {
+              if (bc) {
+                alternativesSheetRef.current?.close();
+                router.navigate({ pathname: "/scan-result", params: { barcode: bc } });
+              }
+            }}
+          />
+        </BottomSheetScrollView>
+      </BottomSheet>
 
       {/* ── Off-screen Share Card (captured as image) ── */}
       {shareData && (
