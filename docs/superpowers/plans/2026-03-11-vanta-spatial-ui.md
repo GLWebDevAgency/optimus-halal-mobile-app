@@ -2491,3 +2491,100 @@ Expected: "No such file or directory" for both
 ```bash
 git add -u && git commit -m "fix(scan): final typecheck and lint fixes for Vanta UI"
 ```
+
+---
+
+## Addendum: Review Corrections
+
+The following corrections MUST be applied during implementation. They override the code snippets above.
+
+### Fix 1: HERO_HEIGHT location
+
+`HERO_HEIGHT` is defined in `scan-result.tsx` (line 75), NOT in `VerdictHero.tsx`. Options:
+- **Option A (recommended):** Move `HERO_HEIGHT` to `scan-constants.ts` and import from there in both files.
+- **Option B:** Keep in `scan-result.tsx` and pass as prop to `CompactStickyHeader`.
+
+In Task 10, do NOT "export from VerdictHero". Instead, move the constant to `scan-constants.ts`:
+```tsx
+// scan-constants.ts — add at top
+import { Dimensions } from "react-native";
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+export const HERO_HEIGHT = SCREEN_HEIGHT * 0.35;
+```
+
+### Fix 2: CertifierLogo API in CompactStickyHeader
+
+`CertifierLogo` does NOT accept `name`, `logoUrl`, or `onPress` props. Check the actual component API by reading `CertifierLogo.tsx` before implementing. Either:
+- Use the existing `CertifierLogo` with its actual props
+- Or render a simple `Image` + `Pressable` for the condensed 16px logo
+
+### Fix 3: Haptics API
+
+Replace `notification("warning")` in ScanBottomBar with:
+```tsx
+import { NotificationFeedbackType } from "expo-haptics";
+// ...
+notification(NotificationFeedbackType.Warning);
+```
+
+### Fix 4: i18n keys — NEW TASK (insert before Task 7)
+
+**Task 6.5: Add missing i18n keys**
+
+Add to `optimus-halal/src/i18n/translations/fr.ts` (and `en.ts`, `ar.ts`):
+```tsx
+// In scanResult section:
+viewDetail: "Voir detail",
+alertSingular: "alerte",
+alertPlural: "alertes",
+noAlerts: "Aucune alerte",
+allGood: "Tout est bon",
+alternativesPriority: "Des alternatives existent",
+alternativesDiscover: "Decouvrir aussi",
+madhabConsensus: "Unanime",
+seeAll: "Voir tout",
+loadingAlternatives: "Chargement...",
+noAlternatives: "Aucune alternative trouvee",
+products: "produits",
+ingredients: "ingredients",
+additives: "additifs",
+favorite: "Favori",
+healthScore: "Score sante",
+whereToBuy: "Ou acheter ?",
+scanAnother: "Re-scanner",
+```
+
+### Fix 5: Sheet open haptics
+
+In Task 11 Step 4, add haptics to sheet callbacks:
+```tsx
+const handleOpenHalalSheet = useCallback(() => {
+  impact("medium"); // or impact(ImpactFeedbackStyle.Medium)
+  halalSheetRef.current?.snapToIndex(0);
+}, [impact]);
+```
+
+### Fix 6: AlternativesTile border override
+
+The `isHaram` border style on `BentoTile`'s outer `style` won't affect the inner card. Instead, add a `borderOverride` prop to `BentoTile`:
+```tsx
+// BentoTile.tsx — add prop:
+borderOverride?: { borderColor: string; borderWidth: number };
+
+// Apply in card style:
+style={[styles.card, { ... }, borderOverride && { borderColor: borderOverride.borderColor, borderWidth: borderOverride.borderWidth }]}
+```
+
+### Fix 7: RTL for AlternativesTile image deck
+
+Replace `translateX: i * -8` with `I18nManager.isRTL ? i * 8 : i * -8` and flip arrow chars in CTAs:
+```tsx
+import { I18nManager } from "react-native";
+const direction = I18nManager.isRTL ? 1 : -1;
+// In deck: transform: [{ translateX: i * 8 * direction }]
+// In CTAs: use `\u2192` (→) which auto-mirrors, or conditional
+```
+
+### Fix 8: VerdictHero minHeight strategy
+
+In Task 10, the hero container style should change from `height: HERO_HEIGHT` to `minHeight: HERO_HEIGHT`. Verify the exact style in `VerdictHero.tsx` before editing.
