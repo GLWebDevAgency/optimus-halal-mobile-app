@@ -58,6 +58,7 @@ import { spacing, radius } from "@/theme/spacing";
 import {
   SUSPENSE_DURATION,
   STATUS_CONFIG,
+  HERO_HEIGHT,
   type HalalStatusKey,
   type StatusVisualConfig,
 } from "./scan-constants";
@@ -469,6 +470,7 @@ export function VerdictHero({
 
 const styles = StyleSheet.create({
   heroGradient: {
+    minHeight: HERO_HEIGHT,
     paddingHorizontal: spacing["3xl"],
     paddingBottom: spacing["3xl"],
     overflow: "hidden",
@@ -495,9 +497,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   heroImageWrapper: {
-    width: 130,
-    height: 130,
-    borderRadius: 26,
+    width: 116,
+    height: 116,
+    borderRadius: 22,
     borderWidth: 3,
     padding: 5,
     overflow: "hidden",
@@ -516,7 +518,7 @@ const styles = StyleSheet.create({
   heroImage: {
     width: "100%",
     height: "100%",
-    borderRadius: 18,
+    borderRadius: 14,
   },
   heroZoomBadge: {
     position: "absolute",
@@ -552,7 +554,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   heroScoreLabelText: {
     fontSize: fontSizeTokens.micro,
@@ -564,7 +566,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.lg,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   heroCertifierRow: {
     flexDirection: "row",
@@ -624,7 +626,7 @@ const styles = StyleSheet.create({
   heroDivider: {
     height: StyleSheet.hairlineWidth,
     width: "100%",
-    marginVertical: spacing.md,
+    marginVertical: spacing.sm,
     opacity: 0.2,
   },
   heroProductRow: {
@@ -656,7 +658,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     flexWrap: "wrap",
     gap: spacing.md,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.md,
   },
   certifierHeroBadge: {
     flexDirection: "row",

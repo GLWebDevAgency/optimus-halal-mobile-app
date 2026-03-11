@@ -15,7 +15,6 @@ import React, { useState, useCallback, useEffect, useRef, useMemo } from "react"
 import {
   View,
   Text,
-  Dimensions,
   StyleSheet,
   Platform,
   Alert,
@@ -57,6 +56,7 @@ import {
   STATUS_CONFIG,
   MADHAB_LABEL_KEY,
   MADHAB_TRUST_KEY,
+  HERO_HEIGHT,
   type HalalStatusKey,
 } from "@/components/scan/scan-constants";
 import { trpc } from "@/lib/trpc";
@@ -70,9 +70,6 @@ import type { NutrientLevel } from "@/services/api/types";
 import { useFeatureFlagsStore, useQuotaStore, useLocalFavoritesStore, useLocalScanHistoryStore, useLocalNutritionProfileStore } from "@/store";
 import { isAuthenticated as hasStoredTokens } from "@/services/api";
 import { trackEvent } from "@/lib/analytics";
-
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
-const HERO_HEIGHT = SCREEN_HEIGHT * 0.5;
 
 // ══════════════════════════════════════════════════════════════
 // MAIN SCREEN

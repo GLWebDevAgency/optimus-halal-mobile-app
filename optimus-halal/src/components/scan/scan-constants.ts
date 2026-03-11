@@ -9,8 +9,14 @@
  */
 
 import type { ComponentType } from "react";
+import { Dimensions } from "react-native";
 import { SealCheckIcon, XCircleIcon, QuestionIcon, type IconProps } from "phosphor-react-native";
 import { halalStatus as halalStatusTokens, brand as brandTokens } from "@/theme/colors";
+
+// ── Layout constants ──
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+/** Hero occupies ~35% of viewport; uses minHeight so content can expand */
+export const HERO_HEIGHT = SCREEN_HEIGHT * 0.35;
 
 // ── Suspense delay — stagger anchor for hero choreography ──
 export const SUSPENSE_DURATION = 350;
