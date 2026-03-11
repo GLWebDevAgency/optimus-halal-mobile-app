@@ -722,9 +722,10 @@ export const fr = {
     ecoScoreDesc: "Impact environnemental de A (faible) à E (élevé)",
     // 3-tab navigation
     tabHalal: "Analyse Halal",
-    tabProfile: "Mon Profil",
+    tabProfile: "Nutrition & Santé",
     tabAlternatives: "Alternatives",
     // Naqiy Health Score
+    healthDashboardTitle: "TABLEAU DE BORD SANTÉ",
     healthScoreTitle: "Score Santé Naqiy",
     healthScoreInsufficient: "Données insuffisantes pour calculer un score santé",
     healthScoreExcellent: "Excellent",
@@ -868,6 +869,17 @@ export const fr = {
     reportProductDesc: "Aidez la communauté en signalant un statut halal incorrect",
     shareAnalysis: "Partager l'analyse",
     shareAnalysisDesc: "Partagez cette analyse avec votre entourage",
+    // V3 — Key Characteristics Grid
+    keyCharacteristics: "CARACTÉRISTIQUES CLÉS",
+    noAdditivesShort: "Sans additifs",
+    noSweetenersShort: "Sans édulcorants",
+    originsLabel: "Origines",
+    // V3 — Alternative card i18n
+    alternativeHalal: "Halal",
+    alternativeDoubtful: "Douteux",
+    // V3 — Unknown status action
+    unknownStatusReport: "Contribuer à l'analyse",
+    unknownStatusReportDesc: "Ce produit n'a pas encore été vérifié. Aidez la communauté !",
   },
 
   // Map

@@ -20,7 +20,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { CaretLeftIcon, EnvelopeSimpleIcon, WarningCircleIcon } from "phosphor-react-native";
 import { Image } from "expo-image";
 import { useHaptics, useTheme, useTranslation } from "@/hooks";
 import { ImpactFeedbackStyle, NotificationFeedbackType } from "expo-haptics";
@@ -143,11 +143,8 @@ export default function ForgotPasswordScreen() {
               accessibilityRole="button"
               accessibilityLabel={t.common.back}
             >
-              <MaterialIcons
-                name="arrow-back-ios-new"
-                size={24}
-                color={brand.primary}
-              />
+              <CaretLeftIcon size={24}
+                color={brand.primary} />
             </PressableScale>
             
             <View style={styles.headerSpacer} />
@@ -246,12 +243,9 @@ export default function ForgotPasswordScreen() {
                     }
                   ]}
                 >
-                  <MaterialIcons
-                    name="mail"
-                    size={22}
+                  <EnvelopeSimpleIcon size={22}
                     color={isFocused ? brand.primary : isDark ? "#6b7280" : "#9ca3af"}
-                    style={styles.inputIcon}
-                  />
+                    style={styles.inputIcon} />
                   <TextInput
                     style={[
                       styles.input,
@@ -280,7 +274,7 @@ export default function ForgotPasswordScreen() {
 
                 {error ? (
                   <Animated.View entering={FadeIn.duration(200)} style={styles.errorContainer}>
-                    <MaterialIcons name="error-outline" size={14} color="#ef4444" />
+                    <WarningCircleIcon size={14} color="#ef4444" />
                     <Text style={styles.errorText}>{error}</Text>
                   </Animated.View>
                 ) : null}

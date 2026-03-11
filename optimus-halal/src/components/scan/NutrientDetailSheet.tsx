@@ -21,19 +21,20 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { InfoIcon, XIcon } from "phosphor-react-native";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { semantic } from "@/theme/colors";
 import { spacing, radius } from "@/theme/spacing";
 import { fontSize, fontWeight } from "@/theme/typography";
 import type { NutrientLevel } from "@/services/api/types";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 const SHEET_RATIO = 0.45;
 
 // ── Level config ─────────────────────────────────────
 
-const LEVEL_CONFIG: Record<NutrientLevel, { color: string; icon: keyof typeof MaterialIcons.glyphMap }> = {
+const LEVEL_CONFIG: Record<NutrientLevel, { color: string; icon: IconName }> = {
   very_low: { color: "#22c55e", icon: "sentiment-very-satisfied" },
   low: { color: "#84cc16", icon: "sentiment-satisfied" },
   moderate: { color: "#f59e0b", icon: "sentiment-neutral" },
@@ -181,7 +182,7 @@ export const NutrientDetailSheet = React.memo(function NutrientDetailSheet({
           {/* Header */}
           <View style={styles.header}>
             <View style={[styles.iconCircle, { backgroundColor: `${config.color}20` }]}>
-              <MaterialIcons name={config.icon} size={24} color={config.color} />
+              <AppIcon name={config.icon} size={24} color={config.color} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.title, { color: colors.textPrimary }]}>
@@ -192,7 +193,7 @@ export const NutrientDetailSheet = React.memo(function NutrientDetailSheet({
               </Text>
             </View>
             <Pressable onPress={handleClose} hitSlop={12}>
-              <MaterialIcons name="close" size={22} color={colors.textMuted} />
+              <XIcon size={22} color={colors.textMuted} />
             </Pressable>
           </View>
 
@@ -237,7 +238,7 @@ export const NutrientDetailSheet = React.memo(function NutrientDetailSheet({
               backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
               borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
             }]}>
-              <MaterialIcons name="info-outline" size={16} color={colors.textMuted} style={{ marginTop: 2 }} />
+              <InfoIcon size={16} color={colors.textMuted} style={{ marginTop: 2 }} />
               <Text style={[styles.infoText, { color: colors.textSecondary }]}>
                 {description}
               </Text>

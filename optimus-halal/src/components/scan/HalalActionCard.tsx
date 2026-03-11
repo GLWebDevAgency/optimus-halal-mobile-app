@@ -10,12 +10,13 @@
 import React from "react";
 import { View, Text, StyleSheet, Share } from "react-native";
 import Animated, { FadeInUp } from "react-native-reanimated";
-import { MaterialIcons } from "@expo/vector-icons";
+import { CaretRightIcon } from "phosphor-react-native";
 import { useTheme } from "@/hooks/useTheme";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { semantic, gold } from "@/theme/colors";
 import { spacing, radius } from "@/theme/spacing";
 import { fontSize, fontWeight } from "@/theme/typography";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 type ActionType = "report" | "request_certification" | "share";
 
@@ -38,7 +39,7 @@ interface HalalActionCardProps {
 }
 
 const ACTION_CONFIG: Record<ActionType, {
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: IconName;
   color: string;
 }> = {
   report: { icon: "flag", color: semantic.warning.base },
@@ -101,7 +102,7 @@ export const HalalActionCard = React.memo(function HalalActionCard({
           ]}
         >
           <View style={[styles.iconCircle, { backgroundColor: `${config.color}20` }]}>
-            <MaterialIcons name={config.icon} size={18} color={config.color} />
+            <AppIcon name={config.icon} size={18} color={config.color} />
           </View>
 
           <View style={styles.textColumn}>
@@ -118,7 +119,7 @@ export const HalalActionCard = React.memo(function HalalActionCard({
             )}
           </View>
 
-          <MaterialIcons name="chevron-right" size={20} color={colors.textMuted} />
+          <CaretRightIcon size={20} color={colors.textMuted} />
         </View>
       </PressableScale>
     </Animated.View>

@@ -1,9 +1,9 @@
 import React from "react";
 import { View, Text } from "react-native";
 import Animated, { ZoomIn } from "react-native-reanimated";
-import { MaterialIcons } from "@expo/vector-icons";
 import { halalStatus as statusColors } from "@/theme/colors";
 import { useTranslation } from "@/hooks";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 type HalalStatus = "halal" | "haram" | "doubtful" | "unknown";
 type PillSize = "sm" | "md" | "lg";
@@ -27,7 +27,7 @@ export const StatusPill: React.FC<StatusPillProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const statusConfig: Record<HalalStatus, { icon: keyof typeof MaterialIcons.glyphMap; label: string; bg: string; color: string }> = {
+  const statusConfig: Record<HalalStatus, { icon: IconName; label: string; bg: string; color: string }> = {
     halal: { icon: "verified", label: t.scanResult.halal, bg: statusColors.halal.bg, color: statusColors.halal.base },
     haram: { icon: "dangerous", label: t.scanResult.haram, bg: statusColors.haram.bg, color: statusColors.haram.base },
     doubtful: { icon: "help-outline", label: t.scanResult.doubtful, bg: statusColors.doubtful.bg, color: statusColors.doubtful.base },
@@ -51,7 +51,7 @@ export const StatusPill: React.FC<StatusPillProps> = ({
       accessibilityRole="text"
       accessibilityLabel={`Statut: ${config.label}`}
     >
-      <MaterialIcons name={config.icon} size={sizeConfig.iconSize} color={config.color} />
+      <AppIcon name={config.icon} size={sizeConfig.iconSize} color={config.color} />
       <Text style={{ color: config.color, fontSize: sizeConfig.fontSize, fontWeight: "700" }}>{config.label}</Text>
     </View>
   );

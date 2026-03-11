@@ -23,6 +23,7 @@ import {
   type OpenFoodFactsProduct,
 } from "./barcode.service.js";
 import { lookupBrandCertifier } from "./brand-certifier.service.js";
+import { getPublicUrl } from "./r2.service.js";
 import { logger } from "../lib/logger.js";
 
 // ── Types ─────────────────────────────────────────────────────
@@ -103,7 +104,7 @@ export async function resolveProduct(
     const isFresh = hasOffData && age < STALE_THRESHOLD_MS;
 
     return {
-      product: existing,
+      product: withResolvedImage(existing),
       source: isFresh ? "db_fresh" : "db_stale",
       offData: (existing.offData as Record<string, unknown>) ?? null,
     };
@@ -137,7 +138,7 @@ export async function resolveProduct(
     .returning();
 
   return {
-    product: newProduct,
+    product: withResolvedImage(newProduct),
     source: "off_new",
     offData: off as unknown as Record<string, unknown>,
   };
@@ -220,7 +221,25 @@ export async function backfillProductFromOff(
     productId: product.id,
   });
 
-  return { product: updatedProduct, offData };
+  return { product: withResolvedImage(updatedProduct), offData };
+}
+
+// ── Image URL resolution (R2 > imageUrl > imageFrontUrl) ─────
+
+/**
+ * Override imageUrl with R2 CDN URL if the product has been mirrored to R2.
+ * Returns a shallow copy — does NOT mutate the original product.
+ */
+export function withResolvedImage<T extends { imageUrl: string | null; imageR2Key: string | null; imageFrontUrl?: string | null }>(
+  product: T,
+): T {
+  if (product.imageR2Key) {
+    return { ...product, imageUrl: getPublicUrl(product.imageR2Key) };
+  }
+  if (!product.imageUrl && product.imageFrontUrl) {
+    return { ...product, imageUrl: product.imageFrontUrl };
+  }
+  return product;
 }
 
 export { mapOffToV2Fields };

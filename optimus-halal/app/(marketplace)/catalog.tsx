@@ -21,7 +21,7 @@ import { Image } from "expo-image";
 import { FlashList } from "@shopify/flash-list";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { BagIcon, MagnifyingGlassIcon, PlusIcon, SealCheckIcon, StarIcon } from "phosphor-react-native";
 import { useHaptics, useTheme, useTranslation } from "@/hooks";
 import Animated, {
   FadeIn,
@@ -33,6 +33,7 @@ import { PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 
 import { useLocalAuthStore, useLocalCartStore } from "@/store";
+import { AppIcon } from "@/lib/icons";
 
 const CATEGORY_IDS = ["all", "food", "cosmetics", "supplements", "fashion"] as const;
 
@@ -150,7 +151,7 @@ const ProductCard = React.memo(function ProductCard({ product, onPress, onAddToC
 
           {/* Certification Badge */}
           <View className="absolute top-2 left-2 flex-row items-center gap-1 bg-white/95 dark:bg-slate-900/90 px-2 py-1 rounded-md">
-            <MaterialIcons name="verified" size={12} color="#059669" />
+            <SealCheckIcon size={12} color="#059669" />
             <Text className="text-[10px] font-bold text-green-700 dark:text-primary">
               {product.certification}
             </Text>
@@ -161,11 +162,9 @@ const ProductCard = React.memo(function ProductCard({ product, onPress, onAddToC
             onPress={onToggleFavorite}
             className="absolute top-2 right-2 h-8 w-8 rounded-full bg-white/60 dark:bg-black/40 items-center justify-center"
           >
-            <MaterialIcons
-              name={product.isFavorite ? "favorite" : "favorite-border"}
+            <AppIcon name={product.isFavorite ? "favorite" : "favorite-border"}
               size={18}
-              color={product.isFavorite ? "#ef4444" : isDark ? "#ffffff" : "#475569"}
-            />
+              color={product.isFavorite ? "#ef4444" : isDark ? "#ffffff" : "#475569"} />
           </Pressable>
         </View>
 
@@ -173,7 +172,7 @@ const ProductCard = React.memo(function ProductCard({ product, onPress, onAddToC
         <View className="p-3 flex-1">
           {/* Rating */}
           <View className="flex-row items-center gap-1 mb-1">
-            <MaterialIcons name="star" size={14} color="#fbbf24" />
+            <StarIcon size={14} color="#fbbf24" />
             <Text className="text-xs text-slate-500 dark:text-slate-400 font-medium">
               {product.rating} ({product.reviews})
             </Text>
@@ -202,7 +201,7 @@ const ProductCard = React.memo(function ProductCard({ product, onPress, onAddToC
               }}
             >
               <View className="h-8 w-8 rounded-lg bg-primary items-center justify-center">
-                <MaterialIcons name="add" size={20} color="#102216" />
+                <PlusIcon size={20} color="#102216" />
               </View>
             </PressableScale>
           </View>
@@ -310,11 +309,8 @@ export default function MarketplaceCatalogScreen() {
             onPress={handleCartPress}
             className="relative p-2 rounded-full"
           >
-            <MaterialIcons
-              name="shopping-bag"
-              size={24}
-              color={isDark ? "#ffffff" : "#1e293b"}
-            />
+            <BagIcon size={24}
+              color={isDark ? "#ffffff" : "#1e293b"} />
             {itemCount > 0 && (
               <View className="absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-primary rounded-full border-2 border-background-light dark:border-background-dark" />
             )}
@@ -325,7 +321,7 @@ export default function MarketplaceCatalogScreen() {
         <View className="px-4 pb-3">
           <View className="relative">
             <View className="absolute inset-y-0 left-0 pl-3 justify-center">
-              <MaterialIcons name="search" size={20} color="#9ca3af" />
+              <MagnifyingGlassIcon size={20} color="#9ca3af" />
             </View>
             <TextInput
               value={searchQuery}

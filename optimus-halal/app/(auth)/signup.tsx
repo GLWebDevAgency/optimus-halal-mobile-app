@@ -21,7 +21,7 @@ import {
 } from "react-native";
 import { router, Link } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { AppleLogoIcon, ArrowRightIcon, GlobeHemisphereWestIcon, GoogleLogoIcon } from "phosphor-react-native";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
 import { Image } from "expo-image";
@@ -33,7 +33,7 @@ import { clearTokens } from "@/services/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { City } from "@/constants/locations";
 import { useTranslation, useHaptics, useTheme } from "@/hooks";
-import { APP_CONFIG } from "@/constants/config";
+import { APP_CONFIG, defaultFeatureFlags } from "@/constants/config";
 
 const logoSource = require("@assets/images/logo_naqiy.webp");
 
@@ -296,58 +296,59 @@ export default function SignUpScreen() {
             </Text>
           </Animated.View>
 
-          {/* Divider */}
-          <Animated.View
-            entering={FadeIn.delay(400).duration(400)}
-            className="relative py-6"
-          >
-            <View className="absolute inset-x-0 top-1/2 h-px bg-slate-200 dark:bg-slate-800" />
-            <View className="items-center">
-              <Text className="bg-white dark:bg-background-dark px-4 text-sm font-medium text-slate-500">
-                {t.common.continueWith}
-              </Text>
-            </View>
-          </Animated.View>
+          {/* Social Auth — gated behind socialAuthEnabled feature flag */}
+          {defaultFeatureFlags.socialAuthEnabled && (
+            <>
+              {/* Divider */}
+              <Animated.View
+                entering={FadeIn.delay(400).duration(400)}
+                className="relative py-6"
+              >
+                <View className="absolute inset-x-0 top-1/2 h-px bg-slate-200 dark:bg-slate-800" />
+                <View className="items-center">
+                  <Text className="bg-white dark:bg-background-dark px-4 text-sm font-medium text-slate-500">
+                    {t.common.continueWith}
+                  </Text>
+                </View>
+              </Animated.View>
 
-          {/* Social Auth */}
-          <Animated.View
-            entering={FadeInUp.delay(500).duration(600)}
-            className="flex-row gap-4"
-          >
-            <PressableScale
-              onPress={() => handleSocialAuth("google")}
-              accessibilityRole="button"
-              accessibilityLabel={`${t.auth.signup.submit} Google`}
-              accessibilityHint={`${t.auth.signup.submit} Google`}
-              style={{ flex: 1 }}
-            >
-              <View className="flex-row items-center justify-center gap-2 h-14 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark">
-                <MaterialIcons name="g-mobiledata" size={24} color="#4285F4" />
-                <Text className="text-sm font-semibold text-slate-700 dark:text-white">
-                  Google
-                </Text>
-              </View>
-            </PressableScale>
+              <Animated.View
+                entering={FadeInUp.delay(500).duration(600)}
+                className="flex-row gap-4"
+              >
+                <PressableScale
+                  onPress={() => handleSocialAuth("google")}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${t.auth.signup.submit} Google`}
+                  accessibilityHint={`${t.auth.signup.submit} Google`}
+                  style={{ flex: 1 }}
+                >
+                  <View className="flex-row items-center justify-center gap-2 h-14 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark">
+                    <GoogleLogoIcon size={24} color="#4285F4" />
+                    <Text className="text-sm font-semibold text-slate-700 dark:text-white">
+                      Google
+                    </Text>
+                  </View>
+                </PressableScale>
 
-            <PressableScale
-              onPress={() => handleSocialAuth("apple")}
-              accessibilityRole="button"
-              accessibilityLabel={`${t.auth.signup.submit} Apple`}
-              accessibilityHint={`${t.auth.signup.submit} Apple`}
-              style={{ flex: 1 }}
-            >
-              <View className="flex-row items-center justify-center gap-2 h-14 rounded-xl bg-slate-900 dark:bg-white">
-                <MaterialIcons
-                  name="apple"
-                  size={24}
-                  color={isDark ? "#0f172a" : "#ffffff"}
-                />
-                <Text className="text-sm font-semibold text-white dark:text-slate-900">
-                  Apple
-                </Text>
-              </View>
-            </PressableScale>
-          </Animated.View>
+                <PressableScale
+                  onPress={() => handleSocialAuth("apple")}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${t.auth.signup.submit} Apple`}
+                  accessibilityHint={`${t.auth.signup.submit} Apple`}
+                  style={{ flex: 1 }}
+                >
+                  <View className="flex-row items-center justify-center gap-2 h-14 rounded-xl bg-slate-900 dark:bg-white">
+                    <AppleLogoIcon size={24}
+                      color={isDark ? "#0f172a" : "#ffffff"} />
+                    <Text className="text-sm font-semibold text-white dark:text-slate-900">
+                      Apple
+                    </Text>
+                  </View>
+                </PressableScale>
+              </Animated.View>
+            </>
+          )}
 
           {/* Explore Mode */}
           <Animated.View
@@ -376,11 +377,11 @@ export default function SignUpScreen() {
                 borderStyle: "dashed",
                 backgroundColor: isDark ? "rgba(148,163,184,0.06)" : "rgba(100,116,139,0.04)",
               }}>
-                <MaterialIcons name="travel-explore" size={20} color={isDark ? "#94a3b8" : "#64748b"} />
+                <GlobeHemisphereWestIcon size={20} color={isDark ? "#94a3b8" : "#64748b"} />
                 <Text style={{ fontSize: 15, fontWeight: "600", color: isDark ? "#94a3b8" : "#64748b" }}>
                   {t.auth.signup.exploreMode}
                 </Text>
-                <MaterialIcons name="arrow-forward" size={16} color={isDark ? "#94a3b8" : "#64748b"} />
+                <ArrowRightIcon size={16} color={isDark ? "#94a3b8" : "#64748b"} />
               </View>
             </PressableScale>
             <Text style={{ fontSize: 12, color: colors.textMuted, textAlign: "center", marginTop: 8 }}>

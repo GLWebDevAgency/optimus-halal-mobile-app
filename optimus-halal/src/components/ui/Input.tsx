@@ -12,16 +12,16 @@ import {
   View,
   Text,
 } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
 import { useTheme } from "@/hooks/useTheme";
 import { PressableScale } from "./PressableScale";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 export interface InputProps extends TextInputProps {
   label?: string;
   error?: string;
   hint?: string;
-  leftIcon?: keyof typeof MaterialIcons.glyphMap;
-  rightIcon?: keyof typeof MaterialIcons.glyphMap;
+  leftIcon?: IconName;
+  rightIcon?: IconName;
   onRightIconPress?: () => void;
   containerClassName?: string;
   ref?: React.Ref<TextInput>;
@@ -86,7 +86,7 @@ export function Input({
             position: "absolute", left: 16, top: 0, bottom: 0,
             justifyContent: "center", zIndex: 10,
           }}>
-            <MaterialIcons name={leftIcon} size={20} color={iconColor} />
+            <AppIcon name={leftIcon} size={20} color={iconColor} />
           </View>
         )}
 
@@ -122,8 +122,7 @@ export function Input({
             accessibilityRole="button"
             accessibilityLabel={isPassword ? "Toggle password visibility" : undefined}
           >
-            <MaterialIcons
-              name={
+            <AppIcon name={
                 isPassword
                   ? isPasswordVisible
                     ? "visibility-off"
@@ -131,8 +130,7 @@ export function Input({
                   : rightIcon!
               }
               size={20}
-              color={iconColor}
-            />
+              color={iconColor} />
           </PressableScale>
         )}
       </View>

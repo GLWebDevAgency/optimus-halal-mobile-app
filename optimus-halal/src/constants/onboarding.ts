@@ -2,7 +2,7 @@
  * Onboarding Slide Configuration
  *
  * Slim metadata — all display text lives in i18n.
- * Each slide has an ID (used as i18n key), a hero MaterialIcons name,
+ * Each slide has an ID (used as i18n key), a hero icon name,
  * and an accent color for glow / decorative elements.
  */
 
@@ -12,7 +12,7 @@ export type OnboardingSlideId = "brand" | "scanner" | "madhab" | "map" | "cta";
 
 export interface OnboardingSlideConfig {
   id: OnboardingSlideId;
-  /** MaterialIcons name for the hero icon (ignored for 'brand' & 'cta' which use logo) */
+  /** Icon name for the hero icon (ignored for 'brand' & 'cta' which use logo) */
   heroIcon: string;
   /** Accent color for glow ring / decorative elements */
   accentColor: string;

@@ -9,7 +9,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import Animated, { FadeInUp } from "react-native-reanimated";
-import { MaterialIcons } from "@expo/vector-icons";
+import { CaretRightIcon, Image as ImageIcon, QuestionIcon, SealCheckIcon, StarIcon } from "phosphor-react-native";
 import { useTheme } from "@/hooks/useTheme";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { semantic, glass } from "@/theme/colors";
@@ -46,6 +46,9 @@ interface AlternativeProductCardProps {
   /** Is this a better choice than the current product? */
   isBetterChoice?: boolean;
   betterChoiceLabel?: string;
+  /** i18n labels for halal status badges */
+  halalLabel?: string;
+  doubtfulLabel?: string;
   index?: number;
   onPress?: (id: string, barcode: string | null) => void;
 }
@@ -61,6 +64,8 @@ export const AlternativeProductCard = React.memo(function AlternativeProductCard
   novaGroup,
   isBetterChoice,
   betterChoiceLabel,
+  halalLabel = "Halal",
+  doubtfulLabel = "Douteux",
   index = 0,
   onPress,
 }: AlternativeProductCardProps) {
@@ -87,7 +92,7 @@ export const AlternativeProductCard = React.memo(function AlternativeProductCard
         {/* Better choice ribbon */}
         {isBetterChoice && (
           <View style={styles.ribbon}>
-            <MaterialIcons name="star" size={10} color="#fff" />
+            <StarIcon size={10} color="#fff" />
             <Text style={styles.ribbonText}>{betterChoiceLabel ?? "Better choice"}</Text>
           </View>
         )}
@@ -103,7 +108,7 @@ export const AlternativeProductCard = React.memo(function AlternativeProductCard
                 transition={200}
               />
             ) : (
-              <MaterialIcons name="image" size={28} color={colors.textMuted} />
+              <ImageIcon size={28} color={colors.textMuted} />
             )}
           </View>
 
@@ -123,14 +128,14 @@ export const AlternativeProductCard = React.memo(function AlternativeProductCard
               {/* Halal badge — dynamic based on actual status */}
               {halalStatus === "halal" && (
                 <View style={[styles.badge, { backgroundColor: `${semantic.success.base}18` }]}>
-                  <MaterialIcons name="verified" size={11} color={semantic.success.base} />
-                  <Text style={[styles.badgeText, { color: semantic.success.base }]}>Halal</Text>
+                  <SealCheckIcon size={11} color={semantic.success.base} />
+                  <Text style={[styles.badgeText, { color: semantic.success.base }]}>{halalLabel}</Text>
                 </View>
               )}
               {halalStatus === "doubtful" && (
                 <View style={[styles.badge, { backgroundColor: `${semantic.warning.base}18` }]}>
-                  <MaterialIcons name="help-outline" size={11} color={semantic.warning.base} />
-                  <Text style={[styles.badgeText, { color: semantic.warning.base }]}>Douteux</Text>
+                  <QuestionIcon size={11} color={semantic.warning.base} />
+                  <Text style={[styles.badgeText, { color: semantic.warning.base }]}>{doubtfulLabel}</Text>
                 </View>
               )}
 
@@ -155,7 +160,7 @@ export const AlternativeProductCard = React.memo(function AlternativeProductCard
           </View>
 
           {/* Arrow */}
-          <MaterialIcons name="chevron-right" size={20} color={colors.textMuted} />
+          <CaretRightIcon size={20} color={colors.textMuted} />
         </View>
       </PressableScale>
     </Animated.View>

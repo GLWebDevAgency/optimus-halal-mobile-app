@@ -28,7 +28,7 @@ import Animated, {
   useReducedMotion,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { BookOpenIcon, InfoIcon, SealCheckIcon, XIcon } from "phosphor-react-native";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { halalStatus, neutral, darkTheme, lightTheme, getTrustScoreColor } from "@/theme/colors";
@@ -236,11 +236,8 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
             accessibilityRole="button"
             accessibilityLabel={t.common.close}
           >
-            <MaterialIcons
-              name="close"
-              size={20}
-              color={colors.textSecondary}
-            />
+            <XIcon size={20}
+              color={colors.textSecondary} />
           </Pressable>
         </View>
 
@@ -264,7 +261,7 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
                 ]}
               >
                 <View style={styles.trustScoreHeader}>
-                  <MaterialIcons name="verified" size={16} color={trustScoreColor} />
+                  <SealCheckIcon size={16} color={trustScoreColor} />
                   <Text style={[styles.trustScoreCertifier, { color: colors.textPrimary }]}>
                     {certifierName}
                   </Text>
@@ -288,7 +285,7 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
               {fiqhKeys.length > 0 && (
                 <View style={styles.fiqhSection}>
                   <View style={styles.fiqhTitleRow}>
-                    <MaterialIcons name="info-outline" size={14} color={colors.textSecondary} />
+                    <InfoIcon size={14} color={colors.textSecondary} />
                     <Text style={[styles.fiqhTitle, { color: colors.textSecondary }]}>
                       {t.scanResult.madhabWeightsTitle}
                     </Text>
@@ -403,11 +400,8 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
                     </Text>
                     {item.scholarlyReference && (
                       <View style={styles.refRow}>
-                        <MaterialIcons
-                          name="menu-book"
-                          size={12}
-                          color={colors.textMuted}
-                        />
+                        <BookOpenIcon size={12}
+                          color={colors.textMuted} />
                         <Text
                           style={[styles.refText, { color: colors.textMuted }]}
                         >

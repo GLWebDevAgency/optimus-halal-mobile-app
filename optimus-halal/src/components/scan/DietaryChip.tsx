@@ -10,19 +10,20 @@
 
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import { CheckIcon, QuestionIcon, XIcon } from "phosphor-react-native";
 import Animated, { FadeInRight } from "react-native-reanimated";
 import { useTheme } from "@/hooks/useTheme";
 import { semantic } from "@/theme/colors";
 import { spacing, radius } from "@/theme/spacing";
 import { fontSize, fontWeight } from "@/theme/typography";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 export type DietaryStatus = "safe" | "contains" | "unknown";
 
 interface DietaryChipProps {
   label: string;
   status: DietaryStatus;
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: IconName;
   /** Stagger index for entry animation */
   index?: number;
 }
@@ -67,18 +68,18 @@ export const DietaryChip = React.memo(function DietaryChip({
         },
       ]}
     >
-      <MaterialIcons name={icon} size={14} color={config.color} />
+      <AppIcon name={icon} size={14} color={config.color} />
       <Text style={[styles.label, { color: config.color }]} numberOfLines={1}>
         {label}
       </Text>
       {status === "safe" && (
-        <MaterialIcons name="check" size={12} color={config.color} />
+        <CheckIcon size={12} color={config.color} />
       )}
       {status === "contains" && (
-        <MaterialIcons name="close" size={12} color={config.color} />
+        <XIcon size={12} color={config.color} />
       )}
       {status === "unknown" && (
-        <MaterialIcons name="help-outline" size={12} color={config.color} />
+        <QuestionIcon size={12} color={config.color} />
       )}
     </Animated.View>
   );

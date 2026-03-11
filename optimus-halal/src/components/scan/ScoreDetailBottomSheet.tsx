@@ -32,11 +32,12 @@ import Animated, {
   interpolateColor,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ChartBarIcon, ProhibitIcon } from "phosphor-react-native";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { halalStatus, darkTheme, lightTheme, getTrustScoreColor } from "@/theme/colors";
 import { CertifierLogo } from "./CertifierLogo";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -92,7 +93,7 @@ const EVIDENCE_CONFIG = {
 const BLOCK_CONFIG = [
   {
     key: "ritualValidity" as const,
-    icon: "mosque" as const,      // MaterialIcons doesn't have mosque, use alternative
+    icon: "mosque" as const,
     fallbackIcon: "auto-awesome" as const,
     labelFr: "Validite rituelle",
     labelEn: "Ritual Validity",
@@ -169,7 +170,7 @@ const BlockBar = React.memo(function BlockBar({
   label: string;
   subtitle: string;
   value: number;
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: IconName;
   staggerIndex: number;
   isDark: boolean;
   colors: any;
@@ -200,7 +201,7 @@ const BlockBar = React.memo(function BlockBar({
     <Animated.View style={[styles.blockRow, containerStyle]}>
       <View style={styles.blockHeader}>
         <View style={styles.blockLabelRow}>
-          <MaterialIcons name={icon} size={14} color={barColor} />
+          <AppIcon name={icon} size={14} color={barColor} />
           <Text style={[styles.blockLabel, { color: colors.textPrimary }]} numberOfLines={1}>
             {label}
           </Text>
@@ -323,7 +324,7 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
     item: { label: string; status: IndicatorStatus },
     index: number,
   ) => {
-    const icon: keyof typeof MaterialIcons.glyphMap =
+    const icon: IconName =
       item.status === "met"
         ? "check-circle"
         : item.status === "notMet"
@@ -338,7 +339,7 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
 
     return (
       <View key={index} style={styles.indicatorRow}>
-        <MaterialIcons name={icon} size={18} color={iconColor} />
+        <AppIcon name={icon} size={18} color={iconColor} />
         <Text style={[styles.indicatorText, { color: colors.textSecondary }]}>
           {item.label}
         </Text>
@@ -415,7 +416,7 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
 
         {/* Header */}
         <View style={styles.header}>
-          <MaterialIcons name="leaderboard" size={22} color={colors.textMuted} />
+          <ChartBarIcon size={22} color={colors.textMuted} />
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
             {t.scanResult.scoreDetailTitle}
           </Text>
@@ -448,7 +449,7 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
             <View style={styles.metaBadgeRow}>
               {evidence && (
                 <View style={[styles.evidenceBadge, { backgroundColor: `${evidence.color}15`, borderColor: `${evidence.color}30` }]}>
-                  <MaterialIcons name={evidence.icon} size={12} color={evidence.color} />
+                  <AppIcon name={evidence.icon} size={12} color={evidence.color} />
                   <Text style={[styles.evidenceBadgeText, { color: evidence.color }]}>
                     {evidence.labelFr}
                   </Text>
@@ -456,7 +457,7 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
               )}
               {detail?.cap != null && (
                 <View style={[styles.capBadge, { backgroundColor: isDark ? "rgba(239,68,68,0.12)" : "rgba(239,68,68,0.08)", borderColor: "rgba(239,68,68,0.25)" }]}>
-                  <MaterialIcons name="block" size={11} color="#ef4444" />
+                  <ProhibitIcon size={11} color="#ef4444" />
                   <Text style={[styles.capBadgeText, { color: "#ef4444" }]}>
                     Cap {detail.cap}
                   </Text>
@@ -503,11 +504,9 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
                 },
               ]}
             >
-              <MaterialIcons
-                name={showIndicators ? "expand-less" : "expand-more"}
+              <AppIcon name={showIndicators ? "expand-less" : "expand-more"}
                 size={18}
-                color={colors.textMuted}
-              />
+                color={colors.textMuted} />
               <Text style={[styles.toggleText, { color: colors.textSecondary }]}>
                 {showIndicators
                   ? t.scanResult.hideIndicators ?? "Masquer le detail"

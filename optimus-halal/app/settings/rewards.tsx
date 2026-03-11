@@ -24,7 +24,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, CopyIcon, GiftIcon, SealCheckIcon, ShieldIcon, StarFourIcon, TagIcon } from "phosphor-react-native";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "@/hooks/useTheme";
@@ -129,11 +129,8 @@ const RewardCard = React.memo(function RewardCard({
             transition={200}
           />
         ) : (
-          <MaterialIcons
-            name="card-giftcard"
-            size={28}
-            color={isDark ? "#4ade80" : "#22c55e"}
-          />
+          <GiftIcon size={28}
+            color={isDark ? "#4ade80" : "#22c55e"} />
         )}
       </View>
 
@@ -175,11 +172,8 @@ const RewardCard = React.memo(function RewardCard({
             },
           ]}
         >
-          <MaterialIcons
-            name="stars"
-            size={14}
-            color={canAfford ? (isDark ? "#4ade80" : "#22c55e") : colors.textMuted}
-          />
+          <StarFourIcon size={14}
+            color={canAfford ? (isDark ? "#4ade80" : "#22c55e") : colors.textMuted} />
           <Text
             style={[
               styles.pointsCostText,
@@ -309,11 +303,8 @@ const ClaimedRewardCard = React.memo(function ClaimedRewardCard({
     >
       <View style={styles.claimedCardHeader}>
         <View style={styles.claimedCardInfo}>
-          <MaterialIcons
-            name="verified"
-            size={20}
-            color={isDark ? "#4ade80" : "#22c55e"}
-          />
+          <SealCheckIcon size={20}
+            color={isDark ? "#4ade80" : "#22c55e"} />
           <View style={styles.claimedCardTextContainer}>
             <Text
               style={[styles.claimedRewardName, { color: colors.textPrimary }]}
@@ -368,7 +359,7 @@ const ClaimedRewardCard = React.memo(function ClaimedRewardCard({
               <Text style={[styles.codeLabel, { color: colors.textMuted }]}>
                 {t.rewards.redemptionCode}
               </Text>
-              <MaterialIcons name="content-copy" size={14} color={colors.textMuted} />
+              <CopyIcon size={14} color={colors.textMuted} />
             </View>
             <Text
               style={[
@@ -508,11 +499,8 @@ export default function RewardsScreen() {
               accessibilityRole="button"
               accessibilityLabel={t.common.back}
             >
-              <MaterialIcons
-                name="arrow-back"
-                size={20}
-                color={colors.textPrimary}
-              />
+              <ArrowLeftIcon size={20}
+                color={colors.textPrimary} />
             </Pressable>
             <Text
               style={[styles.headerTitle, { color: colors.textPrimary }]}
@@ -549,11 +537,8 @@ export default function RewardsScreen() {
         <View style={styles.balanceRow}>
           <View style={styles.balanceLeft}>
             <View style={styles.pointsRow}>
-              <MaterialIcons
-                name="stars"
-                size={32}
-                color={GOLD}
-              />
+              <StarFourIcon size={32}
+                color={GOLD} />
               <Text
                 style={[
                   styles.pointsNumber,
@@ -580,11 +565,8 @@ export default function RewardsScreen() {
               },
             ]}
           >
-            <MaterialIcons
-              name="shield"
-              size={16}
-              color={GOLD}
-            />
+            <ShieldIcon size={16}
+              color={GOLD} />
             <Text
               style={[
                 styles.levelText,
@@ -639,11 +621,8 @@ export default function RewardsScreen() {
             },
           ]}
         >
-          <MaterialIcons
-            name="redeem"
-            size={40}
-            color={colors.textMuted}
-          />
+          <TagIcon size={40}
+            color={colors.textMuted} />
           <Text
             style={[
               styles.emptyClaimedText,
@@ -672,7 +651,7 @@ export default function RewardsScreen() {
   // ── Empty State ─────────────────────────────────────
   const EmptyRewards = (
     <View style={styles.emptyContainer}>
-      <MaterialIcons name="card-giftcard" size={64} color={colors.textMuted} />
+      <GiftIcon size={64} color={colors.textMuted} />
       <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
         {t.rewards.empty}
       </Text>
@@ -701,11 +680,8 @@ export default function RewardsScreen() {
           accessibilityLabel={t.common.back}
           accessibilityHint={t.editProfile.backHint}
         >
-          <MaterialIcons
-            name="arrow-back"
-            size={20}
-            color={colors.textPrimary}
-          />
+          <ArrowLeftIcon size={20}
+            color={colors.textPrimary} />
         </Pressable>
         <Text
           style={[styles.headerTitle, { color: colors.textPrimary }]}

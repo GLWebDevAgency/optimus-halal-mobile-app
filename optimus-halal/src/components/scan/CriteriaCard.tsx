@@ -8,20 +8,63 @@
  * and qualitative indicators (palm oil free, no sweeteners, etc.).
  */
 
-import React, { useState } from "react";
+import React, { useState, type ComponentType } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import {
+  CaretDownIcon,
+  CheckCircleIcon,
+  CoffeeIcon,
+  DropIcon,
+  FlagIcon,
+  FlaskIcon,
+  GlobeIcon,
+  GrainsIcon,
+  HandshakeIcon,
+  LeafIcon,
+  MapPinIcon,
+  SealCheckIcon,
+  ShuffleIcon,
+  StarIcon,
+  StorefrontIcon,
+  TreeEvergreenIcon,
+  WarningIcon,
+  XCircleIcon,
+  type IconProps,
+} from "phosphor-react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useTheme } from "@/hooks/useTheme";
 import { semantic, glass } from "@/theme/colors";
 import { spacing, radius } from "@/theme/spacing";
 import { textStyles, fontSize, fontWeight } from "@/theme/typography";
 
+// ── Icon mapping from backend string names to phosphor components ──
+
+const ICON_MAP: Record<string, ComponentType<IconProps>> = {
+  "flag": FlagIcon,
+  "public": GlobeIcon,
+  "eco": LeafIcon,
+  "nature": TreeEvergreenIcon,
+  "verified": SealCheckIcon,
+  "warning": WarningIcon,
+  "water-drop": DropIcon,
+  "grain": GrainsIcon,
+  "science": FlaskIcon,
+  "check-circle": CheckCircleIcon,
+  "star": StarIcon,
+  "star-border": StarIcon,
+  "place": MapPinIcon,
+  "shuffle": ShuffleIcon,
+  "local-cafe": CoffeeIcon,
+  "coffee": CoffeeIcon,
+  "handshake": HandshakeIcon,
+  "storefront": StorefrontIcon,
+};
+
 interface CriteriaCardProps {
   title: string;
   description: string;
   pass: boolean;
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: string;
   /** Stagger index for entry animation */
   index?: number;
   /** Expandable children (additional detail) */
@@ -49,6 +92,8 @@ export const CriteriaCard = React.memo(function CriteriaCard({
     ? isDark ? "rgba(34, 197, 94, 0.20)" : "rgba(34, 197, 94, 0.15)"
     : isDark ? "rgba(239, 68, 68, 0.20)" : "rgba(239, 68, 68, 0.15)";
 
+  const IconComponent = ICON_MAP[icon] ?? CheckCircleIcon;
+
   const content = (
     <Animated.View
       entering={FadeInDown.delay(index * 80).duration(300)}
@@ -60,7 +105,7 @@ export const CriteriaCard = React.memo(function CriteriaCard({
       <View style={styles.row}>
         {/* Status icon */}
         <View style={[styles.iconCircle, { backgroundColor: `${statusColor}20` }]}>
-          <MaterialIcons name={icon} size={16} color={statusColor} />
+          <IconComponent size={16} color={statusColor} weight={icon === "star-border" ? "regular" : "fill"} />
         </View>
 
         {/* Text content */}
@@ -75,20 +120,19 @@ export const CriteriaCard = React.memo(function CriteriaCard({
 
         {/* Pass/fail indicator */}
         <View style={[styles.badge, { backgroundColor: `${statusColor}15` }]}>
-          <MaterialIcons
-            name={pass ? "check-circle" : "cancel"}
-            size={18}
-            color={statusColor}
-          />
+          {pass
+            ? <CheckCircleIcon size={18} color={statusColor} weight="fill" />
+            : <XCircleIcon size={18} color={statusColor} weight="fill" />
+          }
         </View>
 
         {/* Expand chevron */}
         {expandable && (
-          <MaterialIcons
-            name={expanded ? "expand-less" : "expand-more"}
+          <CaretDownIcon
             size={20}
             color={colors.textMuted}
-            style={styles.chevron}
+            weight="bold"
+            style={[styles.chevron, { transform: [{ rotate: expanded ? "180deg" : "0deg" }] }]}
           />
         )}
       </View>

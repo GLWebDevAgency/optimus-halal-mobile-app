@@ -22,7 +22,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { CameraIcon, ClockIcon, ImagesIcon, ScanIcon, ShieldCheckIcon, XIcon } from "phosphor-react-native";
 import { useHaptics, useTheme } from "@/hooks";
 import { ImpactFeedbackStyle } from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
@@ -51,6 +51,7 @@ import { brand } from "@/theme/colors";
 import { useQuotaStore } from "@/store";
 import { isAuthenticated as hasStoredTokens } from "@/services/api";
 import { trackEvent } from "@/lib/analytics";
+import { AppIcon } from "@/lib/icons";
 
 const GOLD = "#d4af37";
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -101,7 +102,7 @@ export default function ScannerScreen() {
   const pulseOpacity = useSharedValue(0.5);
   const buttonScale = useSharedValue(1);
 
-  // Scan line animation (disabled when user prefers reduced motion)
+  // ScanIcon line animation (disabled when user prefers reduced motion)
   useEffect(() => {
     if (reducedMotion) return;
     scanLinePosition.value = withRepeat(
@@ -306,7 +307,7 @@ export default function ScannerScreen() {
           style={styles.permissionContent}
         >
           <View style={styles.permissionIconContainer}>
-            <MaterialIcons name="camera-alt" size={48} color={GOLD} />
+            <CameraIcon size={48} color={GOLD} />
           </View>
           <View style={styles.permissionTextContainer}>
             <Text style={styles.permissionTitle}>{t.scanner.noPermission}</Text>
@@ -334,8 +335,8 @@ export default function ScannerScreen() {
     <View style={styles.container}>
       <StatusBar style="light" />
 
-      {/* Camera View - Full Screen */}
-      {/* Camera: on iOS use `active` prop to pause session without unmount;
+      {/* CameraIcon View - Full Screen */}
+      {/* CameraIcon: on iOS use `active` prop to pause session without unmount;
           on Android unmount entirely to release the camera resource */}
       {(Platform.OS === "android" ? isFocused : true) && (
         <CameraView
@@ -377,7 +378,7 @@ export default function ScannerScreen() {
             </View>
           )}
 
-          {/* Transparent Scan Frame */}
+          {/* Transparent ScanIcon Frame */}
           <View style={styles.scanFrame}>
             {/* Corner Brackets with Glow */}
             <Animated.View style={[styles.corner, styles.cornerTopLeft, animatedCornerGlowStyle]} />
@@ -385,7 +386,7 @@ export default function ScannerScreen() {
             <Animated.View style={[styles.corner, styles.cornerBottomLeft, animatedCornerGlowStyle]} />
             <Animated.View style={[styles.corner, styles.cornerBottomRight, animatedCornerGlowStyle]} />
 
-            {/* Animated Scan Line */}
+            {/* Animated ScanIcon Line */}
             <Animated.View style={[styles.scanLine, animatedScanLineStyle]}>
               <LinearGradient
                 colors={["transparent", colors.primary, "transparent"]}
@@ -435,13 +436,13 @@ export default function ScannerScreen() {
               accessibilityRole="button"
               accessibilityLabel={t.common.close}
             >
-              <MaterialIcons name="close" size={20} color="#ffffff" />
+              <XIcon size={20} color="#ffffff" />
             </PressableScale>
           </Animated.View>
 
           {/* App Title Badge */}
           <Animated.View entering={FadeIn.delay(300).duration(400)} style={styles.titleBadge}>
-            <MaterialIcons name="verified-user" size={18} color={GOLD} />
+            <ShieldCheckIcon size={18} color={GOLD} />
             <Text style={styles.titleText}>{t.scanner.halalScanner}</Text>
           </Animated.View>
 
@@ -453,11 +454,9 @@ export default function ScannerScreen() {
               accessibilityRole="button"
               accessibilityLabel={t.scanner.flash}
             >
-              <MaterialIcons
-                name={isFlashOn ? "flash-on" : "flash-off"}
+              <AppIcon name={isFlashOn ? "flash-on" : "flash-off"}
                 size={20}
-                color={isFlashOn ? GOLD : "#ffffff"}
-              />
+                color={isFlashOn ? GOLD : "#ffffff"} />
             </PressableScale>
           </Animated.View>
         </LinearGradient>
@@ -493,7 +492,7 @@ export default function ScannerScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={t.scanner.gallery}
               >
-                <MaterialIcons name="photo-library" size={26} color={GOLD} />
+                <ImagesIcon size={26} color={GOLD} />
               </PressableScale>
               <Text style={styles.sideButtonLabel}>{t.scanner.gallery.toUpperCase()}</Text>
             </Animated.View>
@@ -518,7 +517,7 @@ export default function ScannerScreen() {
                     accessibilityRole="button"
                     accessibilityLabel={t.scanner.title}
                   >
-                    <MaterialIcons name="qr-code-scanner" size={36} color={colors.textPrimary} />
+                    <ScanIcon size={36} color={colors.textPrimary} />
                   </PressableScale>
                 </Animated.View>
               </View>
@@ -532,7 +531,7 @@ export default function ScannerScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={t.scanner.history}
               >
-                <MaterialIcons name="history" size={26} color={GOLD} />
+                <ClockIcon size={26} color={GOLD} />
               </PressableScale>
               <Text style={styles.sideButtonLabel}>{t.scanner.history.toUpperCase()}</Text>
             </Animated.View>

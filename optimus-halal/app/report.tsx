@@ -25,7 +25,7 @@ import {
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, CameraPlusIcon, CheckIcon, LockIcon, MagnifyingGlassIcon, PaperPlaneRightIcon, ScanIcon, TrashIcon } from "phosphor-react-native";
 import { useHaptics, useTranslation, useTheme } from "@/hooks";
 import { PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
@@ -43,6 +43,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { trpc } from "@/lib/trpc";
+import { AppIcon } from "@/lib/icons";
 
 // Map UI violation types → backend report type enum
 const VIOLATION_TYPES = [
@@ -246,7 +247,7 @@ export default function ReportingFormScreen() {
           accessibilityRole="button"
           accessibilityLabel={t.common.back}
         >
-          <MaterialIcons name="arrow-back" size={24} color={colors.textPrimary} />
+          <ArrowLeftIcon size={24} color={colors.textPrimary} />
         </Pressable>
 
         <View className="flex-1 items-center">
@@ -373,7 +374,7 @@ export default function ReportingFormScreen() {
           </View>
           <View className="relative" style={getInputShadow("product")}>
             <View className="absolute left-3.5 top-1/2 -translate-y-1/2 z-10">
-              <MaterialIcons name="search" size={20} color={focusedField === "product" ? GOLD : colors.textMuted} />
+              <MagnifyingGlassIcon size={20} color={focusedField === "product" ? GOLD : colors.textMuted} />
             </View>
             <TextInput
               className="w-full pl-11 pr-12 py-4 rounded-2xl text-sm font-medium"
@@ -407,7 +408,7 @@ export default function ReportingFormScreen() {
                 backgroundColor: isDark ? "rgba(212,175,55,0.1)" : "rgba(212,175,55,0.08)",
               }}
             >
-              <MaterialIcons name="qr-code-scanner" size={20} color={GOLD} />
+              <ScanIcon size={20} color={GOLD} />
             </PressableScale>
           </View>
         </Animated.View>
@@ -466,7 +467,7 @@ export default function ReportingFormScreen() {
                             justifyContent: "center",
                           }}
                         >
-                          <MaterialIcons name="check" size={14} color="#ffffff" />
+                          <CheckIcon size={14} color="#ffffff" />
                         </View>
                       </Animated.View>
                     )}
@@ -480,11 +481,9 @@ export default function ReportingFormScreen() {
                         borderColor: isSelected ? "rgba(212,175,55,0.3)" : colors.borderLight,
                       }}
                     >
-                      <MaterialIcons
-                        name={type.icon}
+                      <AppIcon name={type.icon}
                         size={22}
-                        color={isSelected ? GOLD : type.iconColor}
-                      />
+                        color={isSelected ? GOLD : type.iconColor} />
                     </View>
                     <Text className="text-sm font-bold" style={{ color: isSelected ? GOLD : colors.textPrimary }}>
                       {t.report[type.titleKey]}
@@ -589,7 +588,7 @@ export default function ReportingFormScreen() {
                   borderColor: isDark ? "rgba(212,175,55,0.2)" : "rgba(212,175,55,0.15)",
                 }}
               >
-                <MaterialIcons name="add-a-photo" size={24} color={GOLD} />
+                <CameraPlusIcon size={24} color={GOLD} />
               </View>
               <View className="items-center">
                 <Text className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
@@ -630,7 +629,7 @@ export default function ReportingFormScreen() {
                         transition={200}
                       />
                       <View className="absolute inset-0 items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.35)" }}>
-                        <MaterialIcons name="delete" size={20} color="#ffffff" />
+                        <TrashIcon size={20} color="#ffffff" />
                       </View>
                       {index === 0 && (
                         <View className="absolute bottom-1 right-1 rounded px-1 py-0.5" style={{ backgroundColor: "rgba(212,175,55,0.85)" }}>
@@ -731,11 +730,8 @@ export default function ReportingFormScreen() {
                   >
                     {t.report.submitReport}
                   </Text>
-                  <MaterialIcons
-                    name="send"
-                    size={20}
-                    color={isFormValid ? "#ffffff" : colors.textMuted}
-                  />
+                  <PaperPlaneRightIcon size={20}
+                    color={isFormValid ? "#ffffff" : colors.textMuted} />
                 </>
               )}
             </LinearGradient>
@@ -743,7 +739,7 @@ export default function ReportingFormScreen() {
         </PressableScale>
 
         <View className="flex-row items-center justify-center gap-1.5 mt-4 opacity-70">
-          <MaterialIcons name="lock" size={12} color={GOLD} />
+          <LockIcon size={12} color={GOLD} />
           <Text className="text-[11px] font-medium tracking-wide" style={{ color: colors.textMuted }}>
             {t.report.encryptionNotice}
           </Text>

@@ -8,13 +8,14 @@
 
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import { MapPinAreaIcon } from "phosphor-react-native";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks/useTranslation";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { semantic, halalStatus } from "@/theme/colors";
 import { spacing, radius } from "@/theme/spacing";
 import { fontSize, fontWeight } from "@/theme/typography";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 export interface PersonalAlert {
   type: "allergen" | "health" | "boycott";
@@ -23,7 +24,7 @@ export interface PersonalAlert {
   description: string;
 }
 
-const ALERT_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
+const ALERT_ICONS: Record<string, IconName> = {
   allergen: "warning",
   health: "monitor-heart",
   boycott: "block",
@@ -37,7 +38,7 @@ export function PersonalAlerts({ alerts }: { alerts: PersonalAlert[] }) {
   return (
     <Animated.View entering={FadeInDown.delay(280).duration(500)} style={styles.container}>
       <View style={styles.headingRow}>
-        <MaterialIcons name="person-pin" size={18} color={semantic.danger.base} />
+        <MapPinAreaIcon size={18} color={semantic.danger.base} />
         <Text
           style={[styles.heading, { color: colors.textPrimary }]}
           accessibilityRole="header"
@@ -63,12 +64,10 @@ export function PersonalAlerts({ alerts }: { alerts: PersonalAlert[] }) {
             accessibilityRole="alert"
             accessibilityLabel={`${alert.title}. ${alert.description}`}
           >
-            <MaterialIcons
-              name={ALERT_ICONS[alert.type] ?? "warning"}
+            <AppIcon name={ALERT_ICONS[alert.type] ?? "warning"}
               size={18}
               color={accentColor}
-              style={styles.alertIcon}
-            />
+              style={styles.alertIcon} />
             <View style={styles.alertContent}>
               <Text style={[styles.alertTitle, { color: colors.textPrimary }]}>
                 {alert.title}

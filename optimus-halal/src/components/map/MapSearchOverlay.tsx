@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useCallback } from "react";
 import { View, Text, TextInput, Pressable, ActivityIndicator } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ClockIcon, MagnifyingGlassIcon, MapPinIcon, SealCheckIcon, StarIcon, XIcon } from "phosphor-react-native";
 import Animated, {
   FadeIn,
   FadeOut,
@@ -19,6 +19,7 @@ import type { SearchResult } from "@/hooks";
 import { STORE_TYPE_ICON, STORE_CERTIFIER_TO_ID, type ThemeColors, type MapFilter } from "./types";
 import { PressableScale } from "../ui/PressableScale";
 import { CertifierLogo } from "../scan/CertifierLogo";
+import { AppIcon } from "@/lib/icons";
 
 interface Props {
   colors: ThemeColors;
@@ -146,7 +147,7 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
             ]}
           >
             <Animated.View style={searchIconAnimStyle}>
-              <MaterialIcons name="search" size={18} color={colors.primary} />
+              <MagnifyingGlassIcon size={18} color={colors.primary} />
             </Animated.View>
             <TextInput
               value={searchText}
@@ -165,7 +166,7 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
                   <ActivityIndicator size="small" color={colors.primary} />
                 ) : (
                   <Pressable onPress={onClearSearch} hitSlop={8}>
-                    <MaterialIcons name="close" size={16} color={colors.textMuted} />
+                    <XIcon size={16} color={colors.textMuted} />
                   </Pressable>
                 )}
               </Animated.View>
@@ -208,11 +209,9 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
                           className="w-8 h-8 rounded-lg items-center justify-center"
                           style={{ backgroundColor: `${typeColor}18` }}
                         >
-                          <MaterialIcons
-                            name={STORE_TYPE_ICON[r.storeType] ?? "store"}
+                          <AppIcon name={STORE_TYPE_ICON[r.storeType] ?? "store"}
                             size={16}
-                            color={typeColor}
-                          />
+                            color={typeColor} />
                         </View>
                         <View className="flex-1 ml-3">
                           <Text className="text-sm font-semibold" style={{ color: colors.textPrimary }} numberOfLines={1}>
@@ -224,7 +223,7 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
                         </View>
                         {r.averageRating > 0 && (
                           <View className="flex-row items-center gap-0.5 ml-2">
-                            <MaterialIcons name="star" size={12} color="#fbbf24" />
+                            <StarIcon size={12} color="#fbbf24" />
                             <Text className="text-xs font-bold" style={{ color: colors.textPrimary }}>
                               {r.averageRating.toFixed(1)}
                             </Text>
@@ -256,7 +255,7 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
                           borderBottomColor: colors.borderLight,
                         }}
                       >
-                        <MaterialIcons name="place" size={18} color={colors.textMuted} />
+                        <MapPinIcon size={18} color={colors.textMuted} />
                         <View className="flex-1 ml-3">
                           <Text className="text-sm" style={{ color: colors.textPrimary }} numberOfLines={1}>
                             {r.label}
@@ -326,7 +325,7 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
                       />
                     ) : filter.category === "certifier" ? (
                       isActive ? (
-                        <MaterialIcons name="verified" size={13} color="#ffffff" />
+                        <SealCheckIcon size={13} color="#ffffff" />
                       ) : (
                         <CertifierLogo
                           certifierId={STORE_CERTIFIER_TO_ID[filter.certifierIds[0]] ?? filter.certifierIds[0]}
@@ -334,11 +333,11 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
                         />
                       )
                     ) : 'openNow' in filter && filter.openNow ? (
-                      <MaterialIcons name="schedule" size={12} color={isActive ? "#ffffff" : "#22c55e"} />
+                      <ClockIcon size={12} color={isActive ? "#ffffff" : "#22c55e"} />
                     ) : 'halalOnly' in filter && filter.halalOnly ? (
-                      <MaterialIcons name="verified" size={12} color={isActive ? "#ffffff" : colors.primary} />
+                      <SealCheckIcon size={12} color={isActive ? "#ffffff" : colors.primary} />
                     ) : 'minRating' in filter && filter.minRating ? (
-                      <MaterialIcons name="star" size={12} color={isActive ? "#ffffff" : "#fbbf24"} />
+                      <StarIcon size={12} color={isActive ? "#ffffff" : "#fbbf24"} />
                     ) : null}
                     <Text
                       className={`text-xs ${isActive ? "font-semibold" : "font-medium"}`}
@@ -347,7 +346,7 @@ export const MapSearchOverlay = React.memo(function MapSearchOverlay({
                       {filterLabel}
                     </Text>
                     {isActive && (
-                      <MaterialIcons name="close" size={12} color="#ffffff" />
+                      <XIcon size={12} color="#ffffff" />
                     )}
                   </View>
                 </PressableScale>

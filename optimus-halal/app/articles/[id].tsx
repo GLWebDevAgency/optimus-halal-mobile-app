@@ -1,5 +1,5 @@
 /**
- * Article Detail Screen — "Killer 2026" Design
+ * ArticleIcon Detail Screen — "Killer 2026" Design
  *
  * Full-bleed cover, parallax header, elegant typography,
  * premium background, share action, tag chips.
@@ -21,7 +21,7 @@ import {
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, ArrowSquareOutIcon, ArticleIcon, ClockIcon, ShareNetworkIcon, UserIcon } from "phosphor-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
@@ -115,7 +115,7 @@ export default function ArticleDetailScreen() {
     return (
       <View style={styles.center}>
         <PremiumBackground />
-        <MaterialIcons name="article" size={64} color={colors.textMuted} />
+        <ArticleIcon size={64} color={colors.textMuted} />
         <Text style={[styles.errorText, { color: colors.textSecondary }]}>
           {t.articles.notFound}
         </Text>
@@ -178,7 +178,7 @@ export default function ArticleDetailScreen() {
               accessibilityRole="button"
               accessibilityLabel={t.common.back}
             >
-              <MaterialIcons name="arrow-back" size={22} color="#fff" />
+              <ArrowLeftIcon size={22} color="#fff" />
             </Pressable>
 
             <Pressable
@@ -187,7 +187,7 @@ export default function ArticleDetailScreen() {
               accessibilityRole="button"
               accessibilityLabel={t.articles.share}
             >
-              <MaterialIcons name="share" size={22} color="#fff" />
+              <ShareNetworkIcon size={22} color="#fff" />
             </Pressable>
           </View>
 
@@ -218,14 +218,14 @@ export default function ArticleDetailScreen() {
             style={styles.metaRow}
           >
             <View style={styles.metaItem}>
-              <MaterialIcons name="person" size={14} color={colors.textMuted} />
+              <UserIcon size={14} color={colors.textMuted} />
               <Text style={[styles.metaText, { color: colors.textSecondary }]}>
                 {article.author}
               </Text>
             </View>
             <View style={[styles.metaDot, { backgroundColor: colors.textMuted }]} />
             <View style={styles.metaItem}>
-              <MaterialIcons name="schedule" size={14} color={colors.textMuted} />
+              <ClockIcon size={14} color={colors.textMuted} />
               <Text style={[styles.metaText, { color: colors.textSecondary }]}>
                 {article.readTimeMinutes ?? 3} min
               </Text>
@@ -311,7 +311,7 @@ export default function ArticleDetailScreen() {
                 accessibilityRole="link"
                 accessibilityLabel={t.home.readOnSource}
               >
-                <MaterialIcons name="open-in-new" size={18} color="#fff" />
+                <ArrowSquareOutIcon size={18} color="#fff" />
                 <Text style={styles.ctaText}>{t.home.readOnSource}</Text>
               </PressableScale>
             </Animated.View>

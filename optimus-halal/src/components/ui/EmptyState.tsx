@@ -7,16 +7,16 @@
 
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "@/hooks";
 import { brand } from "@/theme/colors";
 import { PressableScale } from "./PressableScale";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 export interface EmptyStateProps {
-  /** MaterialIcons icon name */
-  icon?: keyof typeof MaterialIcons.glyphMap;
+  /** Phosphor icon name */
+  icon?: IconName;
   /** Title displayed in bold */
   title: string;
   /** Optional secondary message */
@@ -51,11 +51,9 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
                 : "rgba(19,236,106,0.08)",
             }}
           >
-            <MaterialIcons
-              name={icon}
+            <AppIcon name={icon}
               size={36}
-              color={colors.primary}
-            />
+              color={colors.primary} />
           </View>
         </Animated.View>
       )}

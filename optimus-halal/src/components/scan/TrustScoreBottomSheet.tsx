@@ -23,7 +23,7 @@ import Animated, {
   useReducedMotion,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { EyeIcon, InfoIcon, MinusCircleIcon, PlusCircleIcon } from "phosphor-react-native";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { halalStatus, darkTheme, lightTheme, getTrustScoreColor } from "@/theme/colors";
@@ -127,7 +127,7 @@ export const TrustScoreBottomSheet = React.memo(function TrustScoreBottomSheet({
 
         {/* Header */}
         <View style={styles.header}>
-          <MaterialIcons name="info-outline" size={22} color={colors.textMuted} />
+          <InfoIcon size={22} color={colors.textMuted} />
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
             {t.scanResult.trustScoreExplainTitle}
           </Text>
@@ -176,7 +176,7 @@ export const TrustScoreBottomSheet = React.memo(function TrustScoreBottomSheet({
           t.scanResult.trustScoreNegative5,
         ].map((label, i) => (
           <View key={i} style={styles.indicatorRow}>
-            <MaterialIcons name="remove-circle-outline" size={16} color={halalStatus.haram.base} />
+            <MinusCircleIcon size={16} color={halalStatus.haram.base} />
             <Text style={[styles.indicatorText, { color: colors.textSecondary }]}>{label}</Text>
           </View>
         ))}
@@ -191,7 +191,7 @@ export const TrustScoreBottomSheet = React.memo(function TrustScoreBottomSheet({
           t.scanResult.trustScorePositive3,
         ].map((label, i) => (
           <View key={i} style={styles.indicatorRow}>
-            <MaterialIcons name="add-circle-outline" size={16} color={halalStatus.halal.base} />
+            <PlusCircleIcon size={16} color={halalStatus.halal.base} />
             <Text style={[styles.indicatorText, { color: colors.textSecondary }]}>{label}</Text>
           </View>
         ))}
@@ -204,7 +204,7 @@ export const TrustScoreBottomSheet = React.memo(function TrustScoreBottomSheet({
           t.scanResult.trustScoreNegative4,
         ].map((label, i) => (
           <View key={i} style={styles.indicatorRow}>
-            <MaterialIcons name="remove-circle-outline" size={16} color={colors.textMuted} />
+            <MinusCircleIcon size={16} color={colors.textMuted} />
             <Text style={[styles.indicatorText, { color: colors.textSecondary }]}>{label}</Text>
           </View>
         ))}
@@ -219,7 +219,7 @@ export const TrustScoreBottomSheet = React.memo(function TrustScoreBottomSheet({
           t.scanResult.trustScoreTransparency3,
         ].map((label, i) => (
           <View key={i} style={styles.indicatorRow}>
-            <MaterialIcons name="visibility" size={16} color={colors.textSecondary} />
+            <EyeIcon size={16} color={colors.textSecondary} />
             <Text style={[styles.indicatorText, { color: colors.textSecondary }]}>{label}</Text>
           </View>
         ))}

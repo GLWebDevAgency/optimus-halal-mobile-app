@@ -10,13 +10,13 @@
 
 import React from "react";
 import { View, Text, StyleSheet, Platform } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { spacing, radius } from "@/theme/spacing";
 import { fontSize, fontWeight } from "@/theme/typography";
 import type { HealthEffectType } from "@/services/api/types";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 interface HealthEffectBadgeProps {
   type: HealthEffectType;
@@ -26,7 +26,7 @@ interface HealthEffectBadgeProps {
 }
 
 interface EffectConfig {
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: IconName;
   color: string;
   labelKey: string;
   label: string;
@@ -81,7 +81,7 @@ export const HealthEffectBadge = React.memo(function HealthEffectBadge({
             : { backgroundColor: "transparent", borderWidth: 1, borderColor: `${config.color}40` },
         ]}
       >
-        <MaterialIcons name={config.icon} size={12} color={config.color} />
+        <AppIcon name={config.icon} size={12} color={config.color} />
         <Text style={[styles.compactText, { color: config.color }]} numberOfLines={1}>
           {confirmed ? label : `${label} ?`}
         </Text>
@@ -100,7 +100,7 @@ export const HealthEffectBadge = React.memo(function HealthEffectBadge({
         ]}
       >
         <View style={[styles.iconCircle, { backgroundColor: `${config.color}20` }]}>
-          <MaterialIcons name={config.icon} size={16} color={config.color} />
+          <AppIcon name={config.icon} size={16} color={config.color} />
         </View>
         <View style={styles.textColumn}>
           <Text style={[styles.label, { color: config.color }]} numberOfLines={1}>

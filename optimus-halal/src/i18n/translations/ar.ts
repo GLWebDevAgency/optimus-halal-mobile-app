@@ -632,9 +632,10 @@ export const ar: TranslationKeys = {
     ecoScoreDesc: "الأثر البيئي من A (منخفض) إلى E (مرتفع)",
     // 3-tab navigation
     tabHalal: "تحليل الحلال",
-    tabProfile: "ملفي",
+    tabProfile: "التغذية والصحة",
     tabAlternatives: "البدائل",
     // Naqiy Health Score
+    healthDashboardTitle: "لوحة القيادة الصحية",
     healthScoreTitle: "مؤشر الصحة نقيّ",
     healthScoreInsufficient: "بيانات غير كافية لحساب مؤشر الصحة",
     healthScoreExcellent: "ممتاز",
@@ -778,6 +779,17 @@ export const ar: TranslationKeys = {
     reportProductDesc: "ساعد المجتمع بالإبلاغ عن حالة حلال غير صحيحة",
     shareAnalysis: "مشاركة التحليل",
     shareAnalysisDesc: "شارك هذا التحليل مع الآخرين",
+    // V3 — Key Characteristics Grid
+    keyCharacteristics: "الخصائص الرئيسية",
+    noAdditivesShort: "بدون مضافات",
+    noSweetenersShort: "بدون محليات",
+    originsLabel: "الأصول",
+    // V3 — Alternative card i18n
+    alternativeHalal: "حلال",
+    alternativeDoubtful: "مشكوك",
+    // V3 — Unknown status action
+    unknownStatusReport: "ساهم في التحليل",
+    unknownStatusReportDesc: "هذا المنتج لم يتم التحقق منه بعد. ساعد المجتمع!",
   },
   map: {
     title: "الخريطة",

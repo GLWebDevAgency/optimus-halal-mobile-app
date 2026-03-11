@@ -15,13 +15,14 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, CaretRightIcon, InfoIcon, QuestionIcon, SealCheckIcon } from "phosphor-react-native";
 import Animated, { FadeIn, FadeInDown, FadeInUp, ZoomIn } from "react-native-reanimated";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
 import { usePreferencesStore } from "@/store";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 const GOLD = "#d4af37";
 
@@ -52,7 +53,7 @@ interface EthicalCriteria {
   id: string;
   name: string;
   description: string;
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: IconName;
   color: string;
   colorDark: string;
   bgColor: string;
@@ -210,7 +211,7 @@ export default function CertificationsScreen() {
                 backgroundColor: isDark ? "rgba(255,255,255,0.05)" : colors.card,
               }}
             >
-              <MaterialIcons name="arrow-back" size={22} color={colors.textPrimary} />
+              <ArrowLeftIcon size={22} color={colors.textPrimary} />
             </View>
           </PressableScale>
           <Text
@@ -234,7 +235,7 @@ export default function CertificationsScreen() {
                 backgroundColor: isDark ? "rgba(255,255,255,0.05)" : colors.card,
               }}
             >
-              <MaterialIcons name="help-outline" size={22} color={colors.primary} />
+              <QuestionIcon size={22} color={colors.primary} />
             </View>
           </PressableScale>
         </View>
@@ -363,11 +364,8 @@ export default function CertificationsScreen() {
                             borderColor: "rgba(212, 175, 55, 0.25)",
                           }}
                         >
-                          <MaterialIcons
-                            name="verified"
-                            size={12}
-                            color={GOLD}
-                          />
+                          <SealCheckIcon size={12}
+                            color={GOLD} />
                           <Text
                             style={{
                               fontSize: 10,
@@ -395,11 +393,8 @@ export default function CertificationsScreen() {
                           >
                             Détails
                           </Text>
-                          <MaterialIcons
-                            name="chevron-right"
-                            size={14}
-                            color={isEnabled ? colors.primary : colors.textSecondary}
-                          />
+                          <CaretRightIcon size={14}
+                            color={isEnabled ? colors.primary : colors.textSecondary} />
                         </View>
                       </PressableScale>
                     </View>
@@ -464,11 +459,9 @@ export default function CertificationsScreen() {
                       borderColor: isDark ? criteria.borderColorDark : criteria.borderColor,
                     }}
                   >
-                    <MaterialIcons
-                      name={criteria.icon}
+                    <AppIcon name={criteria.icon}
                       size={24}
-                      color={isDark ? criteria.colorDark : criteria.color}
-                    />
+                      color={isDark ? criteria.colorDark : criteria.color} />
                   </View>
 
                   {/* Content */}
@@ -502,7 +495,7 @@ export default function CertificationsScreen() {
           })}
         </View>
 
-        {/* Info Card */}
+        {/* InfoIcon Card */}
         <Animated.View
           entering={FadeInUp.delay(500).duration(400)}
           style={{ paddingHorizontal: 20, marginTop: 24, marginBottom: 32 }}
@@ -533,7 +526,7 @@ export default function CertificationsScreen() {
               }}
             />
             <View style={{ flexDirection: "row", gap: 12 }}>
-              <MaterialIcons name="info" size={20} color={colors.primary} style={{ marginTop: 2 }} />
+              <InfoIcon size={20} color={colors.primary} style={{ marginTop: 2 }} />
               <View style={{ flex: 1 }}>
                 <Text
                   style={{
@@ -639,7 +632,7 @@ export default function CertificationsScreen() {
                           marginTop: 4,
                         }}
                       >
-                        <MaterialIcons name="verified" size={14} color={GOLD} />
+                        <SealCheckIcon size={14} color={GOLD} />
                         <Text style={{ fontSize: 12, fontWeight: "600", color: GOLD }}>
                           Recommandé par Naqiy
                         </Text>
@@ -716,11 +709,9 @@ export default function CertificationsScreen() {
                       gap: 8,
                     }}
                   >
-                    <MaterialIcons
-                      name={isCertEnabled(selectedCert.id) ? "remove-circle-outline" : "add-circle-outline"}
+                    <AppIcon name={isCertEnabled(selectedCert.id) ? "remove-circle-outline" : "add-circle-outline"}
                       size={20}
-                      color={isCertEnabled(selectedCert.id) ? colors.textPrimary : (isDark ? "#102217" : "#0d1b13")}
-                    />
+                      color={isCertEnabled(selectedCert.id) ? colors.textPrimary : (isDark ? "#102217" : "#0d1b13")} />
                     <Text
                       style={{
                         fontSize: 16,
@@ -744,7 +735,7 @@ export default function CertificationsScreen() {
 
 // Composant pour les lignes de détails
 interface DetailRowProps {
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: IconName;
   label: string;
   value: string;
   colors: ReturnType<typeof useTheme>["colors"];
@@ -767,11 +758,9 @@ function DetailRow({ icon, label, value, colors, isDark, highlight }: DetailRowP
             : isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
         }}
       >
-        <MaterialIcons
-          name={icon}
+        <AppIcon name={icon}
           size={18}
-          color={highlight ? (isDark ? "#4ade80" : "#16a34a") : colors.textSecondary}
-        />
+          color={highlight ? (isDark ? "#4ade80" : "#16a34a") : colors.textSecondary} />
       </View>
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 2 }}>{label}</Text>

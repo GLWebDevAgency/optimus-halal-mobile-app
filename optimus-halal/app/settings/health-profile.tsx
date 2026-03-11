@@ -18,7 +18,7 @@ import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, BabyIcon, BabyCarriageIcon, CaretRightIcon, ProhibitInsetIcon, ShieldWarningIcon } from "phosphor-react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useHaptics, useTranslation } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
@@ -66,11 +66,8 @@ export default function HealthProfileScreen() {
             className="w-10 h-10 items-center justify-center rounded-xl"
             style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#f1f5f9" }}
           >
-            <MaterialIcons
-              name="arrow-back"
-              size={22}
-              color={isDark ? "#e2e8f0" : "#334155"}
-            />
+            <ArrowLeftIcon size={22}
+              color={isDark ? "#e2e8f0" : "#334155"} />
           </View>
         </Pressable>
         <Text
@@ -104,11 +101,8 @@ export default function HealthProfileScreen() {
             }}
           >
             <View className="flex-row items-center gap-2 mb-2">
-              <MaterialIcons
-                name="privacy-tip"
-                size={18}
-                color={GOLD}
-              />
+              <ShieldWarningIcon size={18}
+                color={GOLD} />
               <Text className="text-sm font-semibold text-slate-900 dark:text-white">
                 {t.healthProfile.privacyTitle}
               </Text>
@@ -143,11 +137,8 @@ export default function HealthProfileScreen() {
                       : "rgba(244,114,182,0.1)",
                   }}
                 >
-                  <MaterialIcons
-                    name="pregnant-woman"
-                    size={22}
-                    color={isDark ? "#f472b6" : "#ec4899"}
-                  />
+                  <BabyIcon size={22}
+                    color={isDark ? "#f472b6" : "#ec4899"} />
                 </View>
                 <View className="flex-1">
                   <Text className="text-sm font-semibold text-slate-900 dark:text-white">
@@ -191,11 +182,8 @@ export default function HealthProfileScreen() {
                       : "rgba(96,165,250,0.1)",
                   }}
                 >
-                  <MaterialIcons
-                    name="child-care"
-                    size={22}
-                    color={isDark ? "#60a5fa" : "#3b82f6"}
-                  />
+                  <BabyCarriageIcon size={22}
+                    color={isDark ? "#60a5fa" : "#3b82f6"} />
                 </View>
                 <View className="flex-1">
                   <Text className="text-sm font-semibold text-slate-900 dark:text-white">
@@ -247,11 +235,8 @@ export default function HealthProfileScreen() {
                       : "rgba(251,191,36,0.1)",
                   }}
                 >
-                  <MaterialIcons
-                    name="no-food"
-                    size={20}
-                    color={isDark ? "#fbbf24" : "#d97706"}
-                  />
+                  <ProhibitInsetIcon size={20}
+                    color={isDark ? "#fbbf24" : "#d97706"} />
                 </View>
                 <View>
                   <Text className="text-sm font-semibold text-slate-900 dark:text-white">
@@ -262,11 +247,8 @@ export default function HealthProfileScreen() {
                   </Text>
                 </View>
               </View>
-              <MaterialIcons
-                name="chevron-right"
-                size={22}
-                color={isDark ? "rgba(212,175,55,0.5)" : "rgba(212,175,55,0.6)"}
-              />
+              <CaretRightIcon size={22}
+                color={isDark ? "rgba(212,175,55,0.5)" : "rgba(212,175,55,0.6)"} />
             </View>
           </PressableScale>
         </Animated.View>

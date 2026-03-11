@@ -21,7 +21,7 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { CaretLeftIcon, InfoIcon } from "phosphor-react-native";
 import { useHaptics, useTheme, useTranslation } from "@/hooks";
 import { ImpactFeedbackStyle, NotificationFeedbackType } from "expo-haptics";
 import Animated, {
@@ -37,6 +37,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { PressableScale } from "@/components/ui/PressableScale";
 import { brand } from "@/theme/colors";
+import { AppIcon } from "@/lib/icons";
 
 type PasswordStrength = "weak" | "medium" | "strong" | "very-strong";
 
@@ -208,11 +209,8 @@ export default function SetNewPasswordScreen() {
           accessibilityRole="button"
           accessibilityLabel={t.common.back}
         >
-          <MaterialIcons
-            name="arrow-back-ios-new"
-            size={24}
-            color={isDark ? "#ffffff" : "#1f2937"}
-          />
+          <CaretLeftIcon size={24}
+            color={isDark ? "#ffffff" : "#1f2937"} />
         </PressableScale>
         
         <Text
@@ -317,11 +315,9 @@ export default function SetNewPasswordScreen() {
                   accessibilityRole="button"
                   accessibilityLabel={showNewPassword ? t.auth.setNewPassword.confirmPassword : t.auth.setNewPassword.newPassword}
                 >
-                  <MaterialIcons
-                    name={showNewPassword ? "visibility" : "visibility-off"}
+                  <AppIcon name={showNewPassword ? "visibility" : "visibility-off"}
                     size={24}
-                    color={isDark ? "#92c9a8" : "#9ca3af"}
-                  />
+                    color={isDark ? "#92c9a8" : "#9ca3af"} />
                 </Pressable>
               </View>
 
@@ -401,22 +397,18 @@ export default function SetNewPasswordScreen() {
                   accessibilityRole="button"
                   accessibilityLabel={showConfirmPassword ? t.auth.setNewPassword.confirmPassword : t.auth.setNewPassword.confirmPassword}
                 >
-                  <MaterialIcons
-                    name={showConfirmPassword ? "visibility" : "visibility-off"}
+                  <AppIcon name={showConfirmPassword ? "visibility" : "visibility-off"}
                     size={24}
-                    color={isDark ? "#92c9a8" : "#9ca3af"}
-                  />
+                    color={isDark ? "#92c9a8" : "#9ca3af"} />
                 </Pressable>
               </View>
 
               {/* Passwords match indicator */}
               {confirmPassword.length > 0 && (
                 <Animated.View entering={FadeIn.duration(200)} style={styles.matchIndicator}>
-                  <MaterialIcons
-                    name={passwordsMatch ? "check-circle" : "error-outline"}
+                  <AppIcon name={passwordsMatch ? "check-circle" : "error-outline"}
                     size={16}
-                    color={passwordsMatch ? "#22c55e" : "#ef4444"}
-                  />
+                    color={passwordsMatch ? "#22c55e" : "#ef4444"} />
                   <Text 
                     style={[
                       styles.matchText,
@@ -429,7 +421,7 @@ export default function SetNewPasswordScreen() {
               )}
             </View>
 
-            {/* Helper Info Box */}
+            {/* Helper InfoIcon Box */}
             <Animated.View
               entering={FadeIn.delay(400).duration(400)}
               style={[
@@ -444,12 +436,9 @@ export default function SetNewPasswordScreen() {
                 }
               ]}
             >
-              <MaterialIcons
-                name="info"
-                size={20}
+              <InfoIcon size={20}
                 color={brand.primary}
-                style={styles.infoIcon}
-              />
+                style={styles.infoIcon} />
               <Text 
                 style={[
                   styles.infoText,

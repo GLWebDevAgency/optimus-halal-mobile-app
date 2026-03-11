@@ -4,6 +4,7 @@ import { router, publicProcedure, protectedProcedure } from "../trpc.js";
 import { products, categories } from "../../db/schema/index.js";
 import { notFound } from "../../lib/errors.js";
 import { findAlternatives } from "../../services/recommendation.service.js";
+import { withResolvedImage } from "../../services/product-lookup.service.js";
 
 function escapeLike(str: string): string {
   return str.replace(/[%_\\]/g, "\\$&");
@@ -17,7 +18,7 @@ export const productRouter = router({
         where: eq(products.id, input.id),
       });
       if (!product) throw notFound("Produit introuvable");
-      return product;
+      return withResolvedImage(product);
     }),
 
   getByBarcode: publicProcedure
@@ -26,7 +27,7 @@ export const productRouter = router({
       const product = await ctx.db.query.products.findFirst({
         where: eq(products.barcode, input.barcode),
       });
-      return product ?? null;
+      return product ? withResolvedImage(product) : null;
     }),
 
   search: publicProcedure
@@ -77,7 +78,7 @@ export const productRouter = router({
         .from(products)
         .where(where);
 
-      return { items, total: count };
+      return { items: items.map(withResolvedImage), total: count };
     }),
 
   getCategories: publicProcedure.query(async ({ ctx }) => {

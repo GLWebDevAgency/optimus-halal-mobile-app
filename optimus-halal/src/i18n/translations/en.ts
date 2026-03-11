@@ -723,9 +723,10 @@ export const en: TranslationKeys = {
     ecoScoreDesc: "Environmental impact from A (low) to E (high)",
     // 3-tab navigation
     tabHalal: "Halal Analysis",
-    tabProfile: "My Profile",
+    tabProfile: "Nutrition & Health",
     tabAlternatives: "Alternatives",
     // Naqiy Health Score
+    healthDashboardTitle: "HEALTH DASHBOARD",
     healthScoreTitle: "Naqiy Health Score",
     healthScoreInsufficient: "Insufficient data to compute a health score",
     healthScoreExcellent: "Excellent",
@@ -869,6 +870,17 @@ export const en: TranslationKeys = {
     reportProductDesc: "Help the community by reporting an incorrect halal status",
     shareAnalysis: "Share analysis",
     shareAnalysisDesc: "Share this analysis with others",
+    // V3 — Key Characteristics Grid
+    keyCharacteristics: "KEY CHARACTERISTICS",
+    noAdditivesShort: "No Additives",
+    noSweetenersShort: "No Sweeteners",
+    originsLabel: "Origins",
+    // V3 — Alternative card i18n
+    alternativeHalal: "Halal",
+    alternativeDoubtful: "Doubtful",
+    // V3 — Unknown status action
+    unknownStatusReport: "Help analyze this product",
+    unknownStatusReportDesc: "This product hasn't been verified yet. Help the community!",
   },
 
   // Map

@@ -15,11 +15,12 @@ import { PremiumBackground } from "@/components/ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, CheckCircleIcon, CloudSlashIcon } from "phosphor-react-native";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { trpc } from "@/lib/trpc";
+import { AppIcon } from "@/lib/icons";
 
 const GOLD = "#d4af37";
 
@@ -141,7 +142,7 @@ const BoycottCard = React.memo(function BoycottCard({
             )}
           </View>
           <View style={{ backgroundColor: level.bgColor, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <MaterialIcons name={level.icon} size={12} color={level.textColor} />
+            <AppIcon name={level.icon} size={12} color={level.textColor} />
             <Text style={{ fontSize: 10, fontWeight: "700", color: level.textColor, textTransform: "uppercase" }}>
               {level.label}
             </Text>
@@ -228,7 +229,7 @@ export default function BoycottListScreen() {
             accessibilityRole="button"
             accessibilityLabel={t.common.back}
           >
-            <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
+            <ArrowLeftIcon size={20} color={colors.textPrimary} />
           </Pressable>
           <View>
             <Text style={{ fontSize: 24, fontWeight: "700", letterSpacing: -0.5, color: colors.textPrimary }} accessibilityRole="header">
@@ -282,7 +283,7 @@ export default function BoycottListScreen() {
         </View>
       ) : isError ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
-          <MaterialIcons name="cloud-off" size={64} color={isDark ? "rgba(212,175,55,0.4)" : "rgba(212,175,55,0.5)"} />
+          <CloudSlashIcon size={64} color={isDark ? "rgba(212,175,55,0.4)" : "rgba(212,175,55,0.5)"} />
           <Text style={{ color: colors.textSecondary, fontSize: 16, marginTop: 16 }}>{t.boycott.loadError}</Text>
           <PressableScale onPress={() => refetch()} accessibilityRole="button">
             <View style={{ marginTop: 20, backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 }}>
@@ -292,7 +293,7 @@ export default function BoycottListScreen() {
         </View>
       ) : items.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 80 }}>
-          <MaterialIcons name="check-circle" size={64} color={GOLD} />
+          <CheckCircleIcon size={64} color={GOLD} />
           <Text style={{ color: colors.textSecondary, fontSize: 18, marginTop: 16 }}>{t.boycott.noCompanies}</Text>
           <Text style={{ color: colors.textMuted, fontSize: 14, marginTop: 8, textAlign: "center", paddingHorizontal: 32 }}>
             {t.boycott.noCompaniesDesc}

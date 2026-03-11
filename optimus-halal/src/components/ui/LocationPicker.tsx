@@ -18,7 +18,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import { BuildingsIcon, CaretDownIcon, CaretRightIcon, CrosshairIcon, InfoIcon, MagnifyingGlassIcon, MapPinIcon, XIcon } from "phosphor-react-native";
 import * as Location from "expo-location";
 import { useHaptics, useTheme, useTranslation } from "@/hooks";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
@@ -164,11 +164,8 @@ export function LocationPicker({
               `}
             >
               <View className="flex-row items-center flex-1">
-                <MaterialIcons
-                  name="location-on"
-                  size={20}
-                  color={value ? colors.primary : "#94a3b8"}
-                />
+                <MapPinIcon size={20}
+                  color={value ? colors.primary : "#94a3b8"} />
                 <Text
                   className={`ml-2 text-base ${
                     value
@@ -180,11 +177,8 @@ export function LocationPicker({
                   {value || resolvedPlaceholder}
                 </Text>
               </View>
-              <MaterialIcons
-                name="arrow-drop-down"
-                size={24}
-                color="#94a3b8"
-              />
+              <CaretDownIcon size={24}
+                color="#94a3b8" />
             </View>
           </PressableScale>
 
@@ -205,7 +199,7 @@ export function LocationPicker({
                 {isLocating ? (
                   <ActivityIndicator size="small" color={colors.primary} />
                 ) : (
-                  <MaterialIcons name="my-location" size={22} color={colors.primary} />
+                  <CrosshairIcon size={22} color={colors.primary} />
                 )}
               </View>
             </PressableScale>
@@ -218,7 +212,7 @@ export function LocationPicker({
 
         {hint && !error && (
           <View className="flex-row items-center ml-1">
-            <MaterialIcons name="info-outline" size={14} color="#94a3b8" />
+            <InfoIcon size={14} color="#94a3b8" />
             <Text className="text-xs text-slate-500 dark:text-slate-400 ml-1">
               {hint}
             </Text>
@@ -256,11 +250,8 @@ export function LocationPicker({
                 }}
                 className="p-2 -mr-2"
               >
-                <MaterialIcons
-                  name="close"
-                  size={24}
-                  color={isDark ? "#ffffff" : "#0f172a"}
-                />
+                <XIcon size={24}
+                  color={isDark ? "#ffffff" : "#0f172a"} />
               </Pressable>
             </View>
 
@@ -284,7 +275,7 @@ export function LocationPicker({
                     {isLocating ? (
                       <ActivityIndicator size="small" color={colors.primary} />
                     ) : (
-                      <MaterialIcons name="my-location" size={24} color={colors.primary} />
+                      <CrosshairIcon size={24} color={colors.primary} />
                     )}
                     <View className="flex-1 ml-3">
                       <Text className="text-primary-700 dark:text-primary-400 font-semibold">
@@ -294,28 +285,22 @@ export function LocationPicker({
                         {t.location.autoDetectCity}
                       </Text>
                     </View>
-                    <MaterialIcons
-                      name="chevron-right"
-                      size={24}
-                      color={colors.primary}
-                    />
+                    <CaretRightIcon size={24}
+                      color={colors.primary} />
                   </View>
                 </PressableScale>
               </Animated.View>
 
               {/* Search Input */}
               <View className="relative">
-                <MaterialIcons
-                  name="search"
-                  size={20}
+                <MagnifyingGlassIcon size={20}
                   color="#94a3b8"
                   style={{
                     position: "absolute",
                     left: 14,
                     top: 14,
                     zIndex: 1,
-                  }}
-                />
+                  }} />
                 <TextInput
                   value={searchQuery}
                   onChangeText={setSearchQuery}
@@ -357,7 +342,7 @@ export function LocationPicker({
                           ${isDark ? "bg-primary-900/30" : "bg-primary-50"}
                         `}
                       >
-                        <MaterialIcons name="location-city" size={20} color={colors.primary} />
+                        <BuildingsIcon size={20} color={colors.primary} />
                       </View>
                       <View className="flex-1">
                         <Text className="text-slate-900 dark:text-white font-medium">
@@ -367,11 +352,8 @@ export function LocationPicker({
                           {item.postalCode} • {item.region}
                         </Text>
                       </View>
-                      <MaterialIcons
-                        name="chevron-right"
-                        size={20}
-                        color="#94a3b8"
-                      />
+                      <CaretRightIcon size={20}
+                        color="#94a3b8" />
                     </View>
                   </PressableScale>
                 </Animated.View>
@@ -380,7 +362,7 @@ export function LocationPicker({
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={
                 <View className="items-center justify-center py-12">
-                  <MaterialIcons name="search-off" size={48} color="#94a3b8" />
+                  <MagnifyingGlassIcon size={48} color="#94a3b8" />
                   <Text className="text-slate-500 dark:text-slate-400 mt-4 text-center">
                     {t.location.noCityFound}
                   </Text>

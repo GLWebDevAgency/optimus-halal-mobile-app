@@ -18,7 +18,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, CloudSlashIcon, FlaskIcon, PackageIcon } from "phosphor-react-native";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useScanHistory, useMe } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
@@ -31,6 +31,7 @@ import { isAuthenticated as hasStoredTokens } from "@/services/api";
 import { MadhabScoreRing } from "@/components/scan/MadhabScoreRing";
 import { CertifierLogo } from "@/components/scan/CertifierLogo";
 import { halalStatus as halalStatusTokens, gold } from "@/theme/colors";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 const LOCALE_MAP: Record<string, string> = { fr: "fr-FR", en: "en-US", ar: "ar-SA" };
 
@@ -38,7 +39,7 @@ const LOCALE_MAP: Record<string, string> = { fr: "fr-FR", en: "en-US", ar: "ar-S
 const NAQIY_LOGO = require("../../assets/images/logo_naqiy.webp");
 
 // ── Analysis verdict config per status ──
-const ANALYSIS_CONFIG: Record<string, { icon: keyof typeof MaterialIcons.glyphMap; color: string; key: "analysisHalal" | "analysisHaram" | "analysisDoubtful" | "analysisUnknown" }> = {
+const ANALYSIS_CONFIG: Record<string, { icon: IconName; color: string; key: "analysisHalal" | "analysisHaram" | "analysisDoubtful" | "analysisUnknown" }> = {
   halal: { icon: "check-circle", color: halalStatusTokens.halal.base, key: "analysisHalal" },
   haram: { icon: "cancel", color: halalStatusTokens.haram.base, key: "analysisHaram" },
   doubtful: { icon: "warning", color: halalStatusTokens.doubtful.base, key: "analysisDoubtful" },
@@ -49,7 +50,7 @@ const ANALYSIS_CONFIG: Record<string, { icon: keyof typeof MaterialIcons.glyphMa
 type HalalStatus = "halal" | "haram" | "doubtful" | "unknown";
 
 interface StatusVisualConfig {
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: IconName;
   color: string;
   gradientDark: readonly [string, string, string];
   gradientLight: readonly [string, string, string];
@@ -298,11 +299,8 @@ const ScanRow = React.memo(function ScanRow({ item, index, isDark, colors, t, la
                 transition={200}
               />
             ) : (
-              <MaterialIcons
-                name="inventory-2"
-                size={20}
-                color={isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}
-              />
+              <PackageIcon size={20}
+                color={isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"} />
             )}
           </View>
 
@@ -342,11 +340,8 @@ const ScanRow = React.memo(function ScanRow({ item, index, isDark, colors, t, la
                 </>
               ) : (
                 <>
-                  <MaterialIcons
-                    name="science"
-                    size={10}
-                    color={`${effectiveConfig.color}${isDark ? "90" : "70"}`}
-                  />
+                  <FlaskIcon size={10}
+                    color={`${effectiveConfig.color}${isDark ? "90" : "70"}`} />
                   <Text
                     style={[styles.tierText, { color: `${effectiveConfig.color}${isDark ? "CC" : "99"}` }]}
                     numberOfLines={1}
@@ -363,11 +358,9 @@ const ScanRow = React.memo(function ScanRow({ item, index, isDark, colors, t, la
               <Text style={[styles.analysisLabel, { color: colors.textMuted }]}>
                 {t.scanHistory.analysisLabel}
               </Text>
-              <MaterialIcons
-                name={analysisConfig.icon}
+              <AppIcon name={analysisConfig.icon}
                 size={10}
-                color={analysisConfig.color}
-              />
+                color={analysisConfig.color} />
               <Text
                 style={[styles.analysisText, { color: analysisConfig.color }]}
                 numberOfLines={1}
@@ -485,7 +478,7 @@ export default function ScanHistoryScreen() {
                 { backgroundColor: isDark ? "rgba(239,68,68,0.1)" : "rgba(239,68,68,0.06)" },
               ]}
             >
-              <MaterialIcons name="cloud-off" size={32} color={isDark ? "#f87171" : "#ef4444"} />
+              <CloudSlashIcon size={32} color={isDark ? "#f87171" : "#ef4444"} />
             </View>
             <Text style={[styles.errorText, { color: colors.textSecondary }]}>
               {t.scanHistory.loadError}
@@ -558,7 +551,7 @@ function Header({ isDark, colors, t, count }: { isDark: boolean; colors: any; t:
           accessibilityRole="button"
           accessibilityLabel={t.common.back}
         >
-          <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
+          <ArrowLeftIcon size={20} color={colors.textPrimary} />
         </PressableScale>
         <View style={styles.flex}>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]} accessibilityRole="header">

@@ -25,7 +25,7 @@ import { FlatList } from "react-native-gesture-handler";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { useLocalSearchParams, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowClockwiseIcon, CompassIcon, MapTrifoldIcon } from "phosphor-react-native";
 import { useHaptics, useUserLocation, useMapStores, useMapSearch } from "@/hooks";
 import type { SearchResult } from "@/hooks";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -94,7 +94,6 @@ const FOCUSED_ZOOM = 13;
 // but resets on app restart (fresh animation on cold start)
 let _hasAnimatedToUser = false;
 let _lastViewport: { center: [number, number]; zoom: number } | null = null;
-
 
 // ── Helpers ────────────────────────────────────────────────
 function openDirections(lat: number, lon: number, name: string) {
@@ -800,7 +799,7 @@ export default function MapScreen() {
   if (!MAPBOX_AVAILABLE) {
     return (
       <View className="flex-1 items-center justify-center px-8" style={{ backgroundColor: colors.background }}>
-        <MaterialIcons name="map" size={64} color={colors.textMuted} />
+        <MapTrifoldIcon size={64} color={colors.textMuted} />
         <Text className="text-lg font-bold mt-4 text-center" style={{ color: colors.textPrimary }}>
           {t.map.title}
         </Text>
@@ -914,7 +913,7 @@ export default function MapScreen() {
                   elevation: 4,
                 }}
               >
-                <MaterialIcons name="refresh" size={14} color="#fff" />
+                <ArrowClockwiseIcon size={14} color="#fff" />
                 <Text className="text-xs font-semibold text-white">{t.map.searchThisArea}</Text>
               </View>
             </PressableScale>
@@ -1038,7 +1037,7 @@ export default function MapScreen() {
                   entering={FadeIn.duration(250)}
                   className="flex-1 items-center justify-center px-8 py-6"
                 >
-                  <MaterialIcons name="explore" size={32} color={colors.textMuted} />
+                  <CompassIcon size={32} color={colors.textMuted} />
                   <Text className="text-sm mt-2 text-center" style={{ color: colors.textSecondary }}>
                     {t.map.noStoresFound}
                   </Text>

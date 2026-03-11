@@ -15,8 +15,8 @@ import Animated, {
   useReducedMotion,
 } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
-import { MaterialIcons } from "@expo/vector-icons";
 import { useTheme, useTranslation, useHaptics } from "@/hooks";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 interface ScanResultTabBarProps {
   activeTab: number;
@@ -24,7 +24,7 @@ interface ScanResultTabBarProps {
 }
 
 interface TabDef {
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: IconName;
   labelKey: "tabHalal" | "tabProfile" | "tabAlternatives";
 }
 
@@ -103,7 +103,7 @@ export const ScanResultTabBar = React.memo(function ScanResultTabBar({
             accessibilityState={{ selected: isActive }}
             accessibilityLabel={t.scanResult[tab.labelKey]}
           >
-            <MaterialIcons name={tab.icon} size={20} color={color} />
+            <AppIcon name={tab.icon} size={20} color={color} />
             <Text
               style={[
                 styles.label,

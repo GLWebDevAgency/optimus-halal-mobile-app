@@ -11,7 +11,7 @@
 import React, { useCallback } from "react";
 import { View, Text, Dimensions, Platform, StyleSheet } from "react-native";
 import { Image } from "expo-image";
-import { MaterialIcons } from "@expo/vector-icons";
+import { GlobeHemisphereWestIcon, MapPinIcon, UserPlusIcon } from "phosphor-react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -28,6 +28,7 @@ import type { OnboardingSlideConfig } from "@constants/onboarding";
 import { useTheme, useTranslation } from "@/hooks";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { gold, primary } from "@/theme/colors";
+import { AppIcon } from "@/lib/icons";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -187,11 +188,9 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
     if (config.id === "madhab") {
       return (
         <View style={styles.heroIconContainer}>
-          <MaterialIcons
-            name={config.heroIcon as any}
+          <AppIcon name={config.heroIcon as any}
             size={72}
-            color={config.accentColor}
-          />
+            color={config.accentColor} />
           {/* Madhab badges row */}
           <Animated.View style={[styles.madhabRow, decorStyle]}>
             {MADHAB_SCHOOLS.map((school, i) => (
@@ -209,11 +208,9 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
                   },
                 ]}
               >
-                <MaterialIcons
-                  name={school.icon}
+                <AppIcon name={school.icon}
                   size={14}
-                  color={gold[isDark ? 400 : 600]}
-                />
+                  color={gold[isDark ? 400 : 600]} />
                 <Text
                   style={[
                     styles.madhabLabel,
@@ -232,11 +229,8 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
     if (config.id === "map") {
       return (
         <View style={styles.heroIconContainer}>
-          <MaterialIcons
-            name="place"
-            size={80}
-            color={config.accentColor}
-          />
+          <MapPinIcon size={80}
+            color={config.accentColor} />
           {/* Floating mini pins */}
           <Animated.View style={[styles.mapPins, decorStyle]}>
             {[-30, 35, -10].map((offset, i) => (
@@ -254,7 +248,7 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
                   },
                 ]}
               >
-                <MaterialIcons name="place" size={10} color="#fff" />
+                <MapPinIcon size={10} color="#fff" />
               </View>
             ))}
           </Animated.View>
@@ -265,11 +259,9 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
     // Default: scanner + others
     return (
       <View style={styles.heroIconContainer}>
-        <MaterialIcons
-          name={config.heroIcon as any}
+        <AppIcon name={config.heroIcon as any}
           size={80}
-          color={config.accentColor}
-        />
+          color={config.accentColor} />
         {config.id === "scanner" && (
           <Animated.View style={[styles.scanLine, decorStyle]}>
             <View
@@ -357,11 +349,8 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
                 },
               ]}
             >
-              <MaterialIcons
-                name="person-add"
-                size={18}
-                color={isDark ? "#0d1b13" : "#ffffff"}
-              />
+              <UserPlusIcon size={18}
+                color={isDark ? "#0d1b13" : "#ffffff"} />
               <Text
                 style={[
                   styles.ctaPrimaryText,
@@ -385,11 +374,8 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
                 },
               ]}
             >
-              <MaterialIcons
-                name="travel-explore"
-                size={18}
-                color={isDark ? "#a0a0a0" : "#6b7280"}
-              />
+              <GlobeHemisphereWestIcon size={18}
+                color={isDark ? "#a0a0a0" : "#6b7280"} />
               <Text
                 style={[
                   styles.ctaSecondaryText,

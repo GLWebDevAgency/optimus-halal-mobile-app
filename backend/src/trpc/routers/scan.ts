@@ -22,6 +22,7 @@ import {
   resolveProduct,
   refreshProductInBackground,
   backfillProductFromOff,
+  withResolvedImage,
 } from "../../services/product-lookup.service.js";
 import { matchAllergens } from "../../services/allergen.service.js";
 import { computeHealthScore, checkScoreExclusion, type AdditiveForScore, type UserNutritionProfile, type ScoreExclusionReason } from "../../services/health-score.service.js";
@@ -921,6 +922,8 @@ export const scanRouter = router({
             name: products.name,
             brand: products.brand,
             imageUrl: products.imageUrl,
+            imageR2Key: products.imageR2Key,
+            imageFrontUrl: products.imageFrontUrl,
             category: products.category,
             halalStatus: products.halalStatus,
             confidenceScore: products.confidenceScore,
@@ -948,8 +951,12 @@ export const scanRouter = router({
       const items = rawItems.map((item) => {
         const certifierId = item.product?.certifierId;
         const scores = certifierId ? scoreMap.get(certifierId) ?? null : null;
+        const product = item.product
+          ? withResolvedImage(item.product)
+          : item.product;
         return {
           ...item,
+          product,
           certifier: scores
             ? {
                 trustScore: scores.trustScore,
