@@ -43,8 +43,8 @@ The current scan-result screen is a vertical scroll with sections stacked linear
 │  │ Tile   │ Tile         │         │
 │  └────────┴──────────────┘         │
 ├─────────────────────────────────────┤
-│ CommunitySection                    │  Existing, reused
-│ LegalDisclaimer                     │  Existing, reused
+│ Community vote (inline JSX)          │  Inline in orchestrator
+│ Legal disclaimer (inline JSX)        │  Inline in orchestrator
 ├─────────────────────────────────────┤
 │ ScanBottomBar (fixed)               │  NEW — replaces floating bar
 └─────────────────────────────────────┘
@@ -65,7 +65,7 @@ Overlay:
 | 5 | `AlertsTile` | `src/components/scan/AlertsTile.tsx` | ~100 | Alert count + top 2 preview, or clean state |
 | 6 | `AlternativesTile` | `src/components/scan/AlternativesTile.tsx` | ~130 | Image deck + first alternative preview |
 | 7 | `CompactStickyHeader` | `src/components/scan/CompactStickyHeader.tsx` | ~100 | 52pt glass header (image + name + verdict pill + certifier logo) |
-| 8 | `ScanBottomBar` | `src/components/scan/ScanBottomBar.tsx` | ~120 | Fixed bottom bar: Favori, Partager, Scanner, Signaler |
+| 8 | `ScanBottomBar` | `src/components/scan/ScanBottomBar.tsx` | ~120 | Fixed bottom bar: Favori, Partager, contextual CTA, Signaler |
 
 ### 3.3 Modified Components
 
@@ -79,6 +79,7 @@ Overlay:
 | Component | Reason |
 |-----------|--------|
 | `ScanActionBar.tsx` | Replaced by `ScanBottomBar` |
+| `StickyVerdictHeader.tsx` | Replaced by `CompactStickyHeader` (scroll-interpolation instead of boolean toggle) |
 
 ### 3.5 Reused As Sheet Content (unchanged)
 
@@ -130,7 +131,7 @@ Inner glow:
 
 - **Score number**: fontSize.h2 (24), fontWeight.black, centered
 - **"/100"**: fontSize.micro (10), textMuted
-- **Arc SVG**: 180deg half-circle, radius 30px, stroke 4px
+- **Arc SVG**: 180deg half-circle, radius 30px, stroke 4px (uses `react-native-svg`, already a project dependency — used by `MadhabScoreRing`)
   - >= 70: halalStatus.halal.base (green)
   - >= 40: halalStatus.doubtful.base (orange)
   - < 40: halalStatus.haram.base (red)
@@ -192,7 +193,12 @@ Inner glow:
 
 `HERO_HEIGHT = SCREEN_HEIGHT * 0.35` (~295pt on iPhone 15)
 
+**Sizing strategy**: The hero switches from fixed-height container to `minHeight: HERO_HEIGHT` with intrinsic content sizing. If content is shorter (e.g., no certifier), it shrinks. If taller on small screens, it grows. The BentoGrid below uses `flex: 1` to fill remaining space.
+
+**Compression vs current 50% hero**: Image shrinks 80x80 -> 72x72 (-8pt). Community line font micro (-4pt). Verdict + trust bar spacing tightened (marginBottom md -> sm on each, saves ~16pt). Certifier bar unchanged (non-condensed). Total saved: ~130pt, fits in 295pt.
+
 Content (top to bottom):
+
 1. Product image 72x72 (glass card) + verdict text + trust bar + confidence dots
 2. Product name + brand + barcode
 3. Certifier bar (full, non-condensed — same as current)
@@ -221,14 +227,17 @@ Fixed at bottom, replacing the floating action bar. Styled like `PremiumTabBar`.
 
 **Background**: Dark rgba(12,12,12, 0.92) / Light rgba(255,255,255, 0.95) + border-top glass token
 
-**4 actions**:
+**4 actions** (slot 3 is contextual, same as existing `ScanActionBar`):
 
-| Slot | Icon | Label | Action |
-|------|------|-------|--------|
-| 1 | HeartIcon | Favori | Toggle favorite |
-| 2 | ShareNetworkIcon | Partager | Native share sheet |
-| 3 | BarcodeIcon | Scanner | Navigate back to scanner |
-| 4 | FlagIcon | Signaler | Navigate to report |
+| Slot | Icon | Label | Action | Condition |
+|------|------|-------|--------|-----------|
+| 1 | HeartIcon | Favori | Toggle favorite | Always |
+| 2 | ShareNetworkIcon | Partager | Native share sheet | Always |
+| 3 | StorefrontIcon | Ou acheter ? | Navigate to marketplace | halal/doubtful products |
+| 3 | BarcodeIcon | Re-scanner | Navigate back to scanner | haram/unknown products |
+| 4 | FlagIcon | Signaler | Navigate to report | Always |
+
+Slot 3 switches icon + label based on `effectiveHeroStatus`. This preserves the existing contextual CTA behavior from `ScanActionBar`.
 
 **Typography**: Icons 22px, labels fontSize.micro (10), textMuted.
 
@@ -301,7 +310,19 @@ When `useReducedMotion()` returns true:
 | AlertsTile | AlertStrip (expanded) | [45%] | 0 |
 | AlternativesTile | AlternativesSection | [55%, 85%] | 0 |
 
-All sheets use `@gorhom/bottom-sheet` v5.2.8 with:
+**Sheet implementation**: The existing bottom sheets (`MadhabBottomSheet`, `TrustScoreBottomSheet`, `ScoreDetailBottomSheet`, `NutrientDetailSheet`) use custom Reanimated-based sliding modals with a `visible: boolean` prop pattern. The **4 new tile-triggered sheets** use `@gorhom/bottom-sheet` v5.2.8 (already a project dependency, used in `StoreDetailCard`). These are NEW sheet wrappers that embed the existing section components as content children:
+
+```tsx
+// Example: Halal detail sheet (new wrapper)
+<BottomSheet ref={halalSheetRef} snapPoints={['70%', '95%']} index={-1} ...>
+  <MadhabVerdictCard {...madhabProps} />
+  <HalalAnalysisSection {...analysisProps} />
+</BottomSheet>
+```
+
+The existing modal-based sheets (`MadhabBottomSheet`, etc.) remain for their current trigger paths (e.g., tapping a specific madhab ring inside the sheet content). They are NOT replaced.
+
+Sheet config:
 - `enableDynamicSizing={false}`
 - `backgroundStyle` matching glass tokens
 - `handleIndicatorStyle` with gold accent in dark mode
@@ -320,7 +341,53 @@ This is a prop-level change on BentoGrid (`prioritizeAlternatives={true}`), not 
 
 ---
 
-## 10. Data Flow
+## 10. Preserved Features (not in Bento Grid)
+
+The following existing features remain in `scan-result.tsx` as inline JSX, unchanged:
+
+| Feature | Current location | New location |
+|---------|-----------------|--------------|
+| Boycott info | Passed to `HalalAnalysisSection` | Same — inside Halal detail sheet |
+| User vote (thumbs up/down) | Inline JSX in orchestrator | Inline JSX below BentoGrid (before disclaimer) |
+| Quota banner (anonymous scan limit) | Inline JSX, conditional | Inline JSX, same position (below BentoGrid) |
+| Level-up celebration overlay | Modal overlay in orchestrator | Unchanged — stays as overlay |
+| Product image preview modal | Modal triggered by image tap | Unchanged — triggered from VerdictHero image |
+| Share card (off-screen capture) | Off-screen `ViewShot` | Unchanged — ref-based, invisible |
+
+None of these features are removed or relocated to tiles/sheets. They stay in the orchestrator.
+
+---
+
+## 11. BentoGrid Props Interface
+
+```tsx
+interface BentoGridProps {
+  /** Swap Row 2 tiles (alternatives left) for haram/doubtful products */
+  prioritizeAlternatives: boolean;
+  children?: never; // tiles are internal, not passed as children
+  // Tile data props:
+  halalAnalysis: HalalAnalysis;
+  madhabVerdicts: MadhabVerdict[];
+  certifierData: CertifierData | null;
+  product: Product;
+  healthScore: HealthScore | null;
+  offExtras: OffExtras | null;
+  personalAlerts: PersonalAlert[];
+  alternativesData: AlternativeProduct[];
+  alternativesLoading: boolean;
+  // Sheet open callbacks (state managed in scan-result.tsx):
+  onOpenHalalSheet: () => void;
+  onOpenHealthSheet: () => void;
+  onOpenAlertsSheet: () => void;
+  onOpenAlternativesSheet: () => void;
+}
+```
+
+Sheet refs (`BottomSheetRef`) live in `scan-result.tsx`. Each `onOpen*` callback calls `sheetRef.current?.snapToIndex(0)`. BentoGrid passes them down to individual tiles.
+
+---
+
+## 12. Data Flow
 
 No backend changes. All data comes from the existing `useScanBarcode()` tRPC mutation.
 
@@ -330,7 +397,7 @@ scan-result.tsx (orchestrator)
   |-- BentoGrid
   |   |-- HalalMadhabTile   <- halalAnalysis, madhabVerdicts, certifierData, product.ingredients
   |   |-- HealthScoreTile   <- healthScore, offExtras
-  |   |-- AlertsTile        <- personalAlerts (from usePersonalAlerts hook)
+  |   |-- AlertsTile        <- personalAlerts (from useScanBarcode mutation data)
   |   |-- AlternativesTile  <- alternativesQuery (from tRPC)
   |-- CompactStickyHeader   <- product, halalAnalysis, certifierData (condensed)
   |-- ScanBottomBar          <- callbacks (favorite, share, navigate, report)
@@ -339,7 +406,7 @@ scan-result.tsx (orchestrator)
 
 ---
 
-## 11. Files Impact Summary
+## 13. Files Impact Summary
 
 ### New files (8)
 - `src/components/scan/BentoGrid.tsx`
@@ -355,8 +422,10 @@ scan-result.tsx (orchestrator)
 - `app/scan-result.tsx` — Replace scroll sections with BentoGrid, add sticky header + bottom bar, wire sheet opens
 - `src/components/scan/VerdictHero.tsx` — HERO_HEIGHT 0.50 -> 0.35, community line font micro
 
-### Removed files (1)
+### Removed files (2)
+
 - `src/components/scan/ScanActionBar.tsx` — Replaced by ScanBottomBar
+- `src/components/scan/StickyVerdictHeader.tsx` — Replaced by CompactStickyHeader
 
 ### Unchanged (reused as sheet content)
 - `HalalAnalysisSection.tsx`, `HealthNutritionSection.tsx`, `AlternativesSection.tsx`, `AlertStrip.tsx`
@@ -365,7 +434,7 @@ scan-result.tsx (orchestrator)
 
 ---
 
-## 12. Verification Checklist
+## 14. Verification Checklist
 
 1. **Typecheck**: `cd optimus-halal && pnpm tsc --noEmit` — 0 errors
 2. **All data accessible**: Every field from useScanBarcode reachable via tiles + sheets
