@@ -50,7 +50,7 @@ export function AlertsTile({ alerts, staggerIndex, onPress }: AlertsTileProps) {
       accessibilityLabel={
         hasAlerts
           ? `${alerts.length} ${alerts.length === 1 ? "alerte" : "alertes"}`
-          : t("home.noAlerts")
+          : t.scanResult.noAlerts
       }
       style={styles.tileOuter}
     >
@@ -115,7 +115,7 @@ export function AlertsTile({ alerts, staggerIndex, onPress }: AlertsTileProps) {
               { color: isDark ? gold[400] : gold[700] },
             ]}
           >
-            {t("common.viewAlerts")} {"\u2192"}
+            {t.common.viewAlerts} {"\u2192"}
           </Text>
         )}
       </View>

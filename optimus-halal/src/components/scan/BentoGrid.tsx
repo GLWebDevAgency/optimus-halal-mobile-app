@@ -16,7 +16,7 @@ import { HealthScoreTile } from "./HealthScoreTile";
 import { AlertsTile } from "./AlertsTile";
 import { AlternativesTile } from "./AlternativesTile";
 import { spacing } from "@/theme/spacing";
-import { halalStatus as halalStatusTokens } from "@/theme/colors";
+import type { HalalStatusKey } from "./scan-constants";
 
 // ── Types (from spec section 11) ──
 
@@ -162,11 +162,11 @@ export function BentoGrid({
       <View style={styles.row}>
         <View style={styles.twoThirds}>
           <HalalMadhabTile
-            halalAnalysis={halalAnalysis}
+            halalStatus={(halalAnalysis?.status ?? "unknown") as HalalStatusKey}
+            effectiveHeroStatus={(effectiveHeroStatus ?? "unknown") as HalalStatusKey}
+            trustScore={halalAnalysis?.trustScore ?? null}
             madhabVerdicts={madhabVerdicts}
-            certifierData={certifierData}
             userMadhab={userMadhab}
-            effectiveHeroStatus={effectiveHeroStatus}
             ingredientCount={ingredientCount}
             additiveCount={additiveCount}
             staggerIndex={0}
@@ -175,8 +175,10 @@ export function BentoGrid({
         </View>
         <View style={styles.oneThird}>
           <HealthScoreTile
-            healthScore={healthScore}
-            offExtras={offExtras}
+            healthScore={healthScore?.score ?? null}
+            nutriScore={offExtras?.nutriscoreGrade ?? null}
+            novaGroup={offExtras?.novaGroup ?? null}
+            ecoScore={offExtras?.ecoscoreGrade ?? null}
             staggerIndex={1}
             onPress={onOpenHealthSheet}
           />
