@@ -30,11 +30,14 @@ import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { LinearGradient } from "expo-linear-gradient";
+
 import { PressableScale } from "@/components/ui/PressableScale";
 import { useHaptics, useTheme, useTranslation } from "@/hooks";
 import {
   halalStatus as halalStatusTokens,
   glass,
+  gold,
 } from "@/theme/colors";
 import { fontSize as fontSizeTokens, fontWeight as fontWeightTokens } from "@/theme/typography";
 import { spacing } from "@/theme/spacing";
@@ -201,20 +204,21 @@ export function ScanBottomBar({
         </Text>
       </PressableScale>
 
-      {/* 3. Contextual CTA */}
+      {/* 3. Contextual CTA — gold gradient pill */}
       <PressableScale
         onPress={handleCTA}
-        style={styles.slot}
         accessibilityRole="button"
         accessibilityLabel={ctaLabel}
       >
-        <CTAIcon size={22} color={colors.primary} weight="bold" />
-        <Text
-          style={[styles.slotLabel, { color: colors.primary, fontWeight: fontWeightTokens.semiBold }]}
-          numberOfLines={1}
+        <LinearGradient
+          colors={[gold[400], gold[600]]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.ctaPill}
         >
-          {ctaLabel}
-        </Text>
+          <CTAIcon size={16} color="#FFFFFF" weight="bold" />
+          <Text style={styles.ctaPillText}>{ctaLabel}</Text>
+        </LinearGradient>
       </PressableScale>
 
       {/* 4. Signaler */}
@@ -310,6 +314,21 @@ const styles = StyleSheet.create({
     fontWeight: fontWeightTokens.medium,
     letterSpacing: 0.2,
     textAlign: "center",
+  },
+  ctaPill: {
+    minWidth: 160,
+    height: 40,
+    borderRadius: 9999,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.xl,
+    gap: spacing.sm,
+  },
+  ctaPillText: {
+    fontSize: fontSizeTokens.bodySmall,
+    fontWeight: fontWeightTokens.bold,
+    color: "#FFFFFF",
   },
 });
 
