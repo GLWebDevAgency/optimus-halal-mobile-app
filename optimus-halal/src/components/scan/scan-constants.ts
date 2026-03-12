@@ -103,3 +103,81 @@ export const HEALTH_SCORE_LABEL_KEYS: Record<
   poor: "healthScorePoor",
   very_poor: "healthScoreVeryPoor",
 };
+
+// ── Nutrient Thresholds (per 100g, Yuka-adapted) ──
+
+export interface NutrientThreshold {
+  low: number;
+  high: number;
+}
+
+/** Negative nutrients: low=good, high=bad */
+export const NEGATIVE_NUTRIENT_THRESHOLDS: Record<string, NutrientThreshold> = {
+  fat: { low: 3, high: 20 },
+  saturated_fat: { low: 1.5, high: 5 },
+  sugar: { low: 5, high: 12.5 },
+  salt: { low: 0.3, high: 1.5 },
+};
+
+/** Positive nutrients: low=bad, high=good */
+export const POSITIVE_NUTRIENT_THRESHOLDS: Record<string, NutrientThreshold> = {
+  fiber: { low: 1.5, high: 3 },
+  protein: { low: 4, high: 8 },
+};
+
+/**
+ * Get nutrient level from value and thresholds.
+ * For negative nutrients: <low = "low", >high = "high", else "moderate"
+ * For positive nutrients: same scale but interpretation is inverted in UI
+ */
+export function getNutrientLevel(
+  value: number,
+  thresholds: NutrientThreshold,
+): "low" | "moderate" | "high" {
+  if (value < thresholds.low) return "low";
+  if (value > thresholds.high) return "high";
+  return "moderate";
+}
+
+// ── Additive Risk Levels (Yuka 4-level system) ──
+
+export const ADDITIVE_RISK_LEVELS = {
+  1: { labelKey: "riskHigh" as const, color: "#ef4444" },    // haram.base
+  2: { labelKey: "riskMedium" as const, color: "#f97316" },  // doubtful.base
+  3: { labelKey: "riskLimited" as const, color: "#FECB02" }, // yellow
+  4: { labelKey: "riskNone" as const, color: "#22c55e" },    // halal.base
+} as const;
+
+// ── NutriScore / NOVA / EcoScore Badge Colors ──
+
+export const NUTRISCORE_COLORS: Record<string, string> = {
+  a: "#038141",
+  b: "#85BB2F",
+  c: "#FECB02",
+  d: "#EE8100",
+  e: "#E63E11",
+};
+
+export const NOVA_COLORS: Record<number, string> = {
+  1: "#038141",
+  2: "#85BB2F",
+  3: "#FECB02",
+  4: "#E63E11",
+};
+
+// ── Nutrient Bar Colors (status-based) ──
+
+export const NUTRIENT_BAR_COLORS = {
+  negative: { low: "#22c55e", moderate: "#f97316", high: "#ef4444" },
+  positive: { low: "#ef4444", moderate: "#f97316", high: "#22c55e" },
+} as const;
+
+// ── Letter Spacing Tokens ──
+
+export const letterSpacing = {
+  tighter: -0.5,
+  tight: -0.3,
+  normal: 0,
+  wide: 0.5,
+  wider: 1.0,
+} as const;
