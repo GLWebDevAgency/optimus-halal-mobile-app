@@ -1,12 +1,12 @@
 /**
  * Scan Result Screen — Orchestrator
  *
- * BentoGrid dashboard layout with tile-triggered @gorhom bottom sheets.
- * Hero → BentoGrid tiles → detail sheets for halal, health, alerts, alternatives.
+ * Continuous-scroll layout with direct inline section cards.
+ * Hero → AlertStrip → HalalVerdictCard → (Alternatives if non-halal) →
+ * HealthNutritionCard → AdditivesCard → (Alternatives if halal) → Disclaimer.
  * CompactStickyHeader (scroll-interpolated) + ScanBottomBar (glass action bar).
  *
- * Section components (HalalAnalysisSection, HealthNutritionSection, AlternativesSection,
- * AlertStrip, MadhabVerdictCard) are rendered inside bottom sheets as detail views.
+ * Detail bottom sheets: madhab, trust score, score detail, nutrient detail.
  *
  * @module app/scan-result
  */
@@ -34,26 +34,25 @@ import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
 } from "react-native-reanimated";
-import BottomSheet, { BottomSheetScrollView, BottomSheetBackdrop } from "@gorhom/bottom-sheet";
 import { IconButton, LevelUpCelebration, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { type PersonalAlert } from "@/components/scan/PersonalAlerts";
 import { MadhabBottomSheet } from "@/components/scan/MadhabBottomSheet";
-import { MadhabVerdictCard } from "@/components/scan/MadhabVerdictCard";
-import { AlertStrip } from "@/components/scan/AlertStrip";
 import { TrustScoreBottomSheet } from "@/components/scan/TrustScoreBottomSheet";
 import { ScoreDetailBottomSheet } from "@/components/scan/ScoreDetailBottomSheet";
 import { ShareCardView, captureAndShareCard } from "@/components/scan/ShareCard";
 import { NutrientDetailSheet } from "@/components/scan/NutrientDetailSheet";
-import { HalalAnalysisSection } from "@/components/scan/HalalAnalysisSection";
-import { HealthNutritionSection } from "@/components/scan/HealthNutritionSection";
 import { AlternativesSection } from "@/components/scan/AlternativesSection";
 import { VerdictHero } from "@/components/scan/VerdictHero";
-import { BentoGrid } from "@/components/scan/BentoGrid";
 import { ScanBottomBar } from "@/components/scan/ScanBottomBar";
 import { CompactStickyHeader } from "@/components/scan/CompactStickyHeader";
 import { ScanLoadingSkeleton } from "@/components/scan/ScanLoadingSkeleton";
 import { ScanErrorState, ScanNotFoundState } from "@/components/scan/ScanStates";
+import { AlertStripCard, type AlertItem } from "@/components/scan/AlertStripCard";
+import { HalalVerdictCard } from "@/components/scan/HalalVerdictCard";
+import { HealthNutritionCard } from "@/components/scan/HealthNutritionCard";
+import { AdditivesCard } from "@/components/scan/AdditivesCard";
+import type { NutrientItem, DietaryItem, AdditiveItem } from "@/components/scan/scan-types";
 import {
   STATUS_CONFIG,
   MADHAB_LABEL_KEY,
@@ -63,9 +62,9 @@ import {
 } from "@/components/scan/scan-constants";
 import { trpc } from "@/lib/trpc";
 import { useScanBarcode } from "@/hooks/useScan";
-import { useTranslation, useHaptics, useAddFavorite, useRemoveFavorite, useCreateReview, useFavoritesList, useMe } from "@/hooks";
+import { useTranslation, useHaptics, useAddFavorite, useRemoveFavorite, useFavoritesList, useMe } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
-import { brand as brandTokens, glass, gold, lightTheme } from "@/theme/colors";
+import { brand as brandTokens, glass, lightTheme } from "@/theme/colors";
 import { fontSize as fontSizeTokens, fontWeight as fontWeightTokens } from "@/theme/typography";
 import { spacing, radius } from "@/theme/spacing";
 import type { NutrientLevel } from "@/services/api/types";
@@ -112,16 +111,13 @@ export default function ScanResultScreen() {
   const boycott = scanMutation.data?.boycott ?? null;
   const offExtras = scanMutation.data?.offExtras ?? null;
   const healthScore = scanMutation.data?.healthScore ?? null;
-  const madhabVerdicts = scanMutation.data?.madhabVerdicts ?? [];
-  const ingredientRulings = useMemo(
-    () => scanMutation.data?.ingredientRulings ?? [],
-    [scanMutation.data?.ingredientRulings]
+  const madhabVerdicts = useMemo(
+    () => scanMutation.data?.madhabVerdicts ?? [],
+    [scanMutation.data?.madhabVerdicts]
   );
   const levelUp = scanMutation.data?.levelUp ?? null;
   const dietaryAnalysis = scanMutation.data?.dietaryAnalysis ?? null;
   const nutrientBreakdown = scanMutation.data?.nutrientBreakdown ?? null;
-  const specialProduct = scanMutation.data?.specialProduct ?? null;
-  const scoreExclusion = scanMutation.data?.scoreExclusion ?? null;
   const additiveHealthEffects = scanMutation.data?.additiveHealthEffects ?? {};
   const meQuery = useMe({ enabled: hasStoredTokens() });
   const isGuest = !meQuery.data && (!hasStoredTokens() || meQuery.isError);
@@ -269,12 +265,6 @@ export default function ScanResultScreen() {
   } | null>(null);
   const handleCloseNutrientDetail = useCallback(() => setSelectedNutrient(null), []);
 
-  // ── Sheet Refs (BentoGrid tile → detail sheets) ──
-  const halalSheetRef = useRef<BottomSheet>(null);
-  const healthSheetRef = useRef<BottomSheet>(null);
-  const alertsSheetRef = useRef<BottomSheet>(null);
-  const alternativesSheetRef = useRef<BottomSheet>(null);
-
   // ── Scroll-Interpolated Sticky Header ──────────────
   const scrollY = useSharedValue(0);
   const scrollHandler = useAnimatedScrollHandler({
@@ -285,10 +275,6 @@ export default function ScanResultScreen() {
 
   // ── Product Image Preview Modal ──────────────
   const [showImagePreview, setShowImagePreview] = useState(false);
-
-  // ── User Vote (backend-synced) ────────────────
-  const [userVote, setUserVote] = useState<"up" | "down" | null>(null);
-  const reviewMutation = useCreateReview();
 
   // ── Favorites (backend-synced OR local for guests) ─────────────────
   const favoritesQuery = useFavoritesList({ limit: 200 });
@@ -450,26 +436,20 @@ export default function ScanResultScreen() {
     });
   }, [product, impact]);
 
-  // ── BentoGrid → Sheet Callbacks ─────────────────
-  const handleOpenHalalSheet = useCallback(() => {
+  // ── Madhab detail sheet handler ─────────────────
+  const handleOpenMadhabSheet = useCallback(() => {
     impact();
-    halalSheetRef.current?.snapToIndex(0);
-  }, [impact]);
-
-  const handleOpenHealthSheet = useCallback(() => {
-    impact();
-    healthSheetRef.current?.snapToIndex(0);
-  }, [impact]);
-
-  const handleOpenAlertsSheet = useCallback(() => {
-    impact();
-    alertsSheetRef.current?.snapToIndex(0);
-  }, [impact]);
-
-  const handleOpenAlternativesSheet = useCallback(() => {
-    impact();
-    alternativesSheetRef.current?.snapToIndex(0);
-  }, [impact]);
+    // Open the madhab bottom sheet by selecting user's madhab or the first verdict
+    const firstVerdict = madhabVerdicts.find((v) => v.madhab === userMadhab) ?? madhabVerdicts[0];
+    if (firstVerdict) {
+      setSelectedMadhab({
+        madhab: firstVerdict.madhab,
+        status: firstVerdict.status as "halal" | "doubtful" | "haram" | "unknown",
+        conflictingAdditives: firstVerdict.conflictingAdditives ?? [],
+        conflictingIngredients: firstVerdict.conflictingIngredients ?? [],
+      });
+    }
+  }, [impact, madhabVerdicts, userMadhab]);
 
   const handleRetry = useCallback(() => {
     hasFired.current = false;
@@ -486,6 +466,82 @@ export default function ScanResultScreen() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [barcode, isViewOnly]);
+
+  // ── Derived data for inline section cards ──────────
+
+  // Alert items for AlertStripCard
+  const alertItems: AlertItem[] = (personalAlerts ?? []).map((a: PersonalAlert) => ({
+    type: a.type,
+    severity: (a.severity === "high" ? "danger" : a.severity === "medium" ? "warning" : "info") as "danger" | "warning" | "info",
+    title: a.title,
+    message: a.description,
+  }));
+
+  // Whether to show alternatives before health (haram/doubtful — Al-Taqwa)
+  const isNonHalal = effectiveHeroStatus === "haram" || effectiveHeroStatus === "doubtful";
+
+  // Nutrient breakdown for HealthNutritionCard
+  const nutrientItems: NutrientItem[] = (nutrientBreakdown ?? []).map((nb: any) => ({
+    key: nb.nutrient,
+    name: nb.nutrient,
+    value: nb.value,
+    unit: nb.unit ?? "g",
+    percentage: nb.dailyValuePercent ?? 0,
+    level: nb.level ?? "moderate",
+    isPositive: !nb.isNegative,
+    indented: false,
+  }));
+
+  // Dietary items — transform flat DietaryAnalysis object into DietaryItem[]
+  const dietaryItems: DietaryItem[] = (() => {
+    if (!dietaryAnalysis) return [];
+    const da = dietaryAnalysis as any;
+    const items: DietaryItem[] = [];
+    const DIETARY_MAP: { key: string; field: string; label: string; icon: string; invert: boolean }[] = [
+      { key: "gluten", field: "containsGluten", label: "Gluten", icon: "grain", invert: true },
+      { key: "lactose", field: "containsLactose", label: "Lactose", icon: "local-drink", invert: true },
+      { key: "palm_oil", field: "containsPalmOil", label: "Huile de palme", icon: "eco", invert: true },
+      { key: "vegetarian", field: "isVegetarian", label: "Végétarien", icon: "spa", invert: false },
+      { key: "vegan", field: "isVegan", label: "Végan", icon: "nature", invert: false },
+    ];
+    for (const { key, field, label, icon, invert } of DIETARY_MAP) {
+      const val = da[field];
+      if (val === null || val === undefined) {
+        items.push({ key, label, status: "unknown", icon });
+      } else if (invert) {
+        items.push({ key, label, status: val ? "contains" : "safe", icon });
+      } else {
+        items.push({ key, label, status: val ? "safe" : "contains", icon });
+      }
+    }
+    return items;
+  })();
+
+  // Additives for AdditivesCard — from halalAnalysis.reasons
+  const additiveItems: AdditiveItem[] = (halalAnalysis?.reasons ?? [])
+    .filter((r: any) => r.type === "additive")
+    .map((r: any) => {
+      const code = r.name?.split(" ")[0] ?? "";
+      const healthEffect = (additiveHealthEffects as Record<string, any>)?.[code];
+      const madhabRulings: Record<string, string> = {};
+      for (const mv of madhabVerdicts ?? []) {
+        const match = (mv.conflictingAdditives ?? []).find((ca: any) => ca.code === code);
+        if (match) madhabRulings[mv.madhab] = match.ruling;
+      }
+      return {
+        code,
+        name: r.name?.replace(/^E\d+[a-z]?\s*/i, "") ?? "",
+        category: r.category ?? "",
+        dangerLevel: (r.status === "haram" ? 1 : r.status === "doubtful" ? 2 : r.status === "halal" ? 4 : 3) as 1 | 2 | 3 | 4,
+        madhabRulings: Object.keys(madhabRulings).length > 0 ? (madhabRulings as any) : undefined,
+        healthEffects: healthEffect ? [{
+          type: healthEffect.type as any,
+          label: healthEffect.type,
+          potential: !healthEffect.confirmed,
+        }] : undefined,
+        scholarlyRefs: r.scholarlyReference ? [{ source: r.scholarlyReference }] : undefined,
+      };
+    });
 
   // ── RENDER: Loading ────────────────────────────
   if (scanMutation.isPending || !scribeComplete) {
@@ -559,67 +615,102 @@ export default function ScanResultScreen() {
         bounces={true}
       >
         {/* ── HERO SECTION ── */}
-        <View style={{ paddingTop: insets.top + 64 }}>
-          <VerdictHero
-            product={product}
-            halalAnalysis={halalAnalysis}
-            certifierData={certifierData}
-            certifierTrustScore={certifierTrustScore}
-            effectiveHeroStatus={effectiveHeroStatus}
-            heroLabel={heroLabel}
-            userMadhab={userMadhab}
-            isStaleData={isStaleData}
-            communityVerifiedCount={communityVerifiedCount}
-            onImagePress={() => setShowImagePreview(true)}
-            onScoreDetailPress={() => setShowScoreDetailSheet(true)}
-          />
-        </View>
-
-        {/* ── BentoGrid Dashboard (replaces inline sections) ── */}
-        <BentoGrid
-          prioritizeAlternatives={effectiveHeroStatus === "haram" || effectiveHeroStatus === "doubtful"}
-          halalAnalysis={halalAnalysis ? {
-            status: halalAnalysis.status ?? "unknown",
-            trustScore: certifierTrustScore,
-            analysisSource: halalAnalysis.analysisSource ?? null,
-          } : null}
-          madhabVerdicts={madhabVerdicts}
-          certifierData={certifierData ? { name: certifierData.name, id: certifierData.id } : null}
-          product={{
-            ingredients: Array.isArray(product.ingredients) ? (product.ingredients as string[]).join(", ") : (product.ingredients as string | null),
-            additives: (product as any).additives ?? null,
-          }}
-          userMadhab={userMadhab}
+        <VerdictHero
+          product={product}
+          halalAnalysis={halalAnalysis}
+          certifierData={certifierData}
+          certifierTrustScore={certifierTrustScore}
           effectiveHeroStatus={effectiveHeroStatus}
-          healthScore={healthScore?.score != null ? { score: healthScore.score, label: healthScore.label ?? "unknown" } : null}
-          offExtras={offExtras}
-          personalAlerts={personalAlerts.map((a) => ({
-            type: a.type,
-            severity: a.severity === "high" ? "danger" as const : a.severity === "medium" ? "warning" as const : "info" as const,
-            title: a.title,
-            message: a.description,
-          }))}
-          alternativesData={(alternativesQuery.data ?? []).map((a: any) => ({
-            id: a.id,
-            name: a.name,
-            brand: a.brand ?? null,
-            imageUrl: a.imageUrl ?? null,
-            halalStatus: a.halalStatus ?? "unknown",
-          }))}
-          alternativesLoading={alternativesQuery.isLoading}
-          onOpenHalalSheet={handleOpenHalalSheet}
-          onOpenHealthSheet={handleOpenHealthSheet}
-          onOpenAlertsSheet={handleOpenAlertsSheet}
-          onOpenAlternativesSheet={handleOpenAlternativesSheet}
+          heroLabel={heroLabel}
+          userMadhab={userMadhab}
+          isStaleData={isStaleData}
+          communityVerifiedCount={communityVerifiedCount}
+          onImagePress={() => setShowImagePreview(true)}
+          onScoreDetailPress={() => setShowScoreDetailSheet(true)}
+          topInset={insets.top + 64}
         />
 
-        {/* ── Community Vote (preserved) ── */}
-        <View style={styles.contentContainer}>
-          {/* ── Legal Disclaimer ── */}
+        {/* ── Content cards — padded container ── */}
+        <View style={{ paddingHorizontal: spacing.xl, gap: spacing.xl, paddingBottom: spacing["6xl"] }}>
+
+          {/* ALERT STRIP (conditional) */}
+          {alertItems.length > 0 && (
+            <AlertStripCard alerts={alertItems} staggerIndex={1} />
+          )}
+
+          {/* HALAL VERDICT CARD */}
+          <HalalVerdictCard
+            madhabVerdicts={madhabVerdicts}
+            userMadhab={userMadhab ?? ""}
+            effectiveHeroStatus={effectiveHeroStatus as any}
+            ingredientCount={ingredients.length}
+            additiveCount={additiveItems.length}
+            onPressMadhab={(verdict) => {
+              setSelectedMadhab({
+                madhab: verdict.madhab,
+                status: verdict.status as "halal" | "doubtful" | "haram" | "unknown",
+                conflictingAdditives: verdict.conflictingAdditives ?? [],
+                conflictingIngredients: verdict.conflictingIngredients ?? [],
+              });
+            }}
+            onPressCard={handleOpenMadhabSheet}
+            staggerIndex={2}
+          />
+
+          {/* Haram/Doubtful: alternatives BEFORE health (Al-Taqwa) */}
+          {isNonHalal && (
+            <AlternativesSection
+              variant="priority"
+              alternativesQuery={alternativesQuery}
+              onAlternativePress={(_id: string, bc?: string | null) => {
+                if (bc) router.navigate({ pathname: "/scan-result", params: { barcode: bc } });
+              }}
+              staggerIndex={3}
+            />
+          )}
+
+          {/* HEALTH & NUTRITION */}
+          <HealthNutritionCard
+            healthScore={healthScore ? { score: healthScore.score ?? 0, label: healthScore.label ?? "unknown" } : null}
+            nutriScore={offExtras?.nutriscoreGrade ?? null}
+            novaGroup={offExtras?.novaGroup ?? null}
+            ecoScore={offExtras?.ecoscoreGrade ?? null}
+            nutrientBreakdown={nutrientItems}
+            dietaryAnalysis={dietaryItems}
+            allergens={allergensTags.map((t_: string) => t_.replace(/^(en|fr):/, "").replace(/-/g, " "))}
+            traces={(offExtras?.tracesTags ?? []).map((t_: string) => t_.replace(/^(en|fr):/, "").replace(/-/g, " "))}
+            onNutrientPress={(nb) => setSelectedNutrient({
+              nutrient: nb.key, value: nb.value, unit: nb.unit,
+              level: nb.level as any, dailyValuePercent: nb.percentage, isNegative: !nb.isPositive,
+            })}
+            onPress={() => {}}
+            staggerIndex={4}
+          />
+
+          {/* ADDITIVES */}
+          {additiveItems.length > 0 && (
+            <AdditivesCard
+              additives={additiveItems}
+              onPressCard={() => {}}
+              staggerIndex={5}
+            />
+          )}
+
+          {/* Halal/Unknown: alternatives AFTER additives */}
+          {!isNonHalal && (
+            <AlternativesSection
+              variant="discover"
+              alternativesQuery={alternativesQuery}
+              onAlternativePress={(_id: string, bc?: string | null) => {
+                if (bc) router.navigate({ pathname: "/scan-result", params: { barcode: bc } });
+              }}
+              staggerIndex={6}
+            />
+          )}
+
+          {/* DISCLAIMER — inline */}
           <View style={styles.disclaimerRow}>
-            <InfoIcon size={14}
-              color={colors.textMuted}
-              style={{ marginTop: 1 }} />
+            <InfoIcon size={14} color={colors.textMuted} style={{ marginTop: 1 }} />
             <Text style={[styles.disclaimerText, { color: colors.textMuted }]}>
               {t.scanResult.disclaimer}
             </Text>
@@ -680,6 +771,8 @@ export default function ScanResultScreen() {
         effectiveHeroStatus={effectiveHeroStatus as HalalStatusKey}
         heroLabel={heroLabel}
         certifierData={certifierData ? { name: certifierData.name } : null}
+        productIsFavorite={productIsFavorite}
+        onToggleFavorite={handleToggleFavorite}
         onTrustScorePress={certifierData ? () => {
           impact();
           setShowTrustScoreSheet(true);
@@ -824,145 +917,6 @@ export default function ScanResultScreen() {
         onClose={handleCloseNutrientDetail}
       />
 
-      {/* ── BentoGrid Detail Sheets ── */}
-      <BottomSheet
-        ref={halalSheetRef}
-        index={-1}
-        snapPoints={["70%", "95%"]}
-        enableDynamicSizing={false}
-        enablePanDownToClose
-        backgroundStyle={{
-          backgroundColor: isDark ? "rgba(18,18,18,1)" : "#ffffff",
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-        }}
-        handleIndicatorStyle={{ backgroundColor: isDark ? gold[500] : gold[700] }}
-        backdropComponent={(props) => (
-          <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.5} />
-        )}
-      >
-        <BottomSheetScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}>
-          <HalalAnalysisSection
-            boycott={boycott}
-            halalAnalysis={halalAnalysis}
-            specialProduct={specialProduct}
-            dietaryAnalysis={dietaryAnalysis}
-            offExtras={offExtras}
-            ingredientRulings={ingredientRulings}
-            ingredients={ingredients}
-            additiveHealthEffects={additiveHealthEffects}
-            product={product}
-            halalStatus={halalStatus}
-            isNewProduct={!!scanMutation.data?.isNewProduct}
-            onVote={(vote) => {
-              impact();
-              setUserVote(vote);
-              if (vote && product?.id) {
-                reviewMutation.mutate({ productId: product.id, rating: vote === "up" ? 5 : 1 });
-              }
-            }}
-            userVote={userVote}
-          />
-          <MadhabVerdictCard
-            madhabVerdicts={madhabVerdicts}
-            certifierData={certifierData_}
-            userMadhab={userMadhab}
-            effectiveHeroStatus={effectiveHeroStatus}
-            onSelectMadhab={(v) => {
-              impact();
-              setSelectedMadhab(v);
-            }}
-          />
-        </BottomSheetScrollView>
-      </BottomSheet>
-
-      <BottomSheet
-        ref={healthSheetRef}
-        index={-1}
-        snapPoints={["60%", "90%"]}
-        enableDynamicSizing={false}
-        enablePanDownToClose
-        backgroundStyle={{
-          backgroundColor: isDark ? "rgba(18,18,18,1)" : "#ffffff",
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-        }}
-        handleIndicatorStyle={{ backgroundColor: isDark ? gold[500] : gold[700] }}
-        backdropComponent={(props) => (
-          <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.5} />
-        )}
-      >
-        <BottomSheetScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}>
-          <HealthNutritionSection
-            healthScore={healthScore}
-            offExtras={offExtras}
-            scoreExclusion={scoreExclusion}
-            dietaryAnalysis={dietaryAnalysis}
-            allergensTags={allergensTags}
-            nutrientBreakdown={nutrientBreakdown}
-            onNutrientPress={(nb) => setSelectedNutrient({
-              nutrient: nb.nutrient, value: nb.value, unit: nb.unit,
-              level: nb.level, dailyValuePercent: nb.dailyValuePercent, isNegative: nb.isNegative,
-            })}
-          />
-        </BottomSheetScrollView>
-      </BottomSheet>
-
-      <BottomSheet
-        ref={alertsSheetRef}
-        index={-1}
-        snapPoints={["45%"]}
-        enableDynamicSizing={false}
-        enablePanDownToClose
-        backgroundStyle={{
-          backgroundColor: isDark ? "rgba(18,18,18,1)" : "#ffffff",
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-        }}
-        handleIndicatorStyle={{ backgroundColor: isDark ? gold[500] : gold[700] }}
-        backdropComponent={(props) => (
-          <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.5} />
-        )}
-      >
-        <BottomSheetScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}>
-          {personalAlerts.length > 0 && (
-            <View style={{ paddingHorizontal: spacing["3xl"] }}>
-              <AlertStrip alerts={personalAlerts} />
-            </View>
-          )}
-        </BottomSheetScrollView>
-      </BottomSheet>
-
-      <BottomSheet
-        ref={alternativesSheetRef}
-        index={-1}
-        snapPoints={["55%", "85%"]}
-        enableDynamicSizing={false}
-        enablePanDownToClose
-        backgroundStyle={{
-          backgroundColor: isDark ? "rgba(18,18,18,1)" : "#ffffff",
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-        }}
-        handleIndicatorStyle={{ backgroundColor: isDark ? gold[500] : gold[700] }}
-        backdropComponent={(props) => (
-          <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.5} />
-        )}
-      >
-        <BottomSheetScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}>
-          <AlternativesSection
-            variant={effectiveHeroStatus === "haram" || effectiveHeroStatus === "doubtful" ? "priority" : "discover"}
-            alternativesQuery={alternativesQuery}
-            onAlternativePress={(_id, bc) => {
-              if (bc) {
-                alternativesSheetRef.current?.close();
-                router.navigate({ pathname: "/scan-result", params: { barcode: bc } });
-              }
-            }}
-          />
-        </BottomSheetScrollView>
-      </BottomSheet>
-
       {/* ── Off-screen Share Card (captured as image) ── */}
       {shareData && (
         <View style={styles.offScreen} pointerEvents="none">
@@ -987,10 +941,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: spacing.xl,
     zIndex: 50,
-  },
-  contentContainer: {
-    paddingHorizontal: spacing["3xl"],
-    paddingTop: spacing["3xl"],
   },
   disclaimerRow: {
     flexDirection: "row" as const,
