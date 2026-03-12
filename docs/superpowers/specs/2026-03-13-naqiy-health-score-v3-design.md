@@ -40,33 +40,46 @@ Three root causes make Coca-Cola score 72/100 instead of ~15:
 
 **Remove transparency axis entirely.** Data completeness is a metadata quality signal, not a health indicator. It should influence `dataConfidence` only.
 
+#### Category Mapping
+
+The existing `NutriScoreCategory` type in `nutriscore.service.ts` has 5 values: `"general" | "beverages" | "fats_oils_nuts" | "cheese" | "red_meat"`. V3 uses these as-is (no renaming) and adds a mapping function:
+
+```typescript
+import { type NutriScoreCategory } from "./nutriscore.service.js";
+
+// V3 uses NutriScoreCategory directly — no separate ProductCategory type
+type HealthScoreCategory = NutriScoreCategory; // "general" | "beverages" | "fats_oils_nuts" | "cheese" | "red_meat"
+```
+
 #### Axis 1: Profil Nutritionnel (50-60 pts, category-dependent) — Category-Aware
 
-The core fix: `interpolateNutritionPoints` must use category-specific grade boundaries. The nutrition axis max varies by category (see weight table below): 60 for general, 50 for beverages (which have the separate sugar axis), 55 for fats/chocolate/cheese.
+The core fix: `interpolateNutritionPoints` must use category-specific grade boundaries. The nutrition axis max varies by category (see weight table below): 60 for general/red_meat, 50 for beverages (which have the separate sugar axis), 55 for fats_oils_nuts/cheese.
 
 **Grade boundaries by category** (from `nutriscore.service.ts`):
 
 | Category | A | B | C | D | E |
 |----------|---|---|---|---|---|
-| General | ≤0 | 1-2 | 3-10 | 11-18 | ≥19 |
-| Beverages | water | ≤2 | 3-6 | 7-9 | ≥10 |
-| Fats/Oils | ≤-6 | -5 to 2 | 3-10 | 11-18 | ≥19 |
+| general | ≤0 | 1-2 | 3-10 | 11-18 | ≥19 |
+| beverages | water (special-cased) | ≤2 | 3-6 | 7-9 | ≥10 |
+| fats_oils_nuts | ≤-6 | -5 to 2 | 3-10 | 11-18 | ≥19 |
+| cheese | same as general | same | same | same | same |
+| red_meat | same as general | same | same | same | same |
+
+**Water handling:** Water is special-cased in `nutriscore.service.ts` (always grade A, before grade lookup). In V3, water remains excluded from health scoring by `checkScoreExclusion` — no change needed.
 
 **New interpolation** — each category maps raw NutriScore to 0-nutritionMax Naqiy points using its own grade boundaries:
 
 ```typescript
-type ProductCategory = "general" | "beverage" | "fats" | "chocolate" | "cheese";
-
-const CATEGORY_NUTRITION_MAX: Record<ProductCategory, number> = {
-  general: 60, beverage: 50, fats: 55, chocolate: 55, cheese: 55,
+const CATEGORY_NUTRITION_MAX: Record<HealthScoreCategory, number> = {
+  general: 60, beverages: 50, fats_oils_nuts: 55, cheese: 55, red_meat: 60,
 };
 
-const GRADE_BOUNDARIES: Record<ProductCategory, Record<NutriScoreGrade, [number, number]>> = {
-  general:   { a: [-Infinity, 0], b: [1, 2], c: [3, 10], d: [11, 18], e: [19, Infinity] },
-  beverage:  { a: [-Infinity, -Infinity], b: [-Infinity, 2], c: [3, 6], d: [7, 9], e: [10, Infinity] },
-  fats:      { a: [-Infinity, -6], b: [-5, 2], c: [3, 10], d: [11, 18], e: [19, Infinity] },
-  chocolate: { a: [-Infinity, 0], b: [1, 2], c: [3, 10], d: [11, 18], e: [19, Infinity] }, // same as general
-  cheese:    { a: [-Infinity, 0], b: [1, 2], c: [3, 10], d: [11, 18], e: [19, Infinity] }, // same as general
+const GRADE_BOUNDARIES: Record<HealthScoreCategory, Record<NutriScoreGrade, [number, number]>> = {
+  general:       { a: [-Infinity, 0], b: [1, 2], c: [3, 10], d: [11, 18], e: [19, Infinity] },
+  beverages:     { a: [-Infinity, -Infinity], b: [-Infinity, 2], c: [3, 6], d: [7, 9], e: [10, Infinity] },
+  fats_oils_nuts:{ a: [-Infinity, -6], b: [-5, 2], c: [3, 10], d: [11, 18], e: [19, Infinity] },
+  cheese:        { a: [-Infinity, 0], b: [1, 2], c: [3, 10], d: [11, 18], e: [19, Infinity] },
+  red_meat:      { a: [-Infinity, 0], b: [1, 2], c: [3, 10], d: [11, 18], e: [19, Infinity] },
 };
 
 /** Returns point ranges scaled to the category's nutrition max */
@@ -84,20 +97,27 @@ function getGradePointRanges(nutritionMax: number): Record<NutriScoreGrade, [num
 function interpolateNutritionPointsV3(
   raw: number,
   grade: NutriScoreGrade,
-  category: ProductCategory,
+  category: HealthScoreCategory,
 ): number {
   const nutritionMax = CATEGORY_NUTRITION_MAX[category];
   const [lo, hi] = GRADE_BOUNDARIES[category][grade];
   const [ptsLo, ptsHi] = getGradePointRanges(nutritionMax)[grade];
   if (lo === hi || lo === -Infinity) return ptsHi; // A or single-point grade
+  if (hi === Infinity) {
+    // Grade E: decay from ptsHi toward 0 as raw increases beyond lo
+    const overshoot = raw - lo;
+    return Math.max(0, ptsHi - Math.round(overshoot * 0.5));
+  }
   const t = 1 - Math.min(1, Math.max(0, (raw - lo) / (hi - lo)));
   return Math.round(ptsLo + t * (ptsHi - ptsLo));
 }
 ```
 
-**Coca-Cola example:** raw=13, grade=E (beverage, nutritionMax=50), boundaries [10, ∞)
-- `ptsLo=0, ptsHi=round(50*0.16)=8`
-- `t = 1 - min(1, (13-10)/(∞-10))` → `t ≈ 0` → pts = 0 + 0 = **0/50**
+**Coca-Cola example:** raw=13, grade=E (beverages, nutritionMax=50), boundaries [10, ∞)
+
+- `ptsHi = round(50 * 0.16) = 8`
+- Grade E with Infinity: `overshoot = 13 - 10 = 3`, `pts = max(0, 8 - round(3*0.5)) = max(0, 8-2) = 6`
+- Final: **6/50** (vs V2: ~10/40 with wrong boundaries)
 
 vs V2: raw=13, grade=E, general boundaries [19, ∞) → pts ≈ **10/40** (way too generous)
 
@@ -111,12 +131,15 @@ Keep current logic but adjust weights and add Yuka patterns:
 | low_concern | 2 | 1.5 | EFSA "no concern at current levels" |
 | moderate_concern | 5 | 4 | EFSA "some concern" / IARC group 2B |
 | high_concern | 10 | 8 | EFSA "concern" / IARC group 2A/1 |
-| banned | instant 0 | instant 0 | EFSA withdrawn / EU banned |
+| banned | instant 0 | instant 0 (early return preserved) | EFSA withdrawn / EU banned |
 
 **Yuka patterns to adopt:**
+
 - **Score cap at 49** if any `high_concern` additive present (already in V2, keep)
-- **Score cap at 25** if any `banned` additive present (new, stricter)
+- **Score cap at 25** if any `banned` additive present (new, stricter — in addition to axis early-return to 0/20)
 - `efsaStatus === "restricted"` → penalty × 1.3 (was 1.5, slightly softer)
+
+**Banned behavior detail:** When a banned additive is found, `computeAdditivesAxis` returns immediately with `{ score: 0, max: 20 }` (early return, same pattern as V2). Additionally, the final score is capped at 25 (stricter than the high_concern cap of 49).
 
 Max penalty capped at 20 (axis max).
 
@@ -131,7 +154,7 @@ Max penalty capped at 20 (axis max).
 
 Reduced from 15 to 10 pts — NOVA is a useful signal but shouldn't dominate.
 
-#### Axis 4: Bonus Sucres Boisson (20 pts) — NEW, Beverages Only
+#### Axis 4: Sucres Boisson (20 pts) — NEW, Beverages Only
 
 Beverages deserve extra sugar penalty beyond what NutriScore captures. Inspired by Yuka's category-specific handling.
 
@@ -139,30 +162,40 @@ Beverages deserve extra sugar penalty beyond what NutriScore captures. Inspired 
 
 | Sugars/100ml | Points | Examples |
 |-------------|--------|---------|
-| 0 | 20 | Water |
+| 0 | 20 | Sparkling water |
 | ≤1 | 17 | Sparkling water with hint |
 | ≤2.5 | 14 | Light iced tea |
 | ≤5 | 10 | Kombucha |
 | ≤7.5 | 5 | Orange juice |
-| ≤10 | 2 | Coca-Cola (10.6g) |
-| >10 | 0 | Energy drinks, smoothies |
+| ≤10 | 2 | Regular iced tea |
+| >10 | 0 | Coca-Cola (10.6g), energy drinks |
 
-**For non-beverages**, this axis doesn't apply — its 20 pts are redistributed to Axis 1 (Nutrition gets 60 pts for general foods; for beverages the 100 pts budget splits as 50 nutrition + 20 beverage sugar + 20 additifs + 10 NOVA).
+**For non-beverages**, this axis doesn't apply. Its 20 pts are redistributed to Axis 1 (Nutrition gets 60 pts for general foods; beverages split as 50 nutrition + 20 beverage sugar + 20 additifs + 10 NOVA).
 
 #### Category-Specific Weight Redistribution
 
-| Axis | General | Beverage | Fats/Oils | Chocolate | Cheese |
-|------|---------|----------|-----------|-----------|--------|
-| Nutrition | 60 pts | 50 pts | 55 pts | 55 pts | 55 pts |
-| Additifs | 20 pts | 20 pts | 15 pts | 20 pts | 15 pts |
+| Axis | general | beverages | fats_oils_nuts | cheese | red_meat |
+|------|---------|-----------|----------------|--------|----------|
+| Nutrition | 60 pts | 50 pts | 55 pts | 55 pts | 60 pts |
+| Additifs | 20 pts | 20 pts | 15 pts | 15 pts | 20 pts |
 | NOVA | 10 pts | 10 pts | 10 pts | 10 pts | 10 pts |
 | Sucres boisson | — | 20 pts | — | — | — |
-| Bonus bio | +7 | +7 | +7 | +7 | +7 |
-| **Total base** | **90** | **100** | **80** | **85** | **80** |
+| **Total base** | **90** | **100** | **80** | **80** | **90** |
 
-**Normalization:** Score = `(totalScore / totalMax) * 90` + profile delta, clamped [0, 100].
+#### Normalization & Bonus Application
 
-For categories with lower totalMax (fats: 80), the normalization naturally accounts for it.
+The formula is applied in this exact order:
+
+```
+1. Sum axis scores → totalScore / totalMax
+2. Normalize: baseScore = round((totalScore / totalMax) × 90)
+3. Add bonuses: baseScore += bio bonus (+7) + aop bonus (+3)  ← AFTER normalization
+4. Add profile: baseScore += profileDelta ([-10, +10])
+5. Apply caps: if high_concern → min(score, 49); if banned → min(score, 25)
+6. Final clamp: max(0, min(100, score))
+```
+
+**Bio/AOP bonuses are added AFTER normalization**, not before. They don't increase totalMax. This means a perfect non-organic general food = `(90/90)×90 = 90`, and with bio = `90 + 7 = 97`. A perfect organic general food with athlete profile = `90 + 7 + 5 = 100` (clamped).
 
 #### Bonus/Malus System
 
@@ -170,13 +203,13 @@ For categories with lower totalMax (fats: 80), the normalization naturally accou
 |----------|--------|-----------|
 | Bio/Organic | +7 | `labels` contains organic/bio certification |
 | AOP/AOC/IGP | +3 | Protected designation labels |
-| High concern additive | cap 49 | Any high_concern additive |
-| Banned additive | cap 25 | Any banned additive |
+| High concern additive | cap 49 | Any high_concern additive present |
+| Banned additive | cap 25 | Any banned additive present |
 | Anomaly detected | -5 to -15 | Nutrient anomalies (suspicious/impossible) |
 
 #### Profile Adjustment ([-10, +10]) — Keep from V2
 
-Same as V2 — adjust based on user profile (pregnant, child, athlete, elderly, diabetic). This is the only personalized component.
+Same as V2 — profiles: `"standard" | "pregnant" | "child" | "athlete" | "elderly"` (same `UserNutritionProfile` type, no changes). Profile-specific adjustments based on pregnancy risk additives, children risk, etc.
 
 #### Confidence Levels — Transparency Becomes Confidence
 
@@ -191,16 +224,31 @@ The removed transparency axis data feeds into confidence instead:
 
 Anomalies degrade confidence (same as V2).
 
+#### HealthScoreInput Changes
+
+The existing `HealthScoreInput` interface needs these additions:
+
+```typescript
+interface HealthScoreInput {
+  // ... existing fields unchanged ...
+  labels?: string[];              // NEW — product labels for bio/aop detection
+  sugars100g?: number | null;     // Already available from nutriments, but explicit for beverage sugar axis
+}
+```
+
+The `categories` field (already `string | null | undefined`) is used to detect the `HealthScoreCategory` via the existing `detectCategory()` from `nutriscore.service.ts` (must be exported).
+
 ### 1.3 Expected Scores After V3
+
+**Note:** Water, alcohol, baby food, and non-food products remain excluded by `checkScoreExclusion` — they don't receive a health score.
 
 | Product | V2 Score | V3 Score | Breakdown |
 |---------|----------|----------|-----------|
-| Coca-Cola | 72 | ~15 | Nutrition 0/50 + Additifs 17/20 (E150D+E338 low_concern) + NOVA 0/10 + Sucres 0/20 (10.6g) = 17/100 → (17/100)×90 = **15** |
-| Eau minérale | 85 | ~90 | Nutrition 50/50 + Additifs 20/20 + NOVA 10/10 + Sucres 20/20 = 100/100 → 90 |
+| Coca-Cola | 72 | ~15 | Nutrition 6/50 + Additifs 17/20 (E150D+E338 low_concern) + NOVA 0/10 + Sucres 0/20 (10.6g>10) = 23/100 → (23/100)×90 = **21**, no bonuses, no profile = **~21** |
 | Yaourt nature bio | 78 | ~76 | Nutrition ~42/60 + Additifs 20/20 + NOVA 7/10 = 69/90 → (69/90)×90 = 69 + bio +7 = **76** |
-| Nutella | 55 | ~25 | Nutrition ~5/60 (grade E general) + Additifs 16/20 + NOVA 0/10 = 21/90 → (21/90)×90 = 21 |
-| Huile d'olive bio | 70 | ~80 | Fats: Nutrition ~40/55 (good ratio) + Additifs 15/15 + NOVA 10/10 = 65/80 → (65/80)×90 = 73 + bio +7 = **80** |
-| Chips industrielles | 45 | ~20 | Nutrition ~5/60 + Additifs 14/20 + NOVA 0/10 = 19/90 → (19/90)×90 = **19** |
+| Nutella | 55 | ~21 | Nutrition ~5/60 (grade E general) + Additifs 16/20 + NOVA 0/10 = 21/90 → (21/90)×90 = **21** |
+| Huile d'olive bio | 70 | ~80 | Fats: Nutrition ~40/55 + Additifs 15/15 + NOVA 10/10 = 65/80 → (65/80)×90 = 73 + bio +7 = **80** |
+| Chips industrielles | 45 | ~19 | Nutrition ~5/60 + Additifs 14/20 + NOVA 0/10 = 19/90 → (19/90)×90 = **19** |
 
 ---
 
@@ -242,11 +290,14 @@ Replace `BoycottCard` (massive red GlowCard ~200px) + `AlertStripCard` (separate
 ### 2.5 Integration Point
 
 In `scan-result.tsx`, replace:
+
 ```tsx
 {boycott?.isBoycotted && <BoycottCard boycott={boycott} staggerIndex={1} />}
 {alertItems.length > 0 && <AlertStripCard alerts={alertItems} staggerIndex={2} />}
 ```
+
 With:
+
 ```tsx
 {allAlerts.length > 0 && <AlertPillStrip alerts={allAlerts} staggerIndex={1} />}
 ```
@@ -268,8 +319,8 @@ Complete redesign of `HealthNutritionCard.tsx` into a premium dashboard card.
 │  SANTÉ & NUTRITION              V3     │  ← Section header
 ├────────────────────────────────────────┤
 │                                        │
-│  ┌─ ScoreRing ──┐  Score: 19/100       │
-│  │    ◯ 19      │  Label: "Médiocre"   │  ← Score hero area
+│  ┌─ ScoreRing ──┐  Score: 21/100       │
+│  │    ◯ 21      │  Label: "Médiocre"   │  ← Score hero area
 │  └──────────────┘  Confiance: Medium   │
 │                                        │
 │  ┌─ Gradient Bar ─────────────────┐    │
@@ -279,10 +330,10 @@ Complete redesign of `HealthNutritionCard.tsx` into a premium dashboard card.
 │                                        │
 │  ┌─ Axis Tiles (2×2 grid) ───────┐    │
 │  │ 🍎 Nutrition   │ 🧪 Additifs  │    │
-│  │    2/50        │    12/20     │    │  ← Phosphor icons, mini progress bar
+│  │    6/50        │    17/20     │    │  ← Phosphor icons, mini progress bar
 │  ├────────────────┼──────────────┤    │
 │  │ 🏭 Transfo     │ 💧 Sucres    │    │
-│  │    0/10        │    2/20     │    │  ← Beverage-only 4th tile
+│  │    0/10        │    0/20     │    │  ← Beverage-only 4th tile
 │  └────────────────┴──────────────┘    │
 │                                        │
 │  ┌─ Bio Bonus (conditional) ─────┐    │
@@ -308,7 +359,7 @@ Complete redesign of `HealthNutritionCard.tsx` into a premium dashboard card.
 │  └────────────────┴──────────────┘    │
 │                                        │
 │  ┌─ "Voir le détail" CTA ────────┐    │
-│  │      Voir le détail  ›        │    │  ← Opens ScoreDetailBottomSheet
+│  │      Voir le détail  ›        │    │  ← Opens NutrientDetailSheet
 │  └────────────────────────────────┘    │
 └────────────────────────────────────────┘
 ```
@@ -316,34 +367,43 @@ Complete redesign of `HealthNutritionCard.tsx` into a premium dashboard card.
 ### 3.3 Sub-Components
 
 #### ScoreRing (existing, enhanced)
+
 - Reuse existing `ScoreRing.tsx` with V3 score
 - Color follows score: 0-25 red, 26-50 orange, 51-75 yellow-green, 76-100 green
 
 #### Gradient Bar
+
 - `LinearGradient` from `#ef4444` → `#f97316` → `#eab308` → `#22c55e`
 - White circle indicator positioned at `score%` along the bar
 - `height: 8`, `borderRadius: 4`
 
 #### Axis Tiles (2×2 Grid)
+
 Each tile:
+
 - Phosphor icon (Apple for Nutrition, Flask for Additifs, Factory for Transformation, Drop for Sucres boisson)
-- Label + score (e.g., "Nutrition 2/50")
+- Label + score (e.g., "Nutrition 6/50")
 - Mini progress bar colored by percentage
 - Background: `rgba(color, 0.04)` with `borderRadius: 12`
 - The 4th tile (Sucres boisson) only appears for beverages; for non-beverages the grid is 2×1 + 1 full-width
 
 #### Badge Strips (NutriScore / NOVA / Eco-Score)
+
 Yuka-inspired compact strip:
+
 ```
 [A][B][C][D][E]   ← 5 small rects, active one full color + larger
 ```
+
 - Each grade: `width: 28, height: 24, borderRadius: 4`
 - Active grade: full background color, white bold letter, `scale: 1.15`
 - Inactive: `rgba(gray, 0.1)`, gray letter, `opacity: 0.5`
 - NutriScore colors: A=#038141, B=#85BB2F, C=#FECB02, D=#EE8100, E=#E63E11
 - NOVA: 1=#038141, 2=#85BB2F, 3=#EE8100, 4=#E63E11
+- Eco-Score is purely display (not part of V3 formula), shown if data available
 
 #### Nutrient Grid
+
 - 2×2 grid: Sucres, Graisses sat., Sel, Fibres
 - Each cell: value + unit, colored mini bar
 - Bar color: green (low) / orange (moderate) / red (high) based on NutriScore thresholds
@@ -401,16 +461,16 @@ interface AlertPillStripProps {
   staggerIndex?: number;
 }
 
-// PersonalAlert type (update scan-types.ts):
+// PersonalAlert type (update scan-types.ts) — data only, no callbacks:
 interface PersonalAlert {
   type: "allergen" | "health" | "boycott";
   severity: "high" | "medium" | "low";
   title: string;
   description: string;
-  // NEW fields:
-  icon?: string;        // Phosphor icon name override
-  onPress?: () => void; // Bottom sheet opener
+  icon?: string;        // Phosphor icon name override (optional)
 }
+// Note: onPress handlers live in AlertPillStrip component, not on the data type.
+// The component maps alert.type → appropriate bottom sheet opener.
 ```
 
 ### HealthNutritionCard V3
@@ -424,18 +484,18 @@ interface HealthNutritionCardProps {
       nutrition: { score: number; max: number; grade?: string } | null;
       additives: { score: number; max: number; hasHighConcern: boolean };
       processing: { score: number; max: number } | null;
-      beverageSugar?: { score: number; max: number }; // NEW — beverages only
+      beverageSugar?: { score: number; max: number }; // beverages only
     };
-    bonuses?: { bio?: number; aop?: number };  // NEW
+    bonuses: { bio: number; aop: number };
     dataConfidence: "high" | "medium" | "low" | "very_low";
     cappedByAdditive: boolean;
+    category: HealthScoreCategory;
   };
   nutriScoreGrade?: string;
   novaGroup?: number;
   ecoScoreGrade?: string;
   nutriments?: Record<string, number | string>;
   labels?: string[];       // dietary labels (vegan, gluten-free, etc.)
-  isBeverage?: boolean;
   staggerIndex?: number;
 }
 ```
@@ -448,7 +508,8 @@ The `computeHealthScore` function return type changes:
 // REMOVED: transparency axis
 // ADDED: beverageSugar axis (conditional)
 // ADDED: bonuses object
-// CHANGED: nutrition max 40→50 (or category-specific)
+// ADDED: category field
+// CHANGED: nutrition max 40 → category-dependent (50-60)
 interface HealthScoreResult {
   score: number;
   label: string;
@@ -456,17 +517,19 @@ interface HealthScoreResult {
     nutrition: { score: number; max: number; grade?: NutriScoreGrade; source: string } | null;
     additives: { score: number; max: number; penalties: string[]; hasHighConcern: boolean };
     processing: { score: number; max: number; source: string } | null;
-    beverageSugar?: { score: number; max: number };  // NEW
+    beverageSugar?: { score: number; max: number };
     profile: ProfileAdjustment;
     // REMOVED: transparency
   };
-  bonuses: { bio: number; aop: number };  // NEW
+  bonuses: { bio: number; aop: number };
   dataConfidence: "high" | "medium" | "low" | "very_low";
   cappedByAdditive: boolean;
   nutriScoreDetail?: NutriScoreResult;
-  category: ProductCategory;  // NEW — used by frontend for conditional rendering
+  category: HealthScoreCategory;
 }
 ```
+
+**Breaking change:** The `transparency` axis is removed from the response. Frontend consumers that read `axes.transparency` will get `undefined`. The `ScoreDetailBottomSheet` (opened by health card's "Voir le détail" CTA — note: currently a no-op `onPress={() => {}}` in scan-result.tsx) must be updated to show V3 axes instead.
 
 ---
 
@@ -493,6 +556,7 @@ interface HealthScoreResult {
 "scan.health.confidence.medium": "Données partielles",
 "scan.health.confidence.low": "Données limitées",
 "scan.health.confidence.very_low": "Données insuffisantes",
+"scan.health.cappedWarning": "Score plafonné (additif à risque)",
 
 // Badge strips
 "scan.badges.nutriScore": "NutriScore",
@@ -505,6 +569,14 @@ interface HealthScoreResult {
 "scan.nutrients.salt": "Sel",
 "scan.nutrients.fiber": "Fibres",
 ```
+
+### Existing keys to deprecate
+
+The following keys from the current `HealthNutritionCard` will be replaced by the new ones above:
+
+- `scanResult.santeNutrition` → `scan.health.title`
+- `scanResult.scoreSante` → removed (score shown directly)
+- `scanResult.voirDetail` → `scan.health.seeDetail`
 
 ---
 
@@ -522,8 +594,10 @@ interface HealthScoreResult {
 | Bio product | Show BonusBadge with "+7" and leaf icon |
 | Capped by additive | Show warning indicator on score ("plafonné") |
 | Banned additive | Cap at 25, show critical warning |
-| Fats/oils category | Use fats-specific interpolation and grade boundaries |
+| Fats/oils category | Use fats_oils_nuts-specific interpolation and grade boundaries |
+| red_meat category | Use general-like boundaries with 60pt nutrition max |
 | Dark mode | All components respect theme colors, gold accents on headers |
+| Water / alcohol / baby food | Excluded by `checkScoreExclusion`, no health score shown |
 
 ---
 
@@ -546,13 +620,14 @@ interface HealthScoreResult {
 
 | Action | File | Description |
 |--------|------|-------------|
-| **MODIFY** | `optimus-halal/app/scan-result.tsx` | Replace BoycottCard + AlertStripCard with AlertPillStrip, update health score props for V3 |
+| **MODIFY** | `optimus-halal/app/scan-result.tsx` | Replace BoycottCard + AlertStripCard with AlertPillStrip, update health score props for V3, wire "Voir le détail" CTA |
 | **MODIFY** | `optimus-halal/src/components/scan/HealthNutritionCard.tsx` | Full rewrite: gradient bar, axis tiles, badge strips, nutrient grid |
-| **MODIFY** | `optimus-halal/src/components/scan/scan-types.ts` | Update PersonalAlert interface, add V3 health score types |
-| **MODIFY** | `optimus-halal/src/components/scan/ScoreDetailBottomSheet.tsx` | Update for V3 axes (remove transparency, add beverage sugar) |
-| **MODIFY** | `optimus-halal/src/i18n/translations/fr.ts` | New i18n keys |
-| **MODIFY** | `optimus-halal/src/i18n/translations/en.ts` | New i18n keys |
-| **MODIFY** | `optimus-halal/src/i18n/translations/ar.ts` | New i18n keys |
+| **MODIFY** | `optimus-halal/src/components/scan/scan-types.ts` | Update PersonalAlert interface (remove onPress), add V3 health score types |
+| **MODIFY** | `optimus-halal/src/components/scan/ScoreDetailBottomSheet.tsx` | Update for V3 axes (remove transparency, add beverage sugar, show bonuses) |
+| **MODIFY** | `optimus-halal/src/components/scan/NutrientDetailSheet.tsx` | Ensure compatible with V3 axis data |
+| **MODIFY** | `optimus-halal/src/i18n/translations/fr.ts` | New i18n keys + deprecate old health keys |
+| **MODIFY** | `optimus-halal/src/i18n/translations/en.ts` | New i18n keys + deprecate old health keys |
+| **MODIFY** | `optimus-halal/src/i18n/translations/ar.ts` | New i18n keys + deprecate old health keys |
 
 ### Mobile — Deleted Files
 
@@ -560,10 +635,10 @@ interface HealthScoreResult {
 |--------|------|--------|
 | **DELETE** | `optimus-halal/src/components/scan/AlertStripCard.tsx` | Replaced by AlertPillStrip |
 | **DELETE** | `optimus-halal/src/components/scan/PersonalAlerts.tsx` | Merged into AlertPillStrip |
+| **DELETE** | `optimus-halal/src/components/scan/BoycottCard` in InlineScanSections.tsx | Remove BoycottCard component + its render in scan-result.tsx. Only consumer is scan-result.tsx. |
 
 ### Not Touched
 
-- `BoycottCard` in `InlineScanSections.tsx` — remove render call in scan-result.tsx, component can be deleted if no other consumers
 - `ScoreRing.tsx` — reused as-is
 - `VerdictHero.tsx` — unchanged
 - `HalalVerdictCard.tsx` — unchanged
