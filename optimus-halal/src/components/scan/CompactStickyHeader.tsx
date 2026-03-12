@@ -31,8 +31,10 @@ import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { HeartIcon } from "phosphor-react-native";
+
 import { useTheme } from "@/hooks/useTheme";
-import { glass } from "@/theme/colors";
+import { glass, halalStatus as halalStatusTokens } from "@/theme/colors";
 import { fontSize as fontSizeTokens, fontWeight as fontWeightTokens } from "@/theme/typography";
 import { spacing, radius } from "@/theme/spacing";
 import { STATUS_CONFIG, type HalalStatusKey } from "./scan-constants";
@@ -49,6 +51,8 @@ export interface CompactStickyHeaderProps {
   heroLabel: string;
   certifierData: { name: string; logoUrl?: string | null } | null;
   onTrustScorePress?: () => void;
+  productIsFavorite?: boolean;
+  onToggleFavorite?: () => void;
 }
 
 // ── Component ──
@@ -63,6 +67,8 @@ export function CompactStickyHeader({
   heroLabel,
   certifierData,
   onTrustScorePress,
+  productIsFavorite,
+  onToggleFavorite,
 }: CompactStickyHeaderProps) {
   const insets = useSafeAreaInsets();
   const { isDark, colors } = useTheme();
@@ -141,6 +147,22 @@ export function CompactStickyHeader({
               </Text>
             </View>
           )}
+        </Pressable>
+      )}
+
+      {/* Favorite toggle */}
+      {onToggleFavorite && (
+        <Pressable
+          onPress={onToggleFavorite}
+          hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel={productIsFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+        >
+          <HeartIcon
+            size={22}
+            color={productIsFavorite ? halalStatusTokens.haram.base : colors.textMuted}
+            weight={productIsFavorite ? "fill" : "regular"}
+          />
         </Pressable>
       )}
     </View>
