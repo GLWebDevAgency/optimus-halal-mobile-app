@@ -38,7 +38,7 @@ export interface NutrientItem {
   value: number;
   unit: "g" | "mg";
   percentage: number;
-  level: "low" | "moderate" | "high";
+  level: "very_low" | "low" | "moderate" | "high" | "very_high";
   isPositive: boolean;
   indented?: boolean;
 }

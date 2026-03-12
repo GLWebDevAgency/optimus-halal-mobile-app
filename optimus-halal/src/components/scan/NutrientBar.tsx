@@ -32,7 +32,7 @@ export interface NutrientBarProps {
   value: number;
   unit: string;
   percentage: number;         // 0-100 of daily value
-  level: "low" | "moderate" | "high";
+  level: "very_low" | "low" | "moderate" | "high" | "very_high";
   isPositive: boolean;        // fiber/protein = positive
   indented?: boolean;         // "dont saturés" style
   staggerIndex: number;
@@ -42,9 +42,11 @@ export interface NutrientBarProps {
 // ── Level label keys ──
 
 const LEVEL_LABEL_KEYS: Record<string, string> = {
+  very_low: "levelVeryLow",
   low: "levelLow",
   moderate: "levelModerate",
   high: "levelHigh",
+  very_high: "levelVeryHigh",
 };
 
 // ── Component ──

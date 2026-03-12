@@ -168,8 +168,10 @@ export const NOVA_COLORS: Record<number, string> = {
 // ── Nutrient Bar Colors (status-based) ──
 
 export const NUTRIENT_BAR_COLORS = {
-  negative: { low: "#22c55e", moderate: "#f97316", high: "#ef4444" },
-  positive: { low: "#ef4444", moderate: "#f97316", high: "#22c55e" },
+  /** Negative nutrients (fat, sugar, salt): low = good (green), high = bad (red) */
+  negative: { very_low: "#038141", low: "#22c55e", moderate: "#f97316", high: "#ef4444", very_high: "#b91c1c" },
+  /** Positive nutrients (fiber, protein): low = bad (red), high = good (green) */
+  positive: { very_low: "#b91c1c", low: "#ef4444", moderate: "#f97316", high: "#22c55e", very_high: "#038141" },
 } as const;
 
 // ── Letter Spacing Tokens ──

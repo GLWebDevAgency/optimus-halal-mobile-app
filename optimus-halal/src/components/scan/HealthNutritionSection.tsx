@@ -28,20 +28,6 @@ import { NutrientBar } from "@/components/scan/NutrientBar";
 import { HEALTH_SCORE_LABEL_KEYS } from "@/components/scan/scan-constants";
 import type { NutrientLevel, ScoreExclusionReason } from "@/services/api/types";
 
-/** Map 5-tier NutrientLevel to 3-tier level for NutrientBar */
-function mapNutrientLevel(level: NutrientLevel): "low" | "moderate" | "high" {
-  switch (level) {
-    case "very_low":
-    case "low":
-      return "low";
-    case "moderate":
-      return "moderate";
-    case "high":
-    case "very_high":
-      return "high";
-  }
-}
-
 export interface HealthNutritionSectionProps {
   /** Pass-through to ScoreDashboardCard — matches HealthScoreData */
   healthScore: any;
@@ -189,7 +175,7 @@ export function HealthNutritionSection({
                 name={t.scanResult[nb.labelKey as keyof typeof t.scanResult] ?? nb.nutrient.replace(/_/g, " ")}
                 value={nb.value}
                 unit={nb.unit}
-                level={mapNutrientLevel(nb.level)}
+                level={nb.level}
                 percentage={nb.dailyValuePercent}
                 isPositive={!nb.isNegative}
                 staggerIndex={idx}

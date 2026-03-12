@@ -915,9 +915,11 @@ export const fr = {
     scoreTresInsuffisant: "Très insuffisant",
     donneesInsuffisantes: "Données insuffisantes",
     // Nutrient levels
+    levelVeryLow: "Très bas",
     levelLow: "Bas",
     levelModerate: "Modéré",
     levelHigh: "Élevé",
+    levelVeryHigh: "Très élevé",
     // Additive risk levels
     riskHigh: "Risque élevé",
     riskMedium: "Risque modéré",
