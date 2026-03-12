@@ -27,7 +27,6 @@ import { Image } from "expo-image";
 import { ChartBarIcon, ImageBrokenIcon, MagnifyingGlassIcon, QrCodeIcon, UsersThreeIcon } from "phosphor-react-native";
 import Animated, {
   FadeIn,
-  FadeInDown,
   FadeInRight,
   ZoomIn,
   useSharedValue,
@@ -36,15 +35,11 @@ import Animated, {
   useDerivedValue,
   runOnJS,
   withTiming,
-  withRepeat,
-  withSequence,
   Easing,
-  useReducedMotion,
 } from "react-native-reanimated";
-import { LinearGradient } from "expo-linear-gradient";
-import { BlurView } from "expo-blur";
 
 import { CertifierLogo } from "@/components/scan/CertifierLogo";
+import { ScoreRing } from "./ScoreRing";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation, useHaptics } from "@/hooks";
@@ -58,7 +53,6 @@ import { spacing, radius } from "@/theme/spacing";
 import {
   SUSPENSE_DURATION,
   STATUS_CONFIG,
-  HERO_HEIGHT,
   type HalalStatusKey,
   type StatusVisualConfig,
 } from "./scan-constants";
@@ -98,6 +92,10 @@ export interface VerdictHeroProps {
   communityVerifiedCount: number;
   onImagePress: () => void;
   onScoreDetailPress: () => void;
+  /** Callback when trust score ring is pressed */
+  onTrustScorePress?: () => void;
+  /** Top safe-area inset so gradient extends behind status bar */
+  topInset?: number;
 }
 
 // ── Component ──
@@ -114,12 +112,12 @@ export function VerdictHero({
   communityVerifiedCount,
   onImagePress,
   onScoreDetailPress,
+  onTrustScorePress,
+  topInset = 0,
 }: VerdictHeroProps) {
   const { isDark, colors } = useTheme();
   const { t } = useTranslation();
   const { impact } = useHaptics();
-  const reducedMotion = useReducedMotion();
-
   const statusConfig: StatusVisualConfig =
     STATUS_CONFIG[effectiveHeroStatus] ?? STATUS_CONFIG.unknown;
 
@@ -156,90 +154,21 @@ export function VerdictHero({
     width: `${barScale.value * 100}%`,
   }));
 
-  // ── Ambient orb drift ──
-  const orbX = useSharedValue(0);
-  const orbY = useSharedValue(0);
-
-  useEffect(() => {
-    if (!reducedMotion) {
-      orbX.value = withRepeat(
-        withSequence(
-          withTiming(20, { duration: 6000, easing: Easing.inOut(Easing.sin) }),
-          withTiming(-20, { duration: 6000, easing: Easing.inOut(Easing.sin) })
-        ),
-        -1,
-        false
-      );
-      orbY.value = withRepeat(
-        withSequence(
-          withTiming(15, { duration: 5000, easing: Easing.inOut(Easing.sin) }),
-          withTiming(-15, { duration: 5000, easing: Easing.inOut(Easing.sin) })
-        ),
-        -1,
-        false
-      );
-    }
-  }, [reducedMotion]);
-
-  const orbStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: orbX.value }, { translateY: orbY.value }],
-  }));
-
   // ── Render ──
 
   return (
     <View
-      style={styles.heroGradient}
+      style={[styles.heroGradient, topInset > 0 && { paddingTop: topInset }]}
       accessibilityRole="summary"
       accessibilityLabel={heroLabel}
     >
-      {/* L0: Status-tinted gradient base */}
-      <LinearGradient
-        colors={[...gradientColors]}
-        style={StyleSheet.absoluteFill}
-      />
-      {/* L1: Glassmorphic blur overlay — preserves verdict tint */}
-      {Platform.OS === "ios" ? (
-        <BlurView
-          intensity={40}
-          tint={isDark ? "dark" : "light"}
-          style={[StyleSheet.absoluteFill, {
-            backgroundColor: isDark ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.1)",
-          }]}
-        />
-      ) : (
-        <LinearGradient
-          colors={isDark
-            ? statusConfig.gradientDark
-            : statusConfig.gradientLight
-          }
-          locations={[0, 0.45, 1]}
-          style={StyleSheet.absoluteFill}
-        />
-      )}
-      {/* L2: Subtle status-colored accent wash */}
-      <View style={[StyleSheet.absoluteFill, {
-        backgroundColor: `${statusConfig.glowColor}${Platform.OS === "android" ? "12" : "0c"}`,
-      }]} />
-      {/* L3: Bottom fade — blends Hero into PremiumBackground */}
-      <LinearGradient
-        colors={["transparent", isDark ? "#0C0C0C" : "#f3f1ed"]}
-        locations={[0.6, 1]}
-        style={StyleSheet.absoluteFill}
-        pointerEvents="none"
-      />
-      {/* L4: Ambient orb — drifting slowly */}
-      <Animated.View
+      {/* Solid status-tinted background */}
+      <View
         style={[
-          styles.orbContainer,
-          orbStyle,
+          StyleSheet.absoluteFill,
+          { backgroundColor: isDark ? gradientColors[0] : gradientColors[0] },
         ]}
-      >
-        <LinearGradient
-          colors={[`${statusConfig.glowColor}18`, `${statusConfig.glowColor}08`, "transparent"]}
-          style={styles.orbGradient}
-        />
-      </Animated.View>
+      />
 
       {/* ── ROW 1: HERO LAYOUT ── */}
       <Animated.View
@@ -302,6 +231,29 @@ export function VerdictHero({
               {t.scanResult.naqiyScoreLabel}{userMadhab !== "general" && ` · ${t.madhab.options[userMadhab as "hanafi" | "shafii" | "maliki" | "hanbali"].label}`}
             </Text>
           </View>
+
+          {/* Score Ring — Naqiy Signature */}
+          <Animated.View
+            entering={FadeIn.delay(SUSPENSE_DURATION + 50).duration(500)}
+            style={styles.scoreRingContainer}
+          >
+            <Text style={[styles.scoreRingLabel, { color: colors.textMuted }]}>
+              NAQIY SCORE
+            </Text>
+            <PressableScale
+              onPress={onTrustScorePress ? () => { impact(); onTrustScorePress(); } : undefined}
+              disabled={!onTrustScorePress}
+              accessibilityLabel={t.scanResult.naqiyScoreLabel}
+              accessibilityRole="button"
+            >
+              <ScoreRing
+                score={certifierTrustScore ?? null}
+                size={80}
+                label={heroLabel}
+                labelColor={statusConfig.color}
+              />
+            </PressableScale>
+          </Animated.View>
 
           {/* Certifier trust score bar OR verdict fallback */}
           <Animated.View
@@ -470,23 +422,9 @@ export function VerdictHero({
 
 const styles = StyleSheet.create({
   heroGradient: {
-    minHeight: HERO_HEIGHT,
     paddingHorizontal: spacing["3xl"],
-    paddingBottom: spacing["3xl"],
+    paddingBottom: spacing["2xl"],
     overflow: "hidden",
-  },
-  orbContainer: {
-    position: "absolute",
-    top: -80,
-    right: -60,
-    width: 280,
-    height: 280,
-    borderRadius: 140,
-  },
-  orbGradient: {
-    width: 280,
-    height: 280,
-    borderRadius: 140,
   },
   heroSplit: {
     flexDirection: "row",
@@ -672,5 +610,17 @@ const styles = StyleSheet.create({
   certifierHeroBadgeText: {
     fontSize: fontSizeTokens.micro,
     fontWeight: fontWeightTokens.semiBold,
+  },
+  scoreRingContainer: {
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  scoreRingLabel: {
+    fontSize: fontSizeTokens.micro ?? 10,
+    fontWeight: fontWeightTokens.bold ?? "700",
+    textTransform: "uppercase" as const,
+    letterSpacing: 1.0,
+    textAlign: "center" as const,
+    marginBottom: 4,
   },
 });
