@@ -20,16 +20,15 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
-import { ArrowsLeftRightIcon, MagnifyingGlassIcon } from "phosphor-react-native";
-import Animated from "react-native-reanimated";
+import { MagnifyingGlassIcon, SparkleIcon } from "phosphor-react-native";
 
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
-import { brand as brandTokens } from "@/theme/colors";
+import { brand as brandTokens, gold } from "@/theme/colors";
 import { fontSize as fontSizeTokens, fontWeight as fontWeightTokens } from "@/theme/typography";
 import { spacing, radius } from "@/theme/spacing";
-import { entryAnimations } from "@/theme/animations";
 import { AlternativeProductCard } from "@/components/scan/AlternativeProductCard";
+import { SectionCard } from "@/components/scan/SectionCard";
 
 export interface AlternativesSectionProps {
   /** "priority" for haram/doubtful (promoted before health), "discover" for halal (after health) */
@@ -50,43 +49,29 @@ export interface AlternativesSectionProps {
     }> | null | undefined;
   };
   onAlternativePress: (id: string, barcode: string | null) => void;
+  /** Stagger index for SectionCard entry animation delay */
+  staggerIndex?: number;
 }
 
 export function AlternativesSection({
   variant,
   alternativesQuery,
   onAlternativePress,
+  staggerIndex = 0,
 }: AlternativesSectionProps) {
   const { isDark, colors } = useTheme();
   const { t } = useTranslation();
 
   const title = variant === "priority"
-    ? "Des alternatives existent"
-    : t.scanResult.alternativesTitle;
-
-  const subtitle = variant === "priority"
-    ? "Produits similaires certifiés halal"
-    : t.scanResult.alternativesSubtitle;
+    ? t.scanResult.alternativesPriority
+    : t.scanResult.alternativesDiscover;
 
   return (
-    <Animated.View entering={entryAnimations.slideInUp(1)}>
-      {/* Header */}
-      <View style={styles.altHeader}>
-        <View style={styles.altHeaderLeft}>
-          <View style={[styles.altHeaderIcon, { backgroundColor: isDark ? `${brandTokens.gold}25` : `${brandTokens.gold}1A` }]}>
-            <ArrowsLeftRightIcon size={14} color={brandTokens.gold} />
-          </View>
-          <View>
-            <Text style={[styles.altHeaderTitle, { color: colors.textPrimary }]}>
-              {title}
-            </Text>
-            <Text style={[{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }]}>
-              {subtitle}
-            </Text>
-          </View>
-        </View>
-      </View>
-
+    <SectionCard
+      icon={<SparkleIcon size={16} color={isDark ? gold[400] : gold[700]} weight="bold" />}
+      title={title}
+      staggerIndex={staggerIndex}
+    >
       {/* Loading */}
       {alternativesQuery.isLoading && (
         <View style={styles.altLoadingContainer}>
@@ -136,33 +121,11 @@ export function AlternativesSection({
           </Text>
         </View>
       )}
-    </Animated.View>
+    </SectionCard>
   );
 }
 
 const styles = StyleSheet.create({
-  altHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: spacing.lg,
-  },
-  altHeaderLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-  },
-  altHeaderIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  altHeaderTitle: {
-    fontSize: fontSizeTokens.body,
-    fontWeight: fontWeightTokens.black,
-  },
   altLoadingContainer: {
     flexDirection: "row",
     alignItems: "center",
