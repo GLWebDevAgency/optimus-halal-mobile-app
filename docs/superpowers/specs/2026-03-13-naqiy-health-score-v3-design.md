@@ -3,7 +3,7 @@
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development to implement this plan.
 
 **Goal:** Three interconnected changes to the scan-result screen:
-1. **Health Score V3** — Fix the scoring formula (Coca-Cola 72→~19), remove transparency axis, add category-specific weighting, Yuka-level additive penalties
+1. **Health Score V3** — Fix the scoring formula (Coca-Cola 72→~15), remove transparency axis, add category-specific weighting, Yuka-level additive penalties
 2. **Alert Pill Strip** — Replace massive BoycottCard + separate AlertStripCard with a single compact horizontal pill strip
 3. **Health & Nutrition Card** — Redesign from basic card to premium gradient-bar + grid-tile dashboard with Phosphor icons and NutriScore/NOVA badge strips
 
@@ -28,7 +28,7 @@
 
 ### 1.1 Diagnosis — Why V2 Fails
 
-Three root causes make Coca-Cola score 72/100 instead of ~19:
+Three root causes make Coca-Cola score 72/100 instead of ~15:
 
 | Bug | Impact | Example |
 |-----|--------|---------|
@@ -40,9 +40,9 @@ Three root causes make Coca-Cola score 72/100 instead of ~19:
 
 **Remove transparency axis entirely.** Data completeness is a metadata quality signal, not a health indicator. It should influence `dataConfidence` only.
 
-#### Axis 1: Profil Nutritionnel (50 pts) — Category-Aware
+#### Axis 1: Profil Nutritionnel (50-60 pts, category-dependent) — Category-Aware
 
-The core fix: `interpolateNutritionPoints` must use category-specific grade boundaries.
+The core fix: `interpolateNutritionPoints` must use category-specific grade boundaries. The nutrition axis max varies by category (see weight table below): 60 for general, 50 for beverages (which have the separate sugar axis), 55 for fats/chocolate/cheese.
 
 **Grade boundaries by category** (from `nutriscore.service.ts`):
 
@@ -52,39 +52,51 @@ The core fix: `interpolateNutritionPoints` must use category-specific grade boun
 | Beverages | water | ≤2 | 3-6 | 7-9 | ≥10 |
 | Fats/Oils | ≤-6 | -5 to 2 | 3-10 | 11-18 | ≥19 |
 
-**New interpolation** — each category maps raw NutriScore to 0-50 Naqiy points using its own grade boundaries:
+**New interpolation** — each category maps raw NutriScore to 0-nutritionMax Naqiy points using its own grade boundaries:
 
 ```typescript
-type ProductCategory = "general" | "beverage" | "fats";
+type ProductCategory = "general" | "beverage" | "fats" | "chocolate" | "cheese";
+
+const CATEGORY_NUTRITION_MAX: Record<ProductCategory, number> = {
+  general: 60, beverage: 50, fats: 55, chocolate: 55, cheese: 55,
+};
 
 const GRADE_BOUNDARIES: Record<ProductCategory, Record<NutriScoreGrade, [number, number]>> = {
-  general:  { a: [-Infinity, 0], b: [1, 2], c: [3, 10], d: [11, 18], e: [19, Infinity] },
-  beverage: { a: [-Infinity, -Infinity], b: [-Infinity, 2], c: [3, 6], d: [7, 9], e: [10, Infinity] },
-  fats:     { a: [-Infinity, -6], b: [-5, 2], c: [3, 10], d: [11, 18], e: [19, Infinity] },
+  general:   { a: [-Infinity, 0], b: [1, 2], c: [3, 10], d: [11, 18], e: [19, Infinity] },
+  beverage:  { a: [-Infinity, -Infinity], b: [-Infinity, 2], c: [3, 6], d: [7, 9], e: [10, Infinity] },
+  fats:      { a: [-Infinity, -6], b: [-5, 2], c: [3, 10], d: [11, 18], e: [19, Infinity] },
+  chocolate: { a: [-Infinity, 0], b: [1, 2], c: [3, 10], d: [11, 18], e: [19, Infinity] }, // same as general
+  cheese:    { a: [-Infinity, 0], b: [1, 2], c: [3, 10], d: [11, 18], e: [19, Infinity] }, // same as general
 };
 
-const GRADE_POINT_RANGES: Record<NutriScoreGrade, [number, number]> = {
-  a: [50, 50],  // Always max
-  b: [40, 49],
-  c: [25, 39],
-  d: [10, 24],
-  e: [0, 9],
-};
+/** Returns point ranges scaled to the category's nutrition max */
+function getGradePointRanges(nutritionMax: number): Record<NutriScoreGrade, [number, number]> {
+  const m = nutritionMax;
+  return {
+    a: [m, m],                                          // Always max
+    b: [Math.round(m * 0.78), Math.round(m * 0.98)],   // ~78-98%
+    c: [Math.round(m * 0.42), Math.round(m * 0.77)],   // ~42-77%
+    d: [Math.round(m * 0.17), Math.round(m * 0.41)],   // ~17-41%
+    e: [0, Math.round(m * 0.16)],                       // ~0-16%
+  };
+}
 
 function interpolateNutritionPointsV3(
   raw: number,
   grade: NutriScoreGrade,
   category: ProductCategory,
 ): number {
+  const nutritionMax = CATEGORY_NUTRITION_MAX[category];
   const [lo, hi] = GRADE_BOUNDARIES[category][grade];
-  const [ptsLo, ptsHi] = GRADE_POINT_RANGES[grade];
+  const [ptsLo, ptsHi] = getGradePointRanges(nutritionMax)[grade];
   if (lo === hi || lo === -Infinity) return ptsHi; // A or single-point grade
   const t = 1 - Math.min(1, Math.max(0, (raw - lo) / (hi - lo)));
   return Math.round(ptsLo + t * (ptsHi - ptsLo));
 }
 ```
 
-**Coca-Cola example:** raw=13, grade=E (beverage), boundaries [10, ∞)
+**Coca-Cola example:** raw=13, grade=E (beverage, nutritionMax=50), boundaries [10, ∞)
+- `ptsLo=0, ptsHi=round(50*0.16)=8`
 - `t = 1 - min(1, (13-10)/(∞-10))` → `t ≈ 0` → pts = 0 + 0 = **0/50**
 
 vs V2: raw=13, grade=E, general boundaries [19, ∞) → pts ≈ **10/40** (way too generous)
@@ -135,7 +147,7 @@ Beverages deserve extra sugar penalty beyond what NutriScore captures. Inspired 
 | ≤10 | 2 | Coca-Cola (10.6g) |
 | >10 | 0 | Energy drinks, smoothies |
 
-**For non-beverages**, this axis doesn't apply — its 20 pts are redistributed to Axis 1 (Nutrition gets 50 pts for general foods, effectively 70 pts budget split as 50 nutrition + 20 beverage sugar for beverages).
+**For non-beverages**, this axis doesn't apply — its 20 pts are redistributed to Axis 1 (Nutrition gets 60 pts for general foods; for beverages the 100 pts budget splits as 50 nutrition + 20 beverage sugar + 20 additifs + 10 NOVA).
 
 #### Category-Specific Weight Redistribution
 
@@ -181,14 +193,14 @@ Anomalies degrade confidence (same as V2).
 
 ### 1.3 Expected Scores After V3
 
-| Product | V2 Score | V3 Score | Key Reason |
-|---------|----------|----------|------------|
-| Coca-Cola | 72 | ~19 | Nutrition 0/50 + Additifs 12/20 + NOVA 0/10 + Sucres 2/20 = 14/100 normalized ~19 |
-| Eau minérale | 85 | ~95 | Nutrition 50/50 + NOVA 10/10 + Sucres 20/20 = 80/80 → 90 + bio bonus if applicable |
-| Yaourt nature bio | 78 | ~82 | Nutrition 42/60 + Additifs 20/20 + NOVA 7/10 = 69/90 → 69 + bio +7 + profile |
-| Nutella | 55 | ~28 | High sugar/sat fat, additifs moderate, NOVA 4 |
-| Huile d'olive bio | 70 | ~78 | Fats category, good fat ratio, bio +7, NOVA 1 |
-| Chips industrielles | 45 | ~22 | NOVA 4, high salt/fat, additifs, no bio |
+| Product | V2 Score | V3 Score | Breakdown |
+|---------|----------|----------|-----------|
+| Coca-Cola | 72 | ~15 | Nutrition 0/50 + Additifs 17/20 (E150D+E338 low_concern) + NOVA 0/10 + Sucres 0/20 (10.6g) = 17/100 → (17/100)×90 = **15** |
+| Eau minérale | 85 | ~90 | Nutrition 50/50 + Additifs 20/20 + NOVA 10/10 + Sucres 20/20 = 100/100 → 90 |
+| Yaourt nature bio | 78 | ~76 | Nutrition ~42/60 + Additifs 20/20 + NOVA 7/10 = 69/90 → (69/90)×90 = 69 + bio +7 = **76** |
+| Nutella | 55 | ~25 | Nutrition ~5/60 (grade E general) + Additifs 16/20 + NOVA 0/10 = 21/90 → (21/90)×90 = 21 |
+| Huile d'olive bio | 70 | ~80 | Fats: Nutrition ~40/55 (good ratio) + Additifs 15/15 + NOVA 10/10 = 65/80 → (65/80)×90 = 73 + bio +7 = **80** |
+| Chips industrielles | 45 | ~20 | Nutrition ~5/60 + Additifs 14/20 + NOVA 0/10 = 19/90 → (19/90)×90 = **19** |
 
 ---
 
