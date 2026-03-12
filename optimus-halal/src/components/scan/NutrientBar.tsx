@@ -1,198 +1,193 @@
 /**
- * NutrientBar — Per-nutrient horizontal bar with tiered level colors.
+ * NutrientBar — Yuka-Style Per-Nutrient Colored Bar
  *
- * Inspired by Yuka's NutritionFact display: each nutrient gets a
- * colored bar showing its level (very_low → very_high) and %DRV.
+ * Single-row layout with animated fill bar.
+ * Negative nutrients (fat, sugar, salt): red = bad, green = good.
+ * Positive nutrients (fiber, protein): green = good, red = bad.
  *
- * Negative nutrients (fat, sugar, salt) use red for high values.
- * Positive nutrients (fiber, proteins) use green for high values.
+ * @module components/scan/NutrientBar
  */
 
 import React, { useEffect } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
+import { InfoIcon } from "phosphor-react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
-  FadeInRight,
+  withTiming,
+  Easing,
 } from "react-native-reanimated";
+import { useReducedMotion } from "react-native-reanimated";
+
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { spacing, radius } from "@/theme/spacing";
 import { fontSize, fontWeight } from "@/theme/typography";
-import { springNaqiy } from "@/theme/animations";
-import type { NutrientLevel } from "@/services/api/types";
+import { NUTRIENT_BAR_COLORS } from "./scan-constants";
 
-interface NutrientBarProps {
-  label: string;
+// ── Types ──
+
+export interface NutrientBarProps {
+  name: string;
   value: number;
   unit: string;
-  level: NutrientLevel;
-  dailyValuePercent: number;
-  isNegative: boolean;
-  /** Stagger index for entry animation */
-  index?: number;
-  /** Called when the bar is tapped (opens detail sheet) */
-  onPress?: () => void;
+  percentage: number;         // 0-100 of daily value
+  level: "low" | "moderate" | "high";
+  isPositive: boolean;        // fiber/protein = positive
+  indented?: boolean;         // "dont saturés" style
+  staggerIndex: number;
+  onInfoPress?: () => void;
 }
 
-// Color mapping: for negative nutrients, red = bad; for positive, green = good
-const LEVEL_COLORS_NEGATIVE: Record<NutrientLevel, string> = {
-  very_low: "#22c55e",  // excellent (green)
-  low: "#84cc16",       // good (lime)
-  moderate: "#eab308",  // moderate (yellow)
-  high: "#f97316",      // concerning (orange)
-  very_high: "#ef4444", // bad (red)
+// ── Level label keys ──
+
+const LEVEL_LABEL_KEYS: Record<string, string> = {
+  low: "levelLow",
+  moderate: "levelModerate",
+  high: "levelHigh",
 };
 
-const LEVEL_COLORS_POSITIVE: Record<NutrientLevel, string> = {
-  very_low: "#ef4444",  // poor (red)
-  low: "#f97316",       // low (orange)
-  moderate: "#eab308",  // moderate (yellow)
-  high: "#84cc16",      // good (lime)
-  very_high: "#22c55e", // excellent (green)
-};
-
-// Bar fill percentage per level
-const LEVEL_FILL: Record<NutrientLevel, number> = {
-  very_low: 10,
-  low: 30,
-  moderate: 50,
-  high: 75,
-  very_high: 95,
-};
+// ── Component ──
 
 export const NutrientBar = React.memo(function NutrientBar({
-  label,
+  name,
   value,
   unit,
+  percentage,
   level,
-  dailyValuePercent,
-  isNegative,
-  index = 0,
-  onPress,
+  isPositive,
+  indented = false,
+  staggerIndex,
+  onInfoPress,
 }: NutrientBarProps) {
   const { isDark, colors } = useTheme();
   const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
+
+  const colorMap = isPositive ? NUTRIENT_BAR_COLORS.positive : NUTRIENT_BAR_COLORS.negative;
+  const barColor = colorMap[level];
+
+  // Animated bar fill
   const barWidth = useSharedValue(0);
-
-  const LEVEL_KEYS: Record<string, string> = {
-    very_low: "nutrientLevelVeryLow",
-    low: "nutrientLevelLow",
-    moderate: "nutrientLevelModerate",
-    high: "nutrientLevelHigh",
-    very_high: "nutrientLevelVeryHigh",
-  };
-  const levelLabel = (t.scanResult[LEVEL_KEYS[level] as keyof typeof t.scanResult] as string) ?? level.replace(/_/g, " ");
-
-  const levelColor = isNegative
-    ? LEVEL_COLORS_NEGATIVE[level]
-    : LEVEL_COLORS_POSITIVE[level];
-
-  const targetWidth = LEVEL_FILL[level];
+  const targetWidth = Math.min(percentage, 100);
 
   useEffect(() => {
-    barWidth.value = withSpring(targetWidth, springNaqiy);
-  }, [targetWidth]);
+    if (reducedMotion) {
+      barWidth.value = targetWidth;
+    } else {
+      barWidth.value = withTiming(targetWidth, {
+        duration: 800,
+        easing: Easing.out(Easing.cubic),
+      });
+    }
+  }, [targetWidth, reducedMotion]);
 
-  const barAnimStyle = useAnimatedStyle(() => ({
+  const barStyle = useAnimatedStyle(() => ({
     width: `${barWidth.value}%`,
   }));
 
-  const content = (
-    <Animated.View
-      entering={FadeInRight.delay(index * 60).duration(250)}
-      style={styles.container}
+  const levelLabel = (t.scanResult as Record<string, string>)[LEVEL_LABEL_KEYS[level]] ?? level;
+
+  return (
+    <View
+      style={[styles.row, indented && styles.indented]}
+      accessibilityLabel={`${name}: ${value}${unit}, ${levelLabel}, ${percentage}% valeur quotidienne`}
     >
-      {/* Top row: label + value */}
-      <View style={styles.topRow}>
-        <Text style={[styles.label, { color: colors.textPrimary }]} numberOfLines={1}>
-          {label}
-        </Text>
-        <Text style={[styles.value, { color: colors.textSecondary }]}>
-          {value}{unit}
-        </Text>
-      </View>
+      {/* Name */}
+      <Text
+        style={[styles.name, { color: colors.textPrimary }]}
+        numberOfLines={1}
+      >
+        {name}
+      </Text>
+
+      {/* Value */}
+      <Text style={[styles.value, { color: colors.textSecondary }]}>
+        {value}{unit}
+      </Text>
 
       {/* Bar */}
-      <View style={[styles.barTrack, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }]}>
+      <View style={[styles.barTrack, { backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)" }]}>
         <Animated.View
-          style={[
-            styles.barFill,
-            { backgroundColor: levelColor },
-            barAnimStyle,
-          ]}
+          style={[styles.barFill, { backgroundColor: barColor }, barStyle]}
         />
       </View>
 
-      {/* Bottom row: level label + %DRV */}
-      <View style={styles.bottomRow}>
-        <View style={[styles.levelBadge, { backgroundColor: `${levelColor}20` }]}>
-          <Text style={[styles.levelText, { color: levelColor }]}>
-            {levelLabel}
-          </Text>
-        </View>
-        <Text style={[styles.drv, { color: colors.textMuted }]}>
-          {dailyValuePercent}% VNR
-        </Text>
-      </View>
-    </Animated.View>
-  );
+      {/* Level label */}
+      <Text style={[styles.levelText, { color: barColor }]} numberOfLines={1}>
+        {levelLabel}
+      </Text>
 
-  if (onPress) {
-    return <Pressable onPress={onPress}>{content}</Pressable>;
-  }
-  return content;
+      {/* % DV */}
+      <Text style={[styles.percent, { color: colors.textMuted }]}>
+        {percentage}%
+      </Text>
+
+      {/* Info icon */}
+      {onInfoPress && (
+        <Pressable
+          onPress={onInfoPress}
+          hitSlop={8}
+          style={styles.infoButton}
+          accessibilityRole="button"
+          accessibilityLabel={`Détail ${name}`}
+        >
+          <InfoIcon size={16} color={colors.textMuted} />
+        </Pressable>
+      )}
+    </View>
+  );
 });
 
+// ── Styles ──
+
 const styles = StyleSheet.create({
-  container: {
-    marginBottom: spacing.lg,
-  },
-  topRow: {
+  row: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: spacing.xs,
+    height: 36,
+    gap: spacing.sm,
   },
-  label: {
-    fontSize: fontSize.body,
-    fontWeight: fontWeight.medium,
-    flex: 1,
+  indented: {
+    paddingLeft: spacing.lg,
+  },
+  name: {
+    width: 80,
+    fontSize: fontSize.bodySmall,
+    fontWeight: fontWeight.regular,
   },
   value: {
-    fontSize: fontSize.body,
-    fontWeight: fontWeight.semiBold,
-    marginLeft: spacing.md,
+    width: 48,
+    fontSize: fontSize.bodySmall,
+    fontWeight: fontWeight.medium,
+    textAlign: "right",
   },
   barTrack: {
+    flex: 1,
     height: 6,
-    borderRadius: 3,
+    borderRadius: radius.full,
     overflow: "hidden",
   },
   barFill: {
     height: "100%",
-    borderRadius: 3,
-  },
-  bottomRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: spacing.xs,
-  },
-  levelBadge: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 2,
-    borderRadius: radius.sm,
+    borderRadius: radius.full,
   },
   levelText: {
-    fontSize: fontSize.micro,
-    fontWeight: fontWeight.bold,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+    width: 56,
+    fontSize: fontSize.caption,
+    fontWeight: fontWeight.semiBold,
+    textAlign: "center",
   },
-  drv: {
-    fontSize: fontSize.micro,
+  percent: {
+    width: 32,
+    fontSize: fontSize.caption,
+    textAlign: "right",
+  },
+  infoButton: {
+    width: 24,
+    height: 24,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 
