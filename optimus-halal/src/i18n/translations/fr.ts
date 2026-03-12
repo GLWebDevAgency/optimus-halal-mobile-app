@@ -896,6 +896,69 @@ export const fr = {
     favorite: "Favori",
     healthScore: "Score santé",
     share: "Partager",
+    // ── Naqiy Signature v2 keys ──
+    // Section headers
+    alertsPersonnelles: "ALERTES PERSONNELLES",
+    avisEcoles: "AVIS DES 4 ÉCOLES",
+    santeNutrition: "SANTÉ & NUTRITION",
+    additifsDetectes: "ADDITIFS DÉTECTÉS",
+    detailNutritionnel: "Détail nutritionnel",
+    allergenesTitle: "Allergènes",
+    tracesLabel: "Traces",
+    decouvrirAussi: "DÉCOUVRIR AUSSI",
+    // Score labels
+    scoreSante: "Score Santé",
+    scoreExcellent: "Excellent",
+    scoreBon: "Bon",
+    scoreMediocre: "Médiocre",
+    scoreInsuffisant: "Insuffisant",
+    scoreTresInsuffisant: "Très insuffisant",
+    donneesInsuffisantes: "Données insuffisantes",
+    // Nutrient levels
+    levelLow: "Bas",
+    levelModerate: "Modéré",
+    levelHigh: "Élevé",
+    // Additive risk levels
+    riskHigh: "Risque élevé",
+    riskMedium: "Risque modéré",
+    riskLimited: "Risque limité",
+    riskNone: "Sans risque",
+    // Additive categories
+    additiveCategoryPreservative: "Conservateur",
+    additiveCategoryColour: "Colorant",
+    additiveCategoryEmulsifier: "Émulsifiant",
+    additiveCategoryStabiliser: "Stabilisant",
+    additiveCategoryThickener: "Épaississant",
+    additiveCategoryAntioxidant: "Antioxydant",
+    additiveCategoryAcidityRegulator: "Régulateur d'acidité",
+    additiveCategoryFlavourEnhancer: "Exhausteur de goût",
+    additiveCategorySweetener: "Édulcorant",
+    additiveCategoryRaisingAgent: "Agent levant",
+    additiveCategoryAntiCaking: "Anti-agglomérant",
+    additiveCategoryGlazingAgent: "Agent d'enrobage",
+    additiveCategoryHumectant: "Humectant",
+    additiveCategorySequestrant: "Séquestrant",
+    additiveCategoryFoamingAgent: "Agent moussant",
+    additiveCategoryOther: "Autre",
+    // Madhab
+    unanime: "Unanime",
+    decisionNote: "La décision vous appartient.",
+    analyseAlgorithmique: "Analyse algorithmique",
+    // Alternatives
+    voirTout: "Voir tout ({{count}})",
+    aucuneAlternative: "Aucune alternative trouvée",
+    // Action bar
+    ouAcheter: "Où acheter ?",
+    alternativesHalal: "Alternatives halal",
+    // Sticky header
+    conforme: "Conforme",
+    nonConforme: "Non Conforme",
+    doubtfulLabel: "Douteux",
+    // Misc
+    voirDetail: "Voir le détail",
+    donneesAnciennes: "Données anciennes",
+    communityVerified: "Vérifié par {{count}} membres",
+    naqiyScore: "NAQIY SCORE",
   },
 
   // Map
