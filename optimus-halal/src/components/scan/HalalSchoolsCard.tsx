@@ -11,7 +11,7 @@
  * @module components/scan/HalalSchoolsCard
  */
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import Animated, {
   FadeInDown,
@@ -717,7 +717,66 @@ function CertificationContent({
   );
 }
 
-// ── D. Main HalalSchoolsCard shell ──
+// ── D. ScholarlySourcesRibbon subcomponent ──
+
+interface ScholarlySourcesRibbonProps {
+  activeVerdict: MadhabVerdict;
+  onScholarlySourcePress: (sourceRef: string) => void;
+  isDark: boolean;
+}
+
+function ScholarlySourcesRibbon({
+  activeVerdict,
+  onScholarlySourcePress,
+  isDark,
+}: ScholarlySourcesRibbonProps) {
+  const sources = useMemo(() => {
+    const refs = new Set<string>();
+    for (const item of [
+      ...(activeVerdict.conflictingAdditives ?? []),
+      ...(activeVerdict.conflictingIngredients ?? []),
+    ]) {
+      if (item.scholarlyReference) refs.add(item.scholarlyReference);
+    }
+    return [...refs];
+  }, [activeVerdict]);
+
+  if (sources.length === 0) return null;
+
+  const goldColor = isDark ? gold[400] : gold[700];
+
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.ribbonContent}
+      style={styles.ribbonScroll}
+    >
+      {sources.map((ref, index) => {
+        const truncated = ref.length > 30 ? `${ref.slice(0, 30)}…` : ref;
+        return (
+          <Pressable
+            key={`${ref}-${index}`}
+            onPress={() => onScholarlySourcePress(ref)}
+            accessibilityRole="button"
+            accessibilityLabel={ref}
+            style={[
+              styles.ribbonPill,
+              { backgroundColor: "rgba(255,255,255,0.04)" },
+            ]}
+          >
+            <BookOpenIcon size={13} color={goldColor} />
+            <Text style={[styles.ribbonPillText, { color: goldColor }]}>
+              {truncated}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </ScrollView>
+  );
+}
+
+// ── E. Main HalalSchoolsCard shell ──
 
 export function HalalSchoolsCard({
   madhabVerdicts,
@@ -813,6 +872,13 @@ export function HalalSchoolsCard({
       >
         <CertificationContent certifierData={certifierData} isDark={isDark} colors={colors} t={t} />
       </AccordionSection>
+
+      {/* D. Scholarly sources ribbon */}
+      <ScholarlySourcesRibbon
+        activeVerdict={activeVerdict}
+        onScholarlySourcePress={onScholarlySourcePress}
+        isDark={isDark}
+      />
     </SectionCard>
   );
 }
@@ -1043,6 +1109,28 @@ const styles = StyleSheet.create({
   accordionRulingText: {
     fontSize: fontSizeTokens.micro,
     fontWeight: fontWeightTokens.bold,
+  },
+
+  // ScholarlySourcesRibbon
+  ribbonScroll: {
+    marginTop: spacing.md,
+    marginHorizontal: -spacing.xs,
+  },
+  ribbonContent: {
+    paddingHorizontal: spacing.xs,
+    gap: 8,
+  },
+  ribbonPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  ribbonPillText: {
+    fontSize: fontSizeTokens.micro,
+    fontWeight: fontWeightTokens.medium,
   },
 
   // Certification content
