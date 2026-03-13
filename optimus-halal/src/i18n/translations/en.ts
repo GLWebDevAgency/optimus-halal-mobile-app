@@ -723,7 +723,8 @@ export const en: TranslationKeys = {
     ecoScoreDesc: "Environmental impact from A (low) to E (high)",
     halalAnalysisTitle: "DETAILED HALAL ANALYSIS",
     // 3-tab navigation
-    tabHalal: "Halal Analysis",
+    tabHalal: "Halal",
+    tabHealth: "Health",
     tabProfile: "Nutrition & Health",
     tabAlternatives: "Alternatives",
     // Naqiy Health Score
@@ -826,7 +827,7 @@ export const en: TranslationKeys = {
     healthEffectConfirmed: "Confirmed",
     healthEffectPotential: "Potential",
     // V3 — Alternatives
-    alternativesTitle: "Halal Alternatives",
+    alternativesTitle: "Halal alternatives",
     alternativesSubtitle: "Similar halal-certified products",
     alternativesEmpty: "No alternatives found in this category",
     alternativesEmptyDesc: "We don't have halal alternatives for this product type yet.",
@@ -979,6 +980,39 @@ export const en: TranslationKeys = {
     donneesAnciennes: "Stale data",
     communityVerified: "Verified by {{count}} members",
     naqiyScore: "NAQIY SCORE",
+    // ─── Onglet Halal — School opinions ───────
+    schoolHeroTitle: "{{status}} according to {{school}} school",
+    schoolConflicts: "{{count}} conflict(s)",
+    schoolDoubts: "{{count}} doubt(s)",
+    schoolSources: "{{count}} source(s)",
+    schoolNoConflicts: "No conflicts detected",
+    accordionIngredients: "Ingredients",
+    accordionAdditives: "Additives",
+    accordionCertification: "Certification",
+    scholarlySourceTitle: "Scholarly source",
+    // ─── Section Alternatives ──────────────────
+    alternativesCount: "{{count}} found",
+    alternativesBestMatch: "Best match",
+    alternativesMatchExact: "Same type",
+    alternativesMatchCategory: "Same category",
+    alternativesMatchSimilar: "Similar product",
+    alternativesNoneFound: "No alternatives found",
+    alternativesNoneDesc: "We don't have halal alternatives for this product type yet.",
+    alternativesSeeAll: "See all alternatives",
+    alternativesScanned: "Scanned",
+    alternativesAlternative: "Alternative",
+    // ─── Section Feedback ──────────────────────
+    feedbackTitle: "Your feedback matters",
+    feedbackDesc: "Does this product seem incorrectly classified? Report an error or suggest a correction.",
+    feedbackCorrect: "Correct",
+    feedbackReport: "Report",
+    feedbackThanks: "Thanks for your feedback!",
+    feedbackReportVerdict: "Incorrect halal verdict",
+    feedbackReportScore: "Incorrect health score",
+    feedbackReportMissing: "Missing information",
+    feedbackReportOther: "Other",
+    // ─── Certifier ─────────────────────────────
+    certifierTrustScore: "Trust score",
   },
 
   // Map

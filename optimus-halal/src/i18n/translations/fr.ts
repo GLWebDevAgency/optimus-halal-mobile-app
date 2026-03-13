@@ -722,7 +722,8 @@ export const fr = {
     ecoScoreDesc: "Impact environnemental de A (faible) à E (élevé)",
     halalAnalysisTitle: "ANALYSE HALAL DÉTAILLÉE",
     // 3-tab navigation
-    tabHalal: "Analyse Halal",
+    tabHalal: "Halal",
+    tabHealth: "Santé",
     tabProfile: "Nutrition & Santé",
     tabAlternatives: "Alternatives",
     // Naqiy Health Score
@@ -825,7 +826,7 @@ export const fr = {
     healthEffectConfirmed: "Avéré",
     healthEffectPotential: "Potentiel",
     // V3 — Alternatives
-    alternativesTitle: "Alternatives Halal",
+    alternativesTitle: "Alternatives halal",
     alternativesSubtitle: "Produits similaires certifiés halal",
     alternativesEmpty: "Aucune alternative trouvée dans cette catégorie",
     alternativesEmptyDesc: "Nous n'avons pas encore d'alternatives halal pour ce type de produit.",
@@ -988,6 +989,39 @@ export const fr = {
     donneesAnciennes: "Données anciennes",
     communityVerified: "Vérifié par {{count}} membres",
     naqiyScore: "NAQIY SCORE",
+    // ─── Onglet Halal — Avis des écoles ───────
+    schoolHeroTitle: "{{status}} selon l'école {{school}}",
+    schoolConflicts: "{{count}} conflit(s)",
+    schoolDoubts: "{{count}} doute(s)",
+    schoolSources: "{{count}} source(s)",
+    schoolNoConflicts: "Aucun conflit détecté",
+    accordionIngredients: "Ingrédients",
+    accordionAdditives: "Additifs",
+    accordionCertification: "Certification",
+    scholarlySourceTitle: "Source savante",
+    // ─── Section Alternatives ──────────────────
+    alternativesCount: "{{count}} trouvée(s)",
+    alternativesBestMatch: "Meilleure correspondance",
+    alternativesMatchExact: "Même type",
+    alternativesMatchCategory: "Même catégorie",
+    alternativesMatchSimilar: "Produit similaire",
+    alternativesNoneFound: "Aucune alternative trouvée",
+    alternativesNoneDesc: "Nous n'avons pas encore d'alternative halal pour ce type de produit.",
+    alternativesSeeAll: "Voir toutes les alternatives",
+    alternativesScanned: "Scanné",
+    alternativesAlternative: "Alternative",
+    // ─── Section Feedback ──────────────────────
+    feedbackTitle: "Votre avis compte",
+    feedbackDesc: "Ce produit vous semble mal classé ? Signalez une erreur ou suggérez une correction.",
+    feedbackCorrect: "Correct",
+    feedbackReport: "Signaler",
+    feedbackThanks: "Merci pour votre retour !",
+    feedbackReportVerdict: "Verdict halal incorrect",
+    feedbackReportScore: "Score santé incorrect",
+    feedbackReportMissing: "Informations manquantes",
+    feedbackReportOther: "Autre",
+    // ─── Certifieur ────────────────────────────
+    certifierTrustScore: "Score de confiance",
   },
 
   // Map
