@@ -87,6 +87,9 @@ Then add the remaining new types:
 ```typescript
 
 // ─── Certifier Badge ───────────────────────
+// Note: VerdictHero.tsx has a LOCAL CertifierInfo with different shape ({id, name, trustScore, lastVerifiedAt}).
+// This exported type is for the reusable CertifierBadge component. Consider renaming VerdictHero's local type
+// to avoid confusion if you work on both files.
 export interface CertifierInfo {
   name: string;
   shortName: string;
@@ -701,7 +704,7 @@ git commit -m "feat(scan): create new AlternativesSection with Hero+Grid layout 
  * Props:
  *   madhabVerdicts: MadhabVerdict[] (from scan-types.ts, 4 items)
  *   userMadhab: MadhabId
- *   certifierData: { name: string; trustScore: number; logoUrl?: string | null } | null
+ *   certifierData: CertifierInfo | null  (from scan-types.ts — includes shortName needed by CertifierBadge)
  *   ingredientRulings: Array<{ pattern: string; ruling: string; explanation: string; scholarlyReference: string | null }>
  *   onMadhabChange: (madhab: MadhabId) => void
  *   onScholarlySourcePress: (sourceRef: string) => void
@@ -1291,24 +1294,24 @@ Note: Only stage files that actually changed. The list above is the expected set
 
 - Tasks 1, 2, 3 are **fully independent** (can parallelize all 3).
 - Tasks 4, 5 depend on Task 1 (types).
-- Tasks 6 depends on Task 1 (types). Tasks 7, 8 are **independent of each other** (both depend on Task 6 only). Task 9 depends on 7 + 8.
-- Tasks 10a depends on Task 6 (CertifierBadge). 10b depends on 10a. 10c depends on 10b.
-- Tasks 11, 12 are **independent of each other** (both depend on Task 1 types only).
+- Task 6 depends on Task 1 (types). Tasks 7, 8 are **independent of each other** (both depend on Task 6 only). Task 9 depends on 7 + 8.
+- Task 10a depends on Task 1 (types). Task 10b depends on 10a + Task 6 (uses CertifierBadge). 10c depends on 10b.
+- Tasks 11, 12 are **independent of each other** (both depend on Task 3 i18n keys only, no type deps).
 - Task 13a depends on ALL of 1-12. 13b depends on 13a. 13c depends on 13b.
 - Task 14 depends on 13c.
 
+Note: `mushbooh` status from DB is mapped to `doubtful` for UI display — the backend already handles this mapping. Implementers should confirm this in the scan router response.
+
 ```text
 [1] ─┬─ [4] ─── [5]
-     ├─ [2]                          (independent)
-     ├─ [3]                          (independent)
+     ├─ [2]                              (independent)
+     ├─ [3] ─┬─ [11]                     (independent)
+     │        └─ [12]                     (independent)
      │
      ├─ [6] ─┬─ [7] ─┐
-     │        └─ [8] ─┴─ [9]        (7 & 8 parallelize)
+     │        └─ [8] ─┴─ [9]            (7 & 8 parallelize)
      │
-     ├─ [6] ─── [10a] ── [10b] ── [10c]
-     │
-     ├─ [11]                         (independent)
-     └─ [12]                         (independent)
-              ↓ all complete ↓
-         [13a] ── [13b] ── [13c] ── [14]
+     └─ [10a] ── [10b (needs 6)] ── [10c]
+                                            ↓ all complete ↓
+                                       [13a] ── [13b] ── [13c] ── [14]
 ```
