@@ -29,7 +29,6 @@ import Animated, {
   Easing,
   runOnJS,
   useReducedMotion,
-  interpolateColor,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChartBarIcon, ProhibitIcon, HeartIcon, AppleLogoIcon, FlaskIcon, FactoryIcon, DropIcon, LeafIcon } from "phosphor-react-native";
@@ -500,7 +499,7 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
             <ChartBarIcon size={22} color={colors.textMuted} />
           )}
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
-            {healthAxes ? "Sante & Nutrition" : t.scanResult.scoreDetailTitle}
+            {healthAxes ? t.scanResult.healthAndNutrition : t.scanResult.scoreDetailTitle}
           </Text>
         </View>
 
@@ -517,8 +516,8 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
               {/* Nutrition axis */}
               {healthAxes.nutrition && (
                 <HealthAxisBar
-                  label="Nutrition"
-                  subtitle={healthAxes.nutrition.grade ? `Grade ${healthAxes.nutrition.grade.toUpperCase()}` : "Qualite nutritionnelle"}
+                  label={t.scanResult.axisNutrition}
+                  subtitle={healthAxes.nutrition.grade ? `Grade ${healthAxes.nutrition.grade.toUpperCase()}` : t.scanResult.nutritionalQuality}
                   value={healthAxes.nutrition.score}
                   max={healthAxes.nutrition.max}
                   icon={<AppleLogoIcon size={14} color={getBlockColor(Math.round((healthAxes.nutrition.score / healthAxes.nutrition.max) * 100))} />}
@@ -530,8 +529,8 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
 
               {/* Additives axis */}
               <HealthAxisBar
-                label="Additifs"
-                subtitle={healthAxes.additives.hasHighConcern ? "Contient des additifs preoccupants" : "Additifs alimentaires"}
+                label={t.scanResult.axisAdditives}
+                subtitle={healthAxes.additives.hasHighConcern ? t.scanResult.containsConcerningAdditives : t.scanResult.foodAdditives}
                 value={healthAxes.additives.score}
                 max={healthAxes.additives.max}
                 icon={<FlaskIcon size={14} color={getBlockColor(Math.round((healthAxes.additives.score / healthAxes.additives.max) * 100))} />}
@@ -543,8 +542,8 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
               {/* Processing axis */}
               {healthAxes.processing && (
                 <HealthAxisBar
-                  label="Transformation"
-                  subtitle="Niveau de transformation (NOVA)"
+                  label={t.scanResult.axisProcessing}
+                  subtitle={t.scanResult.processingLevel}
                   value={healthAxes.processing.score}
                   max={healthAxes.processing.max}
                   icon={<FactoryIcon size={14} color={getBlockColor(Math.round((healthAxes.processing.score / healthAxes.processing.max) * 100))} />}
@@ -557,8 +556,8 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
               {/* Beverage sugar axis (only for beverages) */}
               {healthAxes.beverageSugar && (
                 <HealthAxisBar
-                  label="Sucres (boisson)"
-                  subtitle="Teneur en sucres ajoutés"
+                  label={t.scanResult.axisBeverageSugar}
+                  subtitle={t.scanResult.addedSugarsContent}
                   value={healthAxes.beverageSugar.score}
                   max={healthAxes.beverageSugar.max}
                   icon={<DropIcon size={14} color={getBlockColor(Math.round((healthAxes.beverageSugar.score / healthAxes.beverageSugar.max) * 100))} />}
@@ -576,14 +575,14 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
                   <View style={[styles.bonusBadge, { backgroundColor: isDark ? "rgba(34,197,94,0.12)" : "rgba(34,197,94,0.08)", borderColor: "rgba(34,197,94,0.25)" }]}>
                     <LeafIcon size={12} color="#22c55e" weight="fill" />
                     <Text style={[styles.bonusBadgeText, { color: "#22c55e" }]}>
-                      Bio +{healthAxes.bonuses.bio}
+                      {t.scanResult.bonusBio} +{healthAxes.bonuses.bio}
                     </Text>
                   </View>
                 )}
                 {healthAxes.bonuses.aop > 0 && (
                   <View style={[styles.bonusBadge, { backgroundColor: isDark ? "rgba(245,158,11,0.12)" : "rgba(245,158,11,0.08)", borderColor: "rgba(245,158,11,0.25)" }]}>
                     <Text style={[styles.bonusBadgeText, { color: "#f59e0b" }]}>
-                      AOP +{healthAxes.bonuses.aop}
+                      {t.scanResult.bonusAop} +{healthAxes.bonuses.aop}
                     </Text>
                   </View>
                 )}
@@ -593,13 +592,13 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
             {/* Category label */}
             <View style={styles.categoryRow}>
               <Text style={[styles.categoryLabel, { color: colors.textMuted }]}>
-                Categorie : {healthAxes.category === "general" ? "Aliment" : healthAxes.category === "beverages" ? "Boisson" : healthAxes.category}
+                {t.scanResult.categoryLabel} : {healthAxes.category === "general" ? t.scanResult.categoryFood : healthAxes.category === "beverages" ? t.scanResult.categoryBeverage : healthAxes.category}
               </Text>
             </View>
 
             {/* Footer */}
             <Text style={[styles.footerNote, { color: colors.textMuted }]}>
-              Score calcule a partir des donnees nutritionnelles, des additifs et du niveau de transformation.
+              {t.scanResult.scoreFooterNote}
             </Text>
           </ScrollView>
         ) : (

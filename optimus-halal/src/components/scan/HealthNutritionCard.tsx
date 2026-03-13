@@ -97,7 +97,7 @@ function getScoreLabel(score: number, t: any): string {
 function GradientBar({ score }: { score: number }) {
   const { isDark } = useTheme();
   return (
-    <View style={styles.gradientBarContainer}>
+    <View accessibilityLabel={`Score: ${score}/100`} style={styles.gradientBarContainer}>
       <LinearGradient
         colors={[...GRADIENT_BAR_COLORS]}
         start={{ x: 0, y: 0 }}
@@ -133,7 +133,7 @@ function AxisTile({ axisKey, data, label }: {
   const Icon = AXIS_ICON_MAP[axisKey] ?? AppleLogoIcon;
 
   return (
-    <View style={[styles.axisTile, {
+    <View accessibilityLabel={`${label}: ${data.score}/${data.max}`} style={[styles.axisTile, {
       backgroundColor: isDark ? `${color}14` : `${color}0A`,
     }]}>
       <View style={styles.axisTileHeader}>
@@ -231,7 +231,7 @@ function NutrientGridCell({ name, value, unit, level, onPress }: {
   const pct = Math.min(100, value * 3); // rough visual scale
 
   return (
-    <Pressable onPress={onPress} style={[styles.nutrientCell, {
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`${name}: ${value}${unit}`} style={[styles.nutrientCell, {
       backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
     }]}>
       <Text style={[styles.nutrientCellName, { color: isDark ? "#d1d5db" : "#4b5563" }]}>

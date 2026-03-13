@@ -38,7 +38,7 @@ import { IconButton, LevelUpCelebration, PremiumBackground } from "@/components/
 import { PressableScale } from "@/components/ui/PressableScale";
 import { MadhabBottomSheet } from "@/components/scan/MadhabBottomSheet";
 import { TrustScoreBottomSheet } from "@/components/scan/TrustScoreBottomSheet";
-import { ScoreDetailBottomSheet } from "@/components/scan/ScoreDetailBottomSheet";
+import { ScoreDetailBottomSheet, type HealthAxesUI } from "@/components/scan/ScoreDetailBottomSheet";
 import { ShareCardView, captureAndShareCard } from "@/components/scan/ShareCard";
 import { NutrientDetailSheet } from "@/components/scan/NutrientDetailSheet";
 import { AlternativesSection } from "@/components/scan/AlternativesSection";
@@ -984,14 +984,17 @@ export default function ScanResultScreen() {
         practices={certifierData?.practices ?? null}
         detail={certifierData?.detail ?? null}
         onClose={handleCloseScoreDetail}
-        healthAxes={healthScore ? {
-          nutrition: (healthScore as any).axes?.nutrition ?? null,
-          additives: (healthScore as any).axes?.additives ?? { score: 0, max: 20, hasHighConcern: false },
-          processing: (healthScore as any).axes?.processing ?? null,
-          beverageSugar: (healthScore as any).axes?.beverageSugar,
-          bonuses: (healthScore as any).bonuses ?? { bio: 0, aop: 0 },
-          category: (healthScore as any).category ?? "general",
-        } : undefined}
+        healthAxes={healthScore ? (() => {
+          const hs = healthScore as unknown as { axes?: { nutrition?: any; additives?: any; processing?: any; beverageSugar?: any }; bonuses?: { bio: number; aop: number }; category?: string };
+          return {
+            nutrition: hs.axes?.nutrition ?? null,
+            additives: hs.axes?.additives ?? { score: 0, max: 20, hasHighConcern: false },
+            processing: hs.axes?.processing ?? null,
+            beverageSugar: hs.axes?.beverageSugar,
+            bonuses: hs.bonuses ?? { bio: 0, aop: 0 },
+            category: hs.category ?? "general",
+          } satisfies HealthAxesUI;
+        })() : undefined}
       />
 
       <MadhabBottomSheet

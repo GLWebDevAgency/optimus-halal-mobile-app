@@ -37,9 +37,6 @@ import {
   type NutriScoreCategory,
   type NutriScoreGrade,
   type NutriScoreResult,
-  GENERAL_GRADE_THRESHOLDS,
-  BEV_GRADE_THRESHOLDS,
-  FATS_GRADE_THRESHOLDS,
 } from "./nutriscore.service.js";
 
 // ── Nutrient Anomaly Detection ──────────────────────────────
@@ -486,7 +483,7 @@ function estimateNovaHeuristic(
   categories: string | null | undefined,
 ): number | null {
   if (additiveCount >= 5) return 4;
-  if (additiveCount >= 3) return 4;
+  if (additiveCount >= 3) return 3;
 
   const cats = (categories ?? "").toLowerCase();
   if (/snacks?|sodas?|confiserie|chips|bonbon|candy|energy.drink/.test(cats)) return 4;
@@ -543,10 +540,7 @@ function computeBeverageSugarAxis(
   const sugars = typeof sugarsVal === "string" ? parseFloat(sugarsVal) : sugarsVal;
   if (isNaN(sugars)) return null;
 
-  // Exact 0g → 20 pts
-  if (sugars === 0) return { score: 20, max: 20 };
-
-  // Walk the table
+  // Walk the table (0g → 20 pts via first entry)
   for (const [threshold, pts] of BEVERAGE_SUGAR_TABLE) {
     if (sugars <= threshold) return { score: pts, max: 20 };
   }
