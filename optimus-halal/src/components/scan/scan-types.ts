@@ -9,12 +9,15 @@
 
 import type { HalalStatusKey } from "./scan-constants";
 
+// ─── Madhab ────────────────────────────────
+export type MadhabId = "hanafi" | "maliki" | "shafii" | "hanbali";
+
 /** A single madhab's verdict on the product.
  * NOTE: Backend returns {madhab, status, conflictingAdditives, conflictingIngredients}
  * — there is NO numeric score per madhab. Trust bars are removed in favor of
  * status-only display (dot + label). */
 export interface MadhabVerdict {
-  madhab: "hanafi" | "shafii" | "maliki" | "hanbali";
+  madhab: MadhabId;
   status: HalalStatusKey;
   conflictingAdditives: Array<{
     code: string;
@@ -83,4 +86,31 @@ export interface PersonalAlert {
   title: string;
   description: string;
   icon?: string;  // Phosphor icon name override (optional)
+}
+
+// ─── Certifier Badge ───────────────────────
+// Note: VerdictHero.tsx has a LOCAL CertifierInfo with different shape ({id, name, trustScore, lastVerifiedAt}).
+// This exported type is for the reusable CertifierBadge component. Consider renaming VerdictHero's local type
+// to avoid confusion if you work on both files.
+export interface CertifierInfo {
+  name: string;
+  shortName: string;
+  logoUrl: string | null;
+  trustScore: number;
+}
+
+// ─── Alternatives UI ───────────────────────
+export interface AlternativeProductUI {
+  barcode: string;
+  name: string;
+  brand: string;
+  imageUrl: string | null;
+  quantity?: string;
+  healthScore: number | null;
+  halalStatus: HalalStatusKey;
+  certifier: CertifierInfo | null;
+  matchReason: string;
+  matchType: "exact" | "category" | "similar";
+  price?: number;
+  availableAt?: string[];
 }
