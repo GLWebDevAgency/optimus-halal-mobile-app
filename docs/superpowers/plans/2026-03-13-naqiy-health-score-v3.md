@@ -292,12 +292,12 @@ describe("computeHealthScore V3 — additives (20 pts, new weights)", () => {
     expect(result.axes.additives.max).toBe(20);
   });
 
-  it("low_concern penalty = 1.5", () => {
+  it("low_concern penalty = 1.5 → round(20-1.5) = 19", () => {
     const result = computeHealthScore(makeInput({
       additives: [makeAdditive({ code: "E330", toxicityLevel: "low_concern" })],
     }));
-    // 20 - round(1.5) = 20 - 2 = 18
-    expect(result.axes.additives.score).toBe(18);
+    // 20 - 1.5 = 18.5 → Math.round(18.5) = 19
+    expect(result.axes.additives.score).toBe(19);
   });
 
   it("moderate_concern penalty = 4", () => {
@@ -1255,9 +1255,9 @@ Expected: No type errors.
 rm optimus-halal/src/components/scan/AlertStripCard.tsx
 ```
 
-Verify `PersonalAlerts.tsx` exists before deleting:
+Note: `PersonalAlerts.tsx` may already be deleted from a prior commit. Safe no-op:
 ```bash
-ls optimus-halal/src/components/scan/PersonalAlerts.tsx 2>/dev/null && rm optimus-halal/src/components/scan/PersonalAlerts.tsx
+ls optimus-halal/src/components/scan/PersonalAlerts.tsx 2>/dev/null && rm optimus-halal/src/components/scan/PersonalAlerts.tsx || echo "Already deleted"
 ```
 
 - [ ] **Step 7: Remove BoycottCard export from InlineScanSections**
@@ -1719,7 +1719,7 @@ export function HealthNutritionCard({
           </Text>
           {healthScore?.dataConfidence && (
             <Text style={[styles.confidenceBadge, { color: colors.textMuted }]}>
-              {(t.scanResult as any)[`confidence${healthScore.dataConfidence.charAt(0).toUpperCase() + healthScore.dataConfidence.slice(1).replace("_", "")}`]
+              {({ high: t.scanResult.confidenceHigh, medium: t.scanResult.confidenceMedium, low: t.scanResult.confidenceLow, very_low: t.scanResult.confidenceVeryLow } as Record<string, string>)[healthScore.dataConfidence]
                 ?? healthScore.dataConfidence}
             </Text>
           )}
@@ -2064,7 +2064,138 @@ Wires 'Voir le détail' CTA to ScoreDetailBottomSheet."
 
 ---
 
-### Task 10: Final Cleanup and Verification
+### Task 10: Update getDataConfidence for V3 Spec
+
+**Files:**
+- Modify: `backend/src/services/health-score.service.ts` (function `getDataConfidence`, lines 569-586)
+
+The spec defines new confidence criteria: `high` = NutriScore computed + NOVA available + ingredients list; `medium` = NutriScore computed OR NOVA available; `low` = Only OFF grade fallback; `very_low` = No nutrition data at all.
+
+- [ ] **Step 1: Update getDataConfidence function**
+
+Replace the existing `getDataConfidence` function:
+
+```typescript
+function getDataConfidence(
+  nutrition: AxisScore | null,
+  nutritionSource: "computed" | "off_grade" | "none",
+  processing: AxisScore | null,
+  processingSource: string | null,
+  additivesCount: number,
+  hasIngredientsList: boolean,
+): HealthScoreResult["dataConfidence"] {
+  const hasNutrition = nutrition != null;
+  const hasProcessing = processing != null;
+  const isComputed = nutritionSource === "computed";
+
+  // High: NutriScore computed + NOVA available + ingredients list
+  if (isComputed && hasProcessing && hasIngredientsList) return "high";
+  // High: both present (even if OFF grade fallback)
+  if (hasNutrition && hasProcessing) return "high";
+  // Medium: one of the two primary axes
+  if (hasNutrition || hasProcessing) return "medium";
+  // Low: at least some additive data
+  if (additivesCount > 0) return "low";
+  // Very low: nothing
+  return "very_low";
+}
+```
+
+- [ ] **Step 2: Update call site in computeHealthScore to pass hasIngredientsList**
+
+In the `computeHealthScore` function, update the call to `getDataConfidence`:
+
+```typescript
+  let dataConfidence = getDataConfidence(
+    nutritionAxis, nutritionAxis?.source ?? "none",
+    processingAxis, processingAxis?.source ?? null,
+    input.additives.length,
+    input.hasIngredientsList,  // NEW parameter
+  );
+```
+
+- [ ] **Step 3: Run tests**
+
+Run: `cd backend && pnpm vitest run src/__tests__/unit/health-score.test.ts`
+Expected: All tests pass (existing confidence tests may need minor updates).
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add backend/src/services/health-score.service.ts
+git commit -m "feat(health-score): update getDataConfidence for V3 spec criteria"
+```
+
+---
+
+### Task 11: Update ScoreDetailBottomSheet for V3 Axes
+
+**Files:**
+- Modify: `optimus-halal/src/components/scan/ScoreDetailBottomSheet.tsx`
+
+The current `ScoreDetailBottomSheet` shows certifier trust score breakdown (4-block semantic bars: ritual, ops, tayyib, transparency). For V3, it needs to also display health score V3 axes when opened from the HealthNutritionCard "Voir le détail" CTA.
+
+Note: The existing sheet is for certifier trust scores. We need to add a **health score detail mode** that shows V3 axes breakdown. Since this is a complex component, the minimal change is:
+
+- [ ] **Step 1: Read the full ScoreDetailBottomSheet to understand its current interface**
+
+Read: `optimus-halal/src/components/scan/ScoreDetailBottomSheet.tsx`
+
+- [ ] **Step 2: Add V3 health axes display mode**
+
+The simplest approach: add an optional `healthAxes` prop. When present, render V3 axis breakdown instead of certifier trust bars. This keeps backward compatibility with existing certifier usage.
+
+Add to the component's props interface:
+
+```typescript
+// Add alongside existing props
+healthAxes?: {
+  nutrition: { score: number; max: number; grade?: string } | null;
+  additives: { score: number; max: number; hasHighConcern: boolean };
+  processing: { score: number; max: number } | null;
+  beverageSugar?: { score: number; max: number };
+  bonuses: { bio: number; aop: number };
+  category: string;
+};
+```
+
+When `healthAxes` is provided, render a simple axis list instead of the certifier blocks:
+- Each axis as a labeled progress bar with score/max
+- Bonus badges if bio or aop > 0
+- Category badge
+
+Implementation details depend on the full component structure — the implementer should read the component first and adapt the V3 display to match the existing visual language.
+
+- [ ] **Step 3: Wire in scan-result.tsx**
+
+Update the `ScoreDetailBottomSheet` usage in `scan-result.tsx` to pass `healthAxes` when `showScoreDetailSheet` is triggered from the health card:
+
+```tsx
+<ScoreDetailBottomSheet
+  visible={showScoreDetailSheet}
+  onClose={() => setShowScoreDetailSheet(false)}
+  // ... existing certifier props ...
+  healthAxes={healthScore ? {
+    nutrition: healthScore.axes?.nutrition ?? null,
+    additives: healthScore.axes?.additives ?? { score: 0, max: 20, hasHighConcern: false },
+    processing: healthScore.axes?.processing ?? null,
+    beverageSugar: healthScore.axes?.beverageSugar,
+    bonuses: healthScore.bonuses ?? { bio: 0, aop: 0 },
+    category: healthScore.category ?? "general",
+  } : undefined}
+/>
+```
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add optimus-halal/src/components/scan/ScoreDetailBottomSheet.tsx optimus-halal/app/scan-result.tsx
+git commit -m "feat(scan): add V3 health axes display to ScoreDetailBottomSheet"
+```
+
+---
+
+### Task 12: Final Cleanup and Verification
 
 - [ ] **Step 1: Verify all deleted files are gone**
 
