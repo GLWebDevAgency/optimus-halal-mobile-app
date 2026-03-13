@@ -13,12 +13,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import {
   HeartIcon,
   CaretRightIcon,
-  AppleIcon,
+  AppleLogoIcon,
   FlaskIcon,
   FactoryIcon,
   DropIcon,
   LeafIcon,
-  SealCheckIcon,
   WarningIcon,
 } from "phosphor-react-native";
 
@@ -116,8 +115,8 @@ function GradientBar({ score }: { score: number }) {
 
 // ── Sub: AxisTile ──
 
-const AXIS_ICON_MAP: Record<string, typeof AppleIcon> = {
-  nutrition: AppleIcon,
+const AXIS_ICON_MAP: Record<string, typeof AppleLogoIcon> = {
+  nutrition: AppleLogoIcon,
   additives: FlaskIcon,
   processing: FactoryIcon,
   beverageSugar: DropIcon,
@@ -131,7 +130,7 @@ function AxisTile({ axisKey, data, label }: {
   const { isDark } = useTheme();
   const pct = data.max > 0 ? data.score / data.max : 0;
   const color = pct >= 0.7 ? "#22c55e" : pct >= 0.4 ? "#f97316" : "#ef4444";
-  const Icon = AXIS_ICON_MAP[axisKey] ?? AppleIcon;
+  const Icon = AXIS_ICON_MAP[axisKey] ?? AppleLogoIcon;
 
   return (
     <View style={[styles.axisTile, {
