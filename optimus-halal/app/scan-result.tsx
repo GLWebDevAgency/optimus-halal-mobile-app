@@ -36,7 +36,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { IconButton, LevelUpCelebration, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
-import { type PersonalAlert } from "@/components/scan/PersonalAlerts";
 import { MadhabBottomSheet } from "@/components/scan/MadhabBottomSheet";
 import { TrustScoreBottomSheet } from "@/components/scan/TrustScoreBottomSheet";
 import { ScoreDetailBottomSheet } from "@/components/scan/ScoreDetailBottomSheet";
@@ -48,11 +47,15 @@ import { ScanBottomBar } from "@/components/scan/ScanBottomBar";
 import { CompactStickyHeader } from "@/components/scan/CompactStickyHeader";
 import { ScanLoadingSkeleton } from "@/components/scan/ScanLoadingSkeleton";
 import { ScanErrorState, ScanNotFoundState } from "@/components/scan/ScanStates";
-import { AlertStripCard, type AlertItem } from "@/components/scan/AlertStripCard";
+import { AlertPillStrip } from "@/components/scan/AlertPillStrip";
 import { HalalVerdictCard } from "@/components/scan/HalalVerdictCard";
 import { HealthNutritionCard } from "@/components/scan/HealthNutritionCard";
 import { AdditivesCard } from "@/components/scan/AdditivesCard";
-import type { NutrientItem, DietaryItem, AdditiveItem } from "@/components/scan/scan-types";
+import { HalalDetailCard } from "@/components/scan/HalalDetailCard";
+import { HalalAnalysisBottomSheet } from "@/components/scan/HalalAnalysisBottomSheet";
+import { CommunityVoteCard, NewProductBanner } from "@/components/scan/InlineScanSections";
+import { HalalActionCard } from "@/components/scan/HalalActionCard";
+import type { NutrientItem, DietaryItem, AdditiveItem, PersonalAlert } from "@/components/scan/scan-types";
 import {
   STATUS_CONFIG,
   MADHAB_LABEL_KEY,
@@ -71,6 +74,12 @@ import type { NutrientLevel } from "@/services/api/types";
 import { useFeatureFlagsStore, useQuotaStore, useLocalFavoritesStore, useLocalScanHistoryStore, useLocalNutritionProfileStore } from "@/store";
 import { isAuthenticated as hasStoredTokens } from "@/services/api";
 import { trackEvent } from "@/lib/analytics";
+
+// ── Non-allergen tags incorrectly tagged by OpenFoodFacts ──
+const NON_ALLERGEN_TAGS = new Set([
+  "pork", "porc", "meat", "viande", "beef", "boeuf",
+  "chicken", "poulet", "horse", "cheval", "rabbit", "lapin",
+]);
 
 // ══════════════════════════════════════════════════════════════
 // MAIN SCREEN
@@ -212,6 +221,24 @@ export default function ScanResultScreen() {
   const personalAlerts: PersonalAlert[] = scanMutation.data?.personalAlerts ?? [];
   const communityVerifiedCount = scanMutation.data?.communityVerifiedCount ?? 0;
   const certifierData = scanMutation.data?.certifierData ?? null;
+  const ingredientRulings = scanMutation.data?.ingredientRulings ?? [];
+  const specialProduct = scanMutation.data?.specialProduct ?? null;
+  const isNewProduct = scanMutation.data?.isNewProduct ?? false;
+
+  // ── Community Vote (local state — no backend mutation yet) ──
+  const [userVote, setUserVote] = useState<"up" | "down" | null>(null);
+  const handleVote = useCallback((vote: "up" | "down" | null) => {
+    impact();
+    setUserVote(vote);
+    if (vote && product) {
+      trackEvent("community_vote", {
+        barcode: product.barcode,
+        product_id: product.id,
+        vote,
+        halal_status: halalStatus,
+      });
+    }
+  }, [impact, product, halalStatus]);
 
   // ── Feature Flags ────────────────────────────
   const { isFeatureEnabled } = useFeatureFlagsStore();
@@ -233,19 +260,19 @@ export default function ScanResultScreen() {
   const [selectedMadhab, setSelectedMadhab] = useState<{
     madhab: string;
     status: "halal" | "doubtful" | "haram" | "unknown";
-    conflictingAdditives: Array<{
+    conflictingAdditives: {
       code: string;
       name: string;
       ruling: string;
       explanation: string;
       scholarlyReference: string | null;
-    }>;
-    conflictingIngredients: Array<{
+    }[];
+    conflictingIngredients: {
       pattern: string;
       ruling: string;
       explanation: string;
       scholarlyReference: string | null;
-    }>;
+    }[];
   } | null>(null);
 
   const handleCloseMadhab = useCallback(() => setSelectedMadhab(null), []);
@@ -257,6 +284,10 @@ export default function ScanResultScreen() {
   // ── Score Detail Bottom Sheet ──────────────
   const [showScoreDetailSheet, setShowScoreDetailSheet] = useState(false);
   const handleCloseScoreDetail = useCallback(() => setShowScoreDetailSheet(false), []);
+
+  // ── Halal Analysis Bottom Sheet ──────────────
+  const [showHalalAnalysisSheet, setShowHalalAnalysisSheet] = useState(false);
+  const handleCloseHalalAnalysis = useCallback(() => setShowHalalAnalysisSheet(false), []);
 
   // ── Nutrient Detail Bottom Sheet ─────────────
   const [selectedNutrient, setSelectedNutrient] = useState<{
@@ -416,17 +447,13 @@ export default function ScanResultScreen() {
 
   const handleFindStores = useCallback(() => {
     impact();
-    if (marketplaceEnabled) {
-      router.navigate({
-        pathname: "/(marketplace)/catalog",
-        params: {
-          ...(product?.name ? { search: product.name } : {}),
-        },
-      } as any);
-    } else {
-      router.navigate("/(tabs)/map");
-    }
-  }, [impact, marketplaceEnabled, product?.name]);
+    router.navigate({
+      pathname: "/(marketplace)/catalog",
+      params: {
+        ...(product?.name ? { search: product.name } : {}),
+      },
+    } as any);
+  }, [impact, product?.name]);
 
   const handleReport = useCallback(() => {
     impact();
@@ -435,21 +462,6 @@ export default function ScanResultScreen() {
       params: { productId: product?.id, productName: product?.name },
     });
   }, [product, impact]);
-
-  // ── Madhab detail sheet handler ─────────────────
-  const handleOpenMadhabSheet = useCallback(() => {
-    impact();
-    // Open the madhab bottom sheet by selecting user's madhab or the first verdict
-    const firstVerdict = madhabVerdicts.find((v) => v.madhab === userMadhab) ?? madhabVerdicts[0];
-    if (firstVerdict) {
-      setSelectedMadhab({
-        madhab: firstVerdict.madhab,
-        status: firstVerdict.status as "halal" | "doubtful" | "haram" | "unknown",
-        conflictingAdditives: firstVerdict.conflictingAdditives ?? [],
-        conflictingIngredients: firstVerdict.conflictingIngredients ?? [],
-      });
-    }
-  }, [impact, madhabVerdicts, userMadhab]);
 
   const handleRetry = useCallback(() => {
     hasFired.current = false;
@@ -469,13 +481,29 @@ export default function ScanResultScreen() {
 
   // ── Derived data for inline section cards ──────────
 
-  // Alert items for AlertStripCard
-  const alertItems: AlertItem[] = (personalAlerts ?? []).map((a: PersonalAlert) => ({
-    type: a.type,
-    severity: (a.severity === "high" ? "danger" : a.severity === "medium" ? "warning" : "info") as "danger" | "warning" | "info",
-    title: a.title,
-    message: a.description,
-  }));
+  // Unified alert array for AlertPillStrip
+  const allAlerts: PersonalAlert[] = useMemo(() => {
+    const alerts: PersonalAlert[] = [];
+
+    // Boycott pill (if active)
+    if (boycott?.isBoycotted) {
+      for (const target of boycott.targets) {
+        alerts.push({
+          type: "boycott",
+          severity: "high",
+          title: `Boycott · ${target.companyName}`,
+          description: target.reasonSummary ?? "",
+        });
+      }
+    }
+
+    // Personal alerts (allergens, health)
+    for (const a of personalAlerts ?? []) {
+      alerts.push(a);
+    }
+
+    return alerts;
+  }, [boycott, personalAlerts]);
 
   // Whether to show alternatives before health (haram/doubtful — Al-Taqwa)
   const isNonHalal = effectiveHeroStatus === "haram" || effectiveHeroStatus === "doubtful";
@@ -483,7 +511,7 @@ export default function ScanResultScreen() {
   // Nutrient breakdown for HealthNutritionCard
   const nutrientItems: NutrientItem[] = (nutrientBreakdown ?? []).map((nb: any) => ({
     key: nb.nutrient,
-    name: nb.nutrient,
+    name: nb.labelKey ? ((t.scanResult as Record<string, string>)[nb.labelKey] ?? nb.nutrient) : nb.nutrient,
     value: nb.value,
     unit: nb.unit ?? "g",
     percentage: nb.dailyValuePercent ?? 0,
@@ -631,11 +659,11 @@ export default function ScanResultScreen() {
         />
 
         {/* ── Content cards — padded container ── */}
-        <View style={{ paddingHorizontal: spacing.xl, gap: spacing.xl, paddingBottom: spacing["6xl"] }}>
+        <View style={{ paddingHorizontal: spacing.xl, gap: spacing.xl, paddingTop: spacing.xl, paddingBottom: spacing["6xl"] }}>
 
-          {/* ALERT STRIP (conditional) */}
-          {alertItems.length > 0 && (
-            <AlertStripCard alerts={alertItems} staggerIndex={1} />
+          {/* ALERT PILL STRIP (boycott + allergens + health — unified) */}
+          {allAlerts.length > 0 && (
+            <AlertPillStrip alerts={allAlerts} staggerIndex={1} />
           )}
 
           {/* HALAL VERDICT CARD */}
@@ -653,7 +681,10 @@ export default function ScanResultScreen() {
                 conflictingIngredients: verdict.conflictingIngredients ?? [],
               });
             }}
-            onPressCard={handleOpenMadhabSheet}
+            onPressCard={() => {
+              impact();
+              setShowHalalAnalysisSheet(true);
+            }}
             staggerIndex={2}
           />
 
@@ -677,7 +708,13 @@ export default function ScanResultScreen() {
             ecoScore={offExtras?.ecoscoreGrade ?? null}
             nutrientBreakdown={nutrientItems}
             dietaryAnalysis={dietaryItems}
-            allergens={allergensTags.map((t_: string) => t_.replace(/^(en|fr):/, "").replace(/-/g, " "))}
+            allergens={allergensTags
+              .filter((t_: string) => {
+                const clean = t_.replace(/^(en|fr):/, "").toLowerCase();
+                // Exclude non-EU14 allergens (e.g. pork, meat) incorrectly tagged by OFF
+                return !NON_ALLERGEN_TAGS.has(clean);
+              })
+              .map((t_: string) => t_.replace(/^(en|fr):/, "").replace(/-/g, " "))}
             traces={(offExtras?.tracesTags ?? []).map((t_: string) => t_.replace(/^(en|fr):/, "").replace(/-/g, " "))}
             onNutrientPress={(nb) => setSelectedNutrient({
               nutrient: nb.key, value: nb.value, unit: nb.unit,
@@ -696,7 +733,18 @@ export default function ScanResultScreen() {
             />
           )}
 
-          {/* Halal/Unknown: alternatives AFTER additives */}
+          {/* HALAL ANALYSIS DETAIL — why status, ingredients, scholarly refs, special product */}
+          <HalalDetailCard
+            halalAnalysis={halalAnalysis}
+            ingredients={ingredients}
+            ingredientRulings={ingredientRulings}
+            specialProduct={specialProduct}
+            halalStatus={halalStatus}
+            additiveHealthEffects={additiveHealthEffects}
+            staggerIndex={6}
+          />
+
+          {/* Halal/Unknown: alternatives AFTER analysis */}
           {!isNonHalal && (
             <AlternativesSection
               variant="discover"
@@ -704,8 +752,53 @@ export default function ScanResultScreen() {
               onAlternativePress={(_id: string, bc?: string | null) => {
                 if (bc) router.navigate({ pathname: "/scan-result", params: { barcode: bc } });
               }}
-              staggerIndex={6}
+              staggerIndex={7}
             />
+          )}
+
+          {/* COMMUNITY ACTIONS — contextual by halal status */}
+          {product && halalStatus === "doubtful" && (
+            <HalalActionCard
+              type="report"
+              productName={product.name}
+              productBarcode={product.barcode}
+              reportLabel={t.scanResult.reportProduct}
+              reportDesc={t.scanResult.reportProductDesc}
+              onReport={handleReport}
+            />
+          )}
+          {product && halalStatus === "halal" && (
+            <HalalActionCard
+              type="share"
+              productName={product.name}
+              productBarcode={product.barcode}
+              shareLabel={t.scanResult.shareAnalysis}
+              shareDesc={t.scanResult.shareAnalysisDesc}
+              shareTagline={t.scanResult.shareTagline}
+            />
+          )}
+          {product && halalStatus === "unknown" && (
+            <HalalActionCard
+              type="request_certification"
+              productName={product.name}
+              productBarcode={product.barcode}
+              certifyLabel={t.scanResult.unknownStatusReport}
+              certifyDesc={t.scanResult.unknownStatusReportDesc}
+            />
+          )}
+
+          {/* COMMUNITY VOTE */}
+          {product && (
+            <CommunityVoteCard
+              onVote={handleVote}
+              userVote={userVote}
+              staggerIndex={8}
+            />
+          )}
+
+          {/* NEW PRODUCT BANNER (conditional) */}
+          {isNewProduct && (
+            <NewProductBanner staggerIndex={9} />
           )}
 
           {/* DISCLAIMER — inline */}
@@ -771,8 +864,6 @@ export default function ScanResultScreen() {
         effectiveHeroStatus={effectiveHeroStatus as HalalStatusKey}
         heroLabel={heroLabel}
         certifierData={certifierData ? { name: certifierData.name } : null}
-        productIsFavorite={productIsFavorite}
-        onToggleFavorite={handleToggleFavorite}
         onTrustScorePress={certifierData ? () => {
           impact();
           setShowTrustScoreSheet(true);
@@ -904,6 +995,17 @@ export default function ScanResultScreen() {
         }
         certifierTrustScoreEditorial={certifierData_?.trustScore ?? null}
         onClose={handleCloseMadhab}
+      />
+
+      <HalalAnalysisBottomSheet
+        visible={showHalalAnalysisSheet}
+        onClose={handleCloseHalalAnalysis}
+        halalAnalysis={halalAnalysis}
+        ingredients={ingredients}
+        ingredientRulings={ingredientRulings}
+        specialProduct={specialProduct}
+        halalStatus={halalStatus}
+        additiveHealthEffects={additiveHealthEffects}
       />
 
       <NutrientDetailSheet
