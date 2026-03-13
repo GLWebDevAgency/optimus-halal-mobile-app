@@ -20,6 +20,7 @@ import {
   Alert,
   Modal,
   Pressable,
+  type LayoutChangeEvent,
 } from "react-native";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
@@ -33,6 +34,9 @@ import Animated, {
   ZoomIn,
   useAnimatedScrollHandler,
   useSharedValue,
+  useAnimatedStyle,
+  interpolate,
+  Extrapolation,
 } from "react-native-reanimated";
 import { IconButton, LevelUpCelebration, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
@@ -44,18 +48,23 @@ import { NutrientDetailSheet } from "@/components/scan/NutrientDetailSheet";
 import { AlternativesSection, adaptLegacyAlternative } from "@/components/scan/AlternativesSection";
 import { VerdictHero } from "@/components/scan/VerdictHero";
 import { ScanBottomBar } from "@/components/scan/ScanBottomBar";
-import { CompactStickyHeader } from "@/components/scan/CompactStickyHeader";
+import { CompactStickyHeader, COMPACT_HEADER_HEIGHT } from "@/components/scan/CompactStickyHeader";
+import { ScanResultTabBar } from "@/components/scan/ScanResultTabBar";
+import { ScanResultPager } from "@/components/scan/ScanResultPager";
+import { HalalSchoolsCard } from "@/components/scan/HalalSchoolsCard";
+import { FeedbackCard } from "@/components/scan/FeedbackCard";
+import { ScholarlySourceSheet } from "@/components/scan/ScholarlySourceSheet";
 import { ScanLoadingSkeleton } from "@/components/scan/ScanLoadingSkeleton";
 import { ScanErrorState, ScanNotFoundState } from "@/components/scan/ScanStates";
 import { AlertPillStrip } from "@/components/scan/AlertPillStrip";
-import { HalalVerdictCard } from "@/components/scan/HalalVerdictCard";
+// HalalVerdictCard replaced by HalalSchoolsCard inside pager
 import { HealthNutritionCard } from "@/components/scan/HealthNutritionCard";
-import { AdditivesCard } from "@/components/scan/AdditivesCard";
-import { HalalDetailCard } from "@/components/scan/HalalDetailCard";
+// AdditivesCard moved inside HalalSchoolsCard
+// HalalDetailCard replaced by HalalSchoolsCard inside pager
 import { HalalAnalysisBottomSheet } from "@/components/scan/HalalAnalysisBottomSheet";
-import { CommunityVoteCard, NewProductBanner } from "@/components/scan/InlineScanSections";
-import { HalalActionCard } from "@/components/scan/HalalActionCard";
-import type { NutrientItem, DietaryItem, AdditiveItem, PersonalAlert } from "@/components/scan/scan-types";
+// CommunityVoteCard/NewProductBanner replaced by FeedbackCard
+// HalalActionCard removed — contextual actions folded into FeedbackCard
+import type { NutrientItem, DietaryItem, PersonalAlert } from "@/components/scan/scan-types";
 import {
   STATUS_CONFIG,
   MADHAB_LABEL_KEY,
@@ -71,7 +80,7 @@ import { brand as brandTokens, glass, lightTheme } from "@/theme/colors";
 import { fontSize as fontSizeTokens, fontWeight as fontWeightTokens } from "@/theme/typography";
 import { spacing, radius } from "@/theme/spacing";
 import type { NutrientLevel } from "@/services/api/types";
-import { useFeatureFlagsStore, useQuotaStore, useLocalFavoritesStore, useLocalScanHistoryStore, useLocalNutritionProfileStore } from "@/store";
+import { useFeatureFlagsStore, useQuotaStore, useLocalFavoritesStore, useLocalScanHistoryStore, useLocalNutritionProfileStore, usePreferencesStore } from "@/store";
 import { isAuthenticated as hasStoredTokens } from "@/services/api";
 import { trackEvent } from "@/lib/analytics";
 
@@ -223,22 +232,6 @@ export default function ScanResultScreen() {
   const certifierData = scanMutation.data?.certifierData ?? null;
   const ingredientRulings = scanMutation.data?.ingredientRulings ?? [];
   const specialProduct = scanMutation.data?.specialProduct ?? null;
-  const isNewProduct = scanMutation.data?.isNewProduct ?? false;
-
-  // ── Community Vote (local state — no backend mutation yet) ──
-  const [userVote, setUserVote] = useState<"up" | "down" | null>(null);
-  const handleVote = useCallback((vote: "up" | "down" | null) => {
-    impact();
-    setUserVote(vote);
-    if (vote && product) {
-      trackEvent("community_vote", {
-        barcode: product.barcode,
-        product_id: product.id,
-        vote,
-        halal_status: halalStatus,
-      });
-    }
-  }, [impact, product, halalStatus]);
 
   // ── Feature Flags ────────────────────────────
   const { isFeatureEnabled } = useFeatureFlagsStore();
@@ -302,6 +295,34 @@ export default function ScanResultScreen() {
     onScroll(event) {
       scrollY.value = event.contentOffset.y;
     },
+  });
+
+  // ── Pager + TabBar state ─────────────────────
+  const [activeTab, setActiveTab] = useState(0);
+  const scrollProgress = useSharedValue(0);
+  const tabBarY = useSharedValue(0);
+  const [selectedScholarlyRef, setSelectedScholarlyRef] = useState<string | null>(null);
+  const prefsMadhab = usePreferencesStore((s) => s.selectedMadhab);
+  const setPrefsMadhab = usePreferencesStore((s) => s.setMadhab);
+
+  const handleTabBarLayout = useCallback((event: LayoutChangeEvent) => {
+    tabBarY.value = event.nativeEvent.layout.y;
+  }, []);
+
+  const stickyHeaderTotalHeight = COMPACT_HEADER_HEIGHT + insets.top;
+
+  const stickyTabBarStyle = useAnimatedStyle(() => {
+    const shouldStick = scrollY.value >= tabBarY.value - stickyHeaderTotalHeight;
+    const opacity = interpolate(
+      scrollY.value,
+      [tabBarY.value - stickyHeaderTotalHeight - 20, tabBarY.value - stickyHeaderTotalHeight],
+      [0, 1],
+      Extrapolation.CLAMP,
+    );
+    return {
+      opacity: shouldStick ? opacity : 0,
+      pointerEvents: shouldStick ? "auto" as const : "none" as const,
+    };
   });
 
   // ── Product Image Preview Modal ──────────────
@@ -505,9 +526,6 @@ export default function ScanResultScreen() {
     return alerts;
   }, [boycott, personalAlerts]);
 
-  // Whether to show alternatives before health (haram/doubtful — Al-Taqwa)
-  const isNonHalal = effectiveHeroStatus === "haram" || effectiveHeroStatus === "doubtful";
-
   // Nutrient breakdown for HealthNutritionCard
   const nutrientItems: NutrientItem[] = (nutrientBreakdown ?? []).map((nb: any) => ({
     key: nb.nutrient,
@@ -544,32 +562,6 @@ export default function ScanResultScreen() {
     }
     return items;
   })();
-
-  // Additives for AdditivesCard — from halalAnalysis.reasons
-  const additiveItems: AdditiveItem[] = (halalAnalysis?.reasons ?? [])
-    .filter((r: any) => r.type === "additive")
-    .map((r: any) => {
-      const code = r.name?.split(" ")[0] ?? "";
-      const healthEffect = (additiveHealthEffects as Record<string, any>)?.[code];
-      const madhabRulings: Record<string, string> = {};
-      for (const mv of madhabVerdicts ?? []) {
-        const match = (mv.conflictingAdditives ?? []).find((ca: any) => ca.code === code);
-        if (match) madhabRulings[mv.madhab] = match.ruling;
-      }
-      return {
-        code,
-        name: r.name?.replace(/^E\d+[a-z]?\s*/i, "") ?? "",
-        category: r.category ?? "",
-        dangerLevel: (r.status === "haram" ? 1 : r.status === "doubtful" ? 2 : r.status === "halal" ? 4 : 3) as 1 | 2 | 3 | 4,
-        madhabRulings: Object.keys(madhabRulings).length > 0 ? (madhabRulings as any) : undefined,
-        healthEffects: healthEffect ? [{
-          type: healthEffect.type as any,
-          label: healthEffect.type,
-          potential: !healthEffect.confirmed,
-        }] : undefined,
-        scholarlyRefs: r.scholarlyReference ? [{ source: r.scholarlyReference }] : undefined,
-      };
-    });
 
   // ── RENDER: Loading ────────────────────────────
   if (scanMutation.isPending || !scribeComplete) {
@@ -666,162 +658,91 @@ export default function ScanResultScreen() {
             <AlertPillStrip alerts={allAlerts} staggerIndex={1} />
           )}
 
-          {/* HALAL VERDICT CARD */}
-          <HalalVerdictCard
-            madhabVerdicts={madhabVerdicts}
-            userMadhab={userMadhab ?? ""}
-            effectiveHeroStatus={effectiveHeroStatus as any}
-            ingredientCount={ingredients.length}
-            additiveCount={additiveItems.length}
-            onPressMadhab={(verdict) => {
-              setSelectedMadhab({
-                madhab: verdict.madhab,
-                status: verdict.status as "halal" | "doubtful" | "haram" | "unknown",
-                conflictingAdditives: verdict.conflictingAdditives ?? [],
-                conflictingIngredients: verdict.conflictingIngredients ?? [],
-              });
+          {/* INLINE TAB BAR (measured for sticky clone) */}
+          <View onLayout={handleTabBarLayout}>
+            <ScanResultTabBar activeTab={activeTab as 0 | 1} onTabPress={setActiveTab} scrollProgress={scrollProgress} />
+          </View>
+
+          {/* PAGER: Halal (page 0) + Health (page 1) */}
+          <ScanResultPager
+            activeTab={activeTab}
+            onPageChange={setActiveTab}
+            onScrollProgress={(pos, offset) => { scrollProgress.value = pos + offset; }}
+            halalContent={
+              <HalalSchoolsCard
+                madhabVerdicts={madhabVerdicts}
+                userMadhab={prefsMadhab}
+                certifierData={certifierData ? {
+                  name: certifierData.name,
+                  shortName: certifierData.name?.slice(0, 3)?.toUpperCase() ?? "",
+                  logoUrl: (certifierData as any).logoUrl ?? null,
+                  trustScore: certifierData.trustScore ?? 0,
+                } : null}
+                ingredientRulings={ingredientRulings.map((r: any) => ({
+                  pattern: r.pattern,
+                  ruling: r.ruling,
+                  explanation: r.explanationFr ?? r.explanation ?? "",
+                  scholarlyReference: r.scholarlyReference ?? null,
+                }))}
+                onMadhabChange={setPrefsMadhab}
+                onScholarlySourcePress={setSelectedScholarlyRef}
+              />
+            }
+            healthContent={
+              <HealthNutritionCard
+                healthScore={healthScore ? {
+                  score: healthScore.score ?? 0,
+                  label: healthScore.label ?? "unknown",
+                  axes: {
+                    nutrition: healthScore.axes?.nutrition ?? null,
+                    additives: healthScore.axes?.additives ?? { score: 0, max: 20 },
+                    processing: healthScore.axes?.processing ?? null,
+                    beverageSugar: healthScore.axes?.beverageSugar,
+                  },
+                  bonuses: healthScore.bonuses ?? { bio: 0, aop: 0 },
+                  dataConfidence: healthScore.dataConfidence ?? "low",
+                  cappedByAdditive: healthScore.cappedByAdditive ?? false,
+                  category: healthScore.category ?? "general",
+                } : null}
+                nutriScoreGrade={offExtras?.nutriscoreGrade ?? undefined}
+                novaGroup={offExtras?.novaGroup ?? undefined}
+                ecoScoreGrade={offExtras?.ecoscoreGrade ?? undefined}
+                nutrientBreakdown={nutrientItems}
+                dietaryAnalysis={dietaryItems}
+                allergens={allergensTags
+                  .filter((t_: string) => {
+                    const clean = t_.replace(/^(en|fr):/, "").toLowerCase();
+                    return !NON_ALLERGEN_TAGS.has(clean);
+                  })
+                  .map((t_: string) => t_.replace(/^(en|fr):/, "").replace(/-/g, " "))}
+                traces={(offExtras?.tracesTags ?? []).map((t_: string) => t_.replace(/^(en|fr):/, "").replace(/-/g, " "))}
+                onNutrientPress={(nb) => setSelectedNutrient({
+                  nutrient: nb.key, value: nb.value, unit: nb.unit,
+                  level: nb.level as any, dailyValuePercent: nb.percentage, isNegative: !nb.isPositive,
+                })}
+                onPress={() => setShowScoreDetailSheet(true)}
+                staggerIndex={4}
+              />
+            }
+          />
+
+          {/* ALTERNATIVES */}
+          <AlternativesSection
+            alternatives={(alternativesQuery.data ?? []).map(adaptLegacyAlternative)}
+            scannedProduct={{
+              name: product?.name ?? "",
+              halalStatus: halalStatus,
+              healthScore: healthScore?.score ?? null,
             }}
-            onPressCard={() => {
-              impact();
-              setShowHalalAnalysisSheet(true);
+            isLoading={alternativesQuery.isLoading}
+            onAlternativePress={(bc: string) => {
+              router.navigate({ pathname: "/scan-result", params: { barcode: bc } });
             }}
-            staggerIndex={2}
+            staggerIndex={5}
           />
 
-          {/* Haram/Doubtful: alternatives BEFORE health (Al-Taqwa) */}
-          {isNonHalal && (
-            <AlternativesSection
-              alternatives={(alternativesQuery.data ?? []).map(adaptLegacyAlternative)}
-              scannedProduct={{
-                name: product?.name ?? "",
-                halalStatus: halalStatus,
-                healthScore: healthScore?.score ?? null,
-              }}
-              isLoading={alternativesQuery.isLoading}
-              onAlternativePress={(bc: string) => {
-                router.navigate({ pathname: "/scan-result", params: { barcode: bc } });
-              }}
-              staggerIndex={3}
-            />
-          )}
-
-          {/* HEALTH & NUTRITION — V3 */}
-          <HealthNutritionCard
-            healthScore={healthScore ? {
-              score: healthScore.score ?? 0,
-              label: healthScore.label ?? "unknown",
-              axes: {
-                nutrition: healthScore.axes?.nutrition ?? null,
-                additives: healthScore.axes?.additives ?? { score: 0, max: 20 },
-                processing: healthScore.axes?.processing ?? null,
-                beverageSugar: healthScore.axes?.beverageSugar,
-              },
-              bonuses: healthScore.bonuses ?? { bio: 0, aop: 0 },
-              dataConfidence: healthScore.dataConfidence ?? "low",
-              cappedByAdditive: healthScore.cappedByAdditive ?? false,
-              category: healthScore.category ?? "general",
-            } : null}
-            nutriScoreGrade={offExtras?.nutriscoreGrade ?? undefined}
-            novaGroup={offExtras?.novaGroup ?? undefined}
-            ecoScoreGrade={offExtras?.ecoscoreGrade ?? undefined}
-            nutrientBreakdown={nutrientItems}
-            dietaryAnalysis={dietaryItems}
-            allergens={allergensTags
-              .filter((t_: string) => {
-                const clean = t_.replace(/^(en|fr):/, "").toLowerCase();
-                return !NON_ALLERGEN_TAGS.has(clean);
-              })
-              .map((t_: string) => t_.replace(/^(en|fr):/, "").replace(/-/g, " "))}
-            traces={(offExtras?.tracesTags ?? []).map((t_: string) => t_.replace(/^(en|fr):/, "").replace(/-/g, " "))}
-            onNutrientPress={(nb) => setSelectedNutrient({
-              nutrient: nb.key, value: nb.value, unit: nb.unit,
-              level: nb.level as any, dailyValuePercent: nb.percentage, isNegative: !nb.isPositive,
-            })}
-            onPress={() => setShowScoreDetailSheet(true)}
-            staggerIndex={4}
-          />
-
-          {/* ADDITIVES */}
-          {additiveItems.length > 0 && (
-            <AdditivesCard
-              additives={additiveItems}
-              onPressCard={() => {}}
-              staggerIndex={5}
-            />
-          )}
-
-          {/* HALAL ANALYSIS DETAIL — why status, ingredients, scholarly refs, special product */}
-          <HalalDetailCard
-            halalAnalysis={halalAnalysis}
-            ingredients={ingredients}
-            ingredientRulings={ingredientRulings}
-            specialProduct={specialProduct}
-            halalStatus={halalStatus}
-            additiveHealthEffects={additiveHealthEffects}
-            staggerIndex={6}
-          />
-
-          {/* Halal/Unknown: alternatives AFTER analysis */}
-          {!isNonHalal && (
-            <AlternativesSection
-              alternatives={(alternativesQuery.data ?? []).map(adaptLegacyAlternative)}
-              scannedProduct={{
-                name: product?.name ?? "",
-                halalStatus: halalStatus,
-                healthScore: healthScore?.score ?? null,
-              }}
-              isLoading={alternativesQuery.isLoading}
-              onAlternativePress={(bc: string) => {
-                router.navigate({ pathname: "/scan-result", params: { barcode: bc } });
-              }}
-              staggerIndex={7}
-            />
-          )}
-
-          {/* COMMUNITY ACTIONS — contextual by halal status */}
-          {product && halalStatus === "doubtful" && (
-            <HalalActionCard
-              type="report"
-              productName={product.name}
-              productBarcode={product.barcode}
-              reportLabel={t.scanResult.reportProduct}
-              reportDesc={t.scanResult.reportProductDesc}
-              onReport={handleReport}
-            />
-          )}
-          {product && halalStatus === "halal" && (
-            <HalalActionCard
-              type="share"
-              productName={product.name}
-              productBarcode={product.barcode}
-              shareLabel={t.scanResult.shareAnalysis}
-              shareDesc={t.scanResult.shareAnalysisDesc}
-              shareTagline={t.scanResult.shareTagline}
-            />
-          )}
-          {product && halalStatus === "unknown" && (
-            <HalalActionCard
-              type="request_certification"
-              productName={product.name}
-              productBarcode={product.barcode}
-              certifyLabel={t.scanResult.unknownStatusReport}
-              certifyDesc={t.scanResult.unknownStatusReportDesc}
-            />
-          )}
-
-          {/* COMMUNITY VOTE */}
-          {product && (
-            <CommunityVoteCard
-              onVote={handleVote}
-              userVote={userVote}
-              staggerIndex={8}
-            />
-          )}
-
-          {/* NEW PRODUCT BANNER (conditional) */}
-          {isNewProduct && (
-            <NewProductBanner staggerIndex={9} />
-          )}
+          {/* FEEDBACK */}
+          <FeedbackCard staggerIndex={6} />
 
           {/* DISCLAIMER — inline */}
           <View style={styles.disclaimerRow}>
@@ -875,6 +796,22 @@ export default function ScanResultScreen() {
           </PressableScale>
         </Animated.View>
       )}
+
+      {/* ── Sticky Tab Bar clone (appears when inline bar scrolls out) ── */}
+      <Animated.View
+        style={[
+          {
+            position: "absolute",
+            top: stickyHeaderTotalHeight,
+            left: 0,
+            right: 0,
+            zIndex: 90,
+          },
+          stickyTabBarStyle,
+        ]}
+      >
+        <ScanResultTabBar activeTab={activeTab as 0 | 1} onTabPress={setActiveTab} scrollProgress={scrollProgress} />
+      </Animated.View>
 
       {/* ── Compact Sticky Header (scroll-interpolated) ── */}
       <CompactStickyHeader
@@ -1050,6 +987,12 @@ export default function ScanResultScreen() {
         dailyValuePercent={selectedNutrient?.dailyValuePercent ?? null}
         isNegative={selectedNutrient?.isNegative}
         onClose={handleCloseNutrientDetail}
+      />
+
+      <ScholarlySourceSheet
+        visible={selectedScholarlyRef !== null}
+        sourceRef={selectedScholarlyRef}
+        onClose={() => setSelectedScholarlyRef(null)}
       />
 
       {/* ── Off-screen Share Card (captured as image) ── */}

@@ -188,7 +188,8 @@ export function CompactStickyHeader({
 
 // ── Styles ──
 
-const HEADER_HEIGHT = 52;
+export const COMPACT_HEADER_HEIGHT = 52;
+const HEADER_HEIGHT = COMPACT_HEADER_HEIGHT;
 const PRODUCT_IMAGE_SIZE = 28;
 const CERTIFIER_LOGO_SIZE = 16;
 
