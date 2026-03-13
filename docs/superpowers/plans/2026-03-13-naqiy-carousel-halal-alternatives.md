@@ -62,13 +62,29 @@
 cd optimus-halal && pnpm add react-native-pager-view
 ```
 
-- [ ] **Step 2: Add new types to scan-types.ts**
+- [ ] **Step 2: Add new types and update MadhabVerdict to use MadhabId in scan-types.ts**
 
-Add after existing type exports:
+Add after existing type exports, and update the existing `MadhabVerdict` interface:
 
 ```typescript
 // ─── Madhab ────────────────────────────────
 export type MadhabId = "hanafi" | "maliki" | "shafii" | "hanbali";
+```
+
+Also update the existing `MadhabVerdict` interface to reuse `MadhabId`:
+
+```typescript
+// BEFORE: madhab: "hanafi" | "shafii" | "maliki" | "hanbali";
+// AFTER:
+export interface MadhabVerdict {
+  madhab: MadhabId;
+  // ... rest unchanged
+}
+```
+
+Then add the remaining new types:
+
+```typescript
 
 // ─── Certifier Badge ───────────────────────
 export interface CertifierInfo {
@@ -109,13 +125,19 @@ git commit -m "feat(scan): add pager-view dependency and new types (MadhabId, Al
 **Files:**
 - Modify: `optimus-halal/src/store/index.ts`
 
-- [ ] **Step 1: Add selectedMadhab to UserPreferencesState interface**
+- [ ] **Step 1: Import MadhabId and add selectedMadhab to UserPreferencesState interface**
 
-In `store/index.ts`, add to the `UserPreferencesState` interface:
+In `store/index.ts`, add the import at top:
 
 ```typescript
-selectedMadhab: "hanafi" | "maliki" | "shafii" | "hanbali";
-setMadhab: (madhab: "hanafi" | "maliki" | "shafii" | "hanbali") => void;
+import type { MadhabId } from "@/components/scan/scan-types";
+```
+
+Then add to the `UserPreferencesState` interface:
+
+```typescript
+selectedMadhab: MadhabId;
+setMadhab: (madhab: MadhabId) => void;
 ```
 
 - [ ] **Step 2: Add implementation in create()**
@@ -311,7 +333,11 @@ git commit -m "feat(i18n): add ~30 keys for carousel tabs, halal schools, altern
  * Features:
  *   - Gold underline indicator animated via Reanimated interpolation on scrollProgress
  *   - Tabs: "Halal" | "Santé" (i18n keys: tabHalal, tabHealth)
- *   - Peek hint: slight opacity reduction on inactive tab text
+ *   - Tab text opacity: active = 1.0, inactive = 0.5 (animated on scroll progress)
+ *
+ * Note: The "peek subtil" (content parallax from adjacent tab) is handled by
+ * ScanResultPager, NOT by this component. PagerView natively provides the peek
+ * effect during swipe gestures (content sliding in from the edge).
  *
  * Layout reference:
  *   - Height: 44px
@@ -380,6 +406,7 @@ git commit -m "feat(scan): create ScanResultTabBar with gold animated indicator"
  *   - Height transition: withSpring(targetHeight, { damping: 20, stiffness: 150 })
  *   - overdrag={false} to prevent bouncing past last page
  *   - orientation="horizontal"
+ *   - Android: set nestedScrollEnabled={true} on PagerView for nested scroll compat
  */
 ```
 
@@ -437,7 +464,8 @@ git commit -m "feat(scan): create ScanResultPager with dynamic height and tab sy
  *   - score >= 70 → halalStatus.halal.base (green)
  *   - score >= 40 → halalStatus.doubtful.base (orange)
  *   - score < 40  → halalStatus.haram.base (red)
- *   Note: getTrustScoreColor uses these exact thresholds.
+ *   Note: getTrustScoreColor in colors.ts uses these exact thresholds (70/40).
+ *   The spec said 80/50 but we align with the existing codebase function.
  *
  * Micro-logo bg: same color at 20% opacity
  *
@@ -659,18 +687,16 @@ git commit -m "feat(scan): create new AlternativesSection with Hero+Grid layout 
 
 ## Chunk 3: Halal Tab (HalalSchoolsCard + ScholarlySourceSheet)
 
-### Task 10: Create HalalSchoolsCard
+### Task 10a: Create HalalSchoolsCard — HeroCard + SegmentedBar
 
 **Files:**
 - Create: `optimus-halal/src/components/scan/HalalSchoolsCard.tsx`
 
-- [ ] **Step 1: Implement HalalSchoolsCard**
-
-This is the largest component. It contains 4 subcomponents:
+- [ ] **Step 1: Create file with shared props interface and HeroCard subcomponent**
 
 ```typescript
 /**
- * HalalSchoolsCard — Complete Halal tab content.
+ * HalalSchoolsCard — Complete Halal tab content (built in 3 sub-tasks).
  *
  * Props:
  *   madhabVerdicts: MadhabVerdict[] (from scan-types.ts, 4 items)
@@ -680,72 +706,56 @@ This is the largest component. It contains 4 subcomponents:
  *   onMadhabChange: (madhab: MadhabId) => void
  *   onScholarlySourcePress: (sourceRef: string) => void
  *
- * Subcomponents (all internal, not exported):
+ * State (top-level):
+ *   activeMadhab: MadhabId (local useState, initialized from userMadhab)
+ *   expandedSection: null | "ingredients" | "additives" | "certification"
  *
- * ──────────────────────────────────────────────
- * A. HeroCard (top section)
- * ──────────────────────────────────────────────
- *   - Shows the ACTIVE madhab's verdict (starts with userMadhab)
- *   - State: activeMadhab (local useState, initialized from userMadhab)
+ * This sub-task implements:
+ *   A. HeroCard (internal, not exported)
+ *   B. SegmentedBar (internal, not exported)
+ *   C. The main HalalSchoolsCard shell (exported) — initially renders only A + B
+ */
+```
+
+**A. HeroCard subcomponent:**
+```typescript
+/**
+ * HeroCard — Shows the ACTIVE madhab's verdict.
+ *
+ * Receives: activeVerdict (the MadhabVerdict for activeMadhab), activeMadhab
+ *
+ * Ruling resolution:
+ *   - For each item in conflictingAdditives/conflictingIngredients, the ruling
+ *     comes from the madhab-specific field (e.g. ruling_hanafi).
+ *   - **IMPORTANT: ruling_default fallback** — When the madhab-specific column
+ *     is null, fall back to ruling_default. Never show null/undefined as a ruling.
+ *     Example: `const ruling = item[`ruling_${activeMadhab}`] ?? item.ruling_default ?? "unknown";`
+ *
+ * Layout:
  *   - Verdict status → color from STATUS_CONFIG (scan-constants.ts)
  *   - Title: t.scanResult.schoolHeroTitle with interpolation { status: verdictLabel, school: madhabLabel }
- *   - Explanation: find verdict.conflictingAdditives + conflictingIngredients explanations
- *     Concatenate first 2-3 explanation texts for the active madhab
+ *   - Explanation: concatenate first 2-3 explanation texts from conflicting items
  *   - 3 counters row:
- *     - Conflicts: count of items with ruling !== "halal" in conflictingAdditives + conflictingIngredients
- *     - Doubts: count of items with ruling === "doubtful"
+ *     - Conflicts: count of items with resolved ruling !== "halal"
+ *     - Doubts: count of items with resolved ruling === "doubtful"
  *     - Sources: count of unique scholarlyReference (non-null) across both arrays
+ *   - **Zero conflicts edge case:** When conflicts === 0 AND doubts === 0,
+ *     show t.scanResult.schoolNoConflicts with a CheckCircleIcon (green).
+ *     Do NOT render an empty conflict list or empty state placeholder.
  *   - If conflicts > 0: list inline with:
  *     - Each: name/code + ruling one-liner + scholarlyReference (pressable → onScholarlySourcePress)
  *     - FadeInDown animation on expand
- *
- * ──────────────────────────────────────────────
- * B. SegmentedBar (3 other schools)
- * ──────────────────────────────────────────────
- *   - Horizontal row of 3 pills (the 3 madhabs != activeMadhab)
- *   - Each pill: madhab label + colored dot + status label
+ */
+```
+
+**B. SegmentedBar subcomponent:**
+```typescript
+/**
+ * SegmentedBar — Horizontal row of 3 pills (the 3 madhabs != activeMadhab).
+ *   - Each pill: madhab label (from MADHAB_LABEL_KEY) + colored dot + status label
  *   - Pressable: onPress → setActiveMadhab(madhab) + animate hero card
  *   - Animation: hero card uses Reanimated layout animation (Layout.springify())
  *   - Also calls onMadhabChange(madhab) to persist to store
- *
- * ──────────────────────────────────────────────
- * C. Accordions (3 expandable sections)
- * ──────────────────────────────────────────────
- *   Each accordion:
- *   - Header: icon + title + caret (rotates on expand)
- *   - Content: animated height (useAnimatedStyle, interpolate 0 → measuredHeight)
- *   - State: expandedSection (null | "ingredients" | "additives" | "certification")
- *     Only one open at a time.
- *
- *   C1. Ingredients accordion:
- *     - Source: ingredientRulings prop (already matched by backend)
- *     - Each item: pattern name + status icon (Check/Warning/X) + ruling text
- *     - Filter by activeMadhab: use ingredient_rulings ruling_[madhab] field
- *       Note: ingredientRulings from scan response already include per-item rulings
- *     - Icon: LeafIcon (Phosphor)
- *
- *   C2. Additives accordion:
- *     - Source: active verdict's conflictingAdditives
- *     - Each item: E-code + name + colored ruling badge per school (4 dots)
- *       For the 4 dots, iterate all 4 verdicts and find the same additive code
- *     - Icon: FlaskIcon (Phosphor)
- *
- *   C3. Certification accordion:
- *     - Source: certifierData prop
- *     - CertifierBadge size="extended"
- *     - Trust score explanation text
- *     - If certifierData is null: "Pas de certification" muted text
- *     - Icon: SealCheckIcon (Phosphor)
- *
- * ──────────────────────────────────────────────
- * D. Scholarly Sources Ribbon
- * ──────────────────────────────────────────────
- *   - Horizontal ScrollView at bottom
- *   - Collect all unique scholarlyReference strings from active verdict
- *   - Each pill: BookOpenIcon + source text (truncated 30 chars)
- *   - Pressable → onScholarlySourcePress(ref)
- *   - Hidden if no sources (array empty)
- *   - Style: bg rgba(255,255,255,0.04), borderRadius 12, padding 6px 12px
  */
 ```
 
@@ -759,7 +769,100 @@ cd optimus-halal && npx tsc --noEmit
 
 ```bash
 git add optimus-halal/src/components/scan/HalalSchoolsCard.tsx
-git commit -m "feat(scan): create HalalSchoolsCard with hero, segmented bar, accordions, and scholarly ribbon"
+git commit -m "feat(scan): create HalalSchoolsCard with HeroCard and SegmentedBar"
+```
+
+---
+
+### Task 10b: Add Accordions to HalalSchoolsCard
+
+**Files:**
+- Modify: `optimus-halal/src/components/scan/HalalSchoolsCard.tsx`
+
+- [ ] **Step 1: Add 3 accordion subcomponents inside HalalSchoolsCard**
+
+```typescript
+/**
+ * Accordions — 3 expandable sections added to HalalSchoolsCard.
+ *
+ * Shared accordion pattern:
+ *   - Header: icon + title + caret (rotates 180° on expand via Reanimated)
+ *   - Content: animated height (useAnimatedStyle, interpolate 0 → measuredHeight)
+ *   - State: expandedSection from parent (only one open at a time)
+ *
+ * C1. Ingredients accordion (LeafIcon from Phosphor):
+ *   - Source: ingredientRulings prop (already matched by backend)
+ *   - Each item: pattern name + status icon (Check/Warning/X) + ruling text
+ *   - **ruling_default fallback**: same as HeroCard — use madhab-specific ruling,
+ *     fall back to ruling_default if null.
+ *     `const ruling = item[`ruling_${activeMadhab}`] ?? item.ruling_default ?? "unknown";`
+ *   - Empty state: if ingredientRulings is empty, show "Aucun ingrédient à signaler" muted text
+ *
+ * C2. Additives accordion (FlaskIcon from Phosphor):
+ *   - Source: active verdict's conflictingAdditives
+ *   - Each item: E-code + name + colored ruling badge per school (4 dots)
+ *     For the 4 dots, iterate all 4 verdicts and find the same additive code
+ *   - Empty state: if conflictingAdditives is empty, show "Aucun additif signalé" muted text
+ *
+ * C3. Certification accordion (SealCheckIcon from Phosphor):
+ *   - Source: certifierData prop
+ *   - CertifierBadge size="extended" (import from ./CertifierBadge)
+ *   - Trust score explanation text
+ *   - If certifierData is null: "Pas de certification" muted text
+ */
+```
+
+- [ ] **Step 2: Render all 3 accordions below SegmentedBar in main component**
+
+- [ ] **Step 3: Verify build**
+
+```bash
+cd optimus-halal && npx tsc --noEmit
+```
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add optimus-halal/src/components/scan/HalalSchoolsCard.tsx
+git commit -m "feat(scan): add ingredient, additive, and certification accordions to HalalSchoolsCard"
+```
+
+---
+
+### Task 10c: Add Scholarly Sources Ribbon to HalalSchoolsCard
+
+**Files:**
+- Modify: `optimus-halal/src/components/scan/HalalSchoolsCard.tsx`
+
+- [ ] **Step 1: Add ScholarlySourcesRibbon subcomponent**
+
+```typescript
+/**
+ * ScholarlySourcesRibbon — Horizontal ScrollView at bottom of HalalSchoolsCard.
+ *   - Collect all unique scholarlyReference strings from active verdict
+ *     (from conflictingAdditives + conflictingIngredients, filter non-null)
+ *   - Each pill: BookOpenIcon + source text (truncated 30 chars with "…")
+ *   - Pressable → onScholarlySourcePress(ref)
+ *   - **Hidden entirely if no sources** (sources array is empty) — no empty state, just don't render
+ *   - Style: bg rgba(255,255,255,0.04), borderRadius 12, padding 6px 12px
+ *   - Gap between pills: 8px
+ *   - showsHorizontalScrollIndicator={false}
+ */
+```
+
+- [ ] **Step 2: Render ribbon below accordions in main component**
+
+- [ ] **Step 3: Verify build**
+
+```bash
+cd optimus-halal && npx tsc --noEmit
+```
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add optimus-halal/src/components/scan/HalalSchoolsCard.tsx
+git commit -m "feat(scan): add scholarly sources ribbon to HalalSchoolsCard"
 ```
 
 ---
@@ -879,15 +982,13 @@ git commit -m "feat(scan): create FeedbackCard with local-only feedback and repo
 
 ## Chunk 4: Integration (scan-result.tsx rewrite)
 
-### Task 13: Refactor scan-result.tsx — Pager + TabBar + Sticky integration
+### Task 13a: Export HEADER_HEIGHT and add new imports/state to scan-result.tsx
 
 **Files:**
-- Modify: `optimus-halal/app/scan-result.tsx`
 - Modify: `optimus-halal/src/components/scan/CompactStickyHeader.tsx`
+- Modify: `optimus-halal/app/scan-result.tsx`
 
-This is the critical integration task. It restructures the entire scan-result layout.
-
-- [ ] **Step 1: Export HEADER_HEIGHT from CompactStickyHeader**
+- [ ] **Step 1: Export COMPACT_HEADER_HEIGHT from CompactStickyHeader**
 
 In `CompactStickyHeader.tsx`, find the header height constant (currently 52 + insets.top). Export it:
 
@@ -918,7 +1019,6 @@ const scrollProgress = useSharedValue(0);
 
 // Tab bar sticky
 const tabBarY = useSharedValue(0);
-const tabBarRef = useRef<View>(null);
 
 // Scholarly source sheet
 const [selectedScholarlyRef, setSelectedScholarlyRef] = useState<string | null>(null);
@@ -928,17 +1028,13 @@ const selectedMadhab = usePreferencesStore((s) => s.selectedMadhab);
 const setMadhab = usePreferencesStore((s) => s.setMadhab);
 ```
 
-- [ ] **Step 4: Add tab bar onLayout handler**
+- [ ] **Step 4: Add tab bar onLayout handler and sticky animated style**
 
 ```typescript
 const handleTabBarLayout = useCallback((event: LayoutChangeEvent) => {
   tabBarY.value = event.nativeEvent.layout.y;
 }, []);
-```
 
-- [ ] **Step 5: Add sticky tab bar animated style**
-
-```typescript
 const insets = useSafeAreaInsets();
 const stickyHeaderTotalHeight = COMPACT_HEADER_HEIGHT + insets.top;
 
@@ -957,7 +1053,7 @@ const stickyTabBarStyle = useAnimatedStyle(() => {
 });
 ```
 
-- [ ] **Step 6: Adapt alternatives data**
+- [ ] **Step 5: Add alternatives adapter**
 
 ```typescript
 const adaptedAlternatives: AlternativeProductUI[] = useMemo(() => {
@@ -966,9 +1062,29 @@ const adaptedAlternatives: AlternativeProductUI[] = useMemo(() => {
 }, [alternativesQuery.data]);
 ```
 
-- [ ] **Step 7: Restructure the scroll content**
+- [ ] **Step 6: Verify build** (will have unused import warnings — that's expected, used in next sub-task)
 
-Replace the current linear section layout. The new order is:
+```bash
+cd optimus-halal && npx tsc --noEmit
+```
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add optimus-halal/app/scan-result.tsx optimus-halal/src/components/scan/CompactStickyHeader.tsx
+git commit -m "feat(scan): add imports, state, and sticky logic for Pager+TabBar integration"
+```
+
+---
+
+### Task 13b: Restructure scroll content with Pager + TabBar
+
+**Files:**
+- Modify: `optimus-halal/app/scan-result.tsx`
+
+- [ ] **Step 1: Replace the current linear section layout**
+
+The new order inside `Animated.ScrollView`:
 
 ```
 <Animated.ScrollView onScroll={scrollHandler}>
@@ -1026,8 +1142,38 @@ Replace the current linear section layout. The new order is:
   {/* 7. Disclaimer */}
   <DisclaimerText />
 </Animated.ScrollView>
+```
 
-{/* Sticky tab bar clone (absolute positioned) */}
+Key removals:
+- Remove direct HalalVerdictCard render (replaced by HalalSchoolsCard inside pager)
+- Remove old AlternativesSection import/render (both priority and discover variants)
+- Remove CommunityVoteCard (replaced by FeedbackCard)
+- Keep AdditivesCard and HalalDetailCard as-is (they can move inside pager halal content or stay below — implementer should check which makes more sense for content flow)
+
+- [ ] **Step 2: Verify build**
+
+```bash
+cd optimus-halal && npx tsc --noEmit
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add optimus-halal/app/scan-result.tsx
+git commit -m "feat(scan): restructure scroll content with Pager+TabBar and new sections"
+```
+
+---
+
+### Task 13c: Add sticky tab bar clone and ScholarlySourceSheet
+
+**Files:**
+- Modify: `optimus-halal/app/scan-result.tsx`
+
+- [ ] **Step 1: Add the sticky tab bar clone outside ScrollView**
+
+```typescript
+{/* Sticky tab bar clone (absolute positioned, below CompactStickyHeader) */}
 <Animated.View style={[
   { position: "absolute", top: stickyHeaderTotalHeight, left: 0, right: 0, zIndex: 90 },
   stickyTabBarStyle,
@@ -1038,33 +1184,36 @@ Replace the current linear section layout. The new order is:
     scrollProgress={scrollProgress}
   />
 </Animated.View>
+```
 
-{/* Existing CompactStickyHeader (zIndex 100, above tab bar) */}
-<CompactStickyHeader ... />
+Place it AFTER the ScrollView, BEFORE the existing `CompactStickyHeader` (which has zIndex 100, so it stays above).
 
-{/* Bottom sheets */}
+- [ ] **Step 2: Add ScholarlySourceSheet bottom sheet**
+
+```typescript
 <ScholarlySourceSheet
   visible={selectedScholarlyRef !== null}
   sourceRef={selectedScholarlyRef}
   onClose={() => setSelectedScholarlyRef(null)}
 />
-{/* ... existing bottom sheets ... */}
 ```
 
-Key changes:
-- Remove direct HalalVerdictCard render (replaced by HalalSchoolsCard inside pager)
-- Remove old AlternativesSection import/render (both priority and discover variants)
-- Remove CommunityVoteCard (replaced by FeedbackCard)
-- Keep AdditivesCard and HalalDetailCard as-is (they can move inside pager halal content or stay below — implementer should check which makes more sense for content flow)
-- Keep all existing bottom sheets
+Place it alongside existing bottom sheets.
 
-- [ ] **Step 8: Verify build**
+- [ ] **Step 3: Remove unused old imports**
+
+Remove imports for components no longer used:
+- Old `HalalVerdictCard` (if not used elsewhere)
+- Old `AlternativesSection` (old path, replaced by new)
+- `CommunityVoteCard` (replaced by FeedbackCard)
+
+- [ ] **Step 4: Verify build**
 
 ```bash
 cd optimus-halal && npx tsc --noEmit
 ```
 
-- [ ] **Step 9: Test on device/simulator**
+- [ ] **Step 5: Test on device/simulator**
 
 ```bash
 cd optimus-halal && npx expo start
@@ -1081,11 +1230,11 @@ Manual verification:
 - Correct button shows toast
 - Signaler opens report sheet
 
-- [ ] **Step 10: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add optimus-halal/app/scan-result.tsx optimus-halal/src/components/scan/CompactStickyHeader.tsx
-git commit -m "feat(scan): integrate Pager+TabBar architecture with sticky behavior and adapted alternatives"
+git add optimus-halal/app/scan-result.tsx
+git commit -m "feat(scan): add sticky tab bar clone and ScholarlySourceSheet integration"
 ```
 
 ---
@@ -1119,9 +1268,11 @@ cd optimus-halal && npx tsc --noEmit
 - [ ] **Step 4: Commit**
 
 ```bash
-git add -A
+git add optimus-halal/app/scan-result.tsx optimus-halal/src/components/scan/CompactStickyHeader.tsx optimus-halal/src/components/scan/HalalVerdictCard.tsx optimus-halal/src/components/scan/InlineScanSections.tsx
 git commit -m "chore(scan): clean up unused imports and verify build"
 ```
+
+Note: Only stage files that actually changed. The list above is the expected set — if other files were modified during cleanup, add them explicitly by name. Never use `git add -A`.
 
 ---
 
@@ -1131,18 +1282,33 @@ git commit -m "chore(scan): clean up unused imports and verify build"
 |-------|-------|--------------------|
 | 1. Foundation | 1-5 | Types, store, i18n, ScanResultTabBar, ScanResultPager |
 | 2. Alternatives | 6-9 | CertifierBadge, AlternativeHeroCard, AlternativeGridCard, AlternativesSection |
-| 3. Halal Tab | 10-12 | HalalSchoolsCard, ScholarlySourceSheet, FeedbackCard |
-| 4. Integration | 13-14 | scan-result.tsx rewrite, cleanup |
+| 3. Halal Tab | 10a-10c, 11, 12 | HalalSchoolsCard (3 sub-tasks), ScholarlySourceSheet, FeedbackCard |
+| 4. Integration | 13a-13c, 14 | scan-result.tsx rewrite (3 sub-tasks), cleanup |
 
-**Total: 14 tasks, ~14 commits**
+**Total: 19 sub-tasks, ~19 commits**
 
-**Dependency order:** Tasks 1-3 are independent (can parallelize). Tasks 4-5 depend on Task 1 (types). Tasks 6-9 depend on Task 1 (types). Task 10 depends on Task 6 (CertifierBadge). Task 13 depends on ALL previous tasks. Task 14 depends on Task 13.
+**Dependency order:**
 
-```
+- Tasks 1, 2, 3 are **fully independent** (can parallelize all 3).
+- Tasks 4, 5 depend on Task 1 (types).
+- Tasks 6 depends on Task 1 (types). Tasks 7, 8 are **independent of each other** (both depend on Task 6 only). Task 9 depends on 7 + 8.
+- Tasks 10a depends on Task 6 (CertifierBadge). 10b depends on 10a. 10c depends on 10b.
+- Tasks 11, 12 are **independent of each other** (both depend on Task 1 types only).
+- Task 13a depends on ALL of 1-12. 13b depends on 13a. 13c depends on 13b.
+- Task 14 depends on 13c.
+
+```text
 [1] ─┬─ [4] ─── [5]
-     ├─ [2]
-     ├─ [3]
-     ├─ [6] ─── [7] ─── [8] ─── [9]
-     └─ [6] ─── [10] ── [11] ── [12]
-                                    └─── [13] ── [14]
+     ├─ [2]                          (independent)
+     ├─ [3]                          (independent)
+     │
+     ├─ [6] ─┬─ [7] ─┐
+     │        └─ [8] ─┴─ [9]        (7 & 8 parallelize)
+     │
+     ├─ [6] ─── [10a] ── [10b] ── [10c]
+     │
+     ├─ [11]                         (independent)
+     └─ [12]                         (independent)
+              ↓ all complete ↓
+         [13a] ── [13b] ── [13c] ── [14]
 ```
