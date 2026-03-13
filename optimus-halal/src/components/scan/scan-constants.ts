@@ -183,3 +183,24 @@ export const letterSpacing = {
   wide: 0.5,
   wider: 1.0,
 } as const;
+
+// ── V3 Health Card Constants ──
+
+export const GRADIENT_BAR_COLORS = ["#ef4444", "#f97316", "#eab308", "#22c55e"] as const;
+
+/** Axis icon names (Phosphor) for AxisTile grid */
+export const AXIS_ICONS = {
+  nutrition: "Apple",
+  additives: "Flask",
+  processing: "Factory",
+  beverageSugar: "Drop",
+} as const;
+
+/** Eco-Score colors (same scheme as NutriScore) */
+export const ECOSCORE_COLORS: Record<string, string> = {
+  a: "#038141",
+  b: "#85BB2F",
+  c: "#FECB02",
+  d: "#EE8100",
+  e: "#E63E11",
+};
