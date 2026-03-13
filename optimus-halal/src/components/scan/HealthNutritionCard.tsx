@@ -22,7 +22,6 @@ import {
 } from "phosphor-react-native";
 
 import { SectionCard } from "./SectionCard";
-import { ScoreRing } from "./ScoreRing";
 import { NutrientBar } from "./NutrientBar";
 import { DietaryChip } from "./DietaryChip";
 import { useTheme } from "@/hooks/useTheme";
@@ -288,11 +287,8 @@ export function HealthNutritionCard({
       title={t.scanResult.santeNutrition}
       staggerIndex={staggerIndex}
     >
-      {/* ── Score hero: ScoreRing + label + confidence ── */}
+      {/* ── Score hero: big score + label + confidence ── */}
       <View style={styles.scoreRow}>
-        <View style={styles.scoreRingWrapper}>
-          <ScoreRing score={healthScore?.score ?? null} size={90} label={scoreLabel} />
-        </View>
         <View style={styles.scoreInfo}>
           <Text style={[styles.scoreValue, { color: getScoreColor(score) }]}>
             {score}<Text style={styles.scoreMax}>/100</Text>
@@ -474,7 +470,6 @@ export function HealthNutritionCard({
 const styles = StyleSheet.create({
   // Score hero
   scoreRow: { flexDirection: "row", gap: spacing.lg, alignItems: "center" },
-  scoreRingWrapper: { alignItems: "center" },
   scoreInfo: { flex: 1, gap: 4 },
   scoreValue: { fontSize: 28, fontWeight: "800" },
   scoreMax: { fontSize: 14, fontWeight: "400", opacity: 0.5 },
