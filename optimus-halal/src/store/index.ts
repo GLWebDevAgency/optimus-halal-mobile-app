@@ -8,6 +8,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { User, ScanRecord, Store } from "@/types";
 import type { Language } from "@/i18n";
+import type { MadhabId } from "@/components/scan/scan-types";
 import { defaultFeatureFlags, type FeatureFlags } from "@constants/config";
 import { mmkvStorage } from "@/lib/storage";
 
@@ -289,6 +290,8 @@ interface UserPreferencesState {
   toggleExclusion: (excl: string) => void;
   setNotificationPref: (key: string, value: boolean) => void;
   setHapticsEnabled: (enabled: boolean) => void;
+  selectedMadhab: MadhabId;
+  setMadhab: (madhab: MadhabId) => void;
 }
 
 export const usePreferencesStore = create<UserPreferencesState>()(
@@ -327,6 +330,8 @@ export const usePreferencesStore = create<UserPreferencesState>()(
           notifications: { ...state.notifications, [key]: value },
         })),
       setHapticsEnabled: (enabled) => set({ hapticsEnabled: enabled }),
+      selectedMadhab: "hanafi",
+      setMadhab: (madhab) => set({ selectedMadhab: madhab }),
     }),
     {
       name: "preferences-storage",
@@ -555,7 +560,7 @@ export const useLocalStoreFavoritesStore = create<LocalStoreFavoritesState>()(
  * Stores last 3 scan results for anonymous users.
  * Naqiy+ users get unlimited cloud history.
  */
-const LOCAL_HISTORY_LIMIT = 3;
+const LOCAL_HISTORY_LIMIT = 50;
 
 export interface LocalScanHistoryItem {
   barcode: string;
