@@ -182,14 +182,14 @@ export const ScholarlySourceSheet = React.memo(function ScholarlySourceSheet({
 
               {/* Muted footer */}
               <Text style={[styles.footerText, { color: colors.textMuted }]}>
-                Source issue des rulings d&apos;ingrédients
+                {t.scanResult.scholarlySourceFooter}
               </Text>
             </>
           ) : (
             <Text
               style={[styles.emptyText, { color: colors.textSecondary }]}
             >
-              Aucune référence savante disponible.
+              {t.scanResult.scholarlySourceEmpty}
             </Text>
           )}
         </ScrollView>

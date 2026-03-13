@@ -899,6 +899,11 @@ export const ar: TranslationKeys = {
     accordionAdditives: "المضافات",
     accordionCertification: "الشهادة",
     scholarlySourceTitle: "المصدر العلمي",
+    scholarlySourceFooter: "المصدر من أحكام المكونات",
+    scholarlySourceEmpty: "لا يوجد مرجع علمي متاح.",
+    ingredientsNone: "لا توجد مكونات للإشارة إليها",
+    additivesNone: "لا توجد مضافات مُبلّغ عنها",
+    certificationNone: "لا توجد شهادة",
     // ─── Section Alternatives ──────────────────
     alternativesCount: "{{count}} وُجدت",
     alternativesBestMatch: "أفضل تطابق",

@@ -553,10 +553,12 @@ function IngredientsContent({
   isDark: boolean;
   colors: ReturnType<typeof useTheme>["colors"];
 }) {
+  const { t } = useTranslation();
+
   if (ingredientRulings.length === 0) {
     return (
       <Text style={[styles.accordionEmptyText, { color: colors.textMuted }]}>
-        Aucun ingrédient à signaler
+        {t.scanResult.ingredientsNone as string}
       </Text>
     );
   }
@@ -623,10 +625,12 @@ function AdditivesContent({
   isDark: boolean;
   colors: ReturnType<typeof useTheme>["colors"];
 }) {
+  const { t } = useTranslation();
+
   if (conflictingAdditives.length === 0) {
     return (
       <Text style={[styles.accordionEmptyText, { color: colors.textMuted }]}>
-        Aucun additif signalé
+        {t.scanResult.additivesNone as string}
       </Text>
     );
   }
@@ -700,7 +704,7 @@ function CertificationContent({
   if (!certifierData) {
     return (
       <Text style={[styles.accordionEmptyText, { color: colors.textMuted }]}>
-        Pas de certification
+        {t.scanResult.certificationNone as string}
       </Text>
     );
   }
@@ -762,7 +766,7 @@ function ScholarlySourcesRibbon({
             accessibilityLabel={ref}
             style={[
               styles.ribbonPill,
-              { backgroundColor: "rgba(255,255,255,0.04)" },
+              { backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)" },
             ]}
           >
             <BookOpenIcon size={13} color={goldColor} />

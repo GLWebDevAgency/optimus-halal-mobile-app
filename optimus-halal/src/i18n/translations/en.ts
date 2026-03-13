@@ -990,6 +990,11 @@ export const en: TranslationKeys = {
     accordionAdditives: "Additives",
     accordionCertification: "Certification",
     scholarlySourceTitle: "Scholarly source",
+    scholarlySourceFooter: "Source from ingredient rulings",
+    scholarlySourceEmpty: "No scholarly reference available.",
+    ingredientsNone: "No ingredients to flag",
+    additivesNone: "No additives flagged",
+    certificationNone: "No certification",
     // ─── Section Alternatives ──────────────────
     alternativesCount: "{{count}} found",
     alternativesBestMatch: "Best match",

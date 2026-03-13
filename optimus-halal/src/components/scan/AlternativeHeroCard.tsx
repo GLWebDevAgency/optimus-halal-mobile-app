@@ -179,14 +179,24 @@ export function AlternativeHeroCard({
 
           {/* c. Match reason pills */}
           <View style={styles.pillsRow}>
-            <View style={styles.pill}>
+            <View
+              style={[
+                styles.pill,
+                { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" },
+              ]}
+            >
               <Crosshair size={10} weight="bold" color={colors.textMuted} />
               <Text style={[styles.pillText, { color: colors.textMuted }]} numberOfLines={1}>
                 {alternative.matchReason}
               </Text>
             </View>
             {alternative.availableAt && alternative.availableAt.length > 0 && (
-              <View style={styles.pill}>
+              <View
+                style={[
+                  styles.pill,
+                  { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" },
+                ]}
+              >
                 <Storefront size={10} weight="bold" color={colors.textMuted} />
                 <Text style={[styles.pillText, { color: colors.textMuted }]} numberOfLines={1}>
                   {alternative.availableAt.join(", ")}
@@ -199,7 +209,7 @@ export function AlternativeHeroCard({
           <View
             style={[
               styles.comparisonBar,
-              { backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)" },
+              { backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)" },
             ]}
           >
             <ComparisonSide
@@ -327,7 +337,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "rgba(255,255,255,0.06)",
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 12,

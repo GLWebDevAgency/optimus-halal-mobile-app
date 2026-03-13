@@ -135,8 +135,8 @@ export const FeedbackCard = React.memo(function FeedbackCard({
                     styles.reportRow,
                     {
                       backgroundColor: pressed
-                        ? "rgba(255,255,255,0.08)"
-                        : "rgba(255,255,255,0.04)",
+                        ? isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"
+                        : isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
                     },
                   ]}
                   onPress={handleReportOptionPress}

@@ -999,6 +999,11 @@ export const fr = {
     accordionAdditives: "Additifs",
     accordionCertification: "Certification",
     scholarlySourceTitle: "Source savante",
+    scholarlySourceFooter: "Source issue des rulings d'ingrédients",
+    scholarlySourceEmpty: "Aucune référence savante disponible.",
+    ingredientsNone: "Aucun ingrédient à signaler",
+    additivesNone: "Aucun additif signalé",
+    certificationNone: "Pas de certification",
     // ─── Section Alternatives ──────────────────
     alternativesCount: "{{count}} trouvée(s)",
     alternativesBestMatch: "Meilleure correspondance",

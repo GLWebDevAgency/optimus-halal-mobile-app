@@ -27,19 +27,29 @@ export interface AlternativeGridCardProps {
 // ── Component ──
 
 export function AlternativeGridCard({ alternative, onPress }: AlternativeGridCardProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
 
   return (
     <Pressable
       onPress={() => onPress(alternative.barcode)}
-      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+      style={({ pressed }) => [
+        styles.card,
+        {
+          backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
+          borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+        },
+        pressed && styles.cardPressed,
+      ]}
       accessibilityRole="button"
       accessibilityLabel={`${alternative.name}, ${alternative.brand}`}
     >
       {/* Product image */}
       <Image
         source={alternative.imageUrl ? { uri: alternative.imageUrl } : null}
-        style={styles.image}
+        style={[
+          styles.image,
+          { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" },
+        ]}
         contentFit="cover"
         transition={200}
       />
@@ -86,9 +96,7 @@ export function AlternativeGridCard({ alternative, onPress }: AlternativeGridCar
 const styles = StyleSheet.create({
   card: {
     flex: 1,
-    backgroundColor: "rgba(255,255,255,0.04)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
     borderRadius: 16,
     padding: 10,
     gap: 4,
@@ -100,7 +108,6 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 56,
     borderRadius: 10,
-    backgroundColor: "rgba(255,255,255,0.06)",
     marginBottom: 2,
   },
   name: {
