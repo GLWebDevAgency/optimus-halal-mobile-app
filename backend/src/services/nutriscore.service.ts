@@ -87,7 +87,7 @@ const FVN_THRESHOLDS      = [40, 60, 80]; // Only 0, 2, 5 points (not 1, 3, 4)
 
 // Beverages — N points thresholds per 100ml
 const BEV_ENERGY_THRESHOLDS  = [30, 90, 150, 210, 240, 270, 300, 330, 360, 390];
-const BEV_SUGARS_THRESHOLDS  = [0.5, 2, 3.5, 5, 6, 7, 8, 9, 10, 11];
+export const BEV_SUGARS_THRESHOLDS  = [0.5, 2, 3.5, 5, 6, 7, 8, 9, 10, 11];
 const BEV_SAT_FAT_THRESHOLDS = SAT_FAT_THRESHOLDS; // Same as general
 const BEV_SALT_THRESHOLDS    = SALT_THRESHOLDS;     // Same as general
 
@@ -102,7 +102,7 @@ const FATS_ENERGY_SAT_THRESHOLDS = [120, 240, 360, 480, 600, 720, 840, 960, 1080
 
 // ── Grade Thresholds ───────────────────────────────────────
 
-const GENERAL_GRADE_THRESHOLDS: [number, NutriScoreGrade][] = [
+export const GENERAL_GRADE_THRESHOLDS: [number, NutriScoreGrade][] = [
   [0, "a"],   // <= 0
   [2, "b"],   // 1-2
   [10, "c"],  // 3-10
@@ -110,14 +110,14 @@ const GENERAL_GRADE_THRESHOLDS: [number, NutriScoreGrade][] = [
 ];
 // >= 19 → "e"
 
-const FATS_GRADE_THRESHOLDS: [number, NutriScoreGrade][] = [
+export const FATS_GRADE_THRESHOLDS: [number, NutriScoreGrade][] = [
   [-6, "a"],  // <= -6
   [2, "b"],   // -5 to 2
   [10, "c"],  // 3-10
   [18, "d"],  // 11-18
 ];
 
-const BEV_GRADE_THRESHOLDS: [number, NutriScoreGrade][] = [
+export const BEV_GRADE_THRESHOLDS: [number, NutriScoreGrade][] = [
   // Water is always A (handled separately)
   [2, "b"],   // <= 2
   [6, "c"],   // 3-6
