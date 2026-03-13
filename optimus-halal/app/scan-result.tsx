@@ -972,6 +972,14 @@ export default function ScanResultScreen() {
         practices={certifierData?.practices ?? null}
         detail={certifierData?.detail ?? null}
         onClose={handleCloseScoreDetail}
+        healthAxes={healthScore ? {
+          nutrition: (healthScore as any).axes?.nutrition ?? null,
+          additives: (healthScore as any).axes?.additives ?? { score: 0, max: 20, hasHighConcern: false },
+          processing: (healthScore as any).axes?.processing ?? null,
+          beverageSugar: (healthScore as any).axes?.beverageSugar,
+          bonuses: (healthScore as any).bonuses ?? { bio: 0, aop: 0 },
+          category: (healthScore as any).category ?? "general",
+        } : undefined}
       />
 
       <MadhabBottomSheet
