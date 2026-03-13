@@ -75,3 +75,12 @@ export interface ScholarlyRef {
   source: string;
   detail?: string;
 }
+
+/** Personal alert from user profile (allergens, health, boycott) */
+export interface PersonalAlert {
+  type: "allergen" | "health" | "boycott";
+  severity: "high" | "medium" | "low";
+  title: string;
+  description: string;
+  icon?: string;  // Phosphor icon name override (optional)
+}
