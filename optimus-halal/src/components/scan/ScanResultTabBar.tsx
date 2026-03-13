@@ -1,175 +1,175 @@
 /**
- * ScanResultTabBar — Inline 3-tab switcher for scan result screen.
+ * ScanResultTabBar — 2-tab bar with gold animated indicator.
  *
- * Tabs: Halal Analysis | Mon Profil | Alternatives
- * Pattern: Glassmorphic bar with sliding indicator (Reanimated spring).
- * Not a navigation tab bar — purely presentational, display:'none' switching.
+ * Features:
+ *   - Gold underline indicator animated via Reanimated interpolation on scrollProgress
+ *   - Tabs: "Halal" | "Santé" (i18n keys: tabHalal, tabHealth)
+ *   - Tab text opacity: active = 1.0, inactive = 0.5 (animated on scroll progress)
+ *
+ * @module components/scan/ScanResultTabBar
  */
 
-import React, { useCallback, useEffect } from "react";
-import { View, Text, Pressable, StyleSheet, Platform } from "react-native";
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  useWindowDimensions,
+} from "react-native";
 import Animated, {
-  useSharedValue,
   useAnimatedStyle,
-  withSpring,
-  useReducedMotion,
+  interpolate,
+  Extrapolation,
+  type SharedValue,
 } from "react-native-reanimated";
-import { BlurView } from "expo-blur";
-import { useTheme, useTranslation, useHaptics } from "@/hooks";
-import { AppIcon, type IconName } from "@/lib/icons";
 
-interface ScanResultTabBarProps {
-  activeTab: number;
-  onTabChange: (tab: number) => void;
+import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/hooks";
+import { gold } from "@/theme/colors";
+import { fontSize as fontSizeTokens, fontWeight as fontWeightTokens } from "@/theme/typography";
+
+// ── Constants ──
+
+export const TAB_BAR_HEIGHT = 44;
+
+// ── Types ──
+
+export interface ScanResultTabBarProps {
+  activeTab: 0 | 1;
+  onTabPress: (index: number) => void;
+  scrollProgress: SharedValue<number>;
 }
 
-interface TabDef {
-  icon: IconName;
-  labelKey: "tabHalal" | "tabProfile" | "tabAlternatives";
-}
+// ── Component ──
 
-const TABS: TabDef[] = [
-  { icon: "verified-user", labelKey: "tabHalal" },
-  { icon: "person", labelKey: "tabProfile" },
-  { icon: "swap-horiz", labelKey: "tabAlternatives" },
-];
-
-const TAB_COUNT = TABS.length;
-
-export const ScanResultTabBar = React.memo(function ScanResultTabBar({
+export function ScanResultTabBar({
   activeTab,
-  onTabChange,
+  onTabPress,
+  scrollProgress,
 }: ScanResultTabBarProps) {
   const { isDark, colors } = useTheme();
   const { t } = useTranslation();
-  const { selection } = useHaptics();
-  const reducedMotion = useReducedMotion();
+  const { width } = useWindowDimensions();
 
-  const indicatorX = useSharedValue(activeTab / TAB_COUNT);
+  const tabWidth = width / 2;
 
-  // Sync indicator on programmatic activeTab changes (e.g. CTA "Voir alternatives")
-  useEffect(() => {
-    const target = activeTab / TAB_COUNT;
-    if (reducedMotion) {
-      indicatorX.value = target;
-    } else {
-      indicatorX.value = withSpring(target, { damping: 18, stiffness: 200 });
-    }
-  }, [activeTab, reducedMotion, indicatorX]);
+  const indicatorColor = isDark ? gold[400] : gold[600];
+  const activeTextColor = isDark ? gold[400] : gold[700];
 
-  const handlePress = useCallback(
-    (index: number) => {
-      selection();
-      if (reducedMotion) {
-        indicatorX.value = index / TAB_COUNT;
-      } else {
-        indicatorX.value = withSpring(index / TAB_COUNT, {
-          damping: 18,
-          stiffness: 200,
-        });
-      }
-      onTabChange(index);
-    },
-    [onTabChange, selection, reducedMotion, indicatorX],
-  );
-
+  // Animated indicator translateX: slides from 0 (tab 0) to tabWidth (tab 1)
   const indicatorStyle = useAnimatedStyle(() => ({
-    left: `${indicatorX.value * 100}%`,
-    width: `${100 / TAB_COUNT}%`,
+    transform: [
+      {
+        translateX: interpolate(
+          scrollProgress.value,
+          [0, 1],
+          [0, tabWidth],
+          Extrapolation.CLAMP,
+        ),
+      },
+    ],
   }));
 
-  const barBg = isDark ? "rgba(30,30,30,0.85)" : "rgba(255,255,255,0.9)";
-  const indicatorBg = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)";
-  const borderColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
+  // Animated opacity for each tab text
+  const tab0TextStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      scrollProgress.value,
+      [0, 1],
+      [1.0, 0.5],
+      Extrapolation.CLAMP,
+    ),
+  }));
 
-  const content = (
-    <View style={[styles.inner, { borderBottomColor: borderColor }]}>
-      {/* Sliding indicator */}
-      <Animated.View
-        style={[styles.indicator, { backgroundColor: indicatorBg }, indicatorStyle]}
-      />
+  const tab1TextStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      scrollProgress.value,
+      [0, 1],
+      [0.5, 1.0],
+      Extrapolation.CLAMP,
+    ),
+  }));
 
-      {/* Tabs */}
-      {TABS.map((tab, i) => {
-        const isActive = activeTab === i;
-        const color = isActive ? colors.textPrimary : colors.textMuted;
+  const tabs = [
+    {
+      label: t.scanResult.tabHalal,
+      index: 0 as const,
+      animatedTextStyle: tab0TextStyle,
+    },
+    {
+      label: t.scanResult.tabHealth,
+      index: 1 as const,
+      animatedTextStyle: tab1TextStyle,
+    },
+  ];
 
+  return (
+    <View
+      style={[
+        styles.container,
+        { borderBottomColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" },
+      ]}
+    >
+      {/* Tab buttons */}
+      {tabs.map(({ label, index, animatedTextStyle }) => {
+        const isSelected = activeTab === index;
         return (
           <Pressable
-            key={tab.labelKey}
-            style={styles.tab}
-            onPress={() => handlePress(i)}
+            key={index}
+            style={[styles.tab, { width: tabWidth }]}
+            onPress={() => onTabPress(index)}
             accessibilityRole="tab"
-            accessibilityState={{ selected: isActive }}
-            accessibilityLabel={t.scanResult[tab.labelKey]}
+            accessibilityState={{ selected: isSelected }}
+            accessibilityLabel={label}
           >
-            <AppIcon name={tab.icon} size={20} color={color} />
-            <Text
+            <Animated.Text
               style={[
-                styles.label,
-                { color },
-                isActive && styles.labelActive,
+                styles.tabLabel,
+                { color: isSelected ? activeTextColor : colors.textMuted },
+                animatedTextStyle,
               ]}
-              numberOfLines={1}
             >
-              {t.scanResult[tab.labelKey]}
-            </Text>
+              {label}
+            </Animated.Text>
           </Pressable>
         );
       })}
+
+      {/* Gold animated indicator */}
+      <Animated.View
+        style={[
+          styles.indicator,
+          { width: tabWidth, backgroundColor: indicatorColor },
+          indicatorStyle,
+        ]}
+      />
     </View>
   );
+}
 
-  // Glassmorphic on iOS, opaque on Android
-  if (Platform.OS === "ios") {
-    return (
-      <BlurView intensity={60} tint={isDark ? "dark" : "light"} style={styles.container}>
-        {content}
-      </BlurView>
-    );
-  }
-
-  return (
-    <View style={[styles.container, { backgroundColor: barBg }]}>
-      {content}
-    </View>
-  );
-});
+// ── Styles ──
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 16,
-    marginTop: 12,
-    marginBottom: 4,
-    borderRadius: 14,
-    overflow: "hidden",
-  },
-  inner: {
+    height: TAB_BAR_HEIGHT,
     flexDirection: "row",
-    height: 44,
-    position: "relative",
+    alignItems: "center",
     borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  tab: {
+    height: TAB_BAR_HEIGHT,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tabLabel: {
+    fontSize: fontSizeTokens.bodySmall,
+    fontWeight: fontWeightTokens.semiBold,
+    letterSpacing: 0.2,
   },
   indicator: {
     position: "absolute",
-    top: 0,
     bottom: 0,
-    borderRadius: 14,
-  },
-  tab: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    paddingHorizontal: 4,
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: "500",
-    letterSpacing: 0.1,
-  },
-  labelActive: {
-    fontWeight: "700",
+    left: 0,
+    height: 2,
   },
 });
