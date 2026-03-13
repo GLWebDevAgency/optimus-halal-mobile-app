@@ -36,22 +36,28 @@ function makeAdditive(overrides: Partial<AdditiveForScore> = {}): AdditiveForSco
 
 // ── Complete Product (OFF grade fallback) ─────────────────────
 
-describe("computeHealthScore V2 — complete product", () => {
-  it("grade A / NOVA 1 / no additives / full data → 89 (OFF fallback ceiling)", () => {
+describe("computeHealthScore V3 — complete product (OFF grade fallback)", () => {
+  // V3 general: nutritionMax=60, additivesMax=20, NOVA max=10
+  // OFF grade fallback → center of point range
+  // A: center(60,60)=60, B: center(47,59)=53, C: center(25,46)=36, D: center(10,25)=18, E: center(0,10)=5
+
+  it("grade A / NOVA 1 / no additives / full data → 90 (OFF fallback)", () => {
     const result = computeHealthScore(makeInput({
       nutriscoreGrade: "a",
       novaGroup: 1,
     }));
-    // V2: nutrition=40/40, additives=25/25, processing=15/15, transparency=9/10
-    // normalized = (89/90)*90 = 89
-    expect(result.score).toBe(89);
+    // nutrition=60/60, additives=20/20, processing=10/10
+    // total=90/90, baseScore = round((90/90)*90) = 90
+    expect(result.score).toBe(90);
     expect(result.label).toBe("excellent");
     expect(result.dataConfidence).toBe("high");
     expect(result.axes.nutrition?.source).toBe("off_grade");
     expect(result.cappedByAdditive).toBe(false);
+    expect(result.category).toBe("general");
+    expect(result.bonuses).toEqual({ bio: 0, aop: 0 });
   });
 
-  it("grade E / NOVA 4 / no data → 27", () => {
+  it("grade E / NOVA 4 / no data → 25", () => {
     const result = computeHealthScore(makeInput({
       nutriscoreGrade: "e",
       novaGroup: 4,
@@ -60,38 +66,42 @@ describe("computeHealthScore V2 — complete product", () => {
       hasAllergens: false,
       hasOrigin: false,
     }));
-    // nutrition=0/40, additives=25/25, processing=0/15, transparency=2/10
-    expect(result.score).toBe(27);
+    // nutrition=5/60, additives=20/20, processing=0/10
+    // total=25/90, baseScore = round((25/90)*90) = 25
+    expect(result.score).toBe(25);
     expect(result.label).toBe("poor");
   });
 
-  it("grade B / NOVA 2 / full data → 77", () => {
+  it("grade B / NOVA 2 / full data → 80", () => {
     const result = computeHealthScore(makeInput({
       nutriscoreGrade: "b",
       novaGroup: 2,
     }));
-    // nutrition=33/40, additives=25/25, processing=10/15, transparency=9/10
-    expect(result.score).toBe(77);
-    expect(result.label).toBe("good");
+    // nutrition=53/60, additives=20/20, processing=7/10
+    // total=80/90, baseScore = round((80/90)*90) = 80
+    expect(result.score).toBe(80);
+    expect(result.label).toBe("excellent");
   });
 
   it.each([
-    ["a", 40],
-    ["b", 33],
-    ["c", 22],
-    ["d", 10],
-    ["e", 0],
-  ] as const)("OFF grade %s → %i/40 nutrition points", (grade, expected) => {
+    // OFF grade → center of point range for general (nutritionMax=60)
+    // A: (60+60)/2=60, B: (47+59)/2=53, C: (25+46)/2=35.5→36, D: (10+25)/2=17.5→18, E: (0+10)/2=5
+    ["a", 60],
+    ["b", 53],
+    ["c", 36],
+    ["d", 18],
+    ["e", 5],
+  ] as const)("OFF grade %s → %i/60 nutrition points (general)", (grade, expected) => {
     const result = computeHealthScore(makeInput({ nutriscoreGrade: grade }));
     expect(result.axes.nutrition?.score).toBe(expected);
-    expect(result.axes.nutrition?.max).toBe(40);
+    expect(result.axes.nutrition?.max).toBe(60);
     expect(result.axes.nutrition?.source).toBe("off_grade");
   });
 });
 
 // ── Computed NutriScore ──────────────────────────────────────
 
-describe("computeHealthScore V2 — computed NutriScore", () => {
+describe("computeHealthScore V3 — computed NutriScore", () => {
   it("computes NutriScore from raw nutriments (grade A product)", () => {
     const result = computeHealthScore(makeInput({
       nutriscoreGrade: null,
@@ -109,7 +119,7 @@ describe("computeHealthScore V2 — computed NutriScore", () => {
     }));
     expect(result.axes.nutrition?.source).toBe("computed");
     expect(result.axes.nutrition?.grade).toBe("a");
-    expect(result.axes.nutrition?.score).toBe(40);
+    expect(result.axes.nutrition?.score).toBe(60); // grade A → full points (60 for general)
     expect(result.nutriScoreDetail).toBeDefined();
     expect(result.nutriScoreDetail?.grade).toBe("a");
     expect(result.score).toBeGreaterThanOrEqual(85);
@@ -121,7 +131,7 @@ describe("computeHealthScore V2 — computed NutriScore", () => {
       nutriments: { energy_100g: 500 }, // only 1 N-nutriment
     }));
     expect(result.axes.nutrition?.source).toBe("off_grade");
-    expect(result.axes.nutrition?.score).toBe(22);
+    expect(result.axes.nutrition?.score).toBe(36); // center of C point range for general
   });
 
   it("computed NutriScore provides interpolated points within grade", () => {
@@ -140,7 +150,7 @@ describe("computeHealthScore V2 — computed NutriScore", () => {
     }));
     expect(result.axes.nutrition?.source).toBe("computed");
     expect(result.axes.nutrition?.grade).toBe("e");
-    // Interpolation: raw >= 19 → decreasing from 10 toward 0
+    // V3: grade E uses overshoot decay from max(0, ptsHi - round(overshoot * 0.5))
     expect(result.axes.nutrition!.score).toBeLessThanOrEqual(10);
   });
 
@@ -153,8 +163,6 @@ describe("computeHealthScore V2 — computed NutriScore", () => {
         sodium_100g: 0.1,
       },
     }));
-    // NutriScore may or may not compute (depends on having 3/4 N-nutrients)
-    // But nutriScoreDetail should exist if computed
     if (result.axes.nutrition?.source === "computed") {
       expect(result.nutriScoreDetail).toBeDefined();
     }
@@ -163,7 +171,7 @@ describe("computeHealthScore V2 — computed NutriScore", () => {
 
 // ── Insufficient Data ────────────────────────────────────────
 
-describe("computeHealthScore V2 — insufficient data", () => {
+describe("computeHealthScore V3 — insufficient data", () => {
   it("returns null score when only additives axis is available", () => {
     const result = computeHealthScore(makeInput({
       nutriscoreGrade: null,
@@ -180,10 +188,10 @@ describe("computeHealthScore V2 — insufficient data", () => {
       nutriscoreGrade: "b",
       novaGroup: null,
     }));
-    // nutrition=33/40, additives=25/25, transparency=7/10 (no NOVA bonus)
-    // total=65/75, normalized=(65/75)*90=78
-    expect(result.score).toBe(78);
-    expect(result.label).toBe("good");
+    // V3 general: nutrition=53/60, additives=20/20
+    // total=73/80, normalized=round((73/80)*90)=82
+    expect(result.score).toBe(82);
+    expect(result.label).toBe("excellent");
     expect(result.dataConfidence).toBe("medium");
     expect(result.axes.processing).toBeNull();
   });
@@ -193,9 +201,9 @@ describe("computeHealthScore V2 — insufficient data", () => {
       nutriscoreGrade: null,
       novaGroup: 1,
     }));
-    // additives=25/25, processing=15/15, transparency=9/10 (NOVA available)
-    // total=49/50, normalized=(49/50)*90=88
-    expect(result.score).toBe(88);
+    // V3 general: additives=20/20, processing=10/10
+    // total=30/30, normalized=round((30/30)*90)=90
+    expect(result.score).toBe(90);
     expect(result.axes.nutrition).toBeNull();
   });
 
@@ -208,38 +216,53 @@ describe("computeHealthScore V2 — insufficient data", () => {
   });
 });
 
-// ── Additives Axis (25 pts) ──────────────────────────────────
+// ── Additives Axis (15-20 pts, category-dependent) ───────────
 
-describe("computeHealthScore V2 — additives penalties", () => {
-  it("zero additives = 25/25", () => {
+describe("computeHealthScore V3 — additives penalties", () => {
+  // V3 general: additivesMax=20, penalties: safe=0, low_concern=1.5, moderate=4, high=8
+
+  it("zero additives = 20/20 (general)", () => {
     const result = computeHealthScore(makeInput({ additives: [] }));
-    expect(result.axes.additives.score).toBe(25);
+    expect(result.axes.additives.score).toBe(20);
+    expect(result.axes.additives.max).toBe(20);
     expect(result.axes.additives.penalties).toEqual([]);
+    expect(result.axes.additives.hasBanned).toBe(false);
   });
 
-  it("EFSA banned additive → axe = 0 immediately", () => {
+  it("EFSA banned additive → axe = 0 immediately, hasBanned = true", () => {
     const result = computeHealthScore(makeInput({
       additives: [makeAdditive({ code: "E123", efsaStatus: "banned" })],
     }));
     expect(result.axes.additives.score).toBe(0);
+    expect(result.axes.additives.hasBanned).toBe(true);
     expect(result.axes.additives.penalties).toContain("E123: EFSA banned");
   });
 
-  it("high_concern additive penalizes 10 points", () => {
+  it("high_concern additive penalizes 8 points", () => {
     const result = computeHealthScore(makeInput({
       additives: [makeAdditive({ code: "E621", toxicityLevel: "high_concern" })],
     }));
-    expect(result.axes.additives.score).toBe(15); // 25 - 10
+    // round(max(0, 20 - 8)) = 12
+    expect(result.axes.additives.score).toBe(12);
   });
 
-  it("moderate_concern additive penalizes 5 points", () => {
+  it("moderate_concern additive penalizes 4 points", () => {
     const result = computeHealthScore(makeInput({
       additives: [makeAdditive({ code: "E471", toxicityLevel: "moderate_concern" })],
     }));
-    expect(result.axes.additives.score).toBe(20); // 25 - 5
+    // round(max(0, 20 - 4)) = 16
+    expect(result.axes.additives.score).toBe(16);
   });
 
-  it("EFSA restricted multiplier (x1.5)", () => {
+  it("low_concern single additive → round(20 - 1.5) = 19 (NOT 18)", () => {
+    const result = computeHealthScore(makeInput({
+      additives: [makeAdditive({ code: "E330", toxicityLevel: "low_concern" })],
+    }));
+    // V3: low_concern=1.5, round(20 - 1.5) = round(18.5) = 19
+    expect(result.axes.additives.score).toBe(19);
+  });
+
+  it("EFSA restricted multiplier (x1.3)", () => {
     const result = computeHealthScore(makeInput({
       additives: [makeAdditive({
         code: "E171",
@@ -247,9 +270,9 @@ describe("computeHealthScore V2 — additives penalties", () => {
         efsaStatus: "restricted",
       })],
     }));
-    // 5 * 1.5 = 7.5 → round → 8 → 25 - 8 = 17
-    expect(result.axes.additives.score).toBe(17);
-    expect(result.axes.additives.penalties).toContain("E171: EFSA restricted (x1.5)");
+    // 4 * 1.3 = 5.2 → round(20 - 5.2) = round(14.8) = 15
+    expect(result.axes.additives.score).toBe(15);
+    expect(result.axes.additives.penalties).toContain("E171: EFSA restricted (x1.3)");
   });
 
   it("ADI < 5mg/kg multiplier (x1.3)", () => {
@@ -260,8 +283,8 @@ describe("computeHealthScore V2 — additives penalties", () => {
         adiMgPerKg: 4,
       })],
     }));
-    // 2 * 1.3 = 2.6 → round → 3 → 25 - 3 = 22
-    expect(result.axes.additives.score).toBe(22);
+    // 1.5 * 1.3 = 1.95 → round(20 - 1.95) = round(18.05) = 18
+    expect(result.axes.additives.score).toBe(18);
     expect(result.axes.additives.penalties).toContain("E951: ADI < 5mg/kg (x1.3)");
   });
 
@@ -273,8 +296,8 @@ describe("computeHealthScore V2 — additives penalties", () => {
         bannedCountries: ["NO", "SE", "AT"],
       })],
     }));
-    // 2 + 3 = 5 → 25 - 5 = 20
-    expect(result.axes.additives.score).toBe(20);
+    // 1.5 + 3 = 4.5 → round(20 - 4.5) = round(15.5) = 16
+    expect(result.axes.additives.score).toBe(16);
     expect(result.axes.additives.penalties).toContain("E102: banned in 3 countries (+3)");
   });
 
@@ -288,44 +311,64 @@ describe("computeHealthScore V2 — additives penalties", () => {
         bannedCountries: ["NO", "SE", "AT", "FI"],
       })],
     }));
-    // 10 * 1.5 = 15 → round → 15 * 1.3 = 19.5 → round → 20 + 3 = 23 → 25-23=2
-    expect(result.axes.additives.score).toBe(2);
+    // 8 * 1.3 = 10.4 * 1.3 = 13.52 + 3 = 16.52 → round(20 - 16.52) = round(3.48) = 3
+    expect(result.axes.additives.score).toBe(3);
   });
 
   it("multiple additives accumulate penalties", () => {
     const result = computeHealthScore(makeInput({
       additives: [
-        makeAdditive({ code: "E621", toxicityLevel: "high_concern" }),     // -10
-        makeAdditive({ code: "E471", toxicityLevel: "moderate_concern" }), // -5
-        makeAdditive({ code: "E330", toxicityLevel: "low_concern" }),      // -2
+        makeAdditive({ code: "E621", toxicityLevel: "high_concern" }),     // 8
+        makeAdditive({ code: "E471", toxicityLevel: "moderate_concern" }), // 4
+        makeAdditive({ code: "E330", toxicityLevel: "low_concern" }),      // 1.5
       ],
     }));
-    expect(result.axes.additives.score).toBe(8); // 25 - 17
+    // total penalty = 8 + 4 + 1.5 = 13.5 → round(20 - 13.5) = round(6.5) = 7
+    expect(result.axes.additives.score).toBe(7);
   });
 
   it("penalties clamped to 0 (never negative)", () => {
     const result = computeHealthScore(makeInput({
       additives: [
-        makeAdditive({ code: "E1", toxicityLevel: "high_concern" }), // -10
-        makeAdditive({ code: "E2", toxicityLevel: "high_concern" }), // -10
-        makeAdditive({ code: "E3", toxicityLevel: "high_concern" }), // -10
+        makeAdditive({ code: "E1", toxicityLevel: "high_concern" }), // 8
+        makeAdditive({ code: "E2", toxicityLevel: "high_concern" }), // 8
+        makeAdditive({ code: "E3", toxicityLevel: "high_concern" }), // 8
       ],
     }));
+    // total penalty = 24 → round(max(0, 20-24)) = 0
     expect(result.axes.additives.score).toBe(0);
+  });
+
+  it("fats_oils_nuts category has additivesMax=15", () => {
+    const result = computeHealthScore(makeInput({
+      additives: [],
+      categories: "huile d'olive",
+    }));
+    expect(result.axes.additives.max).toBe(15);
+    expect(result.axes.additives.score).toBe(15);
+  });
+
+  it("cheese category has additivesMax=15", () => {
+    const result = computeHealthScore(makeInput({
+      additives: [],
+      categories: "fromage camembert",
+    }));
+    expect(result.axes.additives.max).toBe(15);
   });
 });
 
-// ── NOVA Processing Axis (15 pts) ────────────────────────────
+// ── NOVA Processing Axis (10 pts) ────────────────────────────
 
-describe("computeHealthScore V2 — NOVA processing", () => {
+describe("computeHealthScore V3 — NOVA processing", () => {
   it.each([
-    [1, 15],
-    [2, 10],
-    [3, 5],
+    [1, 10],
+    [2, 7],
+    [3, 4],
     [4, 0],
-  ])("NOVA %i → %i points", (nova, expected) => {
+  ])("NOVA %i → %i points (V3)", (nova, expected) => {
     const result = computeHealthScore(makeInput({ novaGroup: nova }));
     expect(result.axes.processing?.score).toBe(expected);
+    expect(result.axes.processing?.max).toBe(10);
     expect(result.axes.processing?.source).toBe("off");
   });
 
@@ -339,7 +382,7 @@ describe("computeHealthScore V2 — NOVA processing", () => {
       novaGroup: null,
       aiNovaEstimate: 3,
     }));
-    expect(result.axes.processing?.score).toBe(5);
+    expect(result.axes.processing?.score).toBe(4); // NOVA 3 → 4 pts in V3
     expect(result.axes.processing?.source).toBe("ai");
   });
 
@@ -370,7 +413,7 @@ describe("computeHealthScore V2 — NOVA processing", () => {
       additiveCount: 0,
       ingredientCount: 3,
     }));
-    expect(result.axes.processing?.score).toBe(15);
+    expect(result.axes.processing?.score).toBe(10); // NOVA 1 → 10 pts in V3
     expect(result.axes.processing?.source).toBe("heuristic");
   });
 
@@ -379,74 +422,251 @@ describe("computeHealthScore V2 — NOVA processing", () => {
       novaGroup: 1,
       aiNovaEstimate: 4,
     }));
-    expect(result.axes.processing?.score).toBe(15); // NOVA 1, not 4
+    expect(result.axes.processing?.score).toBe(10); // NOVA 1, not 4
     expect(result.axes.processing?.source).toBe("off");
   });
 });
 
-// ── Transparency Axis (10 pts) ───────────────────────────────
+// ── Beverage Sugar Axis (20 pts, beverages only) ─────────────
 
-describe("computeHealthScore V2 — transparency", () => {
-  it("all data + computed NutriScore + NOVA → 10/10", () => {
+describe("computeHealthScore V3 — beverage sugar axis", () => {
+  it("0g sugar → 20 pts", () => {
     const result = computeHealthScore(makeInput({
-      novaGroup: 2,
+      categories: "boisson",
       nutriments: {
-        energy_100g: 400,
-        sugars_100g: 3,
-        saturated_fat_100g: 1,
-        sodium_100g: 0.1,
-        fiber_100g: 5,
-        proteins_100g: 10,
+        energy_100g: 0,
+        sugars_100g: 0,
+        saturated_fat_100g: 0,
+        sodium_100g: 0,
       },
+      nutriscoreGrade: "b",
+      novaGroup: 1,
     }));
-    // 2+3+1+1+1.5(computed)+1.5(NOVA) = 10
-    expect(result.axes.transparency).toEqual({ score: 10, max: 10 });
+    expect(result.category).toBe("beverages");
+    expect(result.axes.beverageSugar).toBeDefined();
+    expect(result.axes.beverageSugar!.score).toBe(20);
+    expect(result.axes.beverageSugar!.max).toBe(20);
   });
 
-  it("all data + OFF grade only (no computed) → 9/10", () => {
+  it("10.6g sugar (Coca-Cola level) → 0 pts", () => {
+    const result = computeHealthScore(makeInput({
+      categories: "soda",
+      nutriments: {
+        energy_100g: 180,
+        sugars_100g: 10.6,
+        saturated_fat_100g: 0,
+        sodium_100g: 0.01,
+      },
+      nutriscoreGrade: "e",
+      novaGroup: 4,
+    }));
+    expect(result.axes.beverageSugar).toBeDefined();
+    expect(result.axes.beverageSugar!.score).toBe(0);
+  });
+
+  it("1g sugar → 17 pts", () => {
+    const result = computeHealthScore(makeInput({
+      categories: "boisson",
+      nutriments: {
+        energy_100g: 20,
+        sugars_100g: 1,
+        saturated_fat_100g: 0,
+        sodium_100g: 0,
+      },
+      nutriscoreGrade: "b",
+      novaGroup: 1,
+    }));
+    expect(result.axes.beverageSugar!.score).toBe(17);
+  });
+
+  it("5g sugar → 10 pts", () => {
+    const result = computeHealthScore(makeInput({
+      categories: "jus de fruits",
+      nutriments: {
+        energy_100g: 100,
+        sugars_100g: 5,
+        saturated_fat_100g: 0,
+        sodium_100g: 0,
+      },
+      nutriscoreGrade: "c",
+      novaGroup: 2,
+    }));
+    expect(result.axes.beverageSugar!.score).toBe(10);
+  });
+
+  it("non-beverage has no beverageSugar axis", () => {
+    const result = computeHealthScore(makeInput({
+      categories: "biscuits",
+      nutriments: {
+        energy_100g: 2000,
+        sugars_100g: 30,
+        saturated_fat_100g: 10,
+        sodium_100g: 0.5,
+      },
+    }));
+    expect(result.axes.beverageSugar).toBeUndefined();
+  });
+});
+
+// ── Bio/AOP Bonuses ──────────────────────────────────────────
+
+describe("computeHealthScore V3 — bio/aop bonuses", () => {
+  it("+7 for organic label", () => {
+    const result = computeHealthScore(makeInput({
+      nutriscoreGrade: "b",
+      novaGroup: 2,
+      labels: ["en:organic", "en:eu-organic"],
+    }));
+    expect(result.bonuses.bio).toBe(7);
+    expect(result.bonuses.aop).toBe(0);
+    // Base without bonus would be 80, with +7 = 87
+    expect(result.score).toBe(87);
+  });
+
+  it("+3 for AOP label", () => {
+    const result = computeHealthScore(makeInput({
+      nutriscoreGrade: "b",
+      novaGroup: 2,
+      labels: ["en:pdo", "fr:aop"],
+    }));
+    expect(result.bonuses.bio).toBe(0);
+    expect(result.bonuses.aop).toBe(3);
+    expect(result.score).toBe(83);
+  });
+
+  it("+10 combined bio + aop", () => {
+    const result = computeHealthScore(makeInput({
+      nutriscoreGrade: "b",
+      novaGroup: 2,
+      labels: ["en:organic", "en:pdo"],
+    }));
+    expect(result.bonuses.bio).toBe(7);
+    expect(result.bonuses.aop).toBe(3);
+    expect(result.score).toBe(90);
+  });
+
+  it("no labels → 0 bonuses", () => {
+    const result = computeHealthScore(makeInput({
+      nutriscoreGrade: "b",
+      novaGroup: 2,
+    }));
+    expect(result.bonuses).toEqual({ bio: 0, aop: 0 });
+  });
+
+  it("bio label detected via 'biologique'", () => {
     const result = computeHealthScore(makeInput({
       nutriscoreGrade: "a",
       novaGroup: 1,
+      labels: ["Agriculture biologique"],
     }));
-    // 2+3+1+1+0(not computed)+1.5(NOVA) = 8.5 → 9
-    expect(result.axes.transparency.score).toBe(9);
+    expect(result.bonuses.bio).toBe(7);
   });
 
-  it("all data + no NOVA → 7/10", () => {
+  it("aop label detected via 'label rouge'", () => {
     const result = computeHealthScore(makeInput({
       nutriscoreGrade: "a",
-      novaGroup: null,
+      novaGroup: 1,
+      labels: ["Label Rouge"],
     }));
-    // 2+3+1+1+0+0 = 7
-    expect(result.axes.transparency.score).toBe(7);
+    expect(result.bonuses.aop).toBe(3);
   });
 
-  it("no data flags but NOVA present → 2/10", () => {
+  it("bonuses capped at 100 total", () => {
     const result = computeHealthScore(makeInput({
-      hasIngredientsList: false,
-      hasNutritionFacts: false,
-      hasAllergens: false,
-      hasOrigin: false,
+      nutriscoreGrade: "a",
+      novaGroup: 1,
+      labels: ["en:organic", "en:pdo"],
     }));
-    // 0+0+0+0+0+1.5(NOVA) = 1.5 → 2
-    expect(result.axes.transparency.score).toBe(2);
+    // 90 + 7 + 3 = 100, clamped to 100
+    expect(result.score).toBe(100);
+  });
+});
+
+// ── Category Detection & Weights ─────────────────────────────
+
+describe("computeHealthScore V3 — category detection", () => {
+  it("detects beverages category", () => {
+    const result = computeHealthScore(makeInput({ categories: "boisson gazeuse" }));
+    expect(result.category).toBe("beverages");
+    expect(result.axes.nutrition?.max).toBe(50);
+    expect(result.axes.additives.max).toBe(20);
   });
 
-  it("partial data: ingredients + nutrition only → 7/10", () => {
+  it("detects fats_oils_nuts category", () => {
+    const result = computeHealthScore(makeInput({ categories: "huile d'olive" }));
+    expect(result.category).toBe("fats_oils_nuts");
+    expect(result.axes.nutrition?.max).toBe(55);
+    expect(result.axes.additives.max).toBe(15);
+  });
+
+  it("detects cheese category", () => {
+    const result = computeHealthScore(makeInput({ categories: "fromage" }));
+    expect(result.category).toBe("cheese");
+    expect(result.axes.nutrition?.max).toBe(55);
+    expect(result.axes.additives.max).toBe(15);
+  });
+
+  it("detects red_meat category", () => {
+    const result = computeHealthScore(makeInput({ categories: "boeuf" }));
+    expect(result.category).toBe("red_meat");
+    expect(result.axes.nutrition?.max).toBe(60);
+    expect(result.axes.additives.max).toBe(20);
+  });
+
+  it("defaults to general category", () => {
+    const result = computeHealthScore(makeInput({ categories: "biscuits" }));
+    expect(result.category).toBe("general");
+    expect(result.axes.nutrition?.max).toBe(60);
+    expect(result.axes.additives.max).toBe(20);
+  });
+});
+
+// ── Coca-Cola Regression Test ────────────────────────────────
+
+describe("computeHealthScore V3 — Coca-Cola regression", () => {
+  it("Coca-Cola scores ~21 (was 72 in V2)", () => {
     const result = computeHealthScore(makeInput({
+      categories: "Soda, Boisson gazeuse",
+      nutriments: {
+        energy_100g: 180,
+        sugars_100g: 10.6,
+        saturated_fat_100g: 0,
+        sodium_100g: 0.01,
+        fiber_100g: 0,
+        proteins_100g: 0,
+      },
+      nutriscoreGrade: "e",
+      novaGroup: 4,
+      additives: [
+        makeAdditive({ code: "E150d", toxicityLevel: "low_concern" }),
+        makeAdditive({ code: "E338", toxicityLevel: "low_concern" }),
+      ],
       hasIngredientsList: true,
       hasNutritionFacts: true,
       hasAllergens: false,
       hasOrigin: false,
     }));
-    // 2+3+0+0+0+1.5(NOVA from default novaGroup=2) = 6.5 → 7
-    expect(result.axes.transparency.score).toBe(7);
+
+    expect(result.category).toBe("beverages");
+    // Beverage sugar: 10.6g → 0 pts (max 20)
+    expect(result.axes.beverageSugar).toBeDefined();
+    expect(result.axes.beverageSugar!.score).toBe(0);
+    // NOVA 4 → 0 pts (max 10)
+    expect(result.axes.processing?.score).toBe(0);
+    // Nutrition axis: grade E for beverages → low points
+    // Additives: 2 low_concern = 2 * 1.5 = 3 penalty → round(20 - 3) = 17
+    expect(result.axes.additives.score).toBe(17);
+
+    // Score should be around 21 (significantly lower than V2's 72)
+    expect(result.score).toBeGreaterThanOrEqual(15);
+    expect(result.score).toBeLessThanOrEqual(25);
+    expect(result.label).toBe("poor");
   });
 });
 
-// ── Profile Adjustments (V2 NEW) ─────────────────────────────
+// ── Profile Adjustments ──────────────────────────────────────
 
-describe("computeHealthScore V2 — profile adjustments", () => {
+describe("computeHealthScore V3 — profile adjustments", () => {
   it("standard profile → delta 0, no reasons", () => {
     const result = computeHealthScore(makeInput({ profile: "standard" }));
     expect(result.axes.profile.delta).toBe(0);
@@ -547,7 +767,6 @@ describe("computeHealthScore V2 — profile adjustments", () => {
   });
 
   it("profile delta clamped to [-10, +10]", () => {
-    // Athlete with everything good — many bonuses
     const result = computeHealthScore(makeInput({
       profile: "athlete",
       nutriments: { proteins_100g: 50, salt_100g: 5, energy_100g: 2000, sugars_100g: 2, saturated_fat_100g: 3, sodium_100g: 2 },
@@ -557,18 +776,30 @@ describe("computeHealthScore V2 — profile adjustments", () => {
   });
 });
 
-// ── High Concern Additive Cap (V2 NEW) ───────────────────────
+// ── Additive Caps ─────────────────────────────────────────────
 
-describe("computeHealthScore V2 — high concern cap", () => {
-  it("caps score at 49 when high_concern additive present", () => {
+describe("computeHealthScore V3 — additive caps", () => {
+  it("banned additive caps score at 25", () => {
+    const result = computeHealthScore(makeInput({
+      nutriscoreGrade: "a",
+      novaGroup: 1,
+      additives: [makeAdditive({ code: "E123", efsaStatus: "banned" })],
+    }));
+    // Without cap, score would be high. With banned cap: 25
+    expect(result.score).toBeLessThanOrEqual(25);
+    expect(result.cappedByAdditive).toBe(true);
+    expect(result.axes.additives.hasBanned).toBe(true);
+  });
+
+  it("high_concern additive caps score at 49", () => {
     const result = computeHealthScore(makeInput({
       nutriscoreGrade: "a",
       novaGroup: 1,
       additives: [makeAdditive({ code: "E621", toxicityLevel: "high_concern" })],
     }));
-    // Without cap, score would be ~77. With cap: 49
     expect(result.score).toBe(49);
     expect(result.cappedByAdditive).toBe(true);
+    expect(result.axes.additives.hasBanned).toBe(false);
   });
 
   it("no cap when product has no high_concern additive", () => {
@@ -581,18 +812,25 @@ describe("computeHealthScore V2 — high concern cap", () => {
     expect(result.score).toBeGreaterThan(49);
   });
 
-  it("banned additive triggers cap (banned implies high concern)", () => {
+  it("score already below 25 is not affected by banned cap", () => {
     const result = computeHealthScore(makeInput({
-      nutriscoreGrade: "a",
-      novaGroup: 1,
+      nutriscoreGrade: "e",
+      novaGroup: 4,
       additives: [makeAdditive({ code: "E123", efsaStatus: "banned" })],
+      hasIngredientsList: false,
+      hasNutritionFacts: false,
+      hasAllergens: false,
+      hasOrigin: false,
     }));
-    // EFSA banned sets hasHighConcern via the banned check
-    // Actually banned returns early with score=0 and hasHighConcern=true
-    expect(result.cappedByAdditive).toBe(true);
+    // Score would be very low without cap
+    expect(result.score!).toBeLessThanOrEqual(25);
+    // Not "capped" if already below
+    if (result.score! < 25) {
+      expect(result.cappedByAdditive).toBe(false);
+    }
   });
 
-  it("score already below 49 is not affected by cap", () => {
+  it("score already below 49 is not affected by high_concern cap", () => {
     const result = computeHealthScore(makeInput({
       nutriscoreGrade: "e",
       novaGroup: 4,
@@ -602,29 +840,37 @@ describe("computeHealthScore V2 — high concern cap", () => {
       hasAllergens: false,
       hasOrigin: false,
     }));
-    // Score would be ~20 without cap
     expect(result.score!).toBeLessThan(49);
-    expect(result.cappedByAdditive).toBe(false); // not capped because already below
+    expect(result.cappedByAdditive).toBe(false);
+  });
+});
+
+// ── No Transparency Axis ─────────────────────────────────────
+
+describe("computeHealthScore V3 — no transparency axis", () => {
+  it("result.axes should NOT have transparency property", () => {
+    const result = computeHealthScore(makeInput());
+    expect(result.axes).not.toHaveProperty("transparency");
   });
 });
 
 // ── Labels ───────────────────────────────────────────────────
 
-describe("computeHealthScore V2 — labels", () => {
+describe("computeHealthScore V3 — labels", () => {
   it("grade A / NOVA 1 → excellent", () => {
     const result = computeHealthScore(makeInput({ nutriscoreGrade: "a", novaGroup: 1 }));
     expect(result.label).toBe("excellent");
   });
 
-  it("grade B / NOVA 2 → good", () => {
+  it("grade B / NOVA 2 → excellent (80 in V3)", () => {
     const result = computeHealthScore(makeInput({ nutriscoreGrade: "b", novaGroup: 2 }));
-    expect(result.label).toBe("good");
+    expect(result.label).toBe("excellent");
   });
 
   it("grade D / NOVA 3 → mediocre", () => {
     const result = computeHealthScore(makeInput({ nutriscoreGrade: "d", novaGroup: 3 }));
-    // nutrition=10/40, processing=5/15, additives=25/25, transparency=9/10
-    // total=49/90, normalized=(49/90)*90=49
+    // V3: nutrition=18/60, processing=4/10, additives=20/20
+    // total=42/90, normalized=round((42/90)*90)=42
     expect(result.label).toBe("mediocre");
   });
 
@@ -649,15 +895,16 @@ describe("computeHealthScore V2 — labels", () => {
 
 // ── Data Confidence ──────────────────────────────────────────
 
-describe("computeHealthScore V2 — data confidence", () => {
+describe("computeHealthScore V3 — data confidence", () => {
   it("nutrition + processing → high", () => {
     const result = computeHealthScore(makeInput({ nutriscoreGrade: "a", novaGroup: 1 }));
     expect(result.dataConfidence).toBe("high");
   });
 
-  it("computed NutriScore + OFF NOVA → high", () => {
+  it("computed NutriScore + OFF NOVA + hasIngredientsList → high", () => {
     const result = computeHealthScore(makeInput({
       novaGroup: 2,
+      hasIngredientsList: true,
       nutriments: {
         energy_100g: 400,
         sugars_100g: 3,
@@ -692,25 +939,25 @@ describe("computeHealthScore V2 — data confidence", () => {
 
 // ── Proportional Scoring ─────────────────────────────────────
 
-describe("computeHealthScore V2 — proportional scoring when axis absent", () => {
-  it("NOVA absent: score proportional to (nutrition + additives + transparency)", () => {
+describe("computeHealthScore V3 — proportional scoring when axis absent", () => {
+  it("NOVA absent: score proportional to (nutrition + additives)", () => {
     const result = computeHealthScore(makeInput({
       nutriscoreGrade: "a",
       novaGroup: null,
     }));
-    // nutrition=40/40, additives=25/25, transparency=7/10
-    // total=72/75, normalized=(72/75)*90=86
-    expect(result.score).toBe(86);
+    // V3 general: nutrition=60/60, additives=20/20
+    // total=80/80, normalized=round((80/80)*90)=90
+    expect(result.score).toBe(90);
   });
 
-  it("nutriscore absent: score proportional to (additives + processing + transparency)", () => {
+  it("nutriscore absent: score proportional to (additives + processing)", () => {
     const result = computeHealthScore(makeInput({
       nutriscoreGrade: null,
       novaGroup: 1,
     }));
-    // additives=25/25, processing=15/15, transparency=9/10
-    // total=49/50, normalized=(49/50)*90=88
-    expect(result.score).toBe(88);
+    // V3 general: additives=20/20, processing=10/10
+    // total=30/30, normalized=round((30/30)*90)=90
+    expect(result.score).toBe(90);
   });
 
   it("both absent → null (insufficient primary axes)", () => {
@@ -724,19 +971,22 @@ describe("computeHealthScore V2 — proportional scoring when axis absent", () =
 
 // ── Result Structure ─────────────────────────────────────────
 
-describe("computeHealthScore V2 — result structure", () => {
-  it("includes all V2 fields in result", () => {
+describe("computeHealthScore V3 — result structure", () => {
+  it("includes all V3 fields in result", () => {
     const result = computeHealthScore(makeInput());
     expect(result).toHaveProperty("score");
     expect(result).toHaveProperty("label");
     expect(result).toHaveProperty("axes");
     expect(result).toHaveProperty("dataConfidence");
     expect(result).toHaveProperty("cappedByAdditive");
+    expect(result).toHaveProperty("bonuses");
+    expect(result).toHaveProperty("category");
     expect(result.axes).toHaveProperty("nutrition");
     expect(result.axes).toHaveProperty("additives");
     expect(result.axes).toHaveProperty("processing");
-    expect(result.axes).toHaveProperty("transparency");
     expect(result.axes).toHaveProperty("profile");
+    expect(result.axes).not.toHaveProperty("transparency");
+    expect(result.axes.additives).toHaveProperty("hasBanned");
   });
 
   it("profile axis always has delta and reasons", () => {
@@ -815,7 +1065,6 @@ describe("detectNutrientAnomalies", () => {
   });
 
   it("detects anomalies from OFF nutriscore components when standard nutriments null", () => {
-    // Simulates the sardines case: standard nutriments null but OFF computed from estimates
     const anomalies = detectNutrientAnomalies(
       null,
       "Sardines en conserve",
@@ -841,35 +1090,27 @@ describe("detectNutrientAnomalies", () => {
 
 // ── Anomaly Integration in Health Score ─────────────────────
 
-describe("computeHealthScore V2 — nutrient anomaly handling", () => {
+describe("computeHealthScore V3 — nutrient anomaly handling", () => {
   it("sardines case: OFF grade E discarded when nutriscore components have suspicious salt", () => {
-    // Sardines with OFF grade E (from bad salt data) but no standard nutriments
     const result = computeHealthScore(makeInput({
       nutriscoreGrade: "e",
       novaGroup: 3,
-      nutriments: {},  // standard nutriments absent
+      nutriments: {},
       offNutriscoreComponents: [
         { id: "energy", value: 981 },
         { id: "saturated_fat", value: 3.73 },
         { id: "sugars", value: 0 },
-        { id: "salt", value: 12.68 },  // suspicious: 12.68g for sardines
+        { id: "salt", value: 12.68 },
       ],
       categories: "Sardines en conserve",
     }));
-    // OFF grade "e" should be discarded because:
-    // 1. Suspicious salt anomaly detected
-    // 2. Standard nutriments are absent (grade based on unreliable estimates)
-    // Without nutrition axis, score is proportional to remaining axes
     expect(result.nutrientAnomalies).toBeDefined();
     expect(result.nutrientAnomalies!.length).toBeGreaterThan(0);
     expect(result.dataConfidence).not.toBe("high");
-    // The score should NOT be 39 (the broken value)
     expect(result.axes.nutrition).toBeNull();
   });
 
   it("preserves OFF grade when standard nutriments are present despite suspicious values", () => {
-    // If user/OFF provides actual nutriments with a suspicious value, we still compute
-    // but degrade confidence — the data is at least "declared"
     const result = computeHealthScore(makeInput({
       nutriscoreGrade: "e",
       novaGroup: 3,
@@ -883,8 +1124,6 @@ describe("computeHealthScore V2 — nutrient anomaly handling", () => {
       },
       categories: "Sardines en conserve",
     }));
-    // Standard nutriments are present (>= 3 key fields), so OFF grade is kept
-    // But confidence is degraded due to suspicious salt
     expect(result.nutrientAnomalies).toBeDefined();
     expect(result.axes.nutrition).not.toBeNull();
     expect(result.dataConfidence).not.toBe("high");
@@ -1178,7 +1417,6 @@ describe("checkScoreExclusion", () => {
   // ── Priority: water checked before alcohol ─────────────────
 
   it("water exclusion takes priority over other checks", () => {
-    // A product named "Eau" with an alcohol-sounding category should still be "water"
     const result = checkScoreExclusion(makeExclusionProduct({
       name: "Eau minérale",
       category: "Boissons",
