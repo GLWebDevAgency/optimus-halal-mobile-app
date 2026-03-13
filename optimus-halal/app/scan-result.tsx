@@ -41,7 +41,7 @@ import { TrustScoreBottomSheet } from "@/components/scan/TrustScoreBottomSheet";
 import { ScoreDetailBottomSheet, type HealthAxesUI } from "@/components/scan/ScoreDetailBottomSheet";
 import { ShareCardView, captureAndShareCard } from "@/components/scan/ShareCard";
 import { NutrientDetailSheet } from "@/components/scan/NutrientDetailSheet";
-import { AlternativesSection } from "@/components/scan/AlternativesSection";
+import { AlternativesSection, adaptLegacyAlternative } from "@/components/scan/AlternativesSection";
 import { VerdictHero } from "@/components/scan/VerdictHero";
 import { ScanBottomBar } from "@/components/scan/ScanBottomBar";
 import { CompactStickyHeader } from "@/components/scan/CompactStickyHeader";
@@ -691,10 +691,15 @@ export default function ScanResultScreen() {
           {/* Haram/Doubtful: alternatives BEFORE health (Al-Taqwa) */}
           {isNonHalal && (
             <AlternativesSection
-              variant="priority"
-              alternativesQuery={alternativesQuery}
-              onAlternativePress={(_id: string, bc?: string | null) => {
-                if (bc) router.navigate({ pathname: "/scan-result", params: { barcode: bc } });
+              alternatives={(alternativesQuery.data ?? []).map(adaptLegacyAlternative)}
+              scannedProduct={{
+                name: product?.name ?? "",
+                halalStatus: halalStatus,
+                healthScore: healthScore?.score ?? null,
+              }}
+              isLoading={alternativesQuery.isLoading}
+              onAlternativePress={(bc: string) => {
+                router.navigate({ pathname: "/scan-result", params: { barcode: bc } });
               }}
               staggerIndex={3}
             />
@@ -759,10 +764,15 @@ export default function ScanResultScreen() {
           {/* Halal/Unknown: alternatives AFTER analysis */}
           {!isNonHalal && (
             <AlternativesSection
-              variant="discover"
-              alternativesQuery={alternativesQuery}
-              onAlternativePress={(_id: string, bc?: string | null) => {
-                if (bc) router.navigate({ pathname: "/scan-result", params: { barcode: bc } });
+              alternatives={(alternativesQuery.data ?? []).map(adaptLegacyAlternative)}
+              scannedProduct={{
+                name: product?.name ?? "",
+                halalStatus: halalStatus,
+                healthScore: healthScore?.score ?? null,
+              }}
+              isLoading={alternativesQuery.isLoading}
+              onAlternativePress={(bc: string) => {
+                router.navigate({ pathname: "/scan-result", params: { barcode: bc } });
               }}
               staggerIndex={7}
             />
