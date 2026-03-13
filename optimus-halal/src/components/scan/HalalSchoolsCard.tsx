@@ -16,6 +16,11 @@ import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import Animated, {
   FadeInDown,
   Layout,
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  interpolate,
+  useReducedMotion,
 } from "react-native-reanimated";
 import {
   MosqueIcon,
@@ -24,9 +29,14 @@ import {
   XCircleIcon,
   BookOpenIcon,
   ArrowSquareOutIcon,
+  LeafIcon,
+  FlaskIcon,
+  SealCheckIcon,
+  CaretDownIcon,
 } from "phosphor-react-native";
 
 import { SectionCard } from "./SectionCard";
+import { CertifierBadge } from "./CertifierBadge";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation, useHaptics } from "@/hooks";
 import { halalStatus as halalStatusTokens, gold } from "@/theme/colors";
@@ -411,7 +421,303 @@ function SegmentedBar({ madhabVerdicts, activeMadhab, onSelect }: SegmentedBarPr
   );
 }
 
-// ── C. Main HalalSchoolsCard shell ──
+// ── C. AccordionSection generic subcomponent ──
+
+type SectionKey = "ingredients" | "additives" | "certification";
+
+interface AccordionSectionProps {
+  sectionKey: SectionKey;
+  expandedSection: SectionKey | null;
+  onToggle: (key: SectionKey | null) => void;
+  icon: React.ReactNode;
+  title: string;
+  badgeCount?: number;
+  children: React.ReactNode;
+}
+
+function AccordionSection({
+  sectionKey,
+  expandedSection,
+  onToggle,
+  icon,
+  title,
+  badgeCount,
+  children,
+}: AccordionSectionProps) {
+  const { isDark, colors } = useTheme();
+  const { impact } = useHaptics();
+  const reducedMotion = useReducedMotion();
+
+  const isExpanded = expandedSection === sectionKey;
+  const contentHeight = useSharedValue(0);
+
+  const animProgress = useSharedValue(0);
+
+  // Sync animProgress when isExpanded changes
+  React.useEffect(() => {
+    animProgress.value = reducedMotion
+      ? isExpanded ? 1 : 0
+      : withTiming(isExpanded ? 1 : 0, { duration: 250 });
+  }, [isExpanded, animProgress, reducedMotion]);
+
+  const animatedContentStyle = useAnimatedStyle(() => ({
+    height: contentHeight.value > 0
+      ? interpolate(animProgress.value, [0, 1], [0, contentHeight.value])
+      : animProgress.value === 0 ? 0 : undefined,
+    opacity: animProgress.value,
+    overflow: "hidden" as const,
+  }));
+
+  const chevronStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${animProgress.value * 180}deg` }],
+  }));
+
+  function handlePress() {
+    impact();
+    onToggle(isExpanded ? null : sectionKey);
+  }
+
+  return (
+    <View
+      style={[
+        styles.accordionContainer,
+        {
+          backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.025)",
+          borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+        },
+      ]}
+    >
+      {/* Header */}
+      <Pressable
+        onPress={handlePress}
+        accessibilityRole="button"
+        accessibilityLabel={title}
+        accessibilityState={{ expanded: isExpanded }}
+        style={({ pressed }) => [
+          styles.accordionHeader,
+          pressed && { opacity: 0.75 },
+        ]}
+      >
+        {/* Icon + title */}
+        <View style={styles.accordionHeaderLeft}>
+          {icon}
+          <Text style={[styles.accordionTitle, { color: colors.textPrimary }]}>
+            {title}
+          </Text>
+          {badgeCount !== undefined && badgeCount > 0 && (
+            <View
+              style={[
+                styles.accordionBadge,
+                { backgroundColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.07)" },
+              ]}
+            >
+              <Text style={[styles.accordionBadgeText, { color: colors.textMuted }]}>
+                {badgeCount}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* Caret */}
+        <Animated.View style={chevronStyle}>
+          <CaretDownIcon size={16} color={colors.textMuted} weight="bold" />
+        </Animated.View>
+      </Pressable>
+
+      {/* Animated body */}
+      <Animated.View style={animatedContentStyle}>
+        <View
+          onLayout={(e) => {
+            const h = e.nativeEvent.layout.height;
+            if (h > 0 && contentHeight.value !== h) {
+              contentHeight.value = h;
+            }
+          }}
+          style={styles.accordionBody}
+        >
+          {children}
+        </View>
+      </Animated.View>
+    </View>
+  );
+}
+
+// ── C1. IngredientsContent ──
+
+function IngredientsContent({
+  ingredientRulings,
+  isDark,
+  colors,
+}: {
+  ingredientRulings: HalalSchoolsCardProps["ingredientRulings"];
+  isDark: boolean;
+  colors: ReturnType<typeof useTheme>["colors"];
+}) {
+  if (ingredientRulings.length === 0) {
+    return (
+      <Text style={[styles.accordionEmptyText, { color: colors.textMuted }]}>
+        Aucun ingrédient à signaler
+      </Text>
+    );
+  }
+
+  return (
+    <>
+      {ingredientRulings.map((item, index) => {
+        const color = getStatusColor(item.ruling);
+        const RulingIcon =
+          item.ruling === "halal"
+            ? CheckCircleIcon
+            : item.ruling === "haram"
+              ? XCircleIcon
+              : WarningIcon;
+
+        return (
+          <View
+            key={`${item.pattern}-${index}`}
+            style={[
+              styles.accordionListItem,
+              index > 0 && {
+                borderTopWidth: StyleSheet.hairlineWidth,
+                borderTopColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+              },
+            ]}
+          >
+            <RulingIcon size={14} color={color} weight="fill" />
+            <View style={{ flex: 1 }}>
+              <Text
+                style={[styles.accordionItemLabel, { color: colors.textPrimary }]}
+                numberOfLines={1}
+              >
+                {item.pattern}
+              </Text>
+              {item.explanation.length > 0 && (
+                <Text
+                  style={[styles.accordionItemSub, { color: colors.textSecondary }]}
+                  numberOfLines={2}
+                >
+                  {item.explanation}
+                </Text>
+              )}
+            </View>
+            <View style={[styles.accordionRulingBadge, { backgroundColor: color + "22" }]}>
+              <Text style={[styles.accordionRulingText, { color }]}>
+                {item.ruling}
+              </Text>
+            </View>
+          </View>
+        );
+      })}
+    </>
+  );
+}
+
+// ── C2. AdditivesContent ──
+
+function AdditivesContent({
+  conflictingAdditives,
+  isDark,
+  colors,
+}: {
+  conflictingAdditives: MadhabVerdict["conflictingAdditives"];
+  isDark: boolean;
+  colors: ReturnType<typeof useTheme>["colors"];
+}) {
+  if (conflictingAdditives.length === 0) {
+    return (
+      <Text style={[styles.accordionEmptyText, { color: colors.textMuted }]}>
+        Aucun additif signalé
+      </Text>
+    );
+  }
+
+  return (
+    <>
+      {conflictingAdditives.map((item, index) => {
+        const config = STATUS_CONFIG[item.ruling] ?? STATUS_CONFIG.unknown;
+        const color = config.color;
+
+        return (
+          <View
+            key={`${item.code}-${index}`}
+            style={[
+              styles.accordionListItem,
+              index > 0 && {
+                borderTopWidth: StyleSheet.hairlineWidth,
+                borderTopColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+              },
+            ]}
+          >
+            <View style={{ flex: 1 }}>
+              <View style={styles.accordionAdditiveRow}>
+                <Text
+                  style={[styles.accordionItemCode, { color: colors.textMuted }]}
+                  numberOfLines={1}
+                >
+                  {item.code}
+                </Text>
+                <Text
+                  style={[styles.accordionItemLabel, { color: colors.textPrimary, flex: 1 }]}
+                  numberOfLines={1}
+                >
+                  {item.name}
+                </Text>
+              </View>
+              {item.explanation.length > 0 && (
+                <Text
+                  style={[styles.accordionItemSub, { color: colors.textSecondary }]}
+                  numberOfLines={2}
+                >
+                  {item.explanation}
+                </Text>
+              )}
+            </View>
+            <View style={[styles.accordionRulingBadge, { backgroundColor: color + "22" }]}>
+              <Text style={[styles.accordionRulingText, { color }]}>
+                {item.ruling}
+              </Text>
+            </View>
+          </View>
+        );
+      })}
+    </>
+  );
+}
+
+// ── C3. CertificationContent ──
+
+function CertificationContent({
+  certifierData,
+  isDark: _isDark,
+  colors,
+  t,
+}: {
+  certifierData: CertifierInfo | null;
+  isDark: boolean;
+  colors: ReturnType<typeof useTheme>["colors"];
+  t: ReturnType<typeof useTranslation>["t"];
+}) {
+  if (!certifierData) {
+    return (
+      <Text style={[styles.accordionEmptyText, { color: colors.textMuted }]}>
+        Pas de certification
+      </Text>
+    );
+  }
+
+  const trustLabel = t.scanResult.certifierTrustScore as string;
+
+  return (
+    <View style={styles.certificationContent}>
+      <CertifierBadge certifier={certifierData} size="extended" />
+      <Text style={[styles.certificationTrustDesc, { color: colors.textSecondary }]}>
+        {`${trustLabel}: ${certifierData.trustScore}/100`}
+      </Text>
+    </View>
+  );
+}
+
+// ── D. Main HalalSchoolsCard shell ──
 
 export function HalalSchoolsCard({
   madhabVerdicts,
@@ -422,21 +728,14 @@ export function HalalSchoolsCard({
   onScholarlySourcePress,
   staggerIndex = 3,
 }: HalalSchoolsCardProps) {
-  const { isDark } = useTheme();
+  const { isDark, colors } = useTheme();
   const { t } = useTranslation();
 
   // Local state
   const [activeMadhab, setActiveMadhab] = useState<MadhabId>(userMadhab);
-  // expandedSection will be used in Task 10b for accordions
   const [expandedSection, setExpandedSection] = useState<
     null | "ingredients" | "additives" | "certification"
   >(null);
-
-  // Silence unused warning — will be used in Task 10b
-  void expandedSection;
-  void setExpandedSection;
-  void certifierData;
-  void ingredientRulings;
 
   // Find active verdict
   const activeVerdict = madhabVerdicts.find((v) => v.madhab === activeMadhab)
@@ -473,7 +772,47 @@ export function HalalSchoolsCard({
         />
       )}
 
-      {/* ── Task 10b: Accordions will be inserted here ── */}
+      {/* Divider */}
+      <View style={[styles.accordionDivider, { backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.06)" }]} />
+
+      {/* C1. Ingredients accordion */}
+      <AccordionSection
+        sectionKey="ingredients"
+        expandedSection={expandedSection}
+        onToggle={setExpandedSection}
+        icon={<LeafIcon size={15} color={isDark ? gold[400] : gold[700]} weight="bold" />}
+        title={t.scanResult.accordionIngredients as string}
+        badgeCount={ingredientRulings.length}
+      >
+        <IngredientsContent ingredientRulings={ingredientRulings} isDark={isDark} colors={colors} />
+      </AccordionSection>
+
+      {/* C2. Additives accordion */}
+      <AccordionSection
+        sectionKey="additives"
+        expandedSection={expandedSection}
+        onToggle={setExpandedSection}
+        icon={<FlaskIcon size={15} color={isDark ? gold[400] : gold[700]} weight="bold" />}
+        title={t.scanResult.accordionAdditives as string}
+        badgeCount={activeVerdict.conflictingAdditives?.length ?? 0}
+      >
+        <AdditivesContent
+          conflictingAdditives={activeVerdict.conflictingAdditives ?? []}
+          isDark={isDark}
+          colors={colors}
+        />
+      </AccordionSection>
+
+      {/* C3. Certification accordion */}
+      <AccordionSection
+        sectionKey="certification"
+        expandedSection={expandedSection}
+        onToggle={setExpandedSection}
+        icon={<SealCheckIcon size={15} color={isDark ? gold[400] : gold[700]} weight="bold" />}
+        title={t.scanResult.accordionCertification as string}
+      >
+        <CertificationContent certifierData={certifierData} isDark={isDark} colors={colors} t={t} />
+      </AccordionSection>
     </SectionCard>
   );
 }
@@ -618,5 +957,100 @@ const styles = StyleSheet.create({
   segmentStatusLabel: {
     fontSize: fontSizeTokens.caption,
     fontWeight: fontWeightTokens.semiBold,
+  },
+
+  // Accordion divider
+  accordionDivider: {
+    height: StyleSheet.hairlineWidth,
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
+  },
+
+  // AccordionSection
+  accordionContainer: {
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    marginTop: spacing.sm,
+    overflow: "hidden",
+  },
+  accordionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+  },
+  accordionHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    flex: 1,
+  },
+  accordionTitle: {
+    fontSize: fontSizeTokens.caption,
+    fontWeight: fontWeightTokens.semiBold,
+  },
+  accordionBadge: {
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+  },
+  accordionBadgeText: {
+    fontSize: fontSizeTokens.micro,
+    fontWeight: fontWeightTokens.bold,
+  },
+  accordionBody: {
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
+    gap: 0,
+  },
+  accordionEmptyText: {
+    fontSize: fontSizeTokens.bodySmall,
+    fontStyle: "italic",
+    paddingVertical: spacing.xs,
+  },
+  accordionListItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+  },
+  accordionItemLabel: {
+    fontSize: fontSizeTokens.caption,
+    fontWeight: fontWeightTokens.medium,
+  },
+  accordionItemSub: {
+    fontSize: fontSizeTokens.micro,
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  accordionItemCode: {
+    fontSize: fontSizeTokens.micro,
+    fontWeight: fontWeightTokens.bold,
+    marginRight: spacing.xs,
+  },
+  accordionAdditiveRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  accordionRulingBadge: {
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    alignSelf: "flex-start",
+    marginTop: 1,
+  },
+  accordionRulingText: {
+    fontSize: fontSizeTokens.micro,
+    fontWeight: fontWeightTokens.bold,
+  },
+
+  // Certification content
+  certificationContent: {
+    gap: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  certificationTrustDesc: {
+    fontSize: fontSizeTokens.bodySmall,
   },
 });
