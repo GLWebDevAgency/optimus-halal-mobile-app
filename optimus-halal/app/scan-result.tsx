@@ -700,18 +700,30 @@ export default function ScanResultScreen() {
             />
           )}
 
-          {/* HEALTH & NUTRITION */}
+          {/* HEALTH & NUTRITION — V3 */}
           <HealthNutritionCard
-            healthScore={healthScore ? { score: healthScore.score ?? 0, label: healthScore.label ?? "unknown" } : null}
-            nutriScore={offExtras?.nutriscoreGrade ?? null}
-            novaGroup={offExtras?.novaGroup ?? null}
-            ecoScore={offExtras?.ecoscoreGrade ?? null}
+            healthScore={healthScore ? {
+              score: healthScore.score ?? 0,
+              label: healthScore.label ?? "unknown",
+              axes: {
+                nutrition: healthScore.axes?.nutrition ?? null,
+                additives: healthScore.axes?.additives ?? { score: 0, max: 20 },
+                processing: healthScore.axes?.processing ?? null,
+                beverageSugar: healthScore.axes?.beverageSugar,
+              },
+              bonuses: healthScore.bonuses ?? { bio: 0, aop: 0 },
+              dataConfidence: healthScore.dataConfidence ?? "low",
+              cappedByAdditive: healthScore.cappedByAdditive ?? false,
+              category: healthScore.category ?? "general",
+            } : null}
+            nutriScoreGrade={offExtras?.nutriscoreGrade ?? undefined}
+            novaGroup={offExtras?.novaGroup ?? undefined}
+            ecoScoreGrade={offExtras?.ecoscoreGrade ?? undefined}
             nutrientBreakdown={nutrientItems}
             dietaryAnalysis={dietaryItems}
             allergens={allergensTags
               .filter((t_: string) => {
                 const clean = t_.replace(/^(en|fr):/, "").toLowerCase();
-                // Exclude non-EU14 allergens (e.g. pork, meat) incorrectly tagged by OFF
                 return !NON_ALLERGEN_TAGS.has(clean);
               })
               .map((t_: string) => t_.replace(/^(en|fr):/, "").replace(/-/g, " "))}
@@ -720,7 +732,7 @@ export default function ScanResultScreen() {
               nutrient: nb.key, value: nb.value, unit: nb.unit,
               level: nb.level as any, dailyValuePercent: nb.percentage, isNegative: !nb.isPositive,
             })}
-            onPress={() => {}}
+            onPress={() => setShowScoreDetailSheet(true)}
             staggerIndex={4}
           />
 
