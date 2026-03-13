@@ -16,11 +16,12 @@ import { PremiumBackground } from "@/components/ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, ArrowSquareOutIcon, CloudSlashIcon, CrownIcon } from "phosphor-react-native";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { trpc } from "@/lib/trpc";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 const GOLD = "#d4af37";
 
@@ -199,7 +200,7 @@ const CertifierCard = React.memo(function CertifierCard({
             accessibilityLabel={`Visiter le site de ${item.name}`}
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 12 }}>
-              <MaterialIcons name="open-in-new" size={12} color={GOLD} />
+              <ArrowSquareOutIcon size={12} color={GOLD} />
               <Text style={{ fontSize: 11, color: GOLD, fontWeight: "600" }}>
                 {t.certifierRanking.officialWebsite}
               </Text>
@@ -222,7 +223,7 @@ function CriteriaBadge({
 }: {
   passed: boolean;
   label: string;
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: IconName;
   isDark: boolean;
   colors: ReturnType<typeof useTheme>["colors"];
 }) {
@@ -245,11 +246,9 @@ function CriteriaBadge({
         paddingVertical: 4,
       }}
     >
-      <MaterialIcons
-        name={passed ? "check-circle" : "cancel"}
+      <AppIcon name={passed ? "check-circle" : "cancel"}
         size={12}
-        color={textColor}
-      />
+        color={textColor} />
       <Text style={{ fontSize: 10, fontWeight: "600", color: textColor }}>
         {label}
       </Text>
@@ -313,7 +312,7 @@ export default function CertifierRankingScreen() {
             accessibilityRole="button"
             accessibilityLabel={t.common.back}
           >
-            <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
+            <ArrowLeftIcon size={20} color={colors.textPrimary} />
           </Pressable>
           <View>
             <Text
@@ -336,7 +335,7 @@ export default function CertifierRankingScreen() {
         </View>
       ) : isError ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
-          <MaterialIcons name="cloud-off" size={64} color={colors.textMuted} />
+          <CloudSlashIcon size={64} color={colors.textMuted} />
           <Text style={{ color: colors.textSecondary, fontSize: 16, marginTop: 16 }}>
             {t.certifierRanking.loadError}
           </Text>
@@ -359,7 +358,7 @@ export default function CertifierRankingScreen() {
         </View>
       ) : items.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 80 }}>
-          <MaterialIcons name="workspace-premium" size={64} color={colors.textMuted} />
+          <CrownIcon size={64} color={colors.textMuted} />
           <Text style={{ color: colors.textSecondary, fontSize: 18, marginTop: 16 }}>
             {t.certifierRanking.noCertifiers}
           </Text>

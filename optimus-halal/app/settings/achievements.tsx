@@ -15,7 +15,7 @@ import {
 import { PressableScale } from "@/components/ui/PressableScale";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, CheckCircleIcon, CloudSlashIcon, LockIcon, MedalIcon, TrophyIcon } from "phosphor-react-native";
 import Animated, { FadeInDown, FadeIn, ZoomIn } from "react-native-reanimated";
 
 import { useTheme } from "@/hooks/useTheme";
@@ -23,6 +23,7 @@ import { useTranslation } from "@/hooks";
 import { useAchievements, useLoyaltyBalance } from "@/hooks/useLoyalty";
 import { PremiumBackground } from "@/components/ui";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 const GOLD = "#d4af37";
 
@@ -49,7 +50,7 @@ interface Achievement {
   unlockedAt: Date | undefined;
 }
 
-// ── Valid MaterialIcons check ─────────────────────────
+// ── Valid icon names check ───────────────────────────
 
 const VALID_ICONS = new Set([
   "emoji-events", "star", "verified", "local-fire-department",
@@ -62,9 +63,9 @@ const VALID_ICONS = new Set([
   "health-and-safety", "psychology", "school",
 ]);
 
-function getIconName(icon: string | null): keyof typeof MaterialIcons.glyphMap {
+function getIconName(icon: string | null): IconName {
   if (icon && VALID_ICONS.has(icon)) {
-    return icon as keyof typeof MaterialIcons.glyphMap;
+    return icon as IconName;
   }
   return "emoji-events";
 }
@@ -146,17 +147,15 @@ const AchievementCard = React.memo(function AchievementCard({
             },
           ]}
         >
-          <MaterialIcons
-            name={iconName}
+          <AppIcon name={iconName}
             size={32}
-            color={iconColor}
-          />
+            color={iconColor} />
         </View>
 
-        {/* Lock overlay for locked achievements */}
+        {/* LockIcon overlay for locked achievements */}
         {!achievement.unlocked && (
           <View style={styles.lockOverlay}>
-            <MaterialIcons name="lock" size={20} color={colors.textMuted} />
+            <LockIcon size={20} color={colors.textMuted} />
           </View>
         )}
       </View>
@@ -191,7 +190,7 @@ const AchievementCard = React.memo(function AchievementCard({
             },
           ]}
         >
-          <MaterialIcons name="check-circle" size={10} color={GOLD} />
+          <CheckCircleIcon size={10} color={GOLD} />
           <Text style={[styles.dateText, { color: GOLD }]}>
             {formattedDate}
           </Text>
@@ -282,7 +281,7 @@ export default function AchievementsScreen() {
               accessibilityRole="button"
               accessibilityLabel={t.common.back}
             >
-              <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
+              <ArrowLeftIcon size={20} color={colors.textPrimary} />
             </Pressable>
             <Text
               style={[styles.headerTitle, { color: colors.textPrimary }]}
@@ -326,7 +325,7 @@ export default function AchievementsScreen() {
               accessibilityRole="button"
               accessibilityLabel={t.common.back}
             >
-              <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
+              <ArrowLeftIcon size={20} color={colors.textPrimary} />
             </Pressable>
             <Text
               style={[styles.headerTitle, { color: colors.textPrimary }]}
@@ -337,7 +336,7 @@ export default function AchievementsScreen() {
             <View style={styles.headerSpacer} />
           </View>
           <View style={styles.centerContent}>
-            <MaterialIcons name="cloud-off" size={64} color={colors.textMuted} />
+            <CloudSlashIcon size={64} color={colors.textMuted} />
             <Text style={[styles.errorText, { color: colors.textSecondary }]}>
               {t.common.loadingError}
             </Text>
@@ -378,7 +377,7 @@ export default function AchievementsScreen() {
               accessibilityRole="button"
               accessibilityLabel={t.common.back}
             >
-              <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
+              <ArrowLeftIcon size={20} color={colors.textPrimary} />
             </Pressable>
             <Text
               style={[styles.headerTitle, { color: colors.textPrimary }]}
@@ -389,7 +388,7 @@ export default function AchievementsScreen() {
             <View style={styles.headerSpacer} />
           </View>
           <View style={styles.centerContent}>
-            <MaterialIcons name="emoji-events" size={72} color={colors.textMuted} />
+            <TrophyIcon size={72} color={colors.textMuted} />
             <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
               {t.achievements.empty}
             </Text>
@@ -432,7 +431,7 @@ export default function AchievementsScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={t.common.back}
               >
-                <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
+                <ArrowLeftIcon size={20} color={colors.textPrimary} />
               </Pressable>
               <Text
                 style={[styles.headerTitle, { color: colors.textPrimary }]}
@@ -479,7 +478,7 @@ export default function AchievementsScreen() {
                       },
                     ]}
                   >
-                    <MaterialIcons name="military-tech" size={20} color={GOLD} />
+                    <MedalIcon size={20} color={GOLD} />
                     <Text style={[styles.levelText, { color: GOLD }]}>
                       {t.home.level} {loyaltyData?.level ?? 1}
                     </Text>

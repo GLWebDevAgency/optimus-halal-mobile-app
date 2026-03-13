@@ -9,7 +9,7 @@ import React from "react";
 import { View, Text } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { XIcon } from "phosphor-react-native";
 import { Image } from "expo-image";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
@@ -20,6 +20,7 @@ import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
 import { useQuotaStore } from "@/store";
 import { trackEvent } from "@/lib/analytics";
+import { AppIcon } from "@/lib/icons";
 
 const DAILY_SCAN_LIMIT = 5;
 
@@ -78,7 +79,7 @@ export default function PaywallScreen() {
               backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
             }}
           >
-            <MaterialIcons name="close" size={20} color={colors.textSecondary} />
+            <XIcon size={20} color={colors.textSecondary} />
           </View>
         </PressableScale>
       </Animated.View>
@@ -129,7 +130,7 @@ export default function PaywallScreen() {
                   backgroundColor: isDark ? "rgba(212, 175, 55, 0.1)" : "rgba(212, 175, 55, 0.08)",
                 }}
               >
-                <MaterialIcons name={feature.icon} size={16} color={colors.primary} />
+                <AppIcon name={feature.icon} size={16} color={colors.primary} />
               </View>
               <Text className="text-sm flex-1" style={{ color: colors.textPrimary }}>
                 {feature.text}

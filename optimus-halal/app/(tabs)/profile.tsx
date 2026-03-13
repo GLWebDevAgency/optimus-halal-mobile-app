@@ -20,7 +20,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { BellSimpleIcon, CaretRightIcon, FireIcon, GearIcon, GlobeHemisphereWestIcon, PencilIcon, ScanIcon, SealCheckIcon, SignInIcon, SignOutIcon, StarFourIcon, WifiSlashIcon } from "phosphor-react-native";
 import { useHaptics, useTheme, useLogout, useFavoritesList, useLoyaltyBalance, usePremium } from "@/hooks";
 import { ImpactFeedbackStyle } from "expo-haptics";
 import Animated, {
@@ -36,9 +36,10 @@ import { ProfileSkeleton } from "@/components/skeletons";
 import { useThemeStore, usePreferencesStore, useQuotaStore, useOnboardingStore } from "@/store";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth } from "../_layout";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 interface MenuItemProps {
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: IconName;
   iconBgColor: string;
   iconColor: string;
   title: string;
@@ -76,7 +77,7 @@ const MenuItem = React.memo(function MenuItem({
             className="w-8 h-8 rounded-lg items-center justify-center"
             style={{ backgroundColor: iconBgColor }}
           >
-            <MaterialIcons name={icon} size={18} color={iconColor} />
+            <AppIcon name={icon} size={18} color={iconColor} />
           </View>
           <Text className="font-medium text-sm" style={{ color: colors.textPrimary }}>
             {title}
@@ -89,11 +90,8 @@ const MenuItem = React.memo(function MenuItem({
                 {subtitle}
               </Text>
             )}
-            <MaterialIcons
-              name="chevron-right"
-              size={20}
-              color={colors.iconSecondary}
-            />
+            <CaretRightIcon size={20}
+              color={colors.iconSecondary} />
           </View>
         )}
       </View>
@@ -102,7 +100,7 @@ const MenuItem = React.memo(function MenuItem({
 });
 
 interface StatsCardProps {
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: IconName;
   iconBgColor: string;
   iconColor: string;
   title: string;
@@ -139,7 +137,7 @@ const StatsCard = React.memo(function StatsCard({
           className="w-10 h-10 rounded-full items-center justify-center mb-3"
           style={{ backgroundColor: iconBgColor }}
         >
-          <MaterialIcons name={icon} size={20} color={iconColor} />
+          <AppIcon name={icon} size={20} color={iconColor} />
         </View>
         <Text className="font-bold text-sm" style={{ color: colors.textPrimary }}>
           {title}
@@ -273,7 +271,7 @@ export default function ProfileScreen() {
               {t.profile.title}
             </Text>
             <Pressable onPress={handleSettings} accessibilityRole="button" accessibilityLabel={t.common.settings}>
-              <MaterialIcons name="settings" size={24} color={colors.iconSecondary} />
+              <GearIcon size={24} color={colors.iconSecondary} />
             </Pressable>
           </View>
         </Animated.View>
@@ -289,7 +287,7 @@ export default function ProfileScreen() {
                 borderColor: isDark ? "rgba(212, 175, 55, 0.2)" : "rgba(212, 175, 55, 0.15)",
               }}
             >
-              <MaterialIcons name="travel-explore" size={40} color={colors.primary} />
+              <GlobeHemisphereWestIcon size={40} color={colors.primary} />
             </View>
             <Text className="text-2xl font-bold mb-1" style={{ color: colors.textPrimary }}>
               {t.guest.discoveryMode}
@@ -463,7 +461,7 @@ export default function ProfileScreen() {
                   borderColor: colors.cardBorder,
                 }}
               >
-                <MaterialIcons name="login" size={18} color={colors.primary} />
+                <SignInIcon size={18} color={colors.primary} />
                 <Text className="font-bold text-sm" style={{ color: colors.primary }}>
                   {t.guest.loginExistingAccount}
                 </Text>
@@ -490,7 +488,7 @@ export default function ProfileScreen() {
       <View style={{ flex: 1 }}>
         <PremiumBackground />
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingTop: insets.top }}>
-          <MaterialIcons name="wifi-off" size={48} color={colors.textMuted} />
+          <WifiSlashIcon size={48} color={colors.textMuted} />
           <Text style={{ marginTop: 16, fontSize: 16, fontWeight: "600", color: colors.textPrimary }}>
             {t.errors.network}
           </Text>
@@ -525,11 +523,8 @@ export default function ProfileScreen() {
               accessibilityHint={t.common.viewAlerts}
               className="w-10 h-10 items-center justify-center"
             >
-              <MaterialIcons
-                name="notifications"
-                size={24}
-                color={colors.iconSecondary}
-              />
+              <BellSimpleIcon size={24}
+                color={colors.iconSecondary} />
             </Pressable>
           ) : (
             <View className="w-10 h-10" />
@@ -538,11 +533,8 @@ export default function ProfileScreen() {
             {t.profile.title}
           </Text>
           <Pressable onPress={handleSettings} accessibilityRole="button" accessibilityLabel={t.common.settings} accessibilityHint={t.common.openSettings}>
-            <MaterialIcons
-              name="settings"
-              size={24}
-              color={colors.iconSecondary}
-            />
+            <GearIcon size={24}
+              color={colors.iconSecondary} />
           </Pressable>
         </View>
       </Animated.View>
@@ -580,7 +572,7 @@ export default function ProfileScreen() {
                 />
               </View>
               <View className="absolute bottom-0 right-0 rounded-full p-2" style={{ backgroundColor: colors.primary, borderWidth: 4, borderColor: colors.background }}>
-                <MaterialIcons name="edit" size={14} color="#ffffff" />
+                <PencilIcon size={14} color="#ffffff" />
               </View>
             </View>
           </PressableScale>
@@ -595,7 +587,7 @@ export default function ProfileScreen() {
             className="flex-row items-center gap-1.5 mb-6 px-3 py-1 rounded-full"
             style={{ backgroundColor: isDark ? "rgba(212, 175, 55, 0.1)" : colors.primaryLight, borderWidth: 1, borderColor: isDark ? "rgba(212, 175, 55, 0.2)" : colors.primaryLight }}
           >
-            <MaterialIcons name="verified" size={16} color={colors.primary} />
+            <SealCheckIcon size={16} color={colors.primary} />
             <Text className="font-medium text-xs uppercase tracking-wide" style={{ color: colors.primary }}>
               {t.home.level} {gamification.level} — {t.profile.consciousConsumer}
             </Text>
@@ -652,7 +644,7 @@ export default function ProfileScreen() {
           <View className="flex-row">
             <View className="flex-1 items-center">
               <View className="w-9 h-9 rounded-full items-center justify-center mb-1.5" style={{ backgroundColor: colors.primaryLight }}>
-                <MaterialIcons name="local-fire-department" size={18} color={colors.primary} />
+                <FireIcon size={18} color={colors.primary} />
               </View>
               <Text className="font-bold text-sm" style={{ color: colors.textPrimary }}>
                 {gamification.streak}
@@ -664,7 +656,7 @@ export default function ProfileScreen() {
             <View className="flex-1 items-center">
               <View className="w-9 h-9 rounded-full items-center justify-center mb-1.5"
                 style={{ backgroundColor: isDark ? "rgba(59,130,246,0.1)" : "#eff6ff" }}>
-                <MaterialIcons name="qr-code-scanner" size={18} color={isDark ? "#60a5fa" : "#2563eb"} />
+                <ScanIcon size={18} color={isDark ? "#60a5fa" : "#2563eb"} />
               </View>
               <Text className="font-bold text-sm" style={{ color: colors.textPrimary }}>
                 {gamification.totalScans}
@@ -676,7 +668,7 @@ export default function ProfileScreen() {
             <View className="flex-1 items-center">
               <View className="w-9 h-9 rounded-full items-center justify-center mb-1.5"
                 style={{ backgroundColor: isDark ? "rgba(234,179,8,0.1)" : "#fef3c7" }}>
-                <MaterialIcons name="stars" size={18} color="#eab308" />
+                <StarFourIcon size={18} color="#eab308" />
               </View>
               <Text className="font-bold text-sm" style={{ color: colors.textPrimary }}>
                 {gamification.points}
@@ -774,9 +766,9 @@ export default function ProfileScreen() {
                 </Text>
               </View>
               {isPremium ? (
-                <MaterialIcons name="verified" size={22} color="#D4AF37" />
+                <SealCheckIcon size={22} color="#D4AF37" />
               ) : (
-                <MaterialIcons name="chevron-right" size={20} color={colors.textSecondary} />
+                <CaretRightIcon size={20} color={colors.textSecondary} />
               )}
             </View>
           </PressableScale>
@@ -961,7 +953,7 @@ export default function ProfileScreen() {
                 borderColor: isDark ? "rgba(239,68,68,0.15)" : "#fee2e2",
               }}
             >
-              <MaterialIcons name="logout" size={18} color="#ef4444" />
+              <SignOutIcon size={18} color="#ef4444" />
               <Text className="font-bold text-sm" style={{ color: isDark ? "#f87171" : "#dc2626" }}>
                 {t.profile.logout}
               </Text>

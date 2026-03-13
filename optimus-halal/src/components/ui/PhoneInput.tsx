@@ -17,7 +17,7 @@ import {
   Modal,
   FlatList,
 } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import { CaretDownIcon, CheckIcon, XIcon } from "phosphor-react-native";
 import { useTheme } from "@/hooks";
 import { neutral, brand, darkTheme, lightTheme } from "@/theme/colors";
 import { PressableScale } from "./PressableScale";
@@ -78,7 +78,7 @@ function formatPhoneNumber(value: string, countryCode: string): string {
     // Si on a un 0 au début, on l'ajoute
     if (hasLeadingZero) formatted += "0";
 
-    // Formatage par paires: X XX XX XX XX
+    // Formatage par paires: XIcon XX XX XX XX
     if (digits.length <= 1) formatted += digits;
     else if (digits.length <= 3) formatted += `${digits.slice(0, 1)} ${digits.slice(1)}`;
     else if (digits.length <= 5) formatted += `${digits.slice(0, 1)} ${digits.slice(1, 3)} ${digits.slice(3)}`;
@@ -227,11 +227,8 @@ export function PhoneInput({
               <Text className="text-slate-700 dark:text-slate-300 font-medium text-sm">
                 {selectedCountry.dialCode}
               </Text>
-              <MaterialIcons
-                name="arrow-drop-down"
-                size={20}
-                color={isDark ? neutral[400] : neutral[600]}
-              />
+              <CaretDownIcon size={20}
+                color={isDark ? neutral[400] : neutral[600]} />
             </View>
           </PressableScale>
 
@@ -294,11 +291,8 @@ export function PhoneInput({
                 onPress={() => setIsPickerVisible(false)}
                 className="p-2"
               >
-                <MaterialIcons
-                  name="close"
-                  size={24}
-                  color={isDark ? darkTheme.textPrimary : lightTheme.textPrimary}
-                />
+                <XIcon size={24}
+                  color={isDark ? darkTheme.textPrimary : lightTheme.textPrimary} />
               </Pressable>
             </View>
 
@@ -326,7 +320,7 @@ export function PhoneInput({
                       </Text>
                     </View>
                     {selectedCountry.code === item.code && (
-                      <MaterialIcons name="check" size={24} color={brand.primary} />
+                      <CheckIcon size={24} color={brand.primary} />
                     )}
                   </View>
                 </PressableScale>

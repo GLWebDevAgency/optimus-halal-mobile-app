@@ -20,7 +20,7 @@ import {
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, MagnifyingGlassIcon, XIcon } from "phosphor-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeIn, FadeInDown, FadeInRight } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
@@ -32,6 +32,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useHaptics } from "@/hooks";
 import { trpc } from "@/lib/trpc";
 import { brand, gold } from "@/theme/colors";
+import { AppIcon } from "@/lib/icons";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_GAP = 14;
@@ -221,7 +222,7 @@ export default function ArticlesListScreen() {
             accessibilityRole="button"
             accessibilityLabel={t.common.back}
           >
-            <MaterialIcons name="arrow-back" size={20} color={colors.iconPrimary} />
+            <ArrowLeftIcon size={20} color={colors.iconPrimary} />
           </Pressable>
 
           <View style={styles.headerTitleWrap}>
@@ -252,7 +253,7 @@ export default function ArticlesListScreen() {
             },
           ]}
         >
-          <MaterialIcons name="search" size={20} color={colors.textMuted} />
+          <MagnifyingGlassIcon size={20} color={colors.textMuted} />
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -262,7 +263,7 @@ export default function ArticlesListScreen() {
           />
           {searchQuery.length > 0 && (
             <Pressable onPress={() => setSearchQuery("")}>
-              <MaterialIcons name="close" size={18} color={colors.textMuted} />
+              <XIcon size={18} color={colors.textMuted} />
             </Pressable>
           )}
         </View>
@@ -293,11 +294,9 @@ export default function ArticlesListScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={filter.key === "all" ? t.common.all : getTypeLabel(filter.key)}
               >
-                <MaterialIcons
-                  name={filter.icon as any}
+                <AppIcon name={filter.icon as any}
                   size={16}
-                  color={isActive ? "#fff" : colors.textSecondary}
-                />
+                  color={isActive ? "#fff" : colors.textSecondary} />
                 <Text
                   style={[
                     styles.filterText,

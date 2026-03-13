@@ -24,7 +24,7 @@ import { PressableScale } from "@/components/ui/PressableScale";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { BellIcon, BellRingingIcon, CaretLeftIcon, EnvelopeSimpleIcon, StorefrontIcon } from "phosphor-react-native";
 import { useHaptics, useTheme } from "@/hooks";
 import Animated, {
   FadeIn,
@@ -33,6 +33,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { brand, glass } from "@/theme/colors";
+import { AppIcon } from "@/lib/icons";
 
 const logoSource = require("@assets/images/logo_naqiy.webp");
 const GOLD = "#d4af37";
@@ -104,11 +105,8 @@ export default function MarketplaceComingSoonScreen() {
                 },
               ]}
             >
-              <MaterialIcons
-                name="arrow-back-ios-new"
-                size={16}
-                color={isDark ? GOLD : colors.textPrimary}
-              />
+              <CaretLeftIcon size={16}
+                color={isDark ? GOLD : colors.textPrimary} />
             </View>
           </PressableScale>
           <View style={{
@@ -153,11 +151,8 @@ export default function MarketplaceComingSoonScreen() {
               },
             ]}
           >
-            <MaterialIcons
-              name="notifications-none"
-              size={20}
-              color={isDark ? GOLD : colors.textPrimary}
-            />
+            <BellIcon size={20}
+              color={isDark ? GOLD : colors.textPrimary} />
           </View>
         </PressableScale>
       </Animated.View>
@@ -215,7 +210,7 @@ export default function MarketplaceComingSoonScreen() {
                   },
                 ]}
               >
-                <MaterialIcons name="storefront" size={40} color={GOLD} />
+                <StorefrontIcon size={40} color={GOLD} />
               </View>
 
               {/* Content */}
@@ -244,11 +239,9 @@ export default function MarketplaceComingSoonScreen() {
                   { icon: "shield" as const, label: "Traçabilité" },
                 ].map((item, i) => (
                   <View key={i} style={styles.featureChip}>
-                    <MaterialIcons
-                      name={item.icon}
+                    <AppIcon name={item.icon}
                       size={14}
-                      color={isDark ? GOLD : brand.primary}
-                    />
+                      color={isDark ? GOLD : brand.primary} />
                     <Text
                       style={[
                         styles.featureChipText,
@@ -298,12 +291,9 @@ export default function MarketplaceComingSoonScreen() {
                   },
                 ]}
               >
-                <MaterialIcons
-                  name="mail-outline"
-                  size={20}
+                <EnvelopeSimpleIcon size={20}
                   color={isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)"}
-                  style={{ marginRight: 12 }}
-                />
+                  style={{ marginRight: 12 }} />
                 <TextInput
                   value={email}
                   onChangeText={setEmail}
@@ -342,11 +332,8 @@ export default function MarketplaceComingSoonScreen() {
                   end={{ x: 1, y: 0 }}
                   style={[StyleSheet.absoluteFill, { borderRadius: 14 }]}
                 />
-                <MaterialIcons
-                  name="notifications-active"
-                  size={18}
-                  color={isDark ? "#1A1A1A" : "#ffffff"}
-                />
+                <BellRingingIcon size={18}
+                  color={isDark ? "#1A1A1A" : "#ffffff"} />
                 <Text
                   style={[
                     styles.ctaText,

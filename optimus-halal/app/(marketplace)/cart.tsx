@@ -20,7 +20,7 @@ import { PressableScale } from "@/components/ui/PressableScale";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, ArrowRightIcon, LockIcon, MinusIcon, PlusIcon, ShoppingCartIcon, StorefrontIcon, TrashIcon } from "phosphor-react-native";
 import { useHaptics, useTheme } from "@/hooks";
 import { brand } from "@/theme/colors";
 import { ImpactFeedbackStyle } from "expo-haptics";
@@ -31,6 +31,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { useLocalCartStore } from "@/store";
+import { AppIcon } from "@/lib/icons";
 
 // Extended cart items with full product info (in real app, fetch from products DB)
 const CART_PRODUCTS = {
@@ -154,7 +155,7 @@ function CartItem({
                 {product.name}
               </Text>
               <View className="flex-row items-center gap-1 mt-1">
-                <MaterialIcons name="storefront" size={12} color={isDark ? "#94a3b8" : "#64748b"} />
+                <StorefrontIcon size={12} color={isDark ? "#94a3b8" : "#64748b"} />
                 <Text className="text-xs text-slate-500 dark:text-slate-400">
                   {product.brand}
                 </Text>
@@ -164,7 +165,7 @@ function CartItem({
               onPress={onRemove}
               hitSlop={8}
             >
-              <MaterialIcons name="delete" size={18} color="#9ca3af" />
+              <TrashIcon size={18} color="#9ca3af" />
             </Pressable>
           </View>
 
@@ -177,11 +178,9 @@ function CartItem({
                   key={i}
                   className={`flex-row items-center gap-0.5 px-1.5 py-0.5 rounded ${colors.bg}`}
                 >
-                  <MaterialIcons
-                    name={badge.icon as any}
+                  <AppIcon name={badge.icon as any}
                     size={10}
-                    color={isDark ? (badge.color === "green" ? brand.primary : undefined) : undefined}
-                  />
+                    color={isDark ? (badge.color === "green" ? brand.primary : undefined) : undefined} />
                   <Text className={`text-[10px] font-bold uppercase tracking-wider ${colors.text}`}>
                     {badge.label}
                   </Text>
@@ -205,7 +204,7 @@ function CartItem({
           <View className="flex-row items-center gap-2 bg-slate-50 dark:bg-white/5 rounded-lg p-1 border border-slate-100 dark:border-white/5">
             <Pressable onPress={() => onUpdateQuantity(-1)}>
               <View className="w-7 h-7 items-center justify-center rounded-md bg-white dark:bg-white/10 shadow-sm">
-                <MaterialIcons name="remove" size={14} color={isDark ? "#ffffff" : "#475569"} />
+                <MinusIcon size={14} color={isDark ? "#ffffff" : "#475569"} />
               </View>
             </Pressable>
             <Text className="w-4 text-center text-sm font-semibold text-slate-900 dark:text-white">
@@ -213,7 +212,7 @@ function CartItem({
             </Text>
             <Pressable onPress={() => onUpdateQuantity(1)}>
               <View className="w-7 h-7 items-center justify-center rounded-md bg-primary shadow-sm">
-                <MaterialIcons name="add" size={14} color="#0d1b12" />
+                <PlusIcon size={14} color="#0d1b12" />
               </View>
             </Pressable>
           </View>
@@ -278,11 +277,8 @@ export default function CartScreen() {
             hitSlop={8}
           >
             <View className="h-10 w-10 items-center justify-center rounded-full">
-              <MaterialIcons
-                name="arrow-back"
-                size={24}
-                color={isDark ? "#ffffff" : "#0d1b12"}
-              />
+              <ArrowLeftIcon size={24}
+                color={isDark ? "#ffffff" : "#0d1b12"} />
             </View>
           </Pressable>
 
@@ -301,7 +297,7 @@ export default function CartScreen() {
           className="flex-1 items-center justify-center px-8"
         >
           <View className="w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-full items-center justify-center mb-6">
-            <MaterialIcons name="shopping-cart" size={48} color={isDark ? "#64748b" : "#94a3b8"} />
+            <ShoppingCartIcon size={48} color={isDark ? "#64748b" : "#94a3b8"} />
           </View>
           <Text className="text-xl font-bold text-slate-800 dark:text-white text-center mb-2">
             Votre panier est vide
@@ -311,7 +307,7 @@ export default function CartScreen() {
           </Text>
           <PressableScale onPress={() => router.navigate("/(marketplace)/catalog" as any)}>
             <View className="bg-primary px-6 py-3 rounded-xl flex-row items-center gap-2">
-              <MaterialIcons name="storefront" size={20} color="#0d1b12" />
+              <StorefrontIcon size={20} color="#0d1b12" />
               <Text className="font-bold text-slate-900">Explorer le catalogue</Text>
             </View>
           </PressableScale>
@@ -369,7 +365,7 @@ export default function CartScreen() {
                 <View className="h-px bg-slate-100 dark:bg-white/10 my-2" />
 
                 <View className="flex-row items-center justify-center gap-2 py-1">
-                  <MaterialIcons name="lock" size={14} color="#9ca3af" />
+                  <LockIcon size={14} color="#9ca3af" />
                   <Text className="text-xs text-slate-400 font-medium">
                     Paiement sécurisé garanti
                   </Text>
@@ -408,7 +404,7 @@ export default function CartScreen() {
                 <Text className="text-base font-bold text-[#0d1b12]">
                   Passer la commande
                 </Text>
-                <MaterialIcons name="arrow-forward" size={20} color="#0d1b12" />
+                <ArrowRightIcon size={20} color="#0d1b12" />
               </View>
             </PressableScale>
           </Animated.View>

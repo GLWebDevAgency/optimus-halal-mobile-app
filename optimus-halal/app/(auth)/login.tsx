@@ -20,7 +20,7 @@ import {
 import { PressableScale } from "@/components/ui/PressableScale";
 import { router, Link } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowRightIcon, GlobeHemisphereWestIcon, UserCircleIcon, WarningCircleIcon, XIcon } from "phosphor-react-native";
 import * as LocalAuthentication from "expo-local-authentication";
 import * as Haptics from "expo-haptics";
 import Animated, {
@@ -266,7 +266,7 @@ export default function LoginScreen() {
               accessibilityLiveRegion="assertive"
             >
               <View className="flex-row items-center gap-3 p-4 rounded-xl bg-red-500/10 dark:bg-red-500/15 border border-red-500/20">
-                <MaterialIcons name="error-outline" size={20} color="#ef4444" />
+                <WarningCircleIcon size={20} color="#ef4444" />
                 <Text className="flex-1 text-sm font-medium text-red-600 dark:text-red-400">
                   {serverError}
                 </Text>
@@ -276,7 +276,7 @@ export default function LoginScreen() {
                   accessibilityLabel={t.common.close}
                   accessibilityRole="button"
                 >
-                  <MaterialIcons name="close" size={18} color={isDark ? "#f87171" : "#dc2626"} />
+                  <XIcon size={18} color={isDark ? "#f87171" : "#dc2626"} />
                 </PressableScale>
               </View>
             </Animated.View>
@@ -345,11 +345,8 @@ export default function LoginScreen() {
                   elevation: 8,
                 }}
                 icon={
-                  <MaterialIcons
-                    name="arrow-forward"
-                    size={20}
-                    color="#0d1b13"
-                  />
+                  <ArrowRightIcon size={20}
+                    color="#0d1b13" />
                 }
               >
                 {t.auth.login.submit}
@@ -368,7 +365,7 @@ export default function LoginScreen() {
                   borderColor: isDark ? "rgba(212,175,55,0.15)" : "rgba(212,175,55,0.2)",
                   backgroundColor: isDark ? "rgba(212,175,55,0.04)" : "rgba(212,175,55,0.03)",
                 }}>
-                  <MaterialIcons name="face" size={24} color="#d4af37" />
+                  <UserCircleIcon size={24} color="#d4af37" />
                   <Text style={{ fontSize: 15, fontWeight: "500", color: colors.textSecondary }}>
                     {t.auth.login.biometric}
                   </Text>
@@ -407,11 +404,11 @@ export default function LoginScreen() {
                 borderStyle: "dashed",
                 backgroundColor: isDark ? "rgba(148,163,184,0.06)" : "rgba(100,116,139,0.04)",
               }}>
-                <MaterialIcons name="travel-explore" size={20} color={isDark ? "#94a3b8" : "#64748b"} />
+                <GlobeHemisphereWestIcon size={20} color={isDark ? "#94a3b8" : "#64748b"} />
                 <Text style={{ fontSize: 15, fontWeight: "600", color: isDark ? "#94a3b8" : "#64748b" }}>
                   {t.auth.login.exploreMode}
                 </Text>
-                <MaterialIcons name="arrow-forward" size={16} color={isDark ? "#94a3b8" : "#64748b"} />
+                <ArrowRightIcon size={16} color={isDark ? "#94a3b8" : "#64748b"} />
               </View>
             </PressableScale>
             <Text style={{ fontSize: 12, color: colors.textMuted, textAlign: "center", marginTop: 8 }}>

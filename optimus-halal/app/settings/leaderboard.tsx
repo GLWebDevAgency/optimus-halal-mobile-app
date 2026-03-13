@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, CloudSlashIcon, ScanIcon, TrophyIcon, UserIcon, UsersIcon } from "phosphor-react-native";
 import { Image } from "expo-image";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 
@@ -24,6 +24,7 @@ import { useTranslation, useMe, useLeaderboard, useHaptics } from "@/hooks";
 import { PremiumBackground } from "@/components/ui";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { PressableScale } from "@/components/ui/PressableScale";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 // -- Types ------------------------------------------------------------------
 
@@ -53,7 +54,7 @@ function getMedalColor(rank: number) {
   return { border: PODIUM_COLORS.bronze, bg: PODIUM_COLORS.bronzeBg };
 }
 
-function getMedalIcon(rank: number): keyof typeof MaterialIcons.glyphMap {
+function getMedalIcon(rank: number): IconName {
   if (rank === 1) return "emoji-events";
   if (rank === 2) return "military-tech";
   return "workspace-premium";
@@ -105,7 +106,7 @@ function Avatar({
         },
       ]}
     >
-      <MaterialIcons name="person" size={size * 0.5} color={borderColor} />
+      <UserIcon size={size * 0.5} color={borderColor} />
     </View>
   );
 }
@@ -154,11 +155,9 @@ function PodiumCard({
     >
       {/* Crown / medal icon */}
       <View style={styles.podiumMedalRow}>
-        <MaterialIcons
-          name={getMedalIcon(rank)}
+        <AppIcon name={getMedalIcon(rank)}
           size={isFirst ? 28 : 22}
-          color={medal.border}
-        />
+          color={medal.border} />
       </View>
 
       {/* Avatar */}
@@ -317,7 +316,7 @@ const RankedRow = React.memo(function RankedRow({
           <Text style={[styles.rankedScans, { color: colors.textMuted }]}>
             {entry.totalScans ?? 0}
           </Text>
-          <MaterialIcons name="qr-code-scanner" size={10} color={colors.textMuted} />
+          <ScanIcon size={10} color={colors.textMuted} />
         </View>
       </View>
     </Animated.View>
@@ -446,7 +445,7 @@ export default function LeaderboardScreen() {
             totalCount={0}
           />
           <View style={styles.centerWrap}>
-            <MaterialIcons name="cloud-off" size={64} color={colors.textMuted} />
+            <CloudSlashIcon size={64} color={colors.textMuted} />
             <Text style={[styles.errorText, { color: colors.textSecondary }]}>
               {t.common.loadingError}
             </Text>
@@ -478,7 +477,7 @@ export default function LeaderboardScreen() {
             totalCount={0}
           />
           <View style={styles.centerWrap}>
-            <MaterialIcons name="emoji-events" size={64} color={colors.textMuted} />
+            <TrophyIcon size={64} color={colors.textMuted} />
             <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
               {t.leaderboard.empty}
             </Text>
@@ -600,7 +599,7 @@ function Header({
         accessibilityRole="button"
         accessibilityLabel={t.common.back}
       >
-        <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
+        <ArrowLeftIcon size={20} color={colors.textPrimary} />
       </PressableScale>
 
       <View style={styles.headerTitleWrap}>
@@ -623,7 +622,7 @@ function Header({
             },
           ]}
         >
-          <MaterialIcons name="people" size={14} color={colors.textSecondary} />
+          <UsersIcon size={14} color={colors.textSecondary} />
           <Text style={[styles.countBadgeText, { color: colors.textSecondary }]}>
             {totalCount}
           </Text>

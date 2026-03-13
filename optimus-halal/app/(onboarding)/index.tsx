@@ -21,7 +21,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowRightIcon } from "phosphor-react-native";
 import Animated, {
   useSharedValue,
   useAnimatedScrollHandler,
@@ -252,11 +252,8 @@ export default function OnboardingScreen() {
               >
                 {t.onboarding.next}
               </Text>
-              <MaterialIcons
-                name="arrow-forward"
-                size={20}
-                color={isDark ? "#0d1b13" : colors.primary}
-              />
+              <ArrowRightIcon size={20}
+                color={isDark ? "#0d1b13" : colors.primary} />
             </View>
           </PressableScale>
         </Animated.View>

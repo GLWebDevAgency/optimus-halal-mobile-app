@@ -19,7 +19,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
+import { CheckCircleIcon, CircleIcon, SealCheckIcon, XIcon } from "phosphor-react-native";
 import Animated, { FadeIn, FadeInDown, ZoomIn } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
@@ -34,6 +34,7 @@ import { trackEvent } from "@/lib/analytics";
 import { getOfferings, purchasePackage, restorePurchases } from "@/services/purchases";
 import { APP_CONFIG } from "@/constants/config";
 import type { PurchasesPackage } from "react-native-purchases";
+import { AppIcon } from "@/lib/icons";
 
 const GOLD = "#d4af37";
 
@@ -118,7 +119,7 @@ export default function PremiumPaywallScreen() {
               accessibilityRole="button"
               accessibilityLabel={t.common.close}
             >
-              <MaterialIcons name="close" size={24} color={colors.textPrimary} />
+              <XIcon size={24} color={colors.textPrimary} />
             </Pressable>
           </View>
           <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 32 }}>
@@ -162,11 +163,11 @@ export default function PremiumPaywallScreen() {
               accessibilityRole="button"
               accessibilityLabel={t.common.close}
             >
-              <MaterialIcons name="close" size={24} color={colors.textPrimary} />
+              <XIcon size={24} color={colors.textPrimary} />
             </Pressable>
           </View>
           <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 32 }}>
-            <MaterialIcons name="verified" size={64} color={GOLD} />
+            <SealCheckIcon size={64} color={GOLD} />
             <Text style={{ color: colors.textPrimary, fontSize: 24, fontWeight: "800", marginTop: 16 }}>
               {t.premium.alreadyPremium}
             </Text>
@@ -229,7 +230,7 @@ export default function PremiumPaywallScreen() {
           accessibilityRole="button"
           accessibilityLabel={t.common.close}
         >
-          <MaterialIcons name="close" size={24} color={colors.textPrimary} />
+          <XIcon size={24} color={colors.textPrimary} />
         </Pressable>
       </View>
 
@@ -273,12 +274,12 @@ export default function PremiumPaywallScreen() {
                   justifyContent: "center",
                 }}
               >
-                <MaterialIcons name={feature.icon} size={20} color={GOLD} />
+                <AppIcon name={feature.icon} size={20} color={GOLD} />
               </View>
               <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: "500", flex: 1 }}>
                 {feature.label}
               </Text>
-              <MaterialIcons name="check-circle" size={20} color={GOLD} />
+              <CheckCircleIcon size={20} color={GOLD} />
             </View>
           ))}
         </Animated.View>
@@ -337,10 +338,10 @@ export default function PremiumPaywallScreen() {
                   </View>
                   {isSelected ? (
                     <Animated.View entering={ZoomIn.springify()}>
-                      <MaterialIcons name="check-circle" size={24} color={GOLD} />
+                      <CheckCircleIcon size={24} color={GOLD} />
                     </Animated.View>
                   ) : (
-                    <MaterialIcons name="radio-button-unchecked" size={24} color={colors.textSecondary} />
+                    <CircleIcon size={24} color={colors.textSecondary} />
                   )}
                 </View>
               </PressableScale>

@@ -1,20 +1,24 @@
 /**
- * MadhabScoreRing — Circular progress ring for per-madhab trust scores.
+ * MadhabScoreRing — Premium circular progress ring for per-madhab trust scores.
  *
- * Two visual channels in one compact element:
+ * Two visual channels in one element:
  * - RING ARC: trust score fill (0-100%), animated clockwise on mount
- * - CENTER ICON: verdict (✓ halal, ⚠ doubtful, ✗ haram)
+ * - CENTER ICON: culturally-appropriate verdict icon
+ *
+ * Icon philosophy (Al-Niyyah — cultural sensitivity):
+ * - handshake      -> halal (agreement, conformity)
+ * - shield-warning -> doubtful (caution, uncertainty)
+ * - hand-palm      -> haram (stop — NOT a cross symbol)
+ * - help-outline   -> unknown (insufficient data)
  *
  * For products without a certifier (no trust score), the ring is hidden
- * and only the verdict icon is shown, larger and centered.
+ * and only the verdict icon is shown with a radial glow background.
  *
- * Philosophy: The ring INFORMS (how rigorous is the certifier for this school).
- * The icon STATES (what is the ingredient verdict). Two separate signals,
- * never mixed — aligned with Naqiy's informative-not-prescriptive values.
+ * @module components/scan/MadhabScoreRing
  */
 
 import React, { useEffect } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Platform } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import Animated, {
   useSharedValue,
@@ -23,27 +27,52 @@ import Animated, {
   withDelay,
   Easing,
 } from "react-native-reanimated";
-import { MaterialIcons } from "@expo/vector-icons";
 import { useTheme } from "@/hooks/useTheme";
 import { halalStatus, gold } from "@/theme/colors";
+import { AppIcon, type IconName } from "@/lib/icons";
+import type { IconWeight } from "phosphor-react-native";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-// ── Size constants ──────────────────────────────────────────────
-const RING_SIZE = 40;
-const STROKE_WIDTH = 3;
+// ── Size constants (premium sizing) ──────────────────────────────
+const RING_SIZE = 52;
+const STROKE_WIDTH = 3.5;
 const RADIUS = (RING_SIZE - STROKE_WIDTH) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+const GLOW_SIZE = RING_SIZE + 16;
+const CONTAINER_WIDTH = 78;
 
-// ── Verdict visuals ─────────────────────────────────────────────
-const VERDICT_CONFIG = {
-  halal: { icon: "check" as const, color: halalStatus.halal.base },
-  doubtful: { icon: "help" as const, color: halalStatus.doubtful.base },
-  haram: { icon: "close" as const, color: halalStatus.haram.base },
-  unknown: { icon: "help-outline" as const, color: halalStatus.unknown.base },
-} as const;
+// ── Verdict visuals (culturally appropriate icons) ───────────────
+interface VerdictVisual {
+  icon: IconName;
+  color: string;
+  weight: IconWeight;
+}
 
-// ── Ring color thresholds (trust score) ─────────────────────────
+const VERDICT_CONFIG: Record<string, VerdictVisual> = {
+  halal: {
+    icon: "handshake",
+    color: halalStatus.halal.base,
+    weight: "fill",
+  },
+  doubtful: {
+    icon: "shield-warning",
+    color: halalStatus.doubtful.base,
+    weight: "fill",
+  },
+  haram: {
+    icon: "hand-palm",
+    color: halalStatus.haram.base,
+    weight: "fill",
+  },
+  unknown: {
+    icon: "help-outline",
+    color: halalStatus.unknown.base,
+    weight: "regular",
+  },
+};
+
+// ── Ring color thresholds (trust score) ──────────────────────────
 function getRingColor(score: number): string {
   if (score >= 70) return halalStatus.halal.base;
   if (score >= 40) return halalStatus.doubtful.base;
@@ -55,7 +84,7 @@ interface MadhabScoreRingProps {
   label: string;
   /** Ingredient verdict: halal / doubtful / haram / unknown */
   verdict: "halal" | "doubtful" | "haram" | "unknown";
-  /** Per-madhab trust score (0-100). Null = no certifier → ring hidden */
+  /** Per-madhab trust score (0-100). Null = no certifier -> ring hidden */
   trustScore: number | null;
   /** Translated verdict label: "halal" / "douteux" / "haram" */
   verdictLabel?: string;
@@ -80,7 +109,6 @@ export const MadhabScoreRing = React.memo(function MadhabScoreRing({
   isUserSchool = false,
   staggerIndex = 0,
   showScore = false,
-  onPress,
 }: MadhabScoreRingProps) {
   const { isDark, colors } = useTheme();
   const hasTrustScore = trustScore !== null;
@@ -92,9 +120,9 @@ export const MadhabScoreRing = React.memo(function MadhabScoreRing({
   useEffect(() => {
     if (hasTrustScore) {
       progress.value = withDelay(
-        staggerIndex * 120,
+        staggerIndex * 150,
         withTiming(trustScore / 100, {
-          duration: 900,
+          duration: 1000,
           easing: Easing.out(Easing.cubic),
         })
       );
@@ -106,12 +134,12 @@ export const MadhabScoreRing = React.memo(function MadhabScoreRing({
   }));
 
   const ringColor = hasTrustScore ? getRingColor(trustScore) : "transparent";
-  const trackColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
+  const trackColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)";
 
-  // ── Icon sizing: larger when no ring ────────────────────────
-  const iconSize = hasTrustScore ? 16 : 20;
+  // Icon sizing: smaller when ring is present (less space), larger without
+  const iconSize = hasTrustScore ? 20 : 24;
 
-  // ── Sub-label: trust score number or conflict count ─────────
+  // Sub-label: trust score number or conflict count
   const subLabel = hasTrustScore
     ? `${trustScore}`
     : conflictCount > 0
@@ -126,16 +154,36 @@ export const MadhabScoreRing = React.memo(function MadhabScoreRing({
 
   return (
     <View style={styles.container}>
-      {/* ── Ring + Icon ── */}
+      {/* ── Radial glow behind ring ── */}
       <View
         style={[
-          styles.ringContainer,
-          isUserSchool && {
-            borderWidth: 1.5,
-            borderColor: `${gold[500]}40`,
-            borderRadius: (RING_SIZE + 8) / 2,
-            padding: 2,
+          styles.glow,
+          {
+            backgroundColor: verdictConfig.color,
+            opacity: isDark ? 0.14 : 0.08,
           },
+          Platform.OS === "ios" && {
+            shadowColor: verdictConfig.color,
+            shadowOpacity: isDark ? 0.25 : 0.12,
+            shadowOffset: { width: 0, height: 0 },
+            shadowRadius: 14,
+          },
+        ]}
+      />
+
+      {/* ── Ring wrapper (gold border for user school) ── */}
+      <View
+        style={[
+          styles.ringWrapper,
+          isUserSchool && [
+            styles.userSchoolBorder,
+            Platform.OS === "ios" && {
+              shadowColor: gold[500],
+              shadowOpacity: 0.25,
+              shadowOffset: { width: 0, height: 0 },
+              shadowRadius: 8,
+            },
+          ],
         ]}
       >
         {hasTrustScore ? (
@@ -154,7 +202,7 @@ export const MadhabScoreRing = React.memo(function MadhabScoreRing({
                 stroke={trackColor}
                 strokeWidth={STROKE_WIDTH}
               />
-              {/* Progress arc */}
+              {/* Animated progress arc */}
               <AnimatedCircle
                 cx={RING_SIZE / 2}
                 cy={RING_SIZE / 2}
@@ -174,28 +222,32 @@ export const MadhabScoreRing = React.memo(function MadhabScoreRing({
                   {trustScore}
                 </Text>
               ) : (
-                <MaterialIcons
+                <AppIcon
                   name={verdictConfig.icon}
                   size={iconSize}
                   color={verdictConfig.color}
+                  weight={verdictConfig.weight}
                 />
               )}
             </View>
           </View>
         ) : (
-          /* No ring — just the verdict icon, bigger */
+          /* No ring — verdict icon with tinted background */
           <View
             style={[
               styles.iconOnly,
               {
-                backgroundColor: `${verdictConfig.color}${isDark ? "18" : "10"}`,
+                backgroundColor: `${verdictConfig.color}${isDark ? "14" : "0A"}`,
+                borderWidth: 1,
+                borderColor: `${verdictConfig.color}${isDark ? "25" : "15"}`,
               },
             ]}
           >
-            <MaterialIcons
+            <AppIcon
               name={verdictConfig.icon}
               size={iconSize}
               color={verdictConfig.color}
+              weight={verdictConfig.weight}
             />
           </View>
         )}
@@ -211,38 +263,65 @@ export const MadhabScoreRing = React.memo(function MadhabScoreRing({
           ]}
           numberOfLines={1}
         >
-          {label}
+          {isUserSchool ? `\u2605 ${label}` : label}
         </Text>
       )}
 
-      {/* ── Verdict label (halal/douteux/haram) ── */}
+      {/* ── Verdict pill (colored badge) ── */}
       {label !== "" && verdictLabel && (
-        <Text
-          style={[styles.verdictLabel, { color: verdictConfig.color }]}
-          numberOfLines={1}
+        <View
+          style={[
+            styles.verdictPill,
+            {
+              backgroundColor: `${verdictConfig.color}${isDark ? "18" : "0E"}`,
+              borderColor: `${verdictConfig.color}${isDark ? "30" : "1A"}`,
+            },
+          ]}
         >
-          {verdictLabel}
-        </Text>
+          <Text
+            style={[styles.verdictPillText, { color: verdictConfig.color }]}
+            numberOfLines={1}
+          >
+            {verdictLabel}
+          </Text>
+        </View>
       )}
 
-      {/* ── Sub-label (score or conflict count) — only when no verdictLabel ── */}
+      {/* ── Sub-label (trust score or conflict count) ── */}
       {label !== "" && !verdictLabel && subLabel !== null && (
         <Text style={[styles.subLabel, { color: subLabelColor }]}>
-          {hasTrustScore ? subLabel : `${subLabel} ⚠`}
+          {hasTrustScore ? subLabel : `${subLabel} \u26A0`}
         </Text>
       )}
     </View>
   );
 });
 
+// ── Styles ───────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-    width: 72,
+    width: CONTAINER_WIDTH,
   },
-  ringContainer: {
+  glow: {
+    position: "absolute",
+    top: (CONTAINER_WIDTH - GLOW_SIZE) / 2 + 2,
+    left: (CONTAINER_WIDTH - GLOW_SIZE) / 2,
+    width: GLOW_SIZE,
+    height: GLOW_SIZE,
+    borderRadius: GLOW_SIZE / 2,
+  },
+  ringWrapper: {
     alignItems: "center",
     justifyContent: "center",
+    width: RING_SIZE + 8,
+    height: RING_SIZE + 8,
+    borderRadius: (RING_SIZE + 8) / 2,
+  },
+  userSchoolBorder: {
+    borderWidth: 1.5,
+    borderColor: `${gold[500]}50`,
   },
   svgContainer: {
     width: RING_SIZE,
@@ -256,7 +335,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   scoreText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "800",
     letterSpacing: -0.3,
   },
@@ -270,23 +349,29 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 11,
     fontWeight: "600",
-    marginTop: 5,
+    marginTop: 6,
     letterSpacing: 0.2,
   },
   labelHighlight: {
     fontWeight: "700",
   },
-  verdictLabel: {
-    fontSize: 10,
+  verdictPill: {
+    marginTop: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  verdictPillText: {
+    fontSize: 9,
     fontWeight: "700",
-    marginTop: 2,
     textTransform: "lowercase" as const,
-    letterSpacing: 0.1,
+    letterSpacing: 0.3,
   },
   subLabel: {
     fontSize: 10,
     fontWeight: "700",
-    marginTop: 1,
+    marginTop: 2,
   },
 });
 

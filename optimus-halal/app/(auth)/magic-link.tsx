@@ -19,7 +19,7 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { CheckCircleIcon } from "phosphor-react-native";
 import { NotificationFeedbackType } from "expo-haptics";
 import Animated, {
   FadeIn,
@@ -453,7 +453,7 @@ export default function MagicLinkLoginScreen() {
       className="items-center py-12"
     >
       <View className="w-24 h-24 rounded-full bg-primary-50 dark:bg-primary-900/30 items-center justify-center mb-4" accessible={false}>
-        <MaterialIcons name="check-circle" size={48} color={colors.primary} />
+        <CheckCircleIcon size={48} color={colors.primary} />
       </View>
       <Text className="text-slate-900 dark:text-white text-2xl font-bold" accessibilityRole="header">
         {t.auth.magicLink.loginSuccess}

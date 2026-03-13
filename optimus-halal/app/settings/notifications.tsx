@@ -15,13 +15,14 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, CheckCircleIcon, DotsThreeVerticalIcon } from "phosphor-react-native";
 import Animated, { FadeIn, FadeInDown, ZoomIn } from "react-native-reanimated";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { trpc } from "@/lib/trpc";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 const GOLD = "#d4af37";
 
@@ -33,7 +34,7 @@ interface NotificationCategory {
   id: string;
   nameKey: string;
   descKey: string;
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: IconName;
   iconColor: {
     light: { bg: string; text: string };
     dark: { bg: string; text: string };
@@ -46,7 +47,7 @@ const getGeneralSettings = (primaryColor: string) => [
     id: "push",
     nameKey: "pushNotifications" as const,
     descKey: "enableAll" as const,
-    icon: "notifications-active" as keyof typeof MaterialIcons.glyphMap,
+    icon: "notifications-active" as IconName,
     iconColor: {
       light: { bg: "rgba(19, 236, 106, 0.1)", text: primaryColor },
       dark: { bg: "rgba(19, 236, 106, 0.1)", text: primaryColor },
@@ -57,7 +58,7 @@ const getGeneralSettings = (primaryColor: string) => [
     id: "sound",
     nameKey: "soundVibrate" as const,
     descKey: "soundAlerts" as const,
-    icon: "volume-up" as keyof typeof MaterialIcons.glyphMap,
+    icon: "volume-up" as IconName,
     iconColor: {
       light: { bg: "rgba(59, 130, 246, 0.1)", text: "#3b82f6" },
       dark: { bg: "rgba(96, 165, 250, 0.1)", text: "#60a5fa" },
@@ -71,7 +72,7 @@ const CATEGORY_SETTINGS_STATIC = [
     id: "ethical",
     nameKey: "ethicalAlerts" as const,
     descKey: "brandUpdates" as const,
-    icon: "eco" as keyof typeof MaterialIcons.glyphMap,
+    icon: "eco" as IconName,
     iconColor: {
       light: { bg: "rgba(34, 197, 94, 0.1)", text: "#22c55e" },
       dark: { bg: "rgba(74, 222, 128, 0.1)", text: "#4ade80" },
@@ -82,7 +83,7 @@ const CATEGORY_SETTINGS_STATIC = [
     id: "products",
     nameKey: "newProducts" as const,
     descKey: "availability" as const,
-    icon: "inventory-2" as keyof typeof MaterialIcons.glyphMap,
+    icon: "inventory-2" as IconName,
     iconColor: {
       light: { bg: "rgba(249, 115, 22, 0.1)", text: "#f97316" },
       dark: { bg: "rgba(251, 146, 60, 0.1)", text: "#fb923c" },
@@ -93,7 +94,7 @@ const CATEGORY_SETTINGS_STATIC = [
     id: "offers",
     nameKey: "offersPromos" as const,
     descKey: "partnerDeals" as const,
-    icon: "local-offer" as keyof typeof MaterialIcons.glyphMap,
+    icon: "local-offer" as IconName,
     iconColor: {
       light: { bg: "rgba(168, 85, 247, 0.1)", text: "#a855f7" },
       dark: { bg: "rgba(192, 132, 252, 0.1)", text: "#c084fc" },
@@ -221,7 +222,7 @@ export default function NotificationsScreen() {
               justifyContent: "center",
             }}
           >
-            <MaterialIcons name={setting.icon} size={22} color={iconColors.text} />
+            <AppIcon name={setting.icon} size={22} color={iconColors.text} />
           </View>
           <View style={{ marginLeft: 12, flex: 1 }}>
             <Text
@@ -290,7 +291,7 @@ export default function NotificationsScreen() {
               justifyContent: "center",
             }}
           >
-            <MaterialIcons name={category.icon} size={22} color={iconColors.text} />
+            <AppIcon name={category.icon} size={22} color={iconColors.text} />
           </View>
           <View style={{ marginLeft: 12, flex: 1 }}>
             <Text
@@ -367,7 +368,7 @@ export default function NotificationsScreen() {
           </Text>
           {isSelected && (
             <Animated.View entering={ZoomIn.springify()}>
-              <MaterialIcons name="check-circle" size={20} color={GOLD} />
+              <CheckCircleIcon size={20} color={GOLD} />
             </Animated.View>
           )}
         </View>
@@ -422,7 +423,7 @@ export default function NotificationsScreen() {
               justifyContent: "center",
             }}
           >
-            <MaterialIcons name="arrow-back" size={22} color={themeColors.textPrimary} />
+            <ArrowLeftIcon size={22} color={themeColors.textPrimary} />
           </View>
         </PressableScale>
 
@@ -466,7 +467,7 @@ export default function NotificationsScreen() {
               justifyContent: "center",
             }}
           >
-            <MaterialIcons name="more-vert" size={22} color={themeColors.textSecondary} />
+            <DotsThreeVerticalIcon size={22} color={themeColors.textSecondary} />
           </View>
         </PressableScale>
       </Animated.View>

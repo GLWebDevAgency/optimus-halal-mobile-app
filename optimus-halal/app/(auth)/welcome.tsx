@@ -17,7 +17,7 @@ import {
 import { PressableScale } from "@/components/ui/PressableScale";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { BellRingingIcon, CaretRightIcon, CheckCircleIcon, EnvelopeSimpleIcon, LockSimpleIcon, MapPinIcon, ScanIcon } from "phosphor-react-native";
 import { Image } from "expo-image";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
@@ -143,7 +143,7 @@ export default function AuthWelcomeScreen() {
                     backgroundColor: "rgba(212,175,55,0.2)",
                     alignItems: "center", justifyContent: "center", marginRight: 12,
                   }}>
-                    <MaterialIcons name="mail-outline" size={24} color="#d4af37" />
+                    <EnvelopeSimpleIcon size={24} color="#d4af37" />
                   </View>
                   <Text style={{ color: colors.textPrimary, fontSize: 18, fontWeight: "700" }}>
                     {t.auth.welcome.emailLogin}
@@ -164,7 +164,7 @@ export default function AuthWelcomeScreen() {
                 {t.auth.welcome.emailLoginDesc}
               </Text>
               <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}>
-                <MaterialIcons name="check-circle" size={16} color="#d4af37" />
+                <CheckCircleIcon size={16} color="#d4af37" />
                 <Text style={{ color: isDark ? "rgba(212,175,55,0.8)" : "rgba(146,112,12,0.9)", fontSize: 12, marginLeft: 8 }}>
                   {t.auth.welcome.noPasswordNeeded}
                 </Text>
@@ -214,7 +214,7 @@ export default function AuthWelcomeScreen() {
                       backgroundColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.06)",
                       alignItems: "center", justifyContent: "center", marginRight: 12,
                     }}>
-                      <MaterialIcons name="lock-outline" size={24} color="#d4af37" />
+                      <LockSimpleIcon size={24} color="#d4af37" />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={{ color: colors.textPrimary, fontWeight: "600", fontSize: 15 }}>
@@ -224,11 +224,8 @@ export default function AuthWelcomeScreen() {
                         {t.auth.welcome.classicLoginDesc}
                       </Text>
                     </View>
-                    <MaterialIcons
-                      name="chevron-right"
-                      size={24}
-                      color={isDark ? "rgba(212,175,55,0.4)" : "rgba(212,175,55,0.5)"}
-                    />
+                    <CaretRightIcon size={24}
+                      color={isDark ? "rgba(212,175,55,0.4)" : "rgba(212,175,55,0.5)"} />
                   </View>
                 </View>
               </PressableScale>
@@ -253,21 +250,21 @@ export default function AuthWelcomeScreen() {
 
           <View style={{ gap: 14 }}>
             <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-              <MaterialIcons name="qr-code-scanner" size={20} color="#d4af37" />
+              <ScanIcon size={20} color="#d4af37" />
               <Text style={{ color: colors.textSecondary, fontSize: 13, marginLeft: 12, flex: 1, lineHeight: 19 }}>
                 {t.auth.welcome.benefit1}
               </Text>
             </View>
 
             <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-              <MaterialIcons name="location-on" size={20} color="#d4af37" />
+              <MapPinIcon size={20} color="#d4af37" />
               <Text style={{ color: colors.textSecondary, fontSize: 13, marginLeft: 12, flex: 1, lineHeight: 19 }}>
                 {t.auth.welcome.benefit2}
               </Text>
             </View>
 
             <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-              <MaterialIcons name="notifications-active" size={20} color="#d4af37" />
+              <BellRingingIcon size={20} color="#d4af37" />
               <Text style={{ color: colors.textSecondary, fontSize: 13, marginLeft: 12, flex: 1, lineHeight: 19 }}>
                 {t.auth.welcome.benefit3}
               </Text>

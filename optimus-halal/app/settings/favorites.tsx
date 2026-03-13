@@ -18,7 +18,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FlashList } from "@shopify/flash-list";
 import { router, useLocalSearchParams, useFocusEffect } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, CameraPlusIcon, CloudSlashIcon, HeartIcon, MapPinPlusIcon, MapTrifoldIcon, ScanIcon, StorefrontIcon } from "phosphor-react-native";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useFavoritesList, useRemoveFavorite } from "@/hooks/useFavorites";
 import {
@@ -380,7 +380,7 @@ export default function FavoritesScreen() {
         <SafeAreaView style={styles.flex}>
           <Header colors={colors} t={t} isDark={isDark} />
           <View style={[styles.centered, { paddingHorizontal: 32 }]}>
-            <MaterialIcons name="cloud-off" size={64} color={colors.textMuted} />
+            <CloudSlashIcon size={64} color={colors.textMuted} />
             <Text
               style={{
                 color: colors.textSecondary,
@@ -443,11 +443,8 @@ export default function FavoritesScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={t.common.back}
               >
-                <MaterialIcons
-                  name="arrow-back"
-                  size={20}
-                  color={colors.textPrimary}
-                />
+                <ArrowLeftIcon size={20}
+                  color={colors.textPrimary} />
               </PressableScale>
               <View>
                 <Text
@@ -575,11 +572,8 @@ function Header({
           accessibilityRole="button"
           accessibilityLabel={t.common.back}
         >
-          <MaterialIcons
-            name="arrow-back"
-            size={20}
-            color={colors.textPrimary}
-          />
+          <ArrowLeftIcon size={20}
+            color={colors.textPrimary} />
         </PressableScale>
         <Text style={[styles.title, { color: colors.textPrimary }]}>
           {t.favorites.title}
@@ -600,7 +594,7 @@ function EmptyProducts({
 }) {
   return (
     <View style={styles.emptyContainer}>
-      <MaterialIcons name="favorite-border" size={56} color={colors.textMuted} />
+      <HeartIcon size={56} color={colors.textMuted} />
       <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
         {t.favorites.empty}
       </Text>
@@ -613,11 +607,8 @@ function EmptyProducts({
         accessibilityRole="button"
         accessibilityLabel={t.favorites.scanProduct}
       >
-        <MaterialIcons
-          name="qr-code-scanner"
-          size={18}
-          color={isDark ? "#102217" : "#0d1b13"}
-        />
+        <ScanIcon size={18}
+          color={isDark ? "#102217" : "#0d1b13"} />
         <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
           {t.favorites.scanProduct}
         </Text>
@@ -637,7 +628,7 @@ function EmptyStores({
 }) {
   return (
     <View style={styles.emptyContainer}>
-      <MaterialIcons name="store" size={56} color={colors.textMuted} />
+      <StorefrontIcon size={56} color={colors.textMuted} />
       <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
         {t.favorites.emptyStores}
       </Text>
@@ -650,11 +641,8 @@ function EmptyStores({
         accessibilityRole="button"
         accessibilityLabel={t.favorites.exploreMap}
       >
-        <MaterialIcons
-          name="map"
-          size={18}
-          color={isDark ? "#102217" : "#0d1b13"}
-        />
+        <MapTrifoldIcon size={18}
+          color={isDark ? "#102217" : "#0d1b13"} />
         <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
           {t.favorites.exploreMap}
         </Text>
@@ -692,7 +680,7 @@ function ProductsFooter({
           },
         ]}
       >
-        <MaterialIcons name="add-a-photo" size={22} color={colors.textSecondary} />
+        <CameraPlusIcon size={22} color={colors.textSecondary} />
       </View>
       <Text style={[styles.footerTitle, { color: colors.textPrimary }]}>
         {t.favorites.incompleteList}
@@ -706,11 +694,8 @@ function ProductsFooter({
         accessibilityRole="button"
         accessibilityLabel={t.favorites.scanProduct}
       >
-        <MaterialIcons
-          name="qr-code-scanner"
-          size={16}
-          color={isDark ? "#102217" : "#0d1b13"}
-        />
+        <ScanIcon size={16}
+          color={isDark ? "#102217" : "#0d1b13"} />
         <Text
           style={{
             fontSize: 12,
@@ -755,7 +740,7 @@ function StoresFooter({
           },
         ]}
       >
-        <MaterialIcons name="add-location" size={22} color={colors.textSecondary} />
+        <MapPinPlusIcon size={22} color={colors.textSecondary} />
       </View>
       <Text style={[styles.footerTitle, { color: colors.textPrimary }]}>
         {t.favorites.storeIncompleteList}
@@ -769,11 +754,8 @@ function StoresFooter({
         accessibilityRole="button"
         accessibilityLabel={t.favorites.exploreMap}
       >
-        <MaterialIcons
-          name="map"
-          size={16}
-          color={isDark ? "#102217" : "#0d1b13"}
-        />
+        <MapTrifoldIcon size={16}
+          color={isDark ? "#102217" : "#0d1b13"} />
         <Text
           style={{
             fontSize: 12,

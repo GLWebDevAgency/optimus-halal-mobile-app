@@ -1,9 +1,10 @@
 import React from "react";
 import { View, Text, ActivityIndicator } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import { MapPinIcon } from "phosphor-react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { PressableScale } from "../ui/PressableScale";
 import type { ThemeColors } from "./types";
+import { AppIcon } from "@/lib/icons";
 
 interface Props {
   colors: ThemeColors;
@@ -65,11 +66,9 @@ export const MapControls = React.memo(function MapControls({
             elevation: 3,
           }}
         >
-          <MaterialIcons
-            name={userLocation ? "my-location" : "location-searching"}
+          <AppIcon name={userLocation ? "my-location" : "location-searching"}
             size={20}
-            color={userLocation ? colors.primary : colors.textMuted}
-          />
+            color={userLocation ? colors.primary : colors.textMuted} />
         </PressableScale>
       </View>
 
@@ -93,7 +92,7 @@ export const MapControls = React.memo(function MapControls({
               elevation: 2,
             }}
           >
-            <MaterialIcons name="place" size={14} color={colors.primary} />
+            <MapPinIcon size={14} color={colors.primary} />
             <Text className="font-semibold text-xs" style={{ color: colors.textPrimary }}>
               {storeCount} {storeCount > 1 ? t.stores : t.store}
             </Text>

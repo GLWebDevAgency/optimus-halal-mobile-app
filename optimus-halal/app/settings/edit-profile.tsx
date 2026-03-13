@@ -17,7 +17,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, CameraIcon, WarningCircleIcon } from "phosphor-react-native";
 import Animated, { FadeIn, FadeInDown, SlideInDown } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
@@ -29,6 +29,7 @@ import { useTranslation } from "@/hooks";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { PhoneInput, LocationPicker, parseInternationalPhone, PremiumBackground } from "@/components/ui";
 import { City, FRENCH_CITIES } from "@/constants/locations";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 const GOLD = "#d4af37";
 
@@ -175,7 +176,7 @@ export default function EditProfileScreen() {
     label: string,
     value: string,
     onChangeText: (text: string) => void,
-    icon: keyof typeof MaterialIcons.glyphMap,
+    icon: IconName,
     placeholder: string,
     options?: {
       optional?: boolean;
@@ -238,16 +239,14 @@ export default function EditProfileScreen() {
               ...(isFocused ? { shadowColor: GOLD, shadowOpacity: 0.2, shadowRadius: 12, shadowOffset: { width: 0, height: 0 }, elevation: 4 } : {}),
             }}
           />
-          <MaterialIcons
-            name={icon}
+          <AppIcon name={icon}
             size={20}
             color={isFocused ? GOLD : colors.textSecondary}
             style={{
               position: "absolute",
               left: 14,
               top: 14,
-            }}
-          />
+            }} />
         </View>
       </View>
     );
@@ -274,7 +273,7 @@ export default function EditProfileScreen() {
         <PremiumBackground />
         <SafeAreaView style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 20 }}>
           <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
-        <MaterialIcons name="error-outline" size={48} color="#ef4444" style={{ marginBottom: 16 }} />
+        <WarningCircleIcon size={48} color="#ef4444" style={{ marginBottom: 16 }} />
         <Text style={{
           fontSize: 18,
           fontWeight: "700",
@@ -364,7 +363,7 @@ export default function EditProfileScreen() {
             accessibilityRole="button"
             accessibilityLabel={t.common.back}
           >
-            <MaterialIcons name="arrow-back" size={22} color={colors.textPrimary} />
+            <ArrowLeftIcon size={22} color={colors.textPrimary} />
           </PressableScale>
 
           {/* Title */}
@@ -445,7 +444,7 @@ export default function EditProfileScreen() {
                 )}
               </View>
 
-              {/* Camera Button */}
+              {/* CameraIcon Button */}
               <PressableScale
                 onPress={handleChangePhoto}
                 style={{
@@ -469,7 +468,7 @@ export default function EditProfileScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={t.editProfile.changePhotoLabel}
               >
-                <MaterialIcons name="photo-camera" size={18} color="#ffffff" />
+                <CameraIcon size={18} color="#ffffff" />
               </PressableScale>
             </View>
 

@@ -6,13 +6,13 @@
 
 import React from "react";
 import { View, Text } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
 import { useHaptics } from "@/hooks";
 import { neutral } from "@/theme/colors";
 import { PressableScale } from "./PressableScale";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 export interface IconButtonProps {
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: IconName;
   size?: "sm" | "md" | "lg";
   variant?: "default" | "filled" | "outline";
   color?: string;
@@ -76,11 +76,9 @@ export const IconButton: React.FC<IconButtonProps> = ({
           height: sizeStyles.button,
         }}
       >
-        <MaterialIcons
-          name={icon}
+        <AppIcon name={icon}
           size={sizeStyles.icon}
-          color={color || neutral[600]}
-        />
+          color={color || neutral[600]} />
         {badge !== undefined && badge > 0 && (
           <View
             className="absolute -top-1 -right-1 bg-danger rounded-full items-center justify-center"

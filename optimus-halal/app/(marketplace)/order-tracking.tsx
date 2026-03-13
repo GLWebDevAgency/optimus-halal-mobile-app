@@ -20,7 +20,7 @@ import { PressableScale } from "@/components/ui/PressableScale";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { CheckIcon, HeadsetIcon, HouseIcon, MagnifyingGlassIcon, NavigationArrowIcon, PackageIcon, PhoneIcon, SealCheckIcon, SlidersIcon, TruckIcon } from "phosphor-react-native";
 import { useHaptics, useTheme } from "@/hooks";
 import { ImpactFeedbackStyle } from "expo-haptics";
 import Animated, {
@@ -45,7 +45,7 @@ function PastOrderItem({
   return (
     <View className="bg-white dark:bg-[#1a2e22] p-4 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm flex-row items-center gap-4">
       <View className="h-12 w-12 rounded-full bg-gray-100 dark:bg-gray-800 items-center justify-center">
-        <MaterialIcons name="inventory-2" size={24} color="#9ca3af" />
+        <PackageIcon size={24} color="#9ca3af" />
       </View>
       <View className="flex-1">
         <View className="flex-row justify-between items-baseline mb-1">
@@ -114,12 +114,12 @@ export default function OrderTrackingScreen() {
           <View className="flex-row items-center gap-2">
             <Pressable hitSlop={8}>
               <View className="w-10 h-10 items-center justify-center rounded-full">
-                <MaterialIcons name="search" size={24} color={isDark ? "#ffffff" : "#0f172a"} />
+                <MagnifyingGlassIcon size={24} color={isDark ? "#ffffff" : "#0f172a"} />
               </View>
             </Pressable>
             <Pressable hitSlop={8}>
               <View className="w-10 h-10 items-center justify-center rounded-full">
-                <MaterialIcons name="tune" size={24} color={isDark ? "#ffffff" : "#0f172a"} />
+                <SlidersIcon size={24} color={isDark ? "#ffffff" : "#0f172a"} />
               </View>
             </Pressable>
           </View>
@@ -220,7 +220,7 @@ export default function OrderTrackingScreen() {
                   hitSlop={8}
                 >
                   <View className="h-8 w-8 rounded-full bg-primary items-center justify-center shadow-sm">
-                    <MaterialIcons name="call" size={18} color="#102216" />
+                    <PhoneIcon size={18} color="#102216" />
                   </View>
                 </Pressable>
               </View>
@@ -234,7 +234,7 @@ export default function OrderTrackingScreen() {
                   <View className="flex-row">
                     <View className="items-center w-8">
                       <View className="h-8 w-8 rounded-full bg-primary items-center justify-center z-10">
-                        <MaterialIcons name="check" size={18} color="#102216" />
+                        <CheckIcon size={18} color="#102216" />
                       </View>
                       <View className="w-0.5 bg-primary h-6" />
                     </View>
@@ -251,7 +251,7 @@ export default function OrderTrackingScreen() {
                   <View className="flex-row">
                     <View className="items-center w-8">
                       <View className="h-8 w-8 rounded-full bg-primary items-center justify-center z-10">
-                        <MaterialIcons name="check" size={18} color="#102216" />
+                        <CheckIcon size={18} color="#102216" />
                       </View>
                       <View className="w-0.5 bg-primary h-6" />
                     </View>
@@ -268,7 +268,7 @@ export default function OrderTrackingScreen() {
                   <View className="flex-row">
                     <View className="items-center w-8">
                       <View className="h-8 w-8 rounded-full bg-primary items-center justify-center z-10 ring-4 ring-primary/20">
-                        <MaterialIcons name="local-shipping" size={18} color="#102216" />
+                        <TruckIcon size={18} color="#102216" />
                       </View>
                       <View className="w-0.5 bg-gray-200 dark:bg-gray-700 h-6" />
                     </View>
@@ -285,7 +285,7 @@ export default function OrderTrackingScreen() {
                   <View className="flex-row">
                     <View className="items-center w-8">
                       <View className="h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 items-center justify-center z-10">
-                        <MaterialIcons name="home" size={18} color="#9ca3af" />
+                        <HouseIcon size={18} color="#9ca3af" />
                       </View>
                     </View>
                     <View className="flex-1 pt-1 pl-3">
@@ -326,7 +326,7 @@ export default function OrderTrackingScreen() {
                       </Text>
                     </View>
                     <View className="flex-row items-center gap-1 mt-0.5">
-                      <MaterialIcons name="verified" size={12} color={colors.primary} />
+                      <SealCheckIcon size={12} color={colors.primary} />
                       <Text className="text-xs text-slate-500 dark:text-gray-400">
                         Source Éthique • Médine
                       </Text>
@@ -356,7 +356,7 @@ export default function OrderTrackingScreen() {
                       </Text>
                     </View>
                     <View className="flex-row items-center gap-1 mt-0.5">
-                      <MaterialIcons name="verified" size={12} color={colors.primary} />
+                      <SealCheckIcon size={12} color={colors.primary} />
                       <Text className="text-xs text-slate-500 dark:text-gray-400">
                         Certifié HMC • NZ
                       </Text>
@@ -370,7 +370,7 @@ export default function OrderTrackingScreen() {
             <View className="p-4 flex-row gap-3">
               <PressableScale style={{ flex: 1 }}>
                 <View className="flex-1 bg-primary h-12 rounded-lg flex-row items-center justify-center gap-2">
-                  <MaterialIcons name="near-me" size={20} color="#102216" />
+                  <NavigationArrowIcon size={20} color="#102216" />
                   <Text className="font-bold text-[#102216]">
                     Suivre Livreur
                   </Text>
@@ -378,11 +378,8 @@ export default function OrderTrackingScreen() {
               </PressableScale>
               <Pressable>
                 <View className="w-12 h-12 rounded-lg border border-gray-200 dark:border-gray-700 items-center justify-center">
-                  <MaterialIcons
-                    name="support-agent"
-                    size={20}
-                    color={isDark ? "#d1d5db" : "#475569"}
-                  />
+                  <HeadsetIcon size={20}
+                    color={isDark ? "#d1d5db" : "#475569"} />
                 </View>
               </Pressable>
             </View>

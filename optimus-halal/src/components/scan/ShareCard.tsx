@@ -8,7 +8,7 @@
 
 import React, { forwardRef } from "react";
 import { View, Text, StyleSheet, Share, Platform } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import { CrownIcon, QrCodeIcon, WarningIcon } from "phosphor-react-native";
 
 // Guard native imports — react-native-view-shot requires a dev client build
 let captureRef: typeof import("react-native-view-shot").captureRef | null = null;
@@ -21,6 +21,7 @@ try {
 } catch {
   // Expo Go — fall back to text-only sharing
 }
+import { AppIcon, type IconName } from "@/lib/icons";
 import {
   brand,
   primary,
@@ -52,7 +53,7 @@ export interface ShareLabels {
 
 const STATUS_VISUAL: Record<
   string,
-  { icon: keyof typeof MaterialIcons.glyphMap; color: string; bg: string; emoji: string }
+  { icon: IconName; color: string; bg: string; emoji: string }
 > = {
   halal: {
     icon: "verified",
@@ -102,7 +103,7 @@ export const ShareCardView = forwardRef<View, { data: ShareCardData; labels: Sha
         {/* Status icon + verdict */}
         <View style={styles.verdictSection}>
           <View style={[styles.iconCircle, { backgroundColor: `${status.color}20` }]}>
-            <MaterialIcons name={status.icon} size={40} color={status.color} />
+            <AppIcon name={status.icon} size={40} color={status.color} />
           </View>
           <Text style={[styles.verdictText, { color: status.color }]}>
             {labels.statusLabel}
@@ -122,7 +123,7 @@ export const ShareCardView = forwardRef<View, { data: ShareCardData; labels: Sha
         {/* Certifier */}
         {data.certifier ? (
           <View style={styles.infoRow}>
-            <MaterialIcons name="workspace-premium" size={16} color={primary[400]} />
+            <CrownIcon size={16} color={primary[400]} />
             <Text style={styles.infoText}>
               {labels.certifiedBy}: {data.certifier}
             </Text>
@@ -132,7 +133,7 @@ export const ShareCardView = forwardRef<View, { data: ShareCardData; labels: Sha
         {/* Boycott warning */}
         {data.isBoycotted ? (
           <View style={[styles.infoRow, styles.boycottRow]}>
-            <MaterialIcons name="warning" size={16} color={halalStatusTokens.haram.base} />
+            <WarningIcon size={16} color={halalStatusTokens.haram.base} />
             <Text style={[styles.infoText, { color: halalStatusTokens.haram.base }]}>
               {labels.boycotted}
             </Text>
@@ -141,7 +142,7 @@ export const ShareCardView = forwardRef<View, { data: ShareCardData; labels: Sha
 
         {/* Barcode */}
         <View style={styles.barcodeRow}>
-          <MaterialIcons name="qr-code-2" size={14} color={neutral[500]} />
+          <QrCodeIcon size={14} color={neutral[500]} />
           <Text style={styles.barcodeText}>{data.barcode}</Text>
         </View>
 

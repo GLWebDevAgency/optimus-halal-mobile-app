@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, CheckIcon, EnvelopeOpenIcon, QuestionIcon } from "phosphor-react-native";
 import { useHaptics, useTheme, useTranslation } from "@/hooks";
 import { ImpactFeedbackStyle } from "expo-haptics";
 import Animated, {
@@ -136,11 +136,8 @@ export default function ResetConfirmationScreen() {
           accessibilityRole="button"
           accessibilityLabel={t.common.back}
         >
-          <MaterialIcons
-            name="arrow-back"
-            size={24}
-            color={isDark ? "#ffffff" : "#1f2937"}
-          />
+          <ArrowLeftIcon size={24}
+            color={isDark ? "#ffffff" : "#1f2937"} />
         </PressableScale>
         
         <Text
@@ -186,11 +183,8 @@ export default function ResetConfirmationScreen() {
               }
             ]}
           >
-            <MaterialIcons
-              name="mark-email-read"
-              size={48}
-              color={brand.primary}
-            />
+            <EnvelopeOpenIcon size={48}
+              color={brand.primary} />
           </Animated.View>
 
           {/* Decorative check badge */}
@@ -201,7 +195,7 @@ export default function ResetConfirmationScreen() {
               { backgroundColor: colors.primary, borderColor: isDark ? "#102217" : "#ffffff" }
             ]}
           >
-            <MaterialIcons name="check" size={12} color="#102217" />
+            <CheckIcon size={12} color="#102217" />
           </Animated.View>
         </Animated.View>
 
@@ -326,11 +320,8 @@ export default function ResetConfirmationScreen() {
           accessibilityRole="link"
           accessibilityLabel={t.auth.resetConfirmation.contactSupport}
         >
-          <MaterialIcons
-            name="help"
-            size={18}
-            color={isDark ? "#6b7280" : "#9ca3af"}
-          />
+          <QuestionIcon size={18}
+            color={isDark ? "#6b7280" : "#9ca3af"} />
           <Text
             style={[
               styles.supportText,

@@ -27,7 +27,7 @@ import { Image } from "expo-image";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, CaretRightIcon, ChecksIcon, CloudSlashIcon, GlobeIcon, ShieldIcon } from "phosphor-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Shadow } from "react-native-shadow-2";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
@@ -40,6 +40,7 @@ import { useMe } from "@/hooks/useAuth";
 import type { TranslationKeys } from "@/hooks/useTranslation";
 import { trpc } from "@/lib/trpc";
 import { brand, glass, gold } from "@/theme/colors";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 const STAGGER_MS = 50;
 
@@ -50,7 +51,7 @@ type Severity = "critical" | "warning" | "info";
 const SEVERITY_CONFIG: Record<
   Severity,
   {
-    icon: keyof typeof MaterialIcons.glyphMap;
+    icon: IconName;
     color: string;
     bg: string;
     gradient: [string, string];
@@ -84,7 +85,7 @@ const SEVERITY_CONFIG: Record<
   },
 };
 
-const CATEGORY_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
+const CATEGORY_ICONS: Record<string, IconName> = {
   recall: "warning",
   fraud: "gavel",
   boycott: "block",
@@ -203,7 +204,7 @@ const AlertCard = React.memo(function AlertCard({
                   </View>
                 )}
                 <View style={[styles.severityPill, { backgroundColor: config.bg }]}>
-                  <MaterialIcons name={config.icon} size={11} color={config.color} />
+                  <AppIcon name={config.icon} size={11} color={config.color} />
                   <Text style={[styles.severityText, { color: config.color }]}>
                     {t.alerts.severity[severity]}
                   </Text>
@@ -216,11 +217,9 @@ const AlertCard = React.memo(function AlertCard({
                       borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)",
                     },
                   ]}>
-                    <MaterialIcons
-                      name={CATEGORY_ICONS[alert.categoryId ?? ""] ?? "info"}
+                    <AppIcon name={CATEGORY_ICONS[alert.categoryId ?? ""] ?? "info"}
                       size={10}
-                      color={isDark ? "#d1d5db" : "#64748b"}
-                    />
+                      color={isDark ? "#d1d5db" : "#64748b"} />
                     <Text style={[styles.categoryText, { color: isDark ? "#d1d5db" : "#64748b" }]}>
                       {categoryName}
                     </Text>
@@ -283,7 +282,7 @@ const AlertCard = React.memo(function AlertCard({
             <View style={styles.cardFooter}>
               {alert.sourceUrl ? (
                 <View style={styles.sourceRow}>
-                  <MaterialIcons name="language" size={12} color={colors.textMuted} />
+                  <GlobeIcon size={12} color={colors.textMuted} />
                   <Text
                     style={[styles.sourceText, { color: colors.textMuted }]}
                     numberOfLines={1}
@@ -297,11 +296,8 @@ const AlertCard = React.memo(function AlertCard({
               ) : (
                 <View />
               )}
-              <MaterialIcons
-                name="arrow-forward-ios"
-                size={12}
-                color={isDark ? "rgba(207,165,51,0.40)" : "rgba(0,0,0,0.20)"}
-              />
+              <CaretRightIcon size={12}
+                color={isDark ? "rgba(207,165,51,0.40)" : "rgba(0,0,0,0.20)"} />
             </View>
           </View>
         </PressableScale>
@@ -477,14 +473,11 @@ export default function AlertsScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={t.common.back}
               >
-                <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
+                <ArrowLeftIcon size={20} color={colors.textPrimary} />
               </Pressable>
               <View style={styles.headerTitleWrap}>
-                <MaterialIcons
-                  name="shield"
-                  size={20}
-                  color={isDark ? gold[500] : brand.primary}
-                />
+                <ShieldIcon size={20}
+                  color={isDark ? gold[500] : brand.primary} />
                 <Text
                   accessibilityRole="header"
                   style={[styles.headerTitle, { color: colors.textPrimary }]}
@@ -508,11 +501,8 @@ export default function AlertsScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={t.alerts.markAllRead}
               >
-                <MaterialIcons
-                  name="done-all"
-                  size={20}
-                  color={isDark ? gold[500] : brand.primary}
-                />
+                <ChecksIcon size={20}
+                  color={isDark ? gold[500] : brand.primary} />
               </Pressable>
             )}
           </View>
@@ -559,11 +549,9 @@ export default function AlertsScreen() {
                     accessibilityLabel={`${catName}${isActive ? `, ${t.common.selected}` : ""}`}
                   >
                     <View style={styles.filterChipInner}>
-                      <MaterialIcons
-                        name={CATEGORY_ICONS[cat.id] ?? "info"}
+                      <AppIcon name={CATEGORY_ICONS[cat.id] ?? "info"}
                         size={13}
-                        color={isActive ? "#fff" : (isDark ? "#a0a0a0" : "#64748b")}
-                      />
+                        color={isActive ? "#fff" : (isDark ? "#a0a0a0" : "#64748b")} />
                       <Text
                         style={[
                           styles.filterText,
@@ -660,7 +648,7 @@ export default function AlertsScreen() {
               },
             ]}
           >
-            <MaterialIcons name="cloud-off" size={32} color="#ef4444" />
+            <CloudSlashIcon size={32} color="#ef4444" />
           </View>
           <Text style={[styles.errorText, { color: colors.textSecondary }]}>
             {t.alerts.loadError}

@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import { CrownIcon } from "phosphor-react-native";
 import { usePremium, useTranslation, useTheme, useHaptics } from "@/hooks";
 import { useFeatureFlagsStore } from "@/store";
 import { PressableScale } from "./PressableScale";
@@ -43,7 +43,7 @@ export function PremiumGate({ feature, children, fallback }: PremiumGateProps) {
         margin: 16,
       }}
     >
-      <MaterialIcons name="workspace-premium" size={32} color={colors.primary} />
+      <CrownIcon size={32} color={colors.primary} />
       <Text
         style={{
           color: colors.textPrimary,

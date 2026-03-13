@@ -1,9 +1,10 @@
 import React, { useCallback } from "react";
 import { View, Text, Pressable } from "react-native";
 import { Image } from "expo-image";
-import { MaterialIcons } from "@expo/vector-icons";
+import { StarIcon } from "phosphor-react-native";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
 import { useTranslation } from "@/hooks/useTranslation";
+import { AppIcon } from "@/lib/icons";
 import {
   StoreFeatureProperties,
   ThemeColors,
@@ -92,11 +93,9 @@ export const StoreCard = React.memo(function StoreCard({
               />
             ) : (
               <>
-                <MaterialIcons
-                  name={STORE_TYPE_ICON[store.storeType] ?? "store"}
+                <AppIcon name={STORE_TYPE_ICON[store.storeType] ?? "store"}
                   size={24}
-                  color={colors.textMuted}
-                />
+                  color={colors.textMuted} />
                 {store.logoUrl && (
                   <View
                     className="absolute bottom-0.5 right-0.5 rounded-full overflow-hidden"
@@ -156,7 +155,7 @@ export const StoreCard = React.memo(function StoreCard({
               )}
               {store.averageRating > 0 && (
                 <View className="flex-row items-center gap-1">
-                  <MaterialIcons name="star" size={12} color="#fbbf24" />
+                  <StarIcon size={12} color="#fbbf24" />
                   <Text className="text-xs font-bold" style={{ color: colors.textPrimary }}>
                     {store.averageRating.toFixed(1)}
                   </Text>

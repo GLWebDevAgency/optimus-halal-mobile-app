@@ -8,7 +8,7 @@
 import React from "react";
 import { View, Text, StyleSheet, Dimensions } from "react-native";
 import { Image } from "expo-image";
-import { MaterialIcons } from "@expo/vector-icons";
+import { BarcodeIcon, EyeIcon, HeartIcon, PackageIcon, SealCheckIcon } from "phosphor-react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { PressableScale } from "@/components/ui/PressableScale";
@@ -75,7 +75,7 @@ export const ProductFavoriteCard = React.memo(function ProductFavoriteCard({
       entering={FadeInDown.delay(Math.min(index * 60, 360)).duration(350).springify()}
       style={[styles.card, { backgroundColor: colors.card, borderColor: colors.borderLight }]}
     >
-      {/* Image + Heart + Certifier overlay */}
+      {/* Image + HeartIcon + Certifier overlay */}
       <View style={styles.imageContainer}>
         {product.imageUrl ? (
           <Image
@@ -86,7 +86,7 @@ export const ProductFavoriteCard = React.memo(function ProductFavoriteCard({
           />
         ) : (
           <View style={[styles.image, styles.placeholder, { backgroundColor: isDark ? "#1f1f1f" : "#f0ede8" }]}>
-            <MaterialIcons name="inventory-2" size={28} color={colors.textMuted} />
+            <PackageIcon size={28} color={colors.textMuted} />
           </View>
         )}
 
@@ -97,7 +97,7 @@ export const ProductFavoriteCard = React.memo(function ProductFavoriteCard({
           accessibilityLabel={t.favorites.removeConfirm}
         >
           <View style={[styles.heartCircle, { backgroundColor: "rgba(0,0,0,0.35)" }]}>
-            <MaterialIcons name="favorite" size={16} color="#ef4444" />
+            <HeartIcon size={16} color="#ef4444" />
           </View>
         </PressableScale>
 
@@ -111,7 +111,7 @@ export const ProductFavoriteCard = React.memo(function ProductFavoriteCard({
                 contentFit="contain"
               />
             ) : (
-              <MaterialIcons name="verified" size={12} color={brand.primary} />
+              <SealCheckIcon size={12} color={brand.primary} />
             )}
             <Text
               style={[styles.certifierText, { color: isDark ? "#fff" : colors.textSecondary }]}
@@ -159,7 +159,7 @@ export const ProductFavoriteCard = React.memo(function ProductFavoriteCard({
             style={[styles.actionBtn, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}
             accessibilityLabel={t.scanResult.title ?? "View"}
           >
-            <MaterialIcons name="visibility" size={16} color={colors.textSecondary} />
+            <EyeIcon size={16} color={colors.textSecondary} />
           </PressableScale>
 
           <PressableScale
@@ -167,7 +167,7 @@ export const ProductFavoriteCard = React.memo(function ProductFavoriteCard({
             style={[styles.actionBtn, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}
             accessibilityLabel={t.favorites.scanProduct}
           >
-            <MaterialIcons name="qr-code-scanner" size={16} color={colors.textSecondary} />
+            <BarcodeIcon size={16} color={colors.textSecondary} />
           </PressableScale>
         </View>
       </View>

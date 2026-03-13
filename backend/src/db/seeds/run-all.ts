@@ -10,7 +10,8 @@
  *   2. Stores (AVS + Achahada halal stores)
  *   2.5. Google Places (pre-exported ratings, photos, reviews, hours)
  *   3. Boycott targets (BDS movement data)
- *   4. Additives + Madhab rulings (200+ E-numbers)
+ *   4. Additives + Madhab rulings (140 E-numbers, rich data)
+ *   4.5. BoycottX Additives (420 new E-numbers + veg/vegan enrichment)
  *   5. Alert categories + Alerts (Al-Kanz + RappelConso)
  *   6. Articles (editorial content)
  *   7. Ingredient Rulings (47 scholarly-sourced halal rulings)
@@ -102,6 +103,18 @@ export async function seedReferenceData(db: PostgresJsDatabase): Promise<SeedSta
     console.log(`    Additives: ${count} upserted (${Date.now() - t4}ms)`);
   } catch (err) {
     console.warn(`    Additives: skipped (${(err as Error).message})`);
+  }
+
+  // ── Phase 4.5: BoycottX Additives (420 new + 127 enriched) ─
+  // Must run AFTER Phase 4 (our 140 rich entries take priority)
+  const t45 = Date.now();
+  try {
+    const { seedBoycottxAdditives } = await import("./seed-additives-boycottx.js");
+    const count = await seedBoycottxAdditives(db);
+    stats.push({ phase: "BoycottX Additives", count, durationMs: Date.now() - t45 });
+    console.log(`    BoycottX Additives: ${count} upserted (${Date.now() - t45}ms)`);
+  } catch (err) {
+    console.warn(`    BoycottX Additives: skipped (${(err as Error).message})`);
   }
 
   // ── Phase 5: Alert categories + Alerts ──────────────────

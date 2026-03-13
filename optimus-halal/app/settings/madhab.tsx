@@ -17,17 +17,18 @@ import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, CheckIcon, InfoIcon } from "phosphor-react-native";
 import Animated, { FadeIn, FadeInDown, ZoomIn } from "react-native-reanimated";
 import { useHaptics, useTranslation } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
 import { trpc } from "@/lib/trpc";
+import { type IconName } from "@/lib/icons";
 
 const GOLD = "#d4af37";
 
 type MadhabValue = "hanafi" | "shafii" | "maliki" | "hanbali" | "general";
 
-const MADHAB_ICONS: Record<MadhabValue, keyof typeof MaterialIcons.glyphMap> = {
+const MADHAB_ICONS: Record<MadhabValue, IconName> = {
   hanafi: "mosque",
   shafii: "mosque",
   maliki: "mosque",
@@ -93,11 +94,8 @@ export default function MadhabScreen() {
             className="w-10 h-10 items-center justify-center rounded-xl"
             style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#f1f5f9" }}
           >
-            <MaterialIcons
-              name="arrow-back"
-              size={22}
-              color={isDark ? "#e2e8f0" : "#334155"}
-            />
+            <ArrowLeftIcon size={22}
+              color={isDark ? "#e2e8f0" : "#334155"} />
           </View>
         </Pressable>
         <Text
@@ -113,7 +111,7 @@ export default function MadhabScreen() {
         contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Info */}
+        {/* InfoIcon */}
         <Animated.View
           entering={FadeInDown.delay(100).duration(400)}
           className="px-4 mb-6"
@@ -131,7 +129,7 @@ export default function MadhabScreen() {
             }}
           >
             <View className="flex-row items-center gap-2 mb-2">
-              <MaterialIcons name="info" size={18} color={GOLD} />
+              <InfoIcon size={18} color={GOLD} />
               <Text className="text-sm font-semibold text-slate-900 dark:text-white">
                 {t.madhab.infoTitle}
               </Text>
@@ -196,7 +194,7 @@ export default function MadhabScreen() {
                 >
                   {selected === option.value && (
                     <Animated.View entering={ZoomIn.springify()}>
-                      <MaterialIcons name="check" size={14} color="#fff" />
+                      <CheckIcon size={14} color="#fff" />
                     </Animated.View>
                   )}
                 </View>

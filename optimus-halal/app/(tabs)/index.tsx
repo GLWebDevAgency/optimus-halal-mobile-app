@@ -22,7 +22,7 @@ import { Image } from "expo-image";
 import { Shadow } from "react-native-shadow-2";
 import { router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowClockwiseIcon, ArrowRightIcon, BellIcon, CaretRightIcon, CloudSlashIcon, HamburgerIcon, HeartIcon, MapPinPlusIcon, ScanIcon, StorefrontIcon } from "phosphor-react-native";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -52,12 +52,12 @@ import { useHaptics, useUserLocation, useMapStores, usePremium } from "@/hooks";
 import { trpc } from "@/lib/trpc";
 import { useQuotaStore, useLocalFavoritesStore, useLocalStoreFavoritesStore } from "@/store";
 import { defaultFeatureFlags } from "@/constants/config";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 const logoSource = require("@assets/images/logo_naqiy.webp");
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const DAILY_SCAN_LIMIT = 5;
 const STAGGER_MS = 60;
-
 
 // ---------------------------------------------------------------------------
 // Animated ScrollView wrapper
@@ -102,7 +102,7 @@ const StatPillItem = React.memo(function StatPillItem({
 
 // ---- Quick Action Card ----
 interface QuickActionCardProps {
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: IconName;
   title: string;
   subtitle: string;
   onPress: () => void;
@@ -166,13 +166,13 @@ const QuickActionCard = React.memo(function QuickActionCard({
               />
               <View style={styles.quickActionContent}>
                 <View style={styles.quickActionIconWrapPrimary}>
-                  <MaterialIcons name={icon} size={24} color={isDark ? "#1A1A1A" : "#ffffff"} />
+                  <AppIcon name={icon} size={24} color={isDark ? "#1A1A1A" : "#ffffff"} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.quickActionTitlePrimary, isDark && { color: "#1A1A1A" }]}>{title}</Text>
                   <Text style={[styles.quickActionSubPrimary, isDark && { color: "rgba(26,26,26,0.7)" }]}>{subtitle}</Text>
                 </View>
-                <MaterialIcons name="arrow-forward" size={18} color={isDark ? "rgba(26,26,26,0.5)" : "rgba(255,255,255,0.6)"} />
+                <ArrowRightIcon size={18} color={isDark ? "rgba(26,26,26,0.5)" : "rgba(255,255,255,0.6)"} />
               </View>
             </View>
           </PressableScale>
@@ -237,11 +237,9 @@ const QuickActionCard = React.memo(function QuickActionCard({
                   },
                 ]}
               >
-                <MaterialIcons
-                  name={icon}
+                <AppIcon name={icon}
                   size={22}
-                  color={iconColor ?? brand.primary}
-                />
+                  color={iconColor ?? brand.primary} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text
@@ -428,7 +426,7 @@ const DiscoverStoreCard = React.memo(function DiscoverStoreCard({
             />
           ) : (
             <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', opacity: 0.1 }]}>
-               <MaterialIcons name="fastfood" size={48} color={isDark ? "#fff" : "#000"} />
+               <HamburgerIcon size={48} color={isDark ? "#fff" : "#000"} />
             </View>
           )}
           <LinearGradient
@@ -558,11 +556,8 @@ const FavoriteCircle = React.memo(function FavoriteCircle({
                   },
                 ]}
               >
-                <MaterialIcons
-                  name="fastfood"
-                  size={22}
-                  color={isDark ? "#475569" : "#94a3b8"}
-                />
+                <HamburgerIcon size={22}
+                  color={isDark ? "#475569" : "#94a3b8"} />
               </View>
             )}
           </View>
@@ -654,11 +649,9 @@ const FavoriteStoreCircle = React.memo(function FavoriteStoreCircle({
                   },
                 ]}
               >
-                <MaterialIcons
-                  name={storeIcon}
+                <AppIcon name={storeIcon}
                   size={22}
-                  color={ringColors[0]}
-                />
+                  color={ringColors[0]} />
               </View>
             )}
           </View>
@@ -940,7 +933,7 @@ export default function HomeScreen() {
             SECTION 1: HERO HEADER
             ==================================================== */}
         <Animated.View style={[{ paddingHorizontal: 20 }, heroAnimStyle]}>
-          {/* Row: Avatar + Greeting + Brand + Bell */}
+          {/* Row: Avatar + Greeting + Brand + BellIcon */}
           <Animated.View
             entering={FadeInDown.delay(0).duration(500).springify().damping(20)}
             style={styles.headerRow}
@@ -975,7 +968,7 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            {/* Right: Brand Mark + Notification Bell */}
+            {/* Right: Brand Mark + Notification BellIcon */}
             <View style={styles.headerRight}>
               {/* Naqiy brand mark */}
               <View style={styles.brandMark} accessible={false}>
@@ -1001,7 +994,7 @@ export default function HomeScreen() {
                 </Text>
               </View>
 
-              {/* Notification Bell — hidden when alerts feature flag is off */}
+              {/* Notification BellIcon — hidden when alerts feature flag is off */}
               {defaultFeatureFlags.alertsEnabled && (
                 <Pressable
                   onPress={() => router.navigate("/(tabs)/alerts")}
@@ -1020,11 +1013,8 @@ export default function HomeScreen() {
                     },
                   ]}
                 >
-                  <MaterialIcons
-                    name="notifications-none"
-                    size={22}
-                    color={isDark ? brand.gold : colors.textPrimary}
-                  />
+                  <BellIcon size={22}
+                    color={isDark ? brand.gold : colors.textPrimary} />
                   {(unreadCount + alertUnreadCount) > 0 && (
                     <View style={styles.bellBadge}>
                       <Text style={styles.bellBadgeText}>
@@ -1163,7 +1153,7 @@ export default function HomeScreen() {
                     justifyContent: "center",
                   }}
                 >
-                  <MaterialIcons name="qr-code-scanner" size={20} color={colors.primary} />
+                  <ScanIcon size={20} color={colors.primary} />
                 </View>
                 <View style={{ flex: 1, marginStart: 12 }}>
                   <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: "700" }}>
@@ -1187,7 +1177,7 @@ export default function HomeScreen() {
                     />
                   </View>
                 </View>
-                <MaterialIcons name="chevron-right" size={20} color={colors.textSecondary} style={{ marginStart: 8 }} />
+                <CaretRightIcon size={20} color={colors.textSecondary} style={{ marginStart: 8 }} />
               </View>
             </PressableScale>
           </Animated.View>
@@ -1277,7 +1267,7 @@ export default function HomeScreen() {
                 },
               ]}
             >
-              <MaterialIcons name="cloud-off" size={16} color="#ef4444" />
+              <CloudSlashIcon size={16} color="#ef4444" />
               <Text
                 style={[
                   styles.errorBannerText,
@@ -1341,7 +1331,7 @@ export default function HomeScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={t.common.retry}
               >
-                <MaterialIcons name="refresh" size={20} color={colors.textMuted} />
+                <ArrowClockwiseIcon size={20} color={colors.textMuted} />
                 <Text style={{ color: colors.textMuted, fontSize: 13, fontWeight: "500" }}>
                   {t.errors.network} · {t.common.retry}
                 </Text>
@@ -1436,7 +1426,7 @@ export default function HomeScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={t.common.retry}
               >
-                <MaterialIcons name="refresh" size={20} color={colors.textMuted} />
+                <ArrowClockwiseIcon size={20} color={colors.textMuted} />
                 <Text style={{ color: colors.textMuted, fontSize: 13, fontWeight: "500" }}>
                   {t.errors.network} · {t.common.retry}
                 </Text>
@@ -1590,11 +1580,8 @@ export default function HomeScreen() {
                   ]}
                 >
                   <View style={styles.emptyFavContent}>
-                    <MaterialIcons
-                      name="favorite-border"
-                      size={24}
-                      color={isDark ? "#6b7280" : "#94a3b8"}
-                    />
+                    <HeartIcon size={24}
+                      color={isDark ? "#6b7280" : "#94a3b8"} />
                     <Text
                       style={[
                         styles.emptyFavText,
@@ -1647,11 +1634,9 @@ export default function HomeScreen() {
                     },
                   ]}
                 >
-                  <MaterialIcons
-                    name={(isGuest && localFavFull) ? "lock-outline" : "add"}
+                  <AppIcon name={(isGuest && localFavFull) ? "lock-outline" : "add"}
                     size={26}
-                    color={isDark ? "#6b7280" : "#94a3b8"}
-                  />
+                    color={isDark ? "#6b7280" : "#94a3b8"} />
                 </View>
                 <Text
                   style={[
@@ -1698,11 +1683,8 @@ export default function HomeScreen() {
                   ]}
                 >
                   <View style={styles.emptyFavContent}>
-                    <MaterialIcons
-                      name="store"
-                      size={24}
-                      color={isDark ? "#6b7280" : "#94a3b8"}
-                    />
+                    <StorefrontIcon size={24}
+                      color={isDark ? "#6b7280" : "#94a3b8"} />
                     <Text
                       style={[
                         styles.emptyFavText,
@@ -1754,7 +1736,7 @@ export default function HomeScreen() {
                     },
                   ]}
                 >
-                  <MaterialIcons name="add-location" size={26} color={isDark ? "#6b7280" : "#94a3b8"} />
+                  <MapPinPlusIcon size={26} color={isDark ? "#6b7280" : "#94a3b8"} />
                 </View>
                 <Text
                   style={[styles.favName, { color: colors.textSecondary }]}
@@ -1817,7 +1799,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
 
-  // ---- Bell ----
+  // ---- BellIcon ----
   bellButton: {
     width: 44,
     height: 44,
