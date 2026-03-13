@@ -1,36 +1,45 @@
 /**
- * Naqiy Health Score V2 — 5-axis nutritional scoring formula.
+ * Naqiy Health Score V3 — 4-axis category-aware nutritional scoring formula.
  *
  * Pure synchronous service — no DB, no Redis, no side effects.
  * All data must be pre-fetched by the caller (scan router).
  *
  * Axes:
- *   1. Profil Nutritionnel  (40 pts) — NutriScore 2024 recalcule ou grade OFF fallback
- *   2. Risque Additifs      (25 pts) — 4-tier toxicity + EFSA/ADI/banned modulators
- *   3. Transformation NOVA  (15 pts) — NOVA group 1-4 + heuristique
- *   4. Completude Donnees   (10 pts) — data completeness enrichie
- *   5. Ajustement Profil    ([-10, +10]) — bonus/malus par profil utilisateur
+ *   1. Profil Nutritionnel  (50-60 pts, category-dependent) — NutriScore 2024 recalcule ou grade OFF fallback
+ *   2. Risque Additifs      (15-20 pts, category-dependent) — 4-tier toxicity + EFSA/ADI/banned modulators
+ *   3. Transformation NOVA  (10 pts) — NOVA group 1-4 + heuristique
+ *   4. Sucre Boisson         (20 pts, beverages only) — sugar penalty for beverages
+ *   + Ajustement Profil    ([-10, +10]) — bonus/malus par profil utilisateur
+ *   + Bonuses: bio (+7), AOP (+3) — applied after normalization
+ *
+ * Changes V2 → V3:
+ *   - Axe nutrition: 40→50-60 pts (category-dependent), category-aware interpolation
+ *   - Axe additifs: 25→15-20 pts, new penalty weights (1.5/4/8), EFSA restricted x1.3
+ *   - Axe NOVA: 15→10 pts, new point values (10/7/4/0)
+ *   - Axe transparence: REMOVED
+ *   - NEW: Beverage sugar axis (20 pts, beverages only)
+ *   - NEW: Bio (+7) and AOP (+3) bonuses after normalization
+ *   - NEW: Banned additive cap at 25 (was only high_concern cap at 49)
+ *   - Category-specific weights for nutrition and additives
  *
  * Scientific basis:
  *   - NutriScore 2024: Merz et al., Nature Food 2024
  *   - NOVA: Monteiro et al., Public Health Nutrition 2019
  *   - Additives: EFSA opinions + IARC classifications
  *   - Profils: EFSA DRV 2017, ANSES 2021, ESPEN 2014, ISSN 2017
- *
- * Changes V1 → V2:
- *   - Axe nutrition: 50→40 pts, recalcul NutriScore propre avec interpolation
- *   - Axe profil: NOUVEAU, exploite riskPregnant/riskChildren de la DB additives
- *   - Cap additif: high_concern present → score final max 49
- *   - Heuristique NOVA quand absent
- *   - Confiance 4 niveaux (ajout "very_low")
  */
 
 import {
   computeNutriScore,
+  detectCategory,
   extractNutrimentsFromOff,
   type NutrimentInput,
+  type NutriScoreCategory,
   type NutriScoreGrade,
   type NutriScoreResult,
+  GENERAL_GRADE_THRESHOLDS,
+  BEV_GRADE_THRESHOLDS,
+  FATS_GRADE_THRESHOLDS,
 } from "./nutriscore.service.js";
 
 // ── Nutrient Anomaly Detection ──────────────────────────────
@@ -163,6 +172,8 @@ export function detectNutrientAnomalies(
 
 // ── Types ───────────────────────────────────────────────────
 
+export type HealthScoreCategory = NutriScoreCategory;
+
 export type ToxicityLevel = "safe" | "low_concern" | "moderate_concern" | "high_concern";
 export type EfsaStatus = "approved" | "under_review" | "restricted" | "banned";
 
@@ -197,11 +208,11 @@ export interface HealthScoreInput {
   hasNutritionFacts: boolean;
   hasAllergens: boolean;
   hasOrigin: boolean;
-  /** OFF raw nutriments record — NEW in V2 for NutriScore recalculation */
+  /** OFF raw nutriments record — for NutriScore recalculation */
   nutriments?: Record<string, number | string> | null;
-  /** OFF product categories — NEW in V2 for NutriScore category detection */
+  /** OFF product categories — for NutriScore category detection */
   categories?: string | null;
-  /** User nutrition profile — NEW in V2 */
+  /** User nutrition profile */
   profile?: UserNutritionProfile;
   /** AI-estimated NOVA — fallback if OFF nova_group missing */
   aiNovaEstimate?: number | null;
@@ -213,6 +224,8 @@ export interface HealthScoreInput {
   containsAlcohol?: boolean;
   /** OFF nutriscore_data.components (negative + positive) for anomaly detection */
   offNutriscoreComponents?: { id: string; value: number }[];
+  /** Product labels (for bio/aop bonus detection) */
+  labels?: string[];
 }
 
 export interface AxisScore {
@@ -230,11 +243,12 @@ export interface HealthScoreResult {
   label: "excellent" | "good" | "mediocre" | "poor" | "very_poor" | null;
   axes: {
     nutrition: (AxisScore & { grade?: NutriScoreGrade; source: "computed" | "off_grade" | "none" }) | null;
-    additives: AxisScore & { penalties: string[] };
+    additives: AxisScore & { penalties: string[]; hasHighConcern: boolean; hasBanned: boolean };
     processing: (AxisScore & { source: "off" | "ai" | "heuristic" }) | null;
-    transparency: AxisScore;
+    beverageSugar?: AxisScore;
     profile: ProfileAdjustment;
   };
+  bonuses: { bio: number; aop: number };
   dataConfidence: "high" | "medium" | "low" | "very_low";
   /** True if a high_concern additive capped the score at 49 */
   cappedByAdditive: boolean;
@@ -242,74 +256,183 @@ export interface HealthScoreResult {
   nutriScoreDetail?: NutriScoreResult;
   /** Detected anomalies in OFF nutritional data */
   nutrientAnomalies?: NutrientAnomaly[];
+  /** Detected product category */
+  category: HealthScoreCategory;
 }
 
-// ── Axe 1: Profil Nutritionnel (40 pts) ─────────────────────
+// ── Category Weight Maps ─────────────────────────────────────
 
-/** Interpolation table: grade → base points on 40-point scale */
-const GRADE_BASE_POINTS: Record<NutriScoreGrade, number> = {
-  a: 40,
-  b: 33,
-  c: 22,
-  d: 10,
-  e: 0,
+const CATEGORY_NUTRITION_MAX: Record<HealthScoreCategory, number> = {
+  general: 60,
+  beverages: 50,
+  fats_oils_nuts: 55,
+  cheese: 55,
+  red_meat: 60,
 };
 
+const CATEGORY_ADDITIVES_MAX: Record<HealthScoreCategory, number> = {
+  general: 20,
+  beverages: 20,
+  fats_oils_nuts: 15,
+  cheese: 15,
+  red_meat: 20,
+};
+
+// ── Grade Boundaries (NutriScore raw score) ──────────────────
+
+interface GradeBoundary {
+  lo: number; // inclusive lower raw score
+  hi: number; // inclusive upper raw score
+}
+
+const GRADE_BOUNDARIES: Record<HealthScoreCategory, Record<NutriScoreGrade, GradeBoundary>> = {
+  general: {
+    a: { lo: -Infinity, hi: 0 },
+    b: { lo: 1, hi: 2 },
+    c: { lo: 3, hi: 10 },
+    d: { lo: 11, hi: 18 },
+    e: { lo: 19, hi: Infinity },
+  },
+  beverages: {
+    a: { lo: -Infinity, hi: -Infinity }, // water only, excluded
+    b: { lo: -Infinity, hi: 2 },
+    c: { lo: 3, hi: 6 },
+    d: { lo: 7, hi: 9 },
+    e: { lo: 10, hi: Infinity },
+  },
+  fats_oils_nuts: {
+    a: { lo: -Infinity, hi: -6 },
+    b: { lo: -5, hi: 2 },
+    c: { lo: 3, hi: 10 },
+    d: { lo: 11, hi: 18 },
+    e: { lo: 19, hi: Infinity },
+  },
+  cheese: {
+    a: { lo: -Infinity, hi: 0 },
+    b: { lo: 1, hi: 2 },
+    c: { lo: 3, hi: 10 },
+    d: { lo: 11, hi: 18 },
+    e: { lo: 19, hi: Infinity },
+  },
+  red_meat: {
+    a: { lo: -Infinity, hi: 0 },
+    b: { lo: 1, hi: 2 },
+    c: { lo: 3, hi: 10 },
+    d: { lo: 11, hi: 18 },
+    e: { lo: 19, hi: Infinity },
+  },
+};
+
+// ── Grade Point Ranges ───────────────────────────────────────
+
+interface PointRange {
+  lo: number;
+  hi: number;
+}
+
+function getGradePointRanges(nutritionMax: number): Record<NutriScoreGrade, PointRange> {
+  return {
+    a: { lo: nutritionMax, hi: nutritionMax },
+    b: { lo: Math.round(nutritionMax * 0.78), hi: Math.round(nutritionMax * 0.98) },
+    c: { lo: Math.round(nutritionMax * 0.42), hi: Math.round(nutritionMax * 0.77) },
+    d: { lo: Math.round(nutritionMax * 0.17), hi: Math.round(nutritionMax * 0.41) },
+    e: { lo: 0, hi: Math.round(nutritionMax * 0.16) },
+  };
+}
+
+// ── Axe 1: Profil Nutritionnel (50-60 pts, category-dependent) ──
+
 /**
- * Interpolate within a grade for more granular scoring.
- * Grade C spans raw 3-10 (8 points) → maps to 22-31 Naqiy points.
+ * V3 interpolation: maps raw NutriScore to points within a grade's point range.
+ * Grade E has special infinity handling with overshoot decay.
  */
-function interpolateNutritionPoints(raw: number, grade: NutriScoreGrade): number {
-  switch (grade) {
-    case "a": return 40; // raw <= 0 → always 40
-    case "b": return 33 + (2 - Math.max(1, Math.min(2, raw))) * 3.5; // raw 1-2 → 33-36.5
-    case "c": return 22 + (10 - Math.max(3, Math.min(10, raw))) * 1.375; // raw 3-10 → 22-31.6
-    case "d": return 10 + (18 - Math.max(11, Math.min(18, raw))) * 1.5; // raw 11-18 → 10-20.5
-    case "e": return Math.max(0, 10 - (Math.max(19, raw) - 19) * 0.3); // raw >= 19 → 0-10
+function interpolateNutritionPointsV3(
+  raw: number,
+  grade: NutriScoreGrade,
+  category: HealthScoreCategory,
+): number {
+  const nutritionMax = CATEGORY_NUTRITION_MAX[category];
+  const pointRanges = getGradePointRanges(nutritionMax);
+  const boundaries = GRADE_BOUNDARIES[category];
+
+  const range = pointRanges[grade];
+  const boundary = boundaries[grade];
+
+  if (grade === "a") {
+    return nutritionMax; // always full points
   }
+
+  if (grade === "e") {
+    // Grade E infinity handling
+    const lo = boundary.lo;
+    const ptsHi = range.hi;
+    if (raw <= lo) return ptsHi;
+    const overshoot = raw - lo;
+    return Math.max(0, ptsHi - Math.round(overshoot * 0.5));
+  }
+
+  // Grades B, C, D: linear interpolation within boundary → point range
+  const bLo = boundary.lo;
+  const bHi = boundary.hi;
+  const pLo = range.lo;
+  const pHi = range.hi;
+
+  if (bHi === bLo) return pHi; // single-point boundary
+
+  // Interpolate: higher raw → lower points
+  const t = (raw - bLo) / (bHi - bLo);
+  return Math.round(pHi - t * (pHi - pLo));
 }
 
 function computeNutritionAxis(
   nutriments: Record<string, number | string> | null | undefined,
   categories: string | null | undefined,
   offGrade: string | null,
+  category: HealthScoreCategory,
 ): (AxisScore & { grade?: NutriScoreGrade; source: "computed" | "off_grade" | "none" }) | null {
+  const nutritionMax = CATEGORY_NUTRITION_MAX[category];
+
   // Strategy 1: Compute NutriScore from raw nutriments
   if (nutriments && Object.keys(nutriments).length > 0) {
     const input = extractNutrimentsFromOff(nutriments);
     const result = computeNutriScore(input, categories);
     if (result) {
-      const pts = Math.round(interpolateNutritionPoints(result.raw, result.grade));
-      return { score: pts, max: 40, grade: result.grade, source: "computed" };
+      const pts = Math.round(interpolateNutritionPointsV3(result.raw, result.grade, category));
+      return { score: pts, max: nutritionMax, grade: result.grade, source: "computed" };
     }
   }
 
-  // Strategy 2: Fallback to OFF grade
+  // Strategy 2: Fallback to OFF grade — use center of point range
   if (offGrade) {
     const grade = offGrade.toLowerCase() as NutriScoreGrade;
-    const basePts = GRADE_BASE_POINTS[grade];
-    if (basePts !== undefined) {
-      return { score: basePts, max: 40, grade, source: "off_grade" };
+    const pointRanges = getGradePointRanges(nutritionMax);
+    const range = pointRanges[grade];
+    if (range !== undefined) {
+      const centerPts = Math.round((range.lo + range.hi) / 2);
+      return { score: centerPts, max: nutritionMax, grade, source: "off_grade" };
     }
   }
 
   return null;
 }
 
-// ── Axe 2: Risque Additifs (25 pts) ─────────────────────────
+// ── Axe 2: Risque Additifs (15-20 pts, category-dependent) ──
 
-const TOXICITY_PENALTY: Record<ToxicityLevel, number> = {
+const TOXICITY_PENALTY_V3: Record<ToxicityLevel, number> = {
   safe: 0,
-  low_concern: 2,
-  moderate_concern: 5,
-  high_concern: 10,
+  low_concern: 1.5,
+  moderate_concern: 4,
+  high_concern: 8,
 };
 
 function computeAdditivesAxis(
   adds: AdditiveForScore[],
-): AxisScore & { penalties: string[]; hasHighConcern: boolean } {
+  category: HealthScoreCategory,
+): AxisScore & { penalties: string[]; hasHighConcern: boolean; hasBanned: boolean } {
+  const max = CATEGORY_ADDITIVES_MAX[category];
+
   if (adds.length === 0) {
-    return { score: 25, max: 25, penalties: [], hasHighConcern: false };
+    return { score: max, max, penalties: [], hasHighConcern: false, hasBanned: false };
   }
 
   let totalPenalty = 0;
@@ -318,19 +441,19 @@ function computeAdditivesAxis(
 
   for (const add of adds) {
     if (add.efsaStatus === "banned") {
-      return { score: 0, max: 25, penalties: [`${add.code}: EFSA banned`], hasHighConcern: true };
+      return { score: 0, max, penalties: [`${add.code}: EFSA banned`], hasHighConcern: true, hasBanned: true };
     }
 
     if (add.toxicityLevel === "high_concern") hasHighConcern = true;
 
-    let penalty = TOXICITY_PENALTY[add.toxicityLevel] ?? 0;
+    let penalty = TOXICITY_PENALTY_V3[add.toxicityLevel] ?? 0;
 
     if (add.efsaStatus === "restricted") {
-      penalty = Math.round(penalty * 1.5);
-      penalties.push(`${add.code}: EFSA restricted (x1.5)`);
+      penalty = penalty * 1.3;
+      penalties.push(`${add.code}: EFSA restricted (x1.3)`);
     }
     if (add.adiMgPerKg != null && add.adiMgPerKg < 5) {
-      penalty = Math.round(penalty * 1.3);
+      penalty = penalty * 1.3;
       penalties.push(`${add.code}: ADI < 5mg/kg (x1.3)`);
     }
     if (add.bannedCountries && add.bannedCountries.length >= 3) {
@@ -341,16 +464,15 @@ function computeAdditivesAxis(
     totalPenalty += penalty;
   }
 
-  return { score: Math.max(0, 25 - totalPenalty), max: 25, penalties, hasHighConcern };
+  return { score: Math.round(Math.max(0, max - totalPenalty)), max, penalties, hasHighConcern, hasBanned: false };
 }
 
-// ── Axe 3: Transformation NOVA (15 pts) ─────────────────────
+// ── Axe 3: Transformation NOVA (10 pts) ─────────────────────
 
-// Linear 5-point steps aligned with Monteiro et al. (PHN 2019)
-const NOVA_POINTS: Record<number, number> = {
-  1: 15,  // Brut / non transforme
-  2: 10,  // Ingredients culinaires de base
-  3: 5,   // Aliments transformes
+const NOVA_POINTS_V3: Record<number, number> = {
+  1: 10,  // Brut / non transforme
+  2: 7,   // Ingredients culinaires de base
+  3: 4,   // Aliments transformes
   4: 0,   // Ultra-transformes
 };
 
@@ -385,38 +507,72 @@ function computeProcessingAxis(
 ): (AxisScore & { source: "off" | "ai" | "heuristic" }) | null {
   // Priority: OFF > AI > Heuristic
   if (novaGroup != null && novaGroup >= 1 && novaGroup <= 4) {
-    return { score: NOVA_POINTS[novaGroup]!, max: 15, source: "off" };
+    return { score: NOVA_POINTS_V3[novaGroup]!, max: 10, source: "off" };
   }
   if (aiNovaEstimate != null && aiNovaEstimate >= 1 && aiNovaEstimate <= 4) {
-    return { score: NOVA_POINTS[aiNovaEstimate]!, max: 15, source: "ai" };
+    return { score: NOVA_POINTS_V3[aiNovaEstimate]!, max: 10, source: "ai" };
   }
 
   const heuristic = estimateNovaHeuristic(additiveCount, ingredientCount, categories);
   if (heuristic != null) {
-    return { score: NOVA_POINTS[heuristic]!, max: 15, source: "heuristic" };
+    return { score: NOVA_POINTS_V3[heuristic]!, max: 10, source: "heuristic" };
   }
 
   return null;
 }
 
-// ── Axe 4: Completude Donnees (10 pts) ──────────────────────
+// ── Axe 4: Beverage Sugar (20 pts, beverages only) ──────────
 
-function computeTransparencyAxis(
-  input: HealthScoreInput,
-  nutritionComputed: boolean,
-  novaAvailable: boolean,
-): AxisScore {
-  let score = 0;
-  if (input.hasIngredientsList) score += 2;
-  if (input.hasNutritionFacts) score += 3;
-  if (input.hasAllergens) score += 1;
-  if (input.hasOrigin) score += 1;
-  if (nutritionComputed) score += 1.5;
-  if (novaAvailable) score += 1.5;
-  return { score: Math.min(10, Math.round(score)), max: 10 };
+const BEVERAGE_SUGAR_TABLE: [number, number][] = [
+  [0, 20],
+  [1, 17],
+  [2.5, 14],
+  [5, 10],
+  [7.5, 5],
+  [10, 2],
+];
+
+function computeBeverageSugarAxis(
+  nutriments: Record<string, number | string> | null | undefined,
+): AxisScore | null {
+  if (!nutriments) return null;
+
+  const sugarsVal = nutriments["sugars_100g"];
+  if (sugarsVal == null || sugarsVal === "") return null;
+
+  const sugars = typeof sugarsVal === "string" ? parseFloat(sugarsVal) : sugarsVal;
+  if (isNaN(sugars)) return null;
+
+  // Exact 0g → 20 pts
+  if (sugars === 0) return { score: 20, max: 20 };
+
+  // Walk the table
+  for (const [threshold, pts] of BEVERAGE_SUGAR_TABLE) {
+    if (sugars <= threshold) return { score: pts, max: 20 };
+  }
+
+  // > 10g → 0 pts
+  return { score: 0, max: 20 };
 }
 
-// ── Axe 5: Ajustement Profil ([-10, +10]) ───────────────────
+// ── Bio/AOP Bonus Detection ─────────────────────────────────
+
+const BIO_RE = /\b(organic|bio|biologique|ab|eu-organic)\b/i;
+const AOP_RE = /\b(pdo|pgi|tsg|aoc|aop|igp|label.rouge|stg)\b/i;
+
+function detectBioBonus(labels?: string[]): number {
+  if (!labels || labels.length === 0) return 0;
+  const joined = labels.join(" ");
+  return BIO_RE.test(joined) ? 7 : 0;
+}
+
+function detectAopBonus(labels?: string[]): number {
+  if (!labels || labels.length === 0) return 0;
+  const joined = labels.join(" ");
+  return AOP_RE.test(joined) ? 3 : 0;
+}
+
+// ── Ajustement Profil ([-10, +10]) ───────────────────────────
 
 function computeProfileAdjustment(
   profile: UserNutritionProfile,
@@ -572,13 +728,16 @@ function getDataConfidence(
   processing: AxisScore | null,
   processingSource: string | null,
   additivesCount: number,
+  hasIngredientsList: boolean,
 ): HealthScoreResult["dataConfidence"] {
   const hasNutrition = nutrition != null;
   const hasProcessing = processing != null;
 
-  if (hasNutrition && nutritionSource === "computed" && hasProcessing && processingSource === "off") {
+  // high: NutriScore computed + NOVA available + hasIngredientsList
+  if (hasNutrition && nutritionSource === "computed" && hasProcessing && processingSource === "off" && hasIngredientsList) {
     return "high";
   }
+  // high: both nutrition + processing available (even OFF fallback)
   if (hasNutrition && hasProcessing) return "high";
   if (hasNutrition || hasProcessing) return "medium";
   if (additivesCount > 0) return "low";
@@ -663,6 +822,7 @@ export function checkScoreExclusion(product: {
 
 export function computeHealthScore(input: HealthScoreInput): HealthScoreResult {
   const profile = input.profile ?? "standard";
+  const category = detectCategory(input.categories);
 
   // --- Anomaly detection: validate OFF nutritional data ---
   const nutrientAnomalies = detectNutrientAnomalies(
@@ -674,8 +834,6 @@ export function computeHealthScore(input: HealthScoreInput): HealthScoreResult {
   const hasSuspiciousAnomaly = nutrientAnomalies.length > 0;
 
   // If OFF grade relies on corrupted data, discard it
-  // Condition: anomalies detected AND standard nutriments are absent/insufficient
-  // (meaning OFF computed the grade from unreliable ingredient estimates)
   const standardNutrientsAvailable = input.nutriments
     && typeof input.nutriments === "object"
     && ["energy_100g", "fat_100g", "salt_100g", "proteins_100g"]
@@ -687,11 +845,12 @@ export function computeHealthScore(input: HealthScoreInput): HealthScoreResult {
   const offGradeReliable = !hasSuspiciousAnomaly || standardNutrientsAvailable;
   const effectiveOffGrade = offGradeReliable ? input.nutriscoreGrade : null;
 
-  // Axe 1: Nutrition (40 pts) — recalcul propre > grade OFF > null
+  // Axe 1: Nutrition (50-60 pts, category-dependent) — recalcul propre > grade OFF > null
   const nutritionAxis = computeNutritionAxis(
     hasImpossibleAnomaly ? null : input.nutriments,
     input.categories,
     effectiveOffGrade,
+    category,
   );
 
   // Get NutriScore detail for the result
@@ -701,10 +860,10 @@ export function computeHealthScore(input: HealthScoreInput): HealthScoreResult {
     nutriScoreDetail = computeNutriScore(nutrInput, input.categories) ?? undefined;
   }
 
-  // Axe 2: Additives (25 pts)
-  const additivesAxis = computeAdditivesAxis(input.additives);
+  // Axe 2: Additives (15-20 pts, category-dependent)
+  const additivesAxis = computeAdditivesAxis(input.additives, category);
 
-  // Axe 3: NOVA Processing (15 pts) with heuristic fallback
+  // Axe 3: NOVA Processing (10 pts) with heuristic fallback
   const processingAxis = computeProcessingAxis(
     input.novaGroup,
     input.aiNovaEstimate,
@@ -713,14 +872,12 @@ export function computeHealthScore(input: HealthScoreInput): HealthScoreResult {
     input.categories,
   );
 
-  // Axe 4: Transparency (10 pts)
-  const transparencyAxis = computeTransparencyAxis(
-    input,
-    nutritionAxis?.source === "computed",
-    processingAxis != null,
-  );
+  // Axe 4: Beverage Sugar (20 pts, beverages only)
+  const beverageSugarAxis = category === "beverages"
+    ? computeBeverageSugarAxis(input.nutriments)
+    : undefined;
 
-  // Axe 5: Profile adjustment ([-10, +10])
+  // Profile adjustment ([-10, +10])
   const profileAdjustment = computeProfileAdjustment(
     profile,
     input.additives,
@@ -729,7 +886,11 @@ export function computeHealthScore(input: HealthScoreInput): HealthScoreResult {
     nutriScoreDetail?.grade ?? (nutritionAxis?.grade as NutriScoreGrade | undefined),
   );
 
-  // Minimum data: at least 2 of 3 primary axes
+  // Bio/AOP bonuses
+  const bioBonus = detectBioBonus(input.labels);
+  const aopBonus = detectAopBonus(input.labels);
+
+  // Minimum data: at least 2 of 3 primary axes (nutrition, additives, processing)
   const primaryAvailable = [nutritionAxis, additivesAxis, processingAxis]
     .filter(a => a != null).length;
 
@@ -741,11 +902,13 @@ export function computeHealthScore(input: HealthScoreInput): HealthScoreResult {
         nutrition: nutritionAxis ? { ...nutritionAxis } : null,
         additives: additivesAxis,
         processing: processingAxis,
-        transparency: transparencyAxis,
+        ...(beverageSugarAxis != null && { beverageSugar: beverageSugarAxis }),
         profile: profileAdjustment,
       },
+      bonuses: { bio: bioBonus, aop: aopBonus },
       dataConfidence: "very_low",
       cappedByAdditive: false,
+      category,
       nutriScoreDetail,
       ...(nutrientAnomalies.length > 0 && { nutrientAnomalies }),
     };
@@ -758,23 +921,33 @@ export function computeHealthScore(input: HealthScoreInput): HealthScoreResult {
   if (nutritionAxis) { totalScore += nutritionAxis.score; totalMax += nutritionAxis.max; }
   totalScore += additivesAxis.score; totalMax += additivesAxis.max;
   if (processingAxis) { totalScore += processingAxis.score; totalMax += processingAxis.max; }
-  totalScore += transparencyAxis.score; totalMax += transparencyAxis.max;
+  if (beverageSugarAxis) { totalScore += beverageSugarAxis.score; totalMax += beverageSugarAxis.max; }
 
-  // Normalize to 0-90 (base without profile)
-  let normalized = totalMax > 0 ? Math.round((totalScore / totalMax) * 90) : 0;
+  // Step 1-2: Normalize to 0-90 (base without profile/bonuses)
+  let baseScore = totalMax > 0 ? Math.round((totalScore / totalMax) * 90) : 0;
 
-  // Apply profile delta
-  normalized += profileAdjustment.delta;
+  // Step 3: Add bonuses AFTER normalization
+  baseScore += bioBonus + aopBonus;
 
-  // Cap: high_concern additive → max 49
+  // Step 4: Apply profile delta
+  baseScore += profileAdjustment.delta;
+
+  // Step 5: Apply caps
   let cappedByAdditive = false;
-  if (additivesAxis.hasHighConcern && normalized > 49) {
-    normalized = 49;
+
+  // Banned cap at 25
+  if (additivesAxis.hasBanned && baseScore > 25) {
+    baseScore = 25;
+    cappedByAdditive = true;
+  }
+  // High concern cap at 49
+  if (additivesAxis.hasHighConcern && !additivesAxis.hasBanned && baseScore > 49) {
+    baseScore = 49;
     cappedByAdditive = true;
   }
 
-  // Final clamp [0, 100]
-  normalized = Math.max(0, Math.min(100, normalized));
+  // Step 6: Final clamp [0, 100]
+  baseScore = Math.max(0, Math.min(100, baseScore));
 
   // Compute base confidence, then degrade if anomalies detected
   let dataConfidence = getDataConfidence(
@@ -783,22 +956,25 @@ export function computeHealthScore(input: HealthScoreInput): HealthScoreResult {
     processingAxis,
     processingAxis?.source ?? null,
     input.additives.length,
+    input.hasIngredientsList,
   );
   if (hasSuspiciousAnomaly && dataConfidence === "high") dataConfidence = "medium";
   if (hasImpossibleAnomaly && (dataConfidence === "high" || dataConfidence === "medium")) dataConfidence = "low";
 
   return {
-    score: normalized,
-    label: getLabel(normalized),
+    score: baseScore,
+    label: getLabel(baseScore),
     axes: {
       nutrition: nutritionAxis ? { ...nutritionAxis } : null,
       additives: additivesAxis,
       processing: processingAxis,
-      transparency: transparencyAxis,
+      ...(beverageSugarAxis != null && { beverageSugar: beverageSugarAxis }),
       profile: profileAdjustment,
     },
+    bonuses: { bio: bioBonus, aop: aopBonus },
     dataConfidence,
     cappedByAdditive,
+    category,
     nutriScoreDetail,
     ...(nutrientAnomalies.length > 0 && { nutrientAnomalies }),
   };
