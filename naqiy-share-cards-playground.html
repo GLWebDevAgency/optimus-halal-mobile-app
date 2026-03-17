@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Naqiy Share Cards — Before / After</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+    background: #111;
+    color: #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+  .main { display: flex; flex: 1; overflow: hidden; }
+  .controls {
+    width: 260px; min-width: 260px;
+    background: #1a1a1a; border-right: 1px solid #2a2a2a;
+    padding: 20px 16px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 20px;
+  }
+  .preview-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .preview-scroll {
+    flex: 1; overflow-y: auto;
+    display: flex; align-items: center; justify-content: center;
+    background: #0C0C0C; padding: 40px 20px;
+  }
+  .prompt-bar {
+    background: #1a1a1a; border-top: 1px solid #2a2a2a;
+    padding: 12px 20px; display: flex; align-items: center; gap: 12px; min-height: 56px;
+  }
+  .prompt-text { flex: 1; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; color: #9ca3af; line-height: 1.5; }
+  .copy-btn {
+    background: #D4AF37; color: #0C0C0C; border: none; padding: 8px 16px;
+    border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; white-space: nowrap;
+  }
+  .copy-btn:hover { opacity: 0.85; }
+  .ctrl-group { display: flex; flex-direction: column; gap: 8px; }
+  .ctrl-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; }
+  .tab-row { display: flex; gap: 4px; background: #111; border-radius: 10px; padding: 3px; }
+  .tab-btn {
+    flex: 1; padding: 8px 6px; border: none; border-radius: 8px; font-size: 12px; font-weight: 600;
+    cursor: pointer; background: transparent; color: #6b7280; text-align: center;
+  }
+  .tab-btn.active { background: #D4AF37; color: #0C0C0C; }
+  .status-row { display: flex; gap: 4px; flex-wrap: wrap; }
+  .status-btn {
+    padding: 6px 10px; border: 1px solid #333; border-radius: 8px; font-size: 11px; font-weight: 600;
+    cursor: pointer; background: transparent; color: #9ca3af;
+  }
+  .status-btn.active { border-color: var(--sc); color: var(--sc); background: color-mix(in srgb, var(--sc) 12%, transparent); }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; }
+  .toggle-label { font-size: 13px; color: #ccc; }
+  .toggle {
+    width: 40px; height: 22px; border-radius: 11px; background: #333; cursor: pointer;
+    position: relative; border: none;
+  }
+  .toggle.on { background: #D4AF37; }
+  .toggle::after {
+    content: ''; position: absolute; top: 3px; left: 3px;
+    width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform 0.2s;
+  }
+  .toggle.on::after { transform: translateX(18px); }
+  .info-box {
+    background: rgba(212,175,55,0.08); border: 1px solid rgba(212,175,55,0.15);
+    border-radius: 10px; padding: 10px 12px; font-size: 11px; color: #D4AF37; line-height: 1.5;
+  }
+  .card-wrapper { filter: drop-shadow(0 20px 60px rgba(0,0,0,0.6)); }
+</style>
+</head>
+<body>
+<div class="main">
+  <div class="controls">
+    <div>
+      <div style="font-size:18px;font-weight:800;color:#fff;letter-spacing:-0.5px">Naqiy Share Cards</div>
+      <div style="font-size:11px;color:#6b7280;margin-top:4px">Maquettes Avant / Apres</div>
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label">Version</div>
+      <div class="tab-row" id="version-tabs">
+        <button class="tab-btn active" data-val="before">Avant</button>
+        <button class="tab-btn" data-val="after">Apres</button>
+      </div>
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label">Type de carte</div>
+      <div class="tab-row" id="type-tabs">
+        <button class="tab-btn active" data-val="product">Produit</button>
+        <button class="tab-btn" data-val="store">Magasin</button>
+      </div>
+    </div>
+    <div class="ctrl-group" id="status-group">
+      <div class="ctrl-label">Statut Halal</div>
+      <div class="status-row" id="status-btns">
+        <button class="status-btn active" data-val="halal" style="--sc:#22c55e">Halal</button>
+        <button class="status-btn" data-val="haram" style="--sc:#ef4444">Haram</button>
+        <button class="status-btn" data-val="doubtful" style="--sc:#f97316">Douteux</button>
+        <button class="status-btn" data-val="unknown" style="--sc:#6b7280">Inconnu</button>
+      </div>
+    </div>
+    <div class="ctrl-group" id="boycott-group">
+      <div class="toggle-row">
+        <span class="toggle-label">Boycott</span>
+        <button class="toggle" id="boycott-toggle"></button>
+      </div>
+    </div>
+    <div class="ctrl-group" id="certifier-group">
+      <div class="toggle-row">
+        <span class="toggle-label">Certifieur</span>
+        <button class="toggle on" id="certifier-toggle"></button>
+      </div>
+    </div>
+    <div style="flex:1"></div>
+    <div class="info-box" id="info-box">Cliquez sur Apres pour voir le design premium.</div>
+  </div>
+  <div class="preview-area">
+    <div class="preview-scroll">
+      <div class="card-wrapper" id="card-container"></div>
+    </div>
+    <div class="prompt-bar">
+      <div class="prompt-text" id="prompt-output"></div>
+      <button class="copy-btn" id="copy-btn">Copier</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const state = { version:'before', type:'product', status:'halal', boycott:false, certifier:true };
+const SM = {
+  halal:    { color:'#22c55e', bg:'#0a1a10', label:'Certifie Halal',  afterLabel:'Composition Conforme',     icon:'\u2713', dots:['#22c55e','#22c55e','#22c55e','#22c55e'], madhabText:'Les 4 ecoles s\'accordent' },
+  haram:    { color:'#ef4444', bg:'#1a0a0a', label:'Haram Detecte',   afterLabel:'Composition Non Conforme', icon:'\u2717', dots:['#ef4444','#ef4444','#22c55e','#ef4444'], madhabText:'Divergence entre ecoles' },
+  doubtful: { color:'#f97316', bg:'#1a140a', label:'Statut Douteux',  afterLabel:'Composition Douteuse',     icon:'?',      dots:['#22c55e','#f97316','#f97316','#22c55e'], madhabText:'Avis partages entre ecoles' },
+  unknown:  { color:'#6b7280', bg:'#0f0f0f', label:'Non Verifie',     afterLabel:'Donnees Insuffisantes',    icon:'?',      dots:['#6b7280','#6b7280','#6b7280','#6b7280'], madhabText:'Analyse en attente' },
+};
+
+function el(tag, attrs, children) {
+  const e = document.createElement(tag);
+  if (attrs) Object.entries(attrs).forEach(([k,v]) => {
+    if (k === 'style' && typeof v === 'object') Object.assign(e.style, v);
+    else if (k === 'text') e.textContent = v;
+    else e.setAttribute(k, v);
+  });
+  if (children) children.forEach(c => { if (c) e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
+  return e;
+}
+
+function buildBeforeProduct(s) {
+  const card = el('div', {style:{width:'360px',borderRadius:'24px',padding:'28px',overflow:'hidden',textAlign:'center',background:s.bg}});
+  // Top bar
+  const topBar = el('div', {style:{display:'flex',justifyContent:'center',marginBottom:'24px'}});
+  topBar.appendChild(el('div', {style:{background:'rgba(19,236,106,0.12)',padding:'6px 16px',borderRadius:'20px',fontSize:'14px',fontWeight:'700',color:'#13ec6a',letterSpacing:'0.5px'}, text:'\uD83C\uDF3F Naqiy'}));
+  card.appendChild(topBar);
+  // Icon circle
+  const ic = el('div', {style:{width:'72px',height:'72px',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 12px',background:s.color+'20',fontSize:'36px',fontWeight:'900',color:s.color}});
+  ic.textContent = s.icon;
+  card.appendChild(ic);
+  // Verdict
+  card.appendChild(el('div', {style:{fontSize:'22px',fontWeight:'800',letterSpacing:'0.3px',marginBottom:'20px',color:s.color}, text:s.label}));
+  // Product
+  card.appendChild(el('div', {style:{color:'#fff',fontSize:'18px',fontWeight:'700',lineHeight:'1.35',marginBottom:'4px'}, text:'Muesli Raisin, Figue, Abricot'}));
+  card.appendChild(el('div', {style:{color:'#9ca3af',fontSize:'14px',fontWeight:'500',marginBottom:'16px'}, text:'Bjorg'}));
+  // Certifier
+  if (state.certifier) {
+    const row = el('div', {style:{display:'flex',alignItems:'center',justifyContent:'center',gap:'8px',marginBottom:'8px',color:'#c4d0c8',fontSize:'13px',fontWeight:'500'}});
+    row.appendChild(el('span', {text:'\uD83D\uDC51', style:{fontSize:'16px'}}));
+    row.appendChild(el('span', {text:'Certifie par: AVS'}));
+    card.appendChild(row);
+  }
+  // Boycott
+  if (state.boycott) {
+    const bw = el('div', {style:{textAlign:'center',marginBottom:'8px'}});
+    const br = el('div', {style:{display:'inline-flex',alignItems:'center',gap:'6px',background:'rgba(239,68,68,0.10)',padding:'6px 12px',borderRadius:'8px',color:'#ef4444',fontSize:'13px',fontWeight:'600'}});
+    br.appendChild(el('span', {text:'\u26A0\uFE0F'}));
+    br.appendChild(el('span', {text:'Produit a boycotter'}));
+    bw.appendChild(br);
+    card.appendChild(bw);
+  }
+  // Barcode
+  const bc = el('div', {style:{display:'flex',alignItems:'center',justifyContent:'center',gap:'6px',color:'#6b7280',fontSize:'12px',marginTop:'4px',marginBottom:'16px',fontVariantNumeric:'tabular-nums'}});
+  bc.appendChild(el('span', {text:'\u25FB', style:{fontSize:'14px'}}));
+  bc.appendChild(el('span', {text:'3229820129488'}));
+  card.appendChild(bc);
+  // Footer
+  card.appendChild(el('div', {style:{width:'60px',height:'1px',background:'rgba(255,255,255,0.08)',margin:'0 auto 12px'}}));
+  card.appendChild(el('div', {style:{color:'#9ca3af',fontSize:'12px',fontWeight:'500',marginBottom:'2px'}, text:'Verifie avec Naqiy'}));
+  card.appendChild(el('div', {style:{color:'#6b7280',fontSize:'11px'}, text:'Scanne. Comprends. Choisis.'}));
+  return card;
+}
+
+function buildAfterProduct(s) {
+  const conf = state.status==='halal'?85:state.status==='haram'?92:state.status==='doubtful'?55:20;
+  const card = el('div', {style:{width:'360px',borderRadius:'28px',overflow:'hidden',background:`radial-gradient(ellipse at 50% 0%, ${s.color}08 0%, ${s.bg} 70%)`}});
+
+  // Glass Header
+  const hdr = el('div', {style:{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 20px',background:'rgba(255,255,255,0.04)',borderBottom:'1px solid rgba(255,255,255,0.06)'}});
+  const lr = el('div', {style:{display:'flex',alignItems:'center',gap:'8px'}});
+  lr.appendChild(el('div', {style:{width:'24px',height:'24px',borderRadius:'8px',background:'rgba(19,236,106,0.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'13px',fontWeight:'900',color:'#13ec6a'}, text:'N'}));
+  lr.appendChild(el('div', {style:{fontSize:'14px',fontWeight:'700',color:'#fff',letterSpacing:'0.3px'}, text:'Naqiy'}));
+  hdr.appendChild(lr);
+  hdr.appendChild(el('div', {style:{display:'flex',alignItems:'center',gap:'4px',fontSize:'10px',fontWeight:'700',color:'#D4AF37',background:'rgba(212,175,55,0.1)',padding:'4px 10px',borderRadius:'8px',letterSpacing:'0.5px'}, text:'\u2726 VERIFIE'}));
+  card.appendChild(hdr);
+
+  // Hero
+  const hero = el('div', {style:{padding:'24px 28px 16px',textAlign:'center'}});
+  hero.appendChild(el('div', {style:{width:'88px',height:'88px',borderRadius:'16px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.06)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px',fontSize:'40px',boxShadow:'0 8px 24px rgba(0,0,0,0.3)'}, text:'\uD83E\uDD63'}));
+  hero.appendChild(el('div', {style:{color:'#fff',fontSize:'20px',fontWeight:'800',lineHeight:'1.3',letterSpacing:'-0.3px',marginBottom:'6px'}, text:'Muesli Raisin, Figue, Abricot'}));
+  hero.appendChild(el('div', {style:{fontSize:'12px',fontWeight:'600',textTransform:'uppercase',letterSpacing:'1.2px',color:'rgba(212,175,55,0.7)'}, text:'BJORG'}));
+  card.appendChild(hero);
+
+  // ── Madhab consensus row ──
+  const mr = el('div', {style:{display:'flex',alignItems:'center',justifyContent:'center',gap:'8px',padding:'0 20px',marginBottom:'6px'}});
+  const md = el('div', {style:{display:'flex',gap:'4px'}});
+  s.dots.forEach(function(d) { md.appendChild(el('div', {style:{width:'8px',height:'8px',borderRadius:'50%',background:d,boxShadow:'0 0 6px '+d+'50'}})); });
+  mr.appendChild(md);
+  mr.appendChild(el('div', {style:{fontSize:'11px',fontWeight:'500',color:'rgba(212,175,55,0.6)'}, text:s.madhabText}));
+  card.appendChild(mr);
+
+  // ── "Composition Conforme" verdict label (under madhab) ──
+  const verdictLabel = el('div', {style:{textAlign:'center',margin:'0 20px 12px'}});
+  const verdictInner = el('div', {style:{display:'inline-flex',alignItems:'center',gap:'8px'}});
+  const sdo = el('div', {style:{width:'16px',height:'16px',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',background:s.color+'20',flexShrink:'0'}});
+  sdo.appendChild(el('div', {style:{width:'10px',height:'10px',borderRadius:'50%',background:s.color,boxShadow:'0 0 8px '+s.color+'50'}}));
+  verdictInner.appendChild(sdo);
+  verdictInner.appendChild(el('div', {style:{fontSize:'16px',fontWeight:'800',letterSpacing:'-0.2px',color:s.color}, text:s.afterLabel}));
+  verdictLabel.appendChild(verdictInner);
+  card.appendChild(verdictLabel);
+
+  // ── Boycott strip ──
+  if (state.boycott) {
+    const bs = el('div', {style:{margin:'0 20px 12px',padding:'10px 14px',borderRadius:'12px',display:'flex',alignItems:'center',gap:'8px',fontSize:'13px',fontWeight:'600',color:'#ef4444',background:'rgba(239,68,68,0.08)',border:'1px solid rgba(239,68,68,0.12)'}});
+    bs.appendChild(el('span', {text:'\u26A0'}));
+    bs.appendChild(el('span', {text:'Produit boycotte'}));
+    card.appendChild(bs);
+  }
+
+  // ── Score encadre: Certifieur + NaqiyGradeBadge + sante ScoreRing ──
+  const GRADES = [
+    {grade:1, arabic:'\u0661', label:'Tres fiable', color:'#22c55e'},
+    {grade:2, arabic:'\u0662', label:'Fiable',      color:'#84cc16'},
+    {grade:3, arabic:'\u0663', label:'Vigilance',   color:'#f59e0b'},
+    {grade:4, arabic:'\u0664', label:'Peu fiable',  color:'#f97316'},
+    {grade:5, arabic:'\u0665', label:'Insuffisant', color:'#ef4444'},
+  ];
+  const activeGradeNum = state.status==='halal'?1:state.status==='haram'?5:state.status==='doubtful'?3:4;
+  const activeGrade = GRADES[activeGradeNum - 1];
+
+  // Health score + label
+  const healthScore = state.status==='halal'?78:state.status==='haram'?32:state.status==='doubtful'?55:0;
+  const healthLabel = healthScore>=70?'Bon':healthScore>=40?'Mediocre':'Mauvais';
+  const healthColor = healthScore>=70?'#22c55e':healthScore>=40?'#f59e0b':'#ef4444';
+
+  const scoreBox = el('div', {style:{margin:'0 20px 14px',padding:'16px 18px',borderRadius:'16px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(212,175,55,0.12)'}});
+
+  // Certifier + NaqiyGradeBadge (only when certified)
+  if (state.certifier) {
+    // Row 1: "Certifie par: AVS"
+    const certRow = el('div', {style:{display:'flex',alignItems:'center',justifyContent:'center',gap:'6px',marginBottom:'12px'}});
+    certRow.appendChild(el('span', {style:{fontSize:'12px',color:'rgba(255,255,255,0.45)'}, text:'Certifie par:'}));
+    certRow.appendChild(el('span', {style:{fontSize:'12px',fontWeight:'700',color:'#D4AF37'}, text:'AVS'}));
+    scoreBox.appendChild(certRow);
+
+    // Row 2: NaqiyGradeBadge strip
+    const gradeStrip = el('div', {style:{display:'flex',alignItems:'center',gap:'3px',justifyContent:'center',marginBottom:'6px'}});
+    gradeStrip.appendChild(el('div', {style:{fontSize:'13px',fontWeight:'900',color:'#D4AF37',marginRight:'3px'}, text:'N'}));
+    GRADES.forEach(function(g) {
+      const isActive = g.grade === activeGradeNum;
+      const pill = el('div', {style:{
+        width: isActive ? '44px' : '22px',
+        height: isActive ? '26px' : '22px',
+        borderRadius: '6px',
+        display:'flex', alignItems:'center', justifyContent:'center',
+        background: g.color,
+        opacity: isActive ? '1' : '0.2',
+      }});
+      pill.appendChild(el('div', {style:{color:'#fff',fontWeight:'900',fontSize: isActive ? '14px' : '10px'}, text:g.arabic}));
+      gradeStrip.appendChild(pill);
+    });
+    scoreBox.appendChild(gradeStrip);
+
+    // Row 3: Grade label in its color
+    scoreBox.appendChild(el('div', {style:{textAlign:'center',fontSize:'12px',fontWeight:'700',color:activeGrade.color,marginBottom:'12px'}, text:activeGrade.label}));
+
+    // Separator before health score
+    scoreBox.appendChild(el('div', {style:{width:'60%',height:'1px',background:'rgba(255,255,255,0.06)',margin:'0 auto 12px'}}));
+  }
+
+  // Row 4: Health ScoreRing + score + label
+  const healthRow = el('div', {style:{display:'flex',alignItems:'center',justifyContent:'center',gap:'12px'}});
+
+  // SVG ScoreRing (semi-arc 180deg)
+  const ringSize = 52;
+  const ringStroke = 4;
+  const ringR = (ringSize - ringStroke) / 2;
+  const ringCx = ringSize / 2;
+  const ringCy = ringSize / 2;
+  const arcLen = Math.PI * ringR;
+  const fillPct = healthScore / 100;
+  const fillLen = arcLen * (1 - fillPct);
+  const svgH = ringSize / 2 + ringStroke;
+
+  const ringWrap = el('div', {style:{width:ringSize+'px',height:svgH+'px',position:'relative',flexShrink:'0'}});
+  const svgNs = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNs, 'svg');
+  svg.setAttribute('width', String(ringSize));
+  svg.setAttribute('height', String(svgH));
+  svg.setAttribute('viewBox', '0 0 '+ringSize+' '+svgH);
+  const arcD = 'M '+(ringCx-ringR)+' '+ringCy+' A '+ringR+' '+ringR+' 0 0 1 '+(ringCx+ringR)+' '+ringCy;
+  // Track
+  const track = document.createElementNS(svgNs, 'path');
+  track.setAttribute('d', arcD); track.setAttribute('fill', 'none');
+  track.setAttribute('stroke', 'rgba(255,255,255,0.08)');
+  track.setAttribute('stroke-width', String(ringStroke)); track.setAttribute('stroke-linecap', 'round');
+  svg.appendChild(track);
+  // Fill
+  if (healthScore > 0) {
+    const fill = document.createElementNS(svgNs, 'path');
+    fill.setAttribute('d', arcD); fill.setAttribute('fill', 'none');
+    fill.setAttribute('stroke', healthColor);
+    fill.setAttribute('stroke-width', String(ringStroke)); fill.setAttribute('stroke-linecap', 'round');
+    fill.setAttribute('stroke-dasharray', arcLen.toFixed(1));
+    fill.setAttribute('stroke-dashoffset', fillLen.toFixed(1));
+    svg.appendChild(fill);
+  }
+  ringWrap.appendChild(svg);
+  // Score overlay
+  const sOverlay = el('div', {style:{position:'absolute',left:'0',right:'0',bottom:'1px',textAlign:'center'}});
+  sOverlay.appendChild(el('div', {style:{fontSize:'15px',fontWeight:'900',color:healthColor,lineHeight:'1'}, text:String(healthScore)}));
+  ringWrap.appendChild(sOverlay);
+  healthRow.appendChild(ringWrap);
+
+  // Score text column
+  const scoreCol = el('div', {style:{display:'flex',flexDirection:'column',gap:'1px'}});
+  scoreCol.appendChild(el('div', {style:{fontSize:'11px',color:'rgba(255,255,255,0.4)',fontWeight:'500'}, text:'Sante'}));
+  scoreCol.appendChild(el('div', {style:{fontSize:'13px',fontWeight:'700',color:healthColor}, text:healthLabel}));
+  healthRow.appendChild(scoreCol);
+
+  scoreBox.appendChild(healthRow);
+  card.appendChild(scoreBox);
+
+  // Bottom
+  const bot = el('div', {style:{padding:'0 28px 20px',textAlign:'center'}});
+  bot.appendChild(el('div', {style:{width:'80%',height:'1px',background:'rgba(212,175,55,0.08)',margin:'0 auto 14px'}}));
+  // Barcode row with icon
+  const bcRow = el('div', {style:{display:'flex',alignItems:'center',justifyContent:'center',gap:'6px',marginBottom:'10px'}});
+  // Barcode SVG icon
+  const bcSvg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  bcSvg.setAttribute('width','14'); bcSvg.setAttribute('height','14');
+  bcSvg.setAttribute('viewBox','0 0 256 256'); bcSvg.setAttribute('fill','#6b7280');
+  const bcPath = document.createElementNS('http://www.w3.org/2000/svg','path');
+  bcPath.setAttribute('d','M32,48V208a8,8,0,0,1-16,0V48a8,8,0,0,1,16,0Zm24-8a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48A8,8,0,0,0,56,40Zm32,0a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48A8,8,0,0,0,88,40Zm40,0a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48A8,8,0,0,0,128,40Zm32,0a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48A8,8,0,0,0,160,40Zm40,0a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48A8,8,0,0,0,200,40Zm32,0a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48A8,8,0,0,0,232,40Z');
+  bcSvg.appendChild(bcPath);
+  bcRow.appendChild(bcSvg);
+  bcRow.appendChild(el('div', {style:{fontSize:'11px',color:'#6b7280',fontVariantNumeric:'tabular-nums'}, text:'3229820129488'}));
+  bot.appendChild(bcRow);
+  const bf = el('div', {style:{display:'flex',alignItems:'center',justifyContent:'center',gap:'6px',fontSize:'12px'}});
+  bf.appendChild(el('span', {style:{color:'#D4AF37',fontSize:'10px'}, text:'\u2726'}));
+  bf.appendChild(el('span', {style:{fontWeight:'700',color:'#D4AF37'}, text:'naqiy.app'}));
+  bf.appendChild(el('span', {style:{color:'#333',fontSize:'8px'}, text:'\u2022'}));
+  bf.appendChild(el('span', {style:{color:'#6b7280',fontSize:'11px'}, text:'Scanne. Comprends. Choisis.'}));
+  bot.appendChild(bf);
+  card.appendChild(bot);
+  return card;
+}
+
+function buildBeforeStore() {
+  const card = el('div', {style:{width:'360px',borderRadius:'24px',padding:'40px 28px',background:'#151515',textAlign:'center',border:'1px dashed #333'}});
+  card.appendChild(el('div', {style:{fontSize:'48px',marginBottom:'16px',opacity:'0.4'}, text:'\uD83D\uDCCB'}));
+  card.appendChild(el('div', {style:{fontSize:'16px',fontWeight:'700',color:'#fff',marginBottom:'8px'}, text:'Pas de carte visuelle'}));
+  card.appendChild(el('div', {style:{fontSize:'13px',color:'#6b7280',lineHeight:'1.5',marginBottom:'20px'}, text:'Les magasins sont partages en texte brut uniquement.'}));
+  const pre = el('div', {style:{background:'#0C0C0C',borderRadius:'12px',padding:'16px',textAlign:'left',fontFamily:'SF Mono, monospace',fontSize:'12px',color:'#9ca3af',lineHeight:'1.6',whiteSpace:'pre-wrap'}});
+  pre.textContent = 'Carrefour Market \u2014 La Plaine (Halal Certifie)\n12 Rue de la Republique, 93200 Saint-Denis\n\nDecouvert sur Optimus Halal';
+  card.appendChild(pre);
+  return card;
+}
+
+function buildAfterStore() {
+  const card = el('div', {style:{width:'360px',borderRadius:'28px',overflow:'hidden',background:'#0f0f0f'}});
+  // Header
+  const hdr = el('div', {style:{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 20px',background:'rgba(255,255,255,0.04)',borderBottom:'1px solid rgba(255,255,255,0.06)'}});
+  const lr = el('div', {style:{display:'flex',alignItems:'center',gap:'8px'}});
+  lr.appendChild(el('div', {style:{width:'24px',height:'24px',borderRadius:'8px',background:'rgba(19,236,106,0.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'13px',fontWeight:'900',color:'#13ec6a'}, text:'N'}));
+  lr.appendChild(el('div', {style:{fontSize:'14px',fontWeight:'700',color:'#fff'}, text:'Naqiy'}));
+  hdr.appendChild(lr);
+  card.appendChild(hdr);
+  // Hero
+  const hero = el('div', {style:{padding:'28px 24px 16px',textAlign:'center'}});
+  hero.appendChild(el('div', {style:{width:'56px',height:'56px',borderRadius:'50%',background:'rgba(212,175,55,0.08)',border:'1px solid rgba(212,175,55,0.15)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px',fontSize:'28px'}, text:'\uD83D\uDCCD'}));
+  hero.appendChild(el('div', {style:{fontSize:'19px',fontWeight:'800',color:'#fff',lineHeight:'1.3',letterSpacing:'-0.3px',marginBottom:'6px'}, text:'Carrefour Market \u2014 La Plaine'}));
+  const addr = el('div', {style:{fontSize:'13px',color:'#9ca3af',lineHeight:'1.4',marginBottom:'4px'}});
+  addr.appendChild(document.createTextNode('12 Rue de la Republique'));
+  addr.appendChild(el('br'));
+  addr.appendChild(document.createTextNode('93200 Saint-Denis'));
+  hero.appendChild(addr);
+  card.appendChild(hero);
+  // Status row
+  const sr = el('div', {style:{margin:'0 20px 12px',padding:'14px 16px',borderRadius:'14px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.06)',display:'flex',alignItems:'center',justifyContent:'space-between'}});
+  const oi = el('div', {style:{display:'flex',alignItems:'center',gap:'8px'}});
+  oi.appendChild(el('div', {style:{width:'10px',height:'10px',borderRadius:'50%',background:'#22c55e',boxShadow:'0 0 8px rgba(34,197,94,0.4)'}}));
+  oi.appendChild(el('div', {style:{fontSize:'13px',fontWeight:'700',color:'#22c55e'}, text:'Ouvert maintenant'}));
+  sr.appendChild(oi);
+  sr.appendChild(el('div', {style:{fontSize:'14px',fontWeight:'700',color:'#D4AF37'}, text:'4.2 \u2605'}));
+  card.appendChild(sr);
+  // Certifier pill
+  const cp = el('div', {style:{margin:'0 20px 16px',padding:'10px 14px',borderRadius:'12px',background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.12)',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px',fontSize:'13px',fontWeight:'600',color:'#D4AF37'}});
+  cp.appendChild(el('span', {text:'\uD83D\uDEE1'}));
+  cp.appendChild(el('span', {text:'Halal Certifie \u2014 AVS'}));
+  card.appendChild(cp);
+  // Bottom
+  const bot = el('div', {style:{padding:'0 28px 20px',textAlign:'center'}});
+  bot.appendChild(el('div', {style:{width:'80%',height:'1px',background:'rgba(212,175,55,0.08)',margin:'0 auto 14px'}}));
+  const bf = el('div', {style:{display:'flex',alignItems:'center',justifyContent:'center',gap:'6px',fontSize:'12px'}});
+  bf.appendChild(el('span', {style:{color:'#D4AF37',fontSize:'10px'}, text:'\u2726'}));
+  bf.appendChild(el('span', {style:{fontWeight:'700',color:'#D4AF37'}, text:'naqiy.app'}));
+  bf.appendChild(el('span', {style:{color:'#333',fontSize:'8px'}, text:'\u2022'}));
+  bf.appendChild(el('span', {style:{color:'#6b7280',fontSize:'11px'}, text:'Scanne. Comprends. Choisis.'}));
+  bot.appendChild(bf);
+  card.appendChild(bot);
+  return card;
+}
+
+// ── Wiring ──
+document.querySelectorAll('#version-tabs .tab-btn').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#version-tabs .tab-btn').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); state.version = b.dataset.val; updateAll();
+}));
+document.querySelectorAll('#type-tabs .tab-btn').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#type-tabs .tab-btn').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); state.type = b.dataset.val; updateAll();
+}));
+document.querySelectorAll('#status-btns .status-btn').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#status-btns .status-btn').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); state.status = b.dataset.val; updateAll();
+}));
+document.getElementById('boycott-toggle').addEventListener('click', () => {
+  state.boycott = !state.boycott;
+  document.getElementById('boycott-toggle').classList.toggle('on', state.boycott);
+  updateAll();
+});
+document.getElementById('certifier-toggle').addEventListener('click', () => {
+  state.certifier = !state.certifier;
+  document.getElementById('certifier-toggle').classList.toggle('on', state.certifier);
+  updateAll();
+});
+document.getElementById('copy-btn').addEventListener('click', () => {
+  const text = document.getElementById('prompt-output').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copie !';
+    setTimeout(() => btn.textContent = 'Copier', 1500);
+  });
+});
+
+function updateAll() {
+  const c = document.getElementById('card-container');
+  while (c.firstChild) c.removeChild(c.firstChild);
+  const s = SM[state.status];
+  if (state.type === 'product') {
+    c.appendChild(state.version === 'before' ? buildBeforeProduct(s) : buildAfterProduct(s));
+  } else {
+    c.appendChild(state.version === 'before' ? buildBeforeStore() : buildAfterStore());
+  }
+  // Controls visibility
+  document.getElementById('status-group').style.display = state.type === 'product' ? '' : 'none';
+  document.getElementById('boycott-group').style.display = state.type === 'product' ? '' : 'none';
+  document.getElementById('certifier-group').style.display = state.type === 'product' ? '' : 'none';
+  // Info
+  const info = document.getElementById('info-box');
+  if (state.version === 'before' && state.type === 'store') info.textContent = '\u26A0\uFE0F Les magasins n\'ont aucune carte visuelle actuellement. Seul un texte brut est partage.';
+  else if (state.version === 'after') info.textContent = '\u2726 Design premium avec glassmorphisme, gradient subtil, badges, consensus madhab et branding Naqiy signature.';
+  else info.textContent = 'Cliquez sur Apres pour voir le design premium. Les cartes magasin sont nouvelles.';
+  // Prompt
+  updatePrompt();
+}
+
+function updatePrompt() {
+  const p = document.getElementById('prompt-output');
+  const parts = [];
+  if (state.version === 'after') {
+    if (state.type === 'product') {
+      parts.push('Redesign premium de la ShareCard produit Naqiy.');
+      parts.push('Layout: glass header (logo N + badge VERIFIE) \u2192 hero (image 88px + nom + brand gold uppercase) \u2192 verdict row (status dot glow + label + certifieur) \u2192 NaqiyGradeBadge strip (N \u0661\u0662\u0663\u0664\u0665 avec grade actif en avant + label) \u2192 consensus madhab (4 dots) \u2192 barcode avec icone \u2192 footer branding gold.');
+      if (state.status !== 'halal') parts.push('Statut: ' + state.status + ' avec couleurs et dots madhab adaptes.');
+      if (state.boycott) parts.push('Strip boycott rouge subtil sous le verdict.');
+      if (!state.certifier) parts.push('Sans badge certifieur.');
+      parts.push('Background: radial gradient subtil depuis status color. Glassmorphisme sur toutes les surfaces.');
+    } else {
+      parts.push('Nouvelle ShareCard magasin Naqiy (n\'existait pas avant \u2014 etait du texte brut).');
+      parts.push('Layout: glass header (logo N) \u2192 hero (pin gold 56px + nom + adresse) \u2192 status row glass (dot vert "Ouvert" + rating gold) \u2192 pill certifieur gold \u2192 footer branding.');
+      parts.push('Background: #0f0f0f anthracite. Gold accents partout.');
+    }
+  } else {
+    if (state.type === 'product') parts.push('Carte actuelle: layout centre simple, fond ' + SM[state.status].bg + ', icone 72px, verdict ' + SM[state.status].label + ', nom/brand, certifieur/barcode, footer basique.');
+    else parts.push('Etat actuel: AUCUNE carte visuelle pour les magasins. Partage en texte brut: "Nom (Halal Certifie)\\nAdresse\\nDecouvert sur Optimus Halal".');
+  }
+  p.textContent = parts.join(' ');
+}
+
+updateAll();
+</script>
+</body>
+</html>

@@ -33,7 +33,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChartBarIcon, ProhibitIcon, HeartIcon, AppleLogoIcon, FlaskIcon, FactoryIcon, DropIcon, LeafIcon } from "phosphor-react-native";
 import { useTheme } from "@/hooks/useTheme";
-import { useTranslation } from "@/hooks";
+import { useTranslation, useHaptics } from "@/hooks";
 import { halalStatus, darkTheme, lightTheme, getTrustScoreColor } from "@/theme/colors";
 import { CertifierLogo } from "./CertifierLogo";
 import { AppIcon, type IconName } from "@/lib/icons";
@@ -312,6 +312,7 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
+  const { impact } = useHaptics();
 
   const [isMounted, setIsMounted] = useState(false);
   const translateY = useSharedValue(SCREEN_HEIGHT);
@@ -324,6 +325,7 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
     if (visible) {
       setIsMounted(true);
       setShowIndicators(false);
+      impact();
       backdropOpacity.value = withTiming(1, { duration: 200 });
       translateY.value = reducedMotion
         ? 0
@@ -467,6 +469,7 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
 
       {/* Sheet */}
       <Animated.View
+        accessibilityViewIsModal
         style={[
           styles.sheet,
           {

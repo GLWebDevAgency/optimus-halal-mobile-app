@@ -15,6 +15,10 @@ import {
   StarIcon,
   CheckCircleIcon,
   CaretRightIcon,
+  HandshakeIcon,
+  HandPalmIcon,
+  WarningCircleIcon,
+  QuestionIcon,
 } from "phosphor-react-native";
 import Animated, {
   useSharedValue,
@@ -65,6 +69,20 @@ function getStatusLabel(status: HalalStatusKey, t: ReturnType<typeof useTranslat
     unknown: t.scanResult.unknown,
   };
   return map[status] ?? status;
+}
+
+function StatusIcon({ status, size = 18 }: { status: HalalStatusKey; size?: number }) {
+  const color = getStatusColor(status);
+  switch (status) {
+    case "halal":
+      return <HandshakeIcon size={size} color={color} weight="fill" />;
+    case "haram":
+      return <HandPalmIcon size={size} color={color} weight="fill" />;
+    case "doubtful":
+      return <WarningCircleIcon size={size} color={color} weight="fill" />;
+    default:
+      return <QuestionIcon size={size} color={color} weight="bold" />;
+  }
 }
 
 // ── MadhabRow sub-component ──
@@ -146,8 +164,8 @@ function MadhabRow({
           {madhabLabel}
         </Text>
 
-        {/* Status dot */}
-        <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+        {/* Status icon */}
+        <StatusIcon status={verdict.status as HalalStatusKey} size={18} />
 
         {/* Status label */}
         <Text style={[styles.statusLabel, { color: statusColor }]} numberOfLines={1}>
@@ -304,11 +322,6 @@ const styles = StyleSheet.create({
   madhabName: {
     width: 72,
     fontSize: fontSizeTokens.bodySmall,
-  },
-  statusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
   },
   statusLabel: {
     width: 56,

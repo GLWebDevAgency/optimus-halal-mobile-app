@@ -97,7 +97,7 @@ export const defaultFeatureFlags: FeatureFlags = {
   offlineMode: true,
   pushNotifications: true,
   aiScanner: false,
-  gamificationEnabled: true,
+  gamificationEnabled: false, // Désactivé — MVP, gamification différée
   socialSharing: true,
   analyticsEnabled: true,
   socialAuthEnabled: false, // Désactivé — Google/Apple Sign-In à intégrer (OAuth)
@@ -106,10 +106,10 @@ export const defaultFeatureFlags: FeatureFlags = {
   featuredArticlesEnabled: true,
   paywallEnabled: true,
   favoritesLimitEnabled: true,
-  scanHistoryLimitEnabled: false,
+  scanHistoryLimitEnabled: true,
   offlineCacheEnabled: false,
   premiumMapEnabled: false,
-  healthProfileEnabled: false,
+  healthProfileEnabled: true,
 };
 
 /**

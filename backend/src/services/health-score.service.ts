@@ -38,133 +38,27 @@ import {
   type NutriScoreGrade,
   type NutriScoreResult,
 } from "./nutriscore.service.js";
+import {
+  validateNutrients,
+  checkGradeDiscrepancy,
+  type NutrientAnomaly,
+  type AnomalySeverity,
+  type DataQualityFlag,
+  type ValidationResult,
+} from "./nutrient-validator.service.js";
 
-// ── Nutrient Anomaly Detection ──────────────────────────────
+// ── Re-export types from nutrient-validator for consumers ───
 
-export type AnomalySeverity = "impossible" | "suspicious";
+export type { NutrientAnomaly, AnomalySeverity, DataQualityFlag };
 
-export interface NutrientAnomaly {
-  field: string;
-  value: number;
-  threshold: number;
-  severity: AnomalySeverity;
-  message: string;
-}
-
-/** Categories where salt > 10g/100g is expected (soy sauce, bouillon, etc.) */
-const SALT_EXEMPT_RE = /sauce|condiment|bouillon|assaisonnement|soja|soy|miso|anchoi|olive|câpre|sel\b|salt\b|seasoning/i;
-
-/**
- * Detect anomalies in nutritional data.
- * Two layers:
- *   1. Standard nutriments validation (bounds + cross-checks)
- *   2. OFF NutriScore component validation (catches ingredient-estimated errors)
- */
+// detectNutrientAnomalies — delegated to nutrient-validator.service.ts
+// Kept as thin wrapper for backward compat with existing callers.
 export function detectNutrientAnomalies(
   nutriments: Record<string, number | string> | null | undefined,
   categories: string | null | undefined,
   offNutriscoreComponents?: { id: string; value: number }[],
 ): NutrientAnomaly[] {
-  const anomalies: NutrientAnomaly[] = [];
-
-  const num = (obj: Record<string, unknown>, key: string): number | null => {
-    const v = obj[key];
-    if (v == null || v === "") return null;
-    const n = typeof v === "string" ? parseFloat(v as string) : v as number;
-    return isNaN(n) ? null : n;
-  };
-
-  // Build a merged nutrient map: standard nutriments + OFF NutriScore components
-  const merged: Record<string, number> = {};
-  if (nutriments) {
-    for (const key of ["salt_100g", "sodium_100g", "energy_100g", "fat_100g",
-      "saturated_fat_100g", "sugars_100g", "proteins_100g", "fiber_100g",
-      "carbohydrates_100g"]) {
-      const v = num(nutriments as Record<string, unknown>, key);
-      if (v != null) merged[key] = v;
-    }
-  }
-  // OFF NutriScore components (may have values even when standard nutriments are null)
-  if (offNutriscoreComponents) {
-    for (const comp of offNutriscoreComponents) {
-      const key = comp.id === "salt" ? "salt_100g"
-        : comp.id === "sodium" ? "sodium_100g"
-        : comp.id === "energy" ? "energy_100g"
-        : comp.id === "saturated_fat" ? "saturated_fat_100g"
-        : comp.id === "sugars" ? "sugars_100g"
-        : comp.id === "fiber" ? "fiber_100g"
-        : comp.id === "proteins" ? "proteins_100g"
-        : comp.id === "fruits_vegetables_legumes" ? null
-        : null;
-      if (key && merged[key] == null) merged[key] = comp.value;
-    }
-  }
-
-  if (Object.keys(merged).length === 0) return anomalies;
-
-  // --- Layer 1: Absolute physical impossibilities ---
-
-  const IMPOSSIBLE: [string, number, string][] = [
-    ["energy_100g", 4200, "Energie > 4200 kJ (limite physique)"],
-    ["fat_100g", 100, "Graisses > 100g (impossible)"],
-    ["saturated_fat_100g", 100, "Graisses saturees > 100g (impossible)"],
-    ["sugars_100g", 100, "Sucres > 100g (impossible)"],
-    ["proteins_100g", 100, "Proteines > 100g (impossible)"],
-    ["salt_100g", 50, "Sel > 50g (impossible pour un aliment)"],
-  ];
-
-  for (const [field, limit, msg] of IMPOSSIBLE) {
-    const v = merged[field];
-    if (v != null && v > limit) {
-      anomalies.push({ field, value: v, threshold: limit, severity: "impossible", message: msg });
-    }
-  }
-
-  // --- Layer 2: Cross-validation ---
-
-  const fat = merged.fat_100g;
-  const satFat = merged.saturated_fat_100g;
-  if (fat != null && satFat != null && satFat > fat + 0.5) {
-    anomalies.push({
-      field: "saturated_fat_100g", value: satFat, threshold: fat,
-      severity: "impossible",
-      message: `Graisses saturees (${satFat}g) > graisses totales (${fat}g)`,
-    });
-  }
-
-  const carbs = merged.carbohydrates_100g;
-  const sugars = merged.sugars_100g;
-  if (carbs != null && sugars != null && sugars > carbs + 0.5) {
-    anomalies.push({
-      field: "sugars_100g", value: sugars, threshold: carbs,
-      severity: "impossible",
-      message: `Sucres (${sugars}g) > glucides totaux (${carbs}g)`,
-    });
-  }
-
-  // Macronutrient sum > 105g/100g
-  const macroSum = (fat ?? 0) + (carbs ?? 0) + (merged.proteins_100g ?? 0);
-  if (macroSum > 105 && fat != null && carbs != null) {
-    anomalies.push({
-      field: "macro_sum", value: macroSum, threshold: 105,
-      severity: "suspicious",
-      message: `Somme macronutriments = ${macroSum.toFixed(1)}g/100g (> 105g)`,
-    });
-  }
-
-  // --- Layer 3: Category-aware suspicious thresholds ---
-
-  const salt = merged.salt_100g ?? (merged.sodium_100g != null ? merged.sodium_100g * 2.5 : null);
-  const isSaltExempt = categories ? SALT_EXEMPT_RE.test(categories) : false;
-  if (salt != null && salt > 10 && !isSaltExempt) {
-    anomalies.push({
-      field: "salt_100g", value: salt, threshold: 10,
-      severity: "suspicious",
-      message: `Sel = ${salt.toFixed(1)}g/100g suspect pour cette categorie`,
-    });
-  }
-
-  return anomalies;
+  return validateNutrients(nutriments, categories, offNutriscoreComponents).anomalies;
 }
 
 // ── Types ───────────────────────────────────────────────────
@@ -223,6 +117,10 @@ export interface HealthScoreInput {
   offNutriscoreComponents?: { id: string; value: number }[];
   /** Product labels (for bio/aop bonus detection) */
   labels?: string[];
+  /** Special product info (honey, salt, etc.) — if bypassNutriScore, use qualityRatio */
+  specialProduct?: { bypassNutriScore: boolean; qualityRatio: number; type: string } | null;
+  /** Beverage analysis — subcategory-specific sugar/sweetener/caffeine analysis */
+  beverageScoreModifier?: number;
 }
 
 export interface AxisScore {
@@ -255,6 +153,10 @@ export interface HealthScoreResult {
   nutrientAnomalies?: NutrientAnomaly[];
   /** Detected product category */
   category: HealthScoreCategory;
+  /** Data quality flag: "valid"=OK, "suspicious"=minor issues, "unreliable"=force score=null */
+  dataQualityFlag?: DataQualityFlag;
+  /** Reasons for the data quality flag (for DB persistence + dashboard) */
+  dataQualityReasons?: string[];
 }
 
 // ── Category Weight Maps ─────────────────────────────────────
@@ -818,14 +720,63 @@ export function computeHealthScore(input: HealthScoreInput): HealthScoreResult {
   const profile = input.profile ?? "standard";
   const category = detectCategory(input.categories);
 
-  // --- Anomaly detection: validate OFF nutritional data ---
-  const nutrientAnomalies = detectNutrientAnomalies(
+  // --- Yuka-grade nutrient validation (7 invariants + calorie formula) ---
+  const validation = validateNutrients(
     input.nutriments,
     input.categories,
     input.offNutriscoreComponents,
   );
-  const hasImpossibleAnomaly = nutrientAnomalies.some(a => a.severity === "impossible");
+
+  // Grade discrepancy check: compute NutriScore first, then compare with OFF grade
+  let nutriScoreDetail: NutriScoreResult | undefined;
+  const hasImpossibleAnomaly = validation.anomalies.some(a => a.severity === "impossible");
+
+  if (input.nutriments && Object.keys(input.nutriments).length > 0 && !hasImpossibleAnomaly) {
+    const nutrInput = extractNutrimentsFromOff(input.nutriments);
+    nutriScoreDetail = computeNutriScore(nutrInput, input.categories) ?? undefined;
+  }
+
+  // Check grade discrepancy (computed vs OFF) — adds critical anomaly if ≥2 grades apart
+  const gradeDisc = checkGradeDiscrepancy(
+    nutriScoreDetail?.grade,
+    input.nutriscoreGrade,
+  );
+  if (gradeDisc) {
+    validation.anomalies.push(gradeDisc);
+    validation.reasons.push("grade_discrepancy");
+    // Upgrade flag to unreliable if grade discrepancy is critical
+    if (gradeDisc.severity === "critical" && validation.flag !== "unreliable") {
+      validation.flag = "unreliable";
+    }
+  }
+
+  const nutrientAnomalies = validation.anomalies;
   const hasSuspiciousAnomaly = nutrientAnomalies.length > 0;
+
+  // ── DATA QUALITY GATE: "je ne sais pas" ──
+  // When data is unreliable (critical anomaly or impossible values),
+  // return score=null rather than a misleading number.
+  if (validation.flag === "unreliable") {
+    const additivesAxis = computeAdditivesAxis(input.additives, category);
+    return {
+      score: null,
+      label: null,
+      axes: {
+        nutrition: null,
+        additives: additivesAxis,
+        processing: null,
+        profile: { delta: 0, reasons: ["data_unreliable"] },
+      },
+      bonuses: { bio: 0, aop: 0 },
+      dataConfidence: "very_low",
+      cappedByAdditive: false,
+      category,
+      nutriScoreDetail,
+      nutrientAnomalies,
+      dataQualityFlag: validation.flag,
+      dataQualityReasons: validation.reasons,
+    };
+  }
 
   // If OFF grade relies on corrupted data, discard it
   const standardNutrientsAvailable = input.nutriments
@@ -840,18 +791,26 @@ export function computeHealthScore(input: HealthScoreInput): HealthScoreResult {
   const effectiveOffGrade = offGradeReliable ? input.nutriscoreGrade : null;
 
   // Axe 1: Nutrition (50-60 pts, category-dependent) — recalcul propre > grade OFF > null
-  const nutritionAxis = computeNutritionAxis(
-    hasImpossibleAnomaly ? null : input.nutriments,
-    input.categories,
-    effectiveOffGrade,
-    category,
-  );
+  // Special product bypass: honey, salt, coffee, tea → NutriScore irrelevant
+  // Use qualityRatio as alternative nutrition score (pass/fail criteria → 0-max pts)
+  const specialBypass = input.specialProduct?.bypassNutriScore;
+  let nutritionAxis: ReturnType<typeof computeNutritionAxis>;
 
-  // Get NutriScore detail for the result
-  let nutriScoreDetail: NutriScoreResult | undefined;
-  if (input.nutriments && Object.keys(input.nutriments).length > 0 && !hasImpossibleAnomaly) {
-    const nutrInput = extractNutrimentsFromOff(input.nutriments);
-    nutriScoreDetail = computeNutriScore(nutrInput, input.categories) ?? undefined;
+  if (specialBypass && input.specialProduct) {
+    const nutritionMax = CATEGORY_NUTRITION_MAX[category];
+    const altScore = Math.round(input.specialProduct.qualityRatio * nutritionMax);
+    nutritionAxis = {
+      score: altScore,
+      max: nutritionMax,
+      source: "computed" as const,
+    };
+  } else {
+    nutritionAxis = computeNutritionAxis(
+      hasImpossibleAnomaly ? null : input.nutriments,
+      input.categories,
+      effectiveOffGrade,
+      category,
+    );
   }
 
   // Axe 2: Additives (15-20 pts, category-dependent)
@@ -926,6 +885,11 @@ export function computeHealthScore(input: HealthScoreInput): HealthScoreResult {
   // Step 4: Apply profile delta
   baseScore += profileAdjustment.delta;
 
+  // Step 4b: Apply beverage intelligence modifier (sugar/sweetener/caffeine penalties)
+  if (input.beverageScoreModifier) {
+    baseScore += input.beverageScoreModifier;
+  }
+
   // Step 5: Apply caps
   let cappedByAdditive = false;
 
@@ -971,5 +935,7 @@ export function computeHealthScore(input: HealthScoreInput): HealthScoreResult {
     category,
     nutriScoreDetail,
     ...(nutrientAnomalies.length > 0 && { nutrientAnomalies }),
+    dataQualityFlag: validation.flag,
+    ...(validation.reasons.length > 0 && { dataQualityReasons: validation.reasons }),
   };
 }

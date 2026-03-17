@@ -18,6 +18,9 @@ export interface OpenFoodFactsProduct {
   brand_owner?: string;
   categories?: string;
   ingredients_text?: string;
+  ingredients_text_fr?: string;
+  ingredients_text_en?: string;
+  ingredients_text_ar?: string;
   ingredients?: { text?: string; id?: string; percent?: number }[];
   image_url?: string;
   image_front_url?: string;
@@ -131,12 +134,20 @@ export interface SmartExtractionResult {
   aiEnrichment: ExtractionResult | null;
 }
 
+/** Strip only null bytes — the one thing that breaks JSON serialization.
+ *  Everything else (BOM, control chars, OCR, accents) Gemini handles better than regex. */
+function stripNullBytes(text: string): string {
+  return text.replace(/\x00/g, "");
+}
+
 export async function smartExtractIngredients(
   off: OpenFoodFactsProduct,
 ): Promise<SmartExtractionResult> {
   // Strategy 1: AI extraction from raw text (Gemini/GPT/Claude — always preferred)
+  // Minimal sanitization: only strip null bytes to avoid JSON corruption.
+  // Gemini handles OCR artifacts, BOM, control chars, multilingual text natively.
   if (off.ingredients_text) {
-    const aiResult = await aiExtractIngredients(off.ingredients_text);
+    const aiResult = await aiExtractIngredients(stripNullBytes(off.ingredients_text));
     if (aiResult && aiResult.ingredients.length > 0) {
       logger.info("Ingredients extracted via AI", {
         count: aiResult.ingredients.length,
@@ -237,6 +248,9 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeResult> {
       brand_owner: p.brand_owner as string | undefined,
       categories: p.categories as string | undefined,
       ingredients_text: p.ingredients_text as string | undefined,
+      ingredients_text_fr: p.ingredients_text_fr as string | undefined,
+      ingredients_text_en: p.ingredients_text_en as string | undefined,
+      ingredients_text_ar: p.ingredients_text_ar as string | undefined,
       image_url: p.image_url as string | undefined,
       image_front_url: p.image_front_url as string | undefined,
       image_ingredients_url: p.image_ingredients_url as string | undefined,
@@ -587,30 +601,74 @@ const HALAL_LABEL_TAGS = [
 // normalizeCertifierTag() strips known prefixes to resolve both forms.
 
 export const LABEL_TAG_TO_CERTIFIER_ID: Record<string, string> = {
+  // ── AVS ──
   "fr:a-votre-service":                                       "avs-a-votre-service",
   "fr:avs":                                                   "avs-a-votre-service",
+  "en:avs":                                                   "avs-a-votre-service",
+
+  // ── Achahada ──
   "fr:achahada":                                              "achahada",
+
+  // ── Altakwa ──
   "fr:altakwa":                                               "altakwa",
+
+  // ── ARGML — Mosquée de Lyon ──
   "fr:association-rituelle-de-la-grande-mosquee-de-lyon":     "argml-mosquee-de-lyon",
+  "en:association-rituelle-de-la-grande-mosquee-de-lyon":     "argml-mosquee-de-lyon",
   "fr:mosquee-de-lyon":                                       "argml-mosquee-de-lyon",
   "fr:argml":                                                 "argml-mosquee-de-lyon",
-  "fr:societe-francaise-de-controle-de-viande-halal":         "sfcvh-mosquee-de-paris",
+  "fr:grande-mosquee-de-lyon":                                "argml-mosquee-de-lyon",
+  "fr:controle-grande-mosquee-de-lyon-halal":                 "argml-mosquee-de-lyon",
+
+  // ── SFCVH — Mosquée de Paris ──
+  "fr:societe-francaise-de-controle-de-viande-halal":                              "sfcvh-mosquee-de-paris",
+  "en:societe-francaise-de-controle-de-viande-halal":                              "sfcvh-mosquee-de-paris",
+  "en:societe-francaise-de-controle-de-viande-halal-grande-mosquee-de-paris":      "sfcvh-mosquee-de-paris",
+  "fr:societe-francaise-de-controle-de-viande-halal-grande-mosquee-de-paris":      "sfcvh-mosquee-de-paris",
   "fr:sfcvh":                                                 "sfcvh-mosquee-de-paris",
   "fr:mosquee-de-paris":                                      "sfcvh-mosquee-de-paris",
+  "fr:grande-mosquee-de-paris":                               "sfcvh-mosquee-de-paris",
+  "fr:controle-mosquee-de-paris-halal":                       "sfcvh-mosquee-de-paris",
+
+  // ── ACMIF — Mosquée d'Évry-Courcouronnes ──
+  "fr:acmif":                                                 "acmif-mosquee-d-evry",
+  "fr:mosquee-d-evry":                                        "acmif-mosquee-d-evry",
+  "fr:mosquee-d-evry-courcouronnes":                          "acmif-mosquee-d-evry",
+  "fr:mosquee-evry":                                          "acmif-mosquee-d-evry",
+  "fr:controle-de-la-mosquee-d-evry-courcouronnes":           "acmif-mosquee-d-evry",
+  "en:controle-de-la-mosquee-d-evry-courcouronnes":           "acmif-mosquee-d-evry",
+  "en:controledelamosqueedevrycourcouronnes":                  "acmif-mosquee-d-evry",
+  "fr:controle-de-la-mosquee-d-evry-courcouonnes":            "acmif-mosquee-d-evry", // typo OFF
+  "fr:certification-mosquee-evry-courcouronnes":              "acmif-mosquee-d-evry",
+  "fr:halal-mosquee-courcouronnes":                           "acmif-mosquee-d-evry",
+
+  // ── Arrissala ──
   "fr:arrissala":                                             "arrissala",
+
+  // ── Halal Services ──
   "fr:halal-services":                                        "halal-services",
+
+  // ── European Halal Trust ──
   "fr:european-halal-trust":                                  "european-halal-trust",
+
+  // ── HMC ──
   "fr:halal-monitoring-committee":                            "halal-monitoring-committee",
   "en:halal-monitoring-committee":                            "halal-monitoring-committee",
+
+  // ── Khalis Halal ──
   "fr:khalis-halal":                                          "khalis-halal",
+
+  // ── SIDQ ──
   "fr:sidq":                                                  "sidq",
+
+  // ── MCI ──
   "fr:muslim-conseil-international":                          "muslim-conseil-international-mci",
   "fr:mci":                                                   "muslim-conseil-international-mci",
+
+  // ── Others ──
   "fr:halal-correct":                                         "halal-correct",
   "fr:halal-polska":                                          "halal-polska",
   "fr:afcai":                                                 "afcai",
-  "fr:acmif":                                                 "acmif-mosquee-d-evry",
-  "fr:mosquee-d-evry":                                        "acmif-mosquee-d-evry",
   "fr:alamane":                                               "alamane",
   "fr:islamic-centre-aachen":                                 "islamic-centre-aachen",
   "en:islamic-centre-aachen":                                 "islamic-centre-aachen",
@@ -626,6 +684,10 @@ const CERTIFIER_TAG_PREFIXES = [
   "certification-",        // e.g. fr:certification-avs
   "certifie-",             // e.g. fr:certifie-avs
   "certifié-",             // e.g. fr:certifié-avs (accented)
+  "controle-de-la-",       // e.g. fr:controle-de-la-mosquee-d-evry-courcouronnes
+  "controle-de-",          // e.g. fr:controle-de-mosquee-...
+  "controle-",             // e.g. fr:controle-mosquee-de-paris-halal
+  "halal-",                // e.g. fr:halal-mosquee-courcouronnes
 ];
 
 function normalizeCertifierTag(tag: string): string[] {

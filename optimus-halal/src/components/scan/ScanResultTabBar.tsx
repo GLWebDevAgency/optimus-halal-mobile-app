@@ -5,20 +5,21 @@
  *   - Gold underline indicator animated via Reanimated interpolation on scrollProgress
  *   - Tabs: "Halal" | "Santé" (i18n keys: tabHalal, tabHealth)
  *   - Tab text opacity: active = 1.0, inactive = 0.5 (animated on scroll progress)
+ *   - Self-measuring width via onLayout (works in both inline and sticky contexts)
  *
  * @module components/scan/ScanResultTabBar
  */
 
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
-  Text,
   StyleSheet,
   Pressable,
-  useWindowDimensions,
+  type LayoutChangeEvent,
 } from "react-native";
 import Animated, {
   useAnimatedStyle,
+  useSharedValue,
   interpolate,
   Extrapolation,
   type SharedValue,
@@ -50,26 +51,43 @@ export function ScanResultTabBar({
 }: ScanResultTabBarProps) {
   const { isDark, colors } = useTheme();
   const { t } = useTranslation();
-  const { width } = useWindowDimensions();
 
-  const tabWidth = width / 2;
+  // Self-measured container width (handles both inline padded & sticky full-width).
+  const [containerWidth, setContainerWidth] = useState(0);
+  const containerWidthSV = useSharedValue(0);
+
+  const handleLayout = (e: LayoutChangeEvent) => {
+    const w = e.nativeEvent.layout.width;
+    if (w > 0 && Math.abs(w - containerWidth) > 1) {
+      setContainerWidth(w);
+      containerWidthSV.value = w;
+    }
+  };
+
+  const tabWidth = containerWidth > 0 ? containerWidth / 2 : 0;
 
   const indicatorColor = isDark ? gold[400] : gold[600];
   const activeTextColor = isDark ? gold[400] : gold[700];
 
   // Animated indicator translateX: slides from 0 (tab 0) to tabWidth (tab 1)
-  const indicatorStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        translateX: interpolate(
-          scrollProgress.value,
-          [0, 1],
-          [0, tabWidth],
-          Extrapolation.CLAMP,
-        ),
-      },
-    ],
-  }));
+  const indicatorStyle = useAnimatedStyle(() => {
+    const w = containerWidthSV.value;
+    if (w === 0) return { opacity: 0 };
+    const halfW = w / 2;
+    return {
+      opacity: 1,
+      transform: [
+        {
+          translateX: interpolate(
+            scrollProgress.value,
+            [0, 1],
+            [0, halfW],
+            Extrapolation.CLAMP,
+          ),
+        },
+      ],
+    };
+  });
 
   // Animated opacity for each tab text
   const tab0TextStyle = useAnimatedStyle(() => ({
@@ -105,6 +123,7 @@ export function ScanResultTabBar({
 
   return (
     <View
+      onLayout={handleLayout}
       style={[
         styles.container,
         { borderBottomColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" },
@@ -116,7 +135,7 @@ export function ScanResultTabBar({
         return (
           <Pressable
             key={index}
-            style={[styles.tab, { width: tabWidth }]}
+            style={[styles.tab, tabWidth > 0 ? { width: tabWidth } : { flex: 1 }]}
             onPress={() => onTabPress(index)}
             accessibilityRole="tab"
             accessibilityState={{ selected: isSelected }}
@@ -139,7 +158,8 @@ export function ScanResultTabBar({
       <Animated.View
         style={[
           styles.indicator,
-          { width: tabWidth, backgroundColor: indicatorColor },
+          tabWidth > 0 ? { width: tabWidth } : { width: "50%" },
+          { backgroundColor: indicatorColor },
           indicatorStyle,
         ]}
       />

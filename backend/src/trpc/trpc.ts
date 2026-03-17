@@ -95,18 +95,20 @@ export const premiumProcedure = t.procedure.use(isAuthenticated).use(isPremium);
 
 // ── Quota-checked procedure (anonymous + authenticated) ──────────
 // Allows both guest and authenticated users.
-// Guests: enforces daily scan quota via Redis (5/day per deviceId).
-// Authenticated (Naqiy+): unlimited, skips quota check.
+// Premium (Naqiy+): unlimited, skips quota check.
+// Free (guest OR authenticated with expired/cancelled sub): 5/day via Redis.
+// Redis key: deviceId for guests, userId for authenticated free users.
 const DAILY_SCAN_LIMIT = 5;
 
 const quotaChecked = middleware(async ({ ctx, next }) => {
-  // Authenticated users bypass quota entirely
-  if (ctx.userId) {
+  // Premium users bypass quota entirely
+  if (ctx.subscriptionTier === "premium") {
     return next({ ctx: { ...ctx, remainingScans: null } });
   }
 
-  // Anonymous: require deviceId
-  if (!ctx.deviceId) {
+  // Determine quota key — userId for authenticated free users, deviceId for guests
+  const quotaId = ctx.userId ?? ctx.deviceId;
+  if (!quotaId) {
     throw new TRPCError({
       code: "BAD_REQUEST",
       message: "Device ID requis (header X-Device-Id)",
@@ -115,7 +117,7 @@ const quotaChecked = middleware(async ({ ctx, next }) => {
 
   // Check daily quota in Redis
   const today = new Date().toISOString().slice(0, 10);
-  const key = `scan:quota:${ctx.deviceId}:${today}`;
+  const key = `scan:quota:${quotaId}:${today}`;
   const usedRaw = await ctx.redis.get(key);
   const used = parseInt(usedRaw ?? "0", 10);
 

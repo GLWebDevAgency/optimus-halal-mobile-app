@@ -26,20 +26,28 @@ import {
 } from "../../services/product-lookup.service.js";
 import { matchAllergens } from "../../services/allergen.service.js";
 import { computeHealthScore, checkScoreExclusion, type AdditiveForScore, type UserNutritionProfile, type ScoreExclusionReason } from "../../services/health-score.service.js";
-import { getCertifierScores, getAllCertifierScores } from "../../services/certifier-score.service.js";
+import { getCertifierScores, getAllCertifierScores, getTrustGrade } from "../../services/certifier-score.service.js";
 import { analyzeDietary, type DietaryAnalysis, type AdditiveForDiet } from "../../services/diet-detection.service.js";
 import { computeNutrientBreakdown, type NutrientBreakdown } from "../../services/nutrient-thresholds.service.js";
 import { detectSpecialProduct, type SpecialProductInfo } from "../../services/special-product.service.js";
+import { reconcileNutriments, type ReconciliationReport } from "../../services/data-reconciler.service.js";
+import { analyzeBeverage, type BeverageAnalysis } from "../../services/beverage-intelligence.service.js";
 
 // ── Input Sanitization ─────────────────────────────────────
 // Strip control characters, BOM, and normalize Unicode before
-// passing user-provided or OCR text to AI extraction services
+// passing text to the halal pattern matching engine.
+// Note: Gemini AI path only needs stripNullBytes() — see barcode.service.ts.
 function sanitizeIngredients(text: string): string {
   return text
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "") // control chars
     .replace(/\uFEFF/g, "") // BOM
     .normalize("NFC") // Unicode normalization
     .trim();
+}
+
+/** Normalize OFF additive tag to canonical DB code: "en:e322i" → "E322" */
+function normalizeAdditiveTag(tag: string): string {
+  return tag.replace(/^en:/, "").toUpperCase().replace(/[a-z]$/i, "");
 }
 import { lookupBrandCertifier } from "../../services/brand-certifier.service.js";
 import { notFound } from "../../lib/errors.js";
@@ -352,9 +360,14 @@ export const scanRouter = router({
 
       // 3. Halal analysis (unified path — same logic for new and existing products)
       const storedOff = offData ?? (product?.offData as Record<string, unknown> | null);
+      // Prefer French ingredients text when available (OFF stores per-language variants in offData JSONB)
+      const ingredientsTextForAnalysis =
+        (storedOff?.ingredients_text_fr as string)
+        || (storedOff?.ingredients_text as string)
+        || "";
       if (storedOff) {
         halalAnalysis = await analyzeHalalStatus(
-          sanitizeIngredients((storedOff.ingredients_text as string) || ""),
+          sanitizeIngredients(ingredientsTextForAnalysis),
           storedOff.additives_tags as string[] | undefined,
           storedOff.labels_tags as string[] | undefined,
           storedOff.ingredients_analysis_tags as string[] | undefined,
@@ -378,8 +391,10 @@ export const scanRouter = router({
         }
 
         // AI ingredient extraction (Redis-cached 7d — free after first call)
-        if (storedOff.ingredients_text) {
-          const extraction = await smartExtractIngredients(storedOff as unknown as OpenFoodFactsProduct);
+        // Pass FR ingredients text to AI when available for French-language chips
+        if (ingredientsTextForAnalysis) {
+          const offForExtraction = { ...storedOff, ingredients_text: ingredientsTextForAnalysis };
+          const extraction = await smartExtractIngredients(offForExtraction as unknown as OpenFoodFactsProduct);
           aiEnrichment = extraction.aiEnrichment;
           if (product && extraction.ingredients.length > 0) {
             const current = product.ingredients as string[] | null;
@@ -465,21 +480,22 @@ export const scanRouter = router({
         const allergenMatches = matchAllergens(
           userProfile.allergens,
           offProduct.allergens_tags ?? [],
-          offProduct.traces_tags ?? []
+          offProduct.traces_tags ?? [],
         );
 
         for (const match of allergenMatches) {
+          const name = match.displayName;
+          const isTrace = match.matchType === "trace";
+
           personalAlerts.push({
             type: "allergen",
             severity: match.severity,
-            title:
-              match.matchType === "allergen"
-                ? `Contient : ${match.userAllergen}`
-                : `Traces possibles : ${match.userAllergen}`,
-            description:
-              match.matchType === "allergen"
-                ? `Ce produit contient un allergène de votre profil (${match.userAllergen}).`
-                : `Ce produit peut contenir des traces de ${match.userAllergen}.`,
+            title: isTrace
+              ? `Traces possibles : ${name}`
+              : `Contient : ${name}`,
+            description: isTrace
+              ? `Ce produit peut contenir des traces de ${name}.`
+              : `Ce produit contient un allergène de votre profil (${name}).`,
           });
         }
       }
@@ -487,16 +503,25 @@ export const scanRouter = router({
       // 4b. Health warnings (pregnant/children + risky additives)
       let healthScoreAdditives: AdditiveForScore[] = [];
       const additiveHealthEffects: Record<string, { type: string; confirmed: boolean }> = {};
+      let detectedAdditives: Array<{
+        code: string;
+        nameFr: string;
+        nameEn: string | null;
+        category: string;
+        origin: string;
+        halalStatusDefault: string;
+        toxicityLevel: string;
+        healthEffectType: string | null;
+        healthEffectConfirmed: boolean;
+        riskPregnant: boolean;
+        riskChildren: boolean;
+        healthEffectsFr: string | null;
+      }> = [];
 
       if (offProduct?.additives_tags?.length) {
         const codes = [
           ...new Set(
-            (offProduct.additives_tags as string[]).map((t: string) =>
-              t
-                .replace(/^en:/, "")
-                .toUpperCase()
-                .replace(/[a-z]$/i, "")
-            )
+            (offProduct.additives_tags as string[]).map(normalizeAdditiveTag)
           ),
         ];
 
@@ -526,6 +551,24 @@ export const scanRouter = router({
             };
           }
         }
+
+        // V4: Build detectedAdditives — ALL additives from OFF tags enriched with DB data.
+        // Frontend uses this to show a complete additives list with color-coding
+        // for those that have madhab rulings (conflictingAdditives handles the color).
+        detectedAdditives = riskyAdditives.map((a) => ({
+          code: a.code,
+          nameFr: a.nameFr,
+          nameEn: a.nameEn,
+          category: a.category,
+          origin: a.origin,
+          halalStatusDefault: a.halalStatusDefault,
+          toxicityLevel: a.toxicityLevel,
+          healthEffectType: a.healthEffectType ?? null,
+          healthEffectConfirmed: a.healthEffectConfirmed ?? true,
+          riskPregnant: a.riskPregnant,
+          riskChildren: a.riskChildren,
+          healthEffectsFr: a.healthEffectsFr ?? null,
+        }));
 
         for (const add of riskyAdditives) {
           if (add.riskPregnant && userProfile?.isPregnant) {
@@ -672,7 +715,18 @@ export const scanRouter = router({
         origins: (finalOff.origins as string) ?? null,
       } : null;
 
-      // 8. Naqiy Health Score V2 — 5-axis nutritional formula
+      // 8. Special product detection (must be BEFORE health score for bypassNutriScore)
+      const specialProduct: SpecialProductInfo | null = product
+        ? detectSpecialProduct(product as any)
+        : null;
+
+      // 8. Naqiy Health Score V3 — 4-axis category-aware formula + data quality gate
+      //
+      // Court-circuit: if product already flagged "unreliable" in DB,
+      // skip the entire health score computation → score=null ("je ne sais pas").
+      // The flag persists until data is refreshed from OFF (auto-healing in refreshProductInBackground).
+      const dbDataQualityFlag = (product as any)?.dataQualityFlag as string | null;
+
       const nutritionProfile: UserNutritionProfile =
         input.nutritionProfile
         ?? (userProfile?.isPregnant ? "pregnant" : undefined)
@@ -692,23 +746,89 @@ export const scanRouter = router({
             ].map((c: any) => ({ id: c.id as string, value: c.value as number }))
           : undefined;
 
-      const healthScore = computeHealthScore({
-        nutriscoreGrade: offExtras?.nutriscoreGrade ?? null,
-        novaGroup: offExtras?.novaGroup ?? aiEnrichment?.novaEstimate ?? null,
-        additives: healthScoreAdditives,
-        hasIngredientsList: !!(finalOff?.ingredients_text),
-        hasNutritionFacts: !!(offNutriments && Object.keys(offNutriments).length > 0),
-        hasAllergens: (offExtras?.allergensTags?.length ?? 0) > 0 || (aiEnrichment?.allergenHints?.length ?? 0) > 0,
-        hasOrigin: !!(offExtras?.origins || offExtras?.manufacturingPlaces),
-        nutriments: offNutriments,
-        categories: offCategories,
-        profile: nutritionProfile,
-        aiNovaEstimate: aiEnrichment?.novaEstimate ?? null,
-        additiveCount: offExtras?.additivesTags?.length ?? healthScoreAdditives.length,
-        ingredientCount: ingredientsList?.length ?? 0,
-        containsAlcohol: aiEnrichment?.containsAlcohol ?? false,
+      // 8a. DataReconciler — multi-source nutriment resolution
+      // Merges OFF nutriments + NutriScore components + DB denormalized columns
+      const reconciliation = reconcileNutriments(
+        offNutriments,
         offNutriscoreComponents,
-      });
+        product ? {
+          energyKcal100g: (product as any).energyKcal100g,
+          fat100g: (product as any).fat100g,
+          saturatedFat100g: (product as any).saturatedFat100g,
+          carbohydrates100g: (product as any).carbohydrates100g,
+          sugars100g: (product as any).sugars100g,
+          fiber100g: (product as any).fiber100g,
+          proteins100g: (product as any).proteins100g,
+          salt100g: (product as any).salt100g,
+        } : null,
+      );
+
+      // Use reconciled nutriments for health score (best available from all sources)
+      const reconciledNutriments = Object.keys(reconciliation.flat).length > 0
+        ? reconciliation.flat
+        : offNutriments;
+
+      // 8b. BeverageIntelligence — subcategory + sugar/sweetener/caffeine analysis
+      const beverageAnalysis: BeverageAnalysis | null = analyzeBeverage(
+        offCategories,
+        product?.name,
+        reconciledNutriments,
+        finalOff?.ingredients_text as string | undefined,
+        offExtras?.additivesTags,
+      );
+
+      // Data Quality Gate — court-circuit for previously flagged products
+      // "في الشك أمسك" — when data is unreliable, return null instead of a misleading score
+      type HealthScoreResultType = ReturnType<typeof computeHealthScore>;
+      let healthScore: HealthScoreResultType;
+
+      if (dbDataQualityFlag === "unreliable") {
+        logger.info("Product data quality flagged unreliable — skipping health score computation", {
+          barcode: input.barcode,
+          reasons: (product as any)?.dataQualityReasons,
+        });
+        healthScore = {
+          score: null,
+          label: null,
+          axes: {
+            nutrition: null,
+            additives: { score: 0, max: 0, penalties: [], hasHighConcern: false, hasBanned: false },
+            processing: null,
+            profile: { delta: 0, reasons: ["data_unreliable_cached"] },
+          },
+          bonuses: { bio: 0, aop: 0 },
+          dataConfidence: "very_low",
+          cappedByAdditive: false,
+          category: "general",
+          dataQualityFlag: "unreliable",
+          dataQualityReasons: ((product as any)?.dataQualityReasons as string[]) ?? ["cached_unreliable"],
+        };
+      } else {
+        healthScore = computeHealthScore({
+          nutriscoreGrade: offExtras?.nutriscoreGrade ?? null,
+          novaGroup: offExtras?.novaGroup ?? aiEnrichment?.novaEstimate ?? null,
+          additives: healthScoreAdditives,
+          hasIngredientsList: !!(finalOff?.ingredients_text),
+          hasNutritionFacts: !!(reconciledNutriments && Object.keys(reconciledNutriments).length > 0),
+          hasAllergens: (offExtras?.allergensTags?.length ?? 0) > 0 || (aiEnrichment?.allergenHints?.length ?? 0) > 0,
+          hasOrigin: !!(offExtras?.origins || offExtras?.manufacturingPlaces),
+          nutriments: reconciledNutriments,
+          categories: offCategories,
+          profile: nutritionProfile,
+          aiNovaEstimate: aiEnrichment?.novaEstimate ?? null,
+          additiveCount: offExtras?.additivesTags?.length ?? healthScoreAdditives.length,
+          ingredientCount: ingredientsList?.length ?? 0,
+          containsAlcohol: aiEnrichment?.containsAlcohol ?? false,
+          offNutriscoreComponents,
+          labels: offExtras?.labelsTags,
+          specialProduct: specialProduct ? {
+            bypassNutriScore: specialProduct.bypassNutriScore,
+            qualityRatio: specialProduct.qualityRatio,
+            type: specialProduct.type,
+          } : null,
+          beverageScoreModifier: beverageAnalysis?.scoreModifier,
+        });
+      }
 
       logger.info("Health score V2 computed", {
         barcode: input.barcode,
@@ -727,7 +847,35 @@ export const scanRouter = router({
         logger.warn("Nutrient anomalies detected in OFF data", {
           barcode: input.barcode,
           anomalies: healthScore.nutrientAnomalies,
+          dataQualityFlag: healthScore.dataQualityFlag,
         });
+      }
+
+      // 8b. Persist data quality flag in DB (non-blocking)
+      // This creates the "circuit short" for future scans: once flagged "unreliable",
+      // the product stays flagged until data is refreshed from OFF (auto-healing).
+      if (product && healthScore.dataQualityFlag) {
+        ctx.db
+          .update(products)
+          .set({
+            dataQualityFlag: healthScore.dataQualityFlag,
+            dataQualityReasons: healthScore.dataQualityReasons ?? null,
+          })
+          .where(eq(products.id, product.id))
+          .then(() => {
+            if (healthScore.dataQualityFlag === "unreliable") {
+              logger.warn("Product flagged as unreliable — future scans will return score=null", {
+                barcode: input.barcode,
+                reasons: healthScore.dataQualityReasons,
+              });
+            }
+          })
+          .catch((err) => {
+            logger.error("Failed to persist data quality flag", {
+              barcode: input.barcode,
+              error: err instanceof Error ? err.message : String(err),
+            });
+          });
       }
 
       // 9. Madhab verdicts + Certifier — parallel (both independent)
@@ -744,6 +892,12 @@ export const scanRouter = router({
         trustScoreShafii: number;
         trustScoreMaliki: number;
         trustScoreHanbali: number;
+        trustGrade: {
+          grade: number;
+          arabic: string;
+          label: string;
+          color: string;
+        };
         website: string | null;
         halalAssessment: boolean;
         practices: {
@@ -784,6 +938,7 @@ export const scanRouter = router({
             trustScoreShafii: scored.scores.trustScoreShafii,
             trustScoreMaliki: scored.scores.trustScoreMaliki,
             trustScoreHanbali: scored.scores.trustScoreHanbali,
+            trustGrade: getTrustGrade(scored.scores.trustScore),
             website: scored.website,
             halalAssessment: scored.halalAssessment,
             practices: scored.practices,
@@ -807,9 +962,7 @@ export const scanRouter = router({
       if (offProduct?.additives_tags?.length) {
         const codes = [
           ...new Set(
-            (offProduct.additives_tags as string[]).map((t: string) =>
-              t.replace(/^en:/, "").toUpperCase().replace(/[a-z]$/i, "")
-            )
+            (offProduct.additives_tags as string[]).map(normalizeAdditiveTag)
           ),
         ];
         if (codes.length > 0) {
@@ -839,10 +992,6 @@ export const scanRouter = router({
 
       const nutrientBreakdown: NutrientBreakdown[] | null = product
         ? computeNutrientBreakdown(product as any)
-        : null;
-
-      const specialProduct: SpecialProductInfo | null = product
-        ? detectSpecialProduct(product as any)
         : null;
 
       const scoreExclusion: ScoreExclusionReason | null = product
@@ -885,6 +1034,13 @@ export const scanRouter = router({
         specialProduct,
         scoreExclusion,
         additiveHealthEffects,
+        detectedAdditives,
+        beverageAnalysis,
+        dataReconciliation: reconciliation.hasConflicts ? {
+          conflicts: reconciliation.conflicts,
+          coverage: reconciliation.coverage,
+          completeness: reconciliation.completeness,
+        } : null,
         levelUp: result.levelUp,
         remainingScans,
       };
@@ -1013,5 +1169,47 @@ export const scanRouter = router({
         .returning();
 
       return request;
+    }),
+
+  importHistory: protectedProcedure
+    .input(
+      z.object({
+        items: z.array(
+          z.object({
+            barcode: z.string().min(1).max(50),
+            productId: z.string().uuid().optional(),
+            halalStatus: z.string().max(20).optional(),
+            confidenceScore: z.number().min(0).max(1).optional(),
+            scannedAt: z.string().datetime(),
+          })
+        ).max(100),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (input.items.length === 0) return { imported: 0 };
+
+      // Deduplicate by barcode — keep only the most recent scan per barcode
+      const byBarcode = new Map<string, typeof input.items[number]>();
+      for (const item of input.items) {
+        const existing = byBarcode.get(item.barcode);
+        if (!existing || item.scannedAt > existing.scannedAt) {
+          byBarcode.set(item.barcode, item);
+        }
+      }
+
+      const values = Array.from(byBarcode.values()).map((item) => ({
+        userId: ctx.userId,
+        barcode: item.barcode,
+        productId: item.productId ?? null,
+        halalStatus: item.halalStatus ?? null,
+        confidenceScore: item.confidenceScore ?? null,
+        scannedAt: new Date(item.scannedAt),
+      }));
+
+      // Insert — no conflict handling needed since scans don't have a unique constraint on (userId, barcode)
+      // Multiple scans of the same product are valid (user may scan at different times)
+      await ctx.db.insert(scans).values(values);
+
+      return { imported: values.length };
     }),
 });

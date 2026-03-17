@@ -102,6 +102,7 @@ export function AlternativeHeroCard({
           {alternative.imageUrl ? (
             <Image
               source={{ uri: alternative.imageUrl }}
+              placeholder={{ blurhash: "LGF5]+Yk^6#M@-5c,1J5@[or[Q6." }}
               style={styles.bannerImage}
               contentFit="cover"
               transition={200}

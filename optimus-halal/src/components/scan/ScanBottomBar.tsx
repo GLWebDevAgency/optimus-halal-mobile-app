@@ -164,7 +164,7 @@ export function ScanBottomBar({
       <PressableScale
         onPress={handleFavAnimated}
         disabled={isFavMutating}
-        style={[styles.slot, { opacity: isFavMutating ? 0.5 : 1 }]}
+        style={[styles.slotPressable, { opacity: isFavMutating ? 0.5 : 1 }]}
         accessibilityRole="button"
         accessibilityLabel={
           productIsFavorite
@@ -173,35 +173,39 @@ export function ScanBottomBar({
         }
         accessibilityState={{ selected: productIsFavorite, busy: isFavMutating }}
       >
-        <Animated.View style={favAnimatedStyle}>
-          <HeartIcon
-            size={22}
-            color={favColor}
-            weight={productIsFavorite ? "fill" : "regular"}
-          />
-        </Animated.View>
-        <Text
-          style={[
-            styles.slotLabel,
-            { color: productIsFavorite ? halalStatusTokens.haram.base : mutedColor },
-          ]}
-          numberOfLines={1}
-        >
-          {t.scanResult.addToFavorites.split(" ")[0]}
-        </Text>
+        <View style={styles.slotContent}>
+          <Animated.View style={favAnimatedStyle}>
+            <HeartIcon
+              size={22}
+              color={favColor}
+              weight={productIsFavorite ? "fill" : "regular"}
+            />
+          </Animated.View>
+          <Text
+            style={[
+              styles.slotLabel,
+              { color: productIsFavorite ? halalStatusTokens.haram.base : mutedColor },
+            ]}
+            numberOfLines={1}
+          >
+            {t.scanResult.addToFavorites.split(" ")[0]}
+          </Text>
+        </View>
       </PressableScale>
 
       {/* 2. Partager */}
       <PressableScale
         onPress={handleShare}
-        style={styles.slot}
+        style={styles.slotPressable}
         accessibilityRole="button"
         accessibilityLabel={t.scanResult.shareProduct}
       >
-        <ShareNetworkIcon size={22} color={mutedColor} />
-        <Text style={[styles.slotLabel, { color: mutedColor }]} numberOfLines={1}>
-          {t.scanResult.shareProduct.split(" ")[0]}
-        </Text>
+        <View style={styles.slotContent}>
+          <ShareNetworkIcon size={22} color={mutedColor} />
+          <Text style={[styles.slotLabel, { color: mutedColor }]} numberOfLines={1}>
+            {t.scanResult.shareProduct.split(" ")[0]}
+          </Text>
+        </View>
       </PressableScale>
 
       {/* 3. Contextual CTA — gold gradient pill */}
@@ -224,14 +228,16 @@ export function ScanBottomBar({
       {/* 4. Signaler */}
       <PressableScale
         onPress={handleReport}
-        style={styles.slot}
+        style={styles.slotPressable}
         accessibilityRole="button"
         accessibilityLabel={t.scanResult.report}
       >
-        <FlagIcon size={22} color={mutedColor} />
-        <Text style={[styles.slotLabel, { color: mutedColor }]} numberOfLines={1}>
-          {t.scanResult.report.split(" ")[0]}
-        </Text>
+        <View style={styles.slotContent}>
+          <FlagIcon size={22} color={mutedColor} />
+          <Text style={[styles.slotLabel, { color: mutedColor }]} numberOfLines={1}>
+            {t.scanResult.report.split(" ")[0]}
+          </Text>
+        </View>
       </PressableScale>
     </View>
   );
@@ -302,12 +308,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
-  slot: {
+  slotPressable: {
     flex: 1,
+    minHeight: 48,
+  },
+  slotContent: {
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.xs,
-    minHeight: 48,
   },
   slotLabel: {
     fontSize: fontSizeTokens.micro,

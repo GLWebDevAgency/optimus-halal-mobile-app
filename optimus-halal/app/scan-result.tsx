@@ -20,11 +20,14 @@ import {
   Alert,
   Modal,
   Pressable,
+  RefreshControl,
   type LayoutChangeEvent,
 } from "react-native";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { defaultFeatureFlags } from "@/constants/config";
+import { BlurView } from "expo-blur";
 import { CaretRightIcon, InfinityIcon, InfoIcon, XIcon } from "phosphor-react-native";
 import { ImpactFeedbackStyle, NotificationFeedbackType } from "expo-haptics";
 import Animated, {
@@ -62,9 +65,20 @@ import { HealthNutritionCard } from "@/components/scan/HealthNutritionCard";
 // AdditivesCard moved inside HalalSchoolsCard
 // HalalDetailCard replaced by HalalSchoolsCard inside pager
 import { HalalAnalysisBottomSheet } from "@/components/scan/HalalAnalysisBottomSheet";
+import { CertifierPracticesSheet } from "@/components/scan/CertifierPracticesSheet";
+import { InfoSheet } from "@/components/scan/InfoSheet";
+import { NutriScoreDetailContent } from "@/components/scan/sheets/NutriScoreDetailContent";
+import { AxisDetailContent } from "@/components/scan/sheets/AxisDetailContent";
+import { NovaDetailContent } from "@/components/scan/sheets/NovaDetailContent";
+import { AllergenDetailContent } from "@/components/scan/sheets/AllergenDetailContent";
+import { LabelDetailContent } from "@/components/scan/sheets/LabelDetailContent";
+import { IngredientDetailContent } from "@/components/scan/sheets/IngredientDetailContent";
+import { AlertDetailContent } from "@/components/scan/sheets/AlertDetailContent";
+import { AdditiveDetailContent } from "@/components/scan/sheets/AdditiveDetailContent";
+import { BoycottDetailContent } from "@/components/scan/sheets/BoycottDetailContent";
 // CommunityVoteCard/NewProductBanner replaced by FeedbackCard
 // HalalActionCard removed — contextual actions folded into FeedbackCard
-import type { NutrientItem, DietaryItem, PersonalAlert } from "@/components/scan/scan-types";
+import type { NutrientItem, PersonalAlert } from "@/components/scan/scan-types";
 import {
   STATUS_CONFIG,
   MADHAB_LABEL_KEY,
@@ -80,7 +94,7 @@ import { brand as brandTokens, glass, lightTheme } from "@/theme/colors";
 import { fontSize as fontSizeTokens, fontWeight as fontWeightTokens } from "@/theme/typography";
 import { spacing, radius } from "@/theme/spacing";
 import type { NutrientLevel } from "@/services/api/types";
-import { useFeatureFlagsStore, useQuotaStore, useLocalFavoritesStore, useLocalScanHistoryStore, useLocalNutritionProfileStore, usePreferencesStore } from "@/store";
+import { useFeatureFlagsStore, useQuotaStore, useLocalFavoritesStore, useLocalScanHistoryStore, useLocalNutritionProfileStore } from "@/store";
 import { isAuthenticated as hasStoredTokens } from "@/services/api";
 import { trackEvent } from "@/lib/analytics";
 
@@ -110,6 +124,16 @@ export default function ScanResultScreen() {
   const [scribeComplete, setScribeComplete] = useState(false);
 
   const nutritionProfile = useLocalNutritionProfileStore((s) => s.profile);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Reset hasFired when barcode changes (e.g. navigating to an alternative product)
+  const prevBarcode = useRef(barcode);
+  useEffect(() => {
+    if (barcode !== prevBarcode.current) {
+      prevBarcode.current = barcode;
+      hasFired.current = false;
+    }
+  }, [barcode]);
 
   useEffect(() => {
     if (barcode && !hasFired.current) {
@@ -123,6 +147,19 @@ export default function ScanResultScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- hasFired ref guards re-fire
   }, [barcode, isViewOnly]);
 
+  const handleRefresh = useCallback(() => {
+    if (!barcode) return;
+    setRefreshing(true);
+    scanMutation.mutate(
+      {
+        barcode,
+        viewOnly: isViewOnly || undefined,
+        nutritionProfile: nutritionProfile !== "standard" ? nutritionProfile : undefined,
+      },
+      { onSettled: () => setRefreshing(false) },
+    );
+  }, [barcode, isViewOnly, nutritionProfile, scanMutation]);
+
   // ── Derived State ──────────────────────────────
   const product = scanMutation.data?.product ?? null;
   const halalAnalysis = scanMutation.data?.halalAnalysis ?? null;
@@ -134,9 +171,9 @@ export default function ScanResultScreen() {
     [scanMutation.data?.madhabVerdicts]
   );
   const levelUp = scanMutation.data?.levelUp ?? null;
-  const dietaryAnalysis = scanMutation.data?.dietaryAnalysis ?? null;
   const nutrientBreakdown = scanMutation.data?.nutrientBreakdown ?? null;
   const additiveHealthEffects = scanMutation.data?.additiveHealthEffects ?? {};
+  const detectedAdditives = scanMutation.data?.detectedAdditives ?? [];
   const meQuery = useMe({ enabled: hasStoredTokens() });
   const isGuest = !meQuery.data && (!hasStoredTokens() || meQuery.isError);
   const localRemaining = useQuotaStore((s) => {
@@ -199,15 +236,6 @@ export default function ScanResultScreen() {
     }
     return certifierData_.trustScore;
   }, [certifierData_, userMadhab]);
-
-  const isStaleData = useMemo(() => {
-    const verified = certifierData_?.lastVerifiedAt;
-    if (!verified) return false;
-    const verifiedDate = new Date(verified);
-    const twelveMonthsAgo = new Date();
-    twelveMonthsAgo.setFullYear(twelveMonthsAgo.getFullYear() - 1);
-    return verifiedDate < twelveMonthsAgo;
-  }, [certifierData_]);
 
   // ── Hero color rule ──
   const effectiveHeroStatus: HalalStatusKey =
@@ -278,6 +306,10 @@ export default function ScanResultScreen() {
   const [showScoreDetailSheet, setShowScoreDetailSheet] = useState(false);
   const handleCloseScoreDetail = useCallback(() => setShowScoreDetailSheet(false), []);
 
+  // ── Certifier Practices Bottom Sheet ──────────────
+  const [showCertifierPracticesSheet, setShowCertifierPracticesSheet] = useState(false);
+  const handleCloseCertifierPractices = useCallback(() => setShowCertifierPracticesSheet(false), []);
+
   // ── Halal Analysis Bottom Sheet ──────────────
   const [showHalalAnalysisSheet, setShowHalalAnalysisSheet] = useState(false);
   const handleCloseHalalAnalysis = useCallback(() => setShowHalalAnalysisSheet(false), []);
@@ -300,28 +332,64 @@ export default function ScanResultScreen() {
   // ── Pager + TabBar state ─────────────────────
   const [activeTab, setActiveTab] = useState(0);
   const scrollProgress = useSharedValue(0);
-  const tabBarY = useSharedValue(0);
-  const [selectedScholarlyRef, setSelectedScholarlyRef] = useState<string | null>(null);
-  const prefsMadhab = usePreferencesStore((s) => s.selectedMadhab);
-  const setPrefsMadhab = usePreferencesStore((s) => s.setMadhab);
+  // Two-part measurement: contentAreaY (padded container Y in scroll coords)
+  // + tabBarLocalY (tab bar Y within padded container).
+  const contentAreaY = useSharedValue(0);
+  const tabBarLocalY = useSharedValue(9999);
+  const [selectedScholarlyData, setSelectedScholarlyData] = useState<
+    import("@/components/scan/ScholarlySourceSheet").ScholarlySourceData
+    | import("@/components/scan/ScholarlySourceSheet").ScholarlySourceData[]
+    | null
+  >(null);
+
+  // ── InfoSheet state (discriminated union for all detail sheets) ──
+  const [infoSheet, setInfoSheet] = useState<{
+    type: "nutriscore"; grade: string;
+  } | {
+    type: "axis"; name: string; score: number; max: number; color: string;
+  } | {
+    type: "nova"; group: number; label: string;
+  } | {
+    type: "allergen"; name: string; isTrace: boolean;
+  } | {
+    type: "label"; name: string;
+  } | {
+    type: "ingredient"; name: string; status: "halal" | "haram" | "doubtful" | "safe"; ruling?: { explanation: string; scholarlyReference: string | null };
+  } | {
+    type: "alert"; alert: PersonalAlert;
+  } | {
+    type: "boycott"; companyName: string; reason: string; sourceUrl?: string | null; sourceName?: string | null;
+  } | {
+    type: "additive"; code: string; name: string; category: string; origin: string; toxicityLevel: string; healthEffectsFr: string | null; halalRuling: string | null; riskPregnant: boolean; riskChildren: boolean;
+  } | null>(null);
+  const handleCloseInfoSheet = useCallback(() => setInfoSheet(null), []);
+
+  const handleContentAreaLayout = useCallback((event: LayoutChangeEvent) => {
+    contentAreaY.value = event.nativeEvent.layout.y;
+  }, []);
 
   const handleTabBarLayout = useCallback((event: LayoutChangeEvent) => {
-    tabBarY.value = event.nativeEvent.layout.y;
+    tabBarLocalY.value = event.nativeEvent.layout.y;
   }, []);
 
   const stickyHeaderTotalHeight = COMPACT_HEADER_HEIGHT + insets.top;
 
+  // Unified sticky block: header + tab bar share the SAME scroll thresholds
+  // so they appear together as one cohesive unit.
+  const STICKY_START = HERO_HEIGHT * 0.45;
+  const STICKY_END = HERO_HEIGHT * 0.65;
+
   const stickyTabBarStyle = useAnimatedStyle(() => {
-    const shouldStick = scrollY.value >= tabBarY.value - stickyHeaderTotalHeight;
-    const opacity = interpolate(
+    const progress = interpolate(
       scrollY.value,
-      [tabBarY.value - stickyHeaderTotalHeight - 20, tabBarY.value - stickyHeaderTotalHeight],
+      [STICKY_START, STICKY_END],
       [0, 1],
       Extrapolation.CLAMP,
     );
     return {
-      opacity: shouldStick ? opacity : 0,
-      pointerEvents: shouldStick ? "auto" as const : "none" as const,
+      opacity: progress,
+      transform: [{ translateY: interpolate(progress, [0, 1], [-8, 0], Extrapolation.CLAMP) }],
+      pointerEvents: progress > 0.5 ? "auto" as const : "none" as const,
     };
   });
 
@@ -382,8 +450,22 @@ export default function ScanResultScreen() {
       certifier: halalAnalysis?.certifierName ?? null,
       isBoycotted: !!boycott,
       barcode: product.barcode,
+      imageUrl: product.imageUrl ?? null,
+      madhabStatuses: madhabVerdicts.map((v) => ({
+        madhab: v.madhab,
+        status: v.status,
+      })),
+      trustGrade: certifierData?.trustGrade
+        ? {
+            grade: certifierData.trustGrade.grade,
+            label: certifierData.trustGrade.label,
+            color: certifierData.trustGrade.color,
+          }
+        : null,
+      healthScore: healthScore?.score ?? null,
+      healthLabel: healthScore?.label ?? null,
     };
-  }, [product, halalStatus, halalAnalysis, boycott]);
+  }, [product, halalStatus, halalAnalysis, boycott, madhabVerdicts, certifierData, healthScore]);
 
   const shareLabels = useMemo(() => {
     const statusLabelMap: Record<string, string> = {
@@ -426,7 +508,7 @@ export default function ScanResultScreen() {
           halalStatus: product.halalStatus ?? "unknown",
         });
         if (!added) {
-          router.push("/paywall" as any);
+          router.push({ pathname: "/paywall" as any, params: { trigger: "favorites" } });
         }
       }
       return;
@@ -538,31 +620,6 @@ export default function ScanResultScreen() {
     indented: false,
   }));
 
-  // Dietary items — transform flat DietaryAnalysis object into DietaryItem[]
-  const dietaryItems: DietaryItem[] = (() => {
-    if (!dietaryAnalysis) return [];
-    const da = dietaryAnalysis as any;
-    const items: DietaryItem[] = [];
-    const DIETARY_MAP: { key: string; field: string; label: string; icon: string; invert: boolean }[] = [
-      { key: "gluten", field: "containsGluten", label: "Gluten", icon: "grain", invert: true },
-      { key: "lactose", field: "containsLactose", label: "Lactose", icon: "local-drink", invert: true },
-      { key: "palm_oil", field: "containsPalmOil", label: "Huile de palme", icon: "eco", invert: true },
-      { key: "vegetarian", field: "isVegetarian", label: "Végétarien", icon: "spa", invert: false },
-      { key: "vegan", field: "isVegan", label: "Végan", icon: "nature", invert: false },
-    ];
-    for (const { key, field, label, icon, invert } of DIETARY_MAP) {
-      const val = da[field];
-      if (val === null || val === undefined) {
-        items.push({ key, label, status: "unknown", icon });
-      } else if (invert) {
-        items.push({ key, label, status: val ? "contains" : "safe", icon });
-      } else {
-        items.push({ key, label, status: val ? "safe" : "contains", icon });
-      }
-    }
-    return items;
-  })();
-
   // ── RENDER: Loading ────────────────────────────
   if (scanMutation.isPending || !scribeComplete) {
     return (
@@ -633,29 +690,51 @@ export default function ScanResultScreen() {
         contentContainerStyle={{ paddingBottom: insets.bottom + 140 }}
         showsVerticalScrollIndicator={false}
         bounces={true}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={isDark ? "#D4AF37" : "#8B6914"}
+            progressBackgroundColor={isDark ? "#1a1a1a" : "#f3f1ed"}
+          />
+        }
       >
         {/* ── HERO SECTION ── */}
         <VerdictHero
           product={product}
-          halalAnalysis={halalAnalysis}
-          certifierData={certifierData}
-          certifierTrustScore={certifierTrustScore}
           effectiveHeroStatus={effectiveHeroStatus}
           heroLabel={heroLabel}
           userMadhab={userMadhab}
-          isStaleData={isStaleData}
           communityVerifiedCount={communityVerifiedCount}
           onImagePress={() => setShowImagePreview(true)}
-          onScoreDetailPress={() => setShowScoreDetailSheet(true)}
+          trustGrade={certifierData?.trustGrade ?? null}
+          onTrustGradePress={() => setShowCertifierPracticesSheet(true)}
           topInset={insets.top + 64}
         />
 
-        {/* ── Content cards — padded container ── */}
-        <View style={{ paddingHorizontal: spacing.xl, gap: spacing.xl, paddingTop: spacing.xl, paddingBottom: spacing["6xl"] }}>
+        {/* ── Horizon content — flat flowing sections ── */}
+        <View onLayout={handleContentAreaLayout} style={styles.horizonContainer}>
 
           {/* ALERT PILL STRIP (boycott + allergens + health — unified) */}
           {allAlerts.length > 0 && (
-            <AlertPillStrip alerts={allAlerts} staggerIndex={1} />
+            <AlertPillStrip
+              alerts={allAlerts}
+              staggerIndex={1}
+              onPillPress={(alert) => {
+                if (alert.type === "boycott") {
+                  const target = boycott?.targets?.[0];
+                  setInfoSheet({
+                    type: "boycott",
+                    companyName: target?.companyName ?? "",
+                    reason: target?.reasonSummary ?? alert.description,
+                    sourceUrl: target?.sourceUrl ?? null,
+                    sourceName: target?.sourceName ?? null,
+                  });
+                } else {
+                  setInfoSheet({ type: "alert", alert });
+                }
+              }}
+            />
           )}
 
           {/* INLINE TAB BAR (measured for sticky clone) */}
@@ -667,25 +746,62 @@ export default function ScanResultScreen() {
           <ScanResultPager
             activeTab={activeTab}
             onPageChange={setActiveTab}
-            onScrollProgress={(pos, offset) => { scrollProgress.value = pos + offset; }}
+            scrollProgress={scrollProgress}
             halalContent={
               <HalalSchoolsCard
                 madhabVerdicts={madhabVerdicts}
-                userMadhab={prefsMadhab}
+                userMadhab={userMadhab}
                 certifierData={certifierData ? {
+                  id: certifierData.id,
                   name: certifierData.name,
                   shortName: certifierData.name?.slice(0, 3)?.toUpperCase() ?? "",
                   logoUrl: (certifierData as any).logoUrl ?? null,
                   trustScore: certifierData.trustScore ?? 0,
                 } : null}
+                halalTier={halalAnalysis?.tier ?? null}
+                ingredients={ingredients}
                 ingredientRulings={ingredientRulings.map((r: any) => ({
                   pattern: r.pattern,
                   ruling: r.ruling,
                   explanation: r.explanationFr ?? r.explanation ?? "",
                   scholarlyReference: r.scholarlyReference ?? null,
                 }))}
-                onMadhabChange={setPrefsMadhab}
-                onScholarlySourcePress={setSelectedScholarlyRef}
+                detectedAdditives={detectedAdditives}
+                trustScore={certifierTrustScore ?? undefined}
+                onMadhabChange={() => {}}
+                onScholarlySourcePress={setSelectedScholarlyData}
+                onTrustScorePress={() => setShowCertifierPracticesSheet(true)}
+                onAdditivePress={(additive, ruling) => {
+                  setInfoSheet({
+                    type: "additive",
+                    code: additive.code,
+                    name: additive.nameFr,
+                    category: additive.category,
+                    origin: additive.origin,
+                    toxicityLevel: additive.toxicityLevel,
+                    healthEffectsFr: additive.healthEffectsFr,
+                    halalRuling: ruling ?? null,
+                    riskPregnant: additive.riskPregnant,
+                    riskChildren: additive.riskChildren,
+                  });
+                }}
+                onIngredientPress={(ingredient) => {
+                  const strip = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+                  const stripped = strip(ingredient);
+                  const ruling = ingredientRulings.find((r: any) => {
+                    const p = strip(r.pattern ?? "");
+                    return stripped.includes(p) || p.includes(stripped);
+                  });
+                  const status = ruling
+                    ? (ruling.ruling === "haram" ? "haram" : ruling.ruling === "doubtful" ? "doubtful" : "safe")
+                    : "safe";
+                  setInfoSheet({
+                    type: "ingredient",
+                    name: ingredient,
+                    status: status as any,
+                    ruling: ruling ? { explanation: ruling.explanationFr ?? "", scholarlyReference: ruling.scholarlyReference ?? null } : undefined,
+                  });
+                }}
               />
             }
             healthContent={
@@ -706,34 +822,62 @@ export default function ScanResultScreen() {
                 } : null}
                 nutriScoreGrade={offExtras?.nutriscoreGrade ?? undefined}
                 novaGroup={offExtras?.novaGroup ?? undefined}
-                ecoScoreGrade={offExtras?.ecoscoreGrade ?? undefined}
                 nutrientBreakdown={nutrientItems}
-                dietaryAnalysis={dietaryItems}
                 allergens={allergensTags
                   .filter((t_: string) => {
                     const clean = t_.replace(/^(en|fr):/, "").toLowerCase();
                     return !NON_ALLERGEN_TAGS.has(clean);
                   })
                   .map((t_: string) => t_.replace(/^(en|fr):/, "").replace(/-/g, " "))}
-                traces={(offExtras?.tracesTags ?? []).map((t_: string) => t_.replace(/^(en|fr):/, "").replace(/-/g, " "))}
+                labels={(offExtras?.labelsTags ?? []).map((t_: string) =>
+                  t_.replace(/^(en|fr):/, "").replace(/-/g, " ")
+                )}
                 onNutrientPress={(nb) => setSelectedNutrient({
                   nutrient: nb.key, value: nb.value, unit: nb.unit,
                   level: nb.level as any, dailyValuePercent: nb.percentage, isNegative: !nb.isPositive,
                 })}
-                onPress={() => setShowScoreDetailSheet(true)}
+                onScorePress={() => setShowScoreDetailSheet(true)}
+                onNutriScorePress={() => {
+                  const grade = offExtras?.nutriscoreGrade;
+                  if (grade) setInfoSheet({ type: "nutriscore", grade });
+                }}
+                onAxisPress={(axis) => {
+                  const pct = axis.max > 0 ? axis.score / axis.max : 0;
+                  const color = pct >= 0.7 ? "#22c55e" : pct >= 0.4 ? "#f59e0b" : "#ef4444";
+                  setInfoSheet({ type: "axis", ...axis, color });
+                }}
+                onNovaPress={() => {
+                  const nova = offExtras?.novaGroup;
+                  if (nova != null) setInfoSheet({ type: "nova", group: nova, label: `NOVA ${nova}` });
+                }}
+                onAllergenPress={(allergen) => setInfoSheet({ type: "allergen", name: allergen, isTrace: false })}
+                onLabelPress={(label) => setInfoSheet({ type: "label", name: label })}
+                detectedAdditives={detectedAdditives}
+                onAdditivePress={(additive) => {
+                  setInfoSheet({
+                    type: "additive",
+                    code: additive.code,
+                    name: additive.nameFr,
+                    category: additive.category,
+                    origin: additive.origin,
+                    toxicityLevel: additive.toxicityLevel,
+                    healthEffectsFr: additive.healthEffectsFr,
+                    halalRuling: null, // Health tab — no halal context
+                    riskPregnant: additive.riskPregnant,
+                    riskChildren: additive.riskChildren,
+                  });
+                }}
                 staggerIndex={4}
               />
             }
           />
 
+          {/* ── Horizon divider ── */}
+          <View style={[styles.horizonDivider, { backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.06)" }]} />
+
           {/* ALTERNATIVES */}
           <AlternativesSection
             alternatives={(alternativesQuery.data ?? []).map(adaptLegacyAlternative)}
-            scannedProduct={{
-              name: product?.name ?? "",
-              halalStatus: halalStatus,
-              healthScore: healthScore?.score ?? null,
-            }}
             isLoading={alternativesQuery.isLoading}
             onAlternativePress={(bc: string) => {
               router.navigate({ pathname: "/scan-result", params: { barcode: bc } });
@@ -741,10 +885,16 @@ export default function ScanResultScreen() {
             staggerIndex={5}
           />
 
+          {/* ── Horizon divider ── */}
+          <View style={[styles.horizonDivider, { backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.06)" }]} />
+
           {/* FEEDBACK */}
           <FeedbackCard staggerIndex={6} />
 
-          {/* DISCLAIMER — inline */}
+          {/* ── Horizon divider ── */}
+          <View style={[styles.horizonDivider, { backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.06)" }]} />
+
+          {/* DISCLAIMER — flat inline */}
           <View style={styles.disclaimerRow}>
             <InfoIcon size={14} color={colors.textMuted} style={{ marginTop: 1 }} />
             <Text style={[styles.disclaimerText, { color: colors.textMuted }]}>
@@ -767,7 +917,7 @@ export default function ScanResultScreen() {
           }}
         >
           <PressableScale
-            onPress={() => router.push("/paywall" as any)}
+            onPress={() => router.push({ pathname: "/paywall" as any, params: { trigger: "scan_quota" } })}
             accessibilityRole="button"
             accessibilityLabel={t.guest.dailyScans}
           >
@@ -806,10 +956,27 @@ export default function ScanResultScreen() {
             left: 0,
             right: 0,
             zIndex: 90,
+            overflow: "hidden" as const,
           },
           stickyTabBarStyle,
         ]}
       >
+        {/* Glass background — same as CompactStickyHeader */}
+        {Platform.OS === "ios" ? (
+          <BlurView
+            intensity={isDark ? 50 : 70}
+            tint={isDark ? "dark" : "light"}
+            style={[StyleSheet.absoluteFill, {
+              backgroundColor: isDark ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.5)",
+            }]}
+          />
+        ) : (
+          <View
+            style={[StyleSheet.absoluteFill, {
+              backgroundColor: isDark ? "rgba(12,12,12,0.95)" : "rgba(243,241,237,0.95)",
+            }]}
+          />
+        )}
         <ScanResultTabBar activeTab={activeTab as 0 | 1} onTabPress={setActiveTab} scrollProgress={scrollProgress} />
       </Animated.View>
 
@@ -822,10 +989,11 @@ export default function ScanResultScreen() {
         imageUrl={product?.imageUrl ?? null}
         effectiveHeroStatus={effectiveHeroStatus as HalalStatusKey}
         heroLabel={heroLabel}
-        certifierData={certifierData ? { name: certifierData.name } : null}
+        certifierData={certifierData ? { id: certifierData.id, name: certifierData.name } : null}
+        trustGrade={certifierData?.trustGrade ?? null}
         onTrustScorePress={certifierData ? () => {
           impact();
-          setShowTrustScoreSheet(true);
+          setShowCertifierPracticesSheet(true);
         } : undefined}
       />
 
@@ -904,8 +1072,8 @@ export default function ScanResultScreen() {
         </Pressable>
       </Modal>
 
-      {/* ── Level-Up Celebration Overlay ── */}
-      {showLevelUp && levelUp && (
+      {/* ── Level-Up Celebration Overlay — gamification gated ── */}
+      {defaultFeatureFlags.gamificationEnabled && showLevelUp && levelUp && (
         <LevelUpCelebration
           newLevel={levelUp.newLevel}
           title={t.scanResult.levelUp}
@@ -921,6 +1089,16 @@ export default function ScanResultScreen() {
         trustScore={certifierTrustScore}
         madhab={userMadhab !== "general" ? userMadhab : null}
         onClose={handleCloseTrustScore}
+      />
+
+      <CertifierPracticesSheet
+        visible={showCertifierPracticesSheet}
+        certifierId={certifierData?.id ?? null}
+        certifierName={certifierData?.name ?? null}
+        trustScore={certifierTrustScore}
+        practices={certifierData?.practices ?? null}
+        detail={certifierData?.detail ?? null}
+        onClose={handleCloseCertifierPractices}
       />
 
       <ScoreDetailBottomSheet
@@ -990,10 +1168,71 @@ export default function ScanResultScreen() {
       />
 
       <ScholarlySourceSheet
-        visible={selectedScholarlyRef !== null}
-        sourceRef={selectedScholarlyRef}
-        onClose={() => setSelectedScholarlyRef(null)}
+        visible={selectedScholarlyData !== null}
+        data={selectedScholarlyData}
+        onClose={() => setSelectedScholarlyData(null)}
       />
+
+      {/* ── Generic InfoSheet (progressive disclosure for all detail views) ── */}
+      <InfoSheet
+        visible={infoSheet !== null}
+        onClose={handleCloseInfoSheet}
+        title={
+          infoSheet?.type === "nutriscore" ? "NutriScore"
+          : infoSheet?.type === "axis" ? infoSheet.name
+          : infoSheet?.type === "nova" ? `NOVA ${infoSheet.group}`
+          : infoSheet?.type === "allergen" ? infoSheet.name
+          : infoSheet?.type === "label" ? infoSheet.name
+          : infoSheet?.type === "ingredient" ? infoSheet.name
+          : infoSheet?.type === "alert" ? infoSheet.alert.title
+          : infoSheet?.type === "additive" ? `${infoSheet.code} · ${infoSheet.name}`
+          : infoSheet?.type === "boycott" ? `Boycott · ${infoSheet.companyName}`
+          : undefined
+        }
+      >
+        {infoSheet?.type === "nutriscore" && (
+          <NutriScoreDetailContent grade={infoSheet.grade} />
+        )}
+        {infoSheet?.type === "axis" && (
+          <AxisDetailContent name={infoSheet.name} score={infoSheet.score} max={infoSheet.max} color={infoSheet.color} />
+        )}
+        {infoSheet?.type === "nova" && (
+          <NovaDetailContent group={infoSheet.group} label={infoSheet.label} />
+        )}
+        {infoSheet?.type === "allergen" && (
+          <AllergenDetailContent name={infoSheet.name} isTrace={infoSheet.isTrace} />
+        )}
+        {infoSheet?.type === "label" && (
+          <LabelDetailContent name={infoSheet.name} />
+        )}
+        {infoSheet?.type === "ingredient" && (
+          <IngredientDetailContent name={infoSheet.name} status={infoSheet.status} ruling={infoSheet.ruling} />
+        )}
+        {infoSheet?.type === "alert" && (
+          <AlertDetailContent alert={infoSheet.alert} />
+        )}
+        {infoSheet?.type === "additive" && (
+          <AdditiveDetailContent
+            code={infoSheet.code}
+            name={infoSheet.name}
+            category={infoSheet.category}
+            origin={infoSheet.origin}
+            toxicityLevel={infoSheet.toxicityLevel}
+            healthEffectsFr={infoSheet.healthEffectsFr}
+            halalRuling={infoSheet.halalRuling}
+            riskPregnant={infoSheet.riskPregnant}
+            riskChildren={infoSheet.riskChildren}
+          />
+        )}
+        {infoSheet?.type === "boycott" && (
+          <BoycottDetailContent
+            companyName={infoSheet.companyName}
+            reason={infoSheet.reason}
+            sourceUrl={infoSheet.sourceUrl}
+            sourceName={infoSheet.sourceName}
+          />
+        )}
+      </InfoSheet>
 
       {/* ── Off-screen Share Card (captured as image) ── */}
       {shareData && (
@@ -1010,6 +1249,16 @@ export default function ScanResultScreen() {
 // ══════════════════════════════════════════════════════════════
 
 const styles = StyleSheet.create({
+  horizonContainer: {
+    paddingHorizontal: spacing.xl,
+    gap: spacing["5xl"],
+    paddingTop: spacing.xl,
+    paddingBottom: spacing["6xl"],
+  },
+  horizonDivider: {
+    height: StyleSheet.hairlineWidth,
+    marginHorizontal: -spacing.xl,
+  },
   floatingBackButton: {
     position: "absolute",
     left: spacing.xl,
@@ -1024,10 +1273,7 @@ const styles = StyleSheet.create({
     flexDirection: "row" as const,
     alignItems: "flex-start" as const,
     gap: spacing.md,
-    paddingVertical: spacing.lg,
     paddingHorizontal: spacing.xs,
-    marginTop: spacing.xs,
-    marginBottom: spacing.md,
   },
   disclaimerText: {
     flex: 1,

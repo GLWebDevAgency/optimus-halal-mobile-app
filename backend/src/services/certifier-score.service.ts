@@ -31,6 +31,48 @@ import {
 import { withCache } from "../lib/cache.js";
 import { logger } from "../lib/logger.js";
 
+// ── Naqiy Trust Grade — N١ through N٥ ─────────────────────
+// Aligned with the cap system:
+//   N١ (90-100) — No critical practice compromises
+//   N٢ (70-89)  — Minor gaps (transparency, VSM only)
+//   N٣ (51-69)  — ≤1-2 critical practices, compensated by strong ops
+//   N٤ (35-50)  — Multiple critical failures, cap territory
+//   N٥ (0-34)   — 3+ critical failures (hard-capped at 35)
+
+export type TrustGradeNum = 1 | 2 | 3 | 4 | 5;
+
+export interface TrustGrade {
+  /** Numeric grade 1-5 (1 = best) */
+  grade: TrustGradeNum;
+  /** Arabic numeral display character */
+  arabic: string;
+  /** French label */
+  label: string;
+  /** Hex color */
+  color: string;
+}
+
+const TRUST_GRADES: readonly TrustGrade[] = [
+  { grade: 1, arabic: "١", label: "Très fiable",  color: "#22c55e" },
+  { grade: 2, arabic: "٢", label: "Fiable",       color: "#84cc16" },
+  { grade: 3, arabic: "٣", label: "Vigilance",    color: "#f59e0b" },
+  { grade: 4, arabic: "٤", label: "Peu fiable",   color: "#f97316" },
+  { grade: 5, arabic: "٥", label: "Insuffisant",  color: "#ef4444" },
+] as const;
+
+/** Pure function: score → Naqiy Trust Grade (N١→N٥) */
+export function getTrustGrade(score: number): TrustGrade {
+  if (score >= 90) return TRUST_GRADES[0]; // N١
+  if (score >= 70) return TRUST_GRADES[1]; // N٢
+  if (score >= 51) return TRUST_GRADES[2]; // N٣
+  if (score >= 35) return TRUST_GRADES[3]; // N٤
+  return TRUST_GRADES[4];                  // N٥
+}
+
+export { TRUST_GRADES };
+
+// ── Scores ────────────────────────────────────────────────
+
 export interface CertifierScores {
   trustScore: number;
   trustScoreHanafi: number;

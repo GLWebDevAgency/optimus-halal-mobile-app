@@ -121,11 +121,11 @@ export function ScoreRing({
   }));
 
   const arcPath = describeArc(cx, cy, r);
-  const containerHeight = size / 2 + strokeWidth + 24; // half + stroke + text space
+  const svgHeight = size / 2 + strokeWidth;
 
   return (
-    <View style={[styles.container, { width: size, height: containerHeight }]}>
-      <Svg width={size} height={size / 2 + strokeWidth} viewBox={`0 0 ${size} ${size / 2 + strokeWidth}`}>
+    <View style={[styles.container, { width: size, height: svgHeight }]}>
+      <Svg width={size} height={svgHeight} viewBox={`0 0 ${size} ${svgHeight}`}>
         {/* Track */}
         <Path
           d={arcPath}
@@ -148,17 +148,17 @@ export function ScoreRing({
         )}
       </Svg>
 
-      {/* Score number */}
-      <Text style={[styles.scoreNumber, { color: scoreColor }]}>
-        {score !== null ? displayScore : "—"}
-      </Text>
-
-      {/* Label below */}
-      {label && (
-        <Text style={[styles.scoreLabel, { color: labelColor ?? scoreColor }]}>
-          {label}
+      {/* Score number + label — overlaid inside the arc */}
+      <View style={styles.scoreOverlay} pointerEvents="none">
+        <Text style={[styles.scoreNumber, { color: scoreColor, fontSize: size * 0.3 }]}>
+          {score !== null ? displayScore : "—"}
         </Text>
-      )}
+        {label && (
+          <Text style={[styles.scoreLabel, { color: labelColor ?? scoreColor }]}>
+            {label}
+          </Text>
+        )}
+      </View>
     </View>
   );
 }
@@ -167,14 +167,19 @@ const styles = StyleSheet.create({
   container: {
     alignItems: "center",
   },
+  scoreOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "flex-end",
+    paddingBottom: 2,
+  },
   scoreNumber: {
     fontSize: fontSizeTokens.h2,
     fontWeight: fontWeightTokens.black,
-    marginTop: -4,
   },
   scoreLabel: {
-    fontSize: fontSizeTokens.caption,
+    fontSize: fontSizeTokens.micro,
     fontWeight: fontWeightTokens.semiBold,
-    marginTop: 2,
+    marginTop: -2,
   },
 });

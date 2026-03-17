@@ -39,7 +39,7 @@ import { OnboardingSlide } from "@/components/onboarding";
 import { PremiumBackground, AnimatedPageIndicator } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { ONBOARDING_SLIDES } from "@constants/onboarding";
-import { useOnboardingStore } from "@/store";
+import { useOnboardingStore, useTrialStore } from "@/store";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SLIDE_COUNT = ONBOARDING_SLIDES.length;
@@ -102,19 +102,22 @@ export default function OnboardingScreen() {
   const handleSkip = useCallback(() => {
     impact();
     setOnboardingComplete(true);
+    useTrialStore.getState().startTrial();
     router.replace("/(tabs)");
   }, [impact, setOnboardingComplete]);
 
-  const handleCreateAccount = useCallback(() => {
+  const handleStart = useCallback(() => {
     notification();
     setOnboardingComplete(true);
-    router.replace("/(auth)/signup");
+    useTrialStore.getState().startTrial();
+    router.replace("/(tabs)");
   }, [notification, setOnboardingComplete]);
 
-  const handleExplore = useCallback(() => {
+  const handleLogin = useCallback(() => {
     impact();
     setOnboardingComplete(true);
-    router.replace("/(tabs)");
+    useTrialStore.getState().startTrial();
+    router.replace("/(auth)/login");
   }, [impact, setOnboardingComplete]);
 
   // ── Animated skip button opacity (fade out on last slide) ──
@@ -196,8 +199,8 @@ export default function OnboardingScreen() {
             index={index}
             scrollX={scrollX}
             activeIndex={activeIndex}
-            onCreateAccount={handleCreateAccount}
-            onExplore={handleExplore}
+            onStart={handleStart}
+            onLogin={handleLogin}
           />
         ))}
       </Animated.ScrollView>

@@ -15,7 +15,7 @@
  * @module components/scan/VerdictHero
  */
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -24,30 +24,16 @@ import {
   Pressable,
 } from "react-native";
 import { Image } from "expo-image";
-import { ChartBarIcon, ImageBrokenIcon, MagnifyingGlassIcon, QrCodeIcon, UsersThreeIcon } from "phosphor-react-native";
+import { ImageBrokenIcon, MagnifyingGlassIcon, QrCodeIcon, UsersThreeIcon } from "phosphor-react-native";
 import Animated, {
   FadeIn,
   FadeInRight,
   ZoomIn,
-  useSharedValue,
-  useAnimatedStyle,
-  useAnimatedReaction,
-  useDerivedValue,
-  runOnJS,
-  withTiming,
-  Easing,
 } from "react-native-reanimated";
 
-import { CertifierLogo } from "@/components/scan/CertifierLogo";
-import { ScoreRing } from "./ScoreRing";
-import { PressableScale } from "@/components/ui/PressableScale";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation, useHaptics } from "@/hooks";
-import {
-  halalStatus as halalStatusTokens,
-  glass,
-  lightTheme,
-} from "@/theme/colors";
+import { glass } from "@/theme/colors";
 import { fontSize as fontSizeTokens, fontWeight as fontWeightTokens } from "@/theme/typography";
 import { spacing, radius } from "@/theme/spacing";
 import {
@@ -56,22 +42,9 @@ import {
   type HalalStatusKey,
   type StatusVisualConfig,
 } from "./scan-constants";
+import { NaqiyGradeBadge, getTrustGradeFromScore, type TrustGrade } from "./NaqiyGradeBadge";
 
 // ── Types ──
-
-interface CertifierInfo {
-  id: string;
-  name: string;
-  trustScore: number | null;
-  lastVerifiedAt?: string | null;
-  [key: string]: unknown;
-}
-
-interface HalalAnalysisInfo {
-  tier: string;
-  certifierName: string | null;
-  reasons: Array<{ status: string; name: string; explanation: string; type?: string; scholarlyReference?: string | null; fatwaSourceName?: string | null; fatwaSourceUrl?: string | null }>;
-}
 
 export interface VerdictHeroProps {
   product: {
@@ -82,18 +55,15 @@ export interface VerdictHeroProps {
     brand: string | null;
     halalStatus: string;
   };
-  halalAnalysis: HalalAnalysisInfo | null;
-  certifierData: CertifierInfo | null;
-  certifierTrustScore: number | null;
   effectiveHeroStatus: HalalStatusKey;
   heroLabel: string;
   userMadhab: string;
-  isStaleData: boolean;
   communityVerifiedCount: number;
   onImagePress: () => void;
-  onScoreDetailPress: () => void;
-  /** Callback when trust score ring is pressed */
-  onTrustScorePress?: () => void;
+  /** Naqiy Trust Grade from certifier (N١→N٥) */
+  trustGrade?: TrustGrade | null;
+  /** Callback when the NaqiyGradeBadge strip is pressed */
+  onTrustGradePress?: () => void;
   /** Top safe-area inset so gradient extends behind status bar */
   topInset?: number;
 }
@@ -102,17 +72,13 @@ export interface VerdictHeroProps {
 
 export function VerdictHero({
   product,
-  halalAnalysis,
-  certifierData,
-  certifierTrustScore,
   effectiveHeroStatus,
   heroLabel,
   userMadhab,
-  isStaleData,
   communityVerifiedCount,
   onImagePress,
-  onScoreDetailPress,
-  onTrustScorePress,
+  trustGrade,
+  onTrustGradePress,
   topInset = 0,
 }: VerdictHeroProps) {
   const { isDark, colors } = useTheme();
@@ -125,34 +91,11 @@ export function VerdictHero({
     ? statusConfig.gradientDark
     : statusConfig.gradientLight;
 
-  // ── Animated score counter (0 → N) ──
-  const scoreDisplay = useSharedValue(0);
-  const barScale = useSharedValue(0);
-  const [displayedScore, setDisplayedScore] = useState(0);
-
-  useEffect(() => {
-    if (certifierTrustScore != null) {
-      scoreDisplay.value = withTiming(certifierTrustScore, {
-        duration: 1200,
-        easing: Easing.out(Easing.cubic),
-      });
-      barScale.value = withTiming(certifierTrustScore / 100, {
-        duration: 1400,
-        easing: Easing.out(Easing.cubic),
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [certifierTrustScore]);
-
-  const roundedScore = useDerivedValue(() => Math.round(scoreDisplay.value));
-  useAnimatedReaction(
-    () => roundedScore.value,
-    (val) => runOnJS(setDisplayedScore)(val),
-  );
-
-  const animatedBarStyle = useAnimatedStyle(() => ({
-    width: `${barScale.value * 100}%`,
-  }));
+  // ── Madhab label (displayed in micro header) ──
+  const madhabLabel =
+    userMadhab !== "general"
+      ? t.madhab.options[userMadhab as "hanafi" | "shafii" | "maliki" | "hanbali"]?.label
+      : null;
 
   // ── Render ──
 
@@ -166,7 +109,7 @@ export function VerdictHero({
       <View
         style={[
           StyleSheet.absoluteFill,
-          { backgroundColor: isDark ? gradientColors[0] : gradientColors[0] },
+          { backgroundColor: gradientColors[0] },
         ]}
       />
 
@@ -175,7 +118,7 @@ export function VerdictHero({
         entering={FadeIn.delay(50).duration(400)}
         style={styles.heroSplit}
       >
-        {/* LEFT: Product Image — glass card (preserved from existing design) */}
+        {/* LEFT: Product Image — glass card */}
         <Animated.View
           entering={ZoomIn.delay(SUSPENSE_DURATION).duration(400).springify().damping(26).stiffness(120)}
           style={styles.heroImageColumn}
@@ -194,10 +137,12 @@ export function VerdictHero({
               accessibilityRole="button"
               accessibilityLabel={product.name}
               accessibilityHint={product.imageUrl ? t.scanResult.tapToZoom : undefined}
+              style={product.imageUrl ? styles.heroImagePress : styles.heroImagePlaceholder}
             >
               {product.imageUrl ? (
                 <Image
                   source={{ uri: product.imageUrl }}
+                  placeholder={{ blurhash: "LGF5]+Yk^6#M@-5c,1J5@[or[Q6." }}
                   style={styles.heroImage}
                   contentFit="cover"
                   transition={200}
@@ -218,172 +163,75 @@ export function VerdictHero({
           </View>
         </Animated.View>
 
-        {/* RIGHT COLUMN: Score label + Certifier / Verdict */}
+        {/* RIGHT COLUMN: Info stack */}
         <View style={styles.heroInfoColumn}>
-          {/* Naqiy Score label row */}
-          <View style={styles.heroScoreLabelRow}>
+          {/* Micro header: Naqiy logo + "NAQIY SCAN · Maliki" */}
+          <View style={styles.heroMicroRow}>
             <Image
               source={require("@assets/images/logo_naqiy.webp")}
-              style={{ width: 18, height: 18, opacity: isDark ? 0.5 : 0.35 }}
+              style={{ width: 14, height: 14, opacity: isDark ? 0.5 : 0.35 }}
               contentFit="contain"
             />
-            <Text style={[styles.heroScoreLabelText, { color: colors.textMuted }]}>
-              {t.scanResult.naqiyScoreLabel}{userMadhab !== "general" && ` · ${t.madhab.options[userMadhab as "hanafi" | "shafii" | "maliki" | "hanbali"].label}`}
+            <Text style={[styles.heroMicroText, { color: colors.textMuted }]}>
+              NAQIY SCAN{madhabLabel ? ` · ${madhabLabel}` : ""}
             </Text>
           </View>
 
-          {/* Score Ring — Naqiy Signature */}
-          <Animated.View
-            entering={FadeIn.delay(SUSPENSE_DURATION + 50).duration(500)}
-            style={styles.scoreRingContainer}
+          {/* Product name */}
+          <Text
+            style={[styles.heroProductName, { color: colors.textPrimary }]}
+            numberOfLines={2}
+            accessibilityRole="header"
           >
-            <Text style={[styles.scoreRingLabel, { color: colors.textMuted }]}>
-              NAQIY SCORE
-            </Text>
-            <PressableScale
-              onPress={onTrustScorePress ? () => { impact(); onTrustScorePress(); } : undefined}
-              disabled={!onTrustScorePress}
-              accessibilityLabel={t.scanResult.naqiyScoreLabel}
-              accessibilityRole="button"
-            >
-              <ScoreRing
-                score={certifierTrustScore ?? null}
-                size={80}
-                label={heroLabel}
-                labelColor={statusConfig.color}
-              />
-            </PressableScale>
-          </Animated.View>
+            {product.name}
+          </Text>
 
-          {/* Certifier trust score bar OR verdict fallback */}
+          {/* Brand · Barcode */}
+          <View style={styles.heroBrandRow}>
+            {product.brand && (
+              <Text style={[styles.heroBrandText, { color: colors.textMuted }]} numberOfLines={1}>
+                {product.brand}
+              </Text>
+            )}
+            <View style={styles.heroBarcodeChip}>
+              <QrCodeIcon size={12} color={colors.textMuted} />
+              <Text style={[styles.heroBarcode, { color: colors.textMuted }]}>
+                {product.barcode}
+              </Text>
+            </View>
+          </View>
+
+          {/* Verdict — single, prominent */}
           <Animated.View
             entering={FadeInRight.delay(SUSPENSE_DURATION + 100).duration(450)}
-            style={styles.heroScoreRow}
           >
-            {certifierData ? (
-              <View style={styles.heroCertifierRow}>
-                <View style={styles.heroCertifierBar}>
-                  <View style={styles.heroCertifierHeader}>
-                    <CertifierLogo certifierId={certifierData.id} size={20} fallbackColor={statusConfig.color} />
-                    <Text
-                      style={[styles.heroCertifierName, { color: colors.textPrimary }]}
-                      numberOfLines={1}
-                    >
-                      {certifierData.name}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.heroCertifierScore,
-                        {
-                          color: certifierTrustScore! >= 70
-                            ? halalStatusTokens.halal.base
-                            : certifierTrustScore! >= 40
-                              ? halalStatusTokens.doubtful.base
-                              : halalStatusTokens.haram.base,
-                        },
-                      ]}
-                    >
-                      {displayedScore}/100
-                    </Text>
-                  </View>
-                  <View
-                    style={[
-                      styles.heroCertifierBarBg,
-                      { backgroundColor: isDark ? glass.dark.border : glass.light.borderStrong },
-                    ]}
-                  >
-                    <Animated.View
-                      style={[
-                        styles.heroCertifierBarFill,
-                        {
-                          backgroundColor: certifierTrustScore! >= 70
-                            ? halalStatusTokens.halal.base
-                            : certifierTrustScore! >= 40
-                              ? halalStatusTokens.doubtful.base
-                              : halalStatusTokens.haram.base,
-                        },
-                        animatedBarStyle,
-                      ]}
-                    />
-                  </View>
-                  {halalAnalysis && (
-                    <Text style={[styles.heroTierLabel, { color: colors.textMuted }]}>
-                      {t.scanResult.tier}{" "}
-                      {halalAnalysis.tier === "certified" ? "1" : halalAnalysis.tier === "analyzed_clean" ? "2" : halalAnalysis.tier === "doubtful" ? "3" : "4"}
-                      {" · "}
-                      {halalAnalysis.tier === "certified" ? t.scanResult.tierCertified : halalAnalysis.tier === "analyzed_clean" ? t.scanResult.tierAnalyzed : halalAnalysis.tier === "doubtful" ? t.scanResult.tierDoubtful : t.scanResult.tierUnknown}
-                      {isStaleData && ` · ${t.scanResult.staleData}`}
-                    </Text>
-                  )}
-                </View>
-                {/* Score detail button */}
-                <PressableScale
-                  onPress={() => {
-                    impact();
-                    onScoreDetailPress();
-                  }}
-                  accessibilityLabel={t.scanResult.scoreDetailTitle}
-                  accessibilityRole="button"
-                >
-                  <View
-                    style={[
-                      styles.heroHelpButton,
-                      {
-                        backgroundColor: isDark ? glass.dark.bg : glass.light.border,
-                        borderColor: isDark ? glass.dark.border : glass.light.borderStrong,
-                      },
-                    ]}
-                  >
-                    <ChartBarIcon size={20}
-                      color={isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.35)"} />
-                  </View>
-                </PressableScale>
-              </View>
-            ) : (
-              <View style={styles.heroVerdictColumn}>
-                <Text
-                  style={[styles.heroVerdictText, { color: statusConfig.color }]}
-                  numberOfLines={1}
-                  accessibilityRole="header"
-                >
-                  {heroLabel}
-                </Text>
-              </View>
-            )}
-          </Animated.View>
-
-          {/* Brand */}
-          {product.brand && (
             <Text
-              style={[styles.heroBrandLabel, { color: colors.textMuted }]}
+              style={[styles.heroVerdictText, { color: statusConfig.color }]}
               numberOfLines={1}
             >
-              {product.brand}
+              {heroLabel}
             </Text>
+          </Animated.View>
+
+          {/* Naqiy Trust Grade strip (certifier only) — tappable → certifier detail */}
+          {trustGrade && (
+            <Animated.View
+              entering={FadeIn.delay(SUSPENSE_DURATION + 250).duration(400)}
+              style={styles.gradeStripRow}
+            >
+              <Pressable
+                onPress={onTrustGradePress}
+                accessibilityRole="button"
+                accessibilityLabel="Détail certifieur"
+                style={({ pressed }) => pressed ? { opacity: 0.7 } : undefined}
+              >
+                <NaqiyGradeBadge variant="strip" grade={trustGrade} showLabel />
+              </Pressable>
+            </Animated.View>
           )}
+
         </View>
       </Animated.View>
-
-      {/* ── Product name + barcode (full-width below split) ── */}
-      <View style={[
-        styles.heroDivider,
-        { backgroundColor: isDark ? glass.dark.border : glass.light.border },
-      ]} />
-      <View style={styles.heroProductRow}>
-        <Text
-          style={[styles.heroProductName, { color: colors.textPrimary }]}
-          numberOfLines={2}
-          accessibilityRole="header"
-        >
-          {product.name}
-        </Text>
-        <View style={styles.heroBarcodeChip}>
-          <QrCodeIcon size={16} color={colors.textMuted} />
-          <Text style={[styles.heroBarcode, { color: colors.textMuted }]}>
-            {product.barcode}
-          </Text>
-        </View>
-      </View>
 
       {/* ── Community badge ── */}
       {communityVerifiedCount > 0 && (
@@ -423,7 +271,7 @@ export function VerdictHero({
 const styles = StyleSheet.create({
   heroGradient: {
     paddingHorizontal: spacing["3xl"],
-    paddingBottom: spacing["2xl"],
+    paddingBottom: spacing.xl,
     overflow: "hidden",
   },
   heroSplit: {
@@ -435,11 +283,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   heroImageWrapper: {
-    width: 116,
-    height: 116,
-    borderRadius: 22,
-    borderWidth: 3,
-    padding: 5,
+    width: 100,
+    height: 100,
+    borderRadius: 20,
+    borderWidth: 2.5,
+    padding: 4,
     overflow: "hidden",
     ...Platform.select({
       ios: {
@@ -453,6 +301,14 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  heroImagePress: {
+    flex: 1,
+  },
+  heroImagePlaceholder: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   heroImage: {
     width: "100%",
     height: "100%",
@@ -460,11 +316,11 @@ const styles = StyleSheet.create({
   },
   heroZoomBadge: {
     position: "absolute",
-    bottom: 6,
-    right: 6,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    bottom: 4,
+    right: 4,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     alignItems: "center",
     justifyContent: "center",
     ...Platform.select({
@@ -479,116 +335,55 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  heroBrandLabel: {
-    fontSize: fontSizeTokens.caption,
-    fontWeight: fontWeightTokens.medium,
-    marginTop: spacing["2xs"],
-  },
   heroInfoColumn: {
     flex: 1,
     paddingVertical: spacing.xs,
+    gap: spacing.xs,
   },
-  heroScoreLabelRow: {
+  heroMicroRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
+    gap: 6,
   },
-  heroScoreLabelText: {
-    fontSize: fontSizeTokens.micro,
-    fontWeight: fontWeightTokens.semiBold,
-    letterSpacing: Platform.OS === "android" ? 0.3 : 1.5,
+  heroMicroText: {
+    fontSize: 10,
+    fontWeight: fontWeightTokens.bold,
+    letterSpacing: Platform.OS === "android" ? 0.3 : 1.2,
     textTransform: "uppercase",
   },
-  heroScoreRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.lg,
-    marginBottom: spacing.sm,
-  },
-  heroCertifierRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.lg,
-  },
-  heroCertifierBar: {
-    flex: 1,
-    gap: spacing.sm,
-  },
-  heroCertifierHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  heroCertifierName: {
-    flex: 1,
-    fontSize: fontSizeTokens.caption,
-    fontWeight: fontWeightTokens.semiBold,
-  },
-  heroCertifierScore: {
-    fontSize: fontSizeTokens.caption,
+  heroProductName: {
+    fontSize: fontSizeTokens.body,
     fontWeight: fontWeightTokens.bold,
+    lineHeight: 20,
   },
-  heroCertifierBarBg: {
-    height: 4,
-    borderRadius: 2,
-    overflow: "hidden",
-  },
-  heroCertifierBarFill: {
-    height: 4,
-    borderRadius: 2,
-  },
-  heroTierLabel: {
-    fontSize: 9,
-    fontWeight: fontWeightTokens.medium,
-    marginTop: 2,
-    letterSpacing: 0.3,
-  },
-  heroHelpButton: {
-    width: 38,
-    height: 38,
-    borderRadius: radius.md,
-    borderWidth: 1,
+  heroBrandRow: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    gap: spacing.sm,
+    flexWrap: "wrap",
   },
-  heroVerdictColumn: {
-    flex: 1,
-    gap: spacing["2xs"],
+  heroBrandText: {
+    fontSize: fontSizeTokens.caption,
+    fontWeight: fontWeightTokens.medium,
+  },
+  heroBarcodeChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
+  heroBarcode: {
+    fontSize: 10,
+    fontWeight: fontWeightTokens.medium,
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
   },
   heroVerdictText: {
     fontSize: fontSizeTokens.h4,
     fontWeight: fontWeightTokens.bold,
     letterSpacing: 0.3,
+    marginTop: spacing.xs,
   },
-  heroDivider: {
-    height: StyleSheet.hairlineWidth,
-    width: "100%",
-    marginVertical: spacing.sm,
-    opacity: 0.2,
-  },
-  heroProductRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: spacing.lg,
-  },
-  heroProductName: {
-    fontSize: fontSizeTokens.h4,
-    fontWeight: fontWeightTokens.bold,
-    lineHeight: 24,
-    flex: 1,
-  },
-  heroBarcodeChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    paddingTop: spacing["2xs"],
-  },
-  heroBarcode: {
-    fontSize: fontSizeTokens.micro,
-    fontWeight: fontWeightTokens.medium,
-    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+  gradeStripRow: {
+    marginTop: spacing.xs,
   },
   metadataBand: {
     flexDirection: "row",
@@ -596,7 +391,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     flexWrap: "wrap",
     gap: spacing.md,
-    marginBottom: spacing.md,
+    marginTop: spacing.sm,
   },
   certifierHeroBadge: {
     flexDirection: "row",
@@ -610,17 +405,5 @@ const styles = StyleSheet.create({
   certifierHeroBadgeText: {
     fontSize: fontSizeTokens.micro,
     fontWeight: fontWeightTokens.semiBold,
-  },
-  scoreRingContainer: {
-    alignItems: "center",
-    marginBottom: spacing.sm,
-  },
-  scoreRingLabel: {
-    fontSize: fontSizeTokens.micro ?? 10,
-    fontWeight: fontWeightTokens.bold ?? "700",
-    textTransform: "uppercase" as const,
-    letterSpacing: 1.0,
-    textAlign: "center" as const,
-    marginBottom: 4,
   },
 });

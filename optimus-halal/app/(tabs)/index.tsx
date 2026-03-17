@@ -22,7 +22,7 @@ import { Image } from "expo-image";
 import { Shadow } from "react-native-shadow-2";
 import { router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowClockwiseIcon, ArrowRightIcon, BellIcon, CaretRightIcon, CloudSlashIcon, HamburgerIcon, HeartIcon, MapPinPlusIcon, ScanIcon, StorefrontIcon } from "phosphor-react-native";
+import { ArrowClockwiseIcon, ArrowRightIcon, ArticleIcon, BellIcon, CaretRightIcon, CloudSlashIcon, HamburgerIcon, HeartIcon, MapPinIcon, MapPinPlusIcon, ScanIcon, StorefrontIcon } from "phosphor-react-native";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -34,7 +34,6 @@ import Animated, {
   Extrapolation,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
-import Svg, { Path } from "react-native-svg";
 
 import { Avatar, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
@@ -50,9 +49,10 @@ import { useTheme } from "@/hooks/useTheme";
 import { brand, glass, lightTheme, darkTheme, storeTypeColors } from "@/theme/colors";
 import { useHaptics, useUserLocation, useMapStores, usePremium } from "@/hooks";
 import { trpc } from "@/lib/trpc";
-import { useQuotaStore, useLocalFavoritesStore, useLocalStoreFavoritesStore } from "@/store";
+import { useQuotaStore, useLocalFavoritesStore, useLocalStoreFavoritesStore, useTrialStore } from "@/store";
 import { defaultFeatureFlags } from "@/constants/config";
 import { AppIcon, type IconName } from "@/lib/icons";
+import { NaqiyBrandSheet } from "@/components/NaqiyBrandSheet";
 
 const logoSource = require("@assets/images/logo_naqiy.webp");
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -679,7 +679,7 @@ export default function HomeScreen() {
   const { isDark, isRamadan, colors } = useTheme();
   const { impact } = useHaptics();
   const { t } = useTranslation();
-  const { isPremium } = usePremium();
+  const { isPremium, isTrialActive, trialDaysRemaining } = usePremium();
 
   // Pause store polling when home tab is not visible — saves battery & network
   const [isTabFocused, setIsTabFocused] = useState(true);
@@ -692,10 +692,11 @@ export default function HomeScreen() {
 
   // ---- Auth state from context (reactive, provided by AppInitializer) ----
   const { user: me, isGuest, isAuthLoading, isAuthError, refetchAuth } = useAuth();
-  const isReady = !!me || (isGuest && !isAuthLoading);
+  const isReady = !isAuthLoading;
 
   // ---- Quick Favorites tab (products | stores) ----
   const [favTab, setFavTab] = useState<"products" | "stores">("products");
+  const [brandSheetVisible, setBrandSheetVisible] = useState(false);
 
   // ---- Map Stores (Around You) ----
   const { location: userLocation } = useUserLocation();
@@ -736,7 +737,7 @@ export default function HomeScreen() {
   });
   const articlesQuery = trpc.article.list.useQuery(
     { limit: 5 },
-    { enabled: !!me, staleTime: 120_000 },
+    { enabled: true, staleTime: 120_000 },
   );
 
   // ---- Quota (anonymous) ----
@@ -970,8 +971,13 @@ export default function HomeScreen() {
 
             {/* Right: Brand Mark + Notification BellIcon */}
             <View style={styles.headerRight}>
-              {/* Naqiy brand mark */}
-              <View style={styles.brandMark} accessible={false}>
+              {/* Naqiy brand mark — opens NaqiyBrandSheet */}
+              <Pressable
+                onPress={() => setBrandSheetVisible(true)}
+                accessibilityRole="button"
+                accessibilityLabel={isPremium ? "Naqiy+" : "Naqiy"}
+                style={styles.brandMark}
+              >
                 <View style={{
                   width: 34,
                   height: 34,
@@ -992,7 +998,7 @@ export default function HomeScreen() {
                     <Text style={{ color: brand.gold, fontWeight: "800" }}>+</Text>
                   )}
                 </Text>
-              </View>
+              </Pressable>
 
               {/* Notification BellIcon — hidden when alerts feature flag is off */}
               {defaultFeatureFlags.alertsEnabled && (
@@ -1027,8 +1033,8 @@ export default function HomeScreen() {
             </View>
           </Animated.View>
 
-          {/* Impact Stats Pill — authenticated users only */}
-          {!isGuest && (
+          {/* Impact Stats Pill — gamification gated */}
+          {!isGuest && defaultFeatureFlags.gamificationEnabled && (
           <Animated.View
             entering={FadeInDown.delay(STAGGER_MS)
               .duration(500)
@@ -1118,8 +1124,49 @@ export default function HomeScreen() {
           )}
         </Animated.View>
 
-        {/* Quota Widget — anonymous users only */}
-        {isGuest && (
+        {/* Trial Banner — shown during active 7-day trial */}
+        {isGuest && isTrialActive && (
+          <Animated.View
+            entering={FadeInDown.delay(STAGGER_MS * 2).duration(500).springify().damping(18)}
+            style={{ paddingHorizontal: 20, marginBottom: 16 }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                padding: 14,
+                borderRadius: 16,
+                backgroundColor: isDark ? "rgba(34, 197, 94, 0.08)" : "rgba(34, 197, 94, 0.06)",
+                borderWidth: 1,
+                borderColor: isDark ? "rgba(34, 197, 94, 0.2)" : "rgba(34, 197, 94, 0.15)",
+              }}
+            >
+              <View
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  backgroundColor: isDark ? "rgba(34, 197, 94, 0.12)" : "rgba(34, 197, 94, 0.1)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <AppIcon name="verified" size={20} color={isDark ? "#4ade80" : "#16a34a"} />
+              </View>
+              <View style={{ flex: 1, marginStart: 12 }}>
+                <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: "700" }}>
+                  {t.paywall.trialBanner.replace("{n}", String(trialDaysRemaining))}
+                </Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>
+                  {t.home.trialAllFeaturesUnlocked}
+                </Text>
+              </View>
+            </View>
+          </Animated.View>
+        )}
+
+        {/* Quota Widget — anonymous users only, hidden during trial */}
+        {isGuest && !isTrialActive && (
           <Animated.View
             entering={FadeInDown.delay(STAGGER_MS * 2).duration(500).springify().damping(18)}
             style={{ paddingHorizontal: 20, marginBottom: 16 }}
@@ -1127,7 +1174,7 @@ export default function HomeScreen() {
             <PressableScale
               onPress={() => {
                 impact();
-                router.push("/paywall" as any);
+                router.push({ pathname: "/paywall" as any, params: { trigger: "scan_quota" } });
               }}
               accessibilityRole="button"
               accessibilityLabel={t.guest.dailyScans}
@@ -1291,6 +1338,7 @@ export default function HomeScreen() {
             {/* Section header */}
             <View style={styles.sectionHeader}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <MapPinIcon size={16} color={brand.gold} weight="bold" />
                 <Text
                   accessibilityRole="header"
                   style={[
@@ -1300,9 +1348,6 @@ export default function HomeScreen() {
                 >
                   Autour de vous
                 </Text>
-                <Svg width={20} height={10} viewBox="0 0 24 12">
-                  <Path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke={brand.gold} strokeWidth={1.5} fill="none" opacity={0.8} />
-                </Svg>
               </View>
               <Pressable
                 onPress={() => router.push("/(tabs)/map")}
@@ -1384,6 +1429,7 @@ export default function HomeScreen() {
             {/* Section header */}
             <View style={styles.sectionHeader}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <ArticleIcon size={16} color={brand.gold} weight="bold" />
                 <Text
                   accessibilityRole="header"
                   style={[
@@ -1393,9 +1439,6 @@ export default function HomeScreen() {
                 >
                   {t.home.featured}
                 </Text>
-                <Svg width={20} height={10} viewBox="0 0 24 12">
-                  <Path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke={brand.gold} strokeWidth={1.5} fill="none" opacity={0.7} />
-                </Svg>
               </View>
               <Pressable
                 onPress={() => router.push("/articles")}
@@ -1468,6 +1511,7 @@ export default function HomeScreen() {
           {/* Section header with mini segment control */}
           <View style={styles.sectionHeader}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <HeartIcon size={16} color={brand.gold} weight="bold" />
               <Text
                 accessibilityRole="header"
                 style={[
@@ -1477,9 +1521,6 @@ export default function HomeScreen() {
               >
                 {t.home.favorites}
               </Text>
-              <Svg width={20} height={10} viewBox="0 0 24 12">
-                <Path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke={brand.gold} strokeWidth={1.5} fill="none" opacity={0.7} />
-              </Svg>
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
               {/* Mini segment: Produits | Magasins */}
@@ -1618,7 +1659,7 @@ export default function HomeScreen() {
               <PressableScale
                 accessibilityRole="button"
                 accessibilityLabel={t.home.addFavorite}
-                onPress={() => (isGuest && localFavFull) ? router.push("/paywall" as any) : router.navigate("/(tabs)/scanner")}
+                onPress={() => (isGuest && localFavFull) ? router.push({ pathname: "/paywall" as any, params: { trigger: "favorites" } }) : router.navigate("/(tabs)/scanner")}
                 style={styles.favCircleTouch}
               >
                 <View
@@ -1751,6 +1792,14 @@ export default function HomeScreen() {
         </Animated.View>
         )}
       </AnimatedScrollView>
+
+      {/* Naqiy Brand Bottom Sheet */}
+      <NaqiyBrandSheet
+        visible={brandSheetVisible}
+        onClose={() => setBrandSheetVisible(false)}
+        isGuest={isGuest}
+        user={me}
+      />
     </View>
   );
 }

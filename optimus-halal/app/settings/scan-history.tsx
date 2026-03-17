@@ -20,16 +20,18 @@ import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { ArrowLeftIcon, CloudSlashIcon, FlaskIcon, PackageIcon } from "phosphor-react-native";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
-import { useScanHistory, useMe } from "@/hooks";
+import { useScanHistory, useMe, usePremium } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { trpc } from "@/lib/trpc";
 import { EmptyState, PremiumBackground } from "@/components/ui";
+import { PremiumGate } from "@/components/ui/PremiumGate";
 import { PressableScale } from "@/components/ui/PressableScale";
-import { useLocalScanHistoryStore } from "@/store";
+import { useLocalScanHistoryStore, useFeatureFlagsStore } from "@/store";
 import { isAuthenticated as hasStoredTokens } from "@/services/api";
 import { MadhabScoreRing } from "@/components/scan/MadhabScoreRing";
 import { CertifierLogo } from "@/components/scan/CertifierLogo";
+import { CertifierTrustRow } from "@/components/scan/CertifierTrustRow";
 import { halalStatus as halalStatusTokens, gold } from "@/theme/colors";
 import { AppIcon, type IconName } from "@/lib/icons";
 
@@ -326,31 +328,43 @@ const ScanRow = React.memo(function ScanRow({ item, index, isDark, colors, t, la
               </Text>
             </View>
 
-            {/* Tier + Certifier badge row */}
-            <View style={styles.tierRow}>
-              {certifierId ? (
-                <>
-                  <Text style={[styles.certifiedByLabel, { color: colors.textMuted }]}>
-                    {t.scanHistory.certifiedBy}
-                  </Text>
-                  <CertifierLogo certifierId={certifierId} size={14} fallbackColor={effectiveConfig.color} />
-                  <Text style={[styles.certifierShort, { color: colors.textSecondary }]} numberOfLines={1}>
-                    {getShortName(certifierId)}
-                  </Text>
-                </>
-              ) : (
-                <>
-                  <FlaskIcon size={10}
-                    color={`${effectiveConfig.color}${isDark ? "90" : "70"}`} />
-                  <Text
-                    style={[styles.tierText, { color: `${effectiveConfig.color}${isDark ? "CC" : "99"}` }]}
-                    numberOfLines={1}
-                  >
-                    {tierText}
-                  </Text>
-                </>
-              )}
-            </View>
+            {/* Tier + Certifier badge rows */}
+            {certifierId ? (
+              <View style={styles.certifierBlock}>
+                {/* Row 1: "Certification :" label */}
+                <Text style={[styles.certifiedByLabel, { color: colors.textMuted }]}>
+                  {t.scanHistory.certifiedBy}
+                </Text>
+                {/* Row 2: Logo + Name + Grade strip */}
+                {trustScore != null ? (
+                  <CertifierTrustRow
+                    variant="inline"
+                    certifierId={certifierId}
+                    certifierName={getShortName(certifierId)}
+                    trustScore={trustScore}
+                    showScore={false}
+                  />
+                ) : (
+                  <View style={styles.certifierGradeRow}>
+                    <CertifierLogo certifierId={certifierId} size={14} fallbackColor={effectiveConfig.color} />
+                    <Text style={[styles.certifierShort, { color: colors.textSecondary }]} numberOfLines={1}>
+                      {getShortName(certifierId)}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            ) : (
+              <View style={styles.tierRow}>
+                <FlaskIcon size={10}
+                  color={`${effectiveConfig.color}${isDark ? "90" : "70"}`} />
+                <Text
+                  style={[styles.tierText, { color: `${effectiveConfig.color}${isDark ? "CC" : "99"}` }]}
+                  numberOfLines={1}
+                >
+                  {tierText}
+                </Text>
+              </View>
+            )}
 
             {/* Analysis composition row — on ALL cards */}
             <View style={styles.analysisRow}>
@@ -407,10 +421,16 @@ export default function ScanHistoryScreen() {
 
   const userMadhab = (userProfile?.madhab as string) ?? "general";
 
+  // Premium gate — free users see only last 3 scans when flag enabled
+  const { isPremium } = usePremium();
+  const { flags } = useFeatureFlagsStore();
+  const FREE_HISTORY_LIMIT = 3;
+
   // Merge: guests use local, auth users use cloud
   const scans = useMemo(() => {
+    let items: ScanItem[];
     if (isGuest) {
-      return localScans.map((s) => ({
+      items = localScans.map((s) => ({
         id: s.barcode,
         barcode: s.barcode,
         halalStatus: s.halalStatus,
@@ -429,9 +449,16 @@ export default function ScanHistoryScreen() {
         },
         certifier: null,
       })) as ScanItem[];
+    } else {
+      items = (data?.items ?? []) as ScanItem[];
     }
-    return (data?.items ?? []) as ScanItem[];
-  }, [isGuest, localScans, data]);
+
+    // Limit history for free-tier users
+    if (flags.scanHistoryLimitEnabled && !isPremium) {
+      return items.slice(0, FREE_HISTORY_LIMIT);
+    }
+    return items;
+  }, [isGuest, localScans, data, flags.scanHistoryLimitEnabled, isPremium]);
 
   const renderItem = useCallback(
     ({ item, index }: { item: ScanItem; index: number }) => (
@@ -525,6 +552,13 @@ export default function ScanHistoryScreen() {
               renderItem={renderItem}
               contentContainerStyle={{ paddingTop: 8, paddingBottom: 100 }}
               showsVerticalScrollIndicator={false}
+              ListFooterComponent={
+                flags.scanHistoryLimitEnabled && !isPremium ? (
+                  <PremiumGate feature="scanHistory" trigger="history">
+                    <>{/* children never rendered — gate shows upgrade prompt */}</>
+                  </PremiumGate>
+                ) : null
+              }
             />
           </>
         )}
@@ -644,7 +678,9 @@ const styles = StyleSheet.create({
   dot: { width: 2.5, height: 2.5, borderRadius: 1.25 },
   dateText: { fontSize: 10 },
   tierRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 3 },
+  certifierBlock: { marginTop: 3, gap: 2 },
   certifiedByLabel: { fontSize: 9, fontWeight: "500", fontStyle: "italic" },
+  certifierGradeRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   certifierShort: { fontSize: 10, fontWeight: "700", flexShrink: 1 },
   tierText: { fontSize: 10, fontWeight: "600", flexShrink: 1 },
   analysisRow: { flexDirection: "row", alignItems: "center", gap: 3, marginTop: 3 },

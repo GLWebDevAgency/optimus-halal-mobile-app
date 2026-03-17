@@ -92,6 +92,8 @@ interface MadhabScoreRingProps {
   conflictCount?: number;
   /** Whether this is the user's preferred school */
   isUserSchool?: boolean;
+  /** Whether this is the currently active/selected school */
+  isActive?: boolean;
   /** Stagger delay index for entry animation */
   staggerIndex?: number;
   /** Show the numeric score in the center instead of the verdict icon */
@@ -107,6 +109,7 @@ export const MadhabScoreRing = React.memo(function MadhabScoreRing({
   verdictLabel,
   conflictCount = 0,
   isUserSchool = false,
+  isActive = false,
   staggerIndex = 0,
   showScore = false,
 }: MadhabScoreRingProps) {
@@ -171,10 +174,12 @@ export const MadhabScoreRing = React.memo(function MadhabScoreRing({
         ]}
       />
 
-      {/* ── Ring wrapper (gold border for user school) ── */}
+      {/* ── Ring wrapper (gold border ONLY for user's profile school,
+           scale-up for actively selected school) ── */}
       <View
         style={[
           styles.ringWrapper,
+          isActive && styles.activeScale,
           isUserSchool && [
             styles.userSchoolBorder,
             Platform.OS === "ios" && {
@@ -260,6 +265,7 @@ export const MadhabScoreRing = React.memo(function MadhabScoreRing({
             styles.label,
             { color: isUserSchool ? gold[500] : colors.textSecondary },
             isUserSchool && styles.labelHighlight,
+            isActive && styles.activeLabel,
           ]}
           numberOfLines={1}
         >
@@ -306,7 +312,8 @@ const styles = StyleSheet.create({
   },
   glow: {
     position: "absolute",
-    top: (CONTAINER_WIDTH - GLOW_SIZE) / 2 + 2,
+    // Center on ring wrapper (RING_SIZE + 8), not on full container
+    top: ((RING_SIZE + 8) - GLOW_SIZE) / 2,
     left: (CONTAINER_WIDTH - GLOW_SIZE) / 2,
     width: GLOW_SIZE,
     height: GLOW_SIZE,
@@ -322,6 +329,14 @@ const styles = StyleSheet.create({
   userSchoolBorder: {
     borderWidth: 1.5,
     borderColor: `${gold[500]}50`,
+    borderRadius: 999,
+  },
+  activeScale: {
+    transform: [{ scale: 1.1 }],
+  },
+  activeLabel: {
+    fontSize: 12.5,
+    fontWeight: "700",
   },
   svgContainer: {
     width: RING_SIZE,

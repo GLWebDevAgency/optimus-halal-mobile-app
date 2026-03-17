@@ -16,13 +16,14 @@ import {
   ScrollView,
   TextInput,
   StyleSheet,
-  Dimensions,
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CaretLeftIcon, EnvelopeSimpleIcon, WarningCircleIcon } from "phosphor-react-native";
 import { Image } from "expo-image";
 import { useHaptics, useTheme, useTranslation } from "@/hooks";
+import { useRequestPasswordReset } from "@/hooks/useAuth";
+import { usePasswordResetStore } from "@/store";
 import { ImpactFeedbackStyle, NotificationFeedbackType } from "expo-haptics";
 import Animated, {
   FadeIn,
@@ -47,11 +48,13 @@ export default function ForgotPasswordScreen() {
   const { t, isRTL } = useTranslation();
 
   const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [error, setError] = useState("");
 
+  const resetMutation = useRequestPasswordReset();
+  const setResetEmail = usePasswordResetStore((s) => s.setEmail);
   const buttonScale = useSharedValue(1);
+  const isLoading = resetMutation.isPending;
 
   const validateEmail = useCallback((email: string) => {
     return /\S+@\S+\.\S+/.test(email);
@@ -71,30 +74,34 @@ export default function ForgotPasswordScreen() {
     }
 
     setError("");
-    setIsLoading(true);
-    
+
     buttonScale.value = withSequence(
       withSpring(0.95, { damping: 10, stiffness: 400 }),
       withSpring(1, { damping: 10, stiffness: 200 })
     );
-    
+
     impact(ImpactFeedbackStyle.Medium);
 
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+    const trimmedEmail = email.trim().toLowerCase();
+    const masked = maskEmail(trimmedEmail);
 
-      // Navigate to confirmation screen with masked email
-      router.push({
-        pathname: "/(auth)/reset-confirmation",
-        params: { email: maskEmail(email) },
-      });
-    } catch (_error) {
-      setError(t.auth.forgotPassword.errors.sendFailed);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [email, validateEmail, t]);
+    resetMutation.mutate(
+      { email: trimmedEmail },
+      {
+        onSuccess: () => {
+          // Store email in ephemeral store for OTP + reset screens
+          setResetEmail(trimmedEmail, masked);
+          router.push("/(auth)/reset-code");
+        },
+        onError: () => {
+          // Backend always returns success (doesn't leak email existence)
+          // but network/server errors can still occur
+          setError(t.auth.forgotPassword.errors.sendFailed);
+          notification(NotificationFeedbackType.Error);
+        },
+      }
+    );
+  }, [email, validateEmail, t, resetMutation, setResetEmail, buttonScale, impact, notification]);
 
   const maskEmail = (email: string) => {
     const [localPart, domain] = email.split("@");

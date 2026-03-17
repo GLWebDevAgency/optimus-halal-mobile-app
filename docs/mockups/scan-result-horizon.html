@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Naqiy — Scan Result Playground v2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #1a1a1a;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 32px 16px;
+    gap: 32px;
+  }
+
+  /* ── Controls ── */
+  .controls {
+    position: sticky; top: 32px; width: 260px;
+    background: #222; border-radius: 16px; padding: 24px;
+    color: #fff; flex-shrink: 0;
+  }
+  .controls h2 { font-size: 15px; font-weight: 800; margin-bottom: 20px; color: #D4AF37; }
+  .cg { margin-bottom: 20px; }
+  .cg label {
+    display: block; font-size: 11px; font-weight: 600; color: #888;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+  }
+  .cg select {
+    width: 100%; padding: 10px 12px; border-radius: 10px;
+    border: 1px solid #333; background: #1a1a1a; color: #fff;
+    font-family: inherit; font-size: 13px; cursor: pointer;
+  }
+  .cg select:hover { border-color: #D4AF37; }
+  .btn-row { display: flex; gap: 6px; }
+  .btn-row button {
+    flex: 1; padding: 8px 6px; font-size: 11px; border-radius: 10px;
+    border: 1px solid #444; background: transparent; color: #fff;
+    font-family: inherit; cursor: pointer;
+  }
+  .btn-row button.active { background: rgba(212,175,55,0.15); border-color: #D4AF37; color: #D4AF37; }
+  .legend { margin-top: 24px; padding-top: 16px; border-top: 1px solid #333; }
+  .legend h3 { font-size: 11px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .li { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; color: #999; }
+  .ldot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── Phone Frame ── */
+  .phone {
+    width: 390px; height: 844px; border-radius: 44px; overflow: hidden;
+    position: relative; flex-shrink: 0;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.5), 0 0 0 2px #333;
+    transition: background 0.4s;
+  }
+  .phone.dark { background: #0C0C0C; }
+  .phone.light { background: #f3f1ed; }
+
+  /* ── Status Bar ── */
+  .sbar {
+    height: 54px; padding: 14px 24px 0;
+    display: flex; justify-content: space-between; align-items: center;
+    position: absolute; top: 0; left: 0; right: 0; z-index: 100;
+  }
+  .dark .sbar { color: #fff; }
+  .light .sbar { color: #0d1b13; }
+  .sbar .time { font-size: 14px; font-weight: 700; }
+
+  /* ── Compact Sticky Header ── */
+  .ch {
+    position: absolute; top: 0; left: 0; right: 0; z-index: 90;
+    padding: 54px 20px 0; height: 106px;
+    display: flex; align-items: center; gap: 12px;
+    opacity: 0; transform: translateY(-8px);
+    transition: opacity 0.3s, transform 0.3s; pointer-events: none;
+  }
+  .ch.vis { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .dark .ch { background: rgba(12,12,12,0.88); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .light .ch { background: rgba(243,241,237,0.92); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-bottom: 1px solid rgba(0,0,0,0.06); }
+  .ch img { width: 36px; height: 36px; border-radius: 10px; object-fit: cover; }
+  .ch .ci { flex: 1; }
+  .ch .cn { font-size: 14px; font-weight: 700; letter-spacing: -0.2px; }
+  .ch .cv { font-size: 11px; font-weight: 600; margin-top: 1px; }
+  .ch .bb { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 18px; cursor: pointer; }
+  .dark .ch .bb { background: rgba(255,255,255,0.06); color: #fff; }
+  .light .ch .bb { background: rgba(0,0,0,0.05); color: #0d1b13; }
+
+  /* ── Sticky Tab Bar ── */
+  .stb {
+    position: absolute; top: 106px; left: 0; right: 0; z-index: 89;
+    opacity: 0; transform: translateY(-8px);
+    transition: opacity 0.3s, transform 0.3s; pointer-events: none;
+  }
+  .stb.vis { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .dark .stb { background: rgba(12,12,12,0.88); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .light .stb { background: rgba(243,241,237,0.92); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-bottom: 1px solid rgba(0,0,0,0.06); }
+
+  .scrl { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .scrl::-webkit-scrollbar { display: none; }
+
+  /* ════════════════════════════════════════════
+     HERO ZONE — Hybrid (current + proposed)
+     Layout horizontal, fond teinté, glow
+     ════════════════════════════════════════════ */
+  .hero {
+    padding: 58px 20px 18px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s ease-out, opacity 0.15s ease-out;
+    transform-origin: top center;
+  }
+  /* Status-tinted background */
+  .hero-bg {
+    position: absolute; inset: 0;
+    transition: background 0.4s;
+  }
+  /* Ambient glow orb */
+  .hero-orb {
+    position: absolute;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.15;
+    top: -40px; right: -40px;
+    transition: background 0.4s;
+  }
+
+  /* Horizontal split */
+  .hero-split {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Image card (left) */
+  .hero-img-wrap {
+    width: 100px; height: 100px;
+    border-radius: 20px;
+    padding: 4px;
+    position: relative;
+    flex-shrink: 0;
+    overflow: hidden;
+    transition: border-color 0.3s, background 0.3s;
+  }
+  .hero-img-wrap img {
+    width: 100%; height: 100%;
+    border-radius: 14px;
+    object-fit: cover;
+  }
+  .hero-img-glow {
+    position: absolute; inset: -12px;
+    border-radius: 30px;
+    filter: blur(20px);
+    opacity: 0.35;
+    z-index: -1;
+  }
+  .hero-zoom {
+    position: absolute; bottom: 6px; right: 6px;
+    width: 22px; height: 22px; border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+  }
+  .dark .hero-zoom { background: rgba(12,12,12,0.7); color: #999; }
+  .light .hero-zoom { background: rgba(255,255,255,0.85); color: #666; }
+
+  /* Info stack (right) */
+  .hero-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 2px;
+  }
+
+  /* Micro header */
+  .hero-micro {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 2px;
+  }
+  .hero-micro-logo {
+    width: 13px; height: 13px; border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; font-weight: 900;
+  }
+  .dark .hero-micro-logo { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4); }
+  .light .hero-micro-logo { background: rgba(0,0,0,0.04); color: rgba(0,0,0,0.3); }
+  .hero-micro-text {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 1.2px; text-transform: uppercase;
+  }
+
+  /* Product name */
+  .hero-name {
+    font-size: 16px; font-weight: 700;
+    line-height: 20px; letter-spacing: -0.2px;
+  }
+
+  /* Brand + barcode */
+  .hero-brand-row {
+    display: flex; align-items: center; gap: 8px;
+    flex-wrap: wrap;
+  }
+  .hero-brand { font-size: 12px; font-weight: 500; }
+  .hero-barcode-chip {
+    display: flex; align-items: center; gap: 3px;
+  }
+  .hero-barcode-icon {
+    width: 12px; height: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px;
+  }
+  .hero-barcode {
+    font-size: 10px; font-weight: 500;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  /* Verdict row: dot + text */
+  .hero-verdict-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 4px;
+  }
+  .hero-verdict-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .hero-verdict-text {
+    font-size: 17px; font-weight: 800;
+    letter-spacing: 0.3px;
+  }
+
+  /* Certifier trust bar */
+  .hero-cert {
+    margin-top: 6px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .hero-cert-bar { flex: 1; }
+  .hero-cert-header {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 4px;
+  }
+  .hero-cert-logo {
+    width: 18px; height: 18px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 800;
+    border: 1px solid;
+  }
+  .hero-cert-name { flex: 1; font-size: 12px; font-weight: 600; }
+  .hero-cert-score { font-size: 12px; font-weight: 700; }
+  .hero-cert-track {
+    height: 3px; border-radius: 1.5px; overflow: hidden;
+  }
+  .hero-cert-fill {
+    height: 3px; border-radius: 1.5px;
+    transition: width 0.8s ease;
+  }
+  .hero-tier {
+    font-size: 9px; font-weight: 500;
+    letter-spacing: 0.3px; margin-top: 3px;
+  }
+  .hero-detail-btn {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; cursor: pointer;
+    border: 1px solid;
+  }
+  .dark .hero-detail-btn { background: rgba(255,255,255,0.04); border-color: rgba(207,165,51,0.20); color: rgba(255,255,255,0.5); }
+  .light .hero-detail-btn { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.08); color: rgba(0,0,0,0.35); }
+
+  /* Certifier pill (for the playground proposed style) */
+  .hero-cert-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 14px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.3px;
+    margin-top: 2px;
+  }
+  .dark .hero-cert-pill { background: rgba(212,175,55,0.10); border: 1px solid rgba(212,175,55,0.25); color: #D4AF37; }
+  .light .hero-cert-pill { background: rgba(139,105,20,0.06); border: 1px solid rgba(139,105,20,0.18); color: #8B6914; }
+
+  /* Community badge */
+  .hero-community {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 12px; border-radius: 12px;
+    font-size: 10px; font-weight: 600;
+    margin-top: 10px; border: 1px solid;
+    position: relative; z-index: 1;
+  }
+  .dark .hero-community { background: rgba(255,255,255,0.04); border-color: rgba(207,165,51,0.15); }
+  .light .hero-community { background: rgba(0,0,0,0.02); border-color: rgba(0,0,0,0.06); }
+
+  /* ═══ Common shared styles ═══ */
+  .hl { height: 1px; margin: 0 20px; }
+  .dark .hl { background: rgba(255,255,255,0.07); }
+  .light .hl { background: rgba(0,0,0,0.06); }
+
+  .alerts { padding: 16px 20px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .atag { display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 600; }
+  .atag.warn { color: #f97316; }
+  .dark .atag.warn { background: rgba(249,115,22,0.10); }
+  .light .atag.warn { background: rgba(249,115,22,0.08); }
+  .atag.danger { color: #ef4444; }
+  .dark .atag.danger { background: rgba(239,68,68,0.10); }
+  .light .atag.danger { background: rgba(239,68,68,0.08); }
+
+  .tbar { display: flex; padding: 0 20px; position: relative; }
+  .tbar::after { content: ''; position: absolute; bottom: 0; left: 20px; right: 20px; height: 1px; }
+  .dark .tbar::after { background: rgba(255,255,255,0.07); }
+  .light .tbar::after { background: rgba(0,0,0,0.06); }
+  .tab { flex: 1; padding: 14px 0; text-align: center; font-size: 14px; font-weight: 600; cursor: pointer; position: relative; transition: color 0.2s; }
+  .tab.on::after { content: ''; position: absolute; bottom: 0; left: 20%; right: 20%; height: 2px; border-radius: 1px; }
+  .dark .tab { color: rgba(255,255,255,0.4); }
+  .dark .tab.on { color: #D4AF37; }
+  .dark .tab.on::after { background: #D4AF37; }
+  .light .tab { color: rgba(0,0,0,0.35); }
+  .light .tab.on { color: #8B6914; }
+  .light .tab.on::after { background: #8B6914; }
+
+  .sh { display: flex; align-items: center; justify-content: space-between; padding: 0 20px; margin-bottom: 14px; margin-top: 28px; }
+  .sh .tr { display: flex; align-items: center; gap: 6px; }
+  .sh h3 { font-size: 17px; font-weight: 800; letter-spacing: -0.3px; }
+  .sh .sa { font-size: 12px; font-weight: 600; cursor: pointer; }
+  .dark .sh h3 { color: #fff; }
+  .dark .sh .sa { color: #D4AF37; }
+  .light .sh h3 { color: #0d1b13; }
+  .light .sh .sa { color: #8B6914; }
+  .wo { opacity: 0.7; }
+
+  .mr { display: flex; justify-content: space-around; padding: 20px 20px 16px; gap: 8px; }
+  .mri { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; min-width: 72px; }
+  .mrg { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
+  .mrg:hover { transform: scale(1.05); }
+  .mrg.us { box-shadow: 0 0 0 3px #D4AF37; }
+  .mrg.halal { background: rgba(34,197,94,0.12); border: 2px solid rgba(34,197,94,0.3); }
+  .mrg.haram { background: rgba(239,68,68,0.12); border: 2px solid rgba(239,68,68,0.3); }
+  .mrg.doubtful { background: rgba(249,115,22,0.12); border: 2px solid rgba(249,115,22,0.3); }
+  .msn { font-size: 11px; font-weight: 600; }
+  .mst { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+
+  .gc { margin: 0 20px 16px; border-radius: 20px; padding: 20px; border: 1px solid; }
+  .dark .gc { background: rgba(255,255,255,0.04); border-color: rgba(207,165,51,0.20); }
+  .light .gc { background: rgba(255,255,255,0.72); border-color: rgba(0,0,0,0.06); }
+
+
+  .ig { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 20px 16px; }
+  .ic { padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 500; }
+  .dark .ic.safe { background: rgba(255,255,255,0.04); color: #d1d5db; }
+  .light .ic.safe { background: rgba(0,0,0,0.03); color: #4b5563; }
+  .ic.haram { color: #ef4444; font-weight: 700; }
+  .dark .ic.haram { background: rgba(239,68,68,0.12); }
+  .light .ic.haram { background: rgba(239,68,68,0.08); }
+  .ic.doubtful { color: #f97316; font-weight: 600; }
+  .dark .ic.doubtful { background: rgba(249,115,22,0.10); }
+  .light .ic.doubtful { background: rgba(249,115,22,0.08); }
+
+  .acc { padding: 0 20px; }
+  .aci { border-bottom: 1px solid; }
+  .dark .aci { border-bottom-color: rgba(255,255,255,0.05); }
+  .light .aci { border-bottom-color: rgba(0,0,0,0.04); }
+  .ach { display: flex; align-items: center; padding: 14px 0; gap: 10px; cursor: pointer; user-select: none; }
+  .aic { font-size: 15px; width: 24px; text-align: center; }
+  .att { flex: 1; font-size: 14px; font-weight: 600; }
+  .acn { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 8px; }
+  .dark .acn { background: rgba(255,255,255,0.06); color: #9ca3af; }
+  .light .acn { background: rgba(0,0,0,0.04); color: #6b7280; }
+  .achv { font-size: 12px; transition: transform 0.2s; }
+  .acb { padding: 0 0 14px 34px; font-size: 13px; line-height: 1.6; display: none; }
+  .aci.open .acb { display: block; }
+  .aci.open .achv { transform: rotate(90deg); }
+  .adi { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+  .adc { font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 6px; font-family: 'SF Mono','Fira Code',monospace; }
+  .dark .adc.safe { background: rgba(255,255,255,0.06); color: #9ca3af; }
+  .light .adc.safe { background: rgba(0,0,0,0.04); color: #6b7280; }
+  .adc.warning { color: #f97316; }
+  .dark .adc.warning { background: rgba(249,115,22,0.12); }
+  .light .adc.warning { background: rgba(249,115,22,0.08); }
+  .adn { font-size: 12px; }
+
+  .alts { display: flex; gap: 12px; padding: 0 20px; overflow-x: auto; scroll-snap-type: x mandatory; }
+  .alts::-webkit-scrollbar { display: none; }
+  .altc { min-width: 160px; border-radius: 16px; padding: 14px; scroll-snap-align: start; cursor: pointer; transition: transform 0.2s; border: 1px solid; }
+  .altc:hover { transform: scale(0.97); }
+  .dark .altc { background: rgba(255,255,255,0.04); border-color: rgba(207,165,51,0.15); }
+  .light .altc { background: rgba(255,255,255,0.72); border-color: rgba(0,0,0,0.06); }
+  .altc .ai { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 10px; }
+  .altc .an { font-size: 12px; font-weight: 600; margin-bottom: 4px; line-height: 1.3; }
+  .altc .as { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px; display: inline-flex; }
+
+  .fbs { padding: 0 20px 16px; display: flex; gap: 10px; }
+  .fb { flex: 1; padding: 12px; border-radius: 14px; text-align: center; font-size: 13px; font-weight: 600; cursor: pointer; transition: transform 0.15s; border: 1px solid; }
+  .fb:hover { transform: scale(0.97); }
+  .dark .fb { border-color: rgba(255,255,255,0.08); color: #d1d5db; background: transparent; }
+  .light .fb { border-color: rgba(0,0,0,0.08); color: #4b5563; background: transparent; }
+
+  .disc { padding: 20px 20px 40px; display: flex; gap: 8px; align-items: flex-start; font-size: 11px; line-height: 1.5; }
+
+  /* ── Health Tab ── */
+  .hsh { display: flex; align-items: center; gap: 20px; padding: 24px 20px; }
+  .hrw { position: relative; width: 80px; height: 80px; flex-shrink: 0; }
+  .hrw svg { transform: rotate(-90deg); }
+  .hrl { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .hrl .gr { font-size: 24px; font-weight: 900; }
+  .hrl .sn { font-size: 10px; font-weight: 600; opacity: 0.6; }
+  .hsu { flex: 1; }
+  .hsu .ht { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .hsu .hst { font-size: 13px; line-height: 1.4; opacity: 0.6; }
+
+  .axs { padding: 0 20px 20px; }
+  .axi { margin-bottom: 16px; }
+  .axh { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .axn { font-size: 13px; font-weight: 600; }
+  .axsc { font-size: 13px; font-weight: 700; }
+  .axb { height: 6px; border-radius: 3px; overflow: hidden; }
+  .dark .axb { background: rgba(255,255,255,0.06); }
+  .light .axb { background: rgba(0,0,0,0.06); }
+  .axf { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+
+  .ng { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 20px 16px; }
+  .nc { border-radius: 14px; padding: 14px; border: 1px solid; }
+  .dark .nc { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.06); }
+  .light .nc { background: rgba(255,255,255,0.6); border-color: rgba(0,0,0,0.04); }
+  .nc .nl { font-size: 11px; font-weight: 600; opacity: 0.5; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 4px; }
+  .nc .nv { font-size: 20px; font-weight: 800; }
+  .nc .nu { font-size: 11px; font-weight: 500; opacity: 0.4; }
+  .nc .nbm { height: 3px; border-radius: 2px; margin-top: 8px; overflow: hidden; }
+  .dark .nbm { background: rgba(255,255,255,0.06); }
+  .light .nbm { background: rgba(0,0,0,0.06); }
+
+  .nos { padding: 0 20px 20px; }
+  .noc { display: flex; align-items: center; gap: 14px; padding: 16px; border-radius: 16px; border: 1px solid; }
+  .dark .noc { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.06); }
+  .light .noc { background: rgba(255,255,255,0.6); border-color: rgba(0,0,0,0.04); }
+  .nob { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; color: #fff; }
+  .noi { flex: 1; }
+  .noi .not { font-size: 14px; font-weight: 700; }
+  .noi .nod { font-size: 12px; opacity: 0.5; margin-top: 2px; }
+
+  .nss { padding: 0 20px 16px; }
+  .nsb { display: flex; border-radius: 10px; overflow: hidden; height: 36px; }
+  .nsg { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #fff; transition: opacity 0.3s, transform 0.3s; }
+  .nsg.on { transform: scaleY(1.15); border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+
+  .als { padding: 0 20px 16px; }
+  .alt2 { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .lr { display: flex; gap: 8px; padding: 0 20px 16px; overflow-x: auto; }
+  .lr::-webkit-scrollbar { display: none; }
+  .lp { display: flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; border: 1px solid; }
+  .dark .lp { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.08); color: #d1d5db; }
+  .light .lp { background: rgba(0,0,0,0.02); border-color: rgba(0,0,0,0.06); color: #4b5563; }
+
+  .boycott { margin: 0 20px 16px; padding: 14px 16px; border-radius: 14px; display: flex; align-items: center; gap: 10px; border: 1px solid rgba(239,68,68,0.20); }
+  .dark .boycott { background: rgba(239,68,68,0.08); }
+  .light .boycott { background: rgba(239,68,68,0.05); }
+  .boycott .bt { font-size: 13px; font-weight: 600; color: #ef4444; }
+  .boycott .bd { font-size: 11px; color: #f87171; opacity: 0.8; }
+
+  .schr { display: flex; gap: 8px; padding: 0 20px; overflow-x: auto; margin-bottom: 16px; }
+  .schr::-webkit-scrollbar { display: none; }
+  .schp { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 12px; white-space: nowrap; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid; transition: transform 0.15s; }
+  .schp:hover { transform: scale(0.97); }
+  .dark .schp { background: rgba(212,175,55,0.06); border-color: rgba(212,175,55,0.15); color: #D4AF37; }
+  .light .schp { background: rgba(139,105,20,0.04); border-color: rgba(139,105,20,0.12); color: #8B6914; }
+
+  .trust { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 12px; margin: 0 20px 16px; cursor: pointer; border: 1px solid; transition: transform 0.15s; }
+  .trust:hover { transform: scale(0.98); }
+  .dark .trust { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.06); }
+  .light .trust { background: rgba(0,0,0,0.02); border-color: rgba(0,0,0,0.04); }
+  .trust .tl { font-size: 12px; font-weight: 500; flex: 1; }
+  .trust .tv { font-size: 12px; font-weight: 700; }
+
+  .dark .tp { color: #fff; }
+  .light .tp { color: #0d1b13; }
+  .dark .ts { color: #A0A0A0; }
+  .light .ts { color: #4b5563; }
+  .dark .tm { color: #8b929a; }
+  .light .tm { color: #6b7280; }
+  .gold { color: #D4AF37; }
+  .light .gold { color: #8B6914; }
+
+  .tc { display: none; }
+  .tc.on { display: block; }
+
+  .hi { width: 134px; height: 5px; border-radius: 3px; margin: 8px auto 12px; }
+  .dark .hi { background: rgba(255,255,255,0.15); }
+  .light .hi { background: rgba(0,0,0,0.12); }
+
+  /* ═══ Bottom Sheet Overlay ═══ */
+  .bs-overlay {
+    position: absolute; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.55);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .bs-overlay.open { opacity: 1; pointer-events: auto; }
+  .bs-sheet {
+    position: absolute; bottom: 0; left: 0; right: 0; z-index: 201;
+    border-radius: 24px 24px 0 0;
+    max-height: 75%; overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.32,0.72,0,1);
+    padding: 0 20px 34px;
+  }
+  .bs-overlay.open .bs-sheet { transform: translateY(0); }
+  .dark .bs-sheet { background: #1a1a1a; }
+  .light .bs-sheet { background: #f9f8f5; }
+  .bs-sheet::-webkit-scrollbar { display: none; }
+  .bs-handle { width: 36px; height: 4px; border-radius: 2px; margin: 10px auto 16px; }
+  .dark .bs-handle { background: rgba(255,255,255,0.15); }
+  .light .bs-handle { background: rgba(0,0,0,0.12); }
+  .bs-title { font-size: 17px; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.2px; }
+  .bs-text { font-size: 14px; line-height: 1.7; margin-bottom: 10px; }
+  .bs-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; margin-top: 16px; }
+  .bs-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid; }
+  .dark .bs-row { border-color: rgba(255,255,255,0.05); }
+  .light .bs-row { border-color: rgba(0,0,0,0.04); }
+  .bs-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .bs-val { font-size: 14px; font-weight: 600; }
+  .bs-sub { font-size: 12px; opacity: 0.5; }
+  .bs-bar { height: 4px; border-radius: 2px; margin-top: 8px; overflow: hidden; }
+  .dark .bs-bar { background: rgba(255,255,255,0.06); }
+  .light .bs-bar { background: rgba(0,0,0,0.06); }
+  .bs-fill { height: 100%; border-radius: 2px; }
+
+  /* Clickable cursor on all interactive elements */
+  .hero-img-wrap, .hero-verdict-row, .hero-cert, .hero-cert-pill,
+  .hero-community, .boycott, .atag, .trust, .schp,
+  .ic, .adi, .altc, .fb, .hsh, .nss, .axi, .nc, .noc, .lp,
+  .alt2 .atag { cursor: pointer; }
+  .ic:hover, .adi:hover, .nc:hover, .axi:hover, .noc:hover,
+  .lp:hover, .atag:hover, .fb:hover { opacity: 0.8; }
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <h2>Naqiy Playground v2</h2>
+  <div class="cg">
+    <label>Produit</label>
+    <select id="ps" onchange="switchProduct(this.value)">
+      <option value="halal">Beurre President (Halal AVS)</option>
+      <option value="doubtful">Haribo Tagada (Douteux)</option>
+      <option value="haram">Knorr Bouillon Poule (Haram)</option>
+    </select>
+  </div>
+  <div class="cg">
+    <label>Theme</label>
+    <div class="btn-row">
+      <button id="bd" class="active" onclick="setTheme('dark')">Dark</button>
+      <button id="bl" onclick="setTheme('light')">Light</button>
+    </div>
+  </div>
+  <div class="cg">
+    <label>Onglet</label>
+    <div class="btn-row">
+      <button id="bh" class="active" onclick="setTab('halal')">Halal</button>
+      <button id="bs" onclick="setTab('sante')">Sante</button>
+    </div>
+  </div>
+  <div class="cg">
+    <label>Ecole</label>
+    <select id="ms" onchange="setMadhab(this.value)">
+      <option value="maliki">Maliki</option>
+      <option value="hanafi">Hanafi</option>
+      <option value="shafii">Shafi'i</option>
+      <option value="hanbali">Hanbali</option>
+    </select>
+  </div>
+  <div class="legend">
+    <h3>Hero hybride</h3>
+    <div style="font-size:11px;color:#777;line-height:1.7">
+      Layout horizontal (actuel)<br>
+      + Fond teinte par statut<br>
+      + Glow orb derriere image<br>
+      + Verdict dot + text (propose)<br>
+      + Certifier trust bar (actuel)<br>
+      + Certifier pill gold (propose)<br>
+      + Community badge (actuel)<br>
+      + Barcode chip (actuel)
+    </div>
+  </div>
+  <div class="legend">
+    <h3>Legende</h3>
+    <div class="li"><div class="ldot" style="background:#22c55e"></div> Halal</div>
+    <div class="li"><div class="ldot" style="background:#f97316"></div> Douteux</div>
+    <div class="li"><div class="ldot" style="background:#ef4444"></div> Haram</div>
+    <div class="li"><div class="ldot" style="background:#D4AF37"></div> Gold accent</div>
+  </div>
+</div>
+
+<div class="phone dark" id="phone">
+  <div class="sbar"><span class="time">9:41</span><span>||||  100%</span></div>
+
+  <div class="ch" id="ch">
+    <div class="bb">&#8249;</div>
+    <img id="cimg" src="" alt="">
+    <div class="ci">
+      <div class="cn tp" id="cname"></div>
+      <div class="cv" id="cverdict"></div>
+    </div>
+  </div>
+
+  <div class="stb" id="stb">
+    <div class="tbar">
+      <div class="tab on" id="st-h" onclick="setTab('halal')">Halal</div>
+      <div class="tab" id="st-s" onclick="setTab('sante')">Sante</div>
+    </div>
+  </div>
+
+  <div class="scrl" id="scrl">
+
+    <!-- ════ HERO HYBRIDE ════ -->
+    <div class="hero" id="hero">
+      <div class="hero-bg" id="heroBg"></div>
+      <div class="hero-orb" id="heroOrb"></div>
+
+      <div class="hero-split">
+        <!-- Image (left) -->
+        <div class="hero-img-wrap" id="heroImgWrap">
+          <div class="hero-img-glow" id="heroGlow"></div>
+          <img id="heroImg" src="" alt="">
+          <div class="hero-zoom">&#128269;</div>
+        </div>
+
+        <!-- Info (right) -->
+        <div class="hero-info">
+          <div class="hero-micro">
+            <div class="hero-micro-logo">N</div>
+            <span class="hero-micro-text tm" id="heroMicro"></span>
+          </div>
+
+          <div class="hero-name tp" id="heroName"></div>
+
+          <div class="hero-brand-row">
+            <span class="hero-brand tm" id="heroBrand"></span>
+            <div class="hero-barcode-chip">
+              <span class="hero-barcode-icon tm">&#9783;</span>
+              <span class="hero-barcode tm" id="heroBarcode"></span>
+            </div>
+          </div>
+
+          <div class="hero-verdict-row">
+            <div class="hero-verdict-dot" id="heroVDot"></div>
+            <span class="hero-verdict-text" id="heroVText"></span>
+          </div>
+
+          <!-- Certifier trust bar OR pill -->
+          <div id="heroCertArea"></div>
+        </div>
+      </div>
+
+      <!-- Community badge -->
+      <div id="heroCommunity"></div>
+    </div>
+
+    <!-- Boycott -->
+    <div id="boycottW" style="display:none">
+      <div class="boycott">
+        <span style="font-size:20px">&#128683;</span>
+        <div>
+          <div class="bt" id="boycottT"></div>
+          <div class="bd" id="boycottD"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hl"></div>
+    <div class="alerts" id="alertsEl"></div>
+
+    <div class="tbar" id="mtb">
+      <div class="tab on" id="mt-h" onclick="setTab('halal')">Halal</div>
+      <div class="tab" id="mt-s" onclick="setTab('sante')">Sante</div>
+    </div>
+
+    <!-- HALAL TAB -->
+    <div class="tc on" id="c-h">
+      <div class="mr" id="madhabR"></div>
+
+      <div class="trust" id="trustM">
+        <span style="font-size:16px">&#128737;</span>
+        <span class="tl ts">Score de confiance</span>
+        <span class="tv gold" id="trustV">87%</span>
+        <span class="tm" style="font-size:12px">&#8250;</span>
+      </div>
+      <div class="sh"><div class="tr"><h3 class="tp">Sources</h3><svg class="wo" width="20" height="10" viewBox="0 0 24 12"><path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke="#D4AF37" stroke-width="1.5" fill="none"/></svg></div><span class="sa gold">Voir tout</span></div>
+      <div class="schr" id="scholarR"></div>
+      <div class="sh"><div class="tr"><h3 class="tp">Ingredients</h3><svg class="wo" width="20" height="10" viewBox="0 0 24 12"><path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke="#D4AF37" stroke-width="1.5" fill="none"/></svg></div><span class="sa gold" id="ingCt"></span></div>
+      <div class="ig" id="ingG"></div>
+      <div class="acc" id="hAcc"></div>
+      <div class="hl" style="margin-top:16px"></div>
+      <div class="sh"><div class="tr"><h3 class="tp">Alternatives Halal</h3><svg class="wo" width="20" height="10" viewBox="0 0 24 12"><path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke="#D4AF37" stroke-width="1.5" fill="none"/></svg></div></div>
+      <div class="alts" id="altsS"></div>
+      <div style="height:20px"></div><div class="hl"></div>
+      <div class="sh" style="margin-top:20px"><div class="tr"><h3 class="gold" style="font-size:10px;letter-spacing:0.8px;text-transform:uppercase">Votre avis compte</h3></div></div>
+      <div class="fbs"><div class="fb">Correct</div><div class="fb">Signaler</div></div>
+      <div class="hl"></div>
+      <div class="disc tm"><span style="font-size:14px;flex-shrink:0">i</span><span>Analyse basee sur les ingredients selon les positions de chaque ecole juridique islamique. La decision finale vous appartient.</span></div>
+    </div>
+
+    <!-- SANTE TAB -->
+    <div class="tc" id="c-s">
+      <div class="hsh" id="healthH"></div><div class="hl"></div>
+      <div class="sh"><div class="tr"><h3 class="tp">Nutri-Score</h3><svg class="wo" width="20" height="10" viewBox="0 0 24 12"><path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke="#D4AF37" stroke-width="1.5" fill="none"/></svg></div></div>
+      <div class="nss" id="nsS"></div><div class="hl"></div>
+      <div class="sh"><div class="tr"><h3 class="tp">Axes de sante</h3><svg class="wo" width="20" height="10" viewBox="0 0 24 12"><path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke="#D4AF37" stroke-width="1.5" fill="none"/></svg></div></div>
+      <div class="axs" id="axsS"></div><div class="hl"></div>
+      <div class="sh"><div class="tr"><h3 class="tp">Nutriments</h3><svg class="wo" width="20" height="10" viewBox="0 0 24 12"><path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke="#D4AF37" stroke-width="1.5" fill="none"/></svg></div><span class="sa gold">pour 100g</span></div>
+      <div class="ng" id="ngG"></div><div class="hl"></div>
+      <div class="sh"><div class="tr"><h3 class="tp">Transformation</h3><svg class="wo" width="20" height="10" viewBox="0 0 24 12"><path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke="#D4AF37" stroke-width="1.5" fill="none"/></svg></div></div>
+      <div class="nos" id="noS"></div><div class="hl"></div>
+      <div class="sh"><div class="tr"><h3 class="tp">Allergenes</h3><svg class="wo" width="20" height="10" viewBox="0 0 24 12"><path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke="#D4AF37" stroke-width="1.5" fill="none"/></svg></div></div>
+      <div class="als" id="alS"></div><div class="hl"></div>
+      <div class="sh"><div class="tr"><h3 class="tp">Labels</h3><svg class="wo" width="20" height="10" viewBox="0 0 24 12"><path d="M0,6 Q6,0 12,6 Q18,12 24,6" stroke="#D4AF37" stroke-width="1.5" fill="none"/></svg></div></div>
+      <div class="lr" id="lbR"></div>
+      <div class="hl"></div>
+      <div class="disc tm"><span style="font-size:14px;flex-shrink:0">i</span><span>Score sante Naqiy V3 : nutrition (50-60pts), additifs (15-20pts), NOVA (10pts), sucres boissons (20pts). Donnees OpenFoodFacts.</span></div>
+    </div>
+    <div class="hi"></div>
+  </div>
+
+  <!-- ═══ BOTTOM SHEET ═══ -->
+  <div class="bs-overlay" id="bsOverlay" onclick="closeSheet(event)">
+    <div class="bs-sheet" id="bsSheet" onclick="event.stopPropagation()">
+      <div class="bs-handle"></div>
+      <div id="bsContent"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var PRODUCTS = {
+  halal: {
+    name: "Beurre President Doux 250g", brand: "President", barcode: "3256220880194",
+    image: "https://images.openfoodfacts.org/images/products/325/622/088/0194/front_fr.179.400.jpg",
+    verdict: "halal", tier: "certified", certifier: "AVS", certifierScore: 87,
+    boycott: null, trustScore: 92, community: 12,
+    alerts: [{ text: "Contient : lait", sev: "warn" }],
+    madhabs: { hanafi:{s:"halal",c:0,d:0}, shafii:{s:"halal",c:0,d:0}, maliki:{s:"halal",c:0,d:0}, hanbali:{s:"halal",c:0,d:0} },
+    ingredients: [{n:"Creme pasteurisee",s:"safe"},{n:"Ferments lactiques",s:"safe"},{n:"Sel",s:"safe"}],
+    additives: [],
+    scholarly: [{sch:"Consensus",t:"Produits laitiers purs"},{sch:"Al-Azhar",t:"Fatwa 2019/128"}],
+    alternatives: [{n:"Beurre Bio Charentes",sc:82},{n:"St Hubert Bio Doux",sc:78},{n:"Paysan Breton Doux",sc:75}],
+    health: {
+      score:72,grade:"B",label:"Bon",ns:"C",nova:2,novaL:"Ingredients culinaires transformes",conf:92,
+      axes:[{n:"Nutrition",s:38,m:60,c:"#f59e0b"},{n:"Additifs",s:20,m:20,c:"#22c55e"},{n:"Transformation",s:7,m:10,c:"#22c55e"},{n:"Profil",s:0,m:10,c:"#6b7280"}],
+      nuts:[{l:"Calories",v:"741",u:"kcal",p:85},{l:"Graisses",v:"82",u:"g",p:95,c:"#ef4444"},{l:"Saturees",v:"52",u:"g",p:90,c:"#ef4444"},{l:"Sucres",v:"0.7",u:"g",p:5,c:"#22c55e"},{l:"Sel",v:"0.06",u:"g",p:3,c:"#22c55e"},{l:"Proteines",v:"0.7",u:"g",p:8}],
+      allergens:["Lait"], labels:["Origine France","Lait de vache"]
+    },
+    expl:"Aucun ingredient problematique detecte. Produit laitier pur certifie AVS.", sources:2,
+    bgDark:"rgba(34,197,94,0.06)", bgLight:"rgba(34,197,94,0.04)", heroLabel:"Composition Conforme"
+  },
+  doubtful: {
+    name: "Haribo Tagada Original 300g", brand: "Haribo", barcode: "3102290045501",
+    image: "https://images.openfoodfacts.org/images/products/310/229/004/5501/front_fr.97.400.jpg",
+    verdict: "doubtful", tier: "tier2", certifier: null, certifierScore: null,
+    boycott: null, trustScore: 64, community: 3,
+    alerts: [{text:"E120 : carmine (insecte)",sev:"warn"},{text:"Traces : gluten",sev:"warn"}],
+    madhabs: { hanafi:{s:"halal",c:0,d:1}, shafii:{s:"doubtful",c:0,d:1}, maliki:{s:"doubtful",c:0,d:1}, hanbali:{s:"halal",c:0,d:1} },
+    ingredients: [{n:"Sucre",s:"safe"},{n:"Sirop de glucose",s:"safe"},{n:"Gelatine bovine",s:"safe"},{n:"Amidon",s:"safe"},{n:"Acidifiant",s:"safe"},{n:"E120 carmine",s:"doubtful"},{n:"Aromes",s:"safe"}],
+    additives: [{code:"E120",name:"Carmine (cochenille)",st:"warning"},{code:"E330",name:"Acide citrique",st:"safe"},{code:"E440",name:"Pectine",st:"safe"}],
+    scholarly: [{sch:"Shafi'i",t:"Insectes non-halal sauf sauterelle"},{sch:"Hanafi",t:"Istihalah : transformation complete"},{sch:"Conseil EU",t:"Fatwa CE 2018/042"}],
+    alternatives: [{n:"Lutti Arlequin",sc:68},{n:"Bonbons Auzier",sc:72},{n:"Fini Fizzy Halal",sc:65}],
+    health: {
+      score:28,grade:"D",label:"Mediocre",ns:"E",nova:4,novaL:"Produits ultra-transformes",conf:88,
+      axes:[{n:"Nutrition",s:12,m:60,c:"#ef4444"},{n:"Additifs",s:10,m:20,c:"#f59e0b"},{n:"Transformation",s:2,m:10,c:"#ef4444"},{n:"Profil",s:0,m:10,c:"#6b7280"}],
+      nuts:[{l:"Calories",v:"344",u:"kcal",p:50},{l:"Graisses",v:"0.5",u:"g",p:3,c:"#22c55e"},{l:"Saturees",v:"0.1",u:"g",p:2,c:"#22c55e"},{l:"Sucres",v:"75",u:"g",p:95,c:"#ef4444"},{l:"Sel",v:"0.08",u:"g",p:4,c:"#22c55e"},{l:"Proteines",v:"5.6",u:"g",p:15}],
+      allergens:["Gluten (traces)"], labels:["Fabrique en Allemagne"]
+    },
+    expl:"E120 (carmine) : colorant extrait de la cochenille. Douteux selon Shafi'i et Maliki.", sources:3,
+    bgDark:"rgba(249,115,22,0.05)", bgLight:"rgba(249,115,22,0.03)", heroLabel:"Composition Douteuse"
+  },
+  haram: {
+    name: "Knorr Bouillon de Poule 150g", brand: "Knorr", barcode: "8410187097730",
+    image: "https://images.openfoodfacts.org/images/products/841/018/709/7730/front_fr.30.400.jpg",
+    verdict: "haram", tier: "tier1", certifier: null, certifierScore: null,
+    boycott: {brand:"Unilever",reason:"Activites en territoires occupes"},
+    trustScore: 78, community: 8,
+    alerts: [{text:"Contient : gluten, celeri",sev:"warn"},{text:"Gelatine de porc detectee",sev:"danger"}],
+    madhabs: { hanafi:{s:"haram",c:1,d:1}, shafii:{s:"haram",c:1,d:1}, maliki:{s:"haram",c:1,d:1}, hanbali:{s:"haram",c:1,d:1} },
+    ingredients: [{n:"Sel",s:"safe"},{n:"Amidon de mais",s:"safe"},{n:"Graisse de poule",s:"safe"},{n:"Oignon",s:"safe"},{n:"Exhausteur de gout",s:"safe"},{n:"Gelatine de porc",s:"haram"},{n:"Sucre",s:"safe"},{n:"Curcuma",s:"safe"},{n:"Aromes",s:"safe"},{n:"E471",s:"doubtful"}],
+    additives: [{code:"E621",name:"Glutamate monosodique",st:"warning"},{code:"E471",name:"Mono/diglycerides (origine?)",st:"warning"},{code:"E150a",name:"Caramel",st:"safe"}],
+    scholarly: [{sch:"Consensus",t:"Derives porcins : haram absolu"},{sch:"Al-Azhar",t:"Fatwa 2015/304 gelatine"},{sch:"CFCM",t:"Avis 2020 sur E471"},{sch:"AAOIFI",t:"Standard 2023 additifs"}],
+    alternatives: [{n:"Bouillon Halal Samia",sc:75},{n:"Maggi Bouillon Halal",sc:70},{n:"BioGourmet Legumes",sc:82}],
+    health: {
+      score:35,grade:"C",label:"Moyen",ns:"D",nova:4,novaL:"Produits ultra-transformes",conf:85,
+      axes:[{n:"Nutrition",s:22,m:60,c:"#f59e0b"},{n:"Additifs",s:8,m:20,c:"#ef4444"},{n:"Transformation",s:2,m:10,c:"#ef4444"},{n:"Profil",s:0,m:10,c:"#6b7280"}],
+      nuts:[{l:"Calories",v:"215",u:"kcal",p:32},{l:"Graisses",v:"8.5",u:"g",p:30},{l:"Saturees",v:"4.2",u:"g",p:42,c:"#f59e0b"},{l:"Sucres",v:"9.5",u:"g",p:22,c:"#f59e0b"},{l:"Sel",v:"17.4",u:"g",p:99,c:"#ef4444"},{l:"Proteines",v:"7.8",u:"g",p:20}],
+      allergens:["Gluten","Celeri","Lait"], labels:["Fabrique en France"]
+    },
+    expl:"Contient de la gelatine de porc - interdit par consensus des 4 ecoles (ijma').", sources:4,
+    bgDark:"rgba(239,68,68,0.05)", bgLight:"rgba(239,68,68,0.03)", heroLabel:"Composition Non-Conforme"
+  }
+};
+
+var S = {product:"halal",theme:"dark",tab:"halal",madhab:"maliki"};
+var VC = {halal:"#22c55e",haram:"#ef4444",doubtful:"#f97316",unknown:"#6b7280"};
+var VL = {halal:"Halal",haram:"Haram",doubtful:"Douteux",unknown:"Inconnu"};
+var VI = {halal:"\u2713",haram:"\u2717",doubtful:"?",unknown:"\u2013"};
+var SN = {hanafi:"Hanafi",shafii:"Shafi'i",maliki:"Maliki",hanbali:"Hanbali"};
+var NC = ["#22c55e","#a3e635","#f59e0b","#ef4444"];
+var NSC = {A:"#038141",B:"#85bb2f",C:"#fecb02",D:"#ee8100",E:"#e63e11"};
+var GC = {"A+":"#038141",A:"#22c55e",B:"#85bb2f",C:"#fecb02",D:"#ee8100",F:"#e63e11"};
+
+function clr(el) { while(el.firstChild) el.removeChild(el.firstChild); }
+function mk(tag,cls,txt) { var e=document.createElement(tag); if(cls)e.className=cls; if(txt)e.textContent=txt; return e; }
+
+function render() {
+  var p = PRODUCTS[S.product];
+  document.getElementById("phone").className = "phone " + S.theme;
+
+  // ── HERO ──
+  var isDk = S.theme === "dark";
+  document.getElementById("heroBg").style.background = isDk ? p.bgDark : p.bgLight;
+  document.getElementById("heroOrb").style.background = VC[p.verdict];
+  document.getElementById("heroGlow").style.background = VC[p.verdict];
+  document.getElementById("heroImg").src = p.image;
+
+  // Image border
+  var iw = document.getElementById("heroImgWrap");
+  iw.style.borderWidth = "2.5px";
+  iw.style.borderStyle = "solid";
+  iw.style.borderColor = VC[p.verdict];
+  iw.style.background = isDk ? "rgba(255,255,255,0.04)" : "#ffffff";
+
+  // Micro header
+  var ml = SN[S.madhab] || "";
+  document.getElementById("heroMicro").textContent = "NAQIY SCAN" + (ml ? " \u00B7 " + ml : "");
+
+  // Name / brand / barcode
+  document.getElementById("heroName").textContent = p.name;
+  document.getElementById("heroBrand").textContent = p.brand;
+  document.getElementById("heroBarcode").textContent = p.barcode;
+
+  // Verdict dot + text
+  document.getElementById("heroVDot").style.background = VC[p.verdict];
+  var vt = document.getElementById("heroVText");
+  vt.textContent = p.heroLabel;
+  vt.style.color = VC[p.verdict];
+
+  // Certifier area
+  var ca = document.getElementById("heroCertArea");
+  clr(ca);
+  if (p.certifier && p.certifierScore != null) {
+    // Trust bar (from current)
+    var cert = mk("div","hero-cert");
+    var bar = mk("div","hero-cert-bar");
+    var hdr = mk("div","hero-cert-header");
+    var logo = mk("div","hero-cert-logo");
+    logo.textContent = p.certifier.charAt(0);
+    logo.style.color = VC[p.verdict];
+    logo.style.borderColor = isDk ? "rgba(207,165,51,0.3)" : "rgba(0,0,0,0.1)";
+    logo.style.background = isDk ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.02)";
+    hdr.appendChild(logo);
+    var nm = mk("span","hero-cert-name tp");
+    nm.textContent = p.certifier;
+    hdr.appendChild(nm);
+    var sc = mk("span","hero-cert-score");
+    sc.textContent = p.certifierScore + "/100";
+    sc.style.color = p.certifierScore >= 70 ? "#22c55e" : p.certifierScore >= 40 ? "#f97316" : "#ef4444";
+    hdr.appendChild(sc);
+    bar.appendChild(hdr);
+    var track = mk("div","hero-cert-track");
+    track.style.background = isDk ? "rgba(207,165,51,0.15)" : "rgba(0,0,0,0.08)";
+    var fill = mk("div","hero-cert-fill");
+    fill.style.width = p.certifierScore + "%";
+    fill.style.background = p.certifierScore >= 70 ? "#22c55e" : p.certifierScore >= 40 ? "#f97316" : "#ef4444";
+    track.appendChild(fill);
+    bar.appendChild(track);
+    var tier = mk("span","hero-tier tm");
+    tier.textContent = "Tier 1 \u00B7 Certifie";
+    bar.appendChild(tier);
+    cert.appendChild(bar);
+    var dbtn = mk("div","hero-detail-btn");
+    dbtn.textContent = "\u2261";
+    cert.appendChild(dbtn);
+    ca.appendChild(cert);
+  } else {
+    // Pill (from proposed) for non-certified
+    var tierTxt = p.tier === "tier1" ? "Analyse directe" : p.tier === "tier2" ? "Analyse ingredient" : "Inconnu";
+    var pill = mk("span","hero-cert-pill");
+    pill.textContent = tierTxt;
+    ca.appendChild(pill);
+  }
+
+  // Community badge
+  var cm = document.getElementById("heroCommunity");
+  clr(cm);
+  if (p.community > 0) {
+    var badge = mk("div","hero-community");
+    var ico = mk("span","","&#128101;");
+    badge.appendChild(document.createTextNode("\uD83D\uDC65 "));
+    var btxt = mk("span","ts");
+    btxt.textContent = "Verifie par " + p.community + " utilisateur" + (p.community > 1 ? "s" : "");
+    badge.appendChild(btxt);
+    cm.appendChild(badge);
+  }
+
+  // Compact header
+  document.getElementById("cimg").src = p.image;
+  document.getElementById("cname").textContent = p.name.split(" ").slice(0,3).join(" ");
+  var cv2 = document.getElementById("cverdict");
+  cv2.textContent = VL[p.verdict];
+  cv2.style.color = VC[p.verdict];
+
+  // Boycott
+  if (p.boycott) {
+    document.getElementById("boycottW").style.display = "block";
+    document.getElementById("boycottT").textContent = "Boycott : " + p.boycott.brand;
+    document.getElementById("boycottD").textContent = p.boycott.reason;
+  } else { document.getElementById("boycottW").style.display = "none"; }
+
+  // Alerts
+  var ae = document.getElementById("alertsEl"); clr(ae);
+  p.alerts.forEach(function(a) { var t = mk("span","atag "+a.sev,"\u26A0 "+a.text); ae.appendChild(t); });
+
+  // Trust
+  document.getElementById("trustV").textContent = p.trustScore + "%";
+
+  renderMR(p); renderIng(p); renderAcc(p); renderAlts(p); renderSch(p);
+  renderHH(p); renderNS(p); renderAx(p); renderNut(p); renderNov(p); renderAl(p); renderLb(p);
+  updateTabs();
+}
+
+function renderMR(p) {
+  var el = document.getElementById("madhabR"); clr(el);
+  ["hanafi","shafii","maliki","hanbali"].forEach(function(s) {
+    var v = p.madhabs[s];
+    var it = mk("div","mri"); it.onclick = function(){setMadhab(s)};
+    var rg = mk("div","mrg "+v.s+(s===S.madhab?" us":""));
+    var ic = mk("span",""); ic.style.color=VC[v.s]; ic.style.fontSize=(v.s==="halal"?"22":"18")+"px"; ic.style.fontWeight="900"; ic.textContent=VI[v.s];
+    rg.appendChild(ic); it.appendChild(rg);
+    it.appendChild(mk("span","msn ts",SN[s]));
+    var st = mk("span","mst"); st.style.color=VC[v.s]; st.textContent=VL[v.s]; it.appendChild(st);
+    el.appendChild(it);
+  });
+}
+
+
+function renderIng(p) {
+  var el = document.getElementById("ingG"); clr(el);
+  p.ingredients.forEach(function(i){ el.appendChild(mk("span","ic "+i.s,i.n)); });
+  document.getElementById("ingCt").textContent = p.ingredients.length+" items";
+}
+
+function renderAcc(p) {
+  var el = document.getElementById("hAcc"); clr(el);
+  var gd = S.theme==="dark"?"#D4AF37":"#8B6914";
+  if (p.additives.length>0) {
+    var it = mk("div","aci"); it.onclick=function(){this.classList.toggle("open")};
+    var h = mk("div","ach");
+    var ai = mk("span","aic"); ai.style.color=gd; ai.textContent="\u2697\uFE0F"; h.appendChild(ai);
+    h.appendChild(mk("span","att tp","Additifs"));
+    h.appendChild(mk("span","acn",p.additives.length));
+    h.appendChild(mk("span","achv tm","\u203A"));
+    it.appendChild(h);
+    var b = mk("div","acb");
+    p.additives.forEach(function(a){
+      var di = mk("div","adi");
+      di.appendChild(mk("span","adc "+a.st,a.code));
+      di.appendChild(mk("span","adn ts",a.name));
+      b.appendChild(di);
+    }); it.appendChild(b); el.appendChild(it);
+  }
+  var ci = mk("div","aci"); ci.onclick=function(){this.classList.toggle("open")};
+  var ch2 = mk("div","ach");
+  var ci2 = mk("span","aic"); ci2.style.color=gd; ci2.textContent="\uD83C\uDFC5"; ch2.appendChild(ci2);
+  ch2.appendChild(mk("span","att tp","Certification"));
+  ch2.appendChild(mk("span","achv tm","\u203A"));
+  ci.appendChild(ch2);
+  var cb = mk("div","acb ts");
+  cb.appendChild(mk("p","",p.certifier ? "Certifie par "+p.certifier+" - organisme reconnu en France." : "Aucune certification halal detectee."));
+  ci.appendChild(cb); el.appendChild(ci);
+}
+
+function renderAlts(p) {
+  var el = document.getElementById("altsS"); clr(el);
+  var bg = S.theme==="dark"?"rgba(255,255,255,0.06)":"rgba(0,0,0,0.04)";
+  p.alternatives.forEach(function(a){
+    var c = mk("div","altc");
+    var im = mk("div","ai"); im.style.background=bg; im.textContent="\uD83E\uDD6B"; c.appendChild(im);
+    c.appendChild(mk("div","an tp",a.n));
+    var sc = mk("span","as"); sc.style.background="rgba(34,197,94,0.12)"; sc.style.color="#22c55e"; sc.textContent=a.sc+"/100"; c.appendChild(sc);
+    el.appendChild(c);
+  });
+}
+
+function renderSch(p) {
+  var el = document.getElementById("scholarR"); clr(el);
+  p.scholarly.forEach(function(s){ el.appendChild(mk("div","schp",s.sch+" \u2014 "+s.t)); });
+}
+
+function renderHH(p) {
+  var el = document.getElementById("healthH"); clr(el);
+  var h = p.health; var c = GC[h.grade]||"#6b7280";
+  var ci = 2*Math.PI*34; var of2 = ci*(1-h.score/100);
+  var tk = S.theme==="dark"?"rgba(255,255,255,0.06)":"rgba(0,0,0,0.06)";
+  var w = mk("div","hrw");
+  w.innerHTML = '<svg width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="34" fill="none" stroke="'+tk+'" stroke-width="6"/><circle cx="40" cy="40" r="34" fill="none" stroke="'+c+'" stroke-width="6" stroke-linecap="round" stroke-dasharray="'+ci+'" stroke-dashoffset="'+of2+'"/></svg>';
+  var lb = mk("div","hrl");
+  var gr = mk("span","gr"); gr.style.color=c; gr.textContent=h.grade; lb.appendChild(gr);
+  lb.appendChild(mk("span","sn tm",h.score+"/100")); w.appendChild(lb); el.appendChild(w);
+  var su = mk("div","hsu");
+  su.appendChild(mk("div","ht tp",h.label));
+  su.appendChild(mk("div","hst ts","Score Naqiy Sante V3 \u2014 "+h.conf+"% de confiance"));
+  el.appendChild(su);
+}
+
+function renderNS(p) {
+  var el = document.getElementById("nsS"); clr(el);
+  var b = mk("div","nsb");
+  ["A","B","C","D","E"].forEach(function(g){
+    var sg = mk("div","nsg"+(g===p.health.ns?" on":""),g);
+    sg.style.background=NSC[g]; sg.style.opacity=g===p.health.ns?"1":"0.25";
+    b.appendChild(sg);
+  }); el.appendChild(b);
+}
+
+function renderAx(p) {
+  var el = document.getElementById("axsS"); clr(el);
+  p.health.axes.forEach(function(a){
+    var it = mk("div","axi");
+    var hd = mk("div","axh");
+    hd.appendChild(mk("span","axn tp",a.n));
+    var sc = mk("span","axsc"); sc.style.color=a.c; sc.textContent=a.s+"/"+a.m; hd.appendChild(sc);
+    it.appendChild(hd);
+    var br = mk("div","axb"); var fl = mk("div","axf");
+    fl.style.width=Math.min(100,(a.s/a.m)*100)+"%"; fl.style.background=a.c;
+    br.appendChild(fl); it.appendChild(br); el.appendChild(it);
+  });
+}
+
+function renderNut(p) {
+  var el = document.getElementById("ngG"); clr(el);
+  p.health.nuts.forEach(function(n){
+    var bc = n.c||(S.theme==="dark"?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.15)");
+    var c = mk("div","nc");
+    c.appendChild(mk("div","nl",n.l));
+    var vw = mk("div","");
+    vw.appendChild(mk("span","nv tp",n.v));
+    var u = mk("span","nu tm"); u.textContent=" "+n.u; vw.appendChild(u);
+    c.appendChild(vw);
+    var bm = mk("div","nbm"); var bf = mk("div","");
+    bf.style.cssText="width:"+n.p+"%;height:100%;border-radius:2px;background:"+bc;
+    bm.appendChild(bf); c.appendChild(bm); el.appendChild(c);
+  });
+}
+
+function renderNov(p) {
+  var el = document.getElementById("noS"); clr(el);
+  var h = p.health; var c2 = NC[h.nova-1]||"#6b7280";
+  var cd = mk("div","noc");
+  var bg = mk("div","nob"); bg.style.background=c2; bg.textContent=h.nova; cd.appendChild(bg);
+  var inf = mk("div","noi");
+  inf.appendChild(mk("div","not tp","NOVA "+h.nova));
+  inf.appendChild(mk("div","nod tm",h.novaL));
+  cd.appendChild(inf); el.appendChild(cd);
+}
+
+function renderAl(p) {
+  var el = document.getElementById("alS"); clr(el);
+  var tg = mk("div","alt2");
+  p.health.allergens.forEach(function(a){ tg.appendChild(mk("span","atag warn","\u26A0 "+a)); });
+  el.appendChild(tg);
+}
+
+function renderLb(p) {
+  var el = document.getElementById("lbR"); clr(el);
+  p.health.labels.forEach(function(l){ el.appendChild(mk("span","lp",l)); });
+}
+
+function switchProduct(id) { S.product=id; document.getElementById("scrl").scrollTop=0; updateSticky(0); render(); }
+function setTheme(t) { S.theme=t; document.getElementById("bd").className=t==="dark"?"active":""; document.getElementById("bl").className=t==="light"?"active":""; render(); }
+function setTab(t) { S.tab=t; document.getElementById("bh").className=t==="halal"?"active":""; document.getElementById("bs").className=t==="sante"?"active":""; updateTabs(); }
+function setMadhab(m) { S.madhab=m; document.getElementById("ms").value=m; render(); }
+
+function updateTabs() {
+  ["halal","sante"].forEach(function(t){
+    var on = t===S.tab;
+    document.getElementById("mt-"+(t==="halal"?"h":"s")).className="tab"+(on?" on":"");
+    document.getElementById("st-"+(t==="halal"?"h":"s")).className="tab"+(on?" on":"");
+    document.getElementById("c-"+(t==="halal"?"h":"s")).className="tc"+(on?" on":"");
+  });
+}
+
+document.getElementById("scrl").addEventListener("scroll",function(){ updateSticky(this.scrollTop); });
+
+function updateSticky(y) {
+  var H=280, s0=H*0.45, s1=H*0.65;
+  var p = Math.max(0,Math.min(1,(y-s0)/(s1-s0)));
+  var ch2 = document.getElementById("ch");
+  var stb2 = document.getElementById("stb");
+  var hero = document.getElementById("hero");
+  ch2.style.opacity=p; ch2.style.transform="translateY("+((1-p)*-8)+"px"; ch2.style.pointerEvents=p>0.5?"auto":"none"; ch2.className="ch"+(p>0.1?" vis":"");
+  stb2.style.opacity=p; stb2.style.transform="translateY("+((1-p)*-8)+"px"; stb2.style.pointerEvents=p>0.5?"auto":"none"; stb2.className="stb"+(p>0.1?" vis":"");
+  hero.style.transform="scale("+(1-p*0.08)+")"; hero.style.opacity=1-p*0.4;
+}
+
+// ═══ BOTTOM SHEET ENGINE ═══
+function openSheet(title, buildFn) {
+  var ov = document.getElementById("bsOverlay");
+  var ct = document.getElementById("bsContent");
+  clr(ct);
+  var t = mk("div","bs-title tp"); t.textContent = title; ct.appendChild(t);
+  buildFn(ct);
+  ov.classList.add("open");
+}
+function closeSheet(e) {
+  if (e && e.target !== document.getElementById("bsOverlay")) return;
+  document.getElementById("bsOverlay").classList.remove("open");
+}
+
+// ── Sheet builders ──
+
+function sheetProductImage() {
+  var p = PRODUCTS[S.product];
+  openSheet("Photo du produit", function(ct) {
+    var img = mk("img",""); img.src = p.image; img.style.cssText = "width:100%;border-radius:16px;margin-bottom:16px;";
+    ct.appendChild(img);
+    ct.appendChild(mk("div","bs-text tp",p.name));
+    ct.appendChild(mk("div","bs-text ts",p.brand+" \u00B7 "+p.barcode));
+    ct.appendChild(mk("div","bs-sub tm","Source : OpenFoodFacts. Appuyez longuement pour signaler une erreur d'image."));
+  });
+}
+
+function sheetVerdict() {
+  var p = PRODUCTS[S.product];
+  openSheet("Verdict Halal", function(ct) {
+    var row = mk("div",""); row.style.cssText="display:flex;align-items:center;gap:10px;margin-bottom:16px;";
+    var dot = mk("div","bs-dot"); dot.style.background=VC[p.verdict]; row.appendChild(dot);
+    var vt = mk("span",""); vt.style.cssText="font-size:20px;font-weight:800;color:"+VC[p.verdict]; vt.textContent=p.heroLabel; row.appendChild(vt);
+    ct.appendChild(row);
+    ct.appendChild(mk("div","bs-text ts",p.expl));
+    ct.appendChild(mk("div","bs-label tm","STATUT PAR ECOLE"));
+    ["hanafi","shafii","maliki","hanbali"].forEach(function(s){
+      var v = p.madhabs[s];
+      var r = mk("div","bs-row");
+      var d = mk("div","bs-dot"); d.style.background=VC[v.s]; r.appendChild(d);
+      r.appendChild(mk("span","bs-val tp",SN[s]));
+      var st = mk("span","bs-val"); st.style.color=VC[v.s]; st.textContent=VL[v.s]; r.appendChild(st);
+      ct.appendChild(r);
+    });
+    ct.appendChild(mk("div","bs-label tm","SOURCES"));
+    ct.appendChild(mk("div","bs-text ts",p.sources+" source"+(p.sources>1?"s":"")+" academique"+(p.sources>1?"s":"")+" consultee"+(p.sources>1?"s":"")));
+  });
+}
+
+function sheetTrust() {
+  var p = PRODUCTS[S.product];
+  openSheet("Score de confiance", function(ct) {
+    var sc = mk("div",""); sc.style.cssText="font-size:36px;font-weight:900;margin-bottom:4px;color:"+(p.trustScore>=70?"#22c55e":p.trustScore>=40?"#f59e0b":"#ef4444");
+    sc.textContent=p.trustScore+"/100"; ct.appendChild(sc);
+    ct.appendChild(mk("div","bs-text ts","Mesure la rigueur de l'organisme certificateur, pas le produit. Plus le score est eleve, plus les controles sont stricts."));
+    ct.appendChild(mk("div","bs-label tm","INDICATEURS POSITIFS"));
+    ["\u2713 Controleurs salaries et independants","\u2713 Presents a chaque production","\u2713 Sacrificateurs employes par le certifieur"].forEach(function(t){
+      ct.appendChild(mk("div","bs-text tp",t));
+    });
+    ct.appendChild(mk("div","bs-label tm","INDICATEURS NEGATIFS"));
+    ["\u2717 Accepte l'abattage mecanique de la volaille","\u2717 Accepte l'electronarcose pre-abattage","\u2717 Accepte l'etourdissement des bovins/ovins","\u2717 Accepte la VSM"].forEach(function(t){
+      var el = mk("div","bs-text"); el.style.color="#ef4444"; el.textContent=t; ct.appendChild(el);
+    });
+    ct.appendChild(mk("div","bs-label tm","TRANSPARENCE"));
+    ["Cahier des charges public","Rapports d'audit publies","Liste des entreprises certifiees accessible"].forEach(function(t){
+      ct.appendChild(mk("div","bs-text ts",t));
+    });
+    ct.appendChild(mk("div","bs-sub tm","Score pondere selon l'ecole "+SN[S.madhab]+". Les poids varient selon les positions jurisprudentielles de chaque ecole sur l'abattage."));
+  });
+}
+
+function sheetCommunity() {
+  var p = PRODUCTS[S.product];
+  openSheet("Verification communautaire", function(ct) {
+    ct.appendChild(mk("div","bs-text tp","\uD83D\uDC65 "+p.community+" utilisateur"+(p.community>1?"s":"")+" ont verifie ce produit"));
+    ct.appendChild(mk("div","bs-text ts","Les membres de la communaute Naqiy contribuent a la verification des analyses en signalant les erreurs et en confirmant les verdicts."));
+    ct.appendChild(mk("div","bs-label tm","COMMENT CA MARCHE"));
+    ct.appendChild(mk("div","bs-text ts","1. Scannez le produit\n2. Verifiez si l'analyse est correcte\n3. Appuyez sur 'Correct' ou 'Signaler'\n4. Les votes sont agreges pour ameliorer la fiabilite"));
+  });
+}
+
+function sheetBoycott() {
+  var p = PRODUCTS[S.product];
+  if (!p.boycott) return;
+  openSheet("Boycott", function(ct) {
+    var w = mk("div",""); w.style.cssText="padding:14px;border-radius:14px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.20);margin-bottom:16px;";
+    w.appendChild(mk("div","bs-val","Boycott : "+p.boycott.brand));
+    w.appendChild(mk("div","bs-sub",p.boycott.reason));
+    ct.appendChild(w);
+    ct.appendChild(mk("div","bs-text ts","Cette information provient des listes BDS et de la campagne internationale de boycott. Naqiy affiche cette information a titre informatif."));
+  });
+}
+
+function sheetAlert(alertText) {
+  openSheet("Alerte personnelle", function(ct) {
+    var w = mk("div",""); w.style.cssText="display:flex;align-items:center;gap:8px;padding:14px;border-radius:14px;background:rgba(249,115,22,0.08);margin-bottom:16px;";
+    w.appendChild(mk("span","","\u26A0")); w.appendChild(mk("span","bs-val",alertText));
+    ct.appendChild(w);
+    ct.appendChild(mk("div","bs-text ts","Cette alerte est basee sur votre profil (allergies, regime alimentaire). Vous pouvez personnaliser vos alertes dans les parametres."));
+    ct.appendChild(mk("div","bs-label tm","GERER MES ALERTES"));
+    ct.appendChild(mk("div","bs-text ts","Allez dans Profil > Alertes pour ajouter ou retirer des allergenes et preferences."));
+  });
+}
+
+function sheetMadhab(school) {
+  var p = PRODUCTS[S.product];
+  var v = p.madhabs[school];
+  openSheet("Ecole "+SN[school], function(ct) {
+    var row = mk("div",""); row.style.cssText="display:flex;align-items:center;gap:10px;margin-bottom:16px;";
+    var dot = mk("div","bs-dot"); dot.style.background=VC[v.s]; row.appendChild(dot);
+    var st = mk("span",""); st.style.cssText="font-size:18px;font-weight:700;color:"+VC[v.s]; st.textContent=VL[v.s]+" selon "+SN[school]; row.appendChild(st);
+    ct.appendChild(row);
+    ct.appendChild(mk("div","bs-text ts",p.expl));
+    var sr = mk("div",""); sr.style.cssText="display:flex;gap:24px;margin:16px 0;";
+    [{v:v.c,l:"Conflits"},{v:v.d,l:"Doutes"},{v:p.sources,l:"Sources"}].forEach(function(x){
+      var s = mk("div",""); s.style.textAlign="center";
+      var sv = mk("div",""); sv.style.cssText="font-size:24px;font-weight:800;"; sv.textContent=x.v; s.appendChild(sv);
+      s.appendChild(mk("div","bs-sub",x.l)); sr.appendChild(s);
+    }); ct.appendChild(sr);
+    ct.appendChild(mk("div","bs-sub tm","Les 4 ecoles juridiques sunnites (madhahib) peuvent diverger sur certains ingredients. Naqiy analyse chaque ingredient selon les positions specifiques de chaque ecole."));
+  });
+}
+
+function sheetScholarly(source) {
+  openSheet("Source academique", function(ct) {
+    ct.appendChild(mk("div","bs-label gold",source.sch));
+    ct.appendChild(mk("div","bs-text tp",source.t));
+    ct.appendChild(mk("div","bs-text ts","Cette reference provient de sources academiques et jurisprudentielles reconnues. Les positions sont compilees a partir de fatawa et ouvrages de reference."));
+    ct.appendChild(mk("div","bs-label tm","METHODOLOGIE"));
+    ct.appendChild(mk("div","bs-text ts","Les sources sont extraites de :\n\u2022 Fatawa officielles d'institutions reconnues\n\u2022 Ouvrages de fiqh des 4 ecoles\n\u2022 Standards AAOIFI / SMIIC / MUI\n\u2022 Avis de comites scientifiques halal"));
+  });
+}
+
+function sheetIngredient(ing) {
+  var cols = {safe:"#22c55e",haram:"#ef4444",doubtful:"#f97316"};
+  var labels = {safe:"Sans probleme",haram:"Interdit (Haram)",doubtful:"Douteux"};
+  openSheet(ing.n, function(ct) {
+    var row = mk("div",""); row.style.cssText="display:flex;align-items:center;gap:10px;margin-bottom:16px;";
+    var dot = mk("div","bs-dot"); dot.style.background=cols[ing.s]||"#6b7280"; row.appendChild(dot);
+    var lb = mk("span","bs-val"); lb.style.color=cols[ing.s]||"#6b7280"; lb.textContent=labels[ing.s]||"Inconnu"; row.appendChild(lb);
+    ct.appendChild(row);
+    ct.appendChild(mk("div","bs-text ts","Statut halal de l'ingredient '"+ing.n+"' selon l'analyse Naqiy."));
+    if (ing.s==="haram") ct.appendChild(mk("div","bs-text","Cet ingredient est considere haram par consensus (ijma') des 4 ecoles juridiques."));
+    else if (ing.s==="doubtful") ct.appendChild(mk("div","bs-text","Cet ingredient fait l'objet de divergences entre les ecoles. Consultez les sources academiques pour plus de details."));
+    else ct.appendChild(mk("div","bs-text ts","Aucun probleme detecte pour cet ingredient selon les 4 ecoles."));
+  });
+}
+
+function sheetAdditive(add) {
+  openSheet(add.code+" \u2014 "+add.name, function(ct) {
+    var lbl = add.st==="warning"?"\u26A0 A surveiller":"\u2713 Sans risque";
+    var c = add.st==="warning"?"#f97316":"#22c55e";
+    var row = mk("div",""); row.style.cssText="display:flex;align-items:center;gap:10px;margin-bottom:16px;";
+    var dot = mk("div","bs-dot"); dot.style.background=c; row.appendChild(dot);
+    var lb = mk("span","bs-val"); lb.style.color=c; lb.textContent=lbl; row.appendChild(lb);
+    ct.appendChild(row);
+    ct.appendChild(mk("div","bs-text ts","Les additifs sont evalues selon leur origine (animale, vegetale, synthetique) et les positions des ecoles juridiques sur la transformation chimique (istihalah)."));
+    ct.appendChild(mk("div","bs-label tm","ORIGINE POSSIBLE"));
+    ct.appendChild(mk("div","bs-text ts",add.st==="warning"?"L'origine de cet additif peut etre animale, vegetale ou synthetique. Sans certification claire, le statut reste douteux.":"Cet additif est generalement d'origine vegetale ou synthetique et ne pose pas de probleme."));
+  });
+}
+
+function sheetAlternative(alt) {
+  openSheet(alt.n, function(ct) {
+    var sc = mk("div",""); sc.style.cssText="font-size:32px;font-weight:900;color:#22c55e;margin-bottom:4px;";
+    sc.textContent=alt.sc+"/100"; ct.appendChild(sc);
+    ct.appendChild(mk("div","bs-text ts","Score Naqiy Sante de ce produit alternatif."));
+    ct.appendChild(mk("div","bs-label tm","POURQUOI CETTE ALTERNATIVE ?"));
+    ct.appendChild(mk("div","bs-text ts","Ce produit est suggere car :\n\u2022 Meme categorie que le produit scanne\n\u2022 Meilleur profil halal / sante\n\u2022 Disponible dans les memes enseignes"));
+    ct.appendChild(mk("div","bs-text ts","Appuyez pour scanner ce produit et voir son analyse complete."));
+  });
+}
+
+function sheetFeedback(type) {
+  openSheet(type==="correct"?"Confirmer l'analyse":"Signaler une erreur", function(ct) {
+    if (type==="correct") {
+      ct.appendChild(mk("div","bs-text tp","\uD83D\uDC4D Merci de confirmer que cette analyse est correcte !"));
+      ct.appendChild(mk("div","bs-text ts","Votre vote est enregistre localement et contribue a ameliorer la fiabilite de Naqiy pour toute la communaute."));
+    } else {
+      ct.appendChild(mk("div","bs-text tp","\uD83D\uDEA9 Que souhaitez-vous signaler ?"));
+      ct.appendChild(mk("div","bs-label tm","TYPES DE SIGNALEMENT"));
+      ["\u2022 Verdict incorrect (halal/haram/douteux)","\u2022 Ingredient manquant ou mal orthographie","\u2022 Image incorrecte","\u2022 Information de certification erronee","\u2022 Autre"].forEach(function(t){
+        ct.appendChild(mk("div","bs-text ts",t));
+      });
+    }
+  });
+}
+
+function sheetHealth() {
+  var p = PRODUCTS[S.product]; var h = p.health;
+  openSheet("Score Sante Naqiy V3", function(ct) {
+    var sc = mk("div",""); sc.style.cssText="font-size:36px;font-weight:900;color:"+(GC[h.grade]||"#6b7280")+";margin-bottom:4px;";
+    sc.textContent=h.score+"/100 ("+h.grade+")"; ct.appendChild(sc);
+    ct.appendChild(mk("div","bs-text ts","Le score Naqiy Sante V3 evalue la qualite nutritionnelle globale sur 4 axes independants."));
+    ct.appendChild(mk("div","bs-label tm","4 AXES D'EVALUATION"));
+    h.axes.forEach(function(a){
+      var r = mk("div","bs-row");
+      r.appendChild(mk("span","bs-val tp",a.n));
+      var v = mk("span","bs-val"); v.style.color=a.c; v.textContent=a.s+"/"+a.m; r.appendChild(v);
+      ct.appendChild(r);
+    });
+    ct.appendChild(mk("div","bs-text ts","Confiance : "+h.conf+"%. Base sur les donnees OpenFoodFacts et le modele Naqiy Health V3."));
+  });
+}
+
+function sheetNutriscore() {
+  var p = PRODUCTS[S.product]; var h = p.health;
+  openSheet("Nutri-Score "+h.ns, function(ct) {
+    var sc = mk("div",""); sc.style.cssText="font-size:48px;font-weight:900;color:"+NSC[h.ns]+";margin-bottom:8px;";
+    sc.textContent=h.ns; ct.appendChild(sc);
+    ct.appendChild(mk("div","bs-text ts","Le Nutri-Score est un indicateur officiel europeen qui classe les aliments de A (meilleur) a E (moins bon) selon leur profil nutritionnel."));
+    ct.appendChild(mk("div","bs-label tm","COMMENT C'EST CALCULE"));
+    ct.appendChild(mk("div","bs-text ts","Points negatifs : energie, sucres, graisses saturees, sel\nPoints positifs : fibres, proteines, fruits/legumes/noix\n\nLe score final = negatifs - positifs. Plus c'est bas, mieux c'est."));
+  });
+}
+
+function sheetAxis(axis) {
+  openSheet(axis.n, function(ct) {
+    var sc = mk("div",""); sc.style.cssText="font-size:32px;font-weight:900;color:"+axis.c+";margin-bottom:4px;";
+    sc.textContent=axis.s+"/"+axis.m; ct.appendChild(sc);
+    var bar = mk("div","bs-bar"); var fill = mk("div","bs-fill");
+    fill.style.cssText="width:"+Math.min(100,(axis.s/axis.m)*100)+"%;background:"+axis.c;
+    bar.appendChild(fill); ct.appendChild(bar);
+    ct.appendChild(mk("div","bs-text ts",{
+      "Nutrition":"Evalue les macronutriments (calories, graisses, sucres, sel, proteines, fibres). Base sur le profil nutritionnel adapte a la categorie du produit.",
+      "Additifs":"Mesure le risque lie aux additifs presents. Chaque additif est classe selon les bases EFSA et les alertes sante connues.",
+      "Transformation":"Base sur la classification NOVA (1 a 4). Les produits ultra-transformes (NOVA 4) recoivent un score plus bas.",
+      "Profil":"Ajustement base sur votre profil personnel (age, grossesse, regime). Configure dans vos parametres."
+    }[axis.n] || "Axe d'evaluation du score sante Naqiy V3."));
+  });
+}
+
+function sheetNutrient(nut) {
+  openSheet(nut.l, function(ct) {
+    var sc = mk("div",""); sc.style.cssText="font-size:32px;font-weight:900;margin-bottom:4px;";
+    sc.textContent=nut.v+" "+nut.u; ct.appendChild(sc);
+    var bar = mk("div","bs-bar"); var fill = mk("div","bs-fill");
+    var c = nut.c||(S.theme==="dark"?"rgba(255,255,255,0.3)":"rgba(0,0,0,0.2)");
+    fill.style.cssText="width:"+nut.p+"%;background:"+c;
+    bar.appendChild(fill); ct.appendChild(bar);
+    ct.appendChild(mk("div","bs-sub tm",nut.p+"% de l'apport journalier recommande"));
+    ct.appendChild(mk("div","bs-text ts","Valeur nutritionnelle pour 100g de produit. Les donnees proviennent d'OpenFoodFacts et sont verifiees par la communaute."));
+  });
+}
+
+function sheetNova() {
+  var p = PRODUCTS[S.product]; var h = p.health;
+  openSheet("Transformation NOVA "+h.nova, function(ct) {
+    var sc = mk("div",""); sc.style.cssText="font-size:48px;font-weight:900;color:"+(NC[h.nova-1]||"#6b7280")+";margin-bottom:4px;";
+    sc.textContent=h.nova; ct.appendChild(sc);
+    ct.appendChild(mk("div","bs-text tp",h.novaL));
+    ct.appendChild(mk("div","bs-label tm","CLASSIFICATION NOVA"));
+    [{n:"1",l:"Aliments non transformes",c:"#22c55e"},{n:"2",l:"Ingredients culinaires",c:"#a3e635"},{n:"3",l:"Aliments transformes",c:"#f59e0b"},{n:"4",l:"Ultra-transformes",c:"#ef4444"}].forEach(function(g){
+      var r = mk("div","bs-row");
+      var b = mk("div",""); b.style.cssText="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;font-size:14px;background:"+g.c;
+      b.textContent=g.n; r.appendChild(b);
+      var t = mk("span","bs-val tp"); t.textContent=g.l; if(parseInt(g.n)===h.nova) t.style.fontWeight="800"; r.appendChild(t);
+      ct.appendChild(r);
+    });
+  });
+}
+
+function sheetAllergen(name) {
+  openSheet("Allergene : "+name, function(ct) {
+    var w = mk("div",""); w.style.cssText="display:flex;align-items:center;gap:8px;padding:14px;border-radius:14px;background:rgba(249,115,22,0.08);margin-bottom:16px;";
+    w.appendChild(mk("span","","\u26A0")); w.appendChild(mk("span","bs-val",name));
+    ct.appendChild(w);
+    ct.appendChild(mk("div","bs-text ts","Cet allergene a ete detecte dans la composition du produit. Si vous etes allergique ou intolerant, evitez ce produit."));
+    ct.appendChild(mk("div","bs-label tm","REGLEMENTATION"));
+    ct.appendChild(mk("div","bs-text ts","Les 14 allergenes majeurs doivent etre declares selon le reglement europeen (UE) n\u00B0 1169/2011. La mention 'traces' indique un risque de contamination croisee."));
+  });
+}
+
+function sheetLabel(name) {
+  openSheet(name, function(ct) {
+    ct.appendChild(mk("div","bs-text ts","Ce label indique une caracteristique ou certification du produit."));
+    ct.appendChild(mk("div","bs-text ts","Les labels sont extraits des donnees OpenFoodFacts et verifies par la communaute. Ils peuvent inclure des indications d'origine, des certifications bio, des labels qualite, etc."));
+  });
+}
+
+// ═══ WIRE UP ALL INTERACTIVE ELEMENTS ═══
+
+// Save original render functions and wrap them with click handlers
+
+var _origRenderMR = renderMR;
+renderMR = function(p) {
+  _origRenderMR(p);
+  // Re-wire madhab rings to open sheet on tap (not just switch)
+  var el = document.getElementById("madhabR");
+  var items = el.querySelectorAll(".mri");
+  var schools = ["hanafi","shafii","maliki","hanbali"];
+  items.forEach(function(it, i) {
+    it.onclick = function() { setMadhab(schools[i]); sheetMadhab(schools[i]); };
+  });
+};
+
+var _origRenderIng = renderIng;
+renderIng = function(p) {
+  _origRenderIng(p);
+  var el = document.getElementById("ingG");
+  el.querySelectorAll(".ic").forEach(function(chip, i) {
+    chip.style.cursor = "pointer";
+    chip.onclick = function() { sheetIngredient(p.ingredients[i]); };
+  });
+};
+
+var _origRenderAcc = renderAcc;
+renderAcc = function(p) {
+  _origRenderAcc(p);
+  var el = document.getElementById("hAcc");
+  el.querySelectorAll(".adi").forEach(function(row, i) {
+    row.style.cursor = "pointer";
+    row.onclick = function(e) { e.stopPropagation(); sheetAdditive(p.additives[i]); };
+  });
+};
+
+var _origRenderAlts = renderAlts;
+renderAlts = function(p) {
+  _origRenderAlts(p);
+  var el = document.getElementById("altsS");
+  el.querySelectorAll(".altc").forEach(function(card, i) {
+    card.onclick = function() { sheetAlternative(p.alternatives[i]); };
+  });
+};
+
+var _origRenderSch = renderSch;
+renderSch = function(p) {
+  _origRenderSch(p);
+  var el = document.getElementById("scholarR");
+  el.querySelectorAll(".schp").forEach(function(pill, i) {
+    pill.onclick = function() { sheetScholarly(p.scholarly[i]); };
+  });
+};
+
+var _origRenderHH = renderHH;
+renderHH = function(p) {
+  _origRenderHH(p);
+  document.getElementById("healthH").style.cursor = "pointer";
+  document.getElementById("healthH").onclick = function() { sheetHealth(); };
+};
+
+var _origRenderNS = renderNS;
+renderNS = function(p) {
+  _origRenderNS(p);
+  document.getElementById("nsS").style.cursor = "pointer";
+  document.getElementById("nsS").onclick = function() { sheetNutriscore(); };
+};
+
+var _origRenderAx = renderAx;
+renderAx = function(p) {
+  _origRenderAx(p);
+  var el = document.getElementById("axsS");
+  el.querySelectorAll(".axi").forEach(function(row, i) {
+    row.style.cursor = "pointer";
+    row.onclick = function() { sheetAxis(p.health.axes[i]); };
+  });
+};
+
+var _origRenderNut = renderNut;
+renderNut = function(p) {
+  _origRenderNut(p);
+  var el = document.getElementById("ngG");
+  el.querySelectorAll(".nc").forEach(function(card, i) {
+    card.style.cursor = "pointer";
+    card.onclick = function() { sheetNutrient(p.health.nuts[i]); };
+  });
+};
+
+var _origRenderNov = renderNov;
+renderNov = function(p) {
+  _origRenderNov(p);
+  document.getElementById("noS").style.cursor = "pointer";
+  document.getElementById("noS").onclick = function() { sheetNova(); };
+};
+
+var _origRenderAl = renderAl;
+renderAl = function(p) {
+  _origRenderAl(p);
+  var el = document.getElementById("alS");
+  el.querySelectorAll(".atag").forEach(function(tag, i) {
+    tag.style.cursor = "pointer";
+    tag.onclick = function() { sheetAllergen(p.health.allergens[i]); };
+  });
+};
+
+var _origRenderLb = renderLb;
+renderLb = function(p) {
+  _origRenderLb(p);
+  var el = document.getElementById("lbR");
+  el.querySelectorAll(".lp").forEach(function(pill, i) {
+    pill.style.cursor = "pointer";
+    pill.onclick = function() { sheetLabel(p.health.labels[i]); };
+  });
+};
+
+// Wire hero elements + static elements after each render
+var _origRender = render;
+render = function() {
+  _origRender();
+  var p = PRODUCTS[S.product];
+
+  // Hero image → zoom sheet
+  document.getElementById("heroImgWrap").onclick = function() { sheetProductImage(); };
+
+  // Hero verdict → verdict detail
+  document.getElementById("heroVDot").parentElement.onclick = function() { sheetVerdict(); };
+
+  // Certifier area → trust sheet
+  document.getElementById("heroCertArea").onclick = function() { sheetTrust(); };
+
+  // Community badge → community sheet
+  document.getElementById("heroCommunity").onclick = function() { sheetCommunity(); };
+
+  // Boycott → boycott sheet
+  document.getElementById("boycottW").onclick = function() { sheetBoycott(); };
+
+  // Alert tags
+  document.getElementById("alertsEl").querySelectorAll(".atag").forEach(function(tag, i) {
+    tag.style.cursor = "pointer";
+    tag.onclick = function() { sheetAlert(p.alerts[i].text); };
+  });
+
+  // Trust score row
+  document.getElementById("trustM").onclick = function() { sheetTrust(); };
+
+  // Feedback buttons
+  var fbs = document.querySelectorAll(".fbs .fb");
+  if (fbs[0]) fbs[0].onclick = function() { sheetFeedback("correct"); };
+  if (fbs[1]) fbs[1].onclick = function() { sheetFeedback("report"); };
+};
+
+render();
+</script>
+</body>
+</html>

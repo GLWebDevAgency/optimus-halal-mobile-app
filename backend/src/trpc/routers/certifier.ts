@@ -5,6 +5,7 @@ import { certifiers } from "../../db/schema/index.js";
 import {
   getCertifierScores,
   getAllCertifierScores,
+  getTrustGrade,
 } from "../../services/certifier-score.service.js";
 
 export const certifierRouter = router({
@@ -17,6 +18,13 @@ export const certifierRouter = router({
       website: c.website,
       halalAssessment: c.halalAssessment,
       trustScore: c.scores.trustScore,
+      trustGrade: getTrustGrade(c.scores.trustScore),
+      practices: {
+        acceptsStunning: c.practices.acceptsStunning,
+        controllersAreEmployees: c.practices.controllersAreEmployees,
+        controllersPresentEachProduction: c.practices.controllersPresentEachProduction,
+        hasSalariedSlaughterers: c.practices.hasSalariedSlaughterers,
+      },
     }));
   }),
 

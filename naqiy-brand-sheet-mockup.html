@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Naqiy Brand Sheet — V2 Final</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --gold: #D4AF37;
+    --gold-glow: rgba(212,175,55,0.15);
+    --green: #22c55e;
+    --red: #ef4444;
+    --bg-dark: #0C0C0C;
+    --bg-light: #F8F7F4;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+    background: #111;
+    color: #ccc;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+
+  /* ── Controls ── */
+  .controls {
+    display: flex; gap: 12px; align-items: center; justify-content: center;
+    margin-bottom: 24px;
+  }
+  .controls label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888; }
+  .state-tabs { display: flex; background: rgba(255,255,255,0.06); border-radius: 12px; padding: 3px; gap: 2px; }
+  .state-tab {
+    padding: 8px 24px; border-radius: 10px; border: none; background: transparent;
+    color: #888; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit;
+  }
+  .state-tab.active { background: var(--gold); color: #0C0C0C; }
+  .state-tab:hover:not(.active) { background: rgba(255,255,255,0.08); color: #ccc; }
+
+  /* ── Phone ── */
+  .phone-frame {
+    width: 390px; height: 844px; border-radius: 44px; overflow: hidden; position: relative;
+    border: 3px solid rgba(255,255,255,0.1);
+    box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+    transition: background 0.4s ease;
+  }
+  .phone-frame[data-theme="dark"] { background: var(--bg-dark); }
+  .phone-frame[data-theme="light"] { background: var(--bg-light); }
+
+  .status-bar {
+    height: 54px; padding: 14px 28px 0; display: flex; justify-content: space-between;
+    align-items: center; font-size: 15px; font-weight: 600; transition: color 0.3s;
+  }
+  [data-theme="dark"] .status-bar { color: #fff; }
+  [data-theme="light"] .status-bar { color: #000; }
+  .status-icons { display: flex; gap: 6px; align-items: center; font-size: 12px; }
+
+  .home-header { padding: 8px 20px 16px; display: flex; justify-content: space-between; align-items: center; }
+  .user-greeting { display: flex; align-items: center; gap: 12px; }
+  .avatar-ring { width: 52px; height: 52px; border-radius: 50%; padding: 2px; background: linear-gradient(135deg, var(--gold), rgba(212,175,55,0.3)); }
+  .avatar-inner { width: 100%; height: 100%; border-radius: 50%; background: #4a7c59; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #fff; }
+  .greeting-text { display: flex; flex-direction: column; gap: 1px; }
+  .greeting-sub { font-size: 13px; transition: color 0.3s; }
+  [data-theme="dark"] .greeting-sub { color: rgba(255,255,255,0.5); }
+  [data-theme="light"] .greeting-sub { color: rgba(0,0,0,0.45); }
+  .greeting-name { font-size: 22px; font-weight: 800; transition: color 0.3s; }
+  [data-theme="dark"] .greeting-name { color: #fff; }
+  [data-theme="light"] .greeting-name { color: #0f172a; }
+
+  .naqiy-badge { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 8px; border-radius: 12px; transition: all 0.2s; }
+  .naqiy-badge:hover { background: rgba(212,175,55,0.08); }
+  .naqiy-badge:active { transform: scale(0.96); opacity: 0.8; }
+  .naqiy-logo-box { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; color: var(--gold); transition: background 0.3s; }
+  [data-theme="dark"] .naqiy-logo-box { background: rgba(212,175,55,0.08); }
+  [data-theme="light"] .naqiy-logo-box { background: rgba(212,175,55,0.06); }
+  .naqiy-badge-text { font-size: 16px; font-weight: 700; transition: color 0.3s; }
+  [data-theme="dark"] .naqiy-badge-text { color: #fff; }
+  [data-theme="light"] .naqiy-badge-text { color: #0f172a; }
+  .naqiy-plus { color: var(--gold); font-weight: 800; }
+
+  .home-content { padding: 0 20px; display: flex; flex-direction: column; gap: 12px; transition: filter 0.3s, opacity 0.3s; }
+  .home-content.blurred { filter: blur(4px); opacity: 0.3; }
+  .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .action-card { border-radius: 16px; padding: 16px; height: 72px; display: flex; align-items: center; gap: 12px; transition: background 0.3s; }
+  [data-theme="dark"] .action-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); }
+  [data-theme="light"] .action-card { background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.06); }
+  .action-card.scanner { background: linear-gradient(135deg, #22c55e, #16a34a) !important; border: none !important; }
+  .action-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+  .action-label { font-size: 14px; font-weight: 600; transition: color 0.3s; }
+  [data-theme="dark"] .action-label { color: #fff; }
+  [data-theme="light"] .action-label { color: #0f172a; }
+  .action-sublabel { font-size: 11px; transition: color 0.3s; }
+  [data-theme="dark"] .action-sublabel { color: rgba(255,255,255,0.5); }
+  [data-theme="light"] .action-sublabel { color: rgba(0,0,0,0.45); }
+
+  /* ── Backdrop & Sheet ── */
+  .backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.5); opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 10; border-radius: 44px; }
+  .backdrop.visible { opacity: 1; pointer-events: auto; }
+  .bottom-sheet {
+    position: absolute; bottom: 0; left: 0; right: 0; border-radius: 24px 24px 0 0; z-index: 20;
+    transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    max-height: 88%; overflow-y: auto; overscroll-behavior: contain;
+  }
+  .bottom-sheet.open { transform: translateY(0); }
+  [data-theme="dark"] .bottom-sheet { background: #1a1a1a; border-top: 1px solid rgba(255,255,255,0.08); }
+  [data-theme="light"] .bottom-sheet { background: #fff; border-top: 1px solid rgba(0,0,0,0.06); box-shadow: 0 -8px 40px rgba(0,0,0,0.12); }
+  .sheet-content { padding: 0 20px 40px; }
+  .drag-handle { width: 48px; height: 4px; border-radius: 2px; margin: 10px auto 16px; transition: background 0.3s; }
+  [data-theme="dark"] .drag-handle { background: rgba(255,255,255,0.2); }
+  [data-theme="light"] .drag-handle { background: rgba(0,0,0,0.15); }
+
+  /* ── Sheet Header ── */
+  .sheet-header { text-align: center; margin-bottom: 24px; }
+  .sheet-logo { width: 52px; height: 52px; margin: 0 auto 14px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; color: var(--gold); box-shadow: 0 0 28px var(--gold-glow); transition: background 0.3s; }
+  [data-theme="dark"] .sheet-logo { background: rgba(212,175,55,0.1); border: 1.5px solid rgba(212,175,55,0.2); }
+  [data-theme="light"] .sheet-logo { background: rgba(212,175,55,0.08); border: 1.5px solid rgba(212,175,55,0.15); }
+  .sheet-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; transition: color 0.3s; }
+  [data-theme="dark"] .sheet-title { color: #fff; }
+  [data-theme="light"] .sheet-title { color: #0f172a; }
+  .sheet-subtitle { font-size: 14px; line-height: 1.5; transition: color 0.3s; }
+  [data-theme="dark"] .sheet-subtitle { color: rgba(255,255,255,0.5); }
+  [data-theme="light"] .sheet-subtitle { color: rgba(0,0,0,0.45); }
+  .sheet-tagline { font-size: 13px; font-weight: 600; color: var(--gold); letter-spacing: 0.5px; margin-top: 2px; }
+
+  /* ── Benefit Rows (outcome-oriented) ── */
+  .benefit-row {
+    display: flex; align-items: flex-start; gap: 14px; padding: 14px 0;
+    border-bottom: 1px solid transparent; transition: border-color 0.3s;
+  }
+  .benefit-row:not(:last-child) {
+    border-bottom-color: rgba(255,255,255,0.04);
+  }
+  [data-theme="light"] .benefit-row:not(:last-child) {
+    border-bottom-color: rgba(0,0,0,0.04);
+  }
+  .benefit-icon {
+    width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; font-size: 18px;
+  }
+  .benefit-text { flex: 1; }
+  .benefit-title { font-size: 15px; font-weight: 600; margin-bottom: 2px; transition: color 0.3s; }
+  [data-theme="dark"] .benefit-title { color: #fff; }
+  [data-theme="light"] .benefit-title { color: #0f172a; }
+  .benefit-desc { font-size: 12px; line-height: 1.4; transition: color 0.3s; }
+  [data-theme="dark"] .benefit-desc { color: rgba(255,255,255,0.45); }
+  [data-theme="light"] .benefit-desc { color: rgba(0,0,0,0.4); }
+
+  /* ── CTA Button ── */
+  .cta-btn {
+    width: 100%; padding: 15px; border-radius: 14px; border: none;
+    font-size: 16px; font-weight: 700; font-family: inherit; cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    background: linear-gradient(135deg, #D4AF37, #C5A028);
+    color: #0C0C0C; text-align: center;
+    box-shadow: 0 4px 20px rgba(212,175,55,0.25);
+  }
+  .cta-btn:active { transform: scale(0.98); }
+  .cta-btn:hover { box-shadow: 0 6px 28px rgba(212,175,55,0.35); }
+  .cta-price {
+    font-size: 12px; text-align: center; margin-top: 8px; font-weight: 500; transition: color 0.3s;
+  }
+  [data-theme="dark"] .cta-price { color: rgba(255,255,255,0.35); }
+  [data-theme="light"] .cta-price { color: rgba(0,0,0,0.35); }
+
+  /* ── Social proof ── */
+  .social-proof {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px 0; margin-bottom: 4px;
+  }
+  .proof-avatars { display: flex; margin-right: 2px; }
+  .proof-avatar {
+    width: 24px; height: 24px; border-radius: 50%; margin-left: -6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700; color: #fff; transition: border-color 0.3s;
+  }
+  [data-theme="dark"] .proof-avatar { border: 2px solid #1a1a1a; }
+  [data-theme="light"] .proof-avatar { border: 2px solid #fff; }
+  .proof-avatar:first-child { margin-left: 0; }
+  .proof-text { font-size: 12px; font-weight: 500; transition: color 0.3s; }
+  [data-theme="dark"] .proof-text { color: rgba(255,255,255,0.4); }
+  [data-theme="light"] .proof-text { color: rgba(0,0,0,0.4); }
+
+  /* ── Secondary link ── */
+  .secondary-link {
+    text-align: center; padding: 14px 0; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: color 0.3s;
+  }
+  [data-theme="dark"] .secondary-link { color: rgba(255,255,255,0.4); }
+  [data-theme="light"] .secondary-link { color: rgba(0,0,0,0.4); }
+  .secondary-link:hover { color: var(--gold); }
+
+  /* ── Divider ── */
+  .divider { height: 1px; margin: 14px 0; transition: background 0.3s; }
+  [data-theme="dark"] .divider { background: rgba(255,255,255,0.06); }
+  [data-theme="light"] .divider { background: rgba(0,0,0,0.06); }
+
+  /* ── Theme Switcher ── */
+  .theme-section { margin: 4px 0; }
+  .theme-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; text-align: center; margin-bottom: 10px; font-weight: 600; transition: color 0.3s; }
+  [data-theme="dark"] .theme-label { color: rgba(255,255,255,0.3); }
+  [data-theme="light"] .theme-label { color: rgba(0,0,0,0.3); }
+  .theme-pills { display: flex; gap: 6px; padding: 4px; border-radius: 14px; transition: background 0.3s; }
+  [data-theme="dark"] .theme-pills { background: rgba(255,255,255,0.04); }
+  [data-theme="light"] .theme-pills { background: rgba(0,0,0,0.04); }
+  .theme-pill {
+    flex: 1; text-align: center; padding: 10px 0; border-radius: 10px; font-size: 13px;
+    font-weight: 600; cursor: pointer; border: none; background: transparent;
+    font-family: inherit; transition: all 0.25s;
+  }
+  [data-theme="dark"] .theme-pill { color: rgba(255,255,255,0.5); }
+  [data-theme="light"] .theme-pill { color: rgba(0,0,0,0.4); }
+  .theme-pill.active { background: var(--gold) !important; color: #0C0C0C !important; box-shadow: 0 2px 8px rgba(212,175,55,0.25); }
+  [data-theme="dark"] .theme-pill:hover:not(.active) { background: rgba(255,255,255,0.06); }
+  [data-theme="light"] .theme-pill:hover:not(.active) { background: rgba(0,0,0,0.06); }
+
+  /* ── User Header (Naqiy+) ── */
+  .user-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+  .user-avatar-sheet { width: 48px; height: 48px; border-radius: 50%; padding: 2px; flex-shrink: 0; background: linear-gradient(135deg, var(--gold), rgba(212,175,55,0.4)); animation: goldPulse 3s ease-in-out infinite; }
+  @keyframes goldPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,0); } 50% { box-shadow: 0 0 12px 2px rgba(212,175,55,0.25); } }
+  .user-avatar-inner { width: 100%; height: 100%; border-radius: 50%; background: #4a7c59; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; }
+  .user-info { flex: 1; }
+  .user-name-row { display: flex; align-items: center; gap: 8px; }
+  .user-name { font-size: 18px; font-weight: 700; transition: color 0.3s; }
+  [data-theme="dark"] .user-name { color: #fff; }
+  [data-theme="light"] .user-name { color: #0f172a; }
+  .tier-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: var(--gold); color: #0C0C0C; box-shadow: 0 0 10px rgba(212,175,55,0.2); }
+  .user-email { font-size: 13px; margin-top: 2px; transition: color 0.3s; }
+  [data-theme="dark"] .user-email { color: rgba(255,255,255,0.5); }
+  [data-theme="light"] .user-email { color: rgba(0,0,0,0.45); }
+  .member-since { font-size: 11px; margin-top: 3px; color: var(--gold); font-weight: 500; }
+
+  /* ── Subscription Card ── */
+  .sub-card { border-radius: 16px; padding: 16px; margin-bottom: 10px; border-top: 2px solid var(--gold); transition: background 0.3s; }
+  [data-theme="dark"] .sub-card { background: rgba(255,255,255,0.03); border-left: 1px solid rgba(255,255,255,0.06); border-right: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06); }
+  [data-theme="light"] .sub-card { background: rgba(212,175,55,0.03); border-left: 1px solid rgba(0,0,0,0.06); border-right: 1px solid rgba(0,0,0,0.06); border-bottom: 1px solid rgba(0,0,0,0.06); }
+  .sub-status { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; margin-bottom: 4px; transition: color 0.3s; }
+  [data-theme="dark"] .sub-status { color: #fff; }
+  [data-theme="light"] .sub-status { color: #0f172a; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px rgba(34,197,94,0.4); }
+  .sub-renew { font-size: 12px; transition: color 0.3s; }
+  [data-theme="dark"] .sub-renew { color: rgba(255,255,255,0.5); }
+  [data-theme="light"] .sub-renew { color: rgba(0,0,0,0.45); }
+  .sub-manage { font-size: 13px; color: var(--gold); font-weight: 600; margin-top: 8px; cursor: pointer; display: inline-block; }
+  .sub-manage:hover { text-decoration: underline; }
+
+  /* ── Quick Actions ── */
+  .quick-action { display: flex; align-items: center; gap: 14px; padding: 13px 4px; cursor: pointer; border-radius: 10px; transition: background 0.15s; }
+  [data-theme="dark"] .quick-action:hover { background: rgba(255,255,255,0.03); }
+  [data-theme="light"] .quick-action:hover { background: rgba(0,0,0,0.02); }
+  .qa-icon { font-size: 18px; width: 28px; text-align: center; }
+  .qa-label { flex: 1; font-size: 14px; font-weight: 500; transition: color 0.3s; }
+  [data-theme="dark"] .qa-label { color: rgba(255,255,255,0.8); }
+  [data-theme="light"] .qa-label { color: rgba(0,0,0,0.7); }
+  .qa-value { font-size: 13px; transition: color 0.3s; }
+  [data-theme="dark"] .qa-value { color: rgba(255,255,255,0.5); }
+  [data-theme="light"] .qa-value { color: rgba(0,0,0,0.45); }
+  .qa-chevron { font-size: 14px; margin-left: 4px; transition: color 0.3s; }
+  [data-theme="dark"] .qa-chevron { color: rgba(255,255,255,0.15); }
+  [data-theme="light"] .qa-chevron { color: rgba(0,0,0,0.15); }
+
+  .logout-card { padding: 12px 4px; display: flex; align-items: center; gap: 14px; cursor: pointer; }
+  .logout-card:active { opacity: 0.7; }
+  .card-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .card-icon.red-bg { background: rgba(239,68,68,0.1); }
+  .card-title-red { font-size: 15px; font-weight: 600; color: var(--red); }
+
+  .home-indicator { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 134px; height: 5px; border-radius: 3px; z-index: 30; transition: background 0.3s; }
+  [data-theme="dark"] .home-indicator { background: rgba(255,255,255,0.2); }
+  [data-theme="light"] .home-indicator { background: rgba(0,0,0,0.2); }
+
+  /* ── Prompt ── */
+  .prompt-section { max-width: 700px; width: 100%; margin-top: 32px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; }
+  .prompt-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #666; margin-bottom: 8px; }
+  .prompt-text { font-size: 13px; line-height: 1.6; color: #aaa; font-family: "SF Mono", "Fira Code", monospace; white-space: pre-wrap; }
+  .copy-btn { margin-top: 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: #ccc; padding: 8px 16px; border-radius: 8px; font-size: 12px; cursor: pointer; font-family: inherit; font-weight: 600; transition: all 0.15s; }
+  .copy-btn:hover { background: rgba(255,255,255,0.12); }
+  .copy-btn.copied { background: var(--green); color: #fff; border-color: var(--green); }
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <label>Etat</label>
+  <div class="state-tabs" id="stateTabs"></div>
+</div>
+
+<div class="phone-frame" data-theme="dark" id="phone">
+  <div class="status-bar">
+    <span>21:00</span>
+    <div class="status-icons">
+      <span style="letter-spacing:2px">&#9679;&#9679;&#9679;&#9679;</span>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><path d="M1 8h2v4H1zM5 5h2v7H5zM9 3h2v9H9zM13 0h2v12h-2z"/></svg>
+      <svg width="22" height="12" viewBox="0 0 22 12" fill="currentColor"><rect x="0" y="1" width="19" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="20" y="4" width="2" height="4" rx="1"/><rect x="2" y="3" width="13" height="6" rx="1"/></svg>
+    </div>
+  </div>
+  <div class="home-header">
+    <div class="user-greeting">
+      <div class="avatar-ring"><div class="avatar-inner" id="headerAvatar">M</div></div>
+      <div class="greeting-text">
+        <div class="greeting-sub" id="greetingSub">Ramadan Mubarak,</div>
+        <div class="greeting-name" id="greetingName">Mehdi</div>
+      </div>
+    </div>
+    <div class="naqiy-badge" id="naqiyBadge"></div>
+  </div>
+  <div class="home-content" id="homeContent">
+    <div class="action-grid">
+      <div class="action-card scanner">
+        <div class="action-icon" style="background:rgba(255,255,255,0.2)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><line x1="3" y1="12" x2="21" y2="12"/></svg>
+        </div>
+        <div><div style="font-size:15px;font-weight:700;color:#fff">Scanner</div><div style="font-size:11px;color:rgba(255,255,255,0.7)">Verifier un produit</div></div>
+      </div>
+      <div class="action-card">
+        <div class="action-icon" style="background:rgba(212,175,55,0.1)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg></div>
+        <div><div class="action-label">Magasins</div><div class="action-sublabel">Autour de moi</div></div>
+      </div>
+      <div class="action-card">
+        <div class="action-icon" style="background:rgba(212,175,55,0.08)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div><div class="action-label">Alertes</div><div class="action-sublabel">Toutes les alertes</div></div>
+      </div>
+      <div class="action-card">
+        <div class="action-icon" style="background:rgba(100,130,200,0.1)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div>
+        <div><div class="action-label">Historique</div><div class="action-sublabel">Mes scans</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="backdrop" id="backdrop"></div>
+  <div class="bottom-sheet" id="bottomSheet">
+    <div class="drag-handle"></div>
+    <div class="sheet-content" id="sheetContent"></div>
+  </div>
+  <div class="home-indicator"></div>
+</div>
+
+<div class="prompt-section">
+  <div class="prompt-label">Spec d'implementation</div>
+  <div class="prompt-text" id="promptText"></div>
+  <button class="copy-btn" id="copyBtn">Copier</button>
+</div>
+
+<script>
+  var state = { userState: 'guest', theme: 'dark', sheetOpen: false };
+
+  var SVG_SIGN_IN = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.5"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M13.8 12H3"/></svg>';
+  var SVG_SIGN_OUT = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M19.8 12H9"/></svg>';
+
+  // Benefit icons (SVG)
+  var SVG_INFINITY = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M18.178 8c5.096 0 5.096 8 0 8-5.095 0-7.133-8-12.739-8-4.585 0-4.585 8 0 8 5.606 0 7.644-8 12.74-8z"/></svg>';
+  var SVG_SHIELD = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>';
+  var SVG_HEART = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>';
+
+  function buildStateTabs() {
+    var tabs = document.getElementById('stateTabs');
+    tabs.textContent = '';
+    [{ key: 'guest', label: 'Guest' }, { key: 'premium', label: 'Naqiy+' }].forEach(function(item) {
+      var btn = document.createElement('button');
+      btn.className = 'state-tab' + (state.userState === item.key ? ' active' : '');
+      btn.textContent = item.label;
+      btn.addEventListener('click', function() { state.userState = item.key; state.sheetOpen = false; updateAll(); });
+      tabs.appendChild(btn);
+    });
+  }
+
+  function buildNaqiyBadge() {
+    var badge = document.getElementById('naqiyBadge');
+    badge.textContent = '';
+    var logoBox = document.createElement('div');
+    logoBox.className = 'naqiy-logo-box';
+    logoBox.textContent = 'N';
+    badge.appendChild(logoBox);
+    var textSpan = document.createElement('span');
+    textSpan.className = 'naqiy-badge-text';
+    textSpan.textContent = 'Naqiy';
+    if (state.userState === 'premium') {
+      var plus = document.createElement('span');
+      plus.className = 'naqiy-plus';
+      plus.textContent = '+';
+      textSpan.appendChild(plus);
+    }
+    badge.appendChild(textSpan);
+    badge.onclick = function() { toggleSheet(); };
+  }
+
+  function setTheme(t) { state.theme = t; updateAll(); }
+  function toggleSheet() { state.sheetOpen = !state.sheetOpen; updateAll(); }
+
+  function buildThemePills() {
+    var section = document.createElement('div');
+    section.className = 'theme-section';
+    var label = document.createElement('div');
+    label.className = 'theme-label';
+    label.textContent = 'APPARENCE';
+    section.appendChild(label);
+    var container = document.createElement('div');
+    container.className = 'theme-pills';
+    [{ key: 'light', label: '\u2600\ufe0f  Clair' }, { key: 'system', label: '\u25cf  Syst\u00e8me' }, { key: 'dark', label: '\ud83c\udf19  Sombre' }].forEach(function(p) {
+      var btn = document.createElement('button');
+      btn.className = 'theme-pill' + (state.theme === p.key ? ' active' : '');
+      btn.textContent = p.label;
+      btn.addEventListener('click', function(e) { e.stopPropagation(); setTheme(p.key); });
+      container.appendChild(btn);
+    });
+    section.appendChild(container);
+    return section;
+  }
+
+  function buildDivider() { var d = document.createElement('div'); d.className = 'divider'; return d; }
+
+  function buildBenefitRow(iconHtml, iconBg, title, desc) {
+    var row = document.createElement('div');
+    row.className = 'benefit-row';
+    var icon = document.createElement('div');
+    icon.className = 'benefit-icon';
+    icon.style.background = iconBg;
+    icon.innerHTML = iconHtml;
+    row.appendChild(icon);
+    var text = document.createElement('div');
+    text.className = 'benefit-text';
+    var t = document.createElement('div');
+    t.className = 'benefit-title';
+    t.textContent = title;
+    text.appendChild(t);
+    var d = document.createElement('div');
+    d.className = 'benefit-desc';
+    d.textContent = desc;
+    text.appendChild(d);
+    row.appendChild(text);
+    return row;
+  }
+
+  function buildSocialProof() {
+    var container = document.createElement('div');
+    container.className = 'social-proof';
+    var avatars = document.createElement('div');
+    avatars.className = 'proof-avatars';
+    var colors = ['#4a7c59', '#2563eb', '#D4AF37', '#9333ea'];
+    var initials = ['S', 'A', 'Y', 'K'];
+    for (var i = 0; i < 4; i++) {
+      var av = document.createElement('div');
+      av.className = 'proof-avatar';
+      av.style.background = colors[i];
+      av.textContent = initials[i];
+      avatars.appendChild(av);
+    }
+    container.appendChild(avatars);
+    var text = document.createElement('span');
+    text.className = 'proof-text';
+    text.textContent = 'Rejoint par 2 400+ membres';
+    container.appendChild(text);
+    return container;
+  }
+
+  function buildQuickAction(icon, label, value, hasChevron) {
+    var row = document.createElement('div');
+    row.className = 'quick-action';
+    var ic = document.createElement('span'); ic.className = 'qa-icon'; ic.textContent = icon; row.appendChild(ic);
+    var lb = document.createElement('span'); lb.className = 'qa-label'; lb.textContent = label; row.appendChild(lb);
+    if (value) { var val = document.createElement('span'); val.className = 'qa-value'; val.textContent = value; row.appendChild(val); }
+    if (hasChevron) { var ch = document.createElement('span'); ch.className = 'qa-chevron'; ch.textContent = '\u203a'; row.appendChild(ch); }
+    return row;
+  }
+
+  function renderSheetContent() {
+    var el = document.getElementById('sheetContent');
+    el.textContent = '';
+
+    if (state.userState === 'guest') {
+      // ── Brand header ──
+      var header = document.createElement('div');
+      header.className = 'sheet-header';
+      var logo = document.createElement('div');
+      logo.className = 'sheet-logo';
+      logo.textContent = 'N';
+      header.appendChild(logo);
+      var title = document.createElement('div');
+      title.className = 'sheet-title';
+      title.textContent = 'Rejoignez Naqiy+';
+      header.appendChild(title);
+      var sub = document.createElement('div');
+      sub.className = 'sheet-subtitle';
+      sub.textContent = 'Le halal, en toute confiance.';
+      header.appendChild(sub);
+      el.appendChild(header);
+
+      // ── Outcome-oriented benefits ──
+      el.appendChild(buildBenefitRow(
+        SVG_INFINITY, 'rgba(212,175,55,0.1)',
+        'Scannez sans limite',
+        'Verifiez autant de produits que vous le souhaitez, sans restriction.'
+      ));
+      el.appendChild(buildBenefitRow(
+        SVG_SHIELD, 'rgba(34,197,94,0.1)',
+        'Prot\u00e9gez votre famille',
+        'Alertes grossesse, enfants et score sante actives a chaque scan.'
+      ));
+      el.appendChild(buildBenefitRow(
+        SVG_HEART, 'rgba(244,114,182,0.1)',
+        'Sauvegardez vos produits',
+        'Retrouvez vos favoris verifies, sans limite de sauvegarde.'
+      ));
+
+      // ── Social proof ──
+      el.appendChild(buildSocialProof());
+
+      // ── CTA ──
+      var ctaBtn = document.createElement('button');
+      ctaBtn.className = 'cta-btn';
+      ctaBtn.textContent = 'Rejoindre Naqiy+';
+      el.appendChild(ctaBtn);
+      var price = document.createElement('div');
+      price.className = 'cta-price';
+      price.textContent = '\u00c0 partir de 2,99\u20ac/mois \u00b7 Annulable a tout moment';
+      el.appendChild(price);
+
+      el.appendChild(buildDivider());
+
+      // ── Secondary: login ──
+      var loginLink = document.createElement('div');
+      loginLink.className = 'secondary-link';
+      loginLink.textContent = 'D\u00e9j\u00e0 membre ? Se connecter';
+      el.appendChild(loginLink);
+
+      el.appendChild(buildDivider());
+      el.appendChild(buildThemePills());
+
+    } else {
+      // ── NAQIY+ USER ──
+      var uh = document.createElement('div');
+      uh.className = 'user-header';
+      var avWrap = document.createElement('div');
+      avWrap.className = 'user-avatar-sheet';
+      var avInner = document.createElement('div');
+      avInner.className = 'user-avatar-inner';
+      avInner.textContent = 'M';
+      avWrap.appendChild(avInner);
+      uh.appendChild(avWrap);
+      var info = document.createElement('div');
+      info.className = 'user-info';
+      var nameRow = document.createElement('div');
+      nameRow.className = 'user-name-row';
+      var name = document.createElement('span');
+      name.className = 'user-name';
+      name.textContent = 'Mehdi';
+      nameRow.appendChild(name);
+      var badge = document.createElement('span');
+      badge.className = 'tier-badge';
+      badge.textContent = 'Naqiy+';
+      nameRow.appendChild(badge);
+      info.appendChild(nameRow);
+      var email = document.createElement('div');
+      email.className = 'user-email';
+      email.textContent = 'mehdi@example.com';
+      info.appendChild(email);
+      var since = document.createElement('div');
+      since.className = 'member-since';
+      since.textContent = 'Membre depuis mars 2026';
+      info.appendChild(since);
+      uh.appendChild(info);
+      el.appendChild(uh);
+
+      // ── Subscription card ──
+      var subCard = document.createElement('div');
+      subCard.className = 'sub-card';
+      var subStatus = document.createElement('div');
+      subStatus.className = 'sub-status';
+      var dot = document.createElement('span');
+      dot.className = 'status-dot';
+      subStatus.appendChild(dot);
+      subStatus.appendChild(document.createTextNode(' Abonnement actif'));
+      subCard.appendChild(subStatus);
+      var renew = document.createElement('div');
+      renew.className = 'sub-renew';
+      renew.textContent = 'Renouvellement : 15 avril 2026';
+      subCard.appendChild(renew);
+      var manage = document.createElement('div');
+      manage.className = 'sub-manage';
+      manage.textContent = "G\u00e9rer l'abonnement \u2192";
+      subCard.appendChild(manage);
+      el.appendChild(subCard);
+
+      el.appendChild(buildDivider());
+      el.appendChild(buildThemePills());
+      el.appendChild(buildDivider());
+
+      el.appendChild(buildQuickAction('\ud83d\udd14', 'Notifications', null, true));
+      el.appendChild(buildQuickAction('\ud83c\udf10', 'Langue', 'Fran\u00e7ais', true));
+      el.appendChild(buildQuickAction('\ud83d\udcf1', 'Version', '1.0.0 (MVP)', false));
+
+      el.appendChild(buildDivider());
+
+      // ── Logout ──
+      var logout = document.createElement('div');
+      logout.className = 'logout-card';
+      var logIcon = document.createElement('div');
+      logIcon.className = 'card-icon red-bg';
+      logIcon.innerHTML = SVG_SIGN_OUT;
+      logout.appendChild(logIcon);
+      var logText = document.createElement('div');
+      var logTitle = document.createElement('div');
+      logTitle.className = 'card-title-red';
+      logTitle.textContent = 'Se d\u00e9connecter';
+      logText.appendChild(logTitle);
+      logout.appendChild(logText);
+      el.appendChild(logout);
+    }
+  }
+
+  function updateAll() {
+    var phone = document.getElementById('phone');
+    phone.setAttribute('data-theme', state.theme === 'system' ? 'dark' : state.theme);
+    buildStateTabs();
+    buildNaqiyBadge();
+    var greetSub = document.getElementById('greetingSub');
+    var greetName = document.getElementById('greetingName');
+    if (state.userState === 'guest') { greetSub.textContent = 'Bienvenue,'; greetName.textContent = 'Invit\u00e9'; }
+    else { greetSub.textContent = 'Ramadan Mubarak,'; greetName.textContent = 'Mehdi'; }
+    var backdrop = document.getElementById('backdrop');
+    var sheet = document.getElementById('bottomSheet');
+    var content = document.getElementById('homeContent');
+    if (state.sheetOpen) { backdrop.classList.add('visible'); sheet.classList.add('open'); content.classList.add('blurred'); }
+    else { backdrop.classList.remove('visible'); sheet.classList.remove('open'); content.classList.remove('blurred'); }
+    backdrop.onclick = function() { toggleSheet(); };
+    renderSheetContent();
+    updatePrompt();
+  }
+
+  function updatePrompt() {
+    var parts = [];
+    parts.push('NaqiyBrandSheet — Composant bottom sheet, 2 etats (Guest / Naqiy+).');
+    parts.push('Modele binaire : Guest (exploration gratuite) | Naqiy+ (seul tier avec compte).\n');
+
+    if (state.userState === 'guest') {
+      parts.push('GUEST :');
+      parts.push('- Logo N (52x52, glow gold) + "Rejoignez Naqiy+" (22px bold) + "Le halal, en toute confiance."');
+      parts.push('- 3 benefices outcome-oriented (icon 40x40 + titre + desc) :');
+      parts.push('  1. Scannez sans limite (infinity icon, gold) — plus de restriction quotidienne');
+      parts.push('  2. Protegez votre famille (shield+check, green) — alertes grossesse/enfants/sante');
+      parts.push('  3. Sauvegardez vos produits (heart, pink) — favoris illimites');
+      parts.push('- Social proof : 4 mini-avatars + "Rejoint par 2 400+ membres"');
+      parts.push('- CTA : bouton gold gradient pleine largeur "Rejoindre Naqiy+" -> paywall');
+      parts.push('- Sous-CTA : "A partir de 2,99\u20ac/mois \u00b7 Annulable a tout moment" (muted 12px)');
+      parts.push('- Lien secondaire : "Deja membre ? Se connecter" (muted, centre) -> login');
+      parts.push('- Theme switcher (3 pills : Clair / Systeme / Sombre)');
+    } else {
+      parts.push('NAQIY+ :');
+      parts.push('- Avatar ring gold pulse + nom + email + "Membre depuis mars 2026" (gold 11px)');
+      parts.push('- Badge "Naqiy+" (gold bg, glow)');
+      parts.push('- Carte abonnement : accent gold 2px top, dot vert "Actif", date renouvellement, "Gerer l\'abonnement"');
+      parts.push('- Theme switcher');
+      parts.push('- Quick actions : Notifications, Langue (Francais), Version (1.0.0 MVP)');
+      parts.push('- Deconnexion : icon + texte rouge subtil (Al-Taqwa : pas de retention dark pattern)');
+    }
+
+    parts.push('\nAnimation : spring damping:28 stiffness:120, backdrop fade 200ms.');
+    parts.push('Zero dark pattern. Zero urgence artificielle. Le design guide, il ne pousse pas.');
+    document.getElementById('promptText').textContent = parts.join('\n');
+  }
+
+  document.getElementById('copyBtn').addEventListener('click', function() {
+    var text = document.getElementById('promptText').textContent;
+    navigator.clipboard.writeText(text).then(function() {
+      var btn = document.getElementById('copyBtn');
+      btn.textContent = 'Copie !';
+      btn.classList.add('copied');
+      setTimeout(function() { btn.textContent = 'Copier'; btn.classList.remove('copied'); }, 2000);
+    });
+  });
+
+  updateAll();
+</script>
+</body>
+</html>

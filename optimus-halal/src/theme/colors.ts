@@ -193,7 +193,7 @@ export const darkTheme = {
   /** Typography hierarchy */
   textPrimary: "#FFFFFF",
   textSecondary: "#A0A0A0",
-  textMuted: "#6b7280",
+  textMuted: "#8b929a",
   textInverse: "#1A1A1A",
 
   /** Borders */

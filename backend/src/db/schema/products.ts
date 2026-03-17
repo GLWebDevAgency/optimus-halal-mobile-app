@@ -89,6 +89,12 @@ export const products = pgTable(
     dataSources: t.text("data_sources").array().default([]),
     offLastModified: t.timestamp("off_last_modified", { withTimezone: true }),
     analysisVersion: t.smallint("analysis_version").default(1),
+
+    // ── V3: DATA QUALITY GATE ─────────────────────────────────
+    // NULL=not assessed, "valid"=passed checks, "suspicious"=minor issues,
+    // "unreliable"=critical anomaly → force healthScore=null ("je ne sais pas")
+    dataQualityFlag: t.varchar("data_quality_flag", { length: 20 }),
+    dataQualityReasons: t.text("data_quality_reasons").array(),
   },
   (table) => [
     // V1 indexes

@@ -23,7 +23,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { InfoIcon, XIcon } from "phosphor-react-native";
 import { useTheme } from "@/hooks/useTheme";
-import { useTranslation } from "@/hooks";
+import { useTranslation, useHaptics } from "@/hooks";
 import { semantic } from "@/theme/colors";
 import { spacing, radius } from "@/theme/spacing";
 import { fontSize, fontWeight } from "@/theme/typography";
@@ -113,6 +113,7 @@ export const NutrientDetailSheet = React.memo(function NutrientDetailSheet({
   const { isDark, colors } = useTheme();
   const { t, language } = useTranslation();
   const insets = useSafeAreaInsets();
+  const { impact } = useHaptics();
   const { height: screenHeight } = useWindowDimensions();
   const sheetHeight = screenHeight * SHEET_RATIO;
   const translateY = useSharedValue(sheetHeight);
@@ -120,6 +121,7 @@ export const NutrientDetailSheet = React.memo(function NutrientDetailSheet({
 
   useEffect(() => {
     if (visible) {
+      impact();
       backdropOpacity.value = withTiming(1, { duration: 200 });
       translateY.value = withSpring(0, { damping: 18, stiffness: 160 });
     } else {
@@ -165,12 +167,13 @@ export const NutrientDetailSheet = React.memo(function NutrientDetailSheet({
         </Animated.View>
 
         <Animated.View
+          accessibilityViewIsModal
           style={[
             styles.sheet,
             sheetStyle,
             {
               backgroundColor: isDark ? "#1a1a1a" : "#ffffff",
-              paddingBottom: insets.bottom + spacing.xl,
+              paddingBottom: insets.bottom + 90,
             },
           ]}
         >

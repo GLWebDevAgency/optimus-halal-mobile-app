@@ -10,7 +10,7 @@
 import type { HalalStatusKey } from "./scan-constants";
 
 // ─── Madhab ────────────────────────────────
-export type MadhabId = "hanafi" | "maliki" | "shafii" | "hanbali";
+export type MadhabId = "hanafi" | "maliki" | "shafii" | "hanbali" | "general";
 
 /** A single madhab's verdict on the product.
  * NOTE: Backend returns {madhab, status, conflictingAdditives, conflictingIngredients}
@@ -79,6 +79,22 @@ export interface ScholarlyRef {
   detail?: string;
 }
 
+/** Detected additive from OFF additives_tags, enriched with DB data */
+export interface DetectedAdditive {
+  code: string;
+  nameFr: string;
+  nameEn: string | null;
+  category: string;
+  origin: string;
+  halalStatusDefault: string;
+  toxicityLevel: string;
+  healthEffectType: string | null;
+  healthEffectConfirmed: boolean;
+  riskPregnant: boolean;
+  riskChildren: boolean;
+  healthEffectsFr: string | null;
+}
+
 /** Personal alert from user profile (allergens, health, boycott) */
 export interface PersonalAlert {
   type: "allergen" | "health" | "boycott";
@@ -93,6 +109,8 @@ export interface PersonalAlert {
 // This exported type is for the reusable CertifierBadge component. Consider renaming VerdictHero's local type
 // to avoid confusion if you work on both files.
 export interface CertifierInfo {
+  /** Certifier slug for CertifierLogo lookup (e.g. "argml-mosquee-de-lyon") */
+  id?: string;
   name: string;
   shortName: string;
   logoUrl: string | null;

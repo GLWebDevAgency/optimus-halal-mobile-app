@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useFeatureFlagsStore } from "@/store";
+import { useFeatureFlagsStore, useTrialStore } from "@/store";
 import { trpc } from "@/lib/trpc";
 import { router } from "expo-router";
 import { isAuthenticated as hasStoredTokens } from "@/services/api";
 import { getCustomerInfo, isPremiumCustomer, onCustomerInfoUpdated } from "@/services/purchases";
 import { useMe } from "@/hooks/useAuth";
+import type { PaywallTrigger } from "@/types/paywall";
 
 type PremiumTier = "free" | "premium";
 
@@ -14,7 +15,9 @@ interface PremiumState {
   tier: PremiumTier;
   expiresAt: Date | null;
   provider: string | null;
-  showPaywall: () => void;
+  isTrialActive: boolean;
+  trialDaysRemaining: number;
+  showPaywall: (trigger?: PaywallTrigger) => void;
 }
 
 export function usePremium(): PremiumState {
@@ -48,11 +51,18 @@ export function usePremium(): PremiumState {
     staleTime: 5 * 60 * 1000,
   });
 
-  const showPaywall = useCallback(() => {
+  const showPaywall = useCallback((trigger?: PaywallTrigger) => {
     if (flags.paymentsEnabled && flags.paywallEnabled) {
-      router.push("/paywall" as any);
+      router.push({
+        pathname: "/paywall" as any,
+        params: trigger ? { trigger } : undefined,
+      });
     }
   }, [flags.paymentsEnabled, flags.paywallEnabled]);
+
+  // Trial state — check if 7-day trial is currently active
+  const isTrialActive = useTrialStore((s) => s.isTrialActive());
+  const trialDaysRemaining = useTrialStore.getState().getTrialDaysRemaining();
 
   return useMemo(() => {
     if (!flags.paymentsEnabled) {
@@ -62,13 +72,15 @@ export function usePremium(): PremiumState {
         tier: "free",
         expiresAt: null,
         provider: null,
+        isTrialActive: false,
+        trialDaysRemaining: 0,
         showPaywall,
       };
     }
 
     // RevenueCat is the source of truth for entitlement
     const backendData = statusQuery.data;
-    const premium = rcPremium || backendData?.tier === "premium";
+    const premium = rcPremium || backendData?.tier === "premium" || isTrialActive;
 
     return {
       isPremium: premium,
@@ -76,7 +88,9 @@ export function usePremium(): PremiumState {
       tier: premium ? "premium" : "free",
       expiresAt: backendData?.expiresAt ? new Date(backendData.expiresAt) : null,
       provider: backendData?.provider ?? (rcPremium ? "revenuecat" : null),
+      isTrialActive,
+      trialDaysRemaining,
       showPaywall,
     };
-  }, [flags.paymentsEnabled, statusQuery.data, statusQuery.isLoading, rcPremium, isGuest, showPaywall]);
+  }, [flags.paymentsEnabled, statusQuery.data, statusQuery.isLoading, rcPremium, isGuest, isTrialActive, trialDaysRemaining, showPaywall]);
 }

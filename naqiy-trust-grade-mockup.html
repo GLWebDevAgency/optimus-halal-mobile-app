@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Naqiy Trust Grade — Maquette Interactive</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #050505;
+    color: #e0e0e0;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .page {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── Controls Panel ── */
+  .controls {
+    width: 320px;
+    min-width: 320px;
+    background: #0a0a0a;
+    border-right: 1px solid rgba(255,255,255,0.06);
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .controls h1 {
+    font-size: 18px;
+    font-weight: 800;
+    color: #D4AF37;
+    letter-spacing: -0.3px;
+  }
+
+  .controls h1 span {
+    font-weight: 400;
+    color: rgba(255,255,255,0.4);
+    font-size: 13px;
+    display: block;
+    margin-top: 4px;
+    letter-spacing: 0;
+  }
+
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .control-group label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: rgba(255,255,255,0.4);
+  }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .slider-row input[type=range] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.08);
+    outline: none;
+  }
+
+  .slider-row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #D4AF37;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(212,175,55,0.4);
+  }
+
+  .score-display {
+    font-size: 28px;
+    font-weight: 900;
+    min-width: 52px;
+    text-align: right;
+    transition: color 0.3s;
+  }
+
+  .grade-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .grade-letter-big {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 900;
+    color: white;
+    transition: background-color 0.3s;
+  }
+
+  .grade-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .grade-label-text {
+    font-size: 15px;
+    font-weight: 700;
+    transition: color 0.3s;
+  }
+
+  .grade-range {
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+  }
+
+  .presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .preset-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    color: rgba(255,255,255,0.6);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+
+  .preset-btn:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.15);
+    color: white;
+  }
+
+  .preset-btn.active {
+    background: rgba(212,175,55,0.12);
+    border-color: rgba(212,175,55,0.3);
+    color: #D4AF37;
+  }
+
+  /* ── Preview Area ── */
+  .preview {
+    flex: 1;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    align-items: center;
+  }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: #D4AF37;
+    align-self: flex-start;
+    margin-bottom: -20px;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  /* ── Grade Scale Reference ── */
+  .grade-scale {
+    display: flex;
+    gap: 8px;
+    padding: 20px 24px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.05);
+    width: 100%;
+    max-width: 580px;
+  }
+
+  .grade-scale-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    opacity: 0.35;
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .grade-scale-item.active {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+
+  .grade-pill {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 900;
+    color: white;
+    transition: all 0.3s;
+  }
+
+  .grade-scale-item.active .grade-pill {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  }
+
+  .grade-scale-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-align: center;
+    color: rgba(255,255,255,0.5);
+    transition: color 0.3s;
+  }
+
+  .grade-scale-item.active .grade-scale-label {
+    color: white;
+  }
+
+  .grade-scale-range {
+    font-size: 9px;
+    color: rgba(255,255,255,0.25);
+  }
+
+  /* ── Phone Frame ── */
+  .phone-frame {
+    width: 390px;
+    background: #0C0C0C;
+    border-radius: 44px;
+    border: 3px solid rgba(255,255,255,0.08);
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03);
+    position: relative;
+  }
+
+  .phone-notch {
+    width: 126px;
+    height: 34px;
+    background: #000;
+    border-radius: 0 0 20px 20px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 10;
+  }
+
+  .phone-content {
+    padding: 0;
+    min-height: 780px;
+  }
+
+  /* ── Sticky Header ── */
+  .sticky-header {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 10px;
+    background: rgba(12,12,12,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .sticky-back {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+  }
+
+  .sticky-product-info { flex: 1; overflow: hidden; }
+
+  .sticky-product-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sticky-brand { font-size: 10px; color: rgba(255,255,255,0.4); }
+
+  .sticky-grade-pill {
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 900;
+    color: white;
+    transition: background-color 0.3s;
+  }
+
+  .sticky-certifier-logo {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.5);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* ── Verdict Hero ── */
+  .verdict-hero {
+    padding: 20px 20px 24px;
+    position: relative;
+  }
+
+  .verdict-hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 200px;
+    background: linear-gradient(180deg, rgba(34,197,94,0.08) 0%, transparent 100%);
+    pointer-events: none;
+  }
+
+  .hero-top-row {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    position: relative;
+  }
+
+  .hero-image {
+    width: 72px;
+    height: 72px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    border: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
+  }
+
+  .hero-info { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+
+  .verdict-badge {
+    font-size: 18px;
+    font-weight: 800;
+    color: #22c55e;
+    letter-spacing: -0.3px;
+  }
+
+  .confidence-bar-container { display: flex; align-items: center; gap: 8px; }
+
+  .confidence-bar-bg {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.06);
+    overflow: hidden;
+  }
+
+  .confidence-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s;
+  }
+
+  .confidence-label {
+    font-size: 12px;
+    font-weight: 700;
+    transition: color 0.3s;
+  }
+
+  .hero-product-name { font-size: 15px; font-weight: 600; color: white; margin-top: 4px; }
+  .hero-brand { font-size: 12px; color: rgba(255,255,255,0.4); }
+
+  /* Certifier chip */
+  .certifier-chip {
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .certifier-top-row { display: flex; align-items: center; gap: 10px; }
+
+  .certifier-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.5);
+    border: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
+  }
+
+  .certifier-name-col { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  .certifier-name { font-size: 13px; font-weight: 600; color: white; }
+  .certifier-type { font-size: 10px; color: rgba(255,255,255,0.35); }
+
+  .certifier-score {
+    font-size: 14px;
+    font-weight: 800;
+    transition: color 0.3s;
+  }
+
+  /* Grade strip */
+  .grade-strip { display: flex; align-items: center; gap: 4px; }
+
+  .grade-strip-pill {
+    height: 26px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+    color: white;
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    flex-shrink: 0;
+  }
+
+  .grade-strip-pill.inactive { width: 22px; opacity: 0.2; font-size: 10px; }
+  .grade-strip-pill.active { width: 52px; box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
+
+  .grade-strip-label {
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 8px;
+    transition: color 0.3s;
+  }
+
+  /* Micro logo Naqiy */
+  .naqiy-micro {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .naqiy-micro-n {
+    font-size: 10px;
+    font-weight: 900;
+    color: #D4AF37;
+    letter-spacing: -0.5px;
+  }
+
+  .naqiy-badge-combo {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 6px 2px 4px;
+    border-radius: 6px;
+    transition: background-color 0.3s;
+  }
+
+  .naqiy-badge-combo .naqiy-micro-n {
+    font-size: 8px;
+  }
+
+  .naqiy-badge-combo .grade-num {
+    font-size: 13px;
+    font-weight: 900;
+    color: white;
+  }
+
+  .naqiy-sticky-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 5px 2px 3px;
+    border-radius: 6px;
+  }
+
+  .naqiy-sticky-badge .naqiy-micro-n {
+    font-size: 7px;
+  }
+
+  .naqiy-sticky-badge .grade-num {
+    font-size: 11px;
+    font-weight: 900;
+    color: white;
+  }
+
+  .sheet-naqiy-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px 7px 3px 4px;
+    border-radius: 6px;
+  }
+
+  .sheet-naqiy-badge .naqiy-micro-n {
+    font-size: 8px;
+  }
+
+  .sheet-naqiy-badge .grade-num {
+    font-size: 12px;
+    font-weight: 900;
+    color: white;
+  }
+
+  /* ── Bottom Sheet ── */
+  .bottom-sheet {
+    margin: 0 12px;
+    background: #111111;
+    border-radius: 24px;
+    padding: 20px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .sheet-handle {
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.12);
+    margin: 0 auto 16px;
+  }
+
+  .sheet-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+
+  .sheet-header-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(212,175,55,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #D4AF37;
+    font-size: 14px;
+  }
+
+  .sheet-title { font-size: 16px; font-weight: 700; color: white; flex: 1; }
+
+  .sheet-certifier {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 8px;
+  }
+
+  .sheet-certifier-info { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+  .sheet-certifier-name { font-size: 13px; font-weight: 600; color: white; }
+  .sheet-certifier-meta { display: flex; align-items: center; gap: 6px; }
+
+  .sheet-grade-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px 3px 3px;
+    border-radius: 6px;
+    transition: background-color 0.3s;
+  }
+
+  .sheet-grade-letter {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 900;
+    color: white;
+    transition: background-color 0.3s;
+  }
+
+  .sheet-grade-text { font-size: 11px; font-weight: 600; transition: color 0.3s; }
+
+  .evidence-badge {
+    padding: 3px 8px;
+    border-radius: 5px;
+    background: rgba(34,197,94,0.1);
+    font-size: 10px;
+    font-weight: 600;
+    color: #22c55e;
+    border: 1px solid rgba(34,197,94,0.2);
+  }
+
+  .sheet-score { font-size: 18px; font-weight: 900; transition: color 0.3s; }
+
+  /* Practice blocks */
+  .practice-blocks { display: flex; flex-direction: column; gap: 14px; margin-top: 16px; }
+  .practice-block { display: flex; flex-direction: column; gap: 4px; }
+  .practice-header { display: flex; justify-content: space-between; align-items: center; }
+  .practice-label { font-size: 11px; font-weight: 700; letter-spacing: 0.4px; }
+  .practice-value { font-size: 12px; font-weight: 800; }
+
+  .practice-bar-bg {
+    height: 5px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.06);
+    overflow: hidden;
+  }
+
+  .practice-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .practice-subtitle { font-size: 10px; color: rgba(255,255,255,0.3); }
+
+  .phone-footer { padding: 20px; text-align: center; }
+  .phone-footer p { font-size: 10px; color: rgba(255,255,255,0.2); line-height: 1.5; font-style: italic; }
+
+  /* ── Prompt output ── */
+  .prompt-section { width: 100%; max-width: 580px; margin-top: 20px; }
+  .prompt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .prompt-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: rgba(255,255,255,0.3); }
+
+  .copy-btn {
+    padding: 5px 14px;
+    border-radius: 6px;
+    border: 1px solid rgba(212,175,55,0.3);
+    background: rgba(212,175,55,0.08);
+    color: #D4AF37;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+
+  .copy-btn:hover { background: rgba(212,175,55,0.15); }
+
+  .prompt-output {
+    padding: 16px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.06);
+    font-size: 13px;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.6);
+    min-height: 60px;
+    white-space: pre-wrap;
+  }
+
+  @media (max-width: 900px) {
+    .page { flex-direction: column; }
+    .controls {
+      width: 100%;
+      min-width: auto;
+      position: static;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .preview { padding: 24px 16px; }
+    .phone-frame { width: 100%; max-width: 390px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <!-- ── Controls ── -->
+  <div class="controls">
+    <h1>Naqiy Trust Grade <span>Micrologo Naqiy + grade arabe · Maquette interactive</span></h1>
+
+    <div class="control-group">
+      <label>Score de confiance</label>
+      <div class="slider-row">
+        <input type="range" id="scoreSlider" min="0" max="100" value="51">
+        <div class="score-display" id="scoreDisplay">51</div>
+      </div>
+      <div class="grade-display">
+        <div class="grade-letter-big" id="gradeLetterBig">&#1635;</div>
+        <div class="grade-info">
+          <div class="grade-label-text" id="gradeLabelText">Modéré</div>
+          <div class="grade-range" id="gradeRange">40 – 59</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label>Presets certifieurs</label>
+      <div class="presets">
+        <button class="preset-btn" data-score="92" data-name="AVS" data-full="AVS — Association Viande Halal">AVS (92)</button>
+        <button class="preset-btn" data-score="85" data-name="MPE" data-full="Mosquée Paris — SFCVH">Paris SFCVH (85)</button>
+        <button class="preset-btn active" data-score="51" data-name="ARL" data-full="ARGML — Mosquée de Lyon">Lyon ARGML (51)</button>
+        <button class="preset-btn" data-score="35" data-name="ACH" data-full="Achahada">Achahada (35)</button>
+        <button class="preset-btn" data-score="12" data-name="???" data-full="Certifieur inconnu">Inconnu (12)</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label>Certifieur affiché</label>
+      <input type="text" id="certifierInput" value="ARGML — Mosquée de Lyon"
+        style="padding:10px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.03); color:white; font-size:13px; font-family:inherit; width:100%;">
+    </div>
+
+    <div class="control-group" style="margin-top:auto; padding-top:20px; border-top:1px solid rgba(255,255,255,0.05);">
+      <label style="color:rgba(255,255,255,0.2);">Naqiy Design System</label>
+      <p style="font-size:11px; color:rgba(255,255,255,0.2); line-height:1.5;">
+        Les grades A→E reflètent la fiabilité des pratiques de certification halal. Inspiré du NutriScore pour une lecture instantanée.
+      </p>
+    </div>
+  </div>
+
+  <!-- ── Preview ── -->
+  <div class="preview">
+
+    <!-- Grade Scale Reference -->
+    <div class="section-title">Échelle de confiance Naqiy — N١ N٢ N٣ N٤ N٥</div>
+    <div class="grade-scale" id="gradeScale">
+      <div class="grade-scale-item" data-grade="&#1633;">
+        <div class="grade-pill" style="background:#22c55e">&#1633;</div>
+        <div class="grade-scale-label">Très fiable</div>
+        <div class="grade-scale-range">90–100</div>
+      </div>
+      <div class="grade-scale-item" data-grade="&#1634;">
+        <div class="grade-pill" style="background:#84cc16">&#1634;</div>
+        <div class="grade-scale-label">Fiable</div>
+        <div class="grade-scale-range">70–89</div>
+      </div>
+      <div class="grade-scale-item active" data-grade="&#1635;">
+        <div class="grade-pill" style="background:#f59e0b">&#1635;</div>
+        <div class="grade-scale-label">Vigilance</div>
+        <div class="grade-scale-range">51–69</div>
+      </div>
+      <div class="grade-scale-item" data-grade="&#1636;">
+        <div class="grade-pill" style="background:#f97316">&#1636;</div>
+        <div class="grade-scale-label">Peu fiable</div>
+        <div class="grade-scale-range">35–50</div>
+      </div>
+      <div class="grade-scale-item" data-grade="&#1637;">
+        <div class="grade-pill" style="background:#ef4444">&#1637;</div>
+        <div class="grade-scale-label">Insuffisant</div>
+        <div class="grade-scale-range">0–34</div>
+      </div>
+    </div>
+
+    <!-- Phone Mockup -->
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <div class="phone-content">
+
+        <!-- Compact Sticky Header -->
+        <div class="sticky-header">
+          <div class="sticky-back">&#8249;</div>
+          <div class="sticky-product-info">
+            <div class="sticky-product-name">Muesli Raisin, Figue, Abricot</div>
+            <div class="sticky-brand">Bjorg</div>
+          </div>
+          <div class="naqiy-sticky-badge" id="stickyGradeBadge" style="background:#f59e0b"><span class="naqiy-micro-n">N</span><span class="grade-num" id="stickyGrade">&#1635;</span></div>
+          <div class="sticky-certifier-logo" id="stickyLogo">ARL</div>
+        </div>
+
+        <!-- Verdict Hero -->
+        <div class="verdict-hero">
+          <div class="hero-top-row">
+            <div class="hero-image">&#127859;</div>
+            <div class="hero-info">
+              <div class="verdict-badge">Composition Conforme</div>
+              <div class="confidence-bar-container">
+                <div class="confidence-bar-bg">
+                  <div class="confidence-bar-fill" id="confidenceBar" style="width:51%; background:#f59e0b;"></div>
+                </div>
+                <div class="confidence-label" id="confidenceLabel" style="color:#f59e0b;">51%</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-product-name">Muesli Raisin, Figue, Abricot</div>
+          <div class="hero-brand">Bjorg · 3229820129488</div>
+
+          <!-- Certifier Chip -->
+          <div class="certifier-chip">
+            <div class="certifier-top-row">
+              <div class="certifier-logo" id="heroLogo">ARL</div>
+              <div class="certifier-name-col">
+                <div class="certifier-name" id="heroCertName">ARGML — Mosquée de Lyon</div>
+                <div class="certifier-type">Organisme de certification</div>
+              </div>
+              <div class="certifier-score" id="heroScore">51/100</div>
+            </div>
+            <div class="grade-strip" id="gradeStrip"></div>
+          </div>
+        </div>
+
+        <!-- Bottom Sheet -->
+        <div class="bottom-sheet">
+          <div class="sheet-handle"></div>
+          <div class="sheet-header">
+            <div class="sheet-header-icon">&#128737;</div>
+            <div class="sheet-title">Pratiques du certifieur</div>
+          </div>
+
+          <div class="sheet-certifier">
+            <div class="certifier-logo" id="sheetLogo">ARL</div>
+            <div class="sheet-certifier-info">
+              <div class="sheet-certifier-name" id="sheetCertName">ARGML — Mosquée de Lyon</div>
+              <div class="sheet-certifier-meta">
+                <div class="sheet-naqiy-badge" id="sheetGradeBadge" style="background:#f59e0b"><span class="naqiy-micro-n">N</span><span class="grade-num" id="sheetGradeLetter">&#1635;</span></div>
+                <div class="sheet-grade-text" id="sheetGradeText" style="color:#f59e0b;">Modéré</div>
+                <div class="evidence-badge">&#10003; Vérifié</div>
+              </div>
+            </div>
+            <div class="sheet-score" id="sheetScore">51/100</div>
+          </div>
+
+          <div class="practice-blocks">
+            <div class="practice-block">
+              <div class="practice-header">
+                <div class="practice-label" style="color:#ef4444;">VALIDITÉ RITUELLE · الذبيحة</div>
+                <div class="practice-value" style="color:#ef4444;" id="ritualValue">30</div>
+              </div>
+              <div class="practice-bar-bg">
+                <div class="practice-bar-fill" id="ritualBar" style="background:#ef4444; width:30%;"></div>
+              </div>
+              <div class="practice-subtitle">Tasmiya, coupe, vitalité</div>
+            </div>
+            <div class="practice-block">
+              <div class="practice-header">
+                <div class="practice-label" style="color:#22c55e;">ASSURANCE OPÉRATIONNELLE · الأمانة</div>
+                <div class="practice-value" style="color:#22c55e;" id="opsValue">85</div>
+              </div>
+              <div class="practice-bar-bg">
+                <div class="practice-bar-fill" id="opsBar" style="background:#22c55e; width:85%;"></div>
+              </div>
+              <div class="practice-subtitle">Contrôleurs, sacrificateurs</div>
+            </div>
+            <div class="practice-block">
+              <div class="practice-header">
+                <div class="practice-label" style="color:#8b5cf6;">QUALITÉ PRODUIT — TAYYIB · الطيّب</div>
+                <div class="practice-value" style="color:#8b5cf6;" id="tayyibValue">40</div>
+              </div>
+              <div class="practice-bar-bg">
+                <div class="practice-bar-fill" id="tayyibBar" style="background:#8b5cf6; width:40%;"></div>
+              </div>
+              <div class="practice-subtitle">VSM, matières premières</div>
+            </div>
+            <div class="practice-block">
+              <div class="practice-header">
+                <div class="practice-label" style="color:#3b82f6;">TRANSPARENCE · الشفافية</div>
+                <div class="practice-value" style="color:#3b82f6;" id="transpValue">65</div>
+              </div>
+              <div class="practice-bar-bg">
+                <div class="practice-bar-fill" id="transpBar" style="background:#3b82f6; width:65%;"></div>
+              </div>
+              <div class="practice-subtitle">Charte, audits, liste</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="phone-footer">
+          <p>Plus le score est élevé, plus l'organisme est strict dans ses procédures de certification.</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Prompt Output -->
+    <div class="prompt-section">
+      <div class="prompt-header">
+        <div class="prompt-label">Prompt généré</div>
+        <button class="copy-btn" id="copyBtn">Copier</button>
+      </div>
+      <div class="prompt-output" id="promptOutput"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const GRADES = [
+  { letter: '\u0661', latin: '1', min: 90, max: 100, label: 'Très fiable', color: '#22c55e' },
+  { letter: '\u0662', latin: '2', min: 70, max: 89,  label: 'Fiable',      color: '#84cc16' },
+  { letter: '\u0663', latin: '3', min: 51, max: 69,  label: 'Vigilance',   color: '#f59e0b' },
+  { letter: '\u0664', latin: '4', min: 35, max: 50,  label: 'Peu fiable',  color: '#f97316' },
+  { letter: '\u0665', latin: '5', min: 0,  max: 34,  label: 'Insuffisant', color: '#ef4444' },
+];
+
+function getGrade(score) {
+  return GRADES.find(function(g) { return score >= g.min; }) || GRADES[GRADES.length - 1];
+}
+
+var cachedPractice = null;
+var lastScoreBucket = -1;
+
+function getPracticeScores(score) {
+  var r = score * 0.55 + (Math.random() * 5);
+  var o = score * 0.95 + (Math.random() * 8);
+  var ta = score * 0.7 + (Math.random() * 6);
+  var tr = score * 1.1 + (Math.random() * 5);
+  return {
+    ritual: Math.max(0, Math.min(100, Math.round(r))),
+    ops: Math.max(0, Math.min(100, Math.round(o))),
+    tayyib: Math.max(0, Math.min(100, Math.round(ta))),
+    transparency: Math.max(0, Math.min(100, Math.round(tr))),
+  };
+}
+
+function getStablePracticeScores(score) {
+  var bucket = Math.floor(score / 5);
+  if (bucket !== lastScoreBucket) {
+    lastScoreBucket = bucket;
+    cachedPractice = getPracticeScores(score);
+  }
+  return cachedPractice;
+}
+
+function renderGradeStrip(grade) {
+  var strip = document.getElementById('gradeStrip');
+  while (strip.firstChild) strip.removeChild(strip.firstChild);
+
+  // Micro Naqiy logo prefix
+  var nLogo = document.createElement('span');
+  nLogo.className = 'naqiy-micro-n';
+  nLogo.textContent = 'N';
+  nLogo.style.marginRight = '2px';
+  nLogo.style.fontSize = '11px';
+  strip.appendChild(nLogo);
+
+  GRADES.forEach(function(g) {
+    var pill = document.createElement('div');
+    pill.className = 'grade-strip-pill ' + (g.letter === grade.letter ? 'active' : 'inactive');
+    pill.style.backgroundColor = g.color;
+    pill.textContent = g.letter;
+    strip.appendChild(pill);
+  });
+
+  var label = document.createElement('span');
+  label.className = 'grade-strip-label';
+  label.style.color = grade.color;
+  label.textContent = grade.label;
+  strip.appendChild(label);
+}
+
+function updateAll() {
+  var score = parseInt(document.getElementById('scoreSlider').value);
+  var grade = getGrade(score);
+  var certName = document.getElementById('certifierInput').value;
+  var shortName = certName.slice(0, 3).toUpperCase();
+  var practice = getStablePracticeScores(score);
+
+  // Controls
+  document.getElementById('scoreDisplay').textContent = score;
+  document.getElementById('scoreDisplay').style.color = grade.color;
+  document.getElementById('gradeLetterBig').textContent = grade.letter;
+  document.getElementById('gradeLetterBig').style.backgroundColor = grade.color;
+  document.getElementById('gradeLabelText').textContent = grade.label;
+  document.getElementById('gradeLabelText').style.color = grade.color;
+  document.getElementById('gradeRange').textContent = grade.min + ' – ' + grade.max;
+
+  // Grade scale
+  document.querySelectorAll('.grade-scale-item').forEach(function(el) {
+    if (el.dataset.grade === grade.letter) {
+      el.classList.add('active');
+    } else {
+      el.classList.remove('active');
+    }
+  });
+
+  // Sticky header
+  document.getElementById('stickyGrade').textContent = grade.letter;
+  document.getElementById('stickyGradeBadge').style.backgroundColor = grade.color;
+  document.getElementById('stickyLogo').textContent = shortName;
+
+  // Hero
+  document.getElementById('heroLogo').textContent = shortName;
+  document.getElementById('heroCertName').textContent = certName;
+  document.getElementById('heroScore').textContent = score + '/100';
+  document.getElementById('heroScore').style.color = grade.color;
+  document.getElementById('confidenceBar').style.width = score + '%';
+  document.getElementById('confidenceBar').style.backgroundColor = grade.color;
+  document.getElementById('confidenceLabel').textContent = score + '%';
+  document.getElementById('confidenceLabel').style.color = grade.color;
+  renderGradeStrip(grade);
+
+  // Sheet
+  document.getElementById('sheetLogo').textContent = shortName;
+  document.getElementById('sheetCertName').textContent = certName;
+  document.getElementById('sheetScore').textContent = score + '/100';
+  document.getElementById('sheetScore').style.color = grade.color;
+  document.getElementById('sheetGradeLetter').textContent = grade.letter;
+  document.getElementById('sheetGradeBadge').style.backgroundColor = grade.color;
+  document.getElementById('sheetGradeText').textContent = grade.label;
+  document.getElementById('sheetGradeText').style.color = grade.color;
+
+  // Practice blocks
+  document.getElementById('ritualValue').textContent = practice.ritual;
+  document.getElementById('ritualBar').style.width = practice.ritual + '%';
+  document.getElementById('opsValue').textContent = practice.ops;
+  document.getElementById('opsBar').style.width = practice.ops + '%';
+  document.getElementById('tayyibValue').textContent = practice.tayyib;
+  document.getElementById('tayyibBar').style.width = practice.tayyib + '%';
+  document.getElementById('transpValue').textContent = practice.transparency;
+  document.getElementById('transpBar').style.width = practice.transparency + '%';
+
+  // Prompt
+  updatePrompt(score, grade, certName);
+}
+
+function updatePrompt(score, grade, certName) {
+  var text = 'Implémente le NaqiyScore — système de grade certifieur halal avec chiffres arabes (١٢٣٤٥) et micro-logo "N".\n\n' +
+    'Pour le score ' + score + '/100 (' + certName + '), le grade est N' + grade.letter + ' — ' + grade.label + ' (couleur ' + grade.color + ').\n\n' +
+    'Seuils : N' + '\u0661' + ' (80-100 Très fiable), N' + '\u0662' + ' (60-79 Fiable), N' + '\u0663' + ' (40-59 Modéré), N' + '\u0664' + ' (20-39 Peu fiable), N' + '\u0665' + ' (0-19 Insuffisant).\n\n' +
+    'Format visuel : Micro-logo "N" gold + chiffre arabe coloré sur fond grade (style NutriScore).\n\n' +
+    'Afficher dans : VerdictHero (strip N' + '\u0661' + '→N' + '\u0665' + '), CertifierPracticesSheet (badge N+grade), CompactStickyHeader (micro-badge).\n\n' +
+    'Pure function backend getTrustGrade(score) retournant le grade 1-5 + chiffre arabe + label + couleur.';
+  document.getElementById('promptOutput').textContent = text;
+}
+
+// Events
+document.getElementById('scoreSlider').addEventListener('input', updateAll);
+document.getElementById('certifierInput').addEventListener('input', updateAll);
+
+document.querySelectorAll('.preset-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.getElementById('scoreSlider').value = btn.dataset.score;
+    document.getElementById('certifierInput').value = btn.dataset.full;
+    document.querySelectorAll('.preset-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    lastScoreBucket = -1;
+    updateAll();
+  });
+});
+
+document.getElementById('copyBtn').addEventListener('click', function() {
+  var text = document.getElementById('promptOutput').textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    var btn = document.getElementById('copyBtn');
+    btn.textContent = 'Copié !';
+    setTimeout(function() { btn.textContent = 'Copier'; }, 1500);
+  });
+});
+
+// Init
+updateAll();
+</script>
+</body>
+</html>

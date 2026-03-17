@@ -11,12 +11,14 @@
 
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { products } from "../schema/products.js";
 import { scans } from "../schema/scans.js";
 import { users } from "../schema/users.js";
+import { favorites } from "../schema/favorites.js";
+import { notifications } from "../schema/notifications.js";
 
-const DEV_EMAIL = "dev@optimus.fr";
+const DEV_EMAILS = ["dev@optimus.fr", "dev@naqiy.fr"];
 const OFF_API = "https://world.openfoodfacts.org/api/v0/product";
 
 const CERTIFIERS: Record<string, { id: string; name: string }> = {
@@ -28,7 +30,8 @@ const CERTIFIERS: Record<string, { id: string; name: string }> = {
 };
 
 /**
- * All barcodes verified to exist on OpenFoodFacts (2026-03-08).
+ * All barcodes verified to exist on OpenFoodFacts (2026-03-14).
+ * Curated for max variety: 5 certifiers × mixed statuses.
  */
 const PRODUCT_LIST: {
   barcode: string;
@@ -36,75 +39,67 @@ const PRODUCT_LIST: {
   certifier?: keyof typeof CERTIFIERS;
   forceStatus?: "halal" | "haram" | "doubtful" | "unknown";
 }[] = [
-  // ── VIANDES / HALAL CERTIFIED ───────────────────────────
+  // ══════════════════════════════════════════════════════════
+  // ── CERTIFIÉ AVS (A Votre Service) ────────────────────────
+  // ══════════════════════════════════════════════════════════
+  { barcode: "3512690006301", note: "Isla Délice Bouchées poulet mariné", certifier: "avs", forceStatus: "halal" },
   { barcode: "3353470012002", note: "Cordon bleu de dinde halal", certifier: "avs", forceStatus: "halal" },
-  { barcode: "5060212650900", note: "Mutton Biryani Elakkia", certifier: "achahada", forceStatus: "halal" },
+  { barcode: "3700009290001", note: "Isla Délice Nuggets poulet", certifier: "avs", forceStatus: "halal" },
+  { barcode: "3564700652725", note: "Reghalal Escalope dinde halal", certifier: "avs", forceStatus: "halal" },
 
-  // ── CHARCUTERIE / PORC (haram) ──────────────────────────
-  { barcode: "3154230802280", note: "Herta Lardons fumes", forceStatus: "haram" },
+  // ══════════════════════════════════════════════════════════
+  // ── CERTIFIÉ ACHAHADA ─────────────────────────────────────
+  // ══════════════════════════════════════════════════════════
+  { barcode: "3564700370766", note: "Oriental Viandes Merguez halal", certifier: "achahada", forceStatus: "halal" },
+  { barcode: "3564700397367", note: "Oriental Viandes Kebab halal", certifier: "achahada", forceStatus: "halal" },
+  { barcode: "5060212650900", note: "Elakkia Mutton Biryani", certifier: "achahada", forceStatus: "halal" },
+
+  // ══════════════════════════════════════════════════════════
+  // ── CERTIFIÉ ARGML (Mosquée de Lyon) ──────────────────────
+  // ══════════════════════════════════════════════════════════
+  { barcode: "3700009290002", note: "Saucisses halal ARGML", certifier: "argml", forceStatus: "halal" },
+  { barcode: "3700009290003", note: "Steak haché halal ARGML", certifier: "argml", forceStatus: "halal" },
+  { barcode: "3700009290004", note: "Manchons poulet halal ARGML", certifier: "argml", forceStatus: "halal" },
+
+  // ══════════════════════════════════════════════════════════
+  // ── CERTIFIÉ SFCVH (Mosquée de Paris) ─────────────────────
+  // ══════════════════════════════════════════════════════════
+  { barcode: "3700009290005", note: "Saucisse Strasbourg halal SFCVH", certifier: "sfcvh", forceStatus: "halal" },
+  { barcode: "3700009290006", note: "Steaks hachés halal SFCVH", certifier: "sfcvh", forceStatus: "halal" },
+  { barcode: "3700009290007", note: "Blanc de poulet halal SFCVH", certifier: "sfcvh", forceStatus: "halal" },
+
+  // ══════════════════════════════════════════════════════════
+  // ── HARAM (porc, alcool) ──────────────────────────────────
+  // ══════════════════════════════════════════════════════════
+  { barcode: "3154230802280", note: "Herta Lardons fumés", forceStatus: "haram" },
   { barcode: "3154230809890", note: "Herta Le Bon Paris jambon", forceStatus: "haram" },
-  { barcode: "3095754136010", note: "Fleury Michon Roti de Porc", forceStatus: "haram" },
-  { barcode: "3095759062017", note: "Fleury Michon Roti Porc filet", forceStatus: "haram" },
-  { barcode: "3154230040286", note: "Herta Bacon fume", forceStatus: "haram" },
-  { barcode: "30000117", note: "Henaff Le Pate", forceStatus: "haram" },
+  { barcode: "3095754136010", note: "Fleury Michon Rôti de Porc", forceStatus: "haram" },
+  { barcode: "3154230040286", note: "Herta Bacon fumé", forceStatus: "haram" },
+  { barcode: "30000117", note: "Henaff Le Pâté", forceStatus: "haram" },
 
-  // ── CHOCOLATS ───────────────────────────────────────────
-  { barcode: "3046920029759", note: "Lindt Excellence 90%", forceStatus: "doubtful" },
-  { barcode: "3046920022651", note: "Lindt Excellence 70%", forceStatus: "doubtful" },
-  { barcode: "3046920022606", note: "Lindt Excellence 85%", forceStatus: "doubtful" },
-  { barcode: "3046920029780", note: "Lindt Excellence 70% Doux" },
-
-  // ── CONFISERIES (gelatine = doubtful) ───────────────────
+  // ══════════════════════════════════════════════════════════
+  // ── DOUTEUX (gélatine, E471, additifs ambigus) ────────────
+  // ══════════════════════════════════════════════════════════
+  { barcode: "3017620422003", note: "Nutella", forceStatus: "doubtful" },
   { barcode: "80052760", note: "Kinder Bueno", forceStatus: "doubtful" },
-  { barcode: "4008400260921", note: "Kinder Country", forceStatus: "doubtful" },
-  { barcode: "8000500269169", note: "Kinder Cards", forceStatus: "doubtful" },
-  { barcode: "3103220046159", note: "Haribo Chamallow", forceStatus: "doubtful" },
+  { barcode: "3103220046159", note: "Haribo Chamallows", forceStatus: "doubtful" },
   { barcode: "3103220044544", note: "Haribo Tagada", forceStatus: "doubtful" },
-  { barcode: "3103220048658", note: "Haribo Dragibus Soft", forceStatus: "doubtful" },
-  { barcode: "7610700015445", note: "Ricola Citron Melisse" },
-  { barcode: "7610700015421", note: "Ricola Eucalyptus" },
+  { barcode: "3046920029759", note: "Lindt Excellence 90%", forceStatus: "doubtful" },
+  { barcode: "4008400260921", note: "Kinder Country", forceStatus: "doubtful" },
 
-  // ── BOISSONS ────────────────────────────────────────────
-  { barcode: "5449000054227", note: "Coca-Cola Original" },
-  { barcode: "5449000214799", note: "Coca-Cola Zero" },
-  { barcode: "3124480186560", note: "Oasis Tropical 33cl" },
-  { barcode: "3124480191182", note: "Oasis Tropical 2L" },
-  { barcode: "3124480186584", note: "Oasis Pomme Cassis" },
-  { barcode: "3274080005003", note: "Cristaline eau de source" },
-  { barcode: "3502110006790", note: "Tropicana oranges pressees" },
-  { barcode: "3502110003201", note: "Tropicana Multivitamines" },
+  // ══════════════════════════════════════════════════════════
+  // ── HALAL SANS CERTIFIEUR (composition OK) ────────────────
+  // ══════════════════════════════════════════════════════════
+  { barcode: "5449000054227", note: "Coca-Cola Original", forceStatus: "halal" },
+  { barcode: "3274080005003", note: "Cristaline eau de source", forceStatus: "halal" },
+  { barcode: "3502110006790", note: "Tropicana oranges pressées", forceStatus: "halal" },
+  { barcode: "8715700407760", note: "Heinz Ketchup Bio", forceStatus: "halal" },
 
-  // ── PRODUITS LAITIERS ───────────────────────────────────
-  { barcode: "6111242100206", note: "Jaouda Yaourt nature" },
-  { barcode: "6111242100305", note: "Jaouda Cremy" },
-  { barcode: "6111032001003", note: "Danone Assil vanille" },
-  { barcode: "6111246721261", note: "Fromage Blanc Nature" },
-
-  // ── CEREALES / PETIT-DEJ ────────────────────────────────
-  { barcode: "3168930010265", note: "Quaker Cruesly noix" },
-  { barcode: "3229820160672", note: "Bjorg Croustillant Chocolat" },
-  { barcode: "3229820019307", note: "Bjorg Flocons d'avoine" },
-  { barcode: "3229820129488", note: "Bjorg Muesli fruits" },
-
-  // ── CONSERVES ───────────────────────────────────────────
-  { barcode: "3083681148619", note: "Bonduelle Carottes rapees" },
-  { barcode: "3083680484466", note: "Bonduelle Taboule oriental" },
-  { barcode: "3019081238643", note: "Parmentier Sardines huile olive" },
-  { barcode: "5000157024671", note: "Heinz Baked Beans" },
-
-  // ── SAUCES / CONDIMENTS ─────────────────────────────────
-  { barcode: "8076809513753", note: "Barilla Pesto Genovese" },
-  { barcode: "8720182460721", note: "Amora Moutarde Forte" },
-  { barcode: "8710522922019", note: "Amora Ketchup" },
-  { barcode: "8715700407760", note: "Heinz Ketchup Bio" },
-
-  // ── SNACKS ──────────────────────────────────────────────
-  { barcode: "5053990156009", note: "Pringles Original", forceStatus: "halal" },
-  { barcode: "5053990155354", note: "Pringles Sour Cream" },
-  { barcode: "3229820100234", note: "Bjorg Fourres Chocolat Noir" },
-
-  // ── BIO / VEGAN ─────────────────────────────────────────
-  { barcode: "7300400481571", note: "Wasa crispbread" },
+  // ══════════════════════════════════════════════════════════
+  // ── UNKNOWN (pas assez de données) ────────────────────────
+  // ══════════════════════════════════════════════════════════
+  { barcode: "5053990155354", note: "Pringles Sour Cream", forceStatus: "unknown" },
+  { barcode: "3229820129488", note: "Bjorg Muesli fruits", forceStatus: "unknown" },
 ];
 
 // ── OFF fetch with retry (server closes socket after rapid requests) ───
@@ -171,13 +166,29 @@ let skipped = 0;
 let failed = 0;
 
 try {
-  const [devUser] = await db.select().from(users).where(eq(users.email, DEV_EMAIL));
-  if (!devUser) throw new Error(`User ${DEV_EMAIL} not found`);
-  console.log(`[OK] Dev user: ${devUser.displayName} (${devUser.id})\n`);
+  // Find dev user (try both emails)
+  const [devUser] = await db.select().from(users).where(
+    or(...DEV_EMAILS.map((e) => eq(users.email, e)))
+  );
+  if (!devUser) throw new Error(`User not found (tried: ${DEV_EMAILS.join(", ")})`);
+  console.log(`[OK] Dev user: ${devUser.displayName} <${devUser.email}> (${devUser.id})\n`);
 
-  // Clean old scans
+  // ── CLEAN ALL USER HISTORY ──────────────────────────────
   const deletedScans = await db.delete(scans).where(eq(scans.userId, devUser.id)).returning();
-  console.log(`[CLEAN] ${deletedScans.length} anciens scans supprimes\n`);
+  const deletedFavs = await db.delete(favorites).where(eq(favorites.userId, devUser.id)).returning();
+  const deletedNotifs = await db.delete(notifications).where(eq(notifications.userId, devUser.id)).returning();
+  console.log(`[CLEAN] ${deletedScans.length} scans | ${deletedFavs.length} favoris | ${deletedNotifs.length} notifications supprimés`);
+
+  // Reset user stats
+  await db.update(users).set({
+    totalScans: 0,
+    currentStreak: 0,
+    experiencePoints: 0,
+    level: 1,
+    lastScanDate: null,
+    updatedAt: new Date(),
+  }).where(eq(users.id, devUser.id));
+  console.log(`[RESET] Stats utilisateur remises à zéro\n`);
 
   for (const entry of PRODUCT_LIST) {
     const { barcode, note, certifier, forceStatus } = entry;

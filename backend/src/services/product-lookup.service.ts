@@ -41,12 +41,47 @@ export interface ProductLookupResult {
 /** Products older than this are considered stale and eligible for background refresh */
 const STALE_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
+// ── OFF data sanitization ─────────────────────────────────────
+// OpenFoodFacts sometimes returns strings with spurious escape
+// sequences (e.g. "L\\'or espresso" instead of "L'or espresso").
+// These break PostgreSQL queries when stored in JSONB or text columns.
+
+/** Strip parasitic escape sequences from a single string value. */
+function sanitizeOffString(val: string | null | undefined): string | null {
+  if (!val) return null;
+  return val
+    .replace(/\\'/g, "'")     // \' → '
+    .replace(/\\\\/g, "\\")   // \\\\ → \
+    .replace(/\x00/g, "");    // strip null bytes
+}
+
+/** Deep-sanitize all string values in an OFF product object. */
+function sanitizeOffProduct<T>(obj: T): T {
+  if (typeof obj === "string") return sanitizeOffString(obj) as T;
+  if (Array.isArray(obj)) return obj.map(sanitizeOffProduct) as T;
+  if (obj && typeof obj === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(obj)) {
+      out[k] = sanitizeOffProduct(v);
+    }
+    return out as T;
+  }
+  return obj;
+}
+
 // ── OFF → Product column mapping (shared between insert & update) ──
 
 const safeNum = (v: unknown): number | null => {
   if (v === undefined || v === null || v === "") return null;
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
+};
+
+/** Validate a single-letter grade (a-e). OFF sometimes returns "unknown" or "not-applicable". */
+const safeGrade = (v: unknown): string | null => {
+  if (typeof v !== "string") return null;
+  const lower = v.toLowerCase().trim();
+  return /^[a-e]$/.test(lower) ? lower : null;
 };
 
 function mapOffToV2Fields(off: OpenFoodFactsProduct) {
@@ -62,9 +97,9 @@ function mapOffToV2Fields(off: OpenFoodFactsProduct) {
     tracesTags: off.traces_tags ?? null,
     additivesTags: off.additives_tags ?? null,
     ingredientsAnalysisTags: off.ingredients_analysis_tags ?? null,
-    nutriscoreGrade: off.nutriscore_grade ?? null,
+    nutriscoreGrade: safeGrade(off.nutriscore_grade),
     novaGroup: off.nova_group ?? null,
-    ecoscoreGrade: off.ecoscore_grade ?? null,
+    ecoscoreGrade: safeGrade(off.ecoscore_grade),
     energyKcal100g: safeNum(nutriments?.["energy-kcal_100g"]),
     fat100g: safeNum(nutriments?.fat_100g),
     saturatedFat100g: safeNum(nutriments?.["saturated-fat_100g"]),
@@ -114,7 +149,7 @@ export async function resolveProduct(
   const offResult = await lookupBarcode(barcode);
   if (!offResult.found || !offResult.product) return null;
 
-  const off = offResult.product;
+  const off = sanitizeOffProduct(offResult.product);
   const extraction = await smartExtractIngredients(off);
 
   // 3. Create product in DB
@@ -155,7 +190,7 @@ export function refreshProductInBackground(
   lookupBarcode(barcode)
     .then(async (result) => {
       if (!result.found || !result.product) return;
-      const off = result.product;
+      const off = sanitizeOffProduct(result.product);
 
       await db
         .update(products)
@@ -167,10 +202,15 @@ export function refreshProductInBackground(
           offData: off as unknown as Record<string, unknown>,
           lastSyncedAt: new Date(),
           ...mapOffToV2Fields(off),
+          // Auto-healing: reset data quality flag so next scan re-validates
+          // with fresh OFF data. If data is still bad, NutrientValidator
+          // will re-flag it. If OFF fixed the data, the flag clears.
+          dataQualityFlag: null,
+          dataQualityReasons: null,
         })
         .where(eq(products.id, productId));
 
-      logger.info("Background product refresh completed", { barcode, productId });
+      logger.info("Background product refresh completed (data quality flag reset)", { barcode, productId });
     })
     .catch((err) => {
       logger.warn("Background product refresh failed", {
@@ -191,7 +231,7 @@ export async function backfillProductFromOff(
     return { product, offData: (product.offData as Record<string, unknown>) ?? {} };
   }
 
-  const off = offResult.product;
+  const off = sanitizeOffProduct(offResult.product);
   const offData = off as unknown as Record<string, unknown>;
 
   await db
@@ -204,6 +244,9 @@ export async function backfillProductFromOff(
       nutritionFacts: off.nutriments ?? product.nutritionFacts,
       lastSyncedAt: new Date(),
       ...mapOffToV2Fields(off),
+      // Auto-healing: reset data quality flag on backfill (same as refresh)
+      dataQualityFlag: null,
+      dataQualityReasons: null,
     })
     .where(eq(products.id, product.id));
 

@@ -1,30 +1,29 @@
 /**
- * AlertPillStrip — Compact horizontal pill strip for alerts.
+ * AlertPillStrip — Inline wrapped alert tags.
  *
- * Replaces BoycottCard (~200px red glow) + AlertStripCard (separate component)
- * with a single ~56px horizontal scrollable row of compact pills.
+ * Compact inline format: icon + text on the same line (e.g. "⚠ contient: lait").
+ * Wraps to multiple lines if needed instead of horizontal scroll.
  *
  * @module components/scan/AlertPillStrip
  */
 
 import React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, ScrollView, Pressable, StyleSheet } from "react-native";
 import {
   HandHeartIcon,
   WarningCircleIcon,
   PillIcon,
-  CaretRightIcon,
 } from "phosphor-react-native";
-import Animated, { FadeInRight } from "react-native-reanimated";
-import { PressableScale } from "@/components/ui/PressableScale";
+import Animated, { FadeIn } from "react-native-reanimated";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/hooks/useTranslation";
 import { fontSize as fontSizeTokens, fontWeight as fontWeightTokens } from "@/theme/typography";
-import { spacing, radius } from "@/theme/spacing";
+import { spacing } from "@/theme/spacing";
 import type { PersonalAlert } from "./scan-types";
 
-// ── Pill color mapping ──
+// ── Color + icon mapping ──
 
-const PILL_CONFIG: Record<string, { color: string; Icon: typeof HandHeartIcon }> = {
+const ALERT_CONFIG: Record<string, { color: string; Icon: typeof HandHeartIcon }> = {
   boycott:  { color: "#ef4444", Icon: HandHeartIcon },
   allergen: { color: "#f97316", Icon: WarningCircleIcon },
   health:   { color: "#3b82f6", Icon: PillIcon },
@@ -38,112 +37,101 @@ export interface AlertPillStripProps {
   onPillPress?: (alert: PersonalAlert) => void;
 }
 
-// ── Sub-component: AlertPill ──
-
-function AlertPill({
-  alert,
-  index,
-  onPress,
-}: {
-  alert: PersonalAlert;
-  index: number;
-  onPress?: (alert: PersonalAlert) => void;
-}) {
-  const { isDark } = useTheme();
-  const config = PILL_CONFIG[alert.type] ?? PILL_CONFIG.health;
-  const { color, Icon } = config;
-
-  return (
-    <Animated.View
-      entering={FadeInRight.duration(250).delay(index * 80).springify()}
-    >
-      <PressableScale
-        onPress={() => onPress?.(alert)}
-        style={[styles.pill, {
-          backgroundColor: isDark ? `${color}1A` : `${color}14`,
-          borderColor: isDark ? `${color}40` : `${color}30`,
-        }]}
-        accessibilityRole="button"
-        accessibilityLabel={alert.title}
-      >
-        <View style={[styles.iconCircle, { backgroundColor: `${color}26` }]}>
-          <Icon size={11} color={color} weight="bold" />
-        </View>
-        <Text
-          style={[styles.pillLabel, { color }]}
-          numberOfLines={1}
-        >
-          {alert.title}
-        </Text>
-        <CaretRightIcon size={10} color={`${color}80`} />
-      </PressableScale>
-    </Animated.View>
-  );
-}
-
-// ── Main Component ──
+// ── Component ──
 
 export function AlertPillStrip({
   alerts,
-  staggerIndex = 1,
   onPillPress,
 }: AlertPillStripProps) {
+  const { isDark } = useTheme();
+  const { t } = useTranslation();
   if (alerts.length === 0) return null;
 
-  // Sort: boycott first, then allergens, then health
   const sorted = [...alerts].sort((a, b) => {
     const order: Record<string, number> = { boycott: 0, allergen: 1, health: 2 };
     return (order[a.type] ?? 3) - (order[b.type] ?? 3);
   });
 
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.scrollContent}
-      style={styles.scroll}
+    <Animated.View entering={FadeIn.duration(300)} style={styles.wrapper}>
+      <Text style={[styles.sectionTitle, { color: isDark ? "#ffffff80" : "#00000060" }]}>
+        {t.scanResult.myPersonalAlerts}
+      </Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.container}
+      >
+        {sorted.map((alert, idx) => (
+          <InlineAlert key={`${alert.type}-${idx}`} alert={alert} onPress={onPillPress} />
+        ))}
+      </ScrollView>
+    </Animated.View>
+  );
+}
+
+// ── InlineAlert — icon + text on same line ──
+
+function InlineAlert({ alert, onPress }: { alert: PersonalAlert; onPress?: (alert: PersonalAlert) => void }) {
+  const { isDark } = useTheme();
+  const config = ALERT_CONFIG[alert.type] ?? ALERT_CONFIG.health;
+  const { color, Icon } = config;
+
+  const content = (
+    <View style={[styles.tag, {
+      backgroundColor: isDark ? `${color}14` : `${color}0C`,
+    }]}>
+      <Icon size={13} color={color} weight="bold" />
+      <Text style={[styles.tagText, { color }]} numberOfLines={1}>
+        {alert.title}
+      </Text>
+    </View>
+  );
+
+  if (!onPress) return content;
+
+  return (
+    <Pressable
+      onPress={() => onPress(alert)}
+      accessibilityRole="button"
+      accessibilityLabel={alert.title}
+      style={({ pressed }) => pressed ? styles.pressed : undefined}
     >
-      {sorted.map((alert, idx) => (
-        <AlertPill
-          key={`${alert.type}-${idx}`}
-          alert={alert}
-          index={idx}
-          onPress={onPillPress}
-        />
-      ))}
-    </ScrollView>
+      {content}
+    </Pressable>
   );
 }
 
 // ── Styles ──
 
 const styles = StyleSheet.create({
-  scroll: {
-    marginHorizontal: -spacing.xl,
+  wrapper: {
+    gap: spacing.sm,
+    marginBottom: -spacing.lg,
   },
-  scrollContent: {
-    paddingHorizontal: spacing.xl,
+  sectionTitle: {
+    fontSize: fontSizeTokens.caption,
+    fontWeight: fontWeightTokens.medium,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  container: {
+    flexDirection: "row",
     gap: spacing.sm,
   },
-  pill: {
+  tag: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.xs,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: spacing.sm,
   },
-  iconCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  pillLabel: {
+  tagText: {
     fontSize: fontSizeTokens.caption,
     fontWeight: fontWeightTokens.semiBold,
-    maxWidth: 200,
+  },
+  pressed: {
+    opacity: 0.7,
   },
 });

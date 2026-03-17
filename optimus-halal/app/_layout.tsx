@@ -22,9 +22,10 @@ import {
 } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { AnimatedSplash } from "@/components/AnimatedSplash";
-import { useLanguageStore, useQuotaStore } from "@/store";
+import { useLanguageStore, useQuotaStore, useTrialStore, useOnboardingStore } from "@/store";
 import { useTheme, useTranslation } from "@/hooks";
 import { initializeTokens, isAuthenticated as hasStoredTokens, clearTokens, setApiLanguage, setOnAuthFailure } from "@/services/api";
+import { DevScanSeeder } from "@/utils/seed-scan-history";
 import { useMe } from "@/hooks/useAuth";
 import { isRTL as isRTLLanguage } from "@/i18n";
 import { trpc, createTRPCClientForProvider } from "@/lib/trpc";
@@ -193,6 +194,16 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
     // Reset quota counter if new day (anonymous scan limit)
     useQuotaStore.getState().resetIfNewDay();
 
+    // Auto-start trial for existing users who completed onboarding
+    // before the trial feature was added (migration edge case)
+    if (!useTrialStore.getState().hasTrialStarted()) {
+      if (useOnboardingStore.getState().hasCompletedOnboarding) {
+        useTrialStore.getState().startTrial();
+      }
+    }
+
+    // DEV: scan seeding is now handled by <DevScanSeeder /> in the JSX tree
+
     // Initialize RevenueCat (works anonymously, identified after login)
     initPurchases().catch((e) => logger.warn("AppInit", "RevenueCat init failed", String(e)));
 
@@ -239,9 +250,13 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
   const authValue = useMemo<AuthContextValue>(() => {
     const hasTokens = tokensReady && hasStoredTokens();
     const isLoading = !tokensReady || (hasTokens && meQuery.isLoading);
+    // Guest = auth fully resolved AND no user data AND no stored tokens.
+    // If tokens exist but meQuery failed/hasn't resolved, user is NOT guest —
+    // they're in an error/loading state. This prevents flash-of-guest-UI.
+    const isGuest = !isLoading && !meQuery.data && !hasTokens;
     return {
       user: (meQuery.data as AuthUser | undefined) ?? null,
-      isGuest: !isLoading && !meQuery.data,
+      isGuest,
       isAuthLoading: isLoading,
       isAuthError: meQuery.isError,
       refetchAuth: meQuery.refetch,
@@ -320,6 +335,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={authValue}>
+      {__DEV__ && !isInitializing && <DevScanSeeder isAuthenticated={!!meQuery.data} />}
       {children}
       {/* AnimatedSplash overlays content — renders on top, exits when ready */}
       {!splashDone && (

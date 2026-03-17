@@ -711,6 +711,7 @@ describe("computeHealthScore V3 — profile adjustments", () => {
   it("child: penalizes high sugar (> 20g/100g)", () => {
     const result = computeHealthScore(makeInput({
       profile: "child",
+      nutriscoreGrade: null,
       nutriments: { sugars_100g: 25, energy_100g: 1500, saturated_fat_100g: 5, sodium_100g: 0.5 },
     }));
     expect(result.axes.profile.reasons.some(r => r.includes("Sucres > 20g"))).toBe(true);
@@ -727,6 +728,7 @@ describe("computeHealthScore V3 — profile adjustments", () => {
   it("athlete: bonus for high protein (> 15g/100g)", () => {
     const result = computeHealthScore(makeInput({
       profile: "athlete",
+      nutriscoreGrade: null,
       nutriments: { proteins_100g: 25, energy_100g: 600, sugars_100g: 2, saturated_fat_100g: 3, sodium_100g: 0.8 },
     }));
     expect(result.axes.profile.delta).toBeGreaterThan(0);
@@ -736,6 +738,7 @@ describe("computeHealthScore V3 — profile adjustments", () => {
   it("athlete: sodium tolerance bonus", () => {
     const result = computeHealthScore(makeInput({
       profile: "athlete",
+      nutriscoreGrade: null,
       nutriments: { salt_100g: 2, energy_100g: 600, sugars_100g: 2, saturated_fat_100g: 3, sodium_100g: 0.8 },
     }));
     expect(result.axes.profile.reasons.some(r => r.includes("sudation"))).toBe(true);
@@ -761,6 +764,7 @@ describe("computeHealthScore V3 — profile adjustments", () => {
   it("elderly: penalty for high sodium (> 2g salt)", () => {
     const result = computeHealthScore(makeInput({
       profile: "elderly",
+      nutriscoreGrade: null,
       nutriments: { salt_100g: 3, proteins_100g: 10, energy_100g: 400, sugars_100g: 5, saturated_fat_100g: 2, sodium_100g: 1.2 },
     }));
     expect(result.axes.profile.reasons.some(r => r.includes("cardiovasculaire"))).toBe(true);
@@ -1045,7 +1049,7 @@ describe("detectNutrientAnomalies", () => {
       { fat_100g: 5, saturated_fat_100g: 10 },
       null,
     );
-    expect(anomalies.some(a => a.severity === "impossible" && a.field === "saturated_fat_100g")).toBe(true);
+    expect(anomalies.some(a => a.severity === "impossible" && a.field === "saturated-fat_100g")).toBe(true);
   });
 
   it("detects impossible sugars > carbohydrates", () => {

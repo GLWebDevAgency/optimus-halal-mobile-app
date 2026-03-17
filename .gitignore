@@ -120,4 +120,8 @@ stitch_onboarding_reliable_certifications/
 apps-et-sources-infos-medias/
 apps-to-explore/
 tools/*
-stitch/*
+stitch/
+stitch.zip
+.superpowers/
+.claude/worktrees/
+.claude/audit-*.md

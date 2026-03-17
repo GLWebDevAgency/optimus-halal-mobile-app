@@ -30,7 +30,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BookOpenIcon, InfoIcon, SealCheckIcon, XIcon } from "phosphor-react-native";
 import { useTheme } from "@/hooks/useTheme";
-import { useTranslation } from "@/hooks";
+import { useTranslation, useHaptics } from "@/hooks";
 import { halalStatus, neutral, darkTheme, lightTheme, getTrustScoreColor } from "@/theme/colors";
 import { MadhabScoreRing } from "./MadhabScoreRing";
 
@@ -124,6 +124,7 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
+  const { impact } = useHaptics();
 
   // Keep component mounted during close animation
   const [isMounted, setIsMounted] = useState(false);
@@ -133,6 +134,7 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
   useEffect(() => {
     if (visible) {
       setIsMounted(true);
+      impact();
       backdropOpacity.value = withTiming(1, { duration: 200 });
       translateY.value = reducedMotion
         ? 0
@@ -174,11 +176,12 @@ export const MadhabBottomSheet = React.memo(function MadhabBottomSheet({
 
       {/* Sheet */}
       <Animated.View
+        accessibilityViewIsModal
         style={[
           styles.sheet,
           {
             backgroundColor: isDark ? darkTheme.background : lightTheme.backgroundSecondary,
-            paddingBottom: insets.bottom + 20,
+            paddingBottom: insets.bottom + 90,
           },
           sheetStyle,
         ]}

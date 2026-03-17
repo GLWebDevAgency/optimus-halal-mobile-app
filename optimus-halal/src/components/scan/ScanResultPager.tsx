@@ -1,33 +1,33 @@
 /**
- * ScanResultPager — PagerView wrapper synced with ScanResultTabBar.
+ * ScanResultPager — Pure-JS horizontal pager synced with ScanResultTabBar.
  *
- * Wraps react-native-pager-view with:
+ * Uses Animated.ScrollView + pagingEnabled instead of react-native-pager-view
+ * to avoid requiring a native module rebuild.
+ *
+ * Features:
  *  - Dynamic height: each page is measured via onLayout and the container
  *    animates smoothly between the two heights using withSpring.
- *  - Tab sync: onPageScroll propagates (position + offset) as a 0..1
+ *  - Tab sync: onScroll propagates (position + offset) as a 0..1
  *    progress value so the TabBar indicator follows the swipe gesture.
  *  - Programmatic navigation: when activeTab changes externally (tab press),
- *    pagerRef.current?.setPage(activeTab) is called via useEffect.
+ *    scrollTo is called via useEffect.
  *
  * @module components/scan/ScanResultPager
  */
 
-import React, { useEffect, useRef, ReactNode } from "react";
-import { Platform, View } from "react-native";
-import PagerView from "react-native-pager-view";
+import React, { useEffect, useRef, useState } from "react";
+import { View, useWindowDimensions, type LayoutChangeEvent } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
+  useAnimatedScrollHandler,
   interpolate,
+  runOnJS,
+  type SharedValue,
 } from "react-native-reanimated";
 
-// ── Spring config ──────────────────────────────────────────────
-/** Height transition: responsive yet smooth. */
-const HEIGHT_SPRING = { damping: 20, stiffness: 150 } as const;
-
-// ── Minimum fallback height (prevents 0-height flicker on first render) ──
-const MIN_PAGE_HEIGHT = 200;
+import { useHaptics } from "@/hooks";
+import { spacing } from "@/theme/spacing";
 
 // ─────────────────────────────────────────────────────────────
 // Props
@@ -39,15 +39,14 @@ export interface ScanResultPagerProps {
   /** Called when the user finishes a page swipe, with the new page index. */
   onPageChange: (index: number) => void;
   /**
-   * Called on every scroll frame.
-   * Reports progress = position + offset (a continuous 0..N value).
-   * The TabBar uses this to animate its indicator in real time.
+   * SharedValue written on every scroll frame (0..1 continuous).
+   * The TabBar reads this to animate its indicator in real time.
    */
-  onScrollProgress: (position: number, offset: number) => void;
+  scrollProgress: SharedValue<number>;
   /** Content rendered inside page 0 (Halal tab). */
-  halalContent: ReactNode;
+  halalContent: React.ReactNode;
   /** Content rendered inside page 1 (Santé / Health tab). */
-  healthContent: ReactNode;
+  healthContent: React.ReactNode;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -57,82 +56,103 @@ export interface ScanResultPagerProps {
 export const ScanResultPager = React.memo(function ScanResultPager({
   activeTab,
   onPageChange,
-  onScrollProgress,
+  scrollProgress,
   halalContent,
   healthContent,
 }: ScanResultPagerProps) {
-  const pagerRef = useRef<PagerView>(null);
+  const scrollRef = useRef<Animated.ScrollView>(null);
+  const { width: screenWidth } = useWindowDimensions();
+  const { selection } = useHaptics();
 
-  // Measured heights for each page (JS-side shared values).
-  const page0Height = useSharedValue(MIN_PAGE_HEIGHT);
-  const page1Height = useSharedValue(MIN_PAGE_HEIGHT);
+  // Page width: start with a good estimate, refine on layout.
+  const estimatedWidth = screenWidth - spacing.xl * 2;
+  const [pageWidth, setPageWidth] = useState(estimatedWidth);
 
-  // Fractional scroll progress used to interpolate height (0 = page 0, 1 = page 1).
-  const scrollProgress = useSharedValue(0);
+  // Shared value mirror for worklet access.
+  const pageWidthSV = useSharedValue(estimatedWidth);
+
+  // Measured heights for each page (0 until onLayout fires).
+  const page0Height = useSharedValue(0);
+  const page1Height = useSharedValue(0);
+
+  // ── Measure container width ──────────────────────────────────
+  const handleLayout = (e: LayoutChangeEvent) => {
+    const w = e.nativeEvent.layout.width;
+    if (w > 0 && Math.abs(w - pageWidth) > 1) {
+      setPageWidth(w);
+      pageWidthSV.value = w;
+    }
+  };
 
   // ── Programmatic navigation when activeTab changes externally ──
   useEffect(() => {
-    pagerRef.current?.setPage(activeTab);
-  }, [activeTab]);
+    if (pageWidth > 0) {
+      (scrollRef.current as any)?.scrollTo?.({
+        x: activeTab * pageWidth,
+        animated: true,
+      });
+    }
+  }, [activeTab, pageWidth]);
+
+  // ── Animated scroll handler (runs on UI thread) ──────────────
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll(event) {
+      const w = pageWidthSV.value;
+      if (w === 0) return;
+
+      // Write directly to the shared value — no JS bridge needed.
+      scrollProgress.value = event.contentOffset.x / w;
+    },
+    onMomentumEnd(event) {
+      const w = pageWidthSV.value;
+      if (w === 0) return;
+
+      const page = Math.round(event.contentOffset.x / w);
+      // Bridge to JS thread for React state update + haptic feedback.
+      runOnJS(onPageChange)(page);
+      runOnJS(selection)();
+    },
+  });
 
   // ── Animated container height ──────────────────────────────
+  // No spring — scrollProgress already provides smooth interpolation during swipe.
+  // This prevents the initial render overlap where spring starts from 0 and
+  // sections below the pager are positioned too high.
   const animatedContainerStyle = useAnimatedStyle(() => {
-    const targetHeight = interpolate(
-      scrollProgress.value,
-      [0, 1],
-      [page0Height.value, page1Height.value],
-    );
+    const h0 = page0Height.value;
+    const h1 = page1Height.value;
+    // Before first measurement, let content flow naturally.
+    if (h0 === 0 && h1 === 0) return {};
+    // If only one page measured, use that.
+    if (h0 === 0) return { height: h1, overflow: "hidden" as const };
+    if (h1 === 0) return { height: h0, overflow: "hidden" as const };
     return {
-      height: withSpring(targetHeight, HEIGHT_SPRING),
-      overflow: "hidden",
+      height: interpolate(scrollProgress.value, [0, 1], [h0, h1]),
+      overflow: "hidden" as const,
     };
   });
 
-  // ── Event handlers ─────────────────────────────────────────
-
-  const handlePageScroll = (
-    e: import("react-native-pager-view").PagerViewOnPageScrollEvent,
-  ) => {
-    const { position, offset } = e.nativeEvent;
-    // Update animated progress for height interpolation.
-    scrollProgress.value = position + offset;
-    // Notify parent for TabBar indicator sync.
-    onScrollProgress(position, offset);
-  };
-
-  const handlePageSelected = (
-    e: import("react-native-pager-view").PagerViewOnPageSelectedEvent,
-  ) => {
-    const { position } = e.nativeEvent;
-    // Snap progress to exact integer after swipe completes.
-    scrollProgress.value = position;
-    onPageChange(position);
-  };
-
   // ── Render ─────────────────────────────────────────────────
   return (
-    <Animated.View style={animatedContainerStyle}>
-      <PagerView
-        ref={pagerRef}
-        style={{ flex: 1 }}
-        initialPage={activeTab}
-        onPageScroll={handlePageScroll}
-        onPageSelected={handlePageSelected}
-        overdrag={false}
-        orientation="horizontal"
-        // Android: enable nested scroll so the outer ScrollView still works.
-        {...(Platform.OS === "android" ? { nestedScrollEnabled: true } : {})}
+    <Animated.View style={animatedContainerStyle} onLayout={handleLayout}>
+      <Animated.ScrollView
+        ref={scrollRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+        bounces={false}
+        nestedScrollEnabled
+        contentContainerStyle={{ alignItems: "flex-start" }}
       >
         {/* Page 0 — Halal */}
         <View
-          key="halal"
+          style={{ width: pageWidth }}
           onLayout={(e) => {
             const { height } = e.nativeEvent.layout;
-            if (height > 0) {
-              page0Height.value = height;
-            }
+            if (height > 0) page0Height.value = height;
           }}
-          // collapsable=false ensures Android measures this view correctly.
           collapsable={false}
         >
           {halalContent}
@@ -140,18 +160,16 @@ export const ScanResultPager = React.memo(function ScanResultPager({
 
         {/* Page 1 — Santé / Health */}
         <View
-          key="health"
+          style={{ width: pageWidth }}
           onLayout={(e) => {
             const { height } = e.nativeEvent.layout;
-            if (height > 0) {
-              page1Height.value = height;
-            }
+            if (height > 0) page1Height.value = height;
           }}
           collapsable={false}
         >
           {healthContent}
         </View>
-      </PagerView>
+      </Animated.ScrollView>
     </Animated.View>
   );
 });

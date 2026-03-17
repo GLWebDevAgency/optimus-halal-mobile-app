@@ -46,6 +46,7 @@ export function AlternativeGridCard({ alternative, onPress }: AlternativeGridCar
       {/* Product image */}
       <Image
         source={alternative.imageUrl ? { uri: alternative.imageUrl } : null}
+        placeholder={{ blurhash: "LGF5]+Yk^6#M@-5c,1J5@[or[Q6." }}
         style={[
           styles.image,
           { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" },

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { randomBytes, timingSafeEqual } from "node:crypto";
+import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { eq, and, gt, sql } from "drizzle-orm";
 import { router, publicProcedure, protectedProcedure } from "../trpc.js";
 import { users, refreshTokens, safeUserColumns } from "../../db/schema/index.js";
@@ -21,6 +21,11 @@ import { logger } from "../../lib/logger.js";
 function safeCompare(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
+
+/** Generate a unique 6-char alphanumeric uppercase referral code */
+function generateReferralCode(): string {
+  return randomBytes(3).toString("hex").toUpperCase();
 }
 
 export const authRouter = router({
@@ -46,6 +51,7 @@ export const authRouter = router({
               passwordHash,
               displayName: input.displayName,
               phoneNumber: input.phoneNumber,
+              referralCode: generateReferralCode(),
             })
             .returning({
               id: users.id,
@@ -61,7 +67,7 @@ export const authRouter = router({
         }
 
         const accessToken = await signAccessToken(user.id);
-        const tokenId = crypto.randomUUID();
+        const tokenId = randomUUID();
         const refreshToken = await signRefreshToken(user.id, tokenId);
 
         await tx.insert(refreshTokens).values({
@@ -123,7 +129,7 @@ export const authRouter = router({
       }
 
       const accessToken = await signAccessToken(user.id);
-      const tokenId = crypto.randomUUID();
+      const tokenId = randomUUID();
       const refreshToken = await signRefreshToken(user.id, tokenId);
 
       // Token management in transaction
@@ -209,7 +215,7 @@ export const authRouter = router({
 
       const storedToken = deleted[0];
       const accessToken = await signAccessToken(userId);
-      const newTokenId = crypto.randomUUID();
+      const newTokenId = randomUUID();
       const newRefreshToken = await signRefreshToken(userId, newTokenId);
 
       await ctx.db.insert(refreshTokens).values({

@@ -1,52 +1,48 @@
 /**
  * HalalSchoolsCard — Interactive 4-School Madhab Deep-Dive
  *
- * Allows the user to explore each school's verdict in detail:
- * - HeroCard: full breakdown of the active madhab (conflicts, sources, explanations)
- * - SegmentedBar: switch between the 3 other madhabs with one tap
- *
- * Extended in Task 10b (accordions: ingredients, additives, certification)
- * and Task 10c (scholarly source bottom sheet).
+ * Horizon Premium Minimalist layout: flat content on surface, no card wrapper.
+ * Typography + whitespace + hairline dividers create visual structure.
+ * Gold uppercase section header. Generous breathing room.
  *
  * @module components/scan/HalalSchoolsCard
  */
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import Animated, {
   FadeInDown,
+  FadeInUp,
   Layout,
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  interpolate,
-  useReducedMotion,
 } from "react-native-reanimated";
 import {
   MosqueIcon,
   CheckCircleIcon,
   WarningIcon,
-  XCircleIcon,
   BookOpenIcon,
-  ArrowSquareOutIcon,
   LeafIcon,
   FlaskIcon,
   SealCheckIcon,
-  CaretDownIcon,
+  CaretRightIcon,
 } from "phosphor-react-native";
 
-import { SectionCard } from "./SectionCard";
-import { CertifierBadge } from "./CertifierBadge";
+import { CertifierLogo } from "./CertifierLogo";
+import { MadhabScoreRing } from "./MadhabScoreRing";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation, useHaptics } from "@/hooks";
 import { halalStatus as halalStatusTokens, gold } from "@/theme/colors";
-import { fontSize as fontSizeTokens, fontWeight as fontWeightTokens } from "@/theme/typography";
+import { fontSize as fontSizeTokens, fontWeight as fontWeightTokens, fontFamily } from "@/theme/typography";
 import { spacing, radius } from "@/theme/spacing";
+import { letterSpacing } from "./scan-constants";
 import {
   STATUS_CONFIG,
   MADHAB_LABEL_KEY,
+  MADHAB_TRUST_KEY,
 } from "./scan-constants";
-import type { MadhabId, MadhabVerdict, CertifierInfo } from "./scan-types";
+import type { MadhabId, MadhabVerdict, CertifierInfo, DetectedAdditive } from "./scan-types";
+import type { ScholarlySourceData } from "./ScholarlySourceSheet";
+import { CertifierTrustRow } from "./CertifierTrustRow";
 
 // ── Types ──
 
@@ -54,14 +50,24 @@ export interface HalalSchoolsCardProps {
   madhabVerdicts: MadhabVerdict[];
   userMadhab: MadhabId;
   certifierData: CertifierInfo | null;
+  /** Halal analysis tier from backend (certified / analyzed_clean / doubtful / unknown) */
+  halalTier?: string | null;
+  /** Full list of product ingredients (from OFF/Gemini extraction) */
+  ingredients: string[];
   ingredientRulings: Array<{
     pattern: string;
     ruling: string;
     explanation: string;
     scholarlyReference: string | null;
   }>;
+  /** All detected additives from OFF product (enriched from DB) */
+  detectedAdditives?: DetectedAdditive[];
+  trustScore?: number;
   onMadhabChange: (madhab: MadhabId) => void;
-  onScholarlySourcePress: (sourceRef: string) => void;
+  onScholarlySourcePress: (data: ScholarlySourceData | ScholarlySourceData[]) => void;
+  onTrustScorePress?: () => void;
+  onIngredientPress?: (ingredient: string) => void;
+  onAdditivePress?: (additive: DetectedAdditive, ruling?: string) => void;
   staggerIndex?: number;
 }
 
@@ -72,21 +78,14 @@ function getStatusColor(status: string): string {
     ?? halalStatusTokens.unknown.base;
 }
 
-// ── Helper: get status bg color ──
-
-function getStatusBg(status: string, isDark: boolean): string {
-  const token = halalStatusTokens[status as keyof typeof halalStatusTokens];
-  if (!token) return isDark ? halalStatusTokens.unknown.bgDark : halalStatusTokens.unknown.bg;
-  return isDark ? token.bgDark : token.bg;
-}
-
 // ── Helper: resolve madhab label ──
 
 function getMadhabLabel(
   madhab: MadhabId,
   t: ReturnType<typeof useTranslation>["t"],
 ): string {
-  const key = MADHAB_LABEL_KEY[madhab];
+  const key = MADHAB_LABEL_KEY[madhab as keyof typeof MADHAB_LABEL_KEY];
+  if (!key) return madhab;
   return (t.scanResult as Record<string, string>)[key] ?? madhab;
 }
 
@@ -102,650 +101,387 @@ function getStatusLabel(
   return (t.scanResult as Record<string, string>)[labelKey] ?? status;
 }
 
-// ── A. HeroCard subcomponent ──
+// ── A. VerdictSection — verdict + consensus indicator ──
 
-interface HeroCardProps {
+interface VerdictSectionProps {
   activeVerdict: MadhabVerdict;
-  onScholarlySourcePress: (sourceRef: string) => void;
+  allVerdicts: MadhabVerdict[];
 }
 
-function HeroCard({ activeVerdict, onScholarlySourcePress }: HeroCardProps) {
-  const { isDark, colors } = useTheme();
+function VerdictSection({ activeVerdict, allVerdicts }: VerdictSectionProps) {
+  const { colors } = useTheme();
   const { t } = useTranslation();
 
   const status = activeVerdict.status;
   const statusColor = getStatusColor(status);
-  const statusBg = getStatusBg(status, isDark);
-  const statusLabel = getStatusLabel(status, t);
-  const madhabLabel = getMadhabLabel(activeVerdict.madhab, t);
 
-  // Title interpolation
-  const heroTitle = (t.scanResult.schoolHeroTitle as string)
-    .replace("{{status}}", statusLabel)
-    .replace("{{school}}", madhabLabel);
+  // ── Consensus detection (إجماع vs خلاف) ──
+  const uniqueStatuses = new Set(allVerdicts.map((v) => v.status));
+  const isConsensus = uniqueStatuses.size === 1;
 
-  // Conflict items (non-halal ruling)
-  const conflictingAdditives = activeVerdict.conflictingAdditives ?? [];
-  const conflictingIngredients = activeVerdict.conflictingIngredients ?? [];
+  const consensusText = isConsensus
+    ? t.scanResult.schoolConsensus as string
+    : t.scanResult.schoolDivergence as string;
 
-  const allConflicts = [
-    ...conflictingAdditives.map((a) => ({
-      id: a.code,
-      label: `${a.name} (${a.code})`,
-      ruling: a.ruling,
-      explanation: a.explanation,
-      scholarlyReference: a.scholarlyReference,
-    })),
-    ...conflictingIngredients.map((i) => ({
-      id: i.pattern,
-      label: i.pattern,
-      ruling: i.ruling,
-      explanation: i.explanation,
-      scholarlyReference: i.scholarlyReference,
-    })),
-  ];
+  // ── Conflicts: active school first, then merge from divergent schools ──
+  // When there's divergence but the active school has no conflicts (e.g. Hanafi
+  // considers lactosérum halal while Shafi'i/Maliki say doubtful), we show the
+  // conflict items from the schools that DO disagree. Otherwise the user sees
+  // "Divergence entre écoles" with no explanation of why.
+  const collectConflicts = (verdict: MadhabVerdict) => {
+    const items: Array<{ id: string; label: string; ruling: string; code?: string; school?: string; explanation: string; scholarlyReference: string | null }> = [];
+    for (const i of verdict.conflictingIngredients ?? []) {
+      items.push({ id: i.pattern, label: i.pattern, ruling: i.ruling, explanation: i.explanation, scholarlyReference: i.scholarlyReference });
+    }
+    for (const a of verdict.conflictingAdditives ?? []) {
+      items.push({ id: a.code, label: a.name, code: a.code, ruling: a.ruling, explanation: a.explanation, scholarlyReference: a.scholarlyReference });
+    }
+    return items.filter((c) => c.ruling !== "halal");
+  };
 
-  const conflictCount = allConflicts.filter((c) => c.ruling !== "halal").length;
-  const doubtCount = allConflicts.filter((c) => c.ruling === "doubtful").length;
+  let activeConflicts = collectConflicts(activeVerdict);
 
-  // Unique scholarly references
-  const allRefs = allConflicts
-    .map((c) => c.scholarlyReference)
-    .filter((ref): ref is string => ref !== null);
-  const uniqueRefs = new Set(allRefs);
-  const sourceCount = uniqueRefs.size;
+  // Fallback: if active school has no conflicts but divergence exists,
+  // gather conflicts from disagreeing schools (deduplicated by id)
+  if (activeConflicts.length === 0 && !isConsensus) {
+    const seen = new Set<string>();
+    for (const v of allVerdicts) {
+      if (v.madhab === activeVerdict.madhab) continue;
+      for (const c of collectConflicts(v)) {
+        if (!seen.has(c.id)) {
+          seen.add(c.id);
+          activeConflicts.push(c);
+        }
+      }
+    }
+  }
 
-  // Explanation: first 2–3 conflict explanation texts concatenated
-  const explanationItems = allConflicts
-    .filter((c) => c.ruling !== "halal" && c.explanation)
-    .slice(0, 3);
-
-  const explanationText = explanationItems
-    .map((c) => c.explanation)
-    .join(" ");
-
-  const zeroCases = conflictCount === 0 && doubtCount === 0;
+  const hasConflicts = activeConflicts.length > 0;
 
   return (
     <Animated.View
       layout={Layout.springify().damping(14).stiffness(170)}
-      style={[
-        styles.heroCard,
-        {
-          backgroundColor: statusBg,
-          borderColor: statusColor + "33",
-        },
-      ]}
+      style={styles.verdictSection}
     >
-      {/* Status pill */}
-      <View style={[styles.heroPill, { borderColor: statusColor + "66" }]}>
-        <View style={[styles.heroStatusDot, { backgroundColor: statusColor }]} />
-        <Text style={[styles.heroPillText, { color: statusColor }]}>
-          {heroTitle}
-        </Text>
-      </View>
-
-      {/* Explanation text */}
-      {explanationText.length > 0 && (
+      {/* Consensus indicator — إجماع or خلاف */}
+      <View style={styles.consensusRow}>
+        {isConsensus ? (
+          <CheckCircleIcon size={14} color={statusColor} weight="fill" />
+        ) : (
+          <WarningIcon size={14} color={halalStatusTokens.doubtful.base} weight="fill" />
+        )}
         <Text
-          style={[styles.heroExplanation, { color: colors.textSecondary }]}
-          numberOfLines={4}
+          style={[
+            styles.consensusText,
+            { color: isConsensus ? statusColor : halalStatusTokens.doubtful.base },
+          ]}
         >
-          {explanationText}
+          {consensusText}
         </Text>
-      )}
-
-      {/* Counters row */}
-      <View style={styles.heroCountersRow}>
-        <CounterBadge
-          count={conflictCount}
-          label={(t.scanResult.schoolConflicts as string).replace("{{count}}", String(conflictCount))}
-          color={conflictCount > 0 ? halalStatusTokens.haram.base : colors.textMuted}
-          isDark={isDark}
-        />
-        <CounterBadge
-          count={doubtCount}
-          label={(t.scanResult.schoolDoubts as string).replace("{{count}}", String(doubtCount))}
-          color={doubtCount > 0 ? halalStatusTokens.doubtful.base : colors.textMuted}
-          isDark={isDark}
-        />
-        <CounterBadge
-          count={sourceCount}
-          label={(t.scanResult.schoolSources as string).replace("{{count}}", String(sourceCount))}
-          color={sourceCount > 0 ? (isDark ? gold[400] : gold[700]) : colors.textMuted}
-          isDark={isDark}
-        />
       </View>
 
-      {/* Zero conflicts edge case */}
-      {zeroCases && (
-        <Animated.View
-          entering={FadeInDown.duration(300)}
-          style={[styles.noConflictsRow, { borderColor: halalStatusTokens.halal.base + "44" }]}
-        >
-          <CheckCircleIcon size={16} color={halalStatusTokens.halal.base} weight="fill" />
-          <Text style={[styles.noConflictsText, { color: halalStatusTokens.halal.base }]}>
-            {t.scanResult.schoolNoConflicts as string}
-          </Text>
-        </Animated.View>
-      )}
-
-      {/* Conflict list */}
-      {!zeroCases && allConflicts.filter((c) => c.ruling !== "halal").length > 0 && (
-        <Animated.View
-          entering={FadeInDown.duration(280)}
-          style={styles.conflictList}
-        >
-          {allConflicts
-            .filter((c) => c.ruling !== "halal")
-            .map((conflict, index) => (
-              <ConflictItem
-                key={`${conflict.id}-${index}`}
-                conflict={conflict}
-                isDark={isDark}
-                colors={colors}
-                onScholarlySourcePress={onScholarlySourcePress}
-              />
-            ))}
+      {/* Conflict substances — name + ruling only (details in Sources) */}
+      {hasConflicts && (
+        <Animated.View entering={FadeInDown.duration(280)} style={styles.conflictList}>
+          {activeConflicts.map((conflict, index) => (
+            <View
+              key={`${conflict.id}-${index}`}
+              style={[styles.conflictItem, { borderLeftColor: getStatusColor(conflict.ruling) }]}
+            >
+              <Text style={[styles.conflictLabel, { color: colors.textPrimary }]} numberOfLines={1}>
+                {conflict.code ? `${conflict.code} · ${conflict.label}` : conflict.label}
+              </Text>
+              <Text style={[styles.conflictRuling, { color: getStatusColor(conflict.ruling) }]}>
+                {conflict.ruling}
+              </Text>
+            </View>
+          ))}
         </Animated.View>
       )}
     </Animated.View>
   );
 }
 
-// ── CounterBadge helper ──
+// ── B. MadhabRingRow — all 4 schools as score rings ──
 
-function CounterBadge({
-  count,
-  label,
-  color,
-  isDark,
-}: {
-  count: number;
-  label: string;
-  color: string;
-  isDark: boolean;
-}) {
-  return (
-    <View
-      style={[
-        styles.counterBadge,
-        {
-          backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
-        },
-      ]}
-    >
-      <Text style={[styles.counterValue, { color }]}>{count}</Text>
-      <Text style={[styles.counterLabel, { color }]}>{label}</Text>
-    </View>
-  );
-}
-
-// ── ConflictItem helper ──
-
-function ConflictItem({
-  conflict,
-  isDark,
-  colors,
-  onScholarlySourcePress,
-}: {
-  conflict: {
-    id: string;
-    label: string;
-    ruling: string;
-    explanation: string;
-    scholarlyReference: string | null;
-  };
-  isDark: boolean;
-  colors: ReturnType<typeof useTheme>["colors"];
-  onScholarlySourcePress: (ref: string) => void;
-}) {
-  const rulingColor = getStatusColor(conflict.ruling);
-
-  return (
-    <View
-      style={[
-        styles.conflictItem,
-        {
-          borderLeftColor: rulingColor,
-          backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.025)",
-        },
-      ]}
-    >
-      {/* Name + ruling */}
-      <View style={styles.conflictHeader}>
-        <Text style={[styles.conflictLabel, { color: colors.textPrimary }]} numberOfLines={1}>
-          {conflict.label}
-        </Text>
-        <View style={[styles.conflictRulingBadge, { backgroundColor: rulingColor + "22" }]}>
-          <Text style={[styles.conflictRulingText, { color: rulingColor }]}>
-            {conflict.ruling}
-          </Text>
-        </View>
-      </View>
-
-      {/* Scholarly reference (pressable) */}
-      {conflict.scholarlyReference && (
-        <Pressable
-          onPress={() => onScholarlySourcePress(conflict.scholarlyReference!)}
-          style={styles.conflictSourceRow}
-          accessibilityRole="button"
-          accessibilityLabel={conflict.scholarlyReference}
-        >
-          <BookOpenIcon size={12} color={isDark ? gold[400] : gold[700]} />
-          <Text
-            style={[styles.conflictSourceText, { color: isDark ? gold[400] : gold[700] }]}
-            numberOfLines={1}
-          >
-            {conflict.scholarlyReference}
-          </Text>
-          <ArrowSquareOutIcon size={12} color={isDark ? gold[400] : gold[700]} />
-        </Pressable>
-      )}
-    </View>
-  );
-}
-
-// ── B. SegmentedBar subcomponent ──
-
-interface SegmentedBarProps {
+interface MadhabRingRowProps {
   madhabVerdicts: MadhabVerdict[];
   activeMadhab: MadhabId;
+  userMadhab: MadhabId;
+  certifierData: CertifierInfo | null;
   onSelect: (madhab: MadhabId) => void;
 }
 
-function SegmentedBar({ madhabVerdicts, activeMadhab, onSelect }: SegmentedBarProps) {
-  const { isDark, colors } = useTheme();
+function MadhabRingRow({
+  madhabVerdicts,
+  activeMadhab,
+  userMadhab,
+  certifierData,
+  onSelect,
+}: MadhabRingRowProps) {
   const { t } = useTranslation();
   const { impact } = useHaptics();
 
-  const otherVerdicts = madhabVerdicts.filter((v) => v.madhab !== activeMadhab);
+  const VERDICT_LABEL: Record<string, string> = {
+    halal: t.scanResult.verdictHalal,
+    doubtful: t.scanResult.verdictDoubtful,
+    haram: t.scanResult.verdictHaram,
+    unknown: t.scanResult.verdictUnknown,
+  };
 
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.segmentedBarContent}
-      style={styles.segmentedBar}
-    >
-      {otherVerdicts.map((verdict) => {
-        const statusColor = getStatusColor(verdict.status);
-        const madhabLabel = getMadhabLabel(verdict.madhab, t);
-        const statusLabel = getStatusLabel(verdict.status, t);
+    <View style={styles.madhabRingRow}>
+      {madhabVerdicts.map((v, i) => {
+        const labelKey = MADHAB_LABEL_KEY[v.madhab as keyof typeof MADHAB_LABEL_KEY];
+        const label = labelKey
+          ? (t.scanResult as Record<string, string>)[labelKey] ?? v.madhab
+          : v.madhab;
+
+        const trustKey = MADHAB_TRUST_KEY[v.madhab as keyof typeof MADHAB_TRUST_KEY];
+        const madhabTrustScore = certifierData && trustKey
+          ? (certifierData as unknown as Record<string, unknown>)[trustKey] as number | null ?? null
+          : null;
 
         return (
-          <Pressable
-            key={verdict.madhab}
+          <PressableScale
+            key={v.madhab}
             onPress={() => {
               impact();
-              onSelect(verdict.madhab);
+              onSelect(v.madhab);
             }}
             accessibilityRole="button"
-            accessibilityLabel={`${madhabLabel}: ${statusLabel}`}
-            style={({ pressed }) => [
-              styles.segmentPill,
-              {
-                backgroundColor: isDark
-                  ? pressed
-                    ? "rgba(255,255,255,0.10)"
-                    : "rgba(255,255,255,0.06)"
-                  : pressed
-                    ? "rgba(0,0,0,0.08)"
-                    : "rgba(0,0,0,0.04)",
-                borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)",
-              },
-            ]}
+            accessibilityLabel={`${label}: ${v.status}`}
+            accessibilityHint={t.scanResult.madhabTapHint}
           >
-            {/* Colored status dot */}
-            <View style={[styles.segmentDot, { backgroundColor: statusColor }]} />
-
-            {/* Madhab label */}
-            <Text
-              style={[styles.segmentMadhabLabel, { color: colors.textPrimary }]}
-              numberOfLines={1}
-            >
-              {madhabLabel}
-            </Text>
-
-            {/* Status label */}
-            <Text
-              style={[styles.segmentStatusLabel, { color: statusColor }]}
-              numberOfLines={1}
-            >
-              {statusLabel}
-            </Text>
-          </Pressable>
+            <MadhabScoreRing
+              label={label}
+              verdict={v.status as "halal" | "doubtful" | "haram" | "unknown"}
+              trustScore={madhabTrustScore}
+              verdictLabel={!certifierData ? VERDICT_LABEL[v.status] : undefined}
+              conflictCount={
+                (v.conflictingAdditives?.length ?? 0) +
+                (v.conflictingIngredients?.length ?? 0)
+              }
+              isUserSchool={userMadhab === v.madhab}
+              isActive={activeMadhab === v.madhab}
+              staggerIndex={i}
+            />
+          </PressableScale>
         );
       })}
-    </ScrollView>
-  );
-}
-
-// ── C. AccordionSection generic subcomponent ──
-
-type SectionKey = "ingredients" | "additives" | "certification";
-
-interface AccordionSectionProps {
-  sectionKey: SectionKey;
-  expandedSection: SectionKey | null;
-  onToggle: (key: SectionKey | null) => void;
-  icon: React.ReactNode;
-  title: string;
-  badgeCount?: number;
-  children: React.ReactNode;
-}
-
-function AccordionSection({
-  sectionKey,
-  expandedSection,
-  onToggle,
-  icon,
-  title,
-  badgeCount,
-  children,
-}: AccordionSectionProps) {
-  const { isDark, colors } = useTheme();
-  const { impact } = useHaptics();
-  const reducedMotion = useReducedMotion();
-
-  const isExpanded = expandedSection === sectionKey;
-  const contentHeight = useSharedValue(0);
-
-  const animProgress = useSharedValue(0);
-
-  // Sync animProgress when isExpanded changes
-  React.useEffect(() => {
-    animProgress.value = reducedMotion
-      ? isExpanded ? 1 : 0
-      : withTiming(isExpanded ? 1 : 0, { duration: 250 });
-  }, [isExpanded, animProgress, reducedMotion]);
-
-  const animatedContentStyle = useAnimatedStyle(() => ({
-    height: contentHeight.value > 0
-      ? interpolate(animProgress.value, [0, 1], [0, contentHeight.value])
-      : animProgress.value === 0 ? 0 : undefined,
-    opacity: animProgress.value,
-    overflow: "hidden" as const,
-  }));
-
-  const chevronStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${animProgress.value * 180}deg` }],
-  }));
-
-  function handlePress() {
-    impact();
-    onToggle(isExpanded ? null : sectionKey);
-  }
-
-  return (
-    <View
-      style={[
-        styles.accordionContainer,
-        {
-          backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.025)",
-          borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
-        },
-      ]}
-    >
-      {/* Header */}
-      <Pressable
-        onPress={handlePress}
-        accessibilityRole="button"
-        accessibilityLabel={title}
-        accessibilityState={{ expanded: isExpanded }}
-        style={({ pressed }) => [
-          styles.accordionHeader,
-          pressed && { opacity: 0.75 },
-        ]}
-      >
-        {/* Icon + title */}
-        <View style={styles.accordionHeaderLeft}>
-          {icon}
-          <Text style={[styles.accordionTitle, { color: colors.textPrimary }]}>
-            {title}
-          </Text>
-          {badgeCount !== undefined && badgeCount > 0 && (
-            <View
-              style={[
-                styles.accordionBadge,
-                { backgroundColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.07)" },
-              ]}
-            >
-              <Text style={[styles.accordionBadgeText, { color: colors.textMuted }]}>
-                {badgeCount}
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {/* Caret */}
-        <Animated.View style={chevronStyle}>
-          <CaretDownIcon size={16} color={colors.textMuted} weight="bold" />
-        </Animated.View>
-      </Pressable>
-
-      {/* Animated body */}
-      <Animated.View style={animatedContentStyle}>
-        <View
-          onLayout={(e) => {
-            const h = e.nativeEvent.layout.height;
-            if (h > 0 && contentHeight.value !== h) {
-              contentHeight.value = h;
-            }
-          }}
-          style={styles.accordionBody}
-        >
-          {children}
-        </View>
-      </Animated.View>
     </View>
   );
 }
 
-// ── C1. IngredientsContent ──
 
-function IngredientsContent({
-  ingredientRulings,
-  isDark,
-  colors,
-}: {
-  ingredientRulings: HalalSchoolsCardProps["ingredientRulings"];
-  isDark: boolean;
-  colors: ReturnType<typeof useTheme>["colors"];
-}) {
-  const { t } = useTranslation();
-
-  if (ingredientRulings.length === 0) {
-    return (
-      <Text style={[styles.accordionEmptyText, { color: colors.textMuted }]}>
-        {t.scanResult.ingredientsNone as string}
-      </Text>
-    );
-  }
-
-  return (
-    <>
-      {ingredientRulings.map((item, index) => {
-        const color = getStatusColor(item.ruling);
-        const RulingIcon =
-          item.ruling === "halal"
-            ? CheckCircleIcon
-            : item.ruling === "haram"
-              ? XCircleIcon
-              : WarningIcon;
-
-        return (
-          <View
-            key={`${item.pattern}-${index}`}
-            style={[
-              styles.accordionListItem,
-              index > 0 && {
-                borderTopWidth: StyleSheet.hairlineWidth,
-                borderTopColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
-              },
-            ]}
-          >
-            <RulingIcon size={14} color={color} weight="fill" />
-            <View style={{ flex: 1 }}>
-              <Text
-                style={[styles.accordionItemLabel, { color: colors.textPrimary }]}
-                numberOfLines={1}
-              >
-                {item.pattern}
-              </Text>
-              {item.explanation.length > 0 && (
-                <Text
-                  style={[styles.accordionItemSub, { color: colors.textSecondary }]}
-                  numberOfLines={2}
-                >
-                  {item.explanation}
-                </Text>
-              )}
-            </View>
-            <View style={[styles.accordionRulingBadge, { backgroundColor: color + "22" }]}>
-              <Text style={[styles.accordionRulingText, { color }]}>
-                {item.ruling}
-              </Text>
-            </View>
-          </View>
-        );
-      })}
-    </>
-  );
-}
-
-// ── C2. AdditivesContent ──
+// ── C2. AdditivesContent — shows ALL detected additives, color-coded by madhab ruling ──
 
 function AdditivesContent({
+  detectedAdditives,
   conflictingAdditives,
   isDark,
   colors,
+  onAdditivePress,
 }: {
+  detectedAdditives: DetectedAdditive[];
   conflictingAdditives: MadhabVerdict["conflictingAdditives"];
   isDark: boolean;
   colors: ReturnType<typeof useTheme>["colors"];
+  onAdditivePress?: (additive: DetectedAdditive, ruling?: string) => void;
 }) {
   const { t } = useTranslation();
 
-  if (conflictingAdditives.length === 0) {
+  // Build ruling lookup from madhab conflicting additives
+  const rulingMap = useMemo(() => {
+    const map = new Map<string, { ruling: string; explanation: string }>();
+    for (const ca of conflictingAdditives) {
+      map.set(ca.code, { ruling: ca.ruling, explanation: ca.explanation });
+    }
+    return map;
+  }, [conflictingAdditives]);
+
+  if (detectedAdditives.length === 0) {
     return (
-      <Text style={[styles.accordionEmptyText, { color: colors.textMuted }]}>
+      <Text style={[styles.emptyText, { color: colors.textMuted }]}>
         {t.scanResult.additivesNone as string}
       </Text>
     );
   }
 
+  // Sort: conflicting first (haram > doubtful), then rest alphabetically
+  const sorted = useMemo(() => {
+    const STATUS_WEIGHT: Record<string, number> = { haram: 3, doubtful: 2, halal: 1 };
+    return [...detectedAdditives].sort((a, b) => {
+      const ra = rulingMap.get(a.code);
+      const rb = rulingMap.get(b.code);
+      const wa = ra ? (STATUS_WEIGHT[ra.ruling] ?? 0) : 0;
+      const wb = rb ? (STATUS_WEIGHT[rb.ruling] ?? 0) : 0;
+      if (wa !== wb) return wb - wa; // Conflicting first
+      return a.code.localeCompare(b.code);
+    });
+  }, [detectedAdditives, rulingMap]);
+
   return (
     <>
-      {conflictingAdditives.map((item, index) => {
-        const config = STATUS_CONFIG[item.ruling] ?? STATUS_CONFIG.unknown;
-        const color = config.color;
+      {sorted.map((additive, index) => {
+        const conflict = rulingMap.get(additive.code);
+        const hasRuling = !!conflict;
+        const rulingColor = hasRuling
+          ? (STATUS_CONFIG[conflict.ruling] ?? STATUS_CONFIG.unknown).color
+          : undefined;
+
+        // Toxicity indicator color (for non-halal-conflicting additives)
+        const toxColor = !hasRuling ? TOXICITY_COLOR[additive.toxicityLevel] : undefined;
+
+        const Wrapper = onAdditivePress ? Pressable : View;
+        const wrapperProps = onAdditivePress
+          ? { onPress: () => onAdditivePress(additive, conflict?.ruling) }
+          : {};
 
         return (
-          <View
-            key={`${item.code}-${index}`}
+          <Wrapper
+            key={additive.code}
+            accessibilityRole={onAdditivePress ? "button" : undefined}
+            accessibilityLabel={`${additive.code} ${additive.nameFr}`}
+            {...wrapperProps}
             style={[
-              styles.accordionListItem,
+              styles.listItem,
               index > 0 && {
                 borderTopWidth: StyleSheet.hairlineWidth,
                 borderTopColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
               },
-            ]}
+            ] as any}
           >
+            {/* Left: color indicator bar for conflicting additives */}
+            {hasRuling && (
+              <View style={[styles.additiveIndicator, { backgroundColor: rulingColor }]} />
+            )}
             <View style={{ flex: 1 }}>
-              <View style={styles.accordionAdditiveRow}>
+              <View style={styles.additiveRow}>
                 <Text
-                  style={[styles.accordionItemCode, { color: colors.textMuted }]}
+                  style={[
+                    styles.additiveCode,
+                    { color: hasRuling ? rulingColor : colors.textMuted },
+                  ]}
                   numberOfLines={1}
                 >
-                  {item.code}
+                  {additive.code}
                 </Text>
                 <Text
-                  style={[styles.accordionItemLabel, { color: colors.textPrimary, flex: 1 }]}
+                  style={[
+                    styles.listItemLabel,
+                    { color: hasRuling ? rulingColor : colors.textPrimary, flex: 1 },
+                  ]}
                   numberOfLines={1}
                 >
-                  {item.name}
+                  {additive.nameFr}
                 </Text>
               </View>
-              {item.explanation.length > 0 && (
+              {/* Show explanation for conflicting, or health effect for others */}
+              {hasRuling && conflict.explanation.length > 0 ? (
                 <Text
-                  style={[styles.accordionItemSub, { color: colors.textSecondary }]}
+                  style={[styles.listItemSub, { color: colors.textSecondary }]}
                   numberOfLines={2}
                 >
-                  {item.explanation}
+                  {conflict.explanation}
                 </Text>
-              )}
+              ) : additive.healthEffectsFr ? (
+                <Text
+                  style={[styles.listItemSub, { color: toxColor ?? colors.textMuted }]}
+                  numberOfLines={2}
+                >
+                  {additive.healthEffectsFr}
+                </Text>
+              ) : null}
             </View>
-            <View style={[styles.accordionRulingBadge, { backgroundColor: color + "22" }]}>
-              <Text style={[styles.accordionRulingText, { color }]}>
-                {item.ruling}
+            {/* Right: ruling badge or category */}
+            {hasRuling ? (
+              <View style={[styles.additiveRulingBadge, { backgroundColor: `${rulingColor}18` }]}>
+                <Text style={[styles.additiveRulingText, { color: rulingColor }]}>
+                  {conflict.ruling}
+                </Text>
+              </View>
+            ) : (
+              <Text style={[styles.additiveCategoryText, { color: toxColor ?? colors.textMuted }]}>
+                {CATEGORY_LABEL[additive.category] ?? additive.category}
               </Text>
-            </View>
-          </View>
+            )}
+          </Wrapper>
         );
       })}
     </>
   );
 }
 
-// ── C3. CertificationContent ──
+// ── Additive helper maps ──
 
-function CertificationContent({
-  certifierData,
-  isDark: _isDark,
-  colors,
-  t,
-}: {
-  certifierData: CertifierInfo | null;
-  isDark: boolean;
-  colors: ReturnType<typeof useTheme>["colors"];
-  t: ReturnType<typeof useTranslation>["t"];
-}) {
-  if (!certifierData) {
-    return (
-      <Text style={[styles.accordionEmptyText, { color: colors.textMuted }]}>
-        {t.scanResult.certificationNone as string}
-      </Text>
-    );
-  }
+const TOXICITY_COLOR: Record<string, string> = {
+  safe: "#22c55e",
+  low_concern: "#84cc16",
+  moderate_concern: "#f59e0b",
+  high_concern: "#ef4444",
+};
 
-  const trustLabel = t.scanResult.certifierTrustScore as string;
+const CATEGORY_LABEL: Record<string, string> = {
+  colorant: "Colorant",
+  preservative: "Conservateur",
+  antioxidant: "Antioxydant",
+  emulsifier: "Émulsifiant",
+  stabilizer: "Stabilisant",
+  thickener: "Épaississant",
+  flavor_enhancer: "Exhausteur",
+  sweetener: "Édulcorant",
+  acid: "Acidifiant",
+  anti_caking: "Anti-aggl.",
+  glazing_agent: "Agent d'enr.",
+  humectant: "Humectant",
+  raising_agent: "Levant",
+  sequestrant: "Séquestrant",
+  other: "Autre",
+};
 
-  return (
-    <View style={styles.certificationContent}>
-      <CertifierBadge certifier={certifierData} size="extended" />
-      <Text style={[styles.certificationTrustDesc, { color: colors.textSecondary }]}>
-        {`${trustLabel}: ${certifierData.trustScore}/100`}
-      </Text>
-    </View>
-  );
-}
-
-// ── D. ScholarlySourcesRibbon subcomponent ──
+// ── D. ScholarlySourcesRibbon ──
 
 interface ScholarlySourcesRibbonProps {
   activeVerdict: MadhabVerdict;
-  onScholarlySourcePress: (sourceRef: string) => void;
+  allVerdicts: MadhabVerdict[];
+  onScholarlySourcePress: (data: ScholarlySourceData | ScholarlySourceData[]) => void;
   isDark: boolean;
 }
 
 function ScholarlySourcesRibbon({
   activeVerdict,
+  allVerdicts,
   onScholarlySourcePress,
   isDark,
 }: ScholarlySourcesRibbonProps) {
-  const sources = useMemo(() => {
-    const refs = new Set<string>();
-    for (const item of [
-      ...(activeVerdict.conflictingAdditives ?? []),
-      ...(activeVerdict.conflictingIngredients ?? []),
-    ]) {
-      if (item.scholarlyReference) refs.add(item.scholarlyReference);
-    }
-    return [...refs];
-  }, [activeVerdict]);
+  const { t } = useTranslation();
 
-  if (sources.length === 0) return null;
+  // Collect source data (explanation + ref) from all verdicts, deduplicated by sourceRef
+  const sourceEntries = useMemo(() => {
+    const byRef = new Map<string, ScholarlySourceData>();
+    const verdictsToScan = [activeVerdict, ...allVerdicts.filter((v) => v.madhab !== activeVerdict.madhab)];
+    for (const verdict of verdictsToScan) {
+      for (const item of [
+        ...(verdict.conflictingAdditives ?? []),
+        ...(verdict.conflictingIngredients ?? []),
+      ]) {
+        if (item.scholarlyReference && !byRef.has(item.scholarlyReference)) {
+          const label = "code" in item
+            ? `${(item as any).code} · ${(item as any).name ?? ""}`.trim()
+            : (item as any).pattern ?? "";
+          byRef.set(item.scholarlyReference, {
+            label,
+            explanation: item.explanation,
+            sourceRef: item.scholarlyReference,
+          });
+        }
+      }
+    }
+    return [...byRef.values()];
+  }, [activeVerdict, allVerdicts]);
+
+  if (sourceEntries.length === 0) return null;
 
   const goldColor = isDark ? gold[400] : gold[700];
 
@@ -756,14 +492,16 @@ function ScholarlySourcesRibbon({
       contentContainerStyle={styles.ribbonContent}
       style={styles.ribbonScroll}
     >
-      {sources.map((ref, index) => {
-        const truncated = ref.length > 30 ? `${ref.slice(0, 30)}…` : ref;
+      {sourceEntries.map((entry, index) => {
+        const truncated = entry.sourceRef.length > 30 ? `${entry.sourceRef.slice(0, 30)}\u2026` : entry.sourceRef;
         return (
           <Pressable
-            key={`${ref}-${index}`}
-            onPress={() => onScholarlySourcePress(ref)}
+            key={`${entry.sourceRef}-${index}`}
+            onPress={() => onScholarlySourcePress(entry)}
+            hitSlop={{ top: 10, bottom: 10, left: 4, right: 4 }}
             accessibilityRole="button"
-            accessibilityLabel={ref}
+            accessibilityLabel={entry.sourceRef}
+            accessibilityHint={t.common.openSourceHint}
             style={[
               styles.ribbonPill,
               { backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)" },
@@ -780,344 +518,627 @@ function ScholarlySourcesRibbon({
   );
 }
 
+// ── E0b. SectionHeader — icon + title + optional annotation ──
+
+function HalalSectionHeader({
+  icon,
+  title,
+  annotation,
+  onAnnotationPress,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  annotation?: string;
+  onAnnotationPress?: () => void;
+}) {
+  const { isDark } = useTheme();
+  const goldColor = isDark ? gold[400] : gold[700];
+
+  return (
+    <View style={styles.halalSectionHeader}>
+      <View style={styles.halalSectionHeaderLeft}>
+        {icon}
+        <Text
+          style={[
+            styles.halalSectionTitle,
+            { color: isDark ? "#fff" : "#0d1b13" },
+          ]}
+        >
+          {title}
+        </Text>
+      </View>
+      {annotation ? (
+        <Pressable onPress={onAnnotationPress} hitSlop={8}>
+          <Text style={[styles.halalSectionAnnotation, { color: goldColor }]}>
+            {annotation}
+          </Text>
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
+// ── E0c. CertifierInfoRow — VerdictHero-style certifier card ──
+// Section title + logo + name + score + progress bar + tier + Naqiy verdict phrase
+
+// Verdict thresholds aligned with Naqiy Trust Index caps:
+// - ≥75: no critical negatives + strong positives → dhabh & tasmiya preserved
+// - ≥55: cap for 2 critical negatives → generally compliant
+// - ≥35: cap for 3 critical negatives → concerning concessions
+// - ≥20: some positives but major ritual failures
+// - <20: no assurance at all
+function getCertifierVerdict(
+  score: number,
+  t: ReturnType<typeof useTranslation>["t"],
+): string {
+  if (score >= 75) return t.scanResult.certifierVerdictExcellent as string;
+  if (score >= 55) return t.scanResult.certifierVerdictGood as string;
+  if (score >= 35) return t.scanResult.certifierVerdictAverage as string;
+  if (score >= 20) return t.scanResult.certifierVerdictWeak as string;
+  return t.scanResult.certifierVerdictVeryWeak as string;
+}
+
+function CertifierInfoRow({
+  certifierData,
+  madhabTrustScore,
+  halalTier,
+  onPress,
+}: {
+  certifierData: CertifierInfo;
+  madhabTrustScore: number | null;
+  halalTier?: string | null;
+  onPress?: () => void;
+}) {
+  const { isDark, colors } = useTheme();
+  const { t } = useTranslation();
+
+  // Use per-madhab trust score if available, otherwise global
+  const displayScore = madhabTrustScore ?? certifierData.trustScore;
+
+  // Score color by threshold
+  const scoreColor = displayScore >= 70
+    ? halalStatusTokens.halal.base
+    : displayScore >= 40
+      ? halalStatusTokens.doubtful.base
+      : halalStatusTokens.haram.base;
+
+  // Tier label
+  const tierNumber = halalTier === "certified" ? "1"
+    : halalTier === "analyzed_clean" ? "2"
+    : halalTier === "doubtful" ? "3" : "4";
+  const tierLabel = halalTier === "certified" ? t.scanResult.tierCertified
+    : halalTier === "analyzed_clean" ? t.scanResult.tierAnalyzed
+    : halalTier === "doubtful" ? t.scanResult.tierDoubtful
+    : t.scanResult.tierUnknown;
+
+  // Naqiy verdict phrase
+  const verdictPhrase = getCertifierVerdict(displayScore, t);
+
+  const goldColor = isDark ? gold[400] : gold[700];
+
+  return (
+    <View style={styles.certifierSection}>
+      {/* Section title — same style as Sources/Ingrédients */}
+      <HalalSectionHeader
+        icon={<SealCheckIcon size={16} color={goldColor} weight="bold" />}
+        title={t.scanResult.certifierSectionTitle as string}
+      />
+
+      {/* Certifier card */}
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`${certifierData.name}, score ${displayScore}/100`}
+        style={styles.certifierCard}
+      >
+        <View style={styles.certifierCardInner}>
+          <CertifierTrustRow
+            variant="full"
+            certifierId={certifierData.id ?? ""}
+            certifierName={certifierData.name}
+            trustScore={displayScore}
+          />
+
+          {/* Tier label */}
+          {halalTier && (
+            <Text style={[styles.certifierTierLabel, { color: colors.textMuted }]}>
+              {t.scanResult.tier} {tierNumber} · {tierLabel}
+            </Text>
+          )}
+
+          {/* Naqiy verdict phrase */}
+          <Text style={[styles.certifierVerdictPhrase, { color: scoreColor }]}>
+            {verdictPhrase}
+          </Text>
+        </View>
+
+        <CaretRightIcon size={14} color={isDark ? "#8b929a" : "#6b7280"} />
+      </Pressable>
+    </View>
+  );
+}
+
+// ── E0d. IngredientChips — flex-wrap chips colored by ruling status ──
+
+function IngredientChips({
+  ingredients,
+  ingredientRulings,
+  additiveCodeMap,
+  onIngredientPress,
+}: {
+  ingredients: string[];
+  ingredientRulings: HalalSchoolsCardProps["ingredientRulings"];
+  additiveCodeMap?: Map<string, string>;
+  onIngredientPress?: (ingredient: string) => void;
+}) {
+  const { isDark, colors } = useTheme();
+  const { t } = useTranslation();
+
+  // Strip diacritics so "lactoserum" matches "lactosérum"
+  const strip = (s: string) =>
+    s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+  // Build ruling lookup (accent-insensitive)
+  const rulingPatterns = useMemo(
+    () =>
+      ingredientRulings.map((r) => ({
+        pattern: strip(r.pattern),
+        ruling: r.ruling,
+      })),
+    [ingredientRulings],
+  );
+
+  const validIngredients = useMemo(
+    () => ingredients.filter((i) => typeof i === "string" && i.trim().length > 0),
+    [ingredients],
+  );
+
+  const displayItems = useMemo(() => {
+    if (validIngredients.length > 0) return validIngredients;
+    if (ingredientRulings.length > 0) return ingredientRulings.map((r) => r.pattern);
+    return [];
+  }, [validIngredients, ingredientRulings]);
+
+  if (displayItems.length === 0) {
+    return (
+      <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+        {t.scanResult.ingredientsNone as string}
+      </Text>
+    );
+  }
+
+  return (
+    <View style={styles.ingredientChipsContainer}>
+      {displayItems.map((ingredient, index) => {
+        const stripped = strip(ingredient);
+        const matched = rulingPatterns.find(
+          (r) => stripped.includes(r.pattern) || r.pattern.includes(stripped),
+        );
+        const ruling = matched?.ruling;
+        const isHaram = ruling === "haram";
+        const isDoubtful = ruling === "doubtful";
+
+        // Resolve E-code for known additives (e.g. "mono/diglycérides" → "E471")
+        let eCode: string | undefined;
+        if (additiveCodeMap && (isHaram || isDoubtful)) {
+          for (const [name, code] of additiveCodeMap) {
+            if (stripped.includes(name) || name.includes(stripped)) {
+              eCode = code;
+              break;
+            }
+          }
+        }
+
+        const chipBg = isHaram
+          ? isDark ? "rgba(239,68,68,0.12)" : "rgba(239,68,68,0.08)"
+          : isDoubtful
+            ? isDark ? "rgba(249,115,22,0.10)" : "rgba(249,115,22,0.08)"
+            : isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)";
+
+        const chipColor = isHaram
+          ? "#ef4444"
+          : isDoubtful
+            ? "#f97316"
+            : isDark ? "#d1d5db" : "#4b5563";
+
+        const chipWeight: "700" | "600" | "500" = isHaram ? "700" : isDoubtful ? "600" : "500";
+
+        const chipLabel = eCode ? `${eCode} · ${ingredient}` : ingredient;
+
+        return (
+          <Pressable
+            key={`${ingredient}-${index}`}
+            onPress={onIngredientPress ? () => onIngredientPress(ingredient) : undefined}
+            accessibilityRole="button"
+            accessibilityLabel={chipLabel}
+            style={[styles.ingredientChip, { backgroundColor: chipBg }]}
+          >
+            <Text
+              style={[
+                styles.ingredientChipText,
+                { color: chipColor, fontWeight: chipWeight },
+              ]}
+              numberOfLines={1}
+            >
+              {chipLabel}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 // ── E. Main HalalSchoolsCard shell ──
 
 export function HalalSchoolsCard({
   madhabVerdicts,
   userMadhab,
   certifierData,
+  halalTier,
+  ingredients,
   ingredientRulings,
-  onMadhabChange,
+  trustScore,
+  detectedAdditives,
+  onMadhabChange: _onMadhabChange,
   onScholarlySourcePress,
+  onTrustScorePress,
+  onIngredientPress,
+  onAdditivePress,
   staggerIndex = 3,
 }: HalalSchoolsCardProps) {
   const { isDark, colors } = useTheme();
   const { t } = useTranslation();
 
-  // Local state
   const [activeMadhab, setActiveMadhab] = useState<MadhabId>(userMadhab);
-  const [expandedSection, setExpandedSection] = useState<
-    null | "ingredients" | "additives" | "certification"
-  >(null);
 
-  // Find active verdict
+  // Sync active madhab when profile loads async
+  useEffect(() => {
+    setActiveMadhab(userMadhab);
+  }, [userMadhab]);
+
+  // All source data for "Voir tout" button (deduplicated by sourceRef)
+  // Must be before early return to respect Rules of Hooks
+  const allSourceData = useMemo(() => {
+    const byRef = new Map<string, ScholarlySourceData>();
+    for (const v of madhabVerdicts) {
+      for (const item of [
+        ...(v.conflictingAdditives ?? []),
+        ...(v.conflictingIngredients ?? []),
+      ]) {
+        if (item.scholarlyReference && !byRef.has(item.scholarlyReference)) {
+          const label = "code" in item
+            ? `${(item as any).code} · ${(item as any).name ?? ""}`.trim()
+            : (item as any).pattern ?? "";
+          byRef.set(item.scholarlyReference, {
+            label,
+            explanation: item.explanation,
+            sourceRef: item.scholarlyReference,
+          });
+        }
+      }
+    }
+    return [...byRef.values()];
+  }, [madhabVerdicts]);
+
+  // Reverse lookup: normalized additive name → E-code (e.g. "mono/diglycerides d'acides gras" → "E471")
+  const additiveCodeMap = useMemo(() => {
+    const map = new Map<string, string>();
+    const strip = (s: string) =>
+      s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    for (const v of madhabVerdicts) {
+      for (const a of v.conflictingAdditives ?? []) {
+        if (a.code && a.name) {
+          map.set(strip(a.name), a.code);
+        }
+      }
+    }
+    return map;
+  }, [madhabVerdicts]);
+
   const activeVerdict = madhabVerdicts.find((v) => v.madhab === activeMadhab)
     ?? madhabVerdicts[0];
 
   if (!activeVerdict) return null;
 
+  // Per-madhab trust score for the tapped school
+  const activeMadhabTrustKey = MADHAB_TRUST_KEY[activeMadhab as keyof typeof MADHAB_TRUST_KEY];
+  const activeMadhabTrustScore = certifierData && activeMadhabTrustKey
+    ? (certifierData as unknown as Record<string, unknown>)[activeMadhabTrustKey] as number | null ?? null
+    : null;
+
   function handleMadhabSelect(madhab: MadhabId) {
+    // Tap changes ONLY the displayed info (local state), NOT the user's profile preference
     setActiveMadhab(madhab);
-    onMadhabChange(madhab);
   }
 
+  const goldColor = isDark ? gold[400] : gold[700];
+  const SPRING_NAQIY = { damping: 14, stiffness: 170, mass: 0.9 };
+  const ingredientCount = ingredients.length > 0 ? ingredients.length : ingredientRulings.length;
+
   return (
-    <SectionCard
-      icon={<MosqueIcon size={16} color={isDark ? gold[400] : gold[700]} weight="bold" />}
-      title={t.scanResult.madhabOpinions as string}
-      staggerIndex={staggerIndex}
+    <Animated.View
+      entering={FadeInUp.delay(staggerIndex * 100)
+        .springify()
+        .damping(SPRING_NAQIY.damping)
+        .stiffness(SPRING_NAQIY.stiffness)
+        .mass(SPRING_NAQIY.mass)}
+      style={styles.container}
     >
-      {/* A. Hero card for active madhab */}
-      <HeroCard
-        activeVerdict={activeVerdict}
-        onScholarlySourcePress={onScholarlySourcePress}
-      />
-
-      {/* Spacer */}
-      <View style={styles.spacer} />
-
-      {/* B. Segmented bar for other 3 madhabs */}
+      {/* ═══ 1. Madhab rings — user picks school ═══ */}
       {madhabVerdicts.length > 1 && (
-        <SegmentedBar
+        <MadhabRingRow
           madhabVerdicts={madhabVerdicts}
           activeMadhab={activeMadhab}
+          userMadhab={userMadhab}
+          certifierData={certifierData}
           onSelect={handleMadhabSelect}
         />
       )}
 
-      {/* Divider */}
-      <View style={[styles.accordionDivider, { backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.06)" }]} />
+      {/* ═══ 2. Verdict explanation + conflicts (why halal/doubtful/haram) ═══ */}
+      <VerdictSection
+        activeVerdict={activeVerdict}
+        allVerdicts={madhabVerdicts}
+      />
 
-      {/* C1. Ingredients accordion */}
-      <AccordionSection
-        sectionKey="ingredients"
-        expandedSection={expandedSection}
-        onToggle={setExpandedSection}
-        icon={<LeafIcon size={15} color={isDark ? gold[400] : gold[700]} weight="bold" />}
-        title={t.scanResult.accordionIngredients as string}
-        badgeCount={ingredientRulings.length}
-      >
-        <IngredientsContent ingredientRulings={ingredientRulings} isDark={isDark} colors={colors} />
-      </AccordionSection>
-
-      {/* C2. Additives accordion */}
-      <AccordionSection
-        sectionKey="additives"
-        expandedSection={expandedSection}
-        onToggle={setExpandedSection}
-        icon={<FlaskIcon size={15} color={isDark ? gold[400] : gold[700]} weight="bold" />}
-        title={t.scanResult.accordionAdditives as string}
-        badgeCount={activeVerdict.conflictingAdditives?.length ?? 0}
-      >
-        <AdditivesContent
-          conflictingAdditives={activeVerdict.conflictingAdditives ?? []}
-          isDark={isDark}
-          colors={colors}
+      {/* ═══ 3. Certifier card with per-madhab trust score ═══ */}
+      {certifierData && (
+        <CertifierInfoRow
+          certifierData={certifierData}
+          madhabTrustScore={activeMadhabTrustScore}
+          halalTier={halalTier}
+          onPress={onTrustScorePress}
         />
-      </AccordionSection>
+      )}
 
-      {/* C3. Certification accordion */}
-      <AccordionSection
-        sectionKey="certification"
-        expandedSection={expandedSection}
-        onToggle={setExpandedSection}
-        icon={<SealCheckIcon size={15} color={isDark ? gold[400] : gold[700]} weight="bold" />}
-        title={t.scanResult.accordionCertification as string}
-      >
-        <CertificationContent certifierData={certifierData} isDark={isDark} colors={colors} t={t} />
-      </AccordionSection>
-
-      {/* D. Scholarly sources ribbon */}
+      {/* ═══ 4. Scholarly Sources ═══ */}
+      <HalalSectionHeader
+        icon={<BookOpenIcon size={16} color={goldColor} weight="bold" />}
+        title="Sources"
+        annotation={allSourceData.length > 0 ? "Voir tout" : undefined}
+        onAnnotationPress={allSourceData.length > 0 ? () => onScholarlySourcePress(allSourceData) : undefined}
+      />
       <ScholarlySourcesRibbon
         activeVerdict={activeVerdict}
+        allVerdicts={madhabVerdicts}
         onScholarlySourcePress={onScholarlySourcePress}
         isDark={isDark}
       />
-    </SectionCard>
+
+      {/* ═══ 5. Ingredients as flat chips ═══ */}
+      <HalalSectionHeader
+        icon={<LeafIcon size={16} color={goldColor} weight="bold" />}
+        title="Ingrédients"
+        annotation={ingredientCount > 0 ? `${ingredientCount}` : undefined}
+      />
+      <IngredientChips
+        ingredients={ingredients}
+        ingredientRulings={ingredientRulings}
+        additiveCodeMap={additiveCodeMap}
+        onIngredientPress={onIngredientPress}
+      />
+
+      {/* ═══ 6. Additifs — ALL detected, color-coded by madhab ruling ═══ */}
+      <HalalSectionHeader
+        icon={<FlaskIcon size={16} color={goldColor} weight="bold" />}
+        title={t.scanResult.accordionAdditives as string}
+        annotation={
+          (detectedAdditives?.length ?? 0) > 0
+            ? `${detectedAdditives?.length ?? 0}`
+            : (activeVerdict.conflictingAdditives?.length ?? 0) > 0
+              ? `${activeVerdict.conflictingAdditives?.length ?? 0}`
+              : undefined
+        }
+      />
+      <AdditivesContent
+        detectedAdditives={detectedAdditives ?? []}
+        conflictingAdditives={activeVerdict.conflictingAdditives ?? []}
+        isDark={isDark}
+        colors={colors}
+        onAdditivePress={onAdditivePress}
+      />
+    </Animated.View>
   );
 }
 
 // ── Styles ──
 
 const styles = StyleSheet.create({
-  // HeroCard
-  heroCard: {
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: spacing.lg,
+  // ── Flat container (no card wrapper) ──
+  container: {
+    gap: spacing.lg,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  sectionTitle: {
+    fontSize: fontSizeTokens.micro,
+    fontFamily: fontFamily.bold,
+    fontWeight: fontWeightTokens.bold,
+    textTransform: "uppercase",
+    letterSpacing: letterSpacing.wider,
+  },
+
+  // ── Horizon divider ──
+  horizonDivider: {
+    height: StyleSheet.hairlineWidth,
+  },
+
+  // ── Verdict Section ──
+  verdictSection: {
     gap: spacing.md,
   },
-  heroPill: {
+  consensusRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
-    borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignSelf: "flex-start",
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
+    gap: spacing.xs,
   },
-  heroStatusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  heroPillText: {
+  consensusText: {
     fontSize: fontSizeTokens.caption,
     fontWeight: fontWeightTokens.semiBold,
-  },
-  heroExplanation: {
-    fontSize: fontSizeTokens.bodySmall,
-    lineHeight: 20,
-  },
-  heroCountersRow: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  counterBadge: {
-    flex: 1,
-    alignItems: "center",
-    borderRadius: radius.sm,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.xs,
-    gap: 2,
-  },
-  counterValue: {
-    fontSize: fontSizeTokens.h4,
-    fontWeight: fontWeightTokens.bold,
-  },
-  counterLabel: {
-    fontSize: fontSizeTokens.micro,
-    textAlign: "center",
-  },
-  noConflictsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.sm,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  noConflictsText: {
-    fontSize: fontSizeTokens.bodySmall,
-    fontWeight: fontWeightTokens.medium,
   },
   conflictList: {
     gap: spacing.sm,
   },
   conflictItem: {
     borderLeftWidth: 3,
-    borderRadius: radius.sm,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    gap: spacing.xs,
-  },
-  conflictHeader: {
+    paddingLeft: spacing.lg,
+    paddingVertical: spacing.xs,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: spacing.sm,
   },
   conflictLabel: {
     flex: 1,
-    fontSize: fontSizeTokens.caption,
-    fontWeight: fontWeightTokens.medium,
-  },
-  conflictRulingBadge: {
-    borderRadius: radius.full,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-  },
-  conflictRulingText: {
-    fontSize: fontSizeTokens.micro,
-    fontWeight: fontWeightTokens.bold,
-  },
-  conflictSourceRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  conflictSourceText: {
-    flex: 1,
-    fontSize: fontSizeTokens.micro,
-  },
-
-  // Spacer between HeroCard and SegmentedBar
-  spacer: {
-    height: spacing.sm,
-  },
-
-  // SegmentedBar
-  segmentedBar: {
-    marginHorizontal: -spacing.xs,
-  },
-  segmentedBarContent: {
-    paddingHorizontal: spacing.xs,
-    gap: spacing.sm,
-  },
-  segmentPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  segmentDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  segmentMadhabLabel: {
-    fontSize: fontSizeTokens.caption,
-    fontWeight: fontWeightTokens.medium,
-  },
-  segmentStatusLabel: {
-    fontSize: fontSizeTokens.caption,
-    fontWeight: fontWeightTokens.semiBold,
-  },
-
-  // Accordion divider
-  accordionDivider: {
-    height: StyleSheet.hairlineWidth,
-    marginTop: spacing.md,
-    marginBottom: spacing.xs,
-  },
-
-  // AccordionSection
-  accordionContainer: {
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    marginTop: spacing.sm,
-    overflow: "hidden",
-  },
-  accordionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-  },
-  accordionHeaderLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    flex: 1,
-  },
-  accordionTitle: {
-    fontSize: fontSizeTokens.caption,
-    fontWeight: fontWeightTokens.semiBold,
-  },
-  accordionBadge: {
-    borderRadius: radius.full,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-  },
-  accordionBadgeText: {
-    fontSize: fontSizeTokens.micro,
-    fontWeight: fontWeightTokens.bold,
-  },
-  accordionBody: {
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.md,
-    gap: 0,
-  },
-  accordionEmptyText: {
     fontSize: fontSizeTokens.bodySmall,
-    fontStyle: "italic",
-    paddingVertical: spacing.xs,
+    fontWeight: fontWeightTokens.medium,
   },
-  accordionListItem: {
+  conflictRuling: {
+    fontSize: fontSizeTokens.caption,
+    fontWeight: fontWeightTokens.bold,
+  },
+
+  // ── Madhab ring row ──
+  madhabRingRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-around",
+    marginTop: spacing["2xl"],
+    paddingBottom: spacing.md,
+  },
+
+  // ── Shared list item styles ──
+  listItem: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: spacing.sm,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.md,
   },
-  accordionItemLabel: {
+  listItemLabel: {
     fontSize: fontSizeTokens.caption,
     fontWeight: fontWeightTokens.medium,
   },
-  accordionItemSub: {
+  listItemSub: {
     fontSize: fontSizeTokens.micro,
     marginTop: 2,
     lineHeight: 16,
   },
-  accordionItemCode: {
+  listItemRuling: {
+    fontSize: fontSizeTokens.caption,
+    fontWeight: fontWeightTokens.bold,
+    alignSelf: "flex-start",
+    marginTop: 1,
+  },
+  additiveRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  additiveCode: {
     fontSize: fontSizeTokens.micro,
     fontWeight: fontWeightTokens.bold,
     marginRight: spacing.xs,
   },
-  accordionAdditiveRow: {
-    flexDirection: "row",
-    alignItems: "center",
+  additiveIndicator: {
+    width: 3,
+    borderRadius: 1.5,
+    alignSelf: "stretch",
+    marginRight: spacing.xs,
   },
-  accordionRulingBadge: {
-    borderRadius: radius.full,
+  additiveRulingBadge: {
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
+    borderRadius: radius.sm,
     alignSelf: "flex-start",
     marginTop: 1,
   },
-  accordionRulingText: {
+  additiveRulingText: {
     fontSize: fontSizeTokens.micro,
     fontWeight: fontWeightTokens.bold,
+    textTransform: "capitalize",
+  },
+  additiveCategoryText: {
+    fontSize: fontSizeTokens.micro,
+    fontWeight: fontWeightTokens.medium,
+    alignSelf: "flex-start",
+    marginTop: 2,
+  },
+  emptyText: {
+    fontSize: fontSizeTokens.bodySmall,
+    fontStyle: "italic",
+    paddingVertical: spacing.xs,
   },
 
-  // ScholarlySourcesRibbon
+  // ── Halal section header (matching mockup: .sh) ──
+  halalSectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 14,
+    marginTop: 28,
+  },
+  halalSectionHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  halalSectionTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    letterSpacing: -0.3,
+  },
+  halalSectionAnnotation: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
+  // ── Certifier section ──
+  certifierSection: {
+    marginTop: spacing.lg,
+  },
+  certifierCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+  },
+  certifierCardInner: {
+    flex: 1,
+    gap: 4,
+  },
+  certifierTierLabel: {
+    fontSize: 9,
+    fontWeight: fontWeightTokens.medium,
+    letterSpacing: 0.3,
+  },
+  certifierVerdictPhrase: {
+    fontSize: fontSizeTokens.caption,
+    fontWeight: fontWeightTokens.medium,
+    fontStyle: "italic",
+    marginTop: 2,
+  },
+
+  // ── Ingredient chips (mockup: .ig/.ic) ──
+  ingredientChipsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    paddingBottom: 16,
+  },
+  ingredientChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  ingredientChipText: {
+    fontSize: 13,
+  },
+
+  // ── Scholarly sources ribbon ──
   ribbonScroll: {
-    marginTop: spacing.md,
     marginHorizontal: -spacing.xs,
   },
   ribbonContent: {
@@ -1137,12 +1158,4 @@ const styles = StyleSheet.create({
     fontWeight: fontWeightTokens.medium,
   },
 
-  // Certification content
-  certificationContent: {
-    gap: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  certificationTrustDesc: {
-    fontSize: fontSizeTokens.bodySmall,
-  },
 });

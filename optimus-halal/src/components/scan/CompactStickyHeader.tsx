@@ -23,8 +23,11 @@ import {
 } from "react-native";
 import Animated, {
   useAnimatedStyle,
+  useAnimatedReaction,
+  useSharedValue,
   interpolate,
   Extrapolation,
+  runOnJS,
   type SharedValue,
 } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
@@ -32,10 +35,13 @@ import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useTheme } from "@/hooks/useTheme";
+import { useHaptics } from "@/hooks";
 import { glass } from "@/theme/colors";
 import { fontSize as fontSizeTokens, fontWeight as fontWeightTokens } from "@/theme/typography";
 import { spacing, radius } from "@/theme/spacing";
 import { STATUS_CONFIG, type HalalStatusKey } from "./scan-constants";
+import { NaqiyGradeBadge, type TrustGrade } from "./NaqiyGradeBadge";
+import { CertifierLogo } from "./CertifierLogo";
 
 // ── Types ──
 
@@ -47,7 +53,9 @@ export interface CompactStickyHeaderProps {
   imageUrl: string | null;
   effectiveHeroStatus: HalalStatusKey;
   heroLabel: string;
-  certifierData: { name: string; logoUrl?: string | null } | null;
+  certifierData: { id: string; name: string } | null;
+  /** Naqiy Trust Grade for micro-badge display */
+  trustGrade?: TrustGrade | null;
   onTrustScorePress?: () => void;
 }
 
@@ -62,12 +70,33 @@ export function CompactStickyHeader({
   effectiveHeroStatus,
   heroLabel,
   certifierData,
+  trustGrade,
   onTrustScorePress,
 }: CompactStickyHeaderProps) {
   const insets = useSafeAreaInsets();
   const { isDark, colors } = useTheme();
+  const { impact } = useHaptics();
 
   const statusConfig = STATUS_CONFIG[effectiveHeroStatus] ?? STATUS_CONFIG.unknown;
+
+  // Haptic feedback when compact header becomes visible
+  const wasVisible = useSharedValue(false);
+  useAnimatedReaction(
+    () => {
+      const start = heroHeight * 0.45;
+      const end = heroHeight * 0.65;
+      return interpolate(scrollY.value, [start, end], [0, 1], Extrapolation.CLAMP) > 0.5;
+    },
+    (isVisible, prev) => {
+      if (isVisible && !prev) {
+        wasVisible.value = true;
+        runOnJS(impact)();
+      }
+      if (!isVisible && prev) {
+        wasVisible.value = false;
+      }
+    },
+  );
 
   // Scroll-interpolated entrance animation — tight sync with hero disappearance
   const animatedStyle = useAnimatedStyle(() => {
@@ -89,6 +118,7 @@ export function CompactStickyHeader({
       {imageUrl ? (
         <Image
           source={{ uri: imageUrl }}
+          placeholder={{ blurhash: "LGF5]+Yk^6#M@-5c,1J5@[or[Q6." }}
           style={styles.productImage}
           contentFit="cover"
           transition={150}
@@ -121,28 +151,22 @@ export function CompactStickyHeader({
         </Text>
       </View>
 
-      {/* Certifier logo — 16px, pressable for trust score */}
+      {/* Naqiy Trust Grade micro-badge + certifier logo — pressable */}
       {certifierData && (
         <Pressable
           onPress={onTrustScorePress}
           hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
           accessibilityLabel={certifierData.name}
           accessibilityRole="button"
+          style={styles.certifierGroup}
         >
-          {certifierData.logoUrl ? (
-            <Image
-              source={{ uri: certifierData.logoUrl }}
-              style={styles.certifierLogo}
-              contentFit="contain"
-              transition={150}
-            />
-          ) : (
-            <View style={[styles.certifierFallback, { borderColor: colors.textMuted }]}>
-              <Text style={[styles.certifierFallbackText, { color: colors.textMuted }]}>
-                {certifierData.name.slice(0, 2).toUpperCase()}
-              </Text>
-            </View>
+          {trustGrade && (
+            <NaqiyGradeBadge variant="micro" grade={trustGrade} />
           )}
+          <CertifierLogo
+            certifierId={certifierData.id}
+            size={CERTIFIER_LOGO_SIZE}
+          />
         </Pressable>
       )}
 
@@ -241,23 +265,10 @@ const styles = StyleSheet.create({
     fontSize: fontSizeTokens.micro,
     fontWeight: fontWeightTokens.bold,
   },
-  certifierLogo: {
-    width: CERTIFIER_LOGO_SIZE,
-    height: CERTIFIER_LOGO_SIZE,
-    borderRadius: CERTIFIER_LOGO_SIZE * 0.25,
-  },
-  certifierFallback: {
-    width: CERTIFIER_LOGO_SIZE,
-    height: CERTIFIER_LOGO_SIZE,
-    borderRadius: CERTIFIER_LOGO_SIZE * 0.25,
-    borderWidth: 1,
+  certifierGroup: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-  },
-  certifierFallbackText: {
-    fontSize: 6,
-    fontWeight: "700",
-    letterSpacing: -0.3,
+    gap: 4,
   },
   borderBottom: {
     position: "absolute",

@@ -21,11 +21,14 @@ import { ArrowLeftIcon, CheckIcon, CheckCircleIcon, MagnifyingGlassIcon, PlusIco
 import Animated, { FadeIn, FadeInDown, SlideInDown, ZoomIn } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { PressableScale } from "@/components/ui/PressableScale";
-import { PremiumBackground } from "@/components/ui";
-import { usePreferencesStore } from "@/store";
+import { PremiumBackground, PremiumGate } from "@/components/ui";
+import { usePreferencesStore, useFeatureFlagsStore } from "@/store";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { AppIcon, type IconName } from "@/lib/icons";
+import { trpc } from "@/lib/trpc";
+import { isAuthenticated as hasStoredTokens } from "@/services/api";
+import { logger } from "@/lib/logger";
 
 const GOLD = "#d4af37";
 
@@ -197,6 +200,9 @@ export default function ExclusionsScreen() {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const updateProfile = trpc.profile.updateProfile.useMutation();
+  const { flags } = useFeatureFlagsStore();
 
   // Theme-aware colors
   const themeColors = {
@@ -269,8 +275,20 @@ export default function ExclusionsScreen() {
     setShowSuggestions(false);
   };
 
-  // Save and go back
-  const handleSave = () => {
+  // Save exclusions to backend (if authenticated) then navigate back
+  const handleSave = async () => {
+    if (hasStoredTokens()) {
+      setIsSaving(true);
+      try {
+        await updateProfile.mutateAsync({ allergens: exclusions });
+        logger.info("Exclusions", `Synced ${exclusions.length} allergens to backend`);
+      } catch (e) {
+        // Don't block navigation — local state is already saved via MMKV
+        logger.warn("Exclusions", "Failed to sync allergens to backend", String(e));
+      } finally {
+        setIsSaving(false);
+      }
+    }
     router.back();
   };
 
@@ -481,6 +499,7 @@ export default function ExclusionsScreen() {
         </PressableScale>
       </Animated.View>
 
+      <PremiumGate feature="healthProfile" trigger="health_profile">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
@@ -815,9 +834,11 @@ export default function ExclusionsScreen() {
       >
         <PressableScale
           onPress={handleSave}
+          disabled={isSaving}
           style={{
             borderRadius: 16,
             overflow: "hidden",
+            opacity: isSaving ? 0.6 : 1,
             shadowColor: "#10b981",
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.4,
@@ -853,6 +874,7 @@ export default function ExclusionsScreen() {
           </LinearGradient>
         </PressableScale>
         </Animated.View>
+      </PremiumGate>
       </SafeAreaView>
     </View>
   );

@@ -48,7 +48,7 @@ import { BlurView } from "expo-blur";
 import { useTranslation } from "@/hooks/useTranslation";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { brand } from "@/theme/colors";
-import { useQuotaStore } from "@/store";
+import { useQuotaStore, useTrialStore } from "@/store";
 import { isAuthenticated as hasStoredTokens } from "@/services/api";
 import { trackEvent } from "@/lib/analytics";
 import { AppIcon } from "@/lib/icons";
@@ -189,14 +189,17 @@ export default function ScannerScreen() {
     async (barcode: string) => {
       if (scanned) return;
 
-      // Quota gate for anonymous users
+      // Quota gate for anonymous users (bypassed during active trial)
       if (!hasStoredTokens()) {
-        const remaining = useQuotaStore.getState().getRemainingScans();
-        if (remaining <= 0) {
-          impact(ImpactFeedbackStyle.Medium);
-          trackEvent("guest_quota_reached", { trigger: "scan" });
-          router.push("/paywall" as any);
-          return;
+        const isTrialActive = useTrialStore.getState().isTrialActive();
+        if (!isTrialActive) {
+          const remaining = useQuotaStore.getState().getRemainingScans();
+          if (remaining <= 0) {
+            impact(ImpactFeedbackStyle.Medium);
+            trackEvent("guest_quota_reached", { trigger: "scan" });
+            router.push({ pathname: "/paywall" as any, params: { trigger: "scan_quota" } });
+            return;
+          }
         }
       }
 
