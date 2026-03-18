@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, Moon, Sun } from "lucide-react";
+import Image from "next/image";
+import { List, Moon, Sun } from "@phosphor-icons/react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +20,6 @@ const navRoutes = [
   { href: "#comment-ca-marche", label: "Comment ça marche" },
   { href: "#tarifs", label: "Tarifs" },
   { href: "#faq", label: "FAQ" },
-  { href: "#contact", label: "Contact" },
 ];
 
 export function Navbar() {
@@ -27,25 +27,27 @@ export function Navbar() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <header className="sticky top-0 z-50 w-full">
-      <div className="mx-auto mt-2 flex max-w-5xl items-center justify-between rounded-2xl border border-border/50 bg-background/80 px-4 py-2.5 shadow-sm backdrop-blur-xl lg:mt-4">
+    <header className="fixed top-0 z-50 w-full">
+      <div className="mx-auto mt-3 flex max-w-4xl items-center justify-between rounded-2xl border border-border/40 bg-background/70 px-4 py-2 shadow-sm backdrop-blur-2xl lg:mt-5">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-primary">
-            <span className="text-sm font-bold text-primary-foreground">
-              ن
-            </span>
-          </div>
+          <Image
+            src="/images/logo_naqiy.webp"
+            alt="Naqiy"
+            width={30}
+            height={30}
+            className="rounded-lg"
+          />
           <span className="text-lg font-bold tracking-tight">Naqiy</span>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden items-center gap-1 lg:flex">
+        <nav className="hidden items-center gap-0.5 lg:flex">
           {navRoutes.map((route) => (
             <Link
               key={route.href}
               href={route.href}
-              className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               {route.label}
             </Link>
@@ -53,7 +55,7 @@ export function Navbar() {
         </nav>
 
         {/* Right side */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {/* Theme toggle */}
           <Button
             variant="ghost"
@@ -69,7 +71,7 @@ export function Navbar() {
           {/* Desktop CTA */}
           <Link
             href="/admin"
-            className="hidden rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 lg:inline-flex"
+            className="hidden rounded-lg bg-primary px-3.5 py-1.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 lg:inline-flex"
           >
             Dashboard
           </Link>
@@ -77,23 +79,25 @@ export function Navbar() {
           {/* Mobile Menu */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger
-              className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden"
+              className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground lg:hidden"
               aria-label="Ouvrir le menu"
             >
-              <Menu className="size-4" />
+              <List className="size-4" />
             </SheetTrigger>
-            <SheetContent side="right" className="w-72 border-border/50">
+            <SheetContent side="right" className="w-72 border-border/40">
               <SheetHeader className="text-left">
                 <SheetTitle className="flex items-center gap-2.5">
-                  <div className="flex size-7 items-center justify-center rounded-lg bg-primary">
-                    <span className="text-xs font-bold text-primary-foreground">
-                      ن
-                    </span>
-                  </div>
+                  <Image
+                    src="/images/logo_naqiy.webp"
+                    alt="Naqiy"
+                    width={24}
+                    height={24}
+                    className="rounded-md"
+                  />
                   Naqiy
                 </SheetTitle>
               </SheetHeader>
-              <nav className="mt-6 flex flex-col gap-1">
+              <nav className="mt-6 flex flex-col gap-0.5">
                 {navRoutes.map((route) => (
                   <Link
                     key={route.href}
@@ -111,7 +115,7 @@ export function Navbar() {
                 <Link
                   href="/admin"
                   onClick={() => setIsOpen(false)}
-                  className="flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                  className="flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
                 >
                   Dashboard
                 </Link>

@@ -1,6 +1,6 @@
 "use client"
 
-import { Globe, Server, ShieldCheck } from "lucide-react"
+import { Globe, HardDrives, ShieldCheck } from "@phosphor-icons/react"
 
 import {
   Card,
@@ -33,7 +33,7 @@ export default function SettingsPage() {
             General
           </TabsTrigger>
           <TabsTrigger value="api">
-            <Server className="size-4" />
+            <HardDrives className="size-4" />
             API
           </TabsTrigger>
           <TabsTrigger value="security">

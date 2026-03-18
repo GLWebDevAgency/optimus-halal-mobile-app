@@ -1,84 +1,83 @@
 "use client";
 
-import { benefits } from "@/@data/benefits";
 import { SectionContainer } from "@/components/layout/section-container";
-import { SectionHeader } from "@/components/layout/section-header";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import { motion } from "motion/react";
+import { ScrollReveal } from "@/components/ui/extras/scroll-reveal";
+
+type Step = {
+  number: string;
+  title: string;
+  description: string;
+};
+
+const steps: Step[] = [
+  {
+    number: "01",
+    title: "Scanne",
+    description:
+      "Pointe ton appareil vers n\u2019importe quel code-barres. C\u2019est instantané.",
+  },
+  {
+    number: "02",
+    title: "Analyse",
+    description:
+      "Notre IA croise ingrédients, certifications, additifs et sources savantes.",
+  },
+  {
+    number: "03",
+    title: "Décide",
+    description:
+      "Un verdict clair, personnalisé selon ta propre école juridique.",
+  },
+];
 
 export function HowItWorks() {
   return (
     <SectionContainer id="comment-ca-marche">
-      <SectionHeader
-        subTitle="COMMENT ÇA MARCHE"
-        title="Simple comme 1, 2, 3"
-      />
+      {/* Section header */}
+      <ScrollReveal>
+        <div className="flex flex-col items-center text-center gap-3">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold">
+            Comment ça marche
+          </h2>
+          <p className="text-muted-foreground text-lg">
+            Trois étapes. Zéro compromis.
+          </p>
+        </div>
+      </ScrollReveal>
 
-      <div className="mt-16 grid gap-12 lg:grid-cols-2">
-        {/* Left column — sticky description */}
-        <div className="lg:sticky lg:top-32 lg:self-start">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <p className="text-lg text-muted-foreground">
-              Naqiy simplifie ta vie quotidienne. En quelques secondes, tu sais
-              exactement ce que tu manges et pourquoi.
-            </p>
-            <p className="mt-4 text-lg text-muted-foreground">
-              Chaque étape est pensée pour te donner confiance, transparence et
-              contrôle sur ton alimentation halal.
-            </p>
-          </motion.div>
+      {/* Steps row */}
+      <div className="relative mt-20">
+        {/* Connecting gold line — desktop only */}
+        <div className="absolute top-[3.5rem] left-[16.67%] right-[16.67%] hidden lg:block">
+          <div className="h-px divider-gold" />
         </div>
 
-        {/* Right column — benefit cards */}
-        <div className="flex flex-col gap-6">
-          {benefits.map((benefit, index) => {
-            const Icon = benefit.icon;
-            const stepNumber = String(index + 1).padStart(2, "0");
+        {/* Step cards */}
+        <div className="grid gap-16 sm:gap-12 lg:grid-cols-3 lg:gap-8">
+          {steps.map((step, index) => (
+            <ScrollReveal key={step.number} delay={index * 0.15}>
+              <div className="flex flex-col items-center text-center">
+                {/* Step number */}
+                <div className="relative">
+                  <span className="text-7xl font-black text-gold-gradient leading-none tracking-tighter">
+                    {step.number}
+                  </span>
+                  {/* Gold dot connector — visible on desktop, sits on the line */}
+                  <div className="absolute -bottom-[0.625rem] left-1/2 hidden size-3 -translate-x-1/2 rounded-full border-2 border-gold bg-background lg:block" />
+                </div>
 
-            return (
-              <motion.div
-                key={benefit.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Card
-                  className={cn(
-                    "transition-all duration-300",
-                    "hover:border-gold/20 hover:shadow-lg hover:shadow-gold/5"
-                  )}
-                >
-                  <CardHeader>
-                    <div className="flex items-center gap-4">
-                      <Badge
-                        variant="outline"
-                        className="border-gold/30 bg-gold/5 text-gold font-mono text-xs"
-                      >
-                        {stepNumber}
-                      </Badge>
-                      <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-                        <Icon className="size-5 text-primary" />
-                      </div>
-                    </div>
-                    <CardTitle className="mt-2">{benefit.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">
-                      {benefit.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })}
+                {/* Title */}
+                <h3 className="mt-6 text-xl font-semibold text-foreground">
+                  {step.title}
+                </h3>
+
+                {/* Description */}
+                <p className="mt-3 max-w-xs text-base leading-relaxed text-muted-foreground">
+                  {step.description}
+                </p>
+              </div>
+            </ScrollReveal>
+          ))}
         </div>
       </div>
     </SectionContainer>

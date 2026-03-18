@@ -1,28 +1,28 @@
 import {
-  ScanBarcode,
-  Scale,
+  Barcode,
+  Scales,
   MapPin,
   ShieldCheck,
   Database,
   Users,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+} from "@phosphor-icons/react";
+import type { IconProps } from "@phosphor-icons/react";
 
 export type Feature = {
-  icon: LucideIcon;
+  icon: React.ComponentType<IconProps>;
   title: string;
   description: string;
 };
 
 export const features: Feature[] = [
   {
-    icon: ScanBarcode,
+    icon: Barcode,
     title: "Scanner IA",
     description:
       "Scanne n\u2019importe quel produit. Notre IA analyse les ingr\u00e9dients et te donne un verdict halal instantan\u00e9.",
   },
   {
-    icon: Scale,
+    icon: Scales,
     title: "Verdicts par \u00e9cole",
     description:
       "Hanafi, Maliki, Shafi\u2019i, Hanbali \u2014 chaque \u00e9cole a son avis. Choisis celle qui te correspond.",

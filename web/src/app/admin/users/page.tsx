@@ -1,4 +1,6 @@
-import { Search, ChevronLeft, ChevronRight } from "lucide-react"
+"use client"
+
+import { MagnifyingGlass, CaretLeft, CaretRight } from "@phosphor-icons/react"
 
 import {
   Card,
@@ -92,7 +94,7 @@ export default function UsersPage() {
               </CardDescription>
             </div>
             <div className="relative w-full max-w-xs">
-              <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <MagnifyingGlass className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input placeholder="Rechercher par email ou nom..." className="pl-8" />
             </div>
           </div>
@@ -154,12 +156,12 @@ export default function UsersPage() {
             </p>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="icon-sm" disabled>
-                <ChevronLeft className="size-4" />
+                <CaretLeft className="size-4" />
                 <span className="sr-only">Page precedente</span>
               </Button>
               <span className="text-sm font-medium">Page 1 / 2 570</span>
               <Button variant="outline" size="icon-sm">
-                <ChevronRight className="size-4" />
+                <CaretRight className="size-4" />
                 <span className="sr-only">Page suivante</span>
               </Button>
             </div>

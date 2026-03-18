@@ -1,10 +1,12 @@
+"use client"
+
 import {
-  AlertTriangle,
-  ShieldAlert,
-  AlertOctagon,
+  Warning,
+  ShieldWarning,
+  WarningOctagon,
   Info,
   Clock,
-} from "lucide-react"
+} from "@phosphor-icons/react"
 
 import {
   Card,
@@ -68,9 +70,9 @@ const alerts = [
 function getSeverityIcon(severity: "critical" | "warning" | "info") {
   switch (severity) {
     case "critical":
-      return <AlertOctagon className="size-5 text-destructive" />
+      return <WarningOctagon className="size-5 text-destructive" />
     case "warning":
-      return <AlertTriangle className="size-5 text-warning" />
+      return <Warning className="size-5 text-warning" />
     case "info":
       return <Info className="size-5 text-primary" />
   }
@@ -130,7 +132,7 @@ export default function AlertsPage() {
         <Card size="sm">
           <CardContent className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-lg bg-destructive/10">
-              <ShieldAlert className="size-5 text-destructive" />
+              <ShieldWarning className="size-5 text-destructive" />
             </div>
             <div>
               <p className="text-2xl font-bold">2</p>
@@ -141,7 +143,7 @@ export default function AlertsPage() {
         <Card size="sm">
           <CardContent className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-lg bg-warning/10">
-              <AlertTriangle className="size-5 text-warning" />
+              <Warning className="size-5 text-warning" />
             </div>
             <div>
               <p className="text-2xl font-bold">1</p>

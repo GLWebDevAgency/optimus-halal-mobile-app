@@ -3,16 +3,16 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
-  LayoutDashboard,
+  SquaresFour,
   Package,
   Users,
-  Store,
+  Storefront,
   FileText,
   Bell,
-  Settings,
-  Search,
-  LogOut,
-} from "lucide-react"
+  GearSix,
+  MagnifyingGlass,
+  SignOut,
+} from "@phosphor-icons/react"
 
 import {
   SidebarProvider,
@@ -36,13 +36,13 @@ import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 
 const navItems = [
-  { href: "/admin", label: "Vue d'ensemble", icon: LayoutDashboard },
+  { href: "/admin", label: "Vue d'ensemble", icon: SquaresFour },
   { href: "/admin/products", label: "Produits", icon: Package },
   { href: "/admin/users", label: "Utilisateurs", icon: Users },
-  { href: "/admin/stores", label: "Magasins", icon: Store },
+  { href: "/admin/stores", label: "Magasins", icon: Storefront },
   { href: "/admin/articles", label: "Articles", icon: FileText },
   { href: "/admin/alerts", label: "Alertes", icon: Bell },
-  { href: "/admin/settings", label: "Paramètres", icon: Settings },
+  { href: "/admin/settings", label: "Paramètres", icon: GearSix },
 ]
 
 export default function AdminLayout({
@@ -107,7 +107,7 @@ export default function AdminLayout({
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton tooltip="Déconnexion">
-                <LogOut />
+                <SignOut />
                 <span>Déconnexion</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -123,7 +123,7 @@ export default function AdminLayout({
 
           <div className="flex flex-1 items-center gap-2">
             <div className="relative max-w-sm flex-1">
-              <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <MagnifyingGlass className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Rechercher..."
                 className="pl-8"

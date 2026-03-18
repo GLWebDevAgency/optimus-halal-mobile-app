@@ -1,13 +1,15 @@
+"use client"
+
 import {
   Users,
-  ScanLine,
+  Scan,
   Database,
-  Store,
-  TrendingUp,
-  TrendingDown,
-  AlertTriangle,
+  Storefront,
+  TrendUp,
+  TrendDown,
+  Warning,
   Clock,
-} from "lucide-react"
+} from "@phosphor-icons/react"
 
 import {
   Card,
@@ -39,7 +41,7 @@ const kpis = [
     value: "3 294",
     change: "+8.2%",
     trending: "up" as const,
-    icon: ScanLine,
+    icon: Scan,
   },
   {
     label: "Produits en BDD",
@@ -53,7 +55,7 @@ const kpis = [
     value: "383",
     change: "-2.1%",
     trending: "down" as const,
-    icon: Store,
+    icon: Storefront,
   },
 ]
 
@@ -163,9 +165,9 @@ export default function AdminDashboardPage() {
               <div className="text-2xl font-bold">{kpi.value}</div>
               <div className="mt-1 flex items-center gap-1 text-xs">
                 {kpi.trending === "up" ? (
-                  <TrendingUp className="size-3 text-success" />
+                  <TrendUp className="size-3 text-success" />
                 ) : (
-                  <TrendingDown className="size-3 text-destructive" />
+                  <TrendDown className="size-3 text-destructive" />
                 )}
                 <span
                   className={
@@ -236,7 +238,7 @@ export default function AdminDashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="size-4 text-warning" />
+              <Warning className="size-4 text-warning" />
               Alertes actives
             </CardTitle>
             <CardDescription>

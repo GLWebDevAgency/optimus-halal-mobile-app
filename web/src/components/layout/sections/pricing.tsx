@@ -1,147 +1,214 @@
 "use client";
 
 import { useState } from "react";
-import { pricingPlans } from "@/@data/pricing";
 import { SectionContainer } from "@/components/layout/section-container";
 import { SectionHeader } from "@/components/layout/section-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
-  AnimatedBackground,
-  AnimatedBackgroundItem,
-} from "@/components/ui/extras/animated-background";
-import { SlidingNumber } from "@/components/ui/extras/sliding-number";
+  ScrollReveal,
+  StaggerContainer,
+  StaggerItem,
+} from "@/components/ui/extras/scroll-reveal";
 import { cn } from "@/lib/utils";
-import { Check } from "lucide-react";
-import { motion } from "motion/react";
+import { Check } from "@phosphor-icons/react";
+
+/* ═══════════════════════════════════════════════
+   DATA
+   ═══════════════════════════════════════════════ */
+
+const plans = [
+  {
+    name: "Naqiy",
+    label: "Gratuit",
+    monthlyPrice: 0,
+    annualPrice: 0,
+    description: "L'essentiel pour scanner en confiance.",
+    features: [
+      "5 scans / jour",
+      "Verdict de base",
+      "Carte des magasins",
+      "Score Naqiy",
+    ],
+    cta: "Commencer gratuitement",
+    variant: "outline" as const,
+    popular: false,
+  },
+  {
+    name: "Naqiy+",
+    label: "Naqiy+",
+    monthlyPrice: 4.99,
+    annualPrice: 49.99,
+    annualSaving: "2 mois offerts",
+    description: "L'expérience halal sans compromis.",
+    features: [
+      "Scans illimités",
+      "Verdict personnalisé par madhab",
+      "Alertes temps réel",
+      "Détail ingrédients & additifs",
+      "Zéro publicité",
+      "Support prioritaire",
+    ],
+    cta: "Essayer Naqiy+",
+    variant: "default" as const,
+    popular: true,
+  },
+] as const;
+
+/* ═══════════════════════════════════════════════
+   COMPONENT
+   ═══════════════════════════════════════════════ */
 
 export function Pricing() {
   const [isAnnual, setIsAnnual] = useState(false);
 
   return (
     <SectionContainer id="tarifs">
-      <SectionHeader
-        subTitle="TARIFS"
-        title="Choisis ton plan"
-      />
+      <ScrollReveal>
+        <SectionHeader
+          title="Simple et transparent"
+          description="Commence gratuitement. Passe à Naqiy+ quand tu veux."
+        />
+      </ScrollReveal>
 
-      {/* Billing toggle */}
-      <div className="mt-8 flex justify-center">
-        <div className="inline-flex items-center rounded-lg bg-muted p-1">
-          <AnimatedBackground
-            defaultValue="monthly"
-            onValueChange={(value) => setIsAnnual(value === "annual")}
-            className="flex rounded-md"
-          >
-            <AnimatedBackgroundItem
-              value="monthly"
-              className="rounded-md font-medium"
-              activeClassName="text-foreground"
+      {/* ─── Billing toggle ─── */}
+      <ScrollReveal delay={0.1}>
+        <div className="mt-10 flex justify-center">
+          <div className="inline-flex items-center gap-1 rounded-full border border-border bg-card p-1">
+            <button
+              type="button"
+              onClick={() => setIsAnnual(false)}
+              className={cn(
+                "relative rounded-full px-5 py-2 text-sm font-medium transition-all",
+                !isAnnual
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
             >
               Mensuel
-            </AnimatedBackgroundItem>
-            <AnimatedBackgroundItem
-              value="annual"
-              className="rounded-md font-medium"
-              activeClassName="text-foreground"
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsAnnual(true)}
+              className={cn(
+                "relative flex items-center gap-2 rounded-full px-5 py-2 text-sm font-medium transition-all",
+                isAnnual
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
             >
               Annuel
-              <Badge className="ml-1.5 bg-primary/10 text-primary text-[10px]">
-                -33%
+              <Badge className="bg-gold/15 text-gold text-[10px] border-gold/30">
+                -17%
               </Badge>
-            </AnimatedBackgroundItem>
-          </AnimatedBackground>
+            </button>
+          </div>
         </div>
-      </div>
+      </ScrollReveal>
 
-      {/* Pricing cards */}
-      <div className="mt-12 grid gap-8 md:grid-cols-3">
-        {pricingPlans.map((plan, index) => {
-          const price = isAnnual ? plan.yearlyPrice : plan.monthlyPrice;
+      {/* ─── Cards ─── */}
+      <StaggerContainer
+        className="mt-14 mx-auto grid max-w-4xl gap-8 md:grid-cols-2"
+        staggerDelay={0.15}
+      >
+        {plans.map((plan) => {
+          const price = isAnnual ? plan.annualPrice : plan.monthlyPrice;
           const period = isAnnual ? "/an" : "/mois";
-          const integerPart = Math.floor(price);
-          const decimalPart = Math.round((price - integerPart) * 100);
 
           return (
-            <motion.div
-              key={plan.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-              className={cn(plan.isPopular && "md:-mt-4 md:mb-[-16px]")}
-            >
+            <StaggerItem key={plan.name}>
               <Card
                 className={cn(
                   "relative h-full transition-all duration-300",
-                  plan.isPopular
-                    ? "border-primary/40 shadow-lg shadow-gold/10 scale-[1.02]"
-                    : "hover:border-gold/20"
+                  plan.popular
+                    ? "border-gold shadow-lg shadow-gold/10 gold-glow"
+                    : "hover:border-gold/20 hover:shadow-md"
                 )}
               >
-                {plan.isPopular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-primary text-primary-foreground">
+                {/* ─── Popular badge ─── */}
+                {plan.popular && (
+                  <div className="absolute -top-3 right-6 z-10">
+                    <Badge className="bg-primary text-primary-foreground px-3 py-0.5 shadow-md">
                       Populaire
                     </Badge>
                   </div>
                 )}
 
-                <CardHeader className="text-center">
-                  <CardTitle className="text-xl">{plan.title}</CardTitle>
-                  <CardDescription>{plan.description}</CardDescription>
-                  <div className="mt-4 flex items-baseline justify-center gap-0.5">
+                <CardHeader className="text-center pb-0">
+                  <p className="text-lg font-semibold tracking-tight">
+                    {plan.label}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {plan.description}
+                  </p>
+
+                  {/* Price */}
+                  <div className="mt-6 flex items-baseline justify-center gap-1">
                     {price === 0 ? (
-                      <span className="text-4xl font-bold">Gratuit</span>
+                      <span className="text-5xl font-bold tracking-tight">
+                        0
+                        <span className="text-3xl">€</span>
+                      </span>
                     ) : (
-                      <>
-                        <span className="text-4xl font-bold">
-                          <SlidingNumber value={integerPart} />
-                        </span>
-                        {decimalPart > 0 && (
-                          <span className="text-xl font-bold text-muted-foreground">
-                            ,
-                            <SlidingNumber value={decimalPart} padStart={2} />
-                          </span>
-                        )}
-                        <span className="ml-1 text-lg text-muted-foreground">
-                          €{period}
-                        </span>
-                      </>
+                      <span className="text-5xl font-bold tracking-tight">
+                        {isAnnual ? "49,99" : "4,99"}
+                        <span className="text-3xl">€</span>
+                      </span>
                     )}
+                    <span className="text-sm text-muted-foreground">
+                      {period}
+                    </span>
                   </div>
+
+                  {/* Annual saving note */}
+                  {plan.popular && isAnnual && plan.annualSaving && (
+                    <p className="mt-2 text-xs font-medium text-gold">
+                      {plan.annualSaving}
+                    </p>
+                  )}
                 </CardHeader>
 
-                <CardContent className="flex flex-col gap-4">
+                <CardContent className="flex flex-col gap-6 pt-6">
+                  {/* Feature list */}
                   <ul className="flex flex-col gap-3">
                     {plan.features.map((feature) => (
                       <li
                         key={feature}
-                        className="flex items-start gap-2 text-sm"
+                        className="flex items-start gap-3 text-sm"
                       >
-                        <Check className="mt-0.5 size-4 shrink-0 text-primary" />
-                        <span>{feature}</span>
+                        <div
+                          className={cn(
+                            "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full",
+                            plan.popular
+                              ? "bg-gold/15 text-gold"
+                              : "bg-primary/10 text-primary"
+                          )}
+                        >
+                          <Check className="size-3" weight="bold" />
+                        </div>
+                        <span className="text-muted-foreground">{feature}</span>
                       </li>
                     ))}
                   </ul>
 
+                  {/* CTA */}
                   <Button
-                    variant={plan.isPopular ? "default" : "outline"}
-                    className={cn(
-                      "mt-4 w-full",
-                      plan.isPopular && "bg-primary text-primary-foreground"
-                    )}
+                    variant={plan.variant}
                     size="lg"
+                    className={cn(
+                      "mt-auto w-full h-11 text-sm font-semibold",
+                      plan.popular && "gold-glow-intense"
+                    )}
                   >
                     {plan.cta}
                   </Button>
                 </CardContent>
               </Card>
-            </motion.div>
+            </StaggerItem>
           );
         })}
-      </div>
+      </StaggerContainer>
     </SectionContainer>
   );
 }

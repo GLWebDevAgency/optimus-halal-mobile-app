@@ -169,8 +169,13 @@ export function BackgroundBeams({
 }: BackgroundBeamsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [particles, setParticles] = useState<Particle[]>([]);
-  const [beams] = useState(() => generateBeams(beamCount));
+  const [beams, setBeams] = useState<BeamConfig[]>([]);
   const particleIdRef = useRef(0);
+
+  // Generate beams client-side only to avoid SSR hydration mismatch (Math.random)
+  useEffect(() => {
+    setBeams(generateBeams(beamCount));
+  }, [beamCount]);
 
   const spawnParticles = useCallback(
     (x: number) => {

@@ -1,4 +1,6 @@
-import { Plus, Clock, Calendar } from "lucide-react"
+"use client"
+
+import { Plus, Clock, CalendarBlank } from "@phosphor-icons/react"
 
 import {
   Card,
@@ -114,7 +116,7 @@ export default function ArticlesPage() {
             <CardFooter className="mt-auto">
               <div className="flex w-full items-center justify-between">
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Calendar className="size-3" />
+                  <CalendarBlank className="size-3" />
                   {article.date}
                 </div>
                 {article.status === "draft" && (
