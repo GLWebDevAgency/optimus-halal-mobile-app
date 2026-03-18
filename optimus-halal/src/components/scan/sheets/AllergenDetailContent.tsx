@@ -75,7 +75,7 @@ export const AllergenDetailContent = React.memo(function AllergenDetailContent({
 
       {/* EU regulation */}
       <Text style={[styles.regulationText, { color: colors.textMuted }]}>
-        Règlement UE n°1169/2011 relatif à l'information des consommateurs
+        Règlement UE n°1169/2011 relatif à l&apos;information des consommateurs
         sur les denrées alimentaires — les 14 allergènes majeurs doivent
         être clairement indiqués.
       </Text>

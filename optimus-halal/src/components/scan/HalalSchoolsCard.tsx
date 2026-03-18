@@ -375,14 +375,6 @@ function AdditivesContent({
     return map;
   }, [conflictingAdditives]);
 
-  if (detectedAdditives.length === 0) {
-    return (
-      <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-        {t.scanResult.additivesNone as string}
-      </Text>
-    );
-  }
-
   // Sort: conflicting first (haram > doubtful), then rest alphabetically
   const sorted = useMemo(() => {
     const STATUS_WEIGHT: Record<string, number> = { haram: 3, doubtful: 2, halal: 1 };
@@ -395,6 +387,14 @@ function AdditivesContent({
       return a.code.localeCompare(b.code);
     });
   }, [detectedAdditives, rulingMap]);
+
+  if (detectedAdditives.length === 0) {
+    return (
+      <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+        {t.scanResult.additivesNone as string}
+      </Text>
+    );
+  }
 
   return (
     <>

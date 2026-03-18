@@ -300,7 +300,7 @@ export const TrustScoreBottomSheet = React.memo(function TrustScoreBottomSheet({
 
           {/* ── 4 Evaluation Themes ── */}
           <Text style={[styles.themesTitle, { color: isDark ? gold[400] : gold[600] }]}>
-            Critères d'évaluation
+            Critères d&apos;évaluation
           </Text>
 
           {THEME_BLOCKS.map((block, i) => {

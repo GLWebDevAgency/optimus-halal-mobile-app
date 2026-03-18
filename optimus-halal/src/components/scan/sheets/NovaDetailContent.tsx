@@ -97,7 +97,7 @@ export const NovaDetailContent = React.memo(function NovaDetailContent({
         borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
       }]}>
         <Text style={[styles.noteText, { color: colors.textMuted }]}>
-          Classification NOVA développée par l'Université de São Paulo.
+          Classification NOVA développée par l&apos;Université de São Paulo.
           Les produits ultra-transformés sont associés à un risque accru
           de maladies chroniques.
         </Text>

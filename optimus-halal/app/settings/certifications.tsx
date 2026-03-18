@@ -331,7 +331,7 @@ export default function CertificationsScreen() {
                     Pourquoi choisir ?
                   </Text>
                   <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-                    Choisir vos certifications permet d'exclure automatiquement
+                    Choisir vos certifications permet d&apos;exclure automatiquement
                     les produits qui ne correspondent pas a vos criteres
                     religieux ou ethiques lors du scan.
                   </Text>

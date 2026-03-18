@@ -39,7 +39,7 @@ export const LabelDetailContent = React.memo(function LabelDetailContent({
         </Text>
         <Text style={[styles.descriptionText, { color: colors.textSecondary }]}>
           Les labels et certifications garantissent le respect de cahiers
-          des charges spécifiques concernant la qualité, l'origine, le mode
+          des charges spécifiques concernant la qualité, l&apos;origine, le mode
           de production ou les engagements environnementaux du produit.
         </Text>
       </View>
@@ -54,7 +54,7 @@ export const LabelDetailContent = React.memo(function LabelDetailContent({
         </Text>
         <Text style={[styles.infoText, { color: colors.textSecondary }]}>
           Les labels sont renseignés par la communauté OpenFoodFacts et
-          vérifiés à partir des informations présentes sur l'emballage
+          vérifiés à partir des informations présentes sur l&apos;emballage
           du produit. Les données peuvent ne pas être exhaustives.
         </Text>
       </View>

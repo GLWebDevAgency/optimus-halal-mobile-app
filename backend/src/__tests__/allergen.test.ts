@@ -11,12 +11,14 @@ describe("allergen service", () => {
       );
       expect(matches).toHaveLength(2);
       expect(matches[0]).toEqual({
+        displayName: "Lait",
         userAllergen: "lactose",
         offTag: "en:milk",
         matchType: "allergen",
         severity: "high",
       });
       expect(matches[1]).toEqual({
+        displayName: "Arachides",
         userAllergen: "arachides",
         offTag: "en:peanuts",
         matchType: "allergen",
@@ -31,15 +33,17 @@ describe("allergen service", () => {
       expect(matches[0].severity).toBe("medium");
     });
 
-    it("matches both allergens and traces for same user allergen", () => {
+    it("deduplicates: allergen match takes priority over trace for same canonical", () => {
       const matches = matchAllergens(
         ["soja"],
         ["en:soybeans"],
         ["en:soybeans"]
       );
-      expect(matches).toHaveLength(2);
+      // Service deduplicates by canonical allergen — allergen match wins over trace
+      expect(matches).toHaveLength(1);
       expect(matches[0].matchType).toBe("allergen");
-      expect(matches[1].matchType).toBe("trace");
+      expect(matches[0].severity).toBe("high");
+      expect(matches[0].displayName).toBe("Soja");
     });
 
     it("returns empty for no matches", () => {
