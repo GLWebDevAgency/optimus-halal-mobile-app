@@ -414,37 +414,95 @@ export default function ProfileScreen() {
             </Animated.View>
           )}
 
-          {/* ── Premium Settings — visible in trial + exploration ── */}
-          <Animated.View entering={FadeInUp.delay(isTrialActive ? 100 : 200).duration(500)} className="px-4 mb-6">
+          {/* ── Stats Cards — trial + exploration ── */}
+          <Animated.View
+            entering={FadeInUp.delay(isTrialActive ? 100 : 200).duration(500)}
+            className="flex-row gap-3 px-4 mb-6"
+          >
+            <StatsCard
+              icon="history"
+              iconBgColor={isDark ? "rgba(59,130,246,0.1)" : "#eff6ff"}
+              iconColor={isDark ? "#60a5fa" : "#2563eb"}
+              title={t.profile.stats.scanHistory}
+              subtitle={`${t.profile.stats.productsScanned}`}
+              onPress={handleScanHistory}
+            />
+            <StatsCard
+              icon="favorite"
+              iconBgColor={isDark ? "rgba(234,179,8,0.1)" : "#fef3c7"}
+              iconColor="#eab308"
+              title={t.profile.stats.favorites}
+              subtitle={`${t.profile.stats.productsSaved}`}
+              onPress={handleFavorites}
+            />
+          </Animated.View>
+
+          {/* ── Preferences — identical to Naqiy+ profile ── */}
+          <Animated.View entering={FadeInUp.delay(isTrialActive ? 150 : 250).duration(500)} className="px-4 mb-6">
             <Text accessibilityRole="header" className="text-base font-bold px-2 mb-3" style={{ color: colors.textPrimary }}>
               {t.profile.preferences}
             </Text>
             <Card variant="elevated" className="overflow-hidden p-0">
-              {/* Certifications — local MMKV, works without backend */}
               <MenuItem
-                icon="verified"
-                iconBgColor={isDark ? "rgba(34,197,94,0.1)" : "#ecfdf5"}
-                iconColor={isDark ? "#4ade80" : "#16a34a"}
+                icon="shield-moon"
+                iconBgColor={isDark ? "rgba(29,229,96,0.1)" : "#ecfdf5"}
+                iconColor={colors.primary}
                 title={t.profile.preferredCertifications}
-                subtitle={certifications.length > 0 ? `${certifications.length}` : undefined}
+                subtitle={certifications.slice(0, 2).join(", ").toUpperCase() || "\u2014"}
                 onPress={() => router.push("/settings/certifications" as any)}
               />
-              {/* Exclusions — local MMKV, works without backend */}
               <MenuItem
-                icon="block"
+                icon="no-food"
                 iconBgColor={isDark ? "rgba(239,68,68,0.1)" : "#fef2f2"}
                 iconColor={isDark ? "#f87171" : "#ef4444"}
                 title={t.profile.dietaryExclusions}
                 onPress={() => router.push("/settings/exclusions" as any)}
               />
-              {/* Madhab — local MMKV, works without backend */}
               <MenuItem
-                icon="menu-book"
-                iconBgColor={isDark ? "rgba(212, 175, 55, 0.1)" : "rgba(212, 175, 55, 0.08)"}
-                iconColor={colors.primary}
+                icon="notifications"
+                iconBgColor={isDark ? "rgba(168,85,247,0.1)" : "#faf5ff"}
+                iconColor={isDark ? "#c084fc" : "#a855f7"}
+                title={t.profile.pushNotifications}
+                onPress={() => router.push("/settings/notifications" as any)}
+              />
+              <MenuItem
+                icon="auto-stories"
+                iconBgColor={isDark ? "rgba(168,85,247,0.1)" : "#f5f3ff"}
+                iconColor={isDark ? "#c084fc" : "#7c3aed"}
                 title={t.profile.madhab}
+                onPress={() => router.push("/settings/madhab" as any)}
+              />
+              <MenuItem
+                icon="monitor-heart"
+                iconBgColor={isDark ? "rgba(244,114,182,0.1)" : "#fdf2f8"}
+                iconColor={isDark ? "#f472b6" : "#ec4899"}
+                title={t.profile.healthProfile}
+                onPress={() => router.push("/settings/health-profile" as any)}
+              />
+              <MenuItem
+                icon="gavel"
+                iconBgColor={isDark ? "rgba(239,68,68,0.1)" : "#fef2f2"}
+                iconColor={isDark ? "#f87171" : "#dc2626"}
+                title={t.profile.boycottEthics}
+                onPress={() => router.push("/settings/boycott-list" as any)}
+              />
+              <MenuItem
+                icon="workspace-premium"
+                iconBgColor={isDark ? "rgba(234,179,8,0.1)" : "#fefce8"}
+                iconColor={isDark ? "#fbbf24" : "#ca8a04"}
+                title={t.profile.certifierRanking}
+                isLast
                 onPress={() => router.push("/settings/certifier-ranking" as any)}
               />
+            </Card>
+          </Animated.View>
+
+          {/* ── Account — appearance, language, help ── */}
+          <Animated.View entering={FadeInUp.delay(isTrialActive ? 200 : 300).duration(500)} className="px-4 mb-6">
+            <Text accessibilityRole="header" className="text-base font-bold px-2 mb-3" style={{ color: colors.textPrimary }}>
+              {t.profile.account}
+            </Text>
+            <Card variant="elevated" className="overflow-hidden p-0">
               <MenuItem
                 icon="palette"
                 iconBgColor={isDark ? "rgba(168,85,247,0.1)" : "#faf5ff"}
