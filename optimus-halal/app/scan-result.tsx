@@ -452,7 +452,7 @@ export default function ScanResultScreen() {
       brand: product.brand ?? null,
       halalStatus: halalStatus as "halal" | "haram" | "doubtful" | "unknown",
       certifier: halalAnalysis?.certifierName ?? null,
-      isBoycotted: !!boycott,
+      isBoycotted: !!boycott?.isBoycotted,
       barcode: product.barcode,
       imageUrl: product.imageUrl ?? null,
       madhabStatuses: madhabVerdicts.map((v) => ({
