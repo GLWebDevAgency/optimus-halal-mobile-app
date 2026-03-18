@@ -580,6 +580,7 @@ export interface LocalScanHistoryItem {
   confidenceScore: number | null;
   certifierId: string | null;
   certifierName: string | null;
+  certifierTrustScore: number | null;
   scannedAt: string;
 }
 

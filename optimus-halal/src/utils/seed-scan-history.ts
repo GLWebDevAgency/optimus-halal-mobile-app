@@ -102,6 +102,7 @@ function seedLocalStore() {
       confidenceScore: product.confidenceScore,
       certifierId: product.certifierId,
       certifierName: product.certifierName,
+      certifierTrustScore: null,
     });
   }
 }

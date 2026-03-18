@@ -218,6 +218,7 @@ export default function ScanResultScreen() {
           confidenceScore: p.confidenceScore ?? null,
           certifierId: p.certifierId ?? null,
           certifierName: p.certifierName ?? null,
+          certifierTrustScore: scanMutation.data?.certifierData?.trustScore ?? null,
         });
       }
     }
@@ -249,16 +250,14 @@ export default function ScanResultScreen() {
       ? "doubtful"
       : halalStatus;
   const statusConfig = STATUS_CONFIG[effectiveHeroStatus] ?? STATUS_CONFIG.unknown;
-  const isWeakCertifier = halalStatus === "halal" && certifierTrustScore !== null && certifierTrustScore < 20;
-  const isCautionCertifier = halalStatus === "halal" && certifierTrustScore !== null && certifierTrustScore < 70 && certifierTrustScore >= 20;
+  // Hero label: factual status only — trust badge handles reliability assessment
+  // No more "Certification Peu Fiable" vs "Pas fiable du tout" contradiction
   const heroLabel =
     effectiveHeroStatus === "halal" && !certifierData_
       ? t.scanResult.compositionCompliant
-      : isWeakCertifier
-        ? t.scanResult.weakCertification
-        : isCautionCertifier
-          ? t.scanResult.cautionCertification
-          : t.scanResult[statusConfig.labelKey];
+      : effectiveHeroStatus === "halal" && certifierData_
+        ? t.scanResult.certifiedHalal
+        : t.scanResult[statusConfig.labelKey];
   const ingredients: string[] = (product?.ingredients as string[]) ?? [];
   const allergensTags: string[] = offExtras?.allergensTags ?? [];
   const personalAlerts: PersonalAlert[] = scanMutation.data?.personalAlerts ?? [];

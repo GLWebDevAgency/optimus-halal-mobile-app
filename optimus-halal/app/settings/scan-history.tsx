@@ -419,6 +419,21 @@ export default function ScanHistoryScreen() {
   // ── Local history (guests) ──
   const localScans = useLocalScanHistoryStore((s) => s.scans);
 
+  // ── Certifier trust scores for guest enrichment (public, no auth needed) ──
+  const certifierRanking = trpc.certifier.ranking.useQuery(undefined, {
+    enabled: isGuest && localScans.some((s) => s.certifierId != null),
+    staleTime: 1000 * 60 * 60, // 1h cache
+  });
+  const certifierScoreMap = useMemo(() => {
+    const map = new Map<string, number>();
+    if (certifierRanking.data) {
+      for (const c of certifierRanking.data) {
+        map.set(c.id, c.trustScore);
+      }
+    }
+    return map;
+  }, [certifierRanking.data]);
+
   const userMadhab = (userProfile?.madhab as string) ?? "general";
 
   // Premium gate — free users see only last 3 scans when flag enabled
@@ -447,7 +462,12 @@ export default function ScanHistoryScreen() {
           certifierId: s.certifierId,
           certifierName: s.certifierName,
         },
-        certifier: null,
+        certifier: (() => {
+          const score = s.certifierTrustScore ?? (s.certifierId ? certifierScoreMap.get(s.certifierId) ?? null : null);
+          return score != null
+            ? { trustScore: score, trustScoreHanafi: null, trustScoreShafii: null, trustScoreMaliki: null, trustScoreHanbali: null }
+            : null;
+        })(),
       })) as ScanItem[];
     } else {
       items = (data?.items ?? []) as ScanItem[];
@@ -458,7 +478,7 @@ export default function ScanHistoryScreen() {
       return items.slice(0, FREE_HISTORY_LIMIT);
     }
     return items;
-  }, [isGuest, localScans, data, flags.scanHistoryLimitEnabled, isPremium]);
+  }, [isGuest, localScans, data, flags.scanHistoryLimitEnabled, isPremium, certifierScoreMap]);
 
   const renderItem = useCallback(
     ({ item, index }: { item: ScanItem; index: number }) => (
