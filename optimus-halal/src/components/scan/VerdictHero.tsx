@@ -43,6 +43,7 @@ import {
   type StatusVisualConfig,
 } from "./scan-constants";
 import { NaqiyGradeBadge, getTrustGradeFromScore, type TrustGrade } from "./NaqiyGradeBadge";
+import { CertifierLogo } from "./CertifierLogo";
 
 // ── Types ──
 
@@ -60,6 +61,10 @@ export interface VerdictHeroProps {
   userMadhab: string;
   communityVerifiedCount: number;
   onImagePress: () => void;
+  /** Certifier info for sub-label */
+  certifierName?: string | null;
+  certifierId?: string | null;
+  certifierScore?: number | null;
   /** Naqiy Trust Grade from certifier (N١→N٥) */
   trustGrade?: TrustGrade | null;
   /** Callback when the NaqiyGradeBadge strip is pressed */
@@ -77,6 +82,9 @@ export function VerdictHero({
   userMadhab,
   communityVerifiedCount,
   onImagePress,
+  certifierName,
+  certifierId,
+  certifierScore,
   trustGrade,
   onTrustGradePress,
   topInset = 0,
@@ -212,6 +220,47 @@ export function VerdictHero({
               {heroLabel}
             </Text>
           </Animated.View>
+
+          {/* Certifier sub-label: [logo] name · score/100 */}
+          {certifierName && certifierId && (
+            <Animated.View
+              entering={FadeIn.delay(SUSPENSE_DURATION + 180).duration(400)}
+            >
+              <Pressable
+                onPress={onTrustGradePress}
+                accessibilityRole="button"
+                accessibilityLabel={certifierName}
+                style={({ pressed }) => [
+                  styles.certifierSubRow,
+                  pressed && { opacity: 0.7 },
+                ]}
+              >
+                <CertifierLogo certifierId={certifierId} size={16} />
+                <Text
+                  style={[styles.certifierSubText, { color: colors.textSecondary }]}
+                  numberOfLines={1}
+                >
+                  {certifierName}
+                </Text>
+                {certifierScore !== null && certifierScore !== undefined && (
+                  <Text
+                    style={[
+                      styles.certifierSubScore,
+                      {
+                        color: certifierScore >= 70
+                          ? (isDark ? "#4ade80" : "#16a34a")
+                          : certifierScore >= 40
+                            ? (isDark ? "#fbbf24" : "#ca8a04")
+                            : (isDark ? "#f87171" : "#dc2626"),
+                      },
+                    ]}
+                  >
+                    {certifierScore}/100
+                  </Text>
+                )}
+              </Pressable>
+            </Animated.View>
+          )}
 
           {/* Naqiy Trust Grade strip (certifier only) — tappable → certifier detail */}
           {trustGrade && (
@@ -381,6 +430,21 @@ const styles = StyleSheet.create({
     fontWeight: fontWeightTokens.bold,
     letterSpacing: 0.3,
     marginTop: spacing.xs,
+  },
+  certifierSubRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 4,
+  },
+  certifierSubText: {
+    fontSize: 12,
+    fontWeight: "500",
+    flexShrink: 1,
+  },
+  certifierSubScore: {
+    fontSize: 12,
+    fontWeight: "800",
   },
   gradeStripRow: {
     marginTop: spacing.xs,

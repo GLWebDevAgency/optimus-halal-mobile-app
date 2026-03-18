@@ -735,6 +735,9 @@ export default function ScanResultScreen() {
           userMadhab={userMadhab}
           communityVerifiedCount={communityVerifiedCount}
           onImagePress={() => setShowImagePreview(true)}
+          certifierName={certifierData?.name ?? null}
+          certifierId={certifierData?.id ?? null}
+          certifierScore={certifierTrustScore ?? null}
           trustGrade={certifierData?.trustGrade ?? null}
           onTrustGradePress={() => setShowCertifierPracticesSheet(true)}
           topInset={insets.top + 64}
