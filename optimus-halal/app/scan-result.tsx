@@ -251,13 +251,14 @@ export default function ScanResultScreen() {
       : halalStatus;
   const statusConfig = STATUS_CONFIG[effectiveHeroStatus] ?? STATUS_CONFIG.unknown;
   // Hero label: factual status only — trust badge handles reliability assessment
-  // No more "Certification Peu Fiable" vs "Pas fiable du tout" contradiction
+  // Uses halalStatus (actual product status) not effectiveHeroStatus (color override)
+  // because effectiveHeroStatus can be "doubtful" for a halal product with weak certifier
   const heroLabel =
-    effectiveHeroStatus === "halal" && !certifierData_
-      ? t.scanResult.compositionCompliant
-      : effectiveHeroStatus === "halal" && certifierData_
-        ? t.scanResult.certifiedHalal
-        : t.scanResult[statusConfig.labelKey];
+    halalStatus === "halal" && certifierData_
+      ? t.scanResult.certifiedHalal          // "Certification Détectée"
+      : halalStatus === "halal" && !certifierData_
+        ? t.scanResult.compositionCompliant   // "Composition Conforme"
+        : t.scanResult[statusConfig.labelKey]; // haram/doubtful/unknown standard labels
   const ingredients: string[] = (product?.ingredients as string[]) ?? [];
   const allergensTags: string[] = offExtras?.allergensTags ?? [];
   const personalAlerts: PersonalAlert[] = scanMutation.data?.personalAlerts ?? [];
