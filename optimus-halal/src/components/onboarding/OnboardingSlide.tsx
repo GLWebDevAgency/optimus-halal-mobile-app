@@ -62,7 +62,7 @@ const GRADE_LABELS = [
   "Fiable",
   "Vigilance",
   "Peu fiable",
-  "Insuffisant",
+  "Pas fiable du tout",
 ] as const;
 
 const ACTIVE_DEMO_GRADE = 2;

@@ -34,7 +34,7 @@ export const TRUST_GRADES: readonly TrustGrade[] = [
   { grade: 2, arabic: "٢", label: "Fiable",       color: "#84cc16" },
   { grade: 3, arabic: "٣", label: "Vigilance",    color: "#f59e0b" },
   { grade: 4, arabic: "٤", label: "Peu fiable",   color: "#f97316" },
-  { grade: 5, arabic: "٥", label: "Insuffisant",  color: "#ef4444" },
+  { grade: 5, arabic: "٥", label: "Pas fiable du tout", color: "#ef4444" },
 ] as const;
 
 /** Client-side fallback: score → grade (mirrors backend getTrustGrade) */

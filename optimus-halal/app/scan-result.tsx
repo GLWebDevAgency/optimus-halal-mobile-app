@@ -507,6 +507,7 @@ export default function ScanResultScreen() {
       verifiedWith: t.scanResult.verifiedWith,
       tagline: t.scanResult.shareTagline,
       fiqhLine: verdictResult?.fiqhLine,
+      shortFiqhLine: verdictResult?.shortFiqhLine,
       certifierLine: verdictResult?.certifierLine,
     };
   }, [halalStatus, certifierData, certifierTrustScore, madhabVerdicts, t]);

@@ -8,15 +8,19 @@
 export interface VerdictSummaryInput {
   madhabVerdicts: Array<{ madhab: string; status: string }>;
   certifierName: string | null;
-  certifierGrade: string | null; // "Excellent" | "Bon" | "Correct" | "Faible" | "Insuffisant"
+  certifierGrade: string | null; // "Très fiable" | "Fiable" | "Vigilance" | "Peu fiable" | "Pas fiable du tout"
   certifierScore: number | null; // 0-100
 }
 
 export interface VerdictSummaryResult {
   /** Main verdict line — fiqh analysis */
   fiqhLine: string;
+  /** Short verdict line for compact contexts (ShareCard) */
+  shortFiqhLine: string;
   /** Secondary line — certifier assessment (null if no certifier) */
   certifierLine: string | null;
+  /** Theoretical nuance note — only set when a certifier is present */
+  theoreticalNote: string | null;
   /** Whether this is a doubtful verdict (triggers "Notre conseil Naqiy" button) */
   isDoubtful: boolean;
   /** Whether all 4 schools agree */
@@ -36,6 +40,13 @@ interface VerdictTranslations {
   certifierHowever: string;
   certifierNone: string;
   certifierNoScore: string;
+  theoreticalNote: string;
+  short4Halal: string;
+  short4Haram: string;
+  short4Doubtful: string;
+  short4Unknown: string;
+  shortMajority: string;
+  shortDivergent: string;
 }
 
 export function buildVerdictSummary(
@@ -53,24 +64,29 @@ export function buildVerdictSummary(
     ? statuses[0]
     : getMajorityStatus(statuses);
 
-  // Build fiqh line
+  // Build fiqh line + short fiqh line
   let fiqhLine: string;
+  let shortFiqhLine: string;
   let isDoubtful = false;
 
   if (isConsensus) {
     switch (statuses[0]) {
       case "halal":
         fiqhLine = verdictT.fiqh4Halal;
+        shortFiqhLine = verdictT.short4Halal;
         break;
       case "haram":
         fiqhLine = verdictT.fiqh4Haram;
+        shortFiqhLine = verdictT.short4Haram;
         break;
       case "doubtful":
         fiqhLine = verdictT.fiqh4Doubtful;
+        shortFiqhLine = verdictT.short4Doubtful;
         isDoubtful = true;
         break;
       default:
         fiqhLine = verdictT.fiqh4Unknown;
+        shortFiqhLine = verdictT.short4Unknown;
         break;
     }
   } else {
@@ -90,8 +106,11 @@ export function buildVerdictSummary(
           "{school}",
           schoolNames[dissenting?.madhab ?? ""] ?? dissenting?.madhab ?? "",
         );
+      shortFiqhLine = verdictT.shortMajority
+        .replace("{n}", String(halalCount));
     } else {
       fiqhLine = verdictT.fiqhDivergent;
+      shortFiqhLine = verdictT.shortDivergent;
       if (statuses.some((s) => s === "doubtful")) isDoubtful = true;
     }
   }
@@ -117,7 +136,10 @@ export function buildVerdictSummary(
     certifierLine = verdictT.certifierNone;
   }
 
-  return { fiqhLine, certifierLine, isDoubtful, isConsensus, dominantStatus };
+  // Theoretical note — only when a certifier is present
+  const theoreticalNote = certifierName ? verdictT.theoreticalNote : null;
+
+  return { fiqhLine, shortFiqhLine, certifierLine, theoreticalNote, isDoubtful, isConsensus, dominantStatus };
 }
 
 function getMajorityStatus(statuses: string[]): string {

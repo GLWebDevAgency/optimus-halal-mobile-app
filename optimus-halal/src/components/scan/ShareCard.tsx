@@ -77,6 +77,8 @@ export interface ShareLabels {
   tagline: string;
   /** Intelligent fiqh verdict line (from buildVerdictSummary) */
   fiqhLine?: string;
+  /** Short fiqh verdict line for compact contexts */
+  shortFiqhLine?: string;
   /** Certifier assessment line (from buildVerdictSummary) */
   certifierLine?: string | null;
 }
@@ -285,7 +287,11 @@ export const ShareCardView = forwardRef<View, { data: ShareCardData; labels: Sha
                   />
                 ))}
               </View>
-              {labels.fiqhLine ? (
+              {labels.shortFiqhLine ? (
+                <Text style={s.madhabLabel} numberOfLines={2}>
+                  {labels.shortFiqhLine}
+                </Text>
+              ) : labels.fiqhLine ? (
                 <Text style={s.madhabLabel} numberOfLines={2}>
                   {labels.fiqhLine}
                 </Text>
@@ -295,7 +301,8 @@ export const ShareCardView = forwardRef<View, { data: ShareCardData; labels: Sha
                 </Text>
               )}
             </View>
-            {labels.certifierLine ? (
+            {/* Only show certifier line on share card when score < 60 (warning case) */}
+            {data.certifierScore != null && data.certifierScore < 60 && labels.certifierLine ? (
               <Text style={s.certifierLineText} numberOfLines={2}>
                 {labels.certifierLine}
               </Text>
@@ -397,10 +404,12 @@ export function generateShareMessage(
     message += `🚨 ${labels.boycotted}\n`;
   }
 
-  if (labels.fiqhLine) {
+  if (labels.shortFiqhLine) {
+    message += `\n📖 ${labels.shortFiqhLine}\n`;
+  } else if (labels.fiqhLine) {
     message += `\n📖 ${labels.fiqhLine}\n`;
   }
-  if (labels.certifierLine) {
+  if (data.certifierScore != null && data.certifierScore < 60 && labels.certifierLine) {
     message += `${labels.certifierLine}\n`;
   }
 

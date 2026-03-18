@@ -193,17 +193,45 @@ function VerdictSection({
       layout={Layout.springify().damping(14).stiffness(170)}
       style={styles.verdictSection}
     >
-      {/* Intelligent fiqh verdict text */}
-      <Text style={[styles.verdictSummaryText, { color: colors.textSecondary }]}>
-        {verdictSummary.fiqhLine}
-      </Text>
+      {/* Verdict Summary Card — premium visual */}
+      <View style={[styles.verdictCard, {
+        backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
+        borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+      }]}>
+        {/* Fiqh line with icon */}
+        <View style={styles.verdictRow}>
+          <BookOpenIcon size={14} color={statusColor} weight="fill" style={{ marginTop: 2 }} />
+          <Text style={[styles.verdictFiqhText, { color: colors.textPrimary }]}>
+            {verdictSummary.fiqhLine}
+          </Text>
+        </View>
 
-      {/* Certifier line (if available) */}
-      {verdictSummary.certifierLine && (
-        <Text style={[styles.verdictCertifierText, { color: colors.textMuted }]}>
-          {verdictSummary.certifierLine}
-        </Text>
-      )}
+        {/* Theoretical note (when certifier present) */}
+        {verdictSummary.theoreticalNote && (
+          <Text style={[styles.verdictTheoreticalText, { color: colors.textMuted }]}>
+            {verdictSummary.theoreticalNote}
+          </Text>
+        )}
+
+        {/* Certifier line with contextual color */}
+        {verdictSummary.certifierLine && (
+          <View style={[styles.verdictCertifierRow, {
+            backgroundColor: certifierScore && certifierScore < 60
+              ? isDark ? "rgba(239,68,68,0.06)" : "rgba(239,68,68,0.04)"
+              : isDark ? "rgba(34,197,94,0.06)" : "rgba(34,197,94,0.04)",
+            borderColor: certifierScore && certifierScore < 60
+              ? isDark ? "rgba(239,68,68,0.12)" : "rgba(239,68,68,0.08)"
+              : isDark ? "rgba(34,197,94,0.12)" : "rgba(34,197,94,0.08)",
+          }]}>
+            <WarningIcon size={12} color={certifierScore && certifierScore < 60 ? "#ef4444" : "#22c55e"} weight="fill" />
+            <Text style={[styles.verdictCertifierInnerText, {
+              color: certifierScore && certifierScore < 60 ? (isDark ? "#f87171" : "#dc2626") : (isDark ? "#4ade80" : "#16a34a"),
+            }]}>
+              {verdictSummary.certifierLine}
+            </Text>
+          </View>
+        )}
+      </View>
 
       {/* Naqiy advice button (shown only for doubtful verdicts) */}
       {verdictSummary.isDoubtful && onNaqiyAdvicePress && (
@@ -1026,14 +1054,44 @@ const styles = StyleSheet.create({
   verdictSection: {
     gap: spacing.md,
   },
-  verdictSummaryText: {
-    fontSize: fontSizeTokens.bodySmall,
-    lineHeight: 20,
+  verdictCard: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 14,
+    gap: 10,
+    marginTop: 4,
   },
-  verdictCertifierText: {
-    fontSize: fontSizeTokens.caption,
-    lineHeight: 18,
-    marginTop: -4,
+  verdictRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "flex-start",
+  },
+  verdictFiqhText: {
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: "500",
+    flex: 1,
+  },
+  verdictTheoreticalText: {
+    fontSize: 11,
+    lineHeight: 16,
+    fontStyle: "italic",
+    marginLeft: 22, // align with text after icon
+  },
+  verdictCertifierRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 6,
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginTop: 2,
+  },
+  verdictCertifierInnerText: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "600",
+    flex: 1,
   },
   naqiyAdviceButton: {
     flexDirection: "row",
