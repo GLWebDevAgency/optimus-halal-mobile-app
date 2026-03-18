@@ -310,15 +310,25 @@ export const ShareCardView = forwardRef<View, { data: ShareCardData; labels: Sha
           </View>
         )}
 
-        {/* ── 4. Verdict label ── */}
-        <View style={s.verdictRow}>
-          <View style={[s.statusDotOuter, { backgroundColor: `${status.color}20` }]}>
-            <View style={[s.statusDot, { backgroundColor: status.color }]} />
-          </View>
-          <Text style={[s.verdictText, { color: status.color }]}>
-            {labels.statusLabel}
-          </Text>
-        </View>
+        {/* ── 4. Verdict label — color adapts to certifier trust when present ── */}
+        {(() => {
+          // When certified halal, dot color reflects trust score, not just halal status
+          const verdictColor = hasCertifier && data.halalStatus === "halal" && data.certifierScore != null
+            ? data.certifierScore >= 70 ? halalStatusTokens.halal.base
+              : data.certifierScore >= 20 ? halalStatusTokens.doubtful.base
+              : halalStatusTokens.haram.base
+            : status.color;
+          return (
+            <View style={s.verdictRow}>
+              <View style={[s.statusDotOuter, { backgroundColor: `${verdictColor}20` }]}>
+                <View style={[s.statusDot, { backgroundColor: verdictColor }]} />
+              </View>
+              <Text style={[s.verdictText, { color: verdictColor }]}>
+                {labels.statusLabel}
+              </Text>
+            </View>
+          );
+        })()}
 
         {/* ── 5. Boycott strip ── */}
         {data.isBoycotted && (
