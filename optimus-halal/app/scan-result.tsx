@@ -126,12 +126,16 @@ export default function ScanResultScreen() {
   const nutritionProfile = useLocalNutritionProfileStore((s) => s.profile);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Reset hasFired when barcode changes (e.g. navigating to an alternative product)
+  // Reset state when barcode changes (e.g. navigating to an alternative product)
   const prevBarcode = useRef(barcode);
+  const scrollRef = useRef<any>(null);
   useEffect(() => {
     if (barcode !== prevBarcode.current) {
       prevBarcode.current = barcode;
       hasFired.current = false;
+      // Reset scroll position + sticky header state
+      scrollY.value = 0;
+      scrollRef.current?.scrollTo?.({ y: 0, animated: false });
     }
   }, [barcode]);
 
@@ -685,6 +689,7 @@ export default function ScanResultScreen() {
       )}
 
       <Animated.ScrollView
+        ref={scrollRef}
         onScroll={scrollHandler}
         scrollEventThrottle={16}
         contentContainerStyle={{ paddingBottom: insets.bottom + 140 }}
