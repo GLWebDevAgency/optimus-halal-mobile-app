@@ -9,6 +9,7 @@ import {
   boycottTargets,
   additives as additivesTable,
   additiveMadhabRulings,
+  devices,
 } from "../../db/schema/index.js";
 import {
   analyzeHalalStatus,
@@ -297,20 +298,33 @@ type RulingRow = {
 };
 
 export const scanRouter = router({
-  // ── Quota check — anonymous users can check remaining scans ──
+  // ── Quota check — reads from devices table (source of truth) ──
   getQuota: publicProcedure.query(async ({ ctx }) => {
-    // Authenticated users → unlimited
-    if (ctx.userId) {
-      return { used: 0, limit: null, remaining: null, unlimited: true };
+    // Premium → unlimited
+    if (ctx.subscriptionTier === "premium") {
+      return { used: 0, limit: null, remaining: null, unlimited: true, trialActive: false, trialDaysRemaining: 0 };
     }
-    if (!ctx.deviceId) {
-      return { used: 0, limit: 5, remaining: 5, unlimited: false };
+
+    // Trial check from devices table
+    if (ctx.device) {
+      const { trialExpiresAt, convertedAt, lastScanDate, scansToday } = ctx.device;
+      const now = new Date();
+      const trialActive = !!trialExpiresAt && !convertedAt && new Date(trialExpiresAt) > now;
+      const trialDaysRemaining = trialActive
+        ? Math.max(0, Math.ceil((new Date(trialExpiresAt!).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+        : 0;
+
+      if (trialActive) {
+        return { used: 0, limit: null, remaining: null, unlimited: true, trialActive: true, trialDaysRemaining };
+      }
+
+      // Post-trial — read quota from DB
+      const today = now.toISOString().slice(0, 10);
+      const used = lastScanDate === today ? scansToday : 0;
+      return { used, limit: 5, remaining: Math.max(0, 5 - used), unlimited: false, trialActive: false, trialDaysRemaining: 0 };
     }
-    const today = new Date().toISOString().slice(0, 10);
-    const key = `scan:quota:${ctx.deviceId}:${today}`;
-    const usedRaw = await ctx.redis.get(key);
-    const used = parseInt(usedRaw ?? "0", 10);
-    return { used, limit: 5, remaining: Math.max(0, 5 - used), unlimited: false };
+
+    return { used: 0, limit: 5, remaining: 5, unlimited: false, trialActive: false, trialDaysRemaining: 0 };
   }),
 
   scanBarcode: quotaCheckedProcedure
@@ -998,16 +1012,36 @@ export const scanRouter = router({
         ? checkScoreExclusion(product as any)
         : null;
 
-      // Increment quota counter for anonymous users (Redis pipeline: INCR + EXPIRE)
+      // Increment scan counters — DB (source of truth) + Redis (cache)
       let remainingScans: number | null = null;
-      if (ctx.isAnonymous && ctx.deviceId && !input.viewOnly) {
+      const quotaId = ctx.userId ?? ctx.deviceId;
+      if (quotaId && !input.viewOnly) {
         const today = new Date().toISOString().slice(0, 10);
-        const key = `scan:quota:${ctx.deviceId}:${today}`;
-        const pipeline = ctx.redis.pipeline();
-        pipeline.incr(key);
-        pipeline.expire(key, 86400);
-        await pipeline.exec();
-        remainingScans = (ctx.remainingScans ?? 1) - 1;
+
+        // DB: update devices table (Drizzle ORM — source of truth)
+        if (ctx.deviceId) {
+          const isNewDay = ctx.device?.lastScanDate !== today;
+          await ctx.db
+            .update(devices)
+            .set({
+              scansToday: isNewDay ? 1 : sql`scans_today + 1`,
+              lastScanDate: today,
+              totalScans: sql`total_scans + 1`,
+              updatedAt: new Date(),
+            })
+            .where(eq(devices.deviceId, ctx.deviceId));
+        }
+
+        // Redis: fast-path cache for next request quota check
+        try {
+          const cacheKey = `scan:quota:${quotaId}:${today}`;
+          await ctx.redis.incr(cacheKey);
+          await ctx.redis.expire(cacheKey, 86400);
+        } catch {
+          // Redis failure is non-fatal — DB is source of truth
+        }
+
+        remainingScans = ctx.remainingScans !== null ? ctx.remainingScans - 1 : null;
       }
 
       return {

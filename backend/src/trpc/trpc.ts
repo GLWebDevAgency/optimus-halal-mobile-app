@@ -94,21 +94,30 @@ const isPremium = middleware(async ({ ctx, next }) => {
 export const premiumProcedure = t.procedure.use(isAuthenticated).use(isPremium);
 
 // ── Quota-checked procedure (anonymous + authenticated) ──────────
-// Allows both guest and authenticated users.
-// Premium (Naqiy+): unlimited, skips quota check.
-// Trial (first 7 days per deviceId): unlimited, skips quota check.
-// Free (guest post-trial OR authenticated with expired sub): 5/day via Redis.
-// Redis key: deviceId for guests, userId for authenticated free users.
+// Source of truth: `devices` table (PostgreSQL).
+// Redis used only as a fast-path cache for the daily counter.
+//
+// Priority chain:
+// 1. Premium (subscriptionTier=premium) → unlimited
+// 2. Trial (device.trialExpiresAt > now AND not converted) → unlimited
+// 3. Free → 5/day quota (DB-backed, Redis-cached)
 const DAILY_SCAN_LIMIT = 5;
-const TRIAL_DURATION_DAYS = 7;
 
 const quotaChecked = middleware(async ({ ctx, next }) => {
-  // Premium users bypass quota entirely
+  // ── 1. Premium bypass ──
   if (ctx.subscriptionTier === "premium") {
     return next({ ctx: { ...ctx, remainingScans: null } });
   }
 
-  // Determine quota key — userId for authenticated free users, deviceId for guests
+  // ── 2. Trial bypass (DB source of truth) ──
+  if (ctx.device && !ctx.userId) {
+    const { trialExpiresAt, convertedAt } = ctx.device;
+    if (trialExpiresAt && !convertedAt && new Date(trialExpiresAt) > new Date()) {
+      return next({ ctx: { ...ctx, remainingScans: null } });
+    }
+  }
+
+  // ── 3. Quota enforcement ──
   const quotaId = ctx.userId ?? ctx.deviceId;
   if (!quotaId) {
     throw new TRPCError({
@@ -117,32 +126,18 @@ const quotaChecked = middleware(async ({ ctx, next }) => {
     });
   }
 
-  // Trial check — first 7 days per deviceId are unlimited
-  // Uses a persistent Redis key (no TTL reset) set on first scan
-  if (ctx.deviceId && !ctx.userId) {
-    const trialKey = `trial:start:${ctx.deviceId}`;
-    const trialStart = await ctx.redis.get(trialKey);
-
-    if (!trialStart) {
-      // First ever scan from this device — start trial
-      await ctx.redis.set(trialKey, new Date().toISOString());
-      return next({ ctx: { ...ctx, remainingScans: null } });
-    }
-
-    const startDate = new Date(trialStart);
-    const now = new Date();
-    const diffDays = (now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
-    if (diffDays < TRIAL_DURATION_DAYS) {
-      // Still within trial period — unlimited scans
-      return next({ ctx: { ...ctx, remainingScans: null } });
-    }
-  }
-
-  // Check daily quota in Redis
+  // Fast path: Redis cache (avoids DB read on every scan)
   const today = new Date().toISOString().slice(0, 10);
-  const key = `scan:quota:${quotaId}:${today}`;
-  const usedRaw = await ctx.redis.get(key);
-  const used = parseInt(usedRaw ?? "0", 10);
+  const cacheKey = `scan:quota:${quotaId}:${today}`;
+  let used: number;
+
+  try {
+    const cached = await ctx.redis.get(cacheKey);
+    used = cached !== null ? parseInt(cached, 10) : (ctx.device?.lastScanDate === today ? ctx.device.scansToday : 0);
+  } catch {
+    // Redis down — fall back to DB
+    used = ctx.device?.lastScanDate === today ? ctx.device.scansToday : 0;
+  }
 
   if (used >= DAILY_SCAN_LIMIT) {
     throw new TRPCError({

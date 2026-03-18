@@ -104,8 +104,8 @@ try {
     "google_reviews",
     // Subscriptions & Boycott
     "boycott_targets", "ingredient_rulings",
-    // Referrals
-    "referrals",
+    // Referrals & Devices
+    "referrals", "devices",
   ];
   const missing = requiredTables.filter((t) => !tables.includes(t));
 

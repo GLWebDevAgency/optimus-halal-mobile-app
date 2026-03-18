@@ -2,7 +2,7 @@ import { z } from "zod";
 import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { eq, and, gt, sql } from "drizzle-orm";
 import { router, publicProcedure, protectedProcedure } from "../trpc.js";
-import { users, refreshTokens, safeUserColumns } from "../../db/schema/index.js";
+import { users, refreshTokens, safeUserColumns, devices } from "../../db/schema/index.js";
 import {
   hashPassword,
   verifyPassword,
@@ -87,6 +87,21 @@ export const authRouter = router({
         });
       });
 
+      // Link device → user (conversion tracking, source of truth)
+      if (ctx.deviceId) {
+        ctx.db
+          .update(devices)
+          .set({
+            userId: result.user.id,
+            convertedAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(eq(devices.deviceId, ctx.deviceId))
+          .catch((err) => {
+            logger.warn("Device link failed", { deviceId: ctx.deviceId, error: String(err) });
+          });
+      }
+
       return {
         user: { id: result.user.id, email: result.user.email, displayName: result.user.displayName },
         accessToken: result.accessToken,
@@ -156,6 +171,21 @@ export const authRouter = router({
           expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         });
       });
+
+      // Link device → user on login (handles new device for existing user)
+      if (ctx.deviceId) {
+        ctx.db
+          .update(devices)
+          .set({
+            userId: user.id,
+            convertedAt: sql`COALESCE(converted_at, NOW())`,
+            updatedAt: new Date(),
+          })
+          .where(eq(devices.deviceId, ctx.deviceId))
+          .catch((err) => {
+            logger.warn("Device link on login failed", { deviceId: ctx.deviceId, error: String(err) });
+          });
+      }
 
       return {
         user: {
