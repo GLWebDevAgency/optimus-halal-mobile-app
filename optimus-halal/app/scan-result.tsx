@@ -474,8 +474,9 @@ export default function ScanResultScreen() {
         : null,
       healthScore: healthScore?.score ?? null,
       healthLabel: healthScore?.label ?? null,
+      certifierScore: certifierTrustScore ?? null,
     };
-  }, [product, halalStatus, halalAnalysis, boycott, madhabVerdicts, certifierData, healthScore]);
+  }, [product, halalStatus, halalAnalysis, boycott, madhabVerdicts, certifierData, healthScore, certifierTrustScore]);
 
   const shareLabels = useMemo(() => {
     const statusLabelMap: Record<string, string> = {
