@@ -24,6 +24,7 @@ import {
   FlaskIcon,
   SealCheckIcon,
   CaretRightIcon,
+  SparkleIcon,
 } from "phosphor-react-native";
 
 import { CertifierLogo } from "./CertifierLogo";
@@ -43,6 +44,7 @@ import {
 import type { MadhabId, MadhabVerdict, CertifierInfo, DetectedAdditive } from "./scan-types";
 import type { ScholarlySourceData } from "./ScholarlySourceSheet";
 import { CertifierTrustRow } from "./CertifierTrustRow";
+import { buildVerdictSummary } from "@/utils/verdict-summary";
 
 // ── Types ──
 
@@ -63,11 +65,16 @@ export interface HalalSchoolsCardProps {
   /** All detected additives from OFF product (enriched from DB) */
   detectedAdditives?: DetectedAdditive[];
   trustScore?: number;
+  /** Certifier grade label for verdict summary (e.g. "Excellent", "Bon") */
+  certifierGrade?: string | null;
+  /** Certifier numeric score for verdict summary (0-100) */
+  certifierScore?: number | null;
   onMadhabChange: (madhab: MadhabId) => void;
   onScholarlySourcePress: (data: ScholarlySourceData | ScholarlySourceData[]) => void;
   onTrustScorePress?: () => void;
   onIngredientPress?: (ingredient: string) => void;
   onAdditivePress?: (additive: DetectedAdditive, ruling?: string) => void;
+  onNaqiyAdvicePress?: () => void;
   staggerIndex?: number;
 }
 
@@ -101,27 +108,48 @@ function getStatusLabel(
   return (t.scanResult as Record<string, string>)[labelKey] ?? status;
 }
 
-// ── A. VerdictSection — verdict + consensus indicator ──
+// ── A. VerdictSection — intelligent verdict summary + conflict details ──
 
 interface VerdictSectionProps {
   activeVerdict: MadhabVerdict;
   allVerdicts: MadhabVerdict[];
+  certifierName: string | null;
+  certifierGrade: string | null;
+  certifierScore: number | null;
+  onNaqiyAdvicePress?: () => void;
 }
 
-function VerdictSection({ activeVerdict, allVerdicts }: VerdictSectionProps) {
-  const { colors } = useTheme();
+function VerdictSection({
+  activeVerdict,
+  allVerdicts,
+  certifierName,
+  certifierGrade,
+  certifierScore,
+  onNaqiyAdvicePress,
+}: VerdictSectionProps) {
+  const { isDark, colors } = useTheme();
   const { t } = useTranslation();
 
   const status = activeVerdict.status;
   const statusColor = getStatusColor(status);
 
-  // ── Consensus detection (إجماع vs خلاف) ──
-  const uniqueStatuses = new Set(allVerdicts.map((v) => v.status));
-  const isConsensus = uniqueStatuses.size === 1;
-
-  const consensusText = isConsensus
-    ? t.scanResult.schoolConsensus as string
-    : t.scanResult.schoolDivergence as string;
+  // ── Build intelligent verdict summary ──
+  const verdictSummary = useMemo(
+    () =>
+      buildVerdictSummary(
+        {
+          madhabVerdicts: allVerdicts.map((v) => ({
+            madhab: v.madhab,
+            status: v.status,
+          })),
+          certifierName,
+          certifierGrade,
+          certifierScore,
+        },
+        t.verdict,
+      ),
+    [allVerdicts, certifierName, certifierGrade, certifierScore, t.verdict],
+  );
 
   // ── Conflicts: active school first, then merge from divergent schools ──
   // When there's divergence but the active school has no conflicts (e.g. Hanafi
@@ -143,7 +171,7 @@ function VerdictSection({ activeVerdict, allVerdicts }: VerdictSectionProps) {
 
   // Fallback: if active school has no conflicts but divergence exists,
   // gather conflicts from disagreeing schools (deduplicated by id)
-  if (activeConflicts.length === 0 && !isConsensus) {
+  if (activeConflicts.length === 0 && !verdictSummary.isConsensus) {
     const seen = new Set<string>();
     for (const v of allVerdicts) {
       if (v.madhab === activeVerdict.madhab) continue;
@@ -158,27 +186,46 @@ function VerdictSection({ activeVerdict, allVerdicts }: VerdictSectionProps) {
 
   const hasConflicts = activeConflicts.length > 0;
 
+  const goldColor = isDark ? gold[400] : gold[700];
+
   return (
     <Animated.View
       layout={Layout.springify().damping(14).stiffness(170)}
       style={styles.verdictSection}
     >
-      {/* Consensus indicator — إجماع or خلاف */}
-      <View style={styles.consensusRow}>
-        {isConsensus ? (
-          <CheckCircleIcon size={14} color={statusColor} weight="fill" />
-        ) : (
-          <WarningIcon size={14} color={halalStatusTokens.doubtful.base} weight="fill" />
-        )}
-        <Text
+      {/* Intelligent fiqh verdict text */}
+      <Text style={[styles.verdictSummaryText, { color: colors.textSecondary }]}>
+        {verdictSummary.fiqhLine}
+      </Text>
+
+      {/* Certifier line (if available) */}
+      {verdictSummary.certifierLine && (
+        <Text style={[styles.verdictCertifierText, { color: colors.textMuted }]}>
+          {verdictSummary.certifierLine}
+        </Text>
+      )}
+
+      {/* Naqiy advice button (shown only for doubtful verdicts) */}
+      {verdictSummary.isDoubtful && onNaqiyAdvicePress && (
+        <Pressable
+          onPress={onNaqiyAdvicePress}
+          accessibilityRole="button"
+          accessibilityLabel={t.verdict.naqiyAdvice}
           style={[
-            styles.consensusText,
-            { color: isConsensus ? statusColor : halalStatusTokens.doubtful.base },
+            styles.naqiyAdviceButton,
+            {
+              backgroundColor: isDark
+                ? "rgba(212,175,55,0.08)"
+                : "rgba(212,175,55,0.06)",
+            },
           ]}
         >
-          {consensusText}
-        </Text>
-      </View>
+          <SparkleIcon size={14} color={goldColor} weight="fill" />
+          <Text style={[styles.naqiyAdviceButtonText, { color: goldColor }]}>
+            {t.verdict.naqiyAdvice}
+          </Text>
+        </Pressable>
+      )}
 
       {/* Conflict substances — name + ruling only (details in Sources) */}
       {hasConflicts && (
@@ -780,11 +827,14 @@ export function HalalSchoolsCard({
   ingredientRulings,
   trustScore,
   detectedAdditives,
+  certifierGrade,
+  certifierScore,
   onMadhabChange: _onMadhabChange,
   onScholarlySourcePress,
   onTrustScorePress,
   onIngredientPress,
   onAdditivePress,
+  onNaqiyAdvicePress,
   staggerIndex = 3,
 }: HalalSchoolsCardProps) {
   const { isDark, colors } = useTheme();
@@ -880,6 +930,10 @@ export function HalalSchoolsCard({
       <VerdictSection
         activeVerdict={activeVerdict}
         allVerdicts={madhabVerdicts}
+        certifierName={certifierData?.name ?? null}
+        certifierGrade={certifierGrade ?? null}
+        certifierScore={certifierScore ?? null}
+        onNaqiyAdvicePress={onNaqiyAdvicePress}
       />
 
       {/* ═══ 3. Certifier card with per-madhab trust score ═══ */}
@@ -972,12 +1026,25 @@ const styles = StyleSheet.create({
   verdictSection: {
     gap: spacing.md,
   },
-  consensusRow: {
+  verdictSummaryText: {
+    fontSize: fontSizeTokens.bodySmall,
+    lineHeight: 20,
+  },
+  verdictCertifierText: {
+    fontSize: fontSizeTokens.caption,
+    lineHeight: 18,
+    marginTop: -4,
+  },
+  naqiyAdviceButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
+    alignSelf: "flex-start",
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
   },
-  consensusText: {
+  naqiyAdviceButtonText: {
     fontSize: fontSizeTokens.caption,
     fontWeight: fontWeightTokens.semiBold,
   },

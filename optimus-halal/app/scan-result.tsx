@@ -57,6 +57,7 @@ import { ScanResultPager } from "@/components/scan/ScanResultPager";
 import { HalalSchoolsCard } from "@/components/scan/HalalSchoolsCard";
 import { FeedbackCard } from "@/components/scan/FeedbackCard";
 import { ScholarlySourceSheet } from "@/components/scan/ScholarlySourceSheet";
+import { NaqiyAdviceSheet } from "@/components/scan/NaqiyAdviceSheet";
 import { ScanLoadingSkeleton } from "@/components/scan/ScanLoadingSkeleton";
 import { ScanErrorState, ScanNotFoundState } from "@/components/scan/ScanStates";
 import { AlertPillStrip } from "@/components/scan/AlertPillStrip";
@@ -97,6 +98,7 @@ import type { NutrientLevel } from "@/services/api/types";
 import { useFeatureFlagsStore, useQuotaStore, useLocalFavoritesStore, useLocalScanHistoryStore, useLocalNutritionProfileStore, useTrialStore } from "@/store";
 import { isAuthenticated as hasStoredTokens } from "@/services/api";
 import { trackEvent } from "@/lib/analytics";
+import { buildVerdictSummary } from "@/utils/verdict-summary";
 
 // ── Non-allergen tags incorrectly tagged by OpenFoodFacts ──
 const NON_ALLERGEN_TAGS = new Set([
@@ -314,6 +316,10 @@ export default function ScanResultScreen() {
   const [showCertifierPracticesSheet, setShowCertifierPracticesSheet] = useState(false);
   const handleCloseCertifierPractices = useCallback(() => setShowCertifierPracticesSheet(false), []);
 
+  // ── Naqiy Advice Bottom Sheet (hadith on doubt) ──
+  const [showNaqiyAdviceSheet, setShowNaqiyAdviceSheet] = useState(false);
+  const handleCloseNaqiyAdvice = useCallback(() => setShowNaqiyAdviceSheet(false), []);
+
   // ── Halal Analysis Bottom Sheet ──────────────
   const [showHalalAnalysisSheet, setShowHalalAnalysisSheet] = useState(false);
   const handleCloseHalalAnalysis = useCallback(() => setShowHalalAnalysisSheet(false), []);
@@ -480,14 +486,30 @@ export default function ScanResultScreen() {
       doubtful: t.scanResult.doubtfulStatus,
       unknown: t.scanResult.unverified,
     };
+
+    // Build intelligent verdict summary for share card
+    const verdictResult = madhabVerdicts.length > 0
+      ? buildVerdictSummary(
+          {
+            madhabVerdicts: madhabVerdicts.map((v) => ({ madhab: v.madhab, status: v.status })),
+            certifierName: certifierData?.name ?? null,
+            certifierGrade: certifierData?.trustGrade?.label ?? null,
+            certifierScore: certifierTrustScore ?? null,
+          },
+          t.verdict,
+        )
+      : null;
+
     return {
       statusLabel: statusLabelMap[halalStatus] ?? statusLabelMap.unknown,
       certifiedBy: t.scanResult.certifiedBy,
       boycotted: t.scanResult.shareBoycotted,
       verifiedWith: t.scanResult.verifiedWith,
       tagline: t.scanResult.shareTagline,
+      fiqhLine: verdictResult?.fiqhLine,
+      certifierLine: verdictResult?.certifierLine,
     };
-  }, [halalStatus, certifierData, t]);
+  }, [halalStatus, certifierData, certifierTrustScore, madhabVerdicts, t]);
 
   const handleShare = useCallback(async () => {
     impact();
@@ -773,7 +795,10 @@ export default function ScanResultScreen() {
                 }))}
                 detectedAdditives={detectedAdditives}
                 trustScore={certifierTrustScore ?? undefined}
+                certifierGrade={certifierData?.trustGrade?.label ?? null}
+                certifierScore={certifierTrustScore ?? null}
                 onMadhabChange={() => {}}
+                onNaqiyAdvicePress={() => setShowNaqiyAdviceSheet(true)}
                 onScholarlySourcePress={setSelectedScholarlyData}
                 onTrustScorePress={() => setShowCertifierPracticesSheet(true)}
                 onAdditivePress={(additive, ruling) => {
@@ -1176,6 +1201,11 @@ export default function ScanResultScreen() {
         visible={selectedScholarlyData !== null}
         data={selectedScholarlyData}
         onClose={() => setSelectedScholarlyData(null)}
+      />
+
+      <NaqiyAdviceSheet
+        visible={showNaqiyAdviceSheet}
+        onClose={handleCloseNaqiyAdvice}
       />
 
       {/* ── Generic InfoSheet (progressive disclosure for all detail views) ── */}

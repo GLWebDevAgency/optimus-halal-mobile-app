@@ -1785,6 +1785,27 @@ export const fr = {
     themeDark: "Sombre",
   },
 
+  // Verdict summary (intelligent fiqh + certifier synthesis)
+  verdict: {
+    fiqh4Halal: "D'après les sources juridiques (fiqh) des 4 écoles, la composition de ce produit est conforme aux exigences du halal.",
+    fiqh4Haram: "D'après les sources juridiques des 4 écoles, la composition contient des ingrédients non conformes aux exigences du halal.",
+    fiqh4Doubtful: "D'après les sources juridiques des 4 écoles, la composition de ce produit présente des éléments douteux.",
+    fiqh4Unknown: "Données insuffisantes pour une analyse juridique complète de la composition.",
+    fiqhMajority: "{n} écoles juridiques sur 4 considèrent la composition conforme. L'école {school} émet une réserve.",
+    fiqhDivergent: "Les avis des écoles juridiques divergent sur ce produit. Consultez le détail ci-dessous.",
+    certifierAlso: "Également certifié par {name}, noté {grade} ({score}/100).",
+    certifierHowever: "Toutefois, le certificateur {name} est noté {grade} ({score}/100).",
+    certifierNone: "Aucune certification halal détectée sur l'emballage.",
+    certifierNoScore: "Certifié par {name}.",
+    naqiyAdvice: "Notre conseil Naqiy",
+    adviceTitle: "Le hadith du doute",
+    adviceHadithAr: "عن النعمان بن بشير رضي الله عنهما قال: سمعت رسول الله ﷺ يقول:\n« الحلال بيّن والحرام بيّن، وبينهما أمور مشتبهات لا يعلمهنّ كثير من الناس، فمن اتّقى الشبهات فقد استبرأ لدينه وعرضه »",
+    adviceHadithTranslation: "« Le licite est clair et l'illicite est clair, et entre les deux il y a des choses douteuses que beaucoup de gens ne connaissent pas. Celui qui se garde des choses douteuses préserve sa religion et son honneur. »",
+    adviceSource: "Sahih al-Bukhari (52) & Sahih Muslim (1599)",
+    adviceChain: "An-Nu'man ibn Bashir (رضي الله عنهما) → Prophète Muhammad ﷺ",
+    adviceClosing: "La décision finale vous appartient. Naqiy vous informe, vous choisissez en conscience.",
+  },
+
   // Paywall (Quota exceeded)
   referral: {
     title: "Parrainage",

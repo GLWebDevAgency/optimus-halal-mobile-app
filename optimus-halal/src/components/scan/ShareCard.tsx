@@ -42,6 +42,7 @@ import {
   neutral,
   gold,
 } from "@/theme/colors";
+import { buildVerdictSummary } from "@/utils/verdict-summary";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -60,8 +61,12 @@ export interface ShareCardData {
   trustGrade?: { grade: number; label: string; color: string } | null;
   /** Health score (0-100) */
   healthScore?: number | null;
-  /** Health label ("Bon", "Médiocre", etc.) */
+  /** Health label ("Bon", "Mediocre", etc.) */
   healthLabel?: string | null;
+  /** Certifier grade label for verdict summary */
+  certifierGrade?: string | null;
+  /** Certifier numeric score for verdict summary (0-100) */
+  certifierScore?: number | null;
 }
 
 export interface ShareLabels {
@@ -70,6 +75,10 @@ export interface ShareLabels {
   boycotted: string;
   verifiedWith: string;
   tagline: string;
+  /** Intelligent fiqh verdict line (from buildVerdictSummary) */
+  fiqhLine?: string;
+  /** Certifier assessment line (from buildVerdictSummary) */
+  certifierLine?: string | null;
 }
 
 // ── Status visual config ─────────────────────────────────────
@@ -261,23 +270,36 @@ export const ShareCardView = forwardRef<View, { data: ShareCardData; labels: Sha
           ) : null}
         </View>
 
-        {/* ── 3. Madhab consensus dots ── */}
+        {/* ── 3. Madhab consensus dots + verdict summary ── */}
         {hasMadhab && (
-          <View style={s.madhabRow}>
-            <View style={s.madhabDots}>
-              {madhabStatuses.map((v, i) => (
-                <View
-                  key={i}
-                  style={[
-                    s.madhabDot,
-                    { backgroundColor: getMadhabDotColor(v.status) },
-                  ]}
-                />
-              ))}
+          <View style={s.madhabSection}>
+            <View style={s.madhabRow}>
+              <View style={s.madhabDots}>
+                {madhabStatuses.map((v, i) => (
+                  <View
+                    key={i}
+                    style={[
+                      s.madhabDot,
+                      { backgroundColor: getMadhabDotColor(v.status) },
+                    ]}
+                  />
+                ))}
+              </View>
+              {labels.fiqhLine ? (
+                <Text style={s.madhabLabel} numberOfLines={2}>
+                  {labels.fiqhLine}
+                </Text>
+              ) : (
+                <Text style={s.madhabLabel}>
+                  {allAgree ? "Les 4 \u00e9coles s'accordent" : "Avis partag\u00e9s entre \u00e9coles"}
+                </Text>
+              )}
             </View>
-            <Text style={s.madhabLabel}>
-              {allAgree ? "Les 4 écoles s'accordent" : "Avis partagés entre écoles"}
-            </Text>
+            {labels.certifierLine ? (
+              <Text style={s.certifierLineText} numberOfLines={2}>
+                {labels.certifierLine}
+              </Text>
+            ) : null}
           </View>
         )}
 
@@ -373,6 +395,13 @@ export function generateShareMessage(
 
   if (data.isBoycotted) {
     message += `🚨 ${labels.boycotted}\n`;
+  }
+
+  if (labels.fiqhLine) {
+    message += `\n📖 ${labels.fiqhLine}\n`;
+  }
+  if (labels.certifierLine) {
+    message += `${labels.certifierLine}\n`;
   }
 
   message += `\n─────────────────────\n`;
@@ -543,13 +572,17 @@ const s = StyleSheet.create({
     color: "rgba(212,175,55,0.7)",
   },
 
-  // Madhab dots
+  // Madhab dots + verdict
+  madhabSection: {
+    marginBottom: 6,
+    paddingHorizontal: 20,
+    gap: 4,
+  },
   madhabRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    marginBottom: 6,
   },
   madhabDots: {
     flexDirection: "row",
@@ -564,6 +597,13 @@ const s = StyleSheet.create({
     fontSize: 11,
     fontWeight: "500",
     color: "rgba(212,175,55,0.6)",
+    flex: 1,
+  },
+  certifierLineText: {
+    fontSize: 10,
+    fontWeight: "400",
+    color: "rgba(255,255,255,0.35)",
+    textAlign: "center",
   },
 
   // Verdict

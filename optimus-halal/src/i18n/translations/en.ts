@@ -1757,6 +1757,27 @@ export const en: TranslationKeys = {
     themeDark: "Dark",
   },
 
+  // Verdict summary (intelligent fiqh + certifier synthesis)
+  verdict: {
+    fiqh4Halal: "According to the juridical sources (fiqh) of all 4 schools, this product's composition meets halal requirements.",
+    fiqh4Haram: "According to the juridical sources of all 4 schools, the composition contains ingredients that do not meet halal requirements.",
+    fiqh4Doubtful: "According to the juridical sources of all 4 schools, this product's composition contains doubtful elements.",
+    fiqh4Unknown: "Insufficient data for a complete juridical analysis of the composition.",
+    fiqhMajority: "{n} out of 4 juridical schools consider the composition compliant. The {school} school has reservations.",
+    fiqhDivergent: "The juridical schools' opinions diverge on this product. See details below.",
+    certifierAlso: "Also certified by {name}, rated {grade} ({score}/100).",
+    certifierHowever: "However, the certifier {name} is rated {grade} ({score}/100).",
+    certifierNone: "No halal certification detected on the packaging.",
+    certifierNoScore: "Certified by {name}.",
+    naqiyAdvice: "Naqiy's advice",
+    adviceTitle: "The hadith on doubt",
+    adviceHadithAr: "عن النعمان بن بشير رضي الله عنهما قال: سمعت رسول الله ﷺ يقول:\n« الحلال بيّن والحرام بيّن، وبينهما أمور مشتبهات لا يعلمهنّ كثير من الناس، فمن اتّقى الشبهات فقد استبرأ لدينه وعرضه »",
+    adviceHadithTranslation: "\"What is lawful is clear and what is unlawful is clear, and between them are doubtful matters that many people do not know. Whoever guards against doubtful matters has protected his religion and his honor.\"",
+    adviceSource: "Sahih al-Bukhari (52) & Sahih Muslim (1599)",
+    adviceChain: "An-Nu'man ibn Bashir (may Allah be pleased with them) → Prophet Muhammad \uFDFA",
+    adviceClosing: "The final decision is yours. Naqiy informs you, you choose with awareness.",
+  },
+
   referral: {
     title: "Referral Program",
     description: "Share your code with friends. When they create a Naqiy+ account, you get 30 days of free premium.",
