@@ -8,11 +8,16 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { User, ScanRecord, Store } from "@/types";
 import type { Language } from "@/i18n";
+import type { MadhabId } from "@/components/scan/scan-types";
 import { defaultFeatureFlags, type FeatureFlags } from "@constants/config";
 import { mmkvStorage } from "@/lib/storage";
 
 /**
- * Auth State
+ * Auth State — Naqiy+ subscribers only
+ *
+ * Guest users never touch this store (no account, device-ID tracked).
+ * Populated after Naqiy+ account creation (post-RevenueCat payment)
+ * or login. Cleared on logout via clearTokens() + queryClient.clear().
  */
 interface AuthState {
   user: User | null;
@@ -289,6 +294,8 @@ interface UserPreferencesState {
   toggleExclusion: (excl: string) => void;
   setNotificationPref: (key: string, value: boolean) => void;
   setHapticsEnabled: (enabled: boolean) => void;
+  selectedMadhab: MadhabId;
+  setMadhab: (madhab: MadhabId) => void;
 }
 
 export const usePreferencesStore = create<UserPreferencesState>()(
@@ -327,6 +334,8 @@ export const usePreferencesStore = create<UserPreferencesState>()(
           notifications: { ...state.notifications, [key]: value },
         })),
       setHapticsEnabled: (enabled) => set({ hapticsEnabled: enabled }),
+      selectedMadhab: "hanafi",
+      setMadhab: (madhab) => set({ selectedMadhab: madhab }),
     }),
     {
       name: "preferences-storage",
@@ -451,7 +460,8 @@ export const useLocalFavoritesStore = create<LocalFavoritesState>()(
 
       addFavorite: (fav) => {
         const state = get();
-        if (state.favorites.length >= LOCAL_FAVORITES_LIMIT) return false;
+        const trialActive = useTrialStore.getState().isTrialActive();
+        if (!trialActive && state.favorites.length >= LOCAL_FAVORITES_LIMIT) return false;
         if (state.favorites.some((f) => f.productId === fav.productId)) return true;
         set({
           favorites: [
@@ -471,6 +481,7 @@ export const useLocalFavoritesStore = create<LocalFavoritesState>()(
       },
 
       isFull: () => {
+        if (useTrialStore.getState().isTrialActive()) return false;
         return get().favorites.length >= LOCAL_FAVORITES_LIMIT;
       },
 
@@ -517,7 +528,8 @@ export const useLocalStoreFavoritesStore = create<LocalStoreFavoritesState>()(
 
       addFavorite: (fav) => {
         const state = get();
-        if (state.favorites.length >= LOCAL_STORE_FAVORITES_LIMIT) return false;
+        const trialActive = useTrialStore.getState().isTrialActive();
+        if (!trialActive && state.favorites.length >= LOCAL_STORE_FAVORITES_LIMIT) return false;
         if (state.favorites.some((f) => f.storeId === fav.storeId)) return true;
         set({
           favorites: [
@@ -537,6 +549,7 @@ export const useLocalStoreFavoritesStore = create<LocalStoreFavoritesState>()(
       },
 
       isFull: () => {
+        if (useTrialStore.getState().isTrialActive()) return false;
         return get().favorites.length >= LOCAL_STORE_FAVORITES_LIMIT;
       },
 
@@ -555,7 +568,7 @@ export const useLocalStoreFavoritesStore = create<LocalStoreFavoritesState>()(
  * Stores last 3 scan results for anonymous users.
  * Naqiy+ users get unlimited cloud history.
  */
-const LOCAL_HISTORY_LIMIT = 3;
+const LOCAL_HISTORY_LIMIT = 50;
 
 export interface LocalScanHistoryItem {
   barcode: string;
@@ -567,6 +580,7 @@ export interface LocalScanHistoryItem {
   confidenceScore: number | null;
   certifierId: string | null;
   certifierName: string | null;
+  certifierTrustScore: number | null;
   scannedAt: string;
 }
 
@@ -598,6 +612,189 @@ export const useLocalScanHistoryStore = create<LocalScanHistoryState>()(
     }),
     {
       name: "local-scan-history-storage",
+      storage: createJSONStorage(() => mmkvStorage),
+    }
+  )
+);
+
+/**
+ * Nutrition Profile State
+ * Persisted user preference for Health Score V2 profile axis.
+ * Sent to scanBarcode mutation as `nutritionProfile`.
+ */
+export type NutritionProfile = "standard" | "pregnant" | "child" | "athlete" | "elderly";
+
+interface NutritionProfileState {
+  profile: NutritionProfile;
+  setProfile: (profile: NutritionProfile) => void;
+}
+
+export const useLocalNutritionProfileStore = create<NutritionProfileState>()(
+  persist(
+    (set) => ({
+      profile: "standard",
+      setProfile: (profile) => set({ profile }),
+    }),
+    {
+      name: "nutrition-profile-storage",
+      storage: createJSONStorage(() => mmkvStorage),
+    }
+  )
+);
+
+/**
+ * Password Reset State (Ephemeral — NOT persisted)
+ *
+ * Transient store for passing email/code between reset screens.
+ * Cleared automatically after successful reset or on timeout.
+ * NEVER persisted to MMKV — sensitive data stays in memory only.
+ */
+interface PasswordResetState {
+  email: string;
+  maskedEmail: string;
+  code: string;
+  setEmail: (email: string, masked: string) => void;
+  setCode: (code: string) => void;
+  clear: () => void;
+}
+
+export const usePasswordResetStore = create<PasswordResetState>()((set) => ({
+  email: "",
+  maskedEmail: "",
+  code: "",
+  setEmail: (email, masked) => set({ email, maskedEmail: masked }),
+  setCode: (code) => set({ code }),
+  clear: () => set({ email: "", maskedEmail: "", code: "" }),
+}));
+
+/**
+ * Dietary Preferences State
+ * Persisted user preferences for dietary restrictions and allergens.
+ * Used by the alternatives engine to filter recommendations.
+ */
+export interface DietaryPreferences {
+  glutenFree: boolean;
+  lactoseFree: boolean;
+  palmOilFree: boolean;
+  vegetarian: boolean;
+  vegan: boolean;
+}
+
+interface DietaryPreferencesState {
+  preferences: DietaryPreferences;
+  allergens: string[];
+  setPreference: <K extends keyof DietaryPreferences>(key: K, value: boolean) => void;
+  setAllergens: (allergens: string[]) => void;
+  addAllergen: (allergen: string) => void;
+  removeAllergen: (allergen: string) => void;
+  resetPreferences: () => void;
+}
+
+const DEFAULT_DIETARY_PREFS: DietaryPreferences = {
+  glutenFree: false,
+  lactoseFree: false,
+  palmOilFree: false,
+  vegetarian: false,
+  vegan: false,
+};
+
+export const useLocalDietaryPreferencesStore = create<DietaryPreferencesState>()(
+  persist(
+    (set) => ({
+      preferences: DEFAULT_DIETARY_PREFS,
+      allergens: [],
+      setPreference: (key, value) =>
+        set((state) => ({
+          preferences: { ...state.preferences, [key]: value },
+        })),
+      setAllergens: (allergens) => set({ allergens }),
+      addAllergen: (allergen) =>
+        set((state) => ({
+          allergens: state.allergens.includes(allergen)
+            ? state.allergens
+            : [...state.allergens, allergen],
+        })),
+      removeAllergen: (allergen) =>
+        set((state) => ({
+          allergens: state.allergens.filter((a) => a !== allergen),
+        })),
+      resetPreferences: () =>
+        set({ preferences: DEFAULT_DIETARY_PREFS, allergens: [] }),
+    }),
+    {
+      name: "naqiy.dietary-preferences",
+      storage: createJSONStorage(() => mmkvStorage),
+    }
+  )
+);
+
+/**
+ * Trial State — 7-day full access for new users
+ *
+ * On first app launch, users get 7 days of full Naqiy+ access.
+ * After 7 days: downgrade to free tier (5 scans/day, premium features locked).
+ * trialStartDate is set once and never changes.
+ */
+const TRIAL_DURATION_DAYS = 7;
+
+interface TrialState {
+  trialStartDate: string | null;
+  startTrial: () => void;
+  isTrialActive: () => boolean;
+  getTrialDaysRemaining: () => number;
+  hasTrialExpired: () => boolean;
+  hasTrialStarted: () => boolean;
+}
+
+export const useTrialStore = create<TrialState>()(
+  persist(
+    (set, get) => ({
+      trialStartDate: null,
+
+      startTrial: () => {
+        const state = get();
+        // Only set once — idempotent
+        if (!state.trialStartDate) {
+          set({ trialStartDate: new Date().toISOString() });
+        }
+      },
+
+      hasTrialStarted: () => {
+        return get().trialStartDate !== null;
+      },
+
+      isTrialActive: () => {
+        const { trialStartDate } = get();
+        if (!trialStartDate) return false;
+        const start = new Date(trialStartDate);
+        const now = new Date();
+        const diffMs = now.getTime() - start.getTime();
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+        return diffDays < TRIAL_DURATION_DAYS;
+      },
+
+      getTrialDaysRemaining: () => {
+        const { trialStartDate } = get();
+        if (!trialStartDate) return 0;
+        const start = new Date(trialStartDate);
+        const now = new Date();
+        const diffMs = now.getTime() - start.getTime();
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+        return Math.max(0, Math.ceil(TRIAL_DURATION_DAYS - diffDays));
+      },
+
+      hasTrialExpired: () => {
+        const { trialStartDate } = get();
+        if (!trialStartDate) return false;
+        const start = new Date(trialStartDate);
+        const now = new Date();
+        const diffMs = now.getTime() - start.getTime();
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+        return diffDays >= TRIAL_DURATION_DAYS;
+      },
+    }),
+    {
+      name: "naqiy.trial",
       storage: createJSONStorage(() => mmkvStorage),
     }
   )

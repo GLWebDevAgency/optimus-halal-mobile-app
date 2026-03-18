@@ -122,6 +122,31 @@ export const ingredientRulingsSeed: NewIngredientRuling[] = [
     category: "vinegar",
   },
   {
+    compoundPattern: "alcohol vinegar",
+    matchType: "contains",
+    priority: 115,
+    rulingDefault: "halal",
+    rulingHanafi: "halal",
+    rulingShafii: "doubtful",
+    rulingMaliki: "doubtful",
+    rulingHanbali: "halal",
+    confidence: 0.8,
+    explanationFr:
+      "Le vinaigre d'alcool (alcohol vinegar / spirit vinegar) est produit par fermentation acetique d'ethanol de betterave ou de cereales. L'alcool est entierement transforme en acide acetique — ce n'est plus du khamr.\n\n" +
+      "Hanafi/Hanbali : HALAL (istihala). Shafi'i/Maliki : DOUTEUX (takhllil classique).",
+    explanationEn:
+      "Alcohol vinegar (spirit vinegar) is produced by acetic fermentation of ethanol from beet or grain. The alcohol is fully converted to acetic acid — it is no longer khamr.\n\n" +
+      "Hanafi/Hanbali: HALAL (istihala). Shafi'i/Maliki: DOUBTFUL (classical takhllil).",
+    explanationAr:
+      "خل الكحول يُنتج بالتخمّر الخلّي للإيثانول. الكحول يتحوّل بالكامل إلى حمض الخل.\n\n" +
+      "حنفي/حنبلي: حلال (استحالة). شافعي/مالكي: مشكوك فيه (التخليل).",
+    scholarlyReference: "Muslim 2051, Al-Kasani Bada'i al-Sana'i 5/113, Ibn Taymiyya Majmoo' 21/483-502, Nawawi Al-Majmoo' 9/232, Ibn Rushd Bidayat al-Mujtahid 1/79",
+    fatwaSourceUrl: "https://islamqa.info/en/answers/2283",
+    fatwaSourceName: "IslamQA #2283",
+    overridesKeyword: "alcohol",
+    category: "vinegar",
+  },
+  {
     compoundPattern: "vinaigre de vin",
     matchType: "contains",
     priority: 110,

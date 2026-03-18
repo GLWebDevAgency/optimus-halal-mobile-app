@@ -16,8 +16,8 @@ import Animated, {
   useReducedMotion,
 } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
-import { MaterialIcons } from "@expo/vector-icons";
 import { useTheme, useTranslation, useHaptics } from "@/hooks";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 interface FavoritesTabBarProps {
   activeTab: number;
@@ -27,7 +27,7 @@ interface FavoritesTabBarProps {
 }
 
 interface TabDef {
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: IconName;
   labelKey: "productsTab" | "storesTab";
 }
 
@@ -107,7 +107,7 @@ export const FavoritesTabBar = React.memo(function FavoritesTabBar({
             accessibilityState={{ selected: isActive }}
             accessibilityLabel={t.favorites[tab.labelKey]}
           >
-            <MaterialIcons name={tab.icon} size={18} color={color} />
+            <AppIcon name={tab.icon} size={18} color={color} />
             <Text
               style={[styles.label, { color }, isActive && styles.labelActive]}
               numberOfLines={1}

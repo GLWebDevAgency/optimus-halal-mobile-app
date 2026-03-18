@@ -79,6 +79,8 @@ export const users = pgTable(
     subscriptionExternalId: t.varchar("subscription_external_id", {
       length: 255,
     }),
+    // ── Referral ──
+    referralCode: t.varchar("referral_code", { length: 8 }).unique(),
   },
   (table) => [
     t.uniqueIndex("users_email_idx").on(table.email),
@@ -181,6 +183,7 @@ export const safeUserColumns = {
   subscriptionProvider: true,
   subscriptionProductId: true,
   // NOTE: subscriptionExternalId is NOT included (private)
+  referralCode: true,
 } as const;
 
 /**
@@ -219,6 +222,7 @@ export const safeUserReturning = {
   subscriptionProvider: users.subscriptionProvider,
   subscriptionProductId: users.subscriptionProductId,
   // NOTE: subscriptionExternalId excluded
+  referralCode: users.referralCode,
 };
 
 /** User type with sensitive fields (passwordHash) excluded. */

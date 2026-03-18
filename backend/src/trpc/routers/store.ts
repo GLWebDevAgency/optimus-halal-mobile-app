@@ -424,6 +424,29 @@ export const storeRouter = router({
       return { success: true };
     }),
 
+  syncFavorites: protectedProcedure
+    .input(
+      z.object({
+        storeIds: z.array(z.string().uuid()).max(50),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (input.storeIds.length === 0) return { synced: 0 };
+
+      const values = input.storeIds.map((storeId) => ({
+        userId: ctx.userId,
+        storeId,
+      }));
+
+      const result = await ctx.db
+        .insert(storeFavorites)
+        .values(values)
+        .onConflictDoNothing()
+        .returning({ id: storeFavorites.id });
+
+      return { synced: result.length };
+    }),
+
   isStoreFavorite: protectedProcedure
     .input(z.object({ storeId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {

@@ -29,6 +29,7 @@ export default function SettingsLayout() {
         <Stack.Screen name="appearance" options={{ animation: "fade", animationDuration: 250 }} />
         <Stack.Screen name="language" options={{ animation: "fade", animationDuration: 250 }} />
         <Stack.Screen name="certifications" />
+        <Stack.Screen name="certifier-ranking" />
         <Stack.Screen name="exclusions" />
         <Stack.Screen name="notifications" />
         <Stack.Screen name="favorites" />
@@ -37,6 +38,7 @@ export default function SettingsLayout() {
         <Stack.Screen name="leaderboard" />
         <Stack.Screen name="achievements" />
         <Stack.Screen name="rewards" />
+        <Stack.Screen name="referral" />
         <Stack.Screen name="premium" options={{ animation: "slide_from_bottom", animationDuration: 300 }} />
       </Stack>
     </QueryErrorBoundary>

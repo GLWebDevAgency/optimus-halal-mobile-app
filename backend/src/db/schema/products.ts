@@ -30,7 +30,7 @@ export const products = pgTable(
     price: t.doublePrecision(),
     currency: t.varchar({ length: 3 }).default("EUR"),
     inStock: t.boolean("in_stock").default(true),
-    // OpenFoodFacts data
+    // OpenFoodFacts data blob (complete response for fallback)
     offData: t.jsonb("off_data"),
     lastSyncedAt: t.timestamp("last_synced_at", { withTimezone: true }),
     createdAt: t
@@ -42,12 +42,85 @@ export const products = pgTable(
       .defaultNow()
       .notNull()
       .$onUpdateFn(() => new Date()),
+
+    // ── V2: IDENTITE PRODUIT ENRICHIE ────────────────────────
+    genericName: t.varchar("generic_name", { length: 500 }),
+    brandOwner: t.varchar("brand_owner", { length: 255 }),
+    quantity: t.varchar({ length: 100 }),
+    servingSize: t.varchar("serving_size", { length: 100 }),
+    countriesTags: t.text("countries_tags").array(),
+
+    // ── V2: INGREDIENTS & ALLERGENES (halal-critical) ────────
+    ingredientsText: t.text("ingredients_text"),
+    allergensTags: t.text("allergens_tags").array(),
+    tracesTags: t.text("traces_tags").array(),
+    additivesTags: t.text("additives_tags").array(),
+    ingredientsAnalysisTags: t.text("ingredients_analysis_tags").array(),
+
+    // ── V2: NUTRITION DENORMALISEE ───────────────────────────
+    nutriscoreGrade: t.varchar("nutriscore_grade", { length: 1 }),
+    novaGroup: t.smallint("nova_group"),
+    ecoscoreGrade: t.varchar("ecoscore_grade", { length: 1 }),
+    energyKcal100g: t.real("energy_kcal_100g"),
+    fat100g: t.real("fat_100g"),
+    saturatedFat100g: t.real("saturated_fat_100g"),
+    carbohydrates100g: t.real("carbohydrates_100g"),
+    sugars100g: t.real("sugars_100g"),
+    fiber100g: t.real("fiber_100g"),
+    proteins100g: t.real("proteins_100g"),
+    salt100g: t.real("salt_100g"),
+
+    // ── V2: LABELS & CERTIFICATIONS ─────────────────────────
+    labelsTags: t.text("labels_tags").array(),
+    embCodes: t.varchar("emb_codes", { length: 255 }),
+
+    // ── V2: ORIGINE & TRACABILITE ───────────────────────────
+    originsTags: t.text("origins_tags").array(),
+    manufacturingPlaces: t.varchar("manufacturing_places", { length: 500 }),
+
+    // ── V2: IMAGES MULTI-SOURCES ────────────────────────────
+    imageIngredientsUrl: t.text("image_ingredients_url"),
+    imageNutritionUrl: t.text("image_nutrition_url"),
+    imageFrontUrl: t.text("image_front_url"),
+    imageR2Key: t.varchar("image_r2_key", { length: 255 }),
+
+    // ── V2: QUALITE & PROVENANCE ────────────────────────────
+    completeness: t.real(),
+    dataSources: t.text("data_sources").array().default([]),
+    offLastModified: t.timestamp("off_last_modified", { withTimezone: true }),
+    analysisVersion: t.smallint("analysis_version").default(1),
+
+    // ── V3: DATA QUALITY GATE ─────────────────────────────────
+    // NULL=not assessed, "valid"=passed checks, "suspicious"=minor issues,
+    // "unreliable"=critical anomaly → force healthScore=null ("je ne sais pas")
+    dataQualityFlag: t.varchar("data_quality_flag", { length: 20 }),
+    dataQualityReasons: t.text("data_quality_reasons").array(),
   },
   (table) => [
+    // V1 indexes
     t.uniqueIndex("products_barcode_idx").on(table.barcode),
     t.index("products_halal_status_idx").on(table.halalStatus),
     t.index("products_category_idx").on(table.category),
     t.index("products_name_idx").on(table.name),
+    // V2 indexes
+    t.index("products_brand_idx").on(table.brand),
+    t.index("products_completeness_idx").on(table.completeness),
+    t.index("products_countries_gin_idx").using(
+      "gin",
+      table.countriesTags,
+    ),
+    t.index("products_labels_gin_idx").using(
+      "gin",
+      table.labelsTags,
+    ),
+    t.index("products_allergens_gin_idx").using(
+      "gin",
+      table.allergensTags,
+    ),
+    t.index("products_additives_gin_idx").using(
+      "gin",
+      table.additivesTags,
+    ),
   ]
 );
 

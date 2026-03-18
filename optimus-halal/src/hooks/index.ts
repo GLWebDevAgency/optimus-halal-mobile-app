@@ -133,6 +133,12 @@ export type { StoreSearchResult, AddressSearchResult, SearchResult } from './use
 export { usePremium } from './usePremium';
 
 // ============================================
+// LOCAL DATA SYNC HOOK
+// ============================================
+
+export { useSyncLocalData } from './useSyncLocalData';
+
+// ============================================
 // IMAGE UPLOAD HOOK (R2)
 // ============================================
 // NOT barrel-exported: expo-image-manipulator requires native module.

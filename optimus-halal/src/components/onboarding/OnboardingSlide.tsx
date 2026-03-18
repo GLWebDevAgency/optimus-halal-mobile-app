@@ -3,15 +3,28 @@
  *
  * Each slide has:
  * - Parallax translateX on hero icon & title (different factors)
- * - Staggered entrance (hero → title → highlight → description → decorative)
+ * - Staggered entrance (hero -> title -> highlight -> description -> decorative)
  *   triggered every time the slide becomes the active index
- * - Slide 5 (CTA) renders two buttons instead of description
+ * - Slide-specific decorative elements:
+ *   - brand: logo image
+ *   - scanner: BarcodeIcon + mini scan result preview
+ *   - trust: ShieldCheckIcon + NaqiyGradeBadge strip explained
+ *   - map: MapPinIcon + floating pins + mini store card
+ *   - cta: logo image + premium profile chips + health badge
  */
 
 import React, { useCallback } from "react";
 import { View, Text, Dimensions, Platform, StyleSheet } from "react-native";
 import { Image } from "expo-image";
-import { MaterialIcons } from "@expo/vector-icons";
+import Svg, { Path } from "react-native-svg";
+import {
+  BarcodeIcon,
+  GlobeHemisphereWestIcon,
+  MapPinIcon,
+  ShieldCheckIcon,
+  StarIcon,
+  WarningIcon,
+} from "phosphor-react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -27,7 +40,7 @@ import Animated, {
 import type { OnboardingSlideConfig } from "@constants/onboarding";
 import { useTheme, useTranslation } from "@/hooks";
 import { PressableScale } from "@/components/ui/PressableScale";
-import { gold, primary } from "@/theme/colors";
+import { gold, primary, halalStatus as halalTokens } from "@/theme/colors";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -35,21 +48,32 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SPRING_SNAPPY = { damping: 18, stiffness: 280, mass: 0.8 };
 const SPRING_SOFT = { damping: 14, stiffness: 200, mass: 0.6 };
 
-// Madhab schools for slide 3
-const MADHAB_SCHOOLS = [
-  { label: "Hanafi", icon: "check-circle" as const },
-  { label: "Shafi'i", icon: "check-circle" as const },
-  { label: "Maliki", icon: "check-circle" as const },
-  { label: "Hanbali", icon: "check-circle" as const },
-];
+// ── NaqiyGradeBadge data (inlined for onboarding) ──────────
+const TRUST_GRADES = [
+  { grade: 1, arabic: "١", color: "#22c55e" },
+  { grade: 2, arabic: "٢", color: "#84cc16" },
+  { grade: 3, arabic: "٣", color: "#f59e0b" },
+  { grade: 4, arabic: "٤", color: "#f97316" },
+  { grade: 5, arabic: "٥", color: "#ef4444" },
+] as const;
+
+const GRADE_LABELS = [
+  "Très fiable",
+  "Fiable",
+  "Vigilance",
+  "Peu fiable",
+  "Pas fiable du tout",
+] as const;
+
+const ACTIVE_DEMO_GRADE = 2;
 
 interface OnboardingSlideProps {
   config: OnboardingSlideConfig;
   index: number;
   scrollX: SharedValue<number>;
   activeIndex: SharedValue<number>;
-  onCreateAccount?: () => void;
-  onExplore?: () => void;
+  onStart?: () => void;
+  onLogin?: () => void;
 }
 
 export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
@@ -57,8 +81,8 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
   index,
   scrollX,
   activeIndex,
-  onCreateAccount,
-  onExplore,
+  onStart,
+  onLogin,
 }) => {
   const { isDark } = useTheme();
   const { t } = useTranslation();
@@ -81,7 +105,6 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
     () => activeIndex.value,
     (current, previous) => {
       if (current === index && previous !== index) {
-        // Reset everything before animating in
         heroScale.value = 0.8;
         heroOpacity.value = 0;
         titleTranslateY.value = 24;
@@ -93,23 +116,20 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
         decorOpacity.value = 0;
 
         // Staggered entrance
-        // 0ms: Hero icon
         heroScale.value = withSpring(1, SPRING_SNAPPY);
         heroOpacity.value = withTiming(1, { duration: 350 });
-
-        // 150ms: Title
         titleTranslateY.value = withDelay(150, withSpring(0, SPRING_SOFT));
         titleOpacity.value = withDelay(150, withTiming(1, { duration: 300 }));
-
-        // 300ms: Highlight
-        highlightTranslateY.value = withDelay(300, withSpring(0, SPRING_SOFT));
-        highlightOpacity.value = withDelay(300, withTiming(1, { duration: 300 }));
-
-        // 400ms: Description
+        highlightTranslateY.value = withDelay(
+          300,
+          withSpring(0, SPRING_SOFT),
+        );
+        highlightOpacity.value = withDelay(
+          300,
+          withTiming(1, { duration: 300 }),
+        );
         descTranslateY.value = withDelay(400, withSpring(0, SPRING_SOFT));
         descOpacity.value = withDelay(400, withTiming(1, { duration: 300 }));
-
-        // 500ms: Decorative elements
         decorOpacity.value = withDelay(500, withTiming(1, { duration: 400 }));
       }
     },
@@ -169,9 +189,7 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
 
   // ── Render hero section per slide type ──
   const renderHero = useCallback(() => {
-    const isBrandOrCta = config.id === "brand" || config.id === "cta";
-
-    if (isBrandOrCta) {
+    if (config.id === "brand" || config.id === "cta") {
       return (
         <View style={styles.heroLogoContainer}>
           <Image
@@ -184,46 +202,158 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
       );
     }
 
-    if (config.id === "madhab") {
+    if (config.id === "scanner") {
       return (
         <View style={styles.heroIconContainer}>
-          <MaterialIcons
-            name={config.heroIcon as any}
-            size={72}
-            color={config.accentColor}
-          />
-          {/* Madhab badges row */}
-          <Animated.View style={[styles.madhabRow, decorStyle]}>
-            {MADHAB_SCHOOLS.map((school, i) => (
+          <BarcodeIcon size={72} color={config.accentColor} />
+          {/* Mini scan result preview card */}
+          <Animated.View style={[styles.scanPreviewCard, decorStyle]}>
+            <View style={styles.scanPreviewStatusRow}>
               <View
-                key={school.label}
                 style={[
-                  styles.madhabBadge,
-                  {
-                    backgroundColor: isDark
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(0,0,0,0.04)",
-                    borderColor: isDark
-                      ? "rgba(207,165,51,0.2)"
-                      : "rgba(0,0,0,0.08)",
-                  },
+                  styles.scanPreviewDot,
+                  { backgroundColor: halalTokens.halal.base },
+                ]}
+              />
+              <Text
+                style={[
+                  styles.scanPreviewStatusText,
+                  { color: halalTokens.halal.base },
                 ]}
               >
-                <MaterialIcons
-                  name={school.icon}
-                  size={14}
-                  color={gold[isDark ? 400 : 600]}
-                />
-                <Text
-                  style={[
-                    styles.madhabLabel,
-                    { color: isDark ? "#e5e5e5" : "#374151" },
-                  ]}
-                >
-                  {school.label}
+                Halal Certifié
+              </Text>
+            </View>
+            <View style={styles.scanPreviewBottom}>
+              {/* Mini NaqiyGradeBadge strip */}
+              <View style={styles.miniGradeStrip}>
+                <Text style={styles.miniGradeN}>N</Text>
+                {TRUST_GRADES.map((g) => {
+                  const isActive = g.grade === ACTIVE_DEMO_GRADE;
+                  return (
+                    <View
+                      key={g.grade}
+                      style={[
+                        styles.miniGradePill,
+                        isActive
+                          ? styles.miniGradePillActive
+                          : styles.miniGradePillInactive,
+                        { backgroundColor: g.color },
+                        !isActive && { opacity: 0.2 },
+                      ]}
+                    >
+                      <Text style={styles.miniGradePillText}>
+                        {g.arabic}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+              {/* Mini health ring */}
+              <View style={styles.miniHealthRow}>
+                <View style={styles.miniRingContainer}>
+                  <Svg width={32} height={17} viewBox="0 0 32 17">
+                    <Path
+                      d="M 4 16 A 12 12 0 0 1 28 16"
+                      fill="none"
+                      stroke="rgba(255,255,255,0.08)"
+                      strokeWidth={3}
+                      strokeLinecap="round"
+                    />
+                    <Path
+                      d="M 4 16 A 12 12 0 0 1 28 16"
+                      fill="none"
+                      stroke={primary[500]}
+                      strokeWidth={3}
+                      strokeLinecap="round"
+                      strokeDasharray={37.7}
+                      strokeDashoffset={11.3}
+                    />
+                  </Svg>
+                  <Text style={[styles.miniRingScore, { color: primary[500] }]}>
+                    68
+                  </Text>
+                </View>
+                <Text style={[styles.miniHealthLabel, { color: primary[500] }]}>
+                  BON
                 </Text>
               </View>
-            ))}
+            </View>
+          </Animated.View>
+        </View>
+      );
+    }
+
+    if (config.id === "trust") {
+      return (
+        <View style={styles.heroIconContainer}>
+          <ShieldCheckIcon
+            size={72}
+            color={gold[500]}
+            weight="duotone"
+          />
+          {/* NaqiyGradeBadge full explained */}
+          <Animated.View style={[styles.gradeExplainedCard, decorStyle]}>
+            {/* Strip */}
+            <View style={styles.gradeStripRow}>
+              <Text style={styles.gradeStripN}>N</Text>
+              {TRUST_GRADES.map((g) => {
+                const isActive = g.grade === ACTIVE_DEMO_GRADE;
+                return (
+                  <View
+                    key={g.grade}
+                    style={[
+                      styles.gradeStripPill,
+                      isActive
+                        ? styles.gradeStripPillActive
+                        : styles.gradeStripPillInactive,
+                      { backgroundColor: g.color },
+                      !isActive && { opacity: 0.22 },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.gradeStripPillText,
+                        { fontSize: isActive ? 12 : 10 },
+                      ]}
+                    >
+                      {g.arabic}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+            {/* Labels */}
+            <View style={styles.gradeLabelsRow}>
+              {TRUST_GRADES.map((g, i) => {
+                const isActive = g.grade === ACTIVE_DEMO_GRADE;
+                return (
+                  <View
+                    key={g.grade}
+                    style={[
+                      styles.gradeLabelCol,
+                      isActive && { width: 40 },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.gradeLabelText,
+                        isActive && { color: g.color },
+                      ]}
+                    >
+                      {GRADE_LABELS[i]}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+            {/* Madhab mini dots */}
+            <View style={styles.madhabMiniRow}>
+              {[0, 1, 2, 3].map((i) => (
+                <View key={i} style={styles.madhabMiniDot} />
+              ))}
+              <Text style={styles.madhabMiniLabel}>4 écoles analysées</Text>
+            </View>
           </Animated.View>
         </View>
       );
@@ -232,11 +362,7 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
     if (config.id === "map") {
       return (
         <View style={styles.heroIconContainer}>
-          <MaterialIcons
-            name="place"
-            size={80}
-            color={config.accentColor}
-          />
+          <MapPinIcon size={80} color={config.accentColor} />
           {/* Floating mini pins */}
           <Animated.View style={[styles.mapPins, decorStyle]}>
             {[-30, 35, -10].map((offset, i) => (
@@ -254,34 +380,61 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
                   },
                 ]}
               >
-                <MaterialIcons name="place" size={10} color="#fff" />
+                <MapPinIcon size={10} color="#fff" />
               </View>
             ))}
+          </Animated.View>
+          {/* Mini store card */}
+          <Animated.View
+            style={[
+              styles.storeCard,
+              {
+                backgroundColor: isDark
+                  ? "rgba(255,255,255,0.04)"
+                  : "rgba(0,0,0,0.03)",
+                borderColor: isDark
+                  ? "rgba(207,165,51,0.14)"
+                  : "rgba(0,0,0,0.08)",
+              },
+              decorStyle,
+            ]}
+          >
+            <View style={styles.storeCardTop}>
+              <Text
+                style={[
+                  styles.storeCardName,
+                  { color: isDark ? "#fff" : "#1a1a1a" },
+                ]}
+              >
+                La Boucherie Halal
+              </Text>
+              <View style={styles.storeDistBadge}>
+                <Text style={styles.storeDistText}>0.3 km</Text>
+              </View>
+            </View>
+            <View style={styles.storeCardBottom}>
+              <View style={styles.storeCertBadge}>
+                <ShieldCheckIcon
+                  size={10}
+                  color={gold[500]}
+                  weight="fill"
+                />
+                <Text style={styles.storeCertText}>AVS</Text>
+              </View>
+              <View style={styles.storeStatusRow}>
+                <View style={styles.storeOpenDot} />
+                <Text style={styles.storeOpenText}>Ouvert</Text>
+                <Text style={styles.storeRatingText}>·</Text>
+                <StarIcon size={10} color={gold[500]} weight="fill" />
+                <Text style={styles.storeRatingText}>4.6</Text>
+              </View>
+            </View>
           </Animated.View>
         </View>
       );
     }
 
-    // Default: scanner + others
-    return (
-      <View style={styles.heroIconContainer}>
-        <MaterialIcons
-          name={config.heroIcon as any}
-          size={80}
-          color={config.accentColor}
-        />
-        {config.id === "scanner" && (
-          <Animated.View style={[styles.scanLine, decorStyle]}>
-            <View
-              style={[
-                styles.scanLineBar,
-                { backgroundColor: primary[500] },
-              ]}
-            />
-          </Animated.View>
-        )}
-      </View>
-    );
+    return null;
   }, [config, isDark, decorStyle]);
 
   const isCta = config.id === "cta";
@@ -290,7 +443,6 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
     <View style={[styles.slide, { width: SCREEN_WIDTH }]}>
       {/* Hero Section */}
       <Animated.View style={[styles.heroSection, heroParallaxStyle]}>
-        {/* Accent glow background */}
         <View
           style={[
             styles.accentGlow,
@@ -327,20 +479,113 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
         </Text>
       </Animated.View>
 
-      {/* Description or CTA buttons */}
+      {/* Description or CTA section */}
       {isCta ? (
         <Animated.View style={[styles.ctaContainer, descStyle]}>
+          {/* Premium profile chips */}
+          <View style={styles.premiumChips}>
+            <View
+              style={[
+                styles.premiumChip,
+                {
+                  backgroundColor: isDark
+                    ? "rgba(207,165,51,0.05)"
+                    : "rgba(207,165,51,0.08)",
+                  borderColor: "rgba(207,165,51,0.18)",
+                },
+              ]}
+            >
+              <WarningIcon size={13} color={gold[500]} />
+              <Text style={styles.premiumChipText}>Allergènes</Text>
+              <Text style={styles.premiumPlusLabel}>NAQIY+</Text>
+            </View>
+            <View
+              style={[
+                styles.premiumChip,
+                {
+                  backgroundColor: isDark
+                    ? "rgba(207,165,51,0.05)"
+                    : "rgba(207,165,51,0.08)",
+                  borderColor: "rgba(207,165,51,0.18)",
+                },
+              ]}
+            >
+              <Svg width={13} height={13} viewBox="0 0 256 256">
+                <Path
+                  d="M128 24a80 80 0 0 0-80 80c0 24 8 40 24 60s24 44 24 68h64c0-24 8-48 24-68s24-36 24-60a80 80 0 0 0-80-80Z"
+                  fill="none"
+                  stroke={gold[500]}
+                  strokeWidth={16}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+              <Text style={styles.premiumChipText}>Grossesse</Text>
+              <Text style={styles.premiumPlusLabel}>NAQIY+</Text>
+            </View>
+            <View
+              style={[
+                styles.premiumChip,
+                {
+                  backgroundColor: isDark
+                    ? "rgba(207,165,51,0.05)"
+                    : "rgba(207,165,51,0.08)",
+                  borderColor: "rgba(207,165,51,0.18)",
+                },
+              ]}
+            >
+              <Svg width={13} height={13} viewBox="0 0 256 256">
+                <Path
+                  d="M160 128a32 32 0 0 1-64 0c0-24 32-56 32-56s32 32 32 56Z"
+                  fill="none"
+                  stroke={gold[500]}
+                  strokeWidth={16}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+              <Text style={styles.premiumChipText}>Enfants</Text>
+              <Text style={styles.premiumPlusLabel}>NAQIY+</Text>
+            </View>
+          </View>
+
+          {/* Health score badge */}
+          <View
+            style={[
+              styles.healthBadge,
+              {
+                backgroundColor: isDark
+                  ? "rgba(19,236,106,0.05)"
+                  : "rgba(19,236,106,0.08)",
+                borderColor: "rgba(19,236,106,0.12)",
+              },
+            ]}
+          >
+            <View style={styles.healthBadgeDot} />
+            <Text
+              style={[
+                styles.healthBadgeText,
+                { color: isDark ? "rgba(255,255,255,0.5)" : "#6b7280" },
+              ]}
+            >
+              Score Santé{" "}
+            </Text>
+            <Text style={[styles.healthBadgeText, { color: primary[500], fontWeight: "700" }]}>
+              Naqiy V3
+            </Text>
+          </View>
+
           <Text
             style={[
               styles.description,
-              { color: isDark ? "#a0a0a0" : "#4b5563", marginBottom: 28 },
+              { color: isDark ? "#a0a0a0" : "#4b5563", marginTop: 12, marginBottom: 20 },
             ]}
           >
             {slideContent.description}
           </Text>
 
-          {/* Create Account Button */}
-          <PressableScale onPress={onCreateAccount} style={styles.ctaButtonWrapper}>
+          {/* Primary CTA — Start (guest mode, zero friction) */}
+          <PressableScale onPress={onStart} style={styles.ctaButtonWrapper}>
             <View
               style={[
                 styles.ctaPrimary,
@@ -357,8 +602,7 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
                 },
               ]}
             >
-              <MaterialIcons
-                name="person-add"
+              <GlobeHemisphereWestIcon
                 size={18}
                 color={isDark ? "#0d1b13" : "#ffffff"}
               />
@@ -368,35 +612,7 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
                   { color: isDark ? "#0d1b13" : "#ffffff" },
                 ]}
               >
-                {t.onboarding.createAccount}
-              </Text>
-            </View>
-          </PressableScale>
-
-          {/* Explore Mode Button */}
-          <PressableScale onPress={onExplore} style={styles.ctaButtonWrapper}>
-            <View
-              style={[
-                styles.ctaSecondary,
-                {
-                  borderColor: isDark
-                    ? "rgba(255,255,255,0.15)"
-                    : "rgba(0,0,0,0.15)",
-                },
-              ]}
-            >
-              <MaterialIcons
-                name="travel-explore"
-                size={18}
-                color={isDark ? "#a0a0a0" : "#6b7280"}
-              />
-              <Text
-                style={[
-                  styles.ctaSecondaryText,
-                  { color: isDark ? "#a0a0a0" : "#6b7280" },
-                ]}
-              >
-                {t.onboarding.exploreMode}
+                {t.onboarding.start}
               </Text>
             </View>
           </PressableScale>
@@ -409,9 +625,30 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
           >
             {t.onboarding.exploreModeHint}
           </Text>
+
+          {/* Login link for returning subscribers */}
+          <PressableScale onPress={onLogin}>
+            <Text
+              style={[
+                styles.loginLink,
+                { color: isDark ? "rgba(255,255,255,0.4)" : "#6b7280" },
+              ]}
+            >
+              {t.onboarding.alreadySubscribed}{" "}
+              <Text style={{ color: gold[500], fontWeight: "700" }}>
+                {t.onboarding.login}
+              </Text>
+            </Text>
+          </PressableScale>
         </Animated.View>
       ) : (
         <Animated.View style={descStyle}>
+          {/* Brand slide: gold tagline */}
+          {config.id === "brand" && (
+            <Text style={styles.brandTagline}>
+              Scanne. Comprends. Choisis.
+            </Text>
+          )}
           <Text
             style={[
               styles.description,
@@ -436,8 +673,8 @@ const styles = StyleSheet.create({
   heroSection: {
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 36,
-    height: 180,
+    marginBottom: 24,
+    minHeight: 180,
   },
   accentGlow: {
     position: "absolute",
@@ -454,13 +691,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 120,
     height: 120,
-  },
-  glowRing: {
-    position: "absolute",
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    borderWidth: 2,
   },
   heroLogo: {
     width: 100,
@@ -491,29 +721,187 @@ const styles = StyleSheet.create({
     maxWidth: 300,
     letterSpacing: Platform.OS === "android" ? 0 : 0.1,
   },
-  // Madhab decorative
-  madhabRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginTop: 20,
-    flexWrap: "wrap",
-    justifyContent: "center",
+
+  // ── Brand tagline ──
+  brandTagline: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: gold[500],
+    letterSpacing: 0.5,
+    textAlign: "center",
+    marginBottom: 8,
   },
-  madhabBadge: {
+
+  // ── Scanner: mini scan preview card ──
+  scanPreviewCard: {
+    marginTop: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.07)",
+    gap: 8,
+    width: 220,
+  },
+  scanPreviewStatusRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
+    gap: 6,
   },
-  madhabLabel: {
+  scanPreviewDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  scanPreviewStatusText: {
     fontSize: 11,
-    fontWeight: "600",
-    letterSpacing: Platform.OS === "android" ? 0.1 : 0.3,
+    fontWeight: "700",
   },
-  // Map decorative
+  scanPreviewBottom: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  // Mini NaqiyGradeBadge strip
+  miniGradeStrip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+  },
+  miniGradeN: {
+    fontSize: 11,
+    fontWeight: "900",
+    color: gold[500],
+    marginRight: 2,
+  },
+  miniGradePill: {
+    borderRadius: 4,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  miniGradePillActive: {
+    width: 26,
+    height: 16,
+  },
+  miniGradePillInactive: {
+    width: 14,
+    height: 14,
+  },
+  miniGradePillText: {
+    fontSize: 8,
+    fontWeight: "900",
+    color: "#fff",
+  },
+
+  // Mini health ring
+  miniHealthRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  miniRingContainer: {
+    width: 32,
+    height: 17,
+    position: "relative",
+  },
+  miniRingScore: {
+    position: "absolute",
+    bottom: -1,
+    width: 32,
+    textAlign: "center",
+    fontSize: 9,
+    fontWeight: "900",
+  },
+  miniHealthLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+  },
+
+  // ── Trust: NaqiyGradeBadge explained ──
+  gradeExplainedCard: {
+    marginTop: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: "rgba(207,165,51,0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(207,165,51,0.12)",
+    gap: 8,
+    width: 250,
+    alignItems: "center",
+  },
+  gradeStripRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
+  gradeStripN: {
+    fontSize: 14,
+    fontWeight: "900",
+    color: gold[500],
+    marginRight: 3,
+  },
+  gradeStripPill: {
+    borderRadius: 5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  gradeStripPillActive: {
+    width: 40,
+    height: 26,
+  },
+  gradeStripPillInactive: {
+    width: 22,
+    height: 22,
+  },
+  gradeStripPillText: {
+    fontWeight: "900",
+    color: "#fff",
+  },
+  gradeLabelsRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 3,
+    paddingLeft: 20,
+  },
+  gradeLabelCol: {
+    width: 22,
+    alignItems: "center",
+  },
+  gradeLabelText: {
+    fontSize: 7,
+    fontWeight: "500",
+    color: "rgba(255,255,255,0.4)",
+    textAlign: "center",
+  },
+
+  // Madhab mini dots
+  madhabMiniRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.06)",
+    width: "100%",
+  },
+  madhabMiniDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: primary[500],
+    opacity: 0.7,
+  },
+  madhabMiniLabel: {
+    fontSize: 10,
+    fontWeight: "500",
+    color: "rgba(207,165,51,0.6)",
+  },
+
+  // ── Map: floating pins + store card ──
   mapPins: {
     position: "absolute",
     width: 160,
@@ -530,23 +918,134 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  // Scanner decorative
-  scanLine: {
-    position: "absolute",
-    width: 60,
+  storeCard: {
+    marginTop: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    gap: 4,
+    width: 200,
+  },
+  storeCardTop: {
+    flexDirection: "row",
     alignItems: "center",
-    top: "50%",
+    justifyContent: "space-between",
+    gap: 8,
   },
-  scanLineBar: {
-    width: "100%",
-    height: 2,
-    borderRadius: 1,
-    opacity: 0.7,
+  storeCardName: {
+    fontSize: 11,
+    fontWeight: "700",
+    flex: 1,
   },
-  // CTA slide
+  storeDistBadge: {
+    backgroundColor: "rgba(19,236,106,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(19,236,106,0.15)",
+    borderRadius: 5,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+  },
+  storeDistText: {
+    fontSize: 9,
+    fontWeight: "700",
+    color: primary[500],
+  },
+  storeCardBottom: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  storeCertBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: "rgba(207,165,51,0.07)",
+    borderWidth: 1,
+    borderColor: "rgba(207,165,51,0.12)",
+    borderRadius: 5,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  storeCertText: {
+    fontSize: 9,
+    fontWeight: "700",
+    color: gold[500],
+  },
+  storeStatusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
+  storeOpenDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: primary[500],
+  },
+  storeOpenText: {
+    fontSize: 9,
+    fontWeight: "600",
+    color: primary[500],
+  },
+  storeRatingText: {
+    fontSize: 9,
+    fontWeight: "600",
+    color: "rgba(255,255,255,0.5)",
+  },
+
+  // ── CTA slide ──
   ctaContainer: {
     alignItems: "center",
     width: "100%",
+  },
+  premiumChips: {
+    flexDirection: "row",
+    gap: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    flexWrap: "wrap",
+    marginBottom: 8,
+  },
+  premiumChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  premiumChipText: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: gold[500],
+  },
+  premiumPlusLabel: {
+    fontSize: 7,
+    fontWeight: "800",
+    color: "rgba(207,165,51,0.5)",
+    letterSpacing: 0.5,
+  },
+  healthBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginBottom: 4,
+  },
+  healthBadgeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: primary[500],
+  },
+  healthBadgeText: {
+    fontSize: 10,
+    fontWeight: "600",
   },
   ctaButtonWrapper: {
     width: "100%",
@@ -565,24 +1064,16 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: Platform.OS === "android" ? 0.1 : 0.3,
   },
-  ctaSecondary: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    height: 52,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderStyle: "dashed",
-  },
-  ctaSecondaryText: {
-    fontSize: 15,
-    fontWeight: "600",
-  },
   hintText: {
     fontSize: 12,
     fontWeight: "500",
     marginTop: 4,
+  },
+  loginLink: {
+    fontSize: 13,
+    fontWeight: "500",
+    marginTop: 16,
+    textAlign: "center",
   },
 });
 

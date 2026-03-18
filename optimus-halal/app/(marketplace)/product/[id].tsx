@@ -25,7 +25,7 @@ import { PressableScale } from "@/components/ui/PressableScale";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, CaretRightIcon, LeafIcon, MinusIcon, PlusIcon, SealCheckIcon, ShoppingCartIcon } from "phosphor-react-native";
 import { useHaptics, useTheme } from "@/hooks";
 import { brand } from "@/theme/colors";
 import Animated, {
@@ -36,6 +36,7 @@ import Animated, {
 import Svg, { Path } from "react-native-svg";
 
 import { useLocalCartStore } from "@/store";
+import { AppIcon } from "@/lib/icons";
 
 // Mock product data
 const PRODUCT_DATA = {
@@ -204,11 +205,8 @@ export default function ProductDetailScreen() {
           hitSlop={8}
         >
           <View className="h-10 w-10 items-center justify-center rounded-full">
-            <MaterialIcons
-              name="arrow-back"
-              size={24}
-              color={isDark ? "#ffffff" : "#0d1b12"}
-            />
+            <ArrowLeftIcon size={24}
+              color={isDark ? "#ffffff" : "#0d1b12"} />
           </View>
         </Pressable>
 
@@ -221,11 +219,8 @@ export default function ProductDetailScreen() {
           hitSlop={8}
         >
           <View className="relative h-10 w-10 items-center justify-center rounded-full">
-            <MaterialIcons
-              name="shopping-cart"
-              size={24}
-              color={isDark ? "#ffffff" : "#0d1b12"}
-            />
+            <ShoppingCartIcon size={24}
+              color={isDark ? "#ffffff" : "#0d1b12"} />
             {itemCount > 0 && (
               <View className="absolute top-2 right-2 h-2 w-2 bg-primary rounded-full" />
             )}
@@ -306,18 +301,15 @@ export default function ProductDetailScreen() {
                 <Text className="text-base font-bold text-slate-800 dark:text-white">
                   Score Éthique: {product.ethicalScore}/100
                 </Text>
-                <MaterialIcons name="verified" size={14} color={colors.primary} />
+                <SealCheckIcon size={14} color={colors.primary} />
               </View>
               <Text className="text-xs text-slate-500 dark:text-slate-400 leading-snug">
                 Excellente transparence. Provenance durable, sans cruauté avec traçabilité complète.
               </Text>
             </View>
             <Pressable hitSlop={8}>
-              <MaterialIcons
-                name="chevron-right"
-                size={24}
-                color={isDark ? "#6b7280" : "#9ca3af"}
-              />
+              <CaretRightIcon size={24}
+                color={isDark ? "#6b7280" : "#9ca3af"} />
             </Pressable>
           </View>
         </Animated.View>
@@ -339,7 +331,7 @@ export default function ProductDetailScreen() {
                   key={cert.id}
                   className={`flex-row items-center gap-2 px-3 py-1.5 rounded-lg ${colors.bg} border ${colors.border}`}
                 >
-                  <MaterialIcons name={cert.icon as any} size={18} color={colors.icon} />
+                  <AppIcon name={cert.icon as any} size={18} color={colors.icon} />
                   <Text className={`text-xs font-semibold ${colors.text}`}>
                     {cert.label}
                   </Text>
@@ -368,11 +360,9 @@ export default function ProductDetailScreen() {
                 <Text className="text-sm font-semibold text-slate-800 dark:text-white">
                   Ingrédients & Nutrition
                 </Text>
-                <MaterialIcons
-                  name={expandedSection === "ingredients" ? "expand-less" : "expand-more"}
+                <AppIcon name={expandedSection === "ingredients" ? "expand-less" : "expand-more"}
                   size={24}
-                  color={isDark ? "#9ca3af" : "#6b7280"}
-                />
+                  color={isDark ? "#9ca3af" : "#6b7280"} />
               </View>
             </PressableScale>
             
@@ -381,11 +371,9 @@ export default function ProductDetailScreen() {
                 <Text className="text-sm font-semibold text-slate-800 dark:text-white">
                   Rapport de Traçabilité
                 </Text>
-                <MaterialIcons
-                  name={expandedSection === "traceability" ? "expand-less" : "expand-more"}
+                <AppIcon name={expandedSection === "traceability" ? "expand-less" : "expand-more"}
                   size={24}
-                  color={isDark ? "#9ca3af" : "#6b7280"}
-                />
+                  color={isDark ? "#9ca3af" : "#6b7280"} />
               </View>
             </PressableScale>
           </View>
@@ -403,11 +391,8 @@ export default function ProductDetailScreen() {
             <View className="flex-row items-center rounded-lg border border-slate-200 dark:border-slate-700 p-1 bg-white dark:bg-slate-800">
               <Pressable onPress={() => handleQuantityChange(-1)}>
                 <View className="h-10 w-10 items-center justify-center rounded-md">
-                  <MaterialIcons
-                    name="remove"
-                    size={24}
-                    color={isDark ? "#ffffff" : "#0d1b12"}
-                  />
+                  <MinusIcon size={24}
+                    color={isDark ? "#ffffff" : "#0d1b12"} />
                 </View>
               </Pressable>
               <View className="w-12 items-center">
@@ -417,7 +402,7 @@ export default function ProductDetailScreen() {
               </View>
               <Pressable onPress={() => handleQuantityChange(1)}>
                 <View className="h-10 w-10 items-center justify-center rounded-md bg-primary">
-                  <MaterialIcons name="add" size={24} color="#0d1b12" />
+                  <PlusIcon size={24} color="#0d1b12" />
                 </View>
               </Pressable>
             </View>
@@ -467,7 +452,7 @@ export default function ProductDetailScreen() {
                       transition={200}
                     />
                     <View className="absolute top-2 right-2 bg-white/90 dark:bg-black/60 rounded-full p-1">
-                      <MaterialIcons name="eco" size={16} color={colors.primary} />
+                      <LeafIcon size={16} color={colors.primary} />
                     </View>
                   </View>
                   <Text
@@ -520,7 +505,7 @@ export default function ProductDetailScreen() {
             }}
           >
             <View className="bg-primary py-4 rounded-xl flex-row items-center justify-center gap-2">
-              <MaterialIcons name="add-shopping-cart" size={20} color="#0d1b12" />
+              <ShoppingCartIcon size={20} color="#0d1b12" />
               <Text className="text-base font-bold text-slate-900">
                 Ajouter
               </Text>

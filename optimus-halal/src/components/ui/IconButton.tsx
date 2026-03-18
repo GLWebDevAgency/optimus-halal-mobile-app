@@ -5,14 +5,14 @@
  */
 
 import React from "react";
-import { View, Text } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import { View, Text, StyleSheet, type ViewStyle } from "react-native";
 import { useHaptics } from "@/hooks";
 import { neutral } from "@/theme/colors";
 import { PressableScale } from "./PressableScale";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 export interface IconButtonProps {
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: IconName;
   size?: "sm" | "md" | "lg";
   variant?: "default" | "filled" | "outline";
   color?: string;
@@ -21,7 +21,7 @@ export interface IconButtonProps {
   accessibilityLabel: string;
   onPress?: () => void;
   disabled?: boolean;
-  className?: string;
+  style?: ViewStyle;
   testID?: string;
 }
 
@@ -29,12 +29,6 @@ const sizeConfig = {
   sm: { button: 44, icon: 18, badge: 14 },
   md: { button: 44, icon: 22, badge: 16 },
   lg: { button: 48, icon: 26, badge: 18 },
-};
-
-const variantStyles = {
-  default: "bg-transparent",
-  filled: "bg-white dark:bg-surface-dark shadow-soft dark:shadow-soft-dark border border-slate-100 dark:border-slate-700",
-  outline: "bg-transparent border border-slate-200 dark:border-slate-700",
 };
 
 export const IconButton: React.FC<IconButtonProps> = ({
@@ -45,7 +39,7 @@ export const IconButton: React.FC<IconButtonProps> = ({
   badge,
   onPress,
   disabled,
-  className = "",
+  style,
   testID,
   accessibilityLabel,
 }) => {
@@ -66,31 +60,31 @@ export const IconButton: React.FC<IconButtonProps> = ({
       testID={testID}
     >
       <View
-        className={`
-          items-center justify-center rounded-full
-          ${variantStyles[variant]}
-          ${className}
-        `}
-        style={{
-          width: sizeStyles.button,
-          height: sizeStyles.button,
-        }}
+        style={[
+          styles.base,
+          variant === "filled" && styles.filled,
+          variant === "outline" && styles.outline,
+          {
+            width: sizeStyles.button,
+            height: sizeStyles.button,
+          },
+          style,
+        ]}
       >
-        <MaterialIcons
-          name={icon}
+        <AppIcon name={icon}
           size={sizeStyles.icon}
-          color={color || neutral[600]}
-        />
+          color={color || neutral[600]} />
         {badge !== undefined && badge > 0 && (
           <View
-            className="absolute -top-1 -right-1 bg-danger rounded-full items-center justify-center"
-            style={{
-              minWidth: sizeStyles.badge,
-              height: sizeStyles.badge,
-              paddingHorizontal: 4,
-            }}
+            style={[
+              styles.badge,
+              {
+                minWidth: sizeStyles.badge,
+                height: sizeStyles.badge,
+              },
+            ]}
           >
-            <Text className="text-white text-[10px] font-bold">
+            <Text style={styles.badgeText}>
               {badge > 99 ? "99+" : badge}
             </Text>
           </View>
@@ -99,5 +93,43 @@ export const IconButton: React.FC<IconButtonProps> = ({
     </PressableScale>
   );
 };
+
+const styles = StyleSheet.create({
+  base: {
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 9999,
+  },
+  filled: {
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.06)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  outline: {
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.12)",
+  },
+  badge: {
+    position: "absolute",
+    top: -2,
+    right: -2,
+    backgroundColor: "#ef4444",
+    borderRadius: 9999,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: "#ffffff",
+    fontSize: 10,
+    fontWeight: "700",
+  },
+});
 
 export default IconButton;

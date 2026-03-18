@@ -1,13 +1,13 @@
 /**
  * Reset Confirmation Screen
- * 
- * Ultra Premium design fidèle au template
- * Écran de confirmation d'envoi de l'email de réinitialisation
- * 
+ *
+ * Confirms password reset email was sent.
+ * Features: 60s resend cooldown, real API resend, ephemeral store integration.
+ *
  * Supports: French, English, Arabic (RTL)
  */
 
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -15,11 +15,13 @@ import {
   Linking,
   Platform,
 } from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
+import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, CheckIcon, EnvelopeOpenIcon, QuestionIcon } from "phosphor-react-native";
 import { useHaptics, useTheme, useTranslation } from "@/hooks";
-import { ImpactFeedbackStyle } from "expo-haptics";
+import { useRequestPasswordReset } from "@/hooks/useAuth";
+import { usePasswordResetStore } from "@/store";
+import { ImpactFeedbackStyle, NotificationFeedbackType } from "expo-haptics";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -38,12 +40,34 @@ import { LinearGradient } from "expo-linear-gradient";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { brand } from "@/theme/colors";
 
+const RESEND_COOLDOWN_SECONDS = 60;
+
 export default function ResetConfirmationScreen() {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
   const { impact, notification } = useHaptics();
-  const { email } = useLocalSearchParams<{ email: string }>();
   const { t, isRTL } = useTranslation();
+
+  const maskedEmail = usePasswordResetStore((s) => s.maskedEmail);
+  const rawEmail = usePasswordResetStore((s) => s.email);
+  const resendMutation = useRequestPasswordReset();
+
+  // Resend cooldown
+  const [cooldown, setCooldown] = useState(RESEND_COOLDOWN_SECONDS);
+  const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
+
+  useEffect(() => {
+    intervalRef.current = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(intervalRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(intervalRef.current);
+  }, []);
 
   // Animation values
   const iconScale = useSharedValue(1);
@@ -51,10 +75,8 @@ export default function ResetConfirmationScreen() {
   const checkScale = useSharedValue(0);
 
   useEffect(() => {
-    // Entrance animation for check mark
     checkScale.value = withSpring(1, { damping: 10, stiffness: 150 });
 
-    // Continuous glow pulsing
     glowOpacity.value = withRepeat(
       withSequence(
         withTiming(0.6, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
@@ -64,7 +86,6 @@ export default function ResetConfirmationScreen() {
       false
     );
 
-    // Subtle icon breathing
     iconScale.value = withRepeat(
       withSequence(
         withTiming(1.03, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
@@ -88,45 +109,59 @@ export default function ResetConfirmationScreen() {
     transform: [{ scale: checkScale.value }],
   }));
 
-  const handleGoBack = useCallback(async () => {
+  const handleGoBack = useCallback(() => {
     impact();
     router.back();
-  }, []);
+  }, [impact]);
 
-  const handleBackToLogin = useCallback(async () => {
+  const handleEnterCode = useCallback(() => {
     impact(ImpactFeedbackStyle.Medium);
-    router.replace("/(auth)/login");
-  }, []);
+    router.push("/(auth)/reset-code");
+  }, [impact]);
 
-  const handleOpenEmailApp = useCallback(async () => {
+  const handleOpenEmailApp = useCallback(() => {
     impact();
-    
     if (Platform.OS === "ios") {
       Linking.openURL("message://");
     } else {
       Linking.openURL("mailto:");
     }
-  }, []);
+  }, [impact]);
 
-  const handleResendLink = useCallback(async () => {
-    notification();
-    // Simulate resend - in real app, call API
-  }, []);
+  const handleResend = useCallback(() => {
+    if (cooldown > 0 || !rawEmail) return;
 
-  const handleContactSupport = useCallback(async () => {
+    notification(NotificationFeedbackType.Success);
+    setCooldown(RESEND_COOLDOWN_SECONDS);
+
+    // Restart countdown
+    intervalRef.current = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(intervalRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    resendMutation.mutate({ email: rawEmail });
+  }, [cooldown, rawEmail, resendMutation, notification]);
+
+  const handleContactSupport = useCallback(() => {
     impact();
-    Linking.openURL("mailto:support@optimushalal.com");
-  }, []);
+    Linking.openURL("mailto:support@naqiy.app");
+  }, [impact]);
 
   return (
-    <View 
+    <View
       style={[
-        styles.container, 
-        { backgroundColor: isDark ? "#102217" : "#f6f8f7" }
+        styles.container,
+        { backgroundColor: isDark ? "#102217" : "#f6f8f7" },
       ]}
     >
       {/* Header */}
-      <Animated.View 
+      <Animated.View
         entering={FadeIn.delay(100).duration(400)}
         style={[styles.header, { paddingTop: insets.top + 16 }]}
       >
@@ -136,26 +171,25 @@ export default function ResetConfirmationScreen() {
           accessibilityRole="button"
           accessibilityLabel={t.common.back}
         >
-          <MaterialIcons
-            name="arrow-back"
+          <ArrowLeftIcon
             size={24}
             color={isDark ? "#ffffff" : "#1f2937"}
           />
         </PressableScale>
-        
+
         <Text
           style={[
             styles.headerTitle,
             {
               color: isDark ? "#ffffff" : "#1f2937",
               textAlign: isRTL ? "right" : "center",
-            }
+            },
           ]}
           accessibilityRole="header"
         >
           {t.auth.resetConfirmation.title}
         </Text>
-        
+
         <View style={styles.headerSpacer} />
       </Animated.View>
 
@@ -167,7 +201,6 @@ export default function ResetConfirmationScreen() {
           style={styles.illustrationContainer}
           accessible={false}
         >
-          {/* Outer glow effect */}
           <Animated.View style={[styles.glowEffect, animatedGlowStyle]}>
             <LinearGradient
               colors={[`${brand.primary}30`, "transparent"]}
@@ -175,33 +208,30 @@ export default function ResetConfirmationScreen() {
             />
           </Animated.View>
 
-          {/* Icon container */}
-          <Animated.View 
+          <Animated.View
             style={[
               styles.iconContainer,
               animatedIconStyle,
               {
                 backgroundColor: isDark ? "#1f2937" : "#ffffff",
                 borderColor: isDark ? "#374151" : "#e5e7eb",
-              }
+              },
             ]}
           >
-            <MaterialIcons
-              name="mark-email-read"
-              size={48}
-              color={brand.primary}
-            />
+            <EnvelopeOpenIcon size={48} color={brand.primary} />
           </Animated.View>
 
-          {/* Decorative check badge */}
           <Animated.View
             style={[
               styles.checkBadge,
               animatedCheckStyle,
-              { backgroundColor: colors.primary, borderColor: isDark ? "#102217" : "#ffffff" }
+              {
+                backgroundColor: colors.primary,
+                borderColor: isDark ? "#102217" : "#ffffff",
+              },
             ]}
           >
-            <MaterialIcons name="check" size={12} color="#102217" />
+            <CheckIcon size={12} color="#102217" />
           </Animated.View>
         </Animated.View>
 
@@ -213,7 +243,7 @@ export default function ResetConfirmationScreen() {
             {
               color: isDark ? "#ffffff" : "#1f2937",
               textAlign: isRTL ? "right" : "center",
-            }
+            },
           ]}
           accessibilityRole="header"
         >
@@ -225,20 +255,24 @@ export default function ResetConfirmationScreen() {
           entering={FadeInDown.delay(400).duration(500)}
           style={[
             styles.bodyText,
-            { 
+            {
               color: isDark ? "#9ca3af" : "#6b7280",
               textAlign: isRTL ? "right" : "center",
-            }
+            },
           ]}
         >
           {t.auth.resetConfirmation.message}{" "}
-          <Text style={{ color: isDark ? "#ffffff" : "#1f2937", fontWeight: "500" }}>
-            {email || "votre adresse email"}
+          <Text
+            style={{
+              color: isDark ? "#ffffff" : "#1f2937",
+              fontWeight: "500",
+            }}
+          >
+            {maskedEmail || "votre adresse email"}
           </Text>
           {t.auth.resetConfirmation.messageSuffix}
         </Animated.Text>
 
-        {/* Spacing */}
         <View style={styles.spacer} />
 
         {/* Primary Actions */}
@@ -246,13 +280,15 @@ export default function ResetConfirmationScreen() {
           entering={FadeInUp.delay(500).duration(500)}
           style={styles.actionsContainer}
         >
-          {/* Back to Login Button */}
-          <View style={[styles.primaryButtonShadow, { shadowColor: colors.primary }]}>
+          {/* Enter Code Button (Primary CTA) */}
+          <View
+            style={[styles.primaryButtonShadow, { shadowColor: colors.primary }]}
+          >
             <PressableScale
-              onPress={handleBackToLogin}
+              onPress={handleEnterCode}
               style={styles.primaryButton}
               accessibilityRole="button"
-              accessibilityLabel={t.auth.resetConfirmation.backToLogin}
+              accessibilityLabel={t.auth.resetConfirmation.enterCode}
             >
               <LinearGradient
                 colors={[brand.primary, "#10d65f"]}
@@ -261,7 +297,7 @@ export default function ResetConfirmationScreen() {
                 end={{ x: 1, y: 1 }}
               >
                 <Text style={styles.primaryButtonText}>
-                  {t.auth.resetConfirmation.backToLogin}
+                  {t.auth.resetConfirmation.enterCode}
                 </Text>
               </LinearGradient>
             </PressableScale>
@@ -276,13 +312,13 @@ export default function ResetConfirmationScreen() {
               styles.secondaryButton,
               {
                 borderColor: isDark ? "#374151" : "#e5e7eb",
-              }
+              },
             ]}
           >
             <Text
               style={[
                 styles.secondaryButtonText,
-                { color: isDark ? "#ffffff" : "#1f2937" }
+                { color: isDark ? "#ffffff" : "#1f2937" },
               ]}
             >
               {t.auth.resetConfirmation.openEmailApp}
@@ -290,26 +326,40 @@ export default function ResetConfirmationScreen() {
           </PressableScale>
         </Animated.View>
 
-        {/* Resend Link */}
+        {/* Resend with cooldown */}
         <Animated.View
           entering={FadeIn.delay(600).duration(500)}
           style={styles.resendContainer}
         >
-          <Text 
+          <Text
             style={[
               styles.resendText,
-              { color: isDark ? "#9ca3af" : "#6b7280" }
+              { color: isDark ? "#9ca3af" : "#6b7280" },
             ]}
           >
             {t.auth.resetConfirmation.noEmail}
           </Text>
           <PressableScale
-            onPress={handleResendLink}
+            onPress={handleResend}
+            disabled={cooldown > 0}
             accessibilityRole="button"
             accessibilityLabel={t.auth.resetConfirmation.resendLink}
           >
-            <Text style={[styles.resendLink, { color: colors.primary }]}>
-              {t.auth.resetConfirmation.resendLink}
+            <Text
+              style={[
+                styles.resendLink,
+                {
+                  color: cooldown > 0
+                    ? isDark
+                      ? "#4b5563"
+                      : "#d1d5db"
+                    : colors.primary,
+                },
+              ]}
+            >
+              {cooldown > 0
+                ? `${t.auth.resetConfirmation.resendIn} ${cooldown}s`
+                : t.auth.resetConfirmation.resendLink}
             </Text>
           </PressableScale>
         </Animated.View>
@@ -322,19 +372,21 @@ export default function ResetConfirmationScreen() {
       >
         <PressableScale
           onPress={handleContactSupport}
-          style={[styles.supportButton, { flexDirection: isRTL ? "row-reverse" : "row" }]}
+          style={[
+            styles.supportButton,
+            { flexDirection: isRTL ? "row-reverse" : "row" },
+          ]}
           accessibilityRole="link"
           accessibilityLabel={t.auth.resetConfirmation.contactSupport}
         >
-          <MaterialIcons
-            name="help"
+          <QuestionIcon
             size={18}
             color={isDark ? "#6b7280" : "#9ca3af"}
           />
           <Text
             style={[
               styles.supportText,
-              { color: isDark ? "#6b7280" : "#9ca3af" }
+              { color: isDark ? "#6b7280" : "#9ca3af" },
             ]}
           >
             {t.auth.resetConfirmation.contactSupport}

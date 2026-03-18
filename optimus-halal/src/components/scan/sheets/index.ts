@@ -1,0 +1,13 @@
+export { IngredientDetailContent } from "./IngredientDetailContent";
+export { AdditiveDetailContent } from "./AdditiveDetailContent";
+export { AlternativePreviewContent } from "./AlternativePreviewContent";
+export { HealthScoreDetailContent } from "./HealthScoreDetailContent";
+export { NutriScoreDetailContent } from "./NutriScoreDetailContent";
+export { AxisDetailContent } from "./AxisDetailContent";
+export { NovaDetailContent } from "./NovaDetailContent";
+export { AllergenDetailContent } from "./AllergenDetailContent";
+export { LabelDetailContent } from "./LabelDetailContent";
+export { CommunityDetailContent } from "./CommunityDetailContent";
+export { AlertDetailContent } from "./AlertDetailContent";
+export { BoycottDetailContent } from "./BoycottDetailContent";
+export { FeedbackDetailContent } from "./FeedbackDetailContent";

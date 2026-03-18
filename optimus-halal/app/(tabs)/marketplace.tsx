@@ -17,7 +17,7 @@ import {
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowRightIcon, BellIcon, BellRingingIcon, PackageIcon, SealCheckIcon, ShoppingCartIcon, ShoppingCartSimpleIcon, SparkleIcon, StorefrontIcon, TruckIcon } from "phosphor-react-native";
 import { useHaptics, useTheme, useTranslation } from "@/hooks";
 import Animated, {
   FadeIn,
@@ -31,6 +31,7 @@ import { PressableScale } from "@/components/ui/PressableScale";
 import { useFeatureFlagsStore, useLocalCartStore } from "@/store";
 import { trpc } from "@/lib/trpc";
 import { brand, glass, halalStatus } from "@/theme/colors";
+import { AppIcon } from "@/lib/icons";
 
 const GOLD = "#d4af37";
 const logoSource = require("@assets/images/logo_naqiy.webp");
@@ -135,11 +136,8 @@ const ProductCard = React.memo(function ProductCard({
                       : "rgba(0,0,0,0.03)",
                   }}
                 >
-                  <MaterialIcons
-                    name="inventory-2"
-                    size={32}
-                    color={isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}
-                  />
+                  <PackageIcon size={32}
+                    color={isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"} />
                 </View>
               )}
               {/* Halal status badge */}
@@ -200,7 +198,7 @@ const ProductCard = React.memo(function ProductCard({
                     marginBottom: 8,
                   }}
                 >
-                  <MaterialIcons name="verified" size={14} color={GOLD} />
+                  <SealCheckIcon size={14} color={GOLD} />
                   <Text
                     style={{
                       fontSize: 12,
@@ -250,11 +248,8 @@ const ProductCard = React.memo(function ProductCard({
                       borderRadius: 999,
                     }}
                   >
-                    <MaterialIcons
-                      name="add-shopping-cart"
-                      size={16}
-                      color={isDark ? GOLD : brand.primary}
-                    />
+                    <ShoppingCartIcon size={16}
+                      color={isDark ? GOLD : brand.primary} />
                   </View>
                 </PressableScale>
               </View>
@@ -388,11 +383,8 @@ export default function MarketplaceTab() {
                 },
               ]}
             >
-              <MaterialIcons
-                name="notifications-none"
-                size={20}
-                color={isDark ? GOLD : colors.textPrimary}
-              />
+              <BellIcon size={20}
+                color={isDark ? GOLD : colors.textPrimary} />
               {unreadCount > 0 && (
                 <View
                   style={[
@@ -453,7 +445,7 @@ export default function MarketplaceTab() {
                   },
                 ]}
               >
-                <MaterialIcons name="storefront" size={40} color={GOLD} />
+                <StorefrontIcon size={40} color={GOLD} />
               </View>
 
               <Text
@@ -475,11 +467,9 @@ export default function MarketplaceTab() {
                   { icon: "shield" as const, label: "Traçabilité" },
                 ].map((item, i) => (
                   <View key={i} style={styles.featureChip}>
-                    <MaterialIcons
-                      name={item.icon}
+                    <AppIcon name={item.icon}
                       size={14}
-                      color={isDark ? GOLD : brand.primary}
-                    />
+                      color={isDark ? GOLD : brand.primary} />
                     <Text
                       style={[
                         styles.featureChipText,
@@ -517,11 +507,8 @@ export default function MarketplaceTab() {
                   end={{ x: 1, y: 0 }}
                   style={[StyleSheet.absoluteFill, { borderRadius: 14 }]}
                 />
-                <MaterialIcons
-                  name="notifications-active"
-                  size={18}
-                  color={isDark ? "#1A1A1A" : "#ffffff"}
-                />
+                <BellRingingIcon size={18}
+                  color={isDark ? "#1A1A1A" : "#ffffff"} />
                 <Text
                   style={[
                     styles.ctaText,
@@ -606,11 +593,8 @@ export default function MarketplaceTab() {
                   },
                 ]}
               >
-                <MaterialIcons
-                  name="notifications-none"
-                  size={20}
-                  color={isDark ? GOLD : colors.textPrimary}
-                />
+                <BellIcon size={20}
+                  color={isDark ? GOLD : colors.textPrimary} />
                 {unreadCount > 0 && (
                   <View
                     style={[
@@ -641,11 +625,8 @@ export default function MarketplaceTab() {
                   },
                 ]}
               >
-                <MaterialIcons
-                  name="shopping-cart-checkout"
-                  size={20}
-                  color={isDark ? GOLD : colors.textPrimary}
-                />
+                <ShoppingCartSimpleIcon size={20}
+                  color={isDark ? GOLD : colors.textPrimary} />
                 {itemCount > 0 && (
                   <View
                     style={[
@@ -703,8 +684,7 @@ export default function MarketplaceTab() {
                           },
                     ]}
                   >
-                    <MaterialIcons
-                      name={category.icon}
+                    <AppIcon name={category.icon}
                       size={18}
                       color={
                         isSelected
@@ -714,8 +694,7 @@ export default function MarketplaceTab() {
                           : isDark
                             ? "rgba(255,255,255,0.5)"
                             : "rgba(0,0,0,0.4)"
-                      }
-                    />
+                      } />
                     <Text
                       style={{
                         marginLeft: 8,
@@ -745,7 +724,7 @@ export default function MarketplaceTab() {
           <View style={styles.sectionHeader}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
               <View style={styles.sectionWave}>
-                <MaterialIcons name="auto-awesome" size={14} color={GOLD} />
+                <SparkleIcon size={14} color={GOLD} />
               </View>
               <Text
                 accessibilityRole="header"
@@ -780,11 +759,8 @@ export default function MarketplaceTab() {
                 paddingHorizontal: 20,
               }}
             >
-              <MaterialIcons
-                name="inventory-2"
-                size={40}
-                color={isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}
-              />
+              <PackageIcon size={40}
+                color={isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"} />
               <Text
                 style={{
                   fontSize: 14,
@@ -871,12 +847,9 @@ export default function MarketplaceTab() {
                   >
                     {t.marketplace.discoverOffers}
                   </Text>
-                  <MaterialIcons
-                    name="arrow-forward"
-                    size={16}
+                  <ArrowRightIcon size={16}
                     color={GOLD}
-                    style={{ marginLeft: 4 }}
-                  />
+                    style={{ marginLeft: 4 }} />
                 </View>
               </PressableScale>
             </View>
@@ -893,7 +866,7 @@ export default function MarketplaceTab() {
                   : "rgba(212,175,55,0.08)",
               }}
             >
-              <MaterialIcons name="local-shipping" size={32} color={GOLD} />
+              <TruckIcon size={32} color={GOLD} />
             </View>
           </View>
         </Animated.View>

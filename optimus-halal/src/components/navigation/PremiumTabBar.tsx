@@ -19,7 +19,7 @@ import {
 } from "react-native";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { BarcodeIcon } from "phosphor-react-native";
 import { BlurView } from "expo-blur";
 import { useHaptics, useTheme, useTranslation } from "@/hooks";
 import Animated, {
@@ -40,14 +40,15 @@ import { LinearGradient } from "expo-linear-gradient";
 import Svg, { Defs, RadialGradient, Stop, Circle } from "react-native-svg";
 
 import { brand, gold, gradients } from "@/theme/colors";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 interface TabConfig {
   name: string;
   navKey: "home" | "map" | "scanner" | "marketplace" | "profile";
-  iconOutline: keyof typeof MaterialIcons.glyphMap;
-  iconFilled: keyof typeof MaterialIcons.glyphMap;
+  iconOutline: IconName;
+  iconFilled: IconName;
   isCenter?: boolean;
 }
 
@@ -196,11 +197,9 @@ function TabItem({ tab, isActive, onPress, badge, index }: TabItemProps) {
 
       {/* Icon Container */}
       <Animated.View style={[styles.iconContainer, animatedIconStyle]}>
-        <MaterialIcons
-          name={isActive ? tab.iconFilled : tab.iconOutline}
+        <AppIcon name={isActive ? tab.iconFilled : tab.iconOutline}
           size={26}
-          color={currentColor}
-        />
+          color={currentColor} />
         {badge && badge > 0 ? (
           <Animated.View entering={FadeIn.duration(200)} style={styles.badge}>
             <LinearGradient
@@ -380,11 +379,8 @@ function CenterScannerButton({ isActive, onPress }: CenterButtonProps) {
             
             {/* Icon with subtle shadow */}
             <View style={styles.iconShadow}>
-              <MaterialIcons
-                name="qr-code-scanner"
-                size={30}
-                color={isDark ? "#1A1A1A" : brand.primary}
-              />
+              <BarcodeIcon size={30}
+                color={isDark ? "#1A1A1A" : brand.primary} />
             </View>
           </LinearGradient>
         </View>

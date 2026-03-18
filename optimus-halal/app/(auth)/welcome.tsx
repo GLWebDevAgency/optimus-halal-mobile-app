@@ -1,29 +1,60 @@
 /**
- * Authentication Welcome Screen
- * 
- * Entry point for authentication with configurable mode:
- * - V1: Classic login only (email/password)
- * - V2: Magic Link only (passwordless) - DEFAULT
- * - Hybrid: Both options available
+ * Welcome Screen — Naqiy
+ *
+ * First impression. The most critical screen in the entire app.
+ * 2-tier model: Guest (free, limited scans) / Naqiy+ (paid, unlimited).
+ *
+ * Psychology: Value → Trust → Action
+ *  1. Show what the app does (scan halal products) — emotional hook
+ *  2. Build trust (social proof, scholarly backing)
+ *  3. Offer clear paths (start free / discover Naqiy+ / login)
+ *
+ * Principles:
+ *  - Al-Niyyah: Truth is always free. Guest CTA is primary.
+ *  - Al-Taqwa: Zero dark patterns. No pressure, no FOMO.
+ *  - Al-Ihsan: springNaqiy signature, choreographed animations.
+ *
+ * Supports: French, English, Arabic (RTL)
  */
 
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
-  ScrollView,
+  StyleSheet,
   Linking,
+  useWindowDimensions,
 } from "react-native";
-import { PressableScale } from "@/components/ui/PressableScale";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import {
+  ScanIcon,
+  MapPinIcon,
+  ShieldCheckIcon,
+  StarIcon,
+  CaretRightIcon,
+} from "phosphor-react-native";
 import { Image } from "expo-image";
-import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeInUp,
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  Easing,
+  interpolate,
+} from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 
-import { AUTH_CONFIG, APP_CONFIG } from "@/constants/config";
 import { PremiumBackground } from "@/components/ui";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { useTranslation, useHaptics, useTheme } from "@/hooks";
+import { APP_CONFIG } from "@/constants/config";
+import { brand, gold } from "@/theme/colors";
+import { getCustomerInfo, isPremiumCustomer } from "@/services/purchases";
 
 const logoSource = require("@assets/images/logo_naqiy.webp");
 
@@ -31,266 +62,334 @@ export default function AuthWelcomeScreen() {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
   const { impact } = useHaptics();
-  const { t } = useTranslation();
+  const { t, isRTL } = useTranslation();
+  const { height } = useWindowDimensions();
 
-  const authMode = AUTH_CONFIG.mode;
-
-  // Si mode V1 uniquement, rediriger directement vers login
+  // Detect orphaned premium: user paid but hasn't created account
+  const [hasOrphanedPremium, setHasOrphanedPremium] = useState(false);
   useEffect(() => {
-    if (authMode === "v1") {
-      router.replace("/(auth)/login");
-    }
-  }, [authMode]);
-
-  const handleMagicLink = useCallback(async () => {
-    impact();
-    router.push("/(auth)/magic-link");
+    getCustomerInfo()
+      .then((info) => {
+        if (info && isPremiumCustomer(info)) {
+          setHasOrphanedPremium(true);
+        }
+      })
+      .catch(() => {});
   }, []);
 
-  const handleTraditionalLogin = useCallback(async () => {
+  // Subtle glow animation on the logo
+  const glowOpacity = useSharedValue(0.4);
+  React.useEffect(() => {
+    glowOpacity.value = withRepeat(
+      withSequence(
+        withTiming(0.7, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(0.4, { duration: 2000, easing: Easing.inOut(Easing.ease) })
+      ),
+      -1,
+      false
+    );
+  }, []);
+
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: glowOpacity.value,
+    transform: [{ scale: interpolate(glowOpacity.value, [0.4, 0.7], [1, 1.15]) }],
+  }));
+
+  // ── Navigation ──────────────────────────────────────────────
+  const handleStartFree = useCallback(() => {
+    impact();
+    if (hasOrphanedPremium) {
+      // Premium user who quit before signup — go create their account
+      router.push("/(auth)/signup");
+    } else {
+      router.replace("/(tabs)");
+    }
+  }, [impact, hasOrphanedPremium]);
+
+  const handleDiscoverPlus = useCallback(() => {
+    impact();
+    // TODO: Navigate to RevenueCat paywall
+    router.push("/(auth)/login");
+  }, [impact]);
+
+  const handleLogin = useCallback(() => {
     impact();
     router.push("/(auth)/login");
-  }, []);
+  }, [impact]);
 
-  // Si mode V1, ne rien afficher (redirection en cours)
-  if (authMode === "v1") {
-    return null;
-  }
+  // Compact layout for smaller screens (iPhone SE, etc.)
+  const isCompact = height < 700;
 
   return (
-    <View className="flex-1">
+    <View style={styles.container}>
       <PremiumBackground />
 
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          paddingTop: insets.top + 40,
-          paddingBottom: insets.bottom + 24,
-          paddingHorizontal: 24,
-        }}
-        showsVerticalScrollIndicator={false}
+      <View
+        style={[
+          styles.content,
+          {
+            paddingTop: insets.top + (isCompact ? 24 : 48),
+            paddingBottom: insets.bottom + 16,
+          },
+        ]}
       >
-        {/* Logo */}
+        {/* ── HERO SECTION ─────────────────────────────────── */}
+        {/* Logo + Brand + Tagline — Emotional hook */}
         <Animated.View
-          entering={FadeIn.delay(100).duration(600)}
-          className="items-center mb-8"
+          entering={FadeIn.delay(100).duration(800)}
+          style={styles.heroSection}
         >
-          <View
-            className="w-20 h-20 rounded-2xl items-center justify-center mb-4"
-            style={{ backgroundColor: colors.card }}
-            accessible={false}
-          >
-            <Image
-              source={logoSource}
-              style={{ width: 52, height: 52 }}
-              contentFit="contain"
-              cachePolicy="memory-disk"
+          {/* Logo with glow ring */}
+          <View style={styles.logoContainer}>
+            <Animated.View
+              style={[
+                styles.logoGlow,
+                glowStyle,
+                {
+                  backgroundColor: isDark
+                    ? "rgba(212, 175, 55, 0.15)"
+                    : "rgba(19, 236, 106, 0.12)",
+                },
+              ]}
             />
+            <View
+              style={[
+                styles.logoCard,
+                {
+                  backgroundColor: isDark ? "#1A1A1A" : "#ffffff",
+                  borderColor: isDark
+                    ? "rgba(207, 165, 51, 0.2)"
+                    : "rgba(0, 0, 0, 0.06)",
+                },
+              ]}
+              accessible={false}
+            >
+              <Image
+                source={logoSource}
+                style={styles.logoImage}
+                contentFit="contain"
+                cachePolicy="memory-disk"
+              />
+            </View>
           </View>
-          <Text style={{ color: colors.textPrimary }} className="text-3xl font-bold" accessibilityRole="header">
+
+          {/* Brand Name */}
+          <Text
+            style={[
+              styles.brandName,
+              { color: colors.textPrimary },
+            ]}
+            accessibilityRole="header"
+          >
             {t.auth.welcome.appName}
           </Text>
-          <Text style={{ color: colors.textSecondary }} className="mt-2 text-center">
+
+          {/* Tagline — the mission in one line */}
+          <Text
+            style={[
+              styles.tagline,
+              {
+                color: isDark ? gold[400] : gold[600],
+                textAlign: isRTL ? "right" : "center",
+              },
+            ]}
+          >
             {t.auth.welcome.tagline}
           </Text>
         </Animated.View>
 
-        {/* Welcome Text */}
+        {/* ── VALUE PROPOSITION ────────────────────────────── */}
+        {/* What you get for FREE — builds desire before any ask */}
         <Animated.View
-          entering={FadeInDown.delay(200).duration(600)}
-          style={{ marginBottom: 32 }}
+          entering={FadeInDown.delay(300).duration(600)}
+          style={styles.valueSection}
         >
-          <Text style={{ color: colors.textPrimary, fontSize: 24, fontWeight: "800", letterSpacing: -0.5, marginBottom: 6 }} accessibilityRole="header">
-            {t.auth.welcome.greeting}
+          <Text
+            style={[
+              styles.valueTitle,
+              {
+                color: colors.textPrimary,
+                textAlign: isRTL ? "right" : "center",
+              },
+            ]}
+          >
+            {t.auth.welcome.valueTitle}
           </Text>
-          <Text style={{ color: colors.textSecondary, fontSize: 15, lineHeight: 22 }}>
-            {authMode === "v2"
-              ? t.auth.welcome.subtitleV2
-              : t.auth.welcome.subtitleHybrid
-            }
-          </Text>
+
+          <View style={styles.valueGrid}>
+            {[
+              {
+                icon: ScanIcon,
+                text: t.auth.welcome.valueScan,
+                color: brand.primary,
+              },
+              {
+                icon: MapPinIcon,
+                text: t.auth.welcome.valueMap,
+                color: "#3b82f6",
+              },
+              {
+                icon: ShieldCheckIcon,
+                text: t.auth.welcome.valueMadhab,
+                color: gold[500],
+              },
+            ].map((item, index) => (
+              <Animated.View
+                key={index}
+                entering={FadeInDown.delay(400 + index * 80).duration(500)}
+                style={[
+                  styles.valueItem,
+                  {
+                    flexDirection: isRTL ? "row-reverse" : "row",
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.valueIconCircle,
+                    {
+                      backgroundColor: isDark
+                        ? `${item.color}15`
+                        : `${item.color}10`,
+                    },
+                  ]}
+                >
+                  <item.icon
+                    size={18}
+                    color={item.color}
+                    weight="duotone"
+                  />
+                </View>
+                <Text
+                  style={[
+                    styles.valueText,
+                    {
+                      color: colors.textSecondary,
+                      textAlign: isRTL ? "right" : "left",
+                    },
+                  ]}
+                >
+                  {item.text}
+                </Text>
+              </Animated.View>
+            ))}
+          </View>
         </Animated.View>
 
-        {/* Magic Link - Primary (V2 et Hybrid) */}
+        {/* Spacer */}
+        <View style={{ flex: 1 }} />
+
+        {/* ── ACTION SECTION ───────────────────────────────── */}
+        {/* Primary: Start Free (Al-Niyyah — truth is free) */}
         <Animated.View
-          entering={FadeInUp.delay(300).duration(600)}
-          className="mb-6"
+          entering={FadeInUp.delay(600).duration(600)}
+          style={styles.actionsSection}
         >
+          {/* CTA 1: Commencer gratuitement — PRIMARY */}
           <PressableScale
-            onPress={handleMagicLink}
+            onPress={handleStartFree}
             accessibilityRole="button"
-            accessibilityLabel={t.auth.welcome.emailLogin}
-            accessibilityHint={t.auth.welcome.emailLoginDesc}
+            accessibilityLabel={t.auth.welcome.startFree}
+            style={[
+              styles.primaryButtonShadow,
+              { shadowColor: brand.primary },
+            ]}
           >
-            <View
-              style={{
-                borderRadius: 16,
-                padding: 24,
-                borderWidth: 2,
-                backgroundColor: isDark ? "rgba(212,175,55,0.1)" : "rgba(212,175,55,0.06)",
-                borderColor: isDark ? "rgba(212,175,55,0.3)" : "rgba(212,175,55,0.25)",
-                shadowColor: "#d4af37",
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.25,
-                shadowRadius: 16,
-                elevation: 8,
-              }}
+            <LinearGradient
+              colors={hasOrphanedPremium
+                ? [gold[500], gold[600]]
+                : [brand.primary, "#10d65f"]
+              }
+              style={styles.primaryButton}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
             >
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <View style={{
-                    width: 40, height: 40, borderRadius: 20,
-                    backgroundColor: "rgba(212,175,55,0.2)",
-                    alignItems: "center", justifyContent: "center", marginRight: 12,
-                  }}>
-                    <MaterialIcons name="mail-outline" size={24} color="#d4af37" />
-                  </View>
-                  <Text style={{ color: colors.textPrimary, fontSize: 18, fontWeight: "700" }}>
-                    {t.auth.welcome.emailLogin}
-                  </Text>
-                </View>
-                {authMode === "hybrid" && (
-                  <View style={{
-                    backgroundColor: "rgba(212,175,55,0.2)",
-                    paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12,
-                  }}>
-                    <Text style={{ color: "#d4af37", fontSize: 12, fontWeight: "600" }}>
-                      {t.auth.welcome.recommended}
-                    </Text>
-                  </View>
-                )}
-              </View>
-              <Text style={{ color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.6)", fontSize: 14, lineHeight: 20 }}>
-                {t.auth.welcome.emailLoginDesc}
+              <Text style={styles.primaryButtonText}>
+                {hasOrphanedPremium
+                  ? t.auth.welcome.finishAccount
+                  : t.auth.welcome.startFree}
               </Text>
-              <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}>
-                <MaterialIcons name="check-circle" size={16} color="#d4af37" />
-                <Text style={{ color: isDark ? "rgba(212,175,55,0.8)" : "rgba(146,112,12,0.9)", fontSize: 12, marginLeft: 8 }}>
-                  {t.auth.welcome.noPasswordNeeded}
-                </Text>
-              </View>
+            </LinearGradient>
+          </PressableScale>
+
+          {/* CTA 2: Découvrir Naqiy+ — PREMIUM, gold accent */}
+          <PressableScale
+            onPress={handleDiscoverPlus}
+            accessibilityRole="button"
+            accessibilityLabel={t.auth.welcome.discoverPlus}
+            style={[
+              styles.premiumButton,
+              {
+                backgroundColor: isDark
+                  ? "rgba(212, 175, 55, 0.08)"
+                  : "rgba(212, 175, 55, 0.06)",
+                borderColor: isDark
+                  ? "rgba(212, 175, 55, 0.25)"
+                  : "rgba(212, 175, 55, 0.2)",
+              },
+            ]}
+          >
+            <StarIcon size={18} color={gold[500]} weight="fill" />
+            <Text
+              style={[
+                styles.premiumButtonText,
+                { color: isDark ? gold[400] : gold[700] },
+              ]}
+            >
+              {t.auth.welcome.discoverPlus}
+            </Text>
+            <View style={styles.premiumBadge}>
+              <Text style={styles.premiumBadgeText}>
+                {t.auth.welcome.premiumPrice}
+              </Text>
             </View>
           </PressableScale>
         </Animated.View>
 
-        {/* Divider + Traditional Login - Only in Hybrid mode */}
-        {authMode === "hybrid" && (
-          <>
-            <Animated.View
-              entering={FadeIn.delay(400).duration(400)}
-              style={{ paddingVertical: 16, position: "relative" }}
+        {/* ── FOOTER ───────────────────────────────────────── */}
+        <Animated.View
+          entering={FadeIn.delay(800).duration(400)}
+          style={styles.footer}
+        >
+          {/* Existing account link — discrete, not competing */}
+          <PressableScale
+            onPress={handleLogin}
+            accessibilityRole="button"
+            accessibilityLabel={t.auth.welcome.hasAccount}
+            style={styles.loginLink}
+          >
+            <Text
+              style={[
+                styles.loginLinkText,
+                { color: colors.textMuted },
+              ]}
             >
-              <View style={{
-                position: "absolute", left: 0, right: 0, top: "50%",
-                height: 1, backgroundColor: isDark ? "rgba(212,175,55,0.12)" : "rgba(212,175,55,0.15)",
-              }} />
-              <View style={{ alignItems: "center" }}>
-                <Text style={{
-                  backgroundColor: colors.background,
-                  paddingHorizontal: 16, fontSize: 13, fontWeight: "600",
-                  color: isDark ? "rgba(212,175,55,0.5)" : "rgba(146,112,12,0.5)",
-                }}>
-                  {t.common.or}
-                </Text>
-              </View>
-            </Animated.View>
+              {t.auth.welcome.hasAccount}
+            </Text>
+            <CaretRightIcon
+              size={14}
+              color={colors.textMuted}
+            />
+          </PressableScale>
 
-            <Animated.View entering={FadeInUp.delay(500).duration(600)}>
-              <PressableScale
-                onPress={handleTraditionalLogin}
-                accessibilityRole="button"
-                accessibilityLabel={t.auth.welcome.classicLogin}
-                accessibilityHint={t.auth.welcome.classicLoginDesc}
-              >
-                <View style={{
-                  borderRadius: 16, padding: 20,
-                  backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#ffffff",
-                  borderWidth: 1,
-                  borderColor: isDark ? "rgba(212,175,55,0.12)" : "rgba(212,175,55,0.1)",
-                }}>
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <View style={{
-                      width: 40, height: 40, borderRadius: 20,
-                      backgroundColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.06)",
-                      alignItems: "center", justifyContent: "center", marginRight: 12,
-                    }}>
-                      <MaterialIcons name="lock-outline" size={24} color="#d4af37" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ color: colors.textPrimary, fontWeight: "600", fontSize: 15 }}>
-                        {t.auth.welcome.classicLogin}
-                      </Text>
-                      <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 2 }}>
-                        {t.auth.welcome.classicLoginDesc}
-                      </Text>
-                    </View>
-                    <MaterialIcons
-                      name="chevron-right"
-                      size={24}
-                      color={isDark ? "rgba(212,175,55,0.4)" : "rgba(212,175,55,0.5)"}
-                    />
-                  </View>
-                </View>
-              </PressableScale>
-            </Animated.View>
-          </>
-        )}
-
-        {/* Benefits */}
-        <Animated.View
-          entering={FadeIn.delay(authMode === "hybrid" ? 600 : 400).duration(400)}
-          style={{
-            marginTop: 48,
-            borderRadius: 16, padding: 24,
-            backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(212,175,55,0.03)",
-            borderWidth: 1,
-            borderColor: isDark ? "rgba(212,175,55,0.1)" : "rgba(212,175,55,0.08)",
-          }}
-        >
-          <Text style={{ color: colors.textPrimary, fontWeight: "700", fontSize: 15, marginBottom: 16 }} accessibilityRole="header">
-            {t.auth.welcome.whySignUp}
-          </Text>
-
-          <View style={{ gap: 14 }}>
-            <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-              <MaterialIcons name="qr-code-scanner" size={20} color="#d4af37" />
-              <Text style={{ color: colors.textSecondary, fontSize: 13, marginLeft: 12, flex: 1, lineHeight: 19 }}>
-                {t.auth.welcome.benefit1}
-              </Text>
-            </View>
-
-            <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-              <MaterialIcons name="location-on" size={20} color="#d4af37" />
-              <Text style={{ color: colors.textSecondary, fontSize: 13, marginLeft: 12, flex: 1, lineHeight: 19 }}>
-                {t.auth.welcome.benefit2}
-              </Text>
-            </View>
-
-            <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-              <MaterialIcons name="notifications-active" size={20} color="#d4af37" />
-              <Text style={{ color: colors.textSecondary, fontSize: 13, marginLeft: 12, flex: 1, lineHeight: 19 }}>
-                {t.auth.welcome.benefit3}
-              </Text>
-            </View>
-          </View>
-        </Animated.View>
-
-        {/* Footer */}
-        <Animated.View
-          entering={FadeIn.delay(authMode === "hybrid" ? 700 : 500).duration(400)}
-          style={{ alignItems: "center", marginTop: 32 }}
-        >
-          <Text style={{ fontSize: 12, color: colors.textMuted, textAlign: "center", lineHeight: 18 }}>
+          {/* Legal */}
+          <Text
+            style={[
+              styles.legalText,
+              { color: colors.textMuted },
+            ]}
+          >
             {t.common.signUpWith}{"\n"}
             <Text
-              style={{ textDecorationLine: "underline" }}
+              style={styles.legalLink}
               onPress={() => Linking.openURL(APP_CONFIG.TERMS_URL)}
               accessibilityRole="link"
             >
               {t.auth.signup.termsLink}
-            </Text> {t.common.and}{" "}
+            </Text>
+            {" "}{t.common.and}{" "}
             <Text
-              style={{ textDecorationLine: "underline" }}
+              style={styles.legalLink}
               onPress={() => Linking.openURL(APP_CONFIG.PRIVACY_POLICY_URL)}
               accessibilityRole="link"
             >
@@ -298,7 +397,169 @@ export default function AuthWelcomeScreen() {
             </Text>
           </Text>
         </Animated.View>
-      </ScrollView>
+      </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+  },
+
+  // ── Hero ──────────────────────────────
+  heroSection: {
+    alignItems: "center",
+    marginBottom: 32,
+  },
+  logoContainer: {
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+  },
+  logoGlow: {
+    position: "absolute",
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  logoCard: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  logoImage: {
+    width: 46,
+    height: 46,
+  },
+  brandName: {
+    fontSize: 34,
+    fontWeight: "800",
+    letterSpacing: -0.8,
+    marginBottom: 6,
+  },
+  tagline: {
+    fontSize: 15,
+    fontWeight: "600",
+    letterSpacing: 0.3,
+  },
+
+  // ── Value Proposition ─────────────────
+  valueSection: {
+    marginBottom: 24,
+  },
+  valueTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    letterSpacing: -0.3,
+    marginBottom: 20,
+  },
+  valueGrid: {
+    gap: 14,
+  },
+  valueItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  valueIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  valueText: {
+    fontSize: 14,
+    lineHeight: 20,
+    flex: 1,
+    fontWeight: "500",
+  },
+
+  // ── Actions ───────────────────────────
+  actionsSection: {
+    gap: 12,
+    marginBottom: 20,
+  },
+  primaryButtonShadow: {
+    borderRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  primaryButton: {
+    height: 56,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  primaryButtonText: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: "#102217",
+    letterSpacing: 0.2,
+  },
+  premiumButton: {
+    height: 52,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  premiumButtonText: {
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  premiumBadge: {
+    backgroundColor: "rgba(212, 175, 55, 0.15)",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    marginLeft: 4,
+  },
+  premiumBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: gold[500],
+  },
+
+  // ── Footer ────────────────────────────
+  footer: {
+    alignItems: "center",
+    gap: 16,
+  },
+  loginLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: 8,
+  },
+  loginLinkText: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  legalText: {
+    fontSize: 11,
+    textAlign: "center",
+    lineHeight: 16,
+  },
+  legalLink: {
+    textDecorationLine: "underline",
+  },
+});

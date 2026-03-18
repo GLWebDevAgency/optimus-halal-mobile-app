@@ -19,13 +19,12 @@ import {
   Linking,
   Platform,
   Keyboard,
-  Share,
 } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { useLocalSearchParams, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowClockwiseIcon, CompassIcon, MapTrifoldIcon } from "phosphor-react-native";
 import { useHaptics, useUserLocation, useMapStores, useMapSearch } from "@/hooks";
 import type { SearchResult } from "@/hooks";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -44,9 +43,13 @@ import {
   MapMarkerLayer,
   MapControls,
   MapSearchOverlay,
+  StoreShareCardView,
+  captureAndShareStoreCard,
   CARD_WIDTH,
+  type StoreFeatureProperties,
+  type StoreShareCardData,
+  type StoreShareLabels,
 } from "@/components/map";
-import type { StoreFeatureProperties } from "@/components/map";
 import { STORE_CERTIFIER_TO_ID, MAP_FILTERS } from "@/components/map/types";
 import { trackEvent } from "@/lib/analytics";
 import Animated, {
@@ -95,7 +98,6 @@ const FOCUSED_ZOOM = 13;
 let _hasAnimatedToUser = false;
 let _lastViewport: { center: [number, number]; zoom: number } | null = null;
 
-
 // ── Helpers ────────────────────────────────────────────────
 function openDirections(lat: number, lon: number, name: string) {
   const encoded = encodeURIComponent(name);
@@ -139,6 +141,7 @@ export default function MapScreen() {
       storeName?: string;
     }>();
   const deepLinkHandledRef = useRef<string | null>(null);
+  const storeShareCardRef = useRef<View>(null);
 
   // Location
   const { location: userLocation, permission, isLoading: locationLoading, refresh: refreshLocation } = useUserLocation();
@@ -674,15 +677,35 @@ export default function MapScreen() {
     callStore(s.phone);
   }, []);
 
-  const handleShareStore = useCallback(() => {
+  const storeShareData = useMemo((): StoreShareCardData | null => {
+    if (!selectedStore) return null;
+    return {
+      storeName: selectedStore.name,
+      address: selectedStore.address,
+      city: selectedStore.city,
+      halalCertified: selectedStore.halalCertified,
+      certifierName: selectedStore.certifierName ?? null,
+      averageRating: selectedStore.averageRating,
+      reviewCount: selectedStore.reviewCount,
+      openStatus: selectedStore.openStatus,
+      storeType: selectedStore.storeType,
+    };
+  }, [selectedStore]);
+
+  const storeShareLabels = useMemo((): StoreShareLabels => ({
+    certifiedLabel: "Halal Certifié",
+    openNow: t.map.open,
+    closed: t.map.closed,
+    verifiedWith: "Découvert sur Naqiy",
+    tagline: "Scanne. Comprends. Choisis.",
+  }), [t]);
+
+  const handleShareStore = useCallback(async () => {
     const s = selectedStoreRef.current;
-    if (!s) return;
+    if (!s || !storeShareData) return;
     trackEvent("map_share_store", { store_id: s.id });
-    const certInfo = s.halalCertified ? " (Halal Certifié)" : "";
-    Share.share({
-      message: `${s.name}${certInfo}\n${s.address}, ${s.city}\n\nDécouvert sur Optimus Halal`,
-    });
-  }, []);
+    await captureAndShareStoreCard(storeShareCardRef, storeShareData, storeShareLabels);
+  }, [storeShareData, storeShareLabels]);
 
   // Progressive zoom: fly to user on first load only.
   // _hasAnimatedToUser is module-level → survives tab navigation (no re-zoom).
@@ -800,7 +823,7 @@ export default function MapScreen() {
   if (!MAPBOX_AVAILABLE) {
     return (
       <View className="flex-1 items-center justify-center px-8" style={{ backgroundColor: colors.background }}>
-        <MaterialIcons name="map" size={64} color={colors.textMuted} />
+        <MapTrifoldIcon size={64} color={colors.textMuted} />
         <Text className="text-lg font-bold mt-4 text-center" style={{ color: colors.textPrimary }}>
           {t.map.title}
         </Text>
@@ -914,7 +937,7 @@ export default function MapScreen() {
                   elevation: 4,
                 }}
               >
-                <MaterialIcons name="refresh" size={14} color="#fff" />
+                <ArrowClockwiseIcon size={14} color="#fff" />
                 <Text className="text-xs font-semibold text-white">{t.map.searchThisArea}</Text>
               </View>
             </PressableScale>
@@ -1038,7 +1061,7 @@ export default function MapScreen() {
                   entering={FadeIn.duration(250)}
                   className="flex-1 items-center justify-center px-8 py-6"
                 >
-                  <MaterialIcons name="explore" size={32} color={colors.textMuted} />
+                  <CompassIcon size={32} color={colors.textMuted} />
                   <Text className="text-sm mt-2 text-center" style={{ color: colors.textSecondary }}>
                     {t.map.noStoresFound}
                   </Text>
@@ -1112,6 +1135,17 @@ export default function MapScreen() {
             </View>
           </PressableScale>
         </Animated.View>
+      )}
+
+      {/* ── Off-screen Store Share Card (captured as image) ── */}
+      {storeShareData && (
+        <View style={{ position: "absolute", left: -9999, top: 0 }} pointerEvents="none">
+          <StoreShareCardView
+            ref={storeShareCardRef}
+            data={storeShareData}
+            labels={storeShareLabels}
+          />
+        </View>
       )}
     </View>
   );

@@ -8,7 +8,7 @@ import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, CheckCircleIcon } from "phosphor-react-native";
 import Animated, { FadeIn, FadeInDown, ZoomIn } from "react-native-reanimated";
 import { useTranslation, type Language } from "@/hooks/useTranslation";
 import { useTheme } from "@/hooks/useTheme";
@@ -61,7 +61,7 @@ export default function LanguageScreen() {
           accessibilityHint="Revenir à l'écran précédent"
           hitSlop={8}
         >
-          <MaterialIcons name="arrow-back" size={24} color={colors.textPrimary} />
+          <ArrowLeftIcon size={24} color={colors.textPrimary} />
         </Pressable>
         <Text
           style={{ fontSize: 20, fontWeight: "700", color: colors.textPrimary, marginLeft: 8 }}
@@ -120,7 +120,7 @@ export default function LanguageScreen() {
                 </View>
                 {language === lang.code && (
                   <Animated.View entering={ZoomIn.springify()}>
-                    <MaterialIcons name="check-circle" size={24} color={GOLD} />
+                    <CheckCircleIcon size={24} color={GOLD} />
                   </Animated.View>
                 )}
               </View>

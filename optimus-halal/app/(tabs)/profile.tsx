@@ -20,7 +20,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { BellSimpleIcon, CaretRightIcon, FireIcon, GearIcon, GiftIcon, GlobeHemisphereWestIcon, PencilIcon, ScanIcon, SealCheckIcon, SignInIcon, SignOutIcon, StarFourIcon, WifiSlashIcon } from "phosphor-react-native";
 import { useHaptics, useTheme, useLogout, useFavoritesList, useLoyaltyBalance, usePremium } from "@/hooks";
 import { ImpactFeedbackStyle } from "expo-haptics";
 import Animated, {
@@ -36,9 +36,10 @@ import { ProfileSkeleton } from "@/components/skeletons";
 import { useThemeStore, usePreferencesStore, useQuotaStore, useOnboardingStore } from "@/store";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth } from "../_layout";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 interface MenuItemProps {
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: IconName;
   iconBgColor: string;
   iconColor: string;
   title: string;
@@ -76,7 +77,7 @@ const MenuItem = React.memo(function MenuItem({
             className="w-8 h-8 rounded-lg items-center justify-center"
             style={{ backgroundColor: iconBgColor }}
           >
-            <MaterialIcons name={icon} size={18} color={iconColor} />
+            <AppIcon name={icon} size={18} color={iconColor} />
           </View>
           <Text className="font-medium text-sm" style={{ color: colors.textPrimary }}>
             {title}
@@ -89,11 +90,8 @@ const MenuItem = React.memo(function MenuItem({
                 {subtitle}
               </Text>
             )}
-            <MaterialIcons
-              name="chevron-right"
-              size={20}
-              color={colors.iconSecondary}
-            />
+            <CaretRightIcon size={20}
+              color={colors.iconSecondary} />
           </View>
         )}
       </View>
@@ -102,7 +100,7 @@ const MenuItem = React.memo(function MenuItem({
 });
 
 interface StatsCardProps {
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: IconName;
   iconBgColor: string;
   iconColor: string;
   title: string;
@@ -139,7 +137,7 @@ const StatsCard = React.memo(function StatsCard({
           className="w-10 h-10 rounded-full items-center justify-center mb-3"
           style={{ backgroundColor: iconBgColor }}
         >
-          <MaterialIcons name={icon} size={20} color={iconColor} />
+          <AppIcon name={icon} size={20} color={iconColor} />
         </View>
         <Text className="font-bold text-sm" style={{ color: colors.textPrimary }}>
           {title}
@@ -180,7 +178,7 @@ export default function ProfileScreen() {
   const { setOnboardingComplete } = useOnboardingStore();
 
   // Premium status
-  const { isPremium } = usePremium();
+  const { isPremium, isTrialActive, trialDaysRemaining } = usePremium();
 
   // tRPC data — skip for anonymous users
   const { data: favoritesData } = useFavoritesList({ limit: 1, enabled: !!profile });
@@ -259,7 +257,7 @@ export default function ProfileScreen() {
     router.replace("/(onboarding)");
   }, [impact, setOnboardingComplete]);
 
-  // ── Guest Mode ──────────────────────────────────
+  // ── Guest Mode (Trial or Exploration) ──────────────────────────────────
   if (isGuest) {
     return (
       <View className="flex-1">
@@ -273,111 +271,236 @@ export default function ProfileScreen() {
               {t.profile.title}
             </Text>
             <Pressable onPress={handleSettings} accessibilityRole="button" accessibilityLabel={t.common.settings}>
-              <MaterialIcons name="settings" size={24} color={colors.iconSecondary} />
+              <GearIcon size={24} color={colors.iconSecondary} />
             </Pressable>
           </View>
         </Animated.View>
 
         <ScrollView contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
-          {/* Guest Hero */}
+
+          {/* ── Hero: Trial vs Exploration ────────────────── */}
           <Animated.View entering={FadeInDown.delay(50).duration(500)} className="items-center pt-8 pb-6 px-6">
-            <View
-              className="w-24 h-24 rounded-full items-center justify-center mb-5"
-              style={{
-                backgroundColor: isDark ? "rgba(212, 175, 55, 0.08)" : "rgba(212, 175, 55, 0.06)",
-                borderWidth: 2,
-                borderColor: isDark ? "rgba(212, 175, 55, 0.2)" : "rgba(212, 175, 55, 0.15)",
-              }}
-            >
-              <MaterialIcons name="travel-explore" size={40} color={colors.primary} />
-            </View>
-            <Text className="text-2xl font-bold mb-1" style={{ color: colors.textPrimary }}>
-              {t.guest.discoveryMode}
-            </Text>
-            <Text className="text-sm text-center px-4 mb-6" style={{ color: colors.textSecondary }}>
-              {t.guest.discoveryDescription}
-            </Text>
-          </Animated.View>
-
-          {/* Quota Card */}
-          <Animated.View entering={FadeInUp.delay(100).duration(500)} className="mx-4 mb-6">
-            <View
-              className="p-4 rounded-2xl"
-              style={{
-                backgroundColor: colors.card,
-                borderWidth: 1,
-                borderColor: colors.cardBorder,
-              }}
-            >
-              <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
-                  {t.guest.dailyScans}
-                </Text>
-                <Text className="text-sm font-bold" style={{ color: quotaExhausted ? "#ef4444" : colors.primary }}>
-                  {dailyScansUsed}/{DAILY_SCAN_LIMIT}
-                </Text>
-              </View>
-              <View className="h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: colors.backgroundSecondary }}>
+            {isTrialActive ? (
+              <>
+                {/* Trial Hero — green badge with countdown */}
                 <View
-                  className="h-full rounded-full"
+                  className="w-24 h-24 rounded-full items-center justify-center mb-5"
                   style={{
-                    width: `${Math.round((dailyScansUsed / DAILY_SCAN_LIMIT) * 100)}%`,
-                    backgroundColor: quotaExhausted ? "#ef4444" : colors.primary,
+                    backgroundColor: isDark ? "rgba(34, 197, 94, 0.1)" : "rgba(34, 197, 94, 0.08)",
+                    borderWidth: 2,
+                    borderColor: isDark ? "rgba(34, 197, 94, 0.25)" : "rgba(34, 197, 94, 0.2)",
                   }}
-                />
-              </View>
-              <Text className="text-xs mt-2" style={{ color: colors.textMuted }}>
-                {t.guest.scansResetAtMidnight}
-              </Text>
-            </View>
-          </Animated.View>
-
-          {/* Naqiy+ CTA */}
-          <Animated.View entering={FadeInUp.delay(150).duration(500)} className="mx-4 mb-6">
-            <PressableScale
-              onPress={() => {
-                impact();
-                router.push("/settings/premium" as any);
-              }}
-              accessibilityRole="button"
-              accessibilityLabel="Naqiy+"
-            >
-              <View
-                className="p-5 rounded-2xl items-center"
-                style={{
-                  backgroundColor: isDark ? "rgba(212, 175, 55, 0.08)" : "rgba(212, 175, 55, 0.05)",
-                  borderWidth: 1,
-                  borderColor: isDark ? "rgba(212, 175, 55, 0.2)" : "rgba(212, 175, 55, 0.12)",
-                }}
-              >
-                <Image
-                  source={require("@assets/images/logo_naqiy.webp")}
-                  style={{ width: 40, height: 40, marginBottom: 12 }}
-                  contentFit="contain"
-                  cachePolicy="memory-disk"
-                />
-                <Text className="text-lg font-bold mb-1" style={{ color: colors.textPrimary }}>
-                  {t.guest.upgradeTitle}
-                </Text>
-                <Text className="text-sm text-center mb-4" style={{ color: colors.textSecondary }}>
-                  {t.guest.upgradeDescription}
+                >
+                  <StarFourIcon size={40} color={isDark ? "#4ade80" : "#16a34a"} weight="fill" />
+                </View>
+                <Text className="text-2xl font-bold mb-1" style={{ color: colors.textPrimary }}>
+                  {t.guest.trialMode}
                 </Text>
                 <View
-                  className="h-11 px-8 rounded-full items-center justify-center"
-                  style={{ backgroundColor: isDark ? colors.primary : "#0f172a" }}
+                  className="px-3 py-1 rounded-full mb-3"
+                  style={{
+                    backgroundColor: isDark ? "rgba(34, 197, 94, 0.1)" : "rgba(34, 197, 94, 0.08)",
+                    borderWidth: 1,
+                    borderColor: isDark ? "rgba(34, 197, 94, 0.2)" : "rgba(34, 197, 94, 0.15)",
+                  }}
                 >
-                  <Text className="font-bold text-sm" style={{ color: isDark ? "#0f172a" : "#fff" }}>
-                    {t.guest.subscribeNaqiyPlus}
+                  <Text className="text-xs font-bold" style={{ color: isDark ? "#4ade80" : "#16a34a" }}>
+                    {t.paywall.trialBanner.replace("{n}", String(trialDaysRemaining))}
                   </Text>
                 </View>
-              </View>
-            </PressableScale>
+                <Text className="text-sm text-center px-4" style={{ color: colors.textSecondary }}>
+                  {t.guest.trialDescription}
+                </Text>
+              </>
+            ) : (
+              <>
+                {/* Exploration Hero — original globe design */}
+                <View
+                  className="w-24 h-24 rounded-full items-center justify-center mb-5"
+                  style={{
+                    backgroundColor: isDark ? "rgba(212, 175, 55, 0.08)" : "rgba(212, 175, 55, 0.06)",
+                    borderWidth: 2,
+                    borderColor: isDark ? "rgba(212, 175, 55, 0.2)" : "rgba(212, 175, 55, 0.15)",
+                  }}
+                >
+                  <GlobeHemisphereWestIcon size={40} color={colors.primary} />
+                </View>
+                <Text className="text-2xl font-bold mb-1" style={{ color: colors.textPrimary }}>
+                  {t.guest.discoveryMode}
+                </Text>
+                <Text className="text-sm text-center px-4" style={{ color: colors.textSecondary }}>
+                  {t.guest.discoveryDescription}
+                </Text>
+              </>
+            )}
           </Animated.View>
 
-          {/* Settings (accessible to guests) */}
-          <Animated.View entering={FadeInUp.delay(200).duration(500)} className="px-4 mb-6">
+          {/* ── Quota Card — only in exploration mode ────── */}
+          {!isTrialActive && (
+            <Animated.View entering={FadeInUp.delay(100).duration(500)} className="mx-4 mb-6">
+              <View
+                className="p-4 rounded-2xl"
+                style={{
+                  backgroundColor: colors.card,
+                  borderWidth: 1,
+                  borderColor: colors.cardBorder,
+                }}
+              >
+                <View className="flex-row items-center justify-between mb-3">
+                  <Text className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
+                    {t.guest.dailyScans}
+                  </Text>
+                  <Text className="text-sm font-bold" style={{ color: quotaExhausted ? "#ef4444" : colors.primary }}>
+                    {dailyScansUsed}/{DAILY_SCAN_LIMIT}
+                  </Text>
+                </View>
+                <View className="h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: colors.backgroundSecondary }}>
+                  <View
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${Math.round((dailyScansUsed / DAILY_SCAN_LIMIT) * 100)}%`,
+                      backgroundColor: quotaExhausted ? "#ef4444" : colors.primary,
+                    }}
+                  />
+                </View>
+                <Text className="text-xs mt-2" style={{ color: colors.textMuted }}>
+                  {t.guest.scansResetAtMidnight}
+                </Text>
+              </View>
+            </Animated.View>
+          )}
+
+          {/* ── Naqiy+ CTA — only in exploration mode ──── */}
+          {!isTrialActive && (
+            <Animated.View entering={FadeInUp.delay(150).duration(500)} className="mx-4 mb-6">
+              <PressableScale
+                onPress={() => {
+                  impact();
+                  router.push({ pathname: "/paywall" as any, params: { trigger: "generic" } });
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Naqiy+"
+              >
+                <View
+                  className="p-5 rounded-2xl items-center"
+                  style={{
+                    backgroundColor: isDark ? "rgba(212, 175, 55, 0.08)" : "rgba(212, 175, 55, 0.05)",
+                    borderWidth: 1,
+                    borderColor: isDark ? "rgba(212, 175, 55, 0.2)" : "rgba(212, 175, 55, 0.12)",
+                  }}
+                >
+                  <Image
+                    source={require("@assets/images/logo_naqiy.webp")}
+                    style={{ width: 40, height: 40, marginBottom: 12 }}
+                    contentFit="contain"
+                    cachePolicy="memory-disk"
+                  />
+                  <Text className="text-lg font-bold mb-1" style={{ color: colors.textPrimary }}>
+                    {t.guest.upgradeTitle}
+                  </Text>
+                  <Text className="text-sm text-center mb-4" style={{ color: colors.textSecondary }}>
+                    {t.guest.upgradeDescription}
+                  </Text>
+                  <View
+                    className="h-11 px-8 rounded-full items-center justify-center"
+                    style={{ backgroundColor: isDark ? colors.primary : "#0f172a" }}
+                  >
+                    <Text className="font-bold text-sm" style={{ color: isDark ? "#0f172a" : "#fff" }}>
+                      {t.paywall.subscribe}
+                    </Text>
+                  </View>
+                </View>
+              </PressableScale>
+            </Animated.View>
+          )}
+
+          {/* ── Stats Cards — trial + exploration ── */}
+          <Animated.View
+            entering={FadeInUp.delay(isTrialActive ? 100 : 200).duration(500)}
+            className="flex-row gap-3 px-4 mb-6"
+          >
+            <StatsCard
+              icon="history"
+              iconBgColor={isDark ? "rgba(59,130,246,0.1)" : "#eff6ff"}
+              iconColor={isDark ? "#60a5fa" : "#2563eb"}
+              title={t.profile.stats.scanHistory}
+              subtitle={`${t.profile.stats.productsScanned}`}
+              onPress={handleScanHistory}
+            />
+            <StatsCard
+              icon="favorite"
+              iconBgColor={isDark ? "rgba(234,179,8,0.1)" : "#fef3c7"}
+              iconColor="#eab308"
+              title={t.profile.stats.favorites}
+              subtitle={`${t.profile.stats.productsSaved}`}
+              onPress={handleFavorites}
+            />
+          </Animated.View>
+
+          {/* ── Preferences — identical to Naqiy+ profile ── */}
+          <Animated.View entering={FadeInUp.delay(isTrialActive ? 150 : 250).duration(500)} className="px-4 mb-6">
             <Text accessibilityRole="header" className="text-base font-bold px-2 mb-3" style={{ color: colors.textPrimary }}>
               {t.profile.preferences}
+            </Text>
+            <Card variant="elevated" className="overflow-hidden p-0">
+              <MenuItem
+                icon="shield-moon"
+                iconBgColor={isDark ? "rgba(29,229,96,0.1)" : "#ecfdf5"}
+                iconColor={colors.primary}
+                title={t.profile.preferredCertifications}
+                subtitle={certifications.slice(0, 2).join(", ").toUpperCase() || "\u2014"}
+                onPress={() => router.push("/settings/certifications" as any)}
+              />
+              <MenuItem
+                icon="no-food"
+                iconBgColor={isDark ? "rgba(239,68,68,0.1)" : "#fef2f2"}
+                iconColor={isDark ? "#f87171" : "#ef4444"}
+                title={t.profile.dietaryExclusions}
+                onPress={() => router.push("/settings/exclusions" as any)}
+              />
+              <MenuItem
+                icon="notifications"
+                iconBgColor={isDark ? "rgba(168,85,247,0.1)" : "#faf5ff"}
+                iconColor={isDark ? "#c084fc" : "#a855f7"}
+                title={t.profile.pushNotifications}
+                onPress={() => router.push("/settings/notifications" as any)}
+              />
+              <MenuItem
+                icon="auto-stories"
+                iconBgColor={isDark ? "rgba(168,85,247,0.1)" : "#f5f3ff"}
+                iconColor={isDark ? "#c084fc" : "#7c3aed"}
+                title={t.profile.madhab}
+                onPress={() => router.push("/settings/madhab" as any)}
+              />
+              <MenuItem
+                icon="monitor-heart"
+                iconBgColor={isDark ? "rgba(244,114,182,0.1)" : "#fdf2f8"}
+                iconColor={isDark ? "#f472b6" : "#ec4899"}
+                title={t.profile.healthProfile}
+                onPress={() => router.push("/settings/health-profile" as any)}
+              />
+              <MenuItem
+                icon="gavel"
+                iconBgColor={isDark ? "rgba(239,68,68,0.1)" : "#fef2f2"}
+                iconColor={isDark ? "#f87171" : "#dc2626"}
+                title={t.profile.boycottEthics}
+                onPress={() => router.push("/settings/boycott-list" as any)}
+              />
+              <MenuItem
+                icon="workspace-premium"
+                iconBgColor={isDark ? "rgba(234,179,8,0.1)" : "#fefce8"}
+                iconColor={isDark ? "#fbbf24" : "#ca8a04"}
+                title={t.profile.certifierRanking}
+                isLast
+                onPress={() => router.push("/settings/certifier-ranking" as any)}
+              />
+            </Card>
+          </Animated.View>
+
+          {/* ── Account — appearance, language, help ── */}
+          <Animated.View entering={FadeInUp.delay(isTrialActive ? 200 : 300).duration(500)} className="px-4 mb-6">
+            <Text accessibilityRole="header" className="text-base font-bold px-2 mb-3" style={{ color: colors.textPrimary }}>
+              {t.profile.account}
             </Text>
             <Card variant="elevated" className="overflow-hidden p-0">
               <MenuItem
@@ -422,7 +545,7 @@ export default function ProfileScreen() {
           </Animated.View>
 
           {/* Legal Section */}
-          <Animated.View entering={FadeInUp.delay(250).duration(500)} className="px-4 mb-6">
+          <Animated.View entering={FadeInUp.delay(isTrialActive ? 150 : 250).duration(500)} className="px-4 mb-6">
             <Text accessibilityRole="header" className="text-base font-bold px-2 mb-3" style={{ color: colors.textPrimary }}>
               {t.profile.legalSection}
             </Text>
@@ -445,8 +568,8 @@ export default function ProfileScreen() {
             </Card>
           </Animated.View>
 
-          {/* Login CTA */}
-          <Animated.View entering={FadeInUp.delay(300).duration(500)} className="px-4 mb-8">
+          {/* Login / Account CTA */}
+          <Animated.View entering={FadeInUp.delay(isTrialActive ? 200 : 300).duration(500)} className="px-4 mb-8">
             <PressableScale
               onPress={() => {
                 impact();
@@ -463,7 +586,7 @@ export default function ProfileScreen() {
                   borderColor: colors.cardBorder,
                 }}
               >
-                <MaterialIcons name="login" size={18} color={colors.primary} />
+                <SignInIcon size={18} color={colors.primary} />
                 <Text className="font-bold text-sm" style={{ color: colors.primary }}>
                   {t.guest.loginExistingAccount}
                 </Text>
@@ -490,7 +613,7 @@ export default function ProfileScreen() {
       <View style={{ flex: 1 }}>
         <PremiumBackground />
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingTop: insets.top }}>
-          <MaterialIcons name="wifi-off" size={48} color={colors.textMuted} />
+          <WifiSlashIcon size={48} color={colors.textMuted} />
           <Text style={{ marginTop: 16, fontSize: 16, fontWeight: "600", color: colors.textPrimary }}>
             {t.errors.network}
           </Text>
@@ -525,11 +648,8 @@ export default function ProfileScreen() {
               accessibilityHint={t.common.viewAlerts}
               className="w-10 h-10 items-center justify-center"
             >
-              <MaterialIcons
-                name="notifications"
-                size={24}
-                color={colors.iconSecondary}
-              />
+              <BellSimpleIcon size={24}
+                color={colors.iconSecondary} />
             </Pressable>
           ) : (
             <View className="w-10 h-10" />
@@ -538,11 +658,8 @@ export default function ProfileScreen() {
             {t.profile.title}
           </Text>
           <Pressable onPress={handleSettings} accessibilityRole="button" accessibilityLabel={t.common.settings} accessibilityHint={t.common.openSettings}>
-            <MaterialIcons
-              name="settings"
-              size={24}
-              color={colors.iconSecondary}
-            />
+            <GearIcon size={24}
+              color={colors.iconSecondary} />
           </Pressable>
         </View>
       </Animated.View>
@@ -580,7 +697,7 @@ export default function ProfileScreen() {
                 />
               </View>
               <View className="absolute bottom-0 right-0 rounded-full p-2" style={{ backgroundColor: colors.primary, borderWidth: 4, borderColor: colors.background }}>
-                <MaterialIcons name="edit" size={14} color="#ffffff" />
+                <PencilIcon size={14} color="#ffffff" />
               </View>
             </View>
           </PressableScale>
@@ -590,16 +707,18 @@ export default function ProfileScreen() {
             {userName}
           </Text>
 
-          {/* Level Badge */}
-          <View
-            className="flex-row items-center gap-1.5 mb-6 px-3 py-1 rounded-full"
-            style={{ backgroundColor: isDark ? "rgba(212, 175, 55, 0.1)" : colors.primaryLight, borderWidth: 1, borderColor: isDark ? "rgba(212, 175, 55, 0.2)" : colors.primaryLight }}
-          >
-            <MaterialIcons name="verified" size={16} color={colors.primary} />
-            <Text className="font-medium text-xs uppercase tracking-wide" style={{ color: colors.primary }}>
-              {t.home.level} {gamification.level} — {t.profile.consciousConsumer}
-            </Text>
-          </View>
+          {/* Level Badge — gamification gated */}
+          {defaultFeatureFlags.gamificationEnabled && (
+            <View
+              className="flex-row items-center gap-1.5 mb-6 px-3 py-1 rounded-full"
+              style={{ backgroundColor: isDark ? "rgba(212, 175, 55, 0.1)" : colors.primaryLight, borderWidth: 1, borderColor: isDark ? "rgba(212, 175, 55, 0.2)" : colors.primaryLight }}
+            >
+              <SealCheckIcon size={16} color={colors.primary} />
+              <Text className="font-medium text-xs uppercase tracking-wide" style={{ color: colors.primary }}>
+                {t.home.level} {gamification.level} — {t.profile.consciousConsumer}
+              </Text>
+            </View>
+          )}
 
           {/* Edit Profile Button */}
           <PressableScale
@@ -622,7 +741,8 @@ export default function ProfileScreen() {
           </PressableScale>
         </Animated.View>
 
-        {/* Gamification Card */}
+        {/* Gamification Card — gated */}
+        {defaultFeatureFlags.gamificationEnabled && (
         <Animated.View
           entering={FadeInUp.delay(100).duration(500)}
           className="mx-4 mb-6 p-4 rounded-2xl"
@@ -652,7 +772,7 @@ export default function ProfileScreen() {
           <View className="flex-row">
             <View className="flex-1 items-center">
               <View className="w-9 h-9 rounded-full items-center justify-center mb-1.5" style={{ backgroundColor: colors.primaryLight }}>
-                <MaterialIcons name="local-fire-department" size={18} color={colors.primary} />
+                <FireIcon size={18} color={colors.primary} />
               </View>
               <Text className="font-bold text-sm" style={{ color: colors.textPrimary }}>
                 {gamification.streak}
@@ -664,7 +784,7 @@ export default function ProfileScreen() {
             <View className="flex-1 items-center">
               <View className="w-9 h-9 rounded-full items-center justify-center mb-1.5"
                 style={{ backgroundColor: isDark ? "rgba(59,130,246,0.1)" : "#eff6ff" }}>
-                <MaterialIcons name="qr-code-scanner" size={18} color={isDark ? "#60a5fa" : "#2563eb"} />
+                <ScanIcon size={18} color={isDark ? "#60a5fa" : "#2563eb"} />
               </View>
               <Text className="font-bold text-sm" style={{ color: colors.textPrimary }}>
                 {gamification.totalScans}
@@ -676,7 +796,7 @@ export default function ProfileScreen() {
             <View className="flex-1 items-center">
               <View className="w-9 h-9 rounded-full items-center justify-center mb-1.5"
                 style={{ backgroundColor: isDark ? "rgba(234,179,8,0.1)" : "#fef3c7" }}>
-                <MaterialIcons name="stars" size={18} color="#eab308" />
+                <StarFourIcon size={18} color="#eab308" />
               </View>
               <Text className="font-bold text-sm" style={{ color: colors.textPrimary }}>
                 {gamification.points}
@@ -687,6 +807,7 @@ export default function ProfileScreen() {
             </View>
           </View>
         </Animated.View>
+        )}
 
         {/* Stats Cards */}
         <Animated.View
@@ -774,17 +895,61 @@ export default function ProfileScreen() {
                 </Text>
               </View>
               {isPremium ? (
-                <MaterialIcons name="verified" size={22} color="#D4AF37" />
+                <SealCheckIcon size={22} color="#D4AF37" />
               ) : (
-                <MaterialIcons name="chevron-right" size={20} color={colors.textSecondary} />
+                <CaretRightIcon size={20} color={colors.textSecondary} />
               )}
+            </View>
+          </PressableScale>
+        </Animated.View>
+
+        {/* Referral Program */}
+        <Animated.View entering={FadeInUp.delay(250).duration(500)} className="px-4 mb-6">
+          <PressableScale
+            onPress={() => {
+              impact();
+              router.push("/settings/referral" as any);
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={t.referral.title}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                padding: 16,
+                borderRadius: 16,
+                backgroundColor: isDark ? "rgba(212, 175, 55, 0.06)" : "rgba(212, 175, 55, 0.04)",
+                borderWidth: 1,
+                borderColor: isDark ? "rgba(212, 175, 55, 0.18)" : "rgba(212, 175, 55, 0.12)",
+              }}
+            >
+              <View style={{
+                width: 38,
+                height: 38,
+                borderRadius: 10,
+                backgroundColor: isDark ? "rgba(212, 175, 55, 0.1)" : "rgba(212, 175, 55, 0.08)",
+                alignItems: "center",
+                justifyContent: "center",
+              }}>
+                <GiftIcon size={20} color={colors.primary} />
+              </View>
+              <View style={{ flex: 1, marginStart: 12 }}>
+                <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: "700" }}>
+                  {t.referral.title}
+                </Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 12 }} numberOfLines={1}>
+                  {t.referral.share}
+                </Text>
+              </View>
+              <CaretRightIcon size={20} color={colors.textSecondary} />
             </View>
           </PressableScale>
         </Animated.View>
 
         {/* Preferences Section */}
         <Animated.View
-          entering={FadeInUp.delay(250).duration(500)}
+          entering={FadeInUp.delay(300).duration(500)}
           className="px-4 mb-6"
         >
           <Text accessibilityRole="header" className="text-base font-bold px-2 mb-3" style={{ color: colors.textPrimary }}>
@@ -839,36 +1004,41 @@ export default function ProfileScreen() {
               iconBgColor={isDark ? "rgba(234,179,8,0.1)" : "#fefce8"}
               iconColor={isDark ? "#fbbf24" : "#ca8a04"}
               title={t.profile.certifierRanking}
+              isLast={!defaultFeatureFlags.gamificationEnabled}
               onPress={() => router.push("/settings/certifier-ranking" as any)}
             />
-            <MenuItem
-              icon="leaderboard"
-              iconBgColor={isDark ? "rgba(59,130,246,0.1)" : "#eff6ff"}
-              iconColor={isDark ? "#60a5fa" : "#2563eb"}
-              title={t.leaderboard.title}
-              onPress={() => router.push("/settings/leaderboard" as any)}
-            />
-            <MenuItem
-              icon="emoji-events"
-              iconBgColor={isDark ? "rgba(234,179,8,0.1)" : "#fef3c7"}
-              iconColor={isDark ? "#fbbf24" : "#eab308"}
-              title={t.achievements.title}
-              onPress={() => router.push("/settings/achievements" as any)}
-            />
-            <MenuItem
-              icon="card-giftcard"
-              iconBgColor={isDark ? "rgba(34,197,94,0.1)" : "#ecfdf5"}
-              iconColor={isDark ? "#4ade80" : "#16a34a"}
-              title={t.rewards.title}
-              isLast
-              onPress={() => router.push("/settings/rewards" as any)}
-            />
+            {defaultFeatureFlags.gamificationEnabled && (
+              <>
+                <MenuItem
+                  icon="leaderboard"
+                  iconBgColor={isDark ? "rgba(59,130,246,0.1)" : "#eff6ff"}
+                  iconColor={isDark ? "#60a5fa" : "#2563eb"}
+                  title={t.leaderboard.title}
+                  onPress={() => router.push("/settings/leaderboard" as any)}
+                />
+                <MenuItem
+                  icon="emoji-events"
+                  iconBgColor={isDark ? "rgba(234,179,8,0.1)" : "#fef3c7"}
+                  iconColor={isDark ? "#fbbf24" : "#eab308"}
+                  title={t.achievements.title}
+                  onPress={() => router.push("/settings/achievements" as any)}
+                />
+                <MenuItem
+                  icon="card-giftcard"
+                  iconBgColor={isDark ? "rgba(34,197,94,0.1)" : "#ecfdf5"}
+                  iconColor={isDark ? "#4ade80" : "#16a34a"}
+                  title={t.rewards.title}
+                  isLast
+                  onPress={() => router.push("/settings/rewards" as any)}
+                />
+              </>
+            )}
           </Card>
         </Animated.View>
 
         {/* Account Section */}
         <Animated.View
-          entering={FadeInUp.delay(300).duration(500)}
+          entering={FadeInUp.delay(350).duration(500)}
           className="px-4 mb-6"
         >
           <Text accessibilityRole="header" className="text-base font-bold px-2 mb-3" style={{ color: colors.textPrimary }}>
@@ -918,7 +1088,7 @@ export default function ProfileScreen() {
 
         {/* Legal Section */}
         <Animated.View
-          entering={FadeInUp.delay(350).duration(500)}
+          entering={FadeInUp.delay(400).duration(500)}
           className="px-4 mb-6"
         >
           <Text accessibilityRole="header" className="text-base font-bold px-2 mb-3" style={{ color: colors.textPrimary }}>
@@ -945,7 +1115,7 @@ export default function ProfileScreen() {
 
         {/* Logout Button */}
         <Animated.View
-          entering={FadeInUp.delay(400).duration(500)}
+          entering={FadeInUp.delay(450).duration(500)}
           className="px-4 mb-8"
         >
           <PressableScale
@@ -961,7 +1131,7 @@ export default function ProfileScreen() {
                 borderColor: isDark ? "rgba(239,68,68,0.15)" : "#fee2e2",
               }}
             >
-              <MaterialIcons name="logout" size={18} color="#ef4444" />
+              <SignOutIcon size={18} color="#ef4444" />
               <Text className="font-bold text-sm" style={{ color: isDark ? "#f87171" : "#dc2626" }}>
                 {t.profile.logout}
               </Text>

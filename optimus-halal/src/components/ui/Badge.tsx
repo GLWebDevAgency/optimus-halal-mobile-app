@@ -6,14 +6,14 @@
 
 import React from "react";
 import { View, Text, ViewProps } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "@/hooks";
 import { semantic, neutral } from "@/theme/colors";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 export interface BadgeProps extends ViewProps {
   variant?: "success" | "warning" | "danger" | "info" | "neutral" | "gold";
   size?: "sm" | "md" | "lg";
-  icon?: keyof typeof MaterialIcons.glyphMap;
+  icon?: IconName;
   children: React.ReactNode;
 }
 
@@ -91,11 +91,9 @@ export const Badge: React.FC<BadgeProps> = ({
       {...props}
     >
       {icon && (
-        <MaterialIcons
-          name={icon}
+        <AppIcon name={icon}
           size={sizeStyle.iconSize}
-          color={variantStyle.iconColor}
-        />
+          color={variantStyle.iconColor} />
       )}
       <Text
         className={`

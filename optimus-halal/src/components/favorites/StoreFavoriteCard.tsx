@@ -8,13 +8,14 @@
 import React from "react";
 import { View, Text, StyleSheet, Linking } from "react-native";
 import { Image } from "expo-image";
-import { MaterialIcons } from "@expo/vector-icons";
+import { HeartIcon, PhoneIcon, SealCheckIcon, SignInIcon, StarIcon } from "phosphor-react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { useTheme, useTranslation, useHaptics } from "@/hooks";
 import { brand, neutral } from "@/theme/colors";
+import { AppIcon, type IconName } from "@/lib/icons";
 
-const STORE_TYPE_CONFIG: Record<string, { icon: keyof typeof MaterialIcons.glyphMap; color: string; label: string }> = {
+const STORE_TYPE_CONFIG: Record<string, { icon: IconName; color: string; label: string }> = {
   butcher: { icon: "restaurant", color: "#ef4444", label: "Boucherie" },
   restaurant: { icon: "restaurant-menu", color: "#f97316", label: "Restaurant" },
   supermarket: { icon: "shopping-cart", color: "#3b82f6", label: "Supermarché" },
@@ -111,7 +112,7 @@ export const StoreFavoriteCard = React.memo(function StoreFavoriteCard({
             />
           ) : (
             <View style={[styles.image, styles.placeholderImage, { backgroundColor: isDark ? "#1f1f1f" : "#f0ede8" }]}>
-              <MaterialIcons name={typeConfig.icon} size={28} color={typeConfig.color} />
+              <AppIcon name={typeConfig.icon} size={28} color={typeConfig.color} />
             </View>
           )}
         </View>
@@ -126,13 +127,13 @@ export const StoreFavoriteCard = React.memo(function StoreFavoriteCard({
           {/* Type + Certifier row */}
           <View style={styles.metaRow}>
             <View style={[styles.typeBadge, { backgroundColor: typeConfig.color + "18" }]}>
-              <MaterialIcons name={typeConfig.icon} size={12} color={typeConfig.color} />
+              <AppIcon name={typeConfig.icon} size={12} color={typeConfig.color} />
               <Text style={[styles.typeText, { color: typeConfig.color }]}>{storeTypeLabel}</Text>
             </View>
 
             {store.halalCertified && certifierLabel ? (
               <View style={[styles.certBadge, { backgroundColor: brand.primary + "18" }]}>
-                <MaterialIcons name="verified" size={11} color={brand.primary} />
+                <SealCheckIcon size={11} color={brand.primary} />
                 <Text style={[styles.certText, { color: brand.primary }]}>{certifierLabel}</Text>
               </View>
             ) : null}
@@ -142,7 +143,7 @@ export const StoreFavoriteCard = React.memo(function StoreFavoriteCard({
           <View style={styles.metaRow}>
             {hasRating && (
               <View style={styles.ratingRow}>
-                <MaterialIcons name="star" size={14} color="#f59e0b" />
+                <StarIcon size={14} color="#f59e0b" />
                 <Text style={[styles.ratingText, { color: colors.textSecondary }]}>
                   {store.averageRating.toFixed(1)}
                 </Text>
@@ -165,7 +166,7 @@ export const StoreFavoriteCard = React.memo(function StoreFavoriteCard({
               style={[styles.actionBtn, styles.dirBtn, { backgroundColor: brand.primary + "15" }]}
               accessibilityLabel="Itinéraire"
             >
-              <MaterialIcons name="directions" size={16} color={brand.primary} />
+              <SignInIcon size={16} color={brand.primary} />
             </PressableScale>
 
             {hasPhone && (
@@ -174,7 +175,7 @@ export const StoreFavoriteCard = React.memo(function StoreFavoriteCard({
                 style={[styles.actionBtn, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}
                 accessibilityLabel="Appeler"
               >
-                <MaterialIcons name="phone" size={16} color={colors.textSecondary} />
+                <PhoneIcon size={16} color={colors.textSecondary} />
               </PressableScale>
             )}
 
@@ -183,7 +184,7 @@ export const StoreFavoriteCard = React.memo(function StoreFavoriteCard({
               style={[styles.actionBtn, { backgroundColor: "rgba(239,68,68,0.1)" }]}
               accessibilityLabel={t.favorites.removeConfirm}
             >
-              <MaterialIcons name="favorite" size={16} color="#ef4444" />
+              <HeartIcon size={16} color="#ef4444" />
             </PressableScale>
           </View>
         </View>

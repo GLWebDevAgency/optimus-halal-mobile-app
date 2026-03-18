@@ -18,19 +18,22 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, CloudSlashIcon, FlaskIcon, PackageIcon } from "phosphor-react-native";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
-import { useScanHistory, useMe } from "@/hooks";
+import { useScanHistory, useMe, usePremium } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { trpc } from "@/lib/trpc";
 import { EmptyState, PremiumBackground } from "@/components/ui";
+import { PremiumGate } from "@/components/ui/PremiumGate";
 import { PressableScale } from "@/components/ui/PressableScale";
-import { useLocalScanHistoryStore } from "@/store";
+import { useLocalScanHistoryStore, useFeatureFlagsStore } from "@/store";
 import { isAuthenticated as hasStoredTokens } from "@/services/api";
 import { MadhabScoreRing } from "@/components/scan/MadhabScoreRing";
 import { CertifierLogo } from "@/components/scan/CertifierLogo";
+import { CertifierTrustRow } from "@/components/scan/CertifierTrustRow";
 import { halalStatus as halalStatusTokens, gold } from "@/theme/colors";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 const LOCALE_MAP: Record<string, string> = { fr: "fr-FR", en: "en-US", ar: "ar-SA" };
 
@@ -38,7 +41,7 @@ const LOCALE_MAP: Record<string, string> = { fr: "fr-FR", en: "en-US", ar: "ar-S
 const NAQIY_LOGO = require("../../assets/images/logo_naqiy.webp");
 
 // ── Analysis verdict config per status ──
-const ANALYSIS_CONFIG: Record<string, { icon: keyof typeof MaterialIcons.glyphMap; color: string; key: "analysisHalal" | "analysisHaram" | "analysisDoubtful" | "analysisUnknown" }> = {
+const ANALYSIS_CONFIG: Record<string, { icon: IconName; color: string; key: "analysisHalal" | "analysisHaram" | "analysisDoubtful" | "analysisUnknown" }> = {
   halal: { icon: "check-circle", color: halalStatusTokens.halal.base, key: "analysisHalal" },
   haram: { icon: "cancel", color: halalStatusTokens.haram.base, key: "analysisHaram" },
   doubtful: { icon: "warning", color: halalStatusTokens.doubtful.base, key: "analysisDoubtful" },
@@ -49,7 +52,7 @@ const ANALYSIS_CONFIG: Record<string, { icon: keyof typeof MaterialIcons.glyphMa
 type HalalStatus = "halal" | "haram" | "doubtful" | "unknown";
 
 interface StatusVisualConfig {
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: IconName;
   color: string;
   gradientDark: readonly [string, string, string];
   gradientLight: readonly [string, string, string];
@@ -298,11 +301,8 @@ const ScanRow = React.memo(function ScanRow({ item, index, isDark, colors, t, la
                 transition={200}
               />
             ) : (
-              <MaterialIcons
-                name="inventory-2"
-                size={20}
-                color={isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}
-              />
+              <PackageIcon size={20}
+                color={isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"} />
             )}
           </View>
 
@@ -328,34 +328,43 @@ const ScanRow = React.memo(function ScanRow({ item, index, isDark, colors, t, la
               </Text>
             </View>
 
-            {/* Tier + Certifier badge row */}
-            <View style={styles.tierRow}>
-              {certifierId ? (
-                <>
-                  <Text style={[styles.certifiedByLabel, { color: colors.textMuted }]}>
-                    {t.scanHistory.certifiedBy}
-                  </Text>
-                  <CertifierLogo certifierId={certifierId} size={14} fallbackColor={effectiveConfig.color} />
-                  <Text style={[styles.certifierShort, { color: colors.textSecondary }]} numberOfLines={1}>
-                    {getShortName(certifierId)}
-                  </Text>
-                </>
-              ) : (
-                <>
-                  <MaterialIcons
-                    name="science"
-                    size={10}
-                    color={`${effectiveConfig.color}${isDark ? "90" : "70"}`}
+            {/* Tier + Certifier badge rows */}
+            {certifierId ? (
+              <View style={styles.certifierBlock}>
+                {/* Row 1: "Certification :" label */}
+                <Text style={[styles.certifiedByLabel, { color: colors.textMuted }]}>
+                  {t.scanHistory.certifiedBy}
+                </Text>
+                {/* Row 2: Logo + Name + Grade strip */}
+                {trustScore != null ? (
+                  <CertifierTrustRow
+                    variant="inline"
+                    certifierId={certifierId}
+                    certifierName={getShortName(certifierId)}
+                    trustScore={trustScore}
+                    showScore={false}
                   />
-                  <Text
-                    style={[styles.tierText, { color: `${effectiveConfig.color}${isDark ? "CC" : "99"}` }]}
-                    numberOfLines={1}
-                  >
-                    {tierText}
-                  </Text>
-                </>
-              )}
-            </View>
+                ) : (
+                  <View style={styles.certifierGradeRow}>
+                    <CertifierLogo certifierId={certifierId} size={14} fallbackColor={effectiveConfig.color} />
+                    <Text style={[styles.certifierShort, { color: colors.textSecondary }]} numberOfLines={1}>
+                      {getShortName(certifierId)}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            ) : (
+              <View style={styles.tierRow}>
+                <FlaskIcon size={10}
+                  color={`${effectiveConfig.color}${isDark ? "90" : "70"}`} />
+                <Text
+                  style={[styles.tierText, { color: `${effectiveConfig.color}${isDark ? "CC" : "99"}` }]}
+                  numberOfLines={1}
+                >
+                  {tierText}
+                </Text>
+              </View>
+            )}
 
             {/* Analysis composition row — on ALL cards */}
             <View style={styles.analysisRow}>
@@ -363,11 +372,9 @@ const ScanRow = React.memo(function ScanRow({ item, index, isDark, colors, t, la
               <Text style={[styles.analysisLabel, { color: colors.textMuted }]}>
                 {t.scanHistory.analysisLabel}
               </Text>
-              <MaterialIcons
-                name={analysisConfig.icon}
+              <AppIcon name={analysisConfig.icon}
                 size={10}
-                color={analysisConfig.color}
-              />
+                color={analysisConfig.color} />
               <Text
                 style={[styles.analysisText, { color: analysisConfig.color }]}
                 numberOfLines={1}
@@ -412,12 +419,33 @@ export default function ScanHistoryScreen() {
   // ── Local history (guests) ──
   const localScans = useLocalScanHistoryStore((s) => s.scans);
 
+  // ── Certifier trust scores for guest enrichment (public, no auth needed) ──
+  const certifierRanking = trpc.certifier.ranking.useQuery(undefined, {
+    enabled: isGuest && localScans.some((s) => s.certifierId != null),
+    staleTime: 1000 * 60 * 60, // 1h cache
+  });
+  const certifierScoreMap = useMemo(() => {
+    const map = new Map<string, number>();
+    if (certifierRanking.data) {
+      for (const c of certifierRanking.data) {
+        map.set(c.id, c.trustScore);
+      }
+    }
+    return map;
+  }, [certifierRanking.data]);
+
   const userMadhab = (userProfile?.madhab as string) ?? "general";
+
+  // Premium gate — free users see only last 3 scans when flag enabled
+  const { isPremium } = usePremium();
+  const { flags } = useFeatureFlagsStore();
+  const FREE_HISTORY_LIMIT = 3;
 
   // Merge: guests use local, auth users use cloud
   const scans = useMemo(() => {
+    let items: ScanItem[];
     if (isGuest) {
-      return localScans.map((s) => ({
+      items = localScans.map((s) => ({
         id: s.barcode,
         barcode: s.barcode,
         halalStatus: s.halalStatus,
@@ -434,11 +462,23 @@ export default function ScanHistoryScreen() {
           certifierId: s.certifierId,
           certifierName: s.certifierName,
         },
-        certifier: null,
+        certifier: (() => {
+          const score = s.certifierTrustScore ?? (s.certifierId ? certifierScoreMap.get(s.certifierId) ?? null : null);
+          return score != null
+            ? { trustScore: score, trustScoreHanafi: null, trustScoreShafii: null, trustScoreMaliki: null, trustScoreHanbali: null }
+            : null;
+        })(),
       })) as ScanItem[];
+    } else {
+      items = (data?.items ?? []) as ScanItem[];
     }
-    return (data?.items ?? []) as ScanItem[];
-  }, [isGuest, localScans, data]);
+
+    // Limit history for free-tier users
+    if (flags.scanHistoryLimitEnabled && !isPremium) {
+      return items.slice(0, FREE_HISTORY_LIMIT);
+    }
+    return items;
+  }, [isGuest, localScans, data, flags.scanHistoryLimitEnabled, isPremium, certifierScoreMap]);
 
   const renderItem = useCallback(
     ({ item, index }: { item: ScanItem; index: number }) => (
@@ -485,7 +525,7 @@ export default function ScanHistoryScreen() {
                 { backgroundColor: isDark ? "rgba(239,68,68,0.1)" : "rgba(239,68,68,0.06)" },
               ]}
             >
-              <MaterialIcons name="cloud-off" size={32} color={isDark ? "#f87171" : "#ef4444"} />
+              <CloudSlashIcon size={32} color={isDark ? "#f87171" : "#ef4444"} />
             </View>
             <Text style={[styles.errorText, { color: colors.textSecondary }]}>
               {t.scanHistory.loadError}
@@ -532,6 +572,13 @@ export default function ScanHistoryScreen() {
               renderItem={renderItem}
               contentContainerStyle={{ paddingTop: 8, paddingBottom: 100 }}
               showsVerticalScrollIndicator={false}
+              ListFooterComponent={
+                flags.scanHistoryLimitEnabled && !isPremium ? (
+                  <PremiumGate feature="scanHistory" trigger="history">
+                    <>{/* children never rendered — gate shows upgrade prompt */}</>
+                  </PremiumGate>
+                ) : null
+              }
             />
           </>
         )}
@@ -558,7 +605,7 @@ function Header({ isDark, colors, t, count }: { isDark: boolean; colors: any; t:
           accessibilityRole="button"
           accessibilityLabel={t.common.back}
         >
-          <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
+          <ArrowLeftIcon size={20} color={colors.textPrimary} />
         </PressableScale>
         <View style={styles.flex}>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]} accessibilityRole="header">
@@ -651,7 +698,9 @@ const styles = StyleSheet.create({
   dot: { width: 2.5, height: 2.5, borderRadius: 1.25 },
   dateText: { fontSize: 10 },
   tierRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 3 },
+  certifierBlock: { marginTop: 3, gap: 2 },
   certifiedByLabel: { fontSize: 9, fontWeight: "500", fontStyle: "italic" },
+  certifierGradeRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   certifierShort: { fontSize: 10, fontWeight: "700", flexShrink: 1 },
   tierText: { fontSize: 10, fontWeight: "600", flexShrink: 1 },
   analysisRow: { flexDirection: "row", alignItems: "center", gap: 3, marginTop: 3 },

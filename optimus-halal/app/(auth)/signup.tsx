@@ -1,12 +1,20 @@
 /**
- * Sign Up Screen
+ * Sign Up Screen — Naqiy+ Account Creation
  *
- * Écran d'inscription avec:
- * - Nom complet
- * - Email (identifiant principal)
- * - Localisation (ville française avec géolocalisation)
- * - Mot de passe
- * - Option "Explorer sans compte" pour le mode guest
+ * Post-payment registration: user just subscribed to Naqiy+ via RevenueCat.
+ * This screen creates their account (email + password + optional info).
+ *
+ * Psychology: Celebration → Simplicity → Activation
+ *  - Gold badge + congratulatory tone ("Bienvenue dans Naqiy+")
+ *  - Minimal fields: name, email, password (city optional)
+ *  - Immediate redirect to app after creation
+ *
+ * Principles:
+ *  - Al-Ihsan: Premium feel befitting a paying subscriber
+ *  - Al-Amanah: Secure account creation, no data waste
+ *  - Al-Taqwa: No pressure, respectful onboarding
+ *
+ * Supports: French, English, Arabic (RTL)
  */
 
 import React, { useState, useCallback } from "react";
@@ -16,24 +24,37 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
+  StyleSheet,
   Linking,
 } from "react-native";
-import { router, Link } from "expo-router";
+import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
-import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
+import { StarIcon, WarningCircleIcon } from "phosphor-react-native";
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeInUp,
+  FadeOut,
+  useSharedValue,
+  useAnimatedStyle,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
+import { NotificationFeedbackType } from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 
 import { Image } from "expo-image";
-import { Button, Input, IconButton, LocationPicker, PremiumBackground } from "@/components/ui";
+import { Button, Input, LocationPicker, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { useLocalAuthStore } from "@/store";
 import { authService } from "@/services/api/auth.service";
-import { clearTokens } from "@/services/api";
-import { useQueryClient } from "@tanstack/react-query";
-import { City } from "@/constants/locations";
+import type { City } from "@/constants/locations";
 import { useTranslation, useHaptics, useTheme } from "@/hooks";
 import { APP_CONFIG } from "@/constants/config";
+import { brand, gold } from "@/theme/colors";
+import { identifyUser as identifyPurchasesUser } from "@/services/purchases";
+import { trpc } from "@/lib/trpc";
+import { logger } from "@/lib/logger";
 
 const logoSource = require("@assets/images/logo_naqiy.webp");
 
@@ -41,18 +62,34 @@ export default function SignUpScreen() {
   const insets = useSafeAreaInsets();
   const { isDark, colors } = useTheme();
   const { impact, notification } = useHaptics();
-  const { t } = useTranslation();
+  const { t, language, isRTL } = useTranslation();
 
-  // Form state
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [referralCode, setReferralCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const { setUser } = useLocalAuthStore();
-  const queryClient = useQueryClient();
+  const applyReferralCode = trpc.referral.applyCode.useMutation();
+
+  // Shake animation for error banner
+  const shakeX = useSharedValue(0);
+  const shakeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shakeX.value }],
+  }));
+  const triggerShake = useCallback(() => {
+    shakeX.value = withSequence(
+      withTiming(-8, { duration: 50 }),
+      withTiming(8, { duration: 50 }),
+      withTiming(-6, { duration: 50 }),
+      withTiming(6, { duration: 50 }),
+      withTiming(0, { duration: 50 })
+    );
+  }, [shakeX]);
 
   const validateForm = useCallback(() => {
     const newErrors: Record<string, string> = {};
@@ -60,13 +97,11 @@ export default function SignUpScreen() {
     if (!fullName.trim()) {
       newErrors.fullName = t.auth.signup.errors.fullNameRequired;
     }
-
     if (!email.trim()) {
       newErrors.email = t.auth.signup.errors.emailRequired;
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = t.auth.signup.errors.emailInvalid;
     }
-
     if (!password) {
       newErrors.password = t.auth.signup.errors.passwordRequired;
     } else if (password.length < 8) {
@@ -88,129 +123,218 @@ export default function SignUpScreen() {
     impact();
 
     try {
-      // Real API call to Railway backend
       const response = await authService.register({
         email: email.trim().toLowerCase(),
         password,
         displayName: fullName,
         phoneNumber: "",
-        preferredLanguage: "fr",
+        preferredLanguage: (["fr", "en", "ar"].includes(language) ? language : "fr") as "fr" | "en" | "ar",
       });
 
       if (response.success && response.user) {
-        // Set authenticated user
         setUser({
           id: response.user.id,
           email: response.user.email || email,
           fullName: response.user.displayName || fullName,
-          location: selectedCity 
-            ? { city: selectedCity.name, country: "France" } 
+          location: selectedCity
+            ? { city: selectedCity.name, country: "France" }
             : undefined,
           preferences: {
             preferredCertifications: [],
             dietaryExclusions: [],
             pushNotificationsEnabled: true,
             darkModeEnabled: "system",
-            language: "fr",
+            language,
           },
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         });
 
-        notification();
+        // Link RevenueCat anonymous purchase to this new account.
+        // Critical: without this, the $RCAnonymousID purchase stays orphaned
+        // and webhooks can't match the user. Fire-and-forget — don't block navigation.
+        identifyPurchasesUser(response.user.id).catch((e) =>
+          logger.warn("Signup", "RevenueCat identify failed (will retry on next launch)", String(e))
+        );
+
+        // Apply referral code if provided — fire-and-forget, don't block navigation
+        const trimmedCode = referralCode.trim();
+        if (trimmedCode.length >= 4) {
+          applyReferralCode.mutate(
+            { code: trimmedCode },
+            {
+              onError: (e) =>
+                logger.warn("Signup", "Referral code failed (non-blocking)", String(e)),
+            },
+          );
+        }
+
+        notification(NotificationFeedbackType.Success);
         router.replace("/(tabs)");
       } else {
-        Alert.alert(t.common.error, response.message || t.auth.magicLink.signupFailed);
+        setServerError(response.message || t.auth.magicLink.signupFailed);
+        triggerShake();
+        notification(NotificationFeedbackType.Error);
       }
     } catch (error: any) {
       console.error("[Signup] Error:", error);
-      Alert.alert(
-        t.common.error,
-        error.message || t.auth.magicLink.signupError
-      );
+      setServerError(error.message || t.auth.magicLink.signupError);
+      triggerShake();
+      notification(NotificationFeedbackType.Error);
     } finally {
       setIsLoading(false);
     }
-  }, [fullName, email, password, selectedCity, validateForm, setUser, impact, notification, t]);
-
-  const handleSocialAuth = useCallback(async (provider: "google" | "apple") => {
-    impact();
-    Alert.alert(t.common.comingSoon, t.auth.magicLink.socialComingSoon.replace("{{provider}}", provider === "google" ? "Google" : "Apple"));
-  }, []);
+  }, [fullName, email, password, selectedCity, referralCode, validateForm, setUser, applyReferralCode, impact, notification, t, language, triggerShake]);
 
   return (
-    <View className="flex-1">
+    <View style={styles.container}>
       <PremiumBackground />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1"
+        style={styles.flex}
       >
         <ScrollView
-          contentContainerStyle={{
-            flexGrow: 1,
-            paddingTop: insets.top + 8,
-            paddingBottom: insets.bottom + 24,
-            paddingHorizontal: 24,
-          }}
+          contentContainerStyle={[
+            styles.scrollContent,
+            {
+              paddingTop: insets.top + 16,
+              paddingBottom: insets.bottom + 24,
+            },
+          ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Header */}
+          {/* Header — Back button */}
           <Animated.View
             entering={FadeIn.delay(100).duration(400)}
-            className="flex-row items-center justify-between mb-4"
+            style={styles.header}
           >
-            <IconButton
-              icon="arrow-back"
-              variant="default"
+            <PressableScale
               onPress={() => router.back()}
-              color={isDark ? "#ffffff" : "#1e293b"}
+              style={styles.backButton}
+              accessibilityRole="button"
               accessibilityLabel={t.common.back}
-            />
-            <Text className="text-sm font-medium text-slate-400 dark:text-slate-500">
-              {t.common.stepOf.replace("{{current}}", "1").replace("{{total}}", "3")}
-            </Text>
+            >
+              <Text style={{ fontSize: 24, color: colors.textPrimary }}>←</Text>
+            </PressableScale>
           </Animated.View>
 
-          {/* Brand Logo */}
+          {/* Naqiy+ Welcome Badge */}
           <Animated.View
-            entering={FadeInDown.delay(150).duration(500)}
-            className="items-center mb-6"
+            entering={FadeInDown.delay(150).duration(600)}
+            style={styles.badgeSection}
           >
+            {/* Logo */}
             <View
-              className="w-16 h-16 rounded-2xl items-center justify-center"
-              style={{ backgroundColor: colors.card }}
+              style={[
+                styles.logoCard,
+                {
+                  backgroundColor: isDark ? "#1A1A1A" : "#ffffff",
+                  borderColor: isDark
+                    ? "rgba(207, 165, 51, 0.25)"
+                    : "rgba(0, 0, 0, 0.06)",
+                },
+              ]}
               accessible={false}
             >
               <Image
                 source={logoSource}
-                style={{ width: 42, height: 42 }}
+                style={styles.logoImage}
                 contentFit="contain"
                 cachePolicy="memory-disk"
               />
             </View>
+
+            {/* Naqiy+ pill */}
+            <View style={styles.plusPill}>
+              <LinearGradient
+                colors={[gold[500], gold[600]]}
+                style={styles.plusPillGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <StarIcon size={12} color="#102217" weight="fill" />
+                <Text style={styles.plusPillText}>Naqiy+</Text>
+              </LinearGradient>
+            </View>
           </Animated.View>
 
-          {/* Title */}
+          {/* Title — Celebration tone */}
           <Animated.View
-            entering={FadeInDown.delay(200).duration(600)}
-            className="mb-6"
+            entering={FadeInDown.delay(250).duration(600)}
+            style={styles.titleSection}
           >
-            <Text className="text-slate-900 dark:text-white tracking-tight text-[32px] font-bold leading-tight mb-2" accessibilityRole="header">
+            <Text
+              style={[
+                styles.title,
+                {
+                  color: colors.textPrimary,
+                  textAlign: isRTL ? "right" : "left",
+                },
+              ]}
+              accessibilityRole="header"
+            >
               {t.auth.signup.title}
             </Text>
-            <Text className="text-slate-500 dark:text-slate-400 text-base font-normal leading-normal">
+            <Text
+              style={[
+                styles.subtitle,
+                {
+                  color: colors.textSecondary,
+                  textAlign: isRTL ? "right" : "left",
+                },
+              ]}
+            >
               {t.auth.signup.subtitle}
             </Text>
           </Animated.View>
 
+          {/* Server Error Banner */}
+          {serverError && (
+            <Animated.View
+              entering={FadeIn.duration(300)}
+              exiting={FadeOut.duration(200)}
+              style={shakeStyle}
+              accessibilityRole="alert"
+              accessibilityLiveRegion="assertive"
+            >
+              <View
+                style={[
+                  styles.errorBanner,
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(239,68,68,0.15)"
+                      : "rgba(239,68,68,0.1)",
+                    borderColor: "rgba(239,68,68,0.2)",
+                  },
+                ]}
+              >
+                <WarningCircleIcon size={20} color="#ef4444" />
+                <Text
+                  style={[
+                    styles.errorText,
+                    { color: isDark ? "#fca5a5" : "#dc2626" },
+                  ]}
+                >
+                  {serverError}
+                </Text>
+                <PressableScale onPress={() => setServerError(null)}>
+                  <Text
+                    style={{ color: isDark ? "#fca5a5" : "#dc2626", fontSize: 18 }}
+                  >
+                    ✕
+                  </Text>
+                </PressableScale>
+              </View>
+            </Animated.View>
+          )}
+
           {/* Form */}
           <Animated.View
-            entering={FadeInUp.delay(300).duration(600)}
-            className="gap-5"
+            entering={FadeInUp.delay(350).duration(600)}
+            style={styles.form}
           >
-            {/* Full Name */}
             <Input
               label={t.auth.signup.fullName}
               placeholder={t.auth.signup.fullNamePlaceholder}
@@ -219,10 +343,8 @@ export default function SignUpScreen() {
               autoCapitalize="words"
               error={errors.fullName}
               accessibilityLabel={t.auth.signup.fullName}
-              accessibilityHint={t.auth.signup.fullNamePlaceholder}
             />
 
-            {/* Email - Required */}
             <Input
               label={t.auth.signup.email}
               placeholder={t.auth.signup.emailPlaceholder}
@@ -234,10 +356,8 @@ export default function SignUpScreen() {
               error={errors.email}
               leftIcon="mail"
               accessibilityLabel={t.auth.signup.email}
-              accessibilityHint={t.auth.signup.emailPlaceholder}
             />
 
-            {/* Location - City Picker */}
             <LocationPicker
               label={t.editProfile.yourCity}
               value={selectedCity?.name}
@@ -247,7 +367,6 @@ export default function SignUpScreen() {
               showGeolocation={true}
             />
 
-            {/* Password */}
             <Input
               label={t.auth.signup.password}
               placeholder={t.auth.signup.passwordPlaceholder}
@@ -257,28 +376,45 @@ export default function SignUpScreen() {
               error={errors.password}
               hint={t.auth.signup.passwordHint}
               accessibilityLabel={t.auth.signup.password}
-              accessibilityHint={t.auth.signup.passwordHint}
             />
 
-            {/* Submit Button */}
-            <Button
-              variant="primary"
-              size="lg"
-              fullWidth
-              loading={isLoading}
-              onPress={handleSignUp}
-              className="mt-4"
-              accessibilityLabel={t.auth.signup.submit}
-              accessibilityHint={t.auth.signup.submit}
-            >
-              {t.auth.signup.submit}
-            </Button>
+            <Input
+              label={t.referral.referralCodeLabel}
+              placeholder={t.referral.referralCodePlaceholder}
+              value={referralCode}
+              onChangeText={setReferralCode}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              maxLength={8}
+              accessibilityLabel={t.referral.referralCodeLabel}
+            />
+
+            {/* Submit */}
+            <View style={styles.submitContainer}>
+              <Button
+                variant="primary"
+                size="lg"
+                fullWidth
+                loading={isLoading}
+                onPress={handleSignUp}
+                accessibilityLabel={t.auth.signup.submit}
+                style={{
+                  shadowColor: brand.primary,
+                  shadowOffset: { width: 0, height: 8 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 16,
+                  elevation: 8,
+                }}
+              >
+                {t.auth.signup.submit}
+              </Button>
+            </View>
 
             {/* Terms */}
-            <Text className="text-center text-xs text-slate-500 dark:text-slate-400 leading-relaxed px-4">
+            <Text style={[styles.termsText, { color: colors.textMuted }]}>
               {t.common.signUpWith}{" "}
               <Text
-                className="text-slate-900 dark:text-white underline"
+                style={styles.termsLink}
                 onPress={() => Linking.openURL(APP_CONFIG.TERMS_URL)}
                 accessibilityRole="link"
               >
@@ -286,125 +422,32 @@ export default function SignUpScreen() {
               </Text>{" "}
               {t.auth.signup.and}{" "}
               <Text
-                className="text-slate-900 dark:text-white underline"
+                style={styles.termsLink}
                 onPress={() => Linking.openURL(APP_CONFIG.PRIVACY_POLICY_URL)}
                 accessibilityRole="link"
               >
                 {t.auth.signup.privacyLink}
               </Text>
-              .
             </Text>
           </Animated.View>
 
-          {/* Divider */}
+          {/* Login Link — for users who already have an account */}
           <Animated.View
-            entering={FadeIn.delay(400).duration(400)}
-            className="relative py-6"
+            entering={FadeIn.delay(500).duration(400)}
+            style={styles.loginSection}
           >
-            <View className="absolute inset-x-0 top-1/2 h-px bg-slate-200 dark:bg-slate-800" />
-            <View className="items-center">
-              <Text className="bg-white dark:bg-background-dark px-4 text-sm font-medium text-slate-500">
-                {t.common.continueWith}
-              </Text>
-            </View>
-          </Animated.View>
-
-          {/* Social Auth */}
-          <Animated.View
-            entering={FadeInUp.delay(500).duration(600)}
-            className="flex-row gap-4"
-          >
-            <PressableScale
-              onPress={() => handleSocialAuth("google")}
-              accessibilityRole="button"
-              accessibilityLabel={`${t.auth.signup.submit} Google`}
-              accessibilityHint={`${t.auth.signup.submit} Google`}
-              style={{ flex: 1 }}
-            >
-              <View className="flex-row items-center justify-center gap-2 h-14 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark">
-                <MaterialIcons name="g-mobiledata" size={24} color="#4285F4" />
-                <Text className="text-sm font-semibold text-slate-700 dark:text-white">
-                  Google
-                </Text>
-              </View>
-            </PressableScale>
-
-            <PressableScale
-              onPress={() => handleSocialAuth("apple")}
-              accessibilityRole="button"
-              accessibilityLabel={`${t.auth.signup.submit} Apple`}
-              accessibilityHint={`${t.auth.signup.submit} Apple`}
-              style={{ flex: 1 }}
-            >
-              <View className="flex-row items-center justify-center gap-2 h-14 rounded-xl bg-slate-900 dark:bg-white">
-                <MaterialIcons
-                  name="apple"
-                  size={24}
-                  color={isDark ? "#0f172a" : "#ffffff"}
-                />
-                <Text className="text-sm font-semibold text-white dark:text-slate-900">
-                  Apple
-                </Text>
-              </View>
-            </PressableScale>
-          </Animated.View>
-
-          {/* Explore Mode */}
-          <Animated.View
-            entering={FadeIn.delay(600).duration(400)}
-            className="items-center mt-6"
-          >
-            <PressableScale
-              onPress={async () => {
-                await clearTokens();
-                queryClient.clear();
-                router.replace("/(tabs)");
-              }}
-              accessibilityRole="button"
-              accessibilityLabel={t.auth.signup.exploreMode}
-            >
-              <View style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                paddingVertical: 14,
-                paddingHorizontal: 28,
-                borderRadius: 12,
-                borderWidth: 1.5,
-                borderColor: isDark ? "rgba(148,163,184,0.25)" : "rgba(100,116,139,0.2)",
-                borderStyle: "dashed",
-                backgroundColor: isDark ? "rgba(148,163,184,0.06)" : "rgba(100,116,139,0.04)",
-              }}>
-                <MaterialIcons name="travel-explore" size={20} color={isDark ? "#94a3b8" : "#64748b"} />
-                <Text style={{ fontSize: 15, fontWeight: "600", color: isDark ? "#94a3b8" : "#64748b" }}>
-                  {t.auth.signup.exploreMode}
-                </Text>
-                <MaterialIcons name="arrow-forward" size={16} color={isDark ? "#94a3b8" : "#64748b"} />
-              </View>
-            </PressableScale>
-            <Text style={{ fontSize: 12, color: colors.textMuted, textAlign: "center", marginTop: 8 }}>
-              {t.auth.signup.exploreModeHint}
-            </Text>
-          </Animated.View>
-
-          {/* Login Link */}
-          <Animated.View
-            entering={FadeIn.delay(700).duration(400)}
-            className="items-center mt-4"
-          >
-            <Text className="text-sm text-slate-500 dark:text-slate-400">
+            <Text style={[styles.loginText, { color: colors.textSecondary }]}>
               {t.auth.signup.hasAccount}{" "}
-              <Link href="/(auth)/login" asChild>
-                <Text
-                  className="font-bold text-gold-600"
-                  accessibilityRole="link"
-                  accessibilityLabel={t.auth.signup.loginLink}
-                  accessibilityHint={t.auth.signup.loginLink}
-                >
-                  {t.auth.signup.loginLink}
-                </Text>
-              </Link>
+              <Text
+                style={[styles.loginLink, { color: gold[500] }]}
+                accessibilityRole="link"
+                onPress={() => {
+                  impact();
+                  router.push("/(auth)/login");
+                }}
+              >
+                {t.auth.signup.loginLink}
+              </Text>
             </Text>
           </Animated.View>
         </ScrollView>
@@ -412,3 +455,122 @@ export default function SignUpScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  flex: { flex: 1 },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // Badge
+  badgeSection: {
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  logoCard: {
+    width: 64,
+    height: 64,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 6,
+    marginBottom: 12,
+  },
+  logoImage: { width: 40, height: 40 },
+  plusPill: {
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  plusPillGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  plusPillText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#102217",
+    letterSpacing: 0.3,
+  },
+
+  // Title
+  titleSection: {
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "800",
+    letterSpacing: -0.5,
+    marginBottom: 6,
+  },
+  subtitle: {
+    fontSize: 15,
+    lineHeight: 22,
+  },
+
+  // Error
+  errorBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 16,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+
+  // Form
+  form: {
+    gap: 20,
+  },
+  submitContainer: {
+    marginTop: 8,
+  },
+  termsText: {
+    fontSize: 12,
+    textAlign: "center",
+    lineHeight: 18,
+    paddingHorizontal: 16,
+  },
+  termsLink: {
+    textDecorationLine: "underline",
+  },
+
+  // Login
+  loginSection: {
+    alignItems: "center",
+    marginTop: 24,
+  },
+  loginText: {
+    fontSize: 14,
+  },
+  loginLink: {
+    fontWeight: "700",
+  },
+});

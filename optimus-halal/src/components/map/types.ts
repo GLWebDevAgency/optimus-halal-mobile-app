@@ -1,5 +1,5 @@
-import type { MaterialIcons } from "@expo/vector-icons";
 import type { useTheme } from "@/hooks/useTheme";
+import { type IconName } from "@/lib/icons";
 
 export interface StoreFeatureProperties {
   id: string;
@@ -23,7 +23,7 @@ export interface StoreFeatureProperties {
 
 export type ThemeColors = ReturnType<typeof useTheme>["colors"];
 
-export const STORE_TYPE_ICON: Record<string, keyof typeof MaterialIcons.glyphMap> = {
+export const STORE_TYPE_ICON: Record<string, IconName> = {
   butcher: "restaurant",
   restaurant: "restaurant-menu",
   supermarket: "shopping-cart",

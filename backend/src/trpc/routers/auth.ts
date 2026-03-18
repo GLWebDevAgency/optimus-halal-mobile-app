@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { randomBytes, timingSafeEqual } from "node:crypto";
+import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { eq, and, gt, sql } from "drizzle-orm";
 import { router, publicProcedure, protectedProcedure } from "../trpc.js";
-import { users, refreshTokens, safeUserColumns } from "../../db/schema/index.js";
+import { users, refreshTokens, safeUserColumns, devices } from "../../db/schema/index.js";
 import {
   hashPassword,
   verifyPassword,
@@ -21,6 +21,11 @@ import { logger } from "../../lib/logger.js";
 function safeCompare(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
+
+/** Generate a unique 6-char alphanumeric uppercase referral code */
+function generateReferralCode(): string {
+  return randomBytes(3).toString("hex").toUpperCase();
 }
 
 export const authRouter = router({
@@ -46,6 +51,7 @@ export const authRouter = router({
               passwordHash,
               displayName: input.displayName,
               phoneNumber: input.phoneNumber,
+              referralCode: generateReferralCode(),
             })
             .returning({
               id: users.id,
@@ -61,7 +67,7 @@ export const authRouter = router({
         }
 
         const accessToken = await signAccessToken(user.id);
-        const tokenId = crypto.randomUUID();
+        const tokenId = randomUUID();
         const refreshToken = await signRefreshToken(user.id, tokenId);
 
         await tx.insert(refreshTokens).values({
@@ -80,6 +86,21 @@ export const authRouter = router({
           error: err instanceof Error ? err.message : String(err),
         });
       });
+
+      // Link device → user (conversion tracking, source of truth)
+      if (ctx.deviceId) {
+        ctx.db
+          .update(devices)
+          .set({
+            userId: result.user.id,
+            convertedAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(eq(devices.deviceId, ctx.deviceId))
+          .catch((err) => {
+            logger.warn("Device link failed", { deviceId: ctx.deviceId, error: String(err) });
+          });
+      }
 
       return {
         user: { id: result.user.id, email: result.user.email, displayName: result.user.displayName },
@@ -123,7 +144,7 @@ export const authRouter = router({
       }
 
       const accessToken = await signAccessToken(user.id);
-      const tokenId = crypto.randomUUID();
+      const tokenId = randomUUID();
       const refreshToken = await signRefreshToken(user.id, tokenId);
 
       // Token management in transaction
@@ -150,6 +171,21 @@ export const authRouter = router({
           expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         });
       });
+
+      // Link device → user on login (handles new device for existing user)
+      if (ctx.deviceId) {
+        ctx.db
+          .update(devices)
+          .set({
+            userId: user.id,
+            convertedAt: sql`COALESCE(converted_at, NOW())`,
+            updatedAt: new Date(),
+          })
+          .where(eq(devices.deviceId, ctx.deviceId))
+          .catch((err) => {
+            logger.warn("Device link on login failed", { deviceId: ctx.deviceId, error: String(err) });
+          });
+      }
 
       return {
         user: {
@@ -209,7 +245,7 @@ export const authRouter = router({
 
       const storedToken = deleted[0];
       const accessToken = await signAccessToken(userId);
-      const newTokenId = crypto.randomUUID();
+      const newTokenId = randomUUID();
       const newRefreshToken = await signRefreshToken(userId, newTokenId);
 
       await ctx.db.insert(refreshTokens).values({

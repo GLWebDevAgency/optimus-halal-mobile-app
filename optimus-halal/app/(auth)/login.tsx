@@ -20,7 +20,7 @@ import {
 import { PressableScale } from "@/components/ui/PressableScale";
 import { router, Link } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowRightIcon, UserCircleIcon, WarningCircleIcon, XIcon } from "phosphor-react-native";
 import * as LocalAuthentication from "expo-local-authentication";
 import * as Haptics from "expo-haptics";
 import Animated, {
@@ -38,8 +38,6 @@ import { Image } from "expo-image";
 import { Button, Input, PremiumBackground } from "@/components/ui";
 import { useLogin } from "@/hooks/useAuth";
 import { useTranslation, useHaptics, useTheme } from "@/hooks";
-import { clearTokens } from "@/services/api";
-import { useQueryClient } from "@tanstack/react-query";
 import type { TranslationKeys } from "@/i18n";
 
 const logoSource = require("@assets/images/logo_naqiy.webp");
@@ -117,7 +115,6 @@ export default function LoginScreen() {
   const [serverError, setServerError] = useState<string | null>(null);
 
   const loginMutation = useLogin();
-  const queryClient = useQueryClient();
   const isLoading = loginMutation.isPending;
 
   // Shake animation for the error banner
@@ -266,7 +263,7 @@ export default function LoginScreen() {
               accessibilityLiveRegion="assertive"
             >
               <View className="flex-row items-center gap-3 p-4 rounded-xl bg-red-500/10 dark:bg-red-500/15 border border-red-500/20">
-                <MaterialIcons name="error-outline" size={20} color="#ef4444" />
+                <WarningCircleIcon size={20} color="#ef4444" />
                 <Text className="flex-1 text-sm font-medium text-red-600 dark:text-red-400">
                   {serverError}
                 </Text>
@@ -276,7 +273,7 @@ export default function LoginScreen() {
                   accessibilityLabel={t.common.close}
                   accessibilityRole="button"
                 >
-                  <MaterialIcons name="close" size={18} color={isDark ? "#f87171" : "#dc2626"} />
+                  <XIcon size={18} color={isDark ? "#f87171" : "#dc2626"} />
                 </PressableScale>
               </View>
             </Animated.View>
@@ -345,11 +342,8 @@ export default function LoginScreen() {
                   elevation: 8,
                 }}
                 icon={
-                  <MaterialIcons
-                    name="arrow-forward"
-                    size={20}
-                    color="#0d1b13"
-                  />
+                  <ArrowRightIcon size={20}
+                    color="#0d1b13" />
                 }
               >
                 {t.auth.login.submit}
@@ -368,7 +362,7 @@ export default function LoginScreen() {
                   borderColor: isDark ? "rgba(212,175,55,0.15)" : "rgba(212,175,55,0.2)",
                   backgroundColor: isDark ? "rgba(212,175,55,0.04)" : "rgba(212,175,55,0.03)",
                 }}>
-                  <MaterialIcons name="face" size={24} color="#d4af37" />
+                  <UserCircleIcon size={24} color="#d4af37" />
                   <Text style={{ fontSize: 15, fontWeight: "500", color: colors.textSecondary }}>
                     {t.auth.login.biometric}
                   </Text>
@@ -377,65 +371,23 @@ export default function LoginScreen() {
             </View>
           </Animated.View>
 
-          {/* Explore Mode */}
+          {/* Not yet Naqiy+? — Soft upsell, Al-Taqwa compliant */}
           <Animated.View
             entering={FadeIn.delay(400).duration(600)}
             style={{ alignItems: "center", marginTop: 32 }}
           >
-            <PressableScale
-              onPress={async () => {
-                // Defensive: ensure clean guest state even if a previous
-                // logout was incomplete (e.g. SecureStore error prevented
-                // queryClient.clear() from running)
-                await clearTokens();
-                queryClient.clear();
-                router.replace("/(tabs)");
-              }}
-              accessibilityRole="button"
-              accessibilityLabel={t.auth.login.exploreMode}
-            >
-              <View style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                paddingVertical: 14,
-                paddingHorizontal: 28,
-                borderRadius: 12,
-                borderWidth: 1.5,
-                borderColor: isDark ? "rgba(148,163,184,0.25)" : "rgba(100,116,139,0.2)",
-                borderStyle: "dashed",
-                backgroundColor: isDark ? "rgba(148,163,184,0.06)" : "rgba(100,116,139,0.04)",
-              }}>
-                <MaterialIcons name="travel-explore" size={20} color={isDark ? "#94a3b8" : "#64748b"} />
-                <Text style={{ fontSize: 15, fontWeight: "600", color: isDark ? "#94a3b8" : "#64748b" }}>
-                  {t.auth.login.exploreMode}
-                </Text>
-                <MaterialIcons name="arrow-forward" size={16} color={isDark ? "#94a3b8" : "#64748b"} />
-              </View>
-            </PressableScale>
-            <Text style={{ fontSize: 12, color: colors.textMuted, textAlign: "center", marginTop: 8 }}>
-              {t.auth.login.exploreModeHint}
-            </Text>
-          </Animated.View>
-
-          {/* Sign Up Link */}
-          <Animated.View
-            entering={FadeIn.delay(500).duration(600)}
-            style={{ alignItems: "center", marginTop: 20 }}
-          >
             <Text style={{ fontSize: 14, color: colors.textSecondary }}>
-              {t.auth.login.noAccount}{" "}
-              <Link href="/(auth)/signup" asChild>
-                <Text
-                  style={{ fontWeight: "700", color: "#d4af37" }}
-                  accessibilityRole="link"
-                  accessibilityLabel={t.auth.login.createAccount}
-                  accessibilityHint={t.auth.login.createAccount}
-                >
-                  {t.auth.login.createAccount}
-                </Text>
-              </Link>
+              {t.auth.login.notYetPlus}{" "}
+              <Text
+                style={{ fontWeight: "700", color: "#d4af37" }}
+                accessibilityRole="link"
+                onPress={() => {
+                  impact();
+                  router.push("/(auth)/welcome");
+                }}
+              >
+                {t.auth.login.discoverPlus}
+              </Text>
             </Text>
           </Animated.View>
         </ScrollView>

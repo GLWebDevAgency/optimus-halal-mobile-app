@@ -17,14 +17,18 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, CheckIcon, CheckCircleIcon, MagnifyingGlassIcon, PlusIcon, ProhibitIcon, ShieldCheckIcon, XIcon } from "phosphor-react-native";
 import Animated, { FadeIn, FadeInDown, SlideInDown, ZoomIn } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { PressableScale } from "@/components/ui/PressableScale";
-import { PremiumBackground } from "@/components/ui";
-import { usePreferencesStore } from "@/store";
+import { PremiumBackground, PremiumGate } from "@/components/ui";
+import { usePreferencesStore, useFeatureFlagsStore } from "@/store";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
+import { AppIcon, type IconName } from "@/lib/icons";
+import { trpc } from "@/lib/trpc";
+import { isAuthenticated as hasStoredTokens } from "@/services/api";
+import { logger } from "@/lib/logger";
 
 const GOLD = "#d4af37";
 
@@ -34,7 +38,7 @@ const { width } = Dimensions.get("window");
 interface Allergen {
   id: string;
   name: string;
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: IconName;
   description: string;
   iconColor: {
     light: { bg: string; text: string };
@@ -110,7 +114,7 @@ interface ExclusionItem {
   id: string;
   name: string;
   description: string;
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: IconName;
   iconColor: {
     light: { bg: string; text: string };
     dark: { bg: string; text: string };
@@ -196,6 +200,9 @@ export default function ExclusionsScreen() {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const updateProfile = trpc.profile.updateProfile.useMutation();
+  const { flags } = useFeatureFlagsStore();
 
   // Theme-aware colors
   const themeColors = {
@@ -213,7 +220,7 @@ export default function ExclusionsScreen() {
       : ["#ffffff", "rgba(239, 246, 255, 0.5)"],
   };
 
-  // Check if an exclusion is selected
+  // CheckIcon if an exclusion is selected
   const isSelected = useCallback((id: string) => {
     return exclusions.includes(id);
   }, [exclusions]);
@@ -236,7 +243,7 @@ export default function ExclusionsScreen() {
           id: suggestion.id,
           name: suggestion.name,
           description: suggestion.description,
-          icon: "block" as keyof typeof MaterialIcons.glyphMap,
+          icon: "block" as IconName,
           iconColor: {
             light: { bg: "rgba(107, 114, 128, 0.1)", text: "#4b5563" },
             dark: { bg: "rgba(156, 163, 175, 0.1)", text: "#9ca3af" },
@@ -268,8 +275,20 @@ export default function ExclusionsScreen() {
     setShowSuggestions(false);
   };
 
-  // Save and go back
-  const handleSave = () => {
+  // Save exclusions to backend (if authenticated) then navigate back
+  const handleSave = async () => {
+    if (hasStoredTokens()) {
+      setIsSaving(true);
+      try {
+        await updateProfile.mutateAsync({ allergens: exclusions });
+        logger.info("Exclusions", `Synced ${exclusions.length} allergens to backend`);
+      } catch (e) {
+        // Don't block navigation — local state is already saved via MMKV
+        logger.warn("Exclusions", "Failed to sync allergens to backend", String(e));
+      } finally {
+        setIsSaving(false);
+      }
+    }
     router.back();
   };
 
@@ -310,15 +329,13 @@ export default function ExclusionsScreen() {
               right: 6,
             }}
           >
-            <MaterialIcons name="check-circle" size={16} color={GOLD} />
+            <CheckCircleIcon size={16} color={GOLD} />
           </Animated.View>
         )}
 
-        <MaterialIcons
-          name={allergen.icon}
+        <AppIcon name={allergen.icon}
           size={28}
-          color={selected ? "#102217" : themeColors.textSecondary}
-        />
+          color={selected ? "#102217" : themeColors.textSecondary} />
         <Text
           style={{
             marginTop: 8,
@@ -365,7 +382,7 @@ export default function ExclusionsScreen() {
               justifyContent: "center",
             }}
           >
-            <MaterialIcons name={item.icon} size={22} color={iconColors.text} />
+            <AppIcon name={item.icon} size={22} color={iconColors.text} />
           </View>
           <View style={{ marginLeft: 12, flex: 1 }}>
             <Text
@@ -401,11 +418,8 @@ export default function ExclusionsScreen() {
           accessibilityRole="button"
           accessibilityLabel={`Retirer ${item.name}`}
         >
-          <MaterialIcons
-            name="close"
-            size={20}
-            color={themeColors.textSecondary}
-          />
+          <XIcon size={20}
+            color={themeColors.textSecondary} />
         </Pressable>
       </Animated.View>
     );
@@ -445,7 +459,7 @@ export default function ExclusionsScreen() {
           accessibilityRole="button"
           accessibilityLabel={t.common.back}
         >
-          <MaterialIcons name="arrow-back" size={22} color={themeColors.textPrimary} />
+          <ArrowLeftIcon size={22} color={themeColors.textPrimary} />
         </PressableScale>
 
         {/* Title */}
@@ -485,6 +499,7 @@ export default function ExclusionsScreen() {
         </PressableScale>
       </Animated.View>
 
+      <PremiumGate feature="healthProfile" trigger="health_profile">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
@@ -519,7 +534,7 @@ export default function ExclusionsScreen() {
               justifyContent: "center",
             }}
           >
-            <MaterialIcons name="verified-user" size={22} color={themeColors.primary} />
+            <ShieldCheckIcon size={22} color={themeColors.primary} />
           </View>
           <View style={{ flex: 1, marginLeft: 16 }}>
             <Text
@@ -565,11 +580,8 @@ export default function ExclusionsScreen() {
               paddingHorizontal: 16,
             }}
           >
-            <MaterialIcons
-              name="search"
-              size={22}
-              color={searchQuery ? themeColors.primary : themeColors.textSecondary}
-            />
+            <MagnifyingGlassIcon size={22}
+              color={searchQuery ? themeColors.primary : themeColors.textSecondary} />
             <TextInput
               value={searchQuery}
               onChangeText={handleSearchChange}
@@ -594,7 +606,7 @@ export default function ExclusionsScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Effacer la recherche"
               >
-                <MaterialIcons name="close" size={20} color={themeColors.textSecondary} />
+                <XIcon size={20} color={themeColors.textSecondary} />
               </Pressable>
             )}
           </View>
@@ -638,7 +650,7 @@ export default function ExclusionsScreen() {
                   accessibilityRole="button"
                   accessibilityLabel={`Ajouter ${suggestion.name}`}
                 >
-                  <MaterialIcons name="add" size={20} color={themeColors.primary} />
+                  <PlusIcon size={20} color={themeColors.primary} />
                   <View style={{ marginLeft: 12 }}>
                     <Text style={{ fontSize: 14, fontWeight: "500", color: themeColors.textPrimary }}>
                       {suggestion.name}
@@ -754,7 +766,7 @@ export default function ExclusionsScreen() {
                 alignItems: "center",
               }}
             >
-              <MaterialIcons name="block" size={40} color={themeColors.textSecondary} />
+              <ProhibitIcon size={40} color={themeColors.textSecondary} />
               <Text
                 style={{
                   fontSize: 14,
@@ -788,7 +800,7 @@ export default function ExclusionsScreen() {
             accessibilityRole="button"
             accessibilityLabel={t.exclusions.addAnother}
           >
-            <MaterialIcons name="add" size={18} color={themeColors.textSecondary} />
+            <PlusIcon size={18} color={themeColors.textSecondary} />
             <Text
               style={{
                 marginLeft: 8,
@@ -822,9 +834,11 @@ export default function ExclusionsScreen() {
       >
         <PressableScale
           onPress={handleSave}
+          disabled={isSaving}
           style={{
             borderRadius: 16,
             overflow: "hidden",
+            opacity: isSaving ? 0.6 : 1,
             shadowColor: "#10b981",
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.4,
@@ -847,7 +861,7 @@ export default function ExclusionsScreen() {
               borderRadius: 16,
             }}
           >
-            <MaterialIcons name="check" size={20} color="#102217" />
+            <CheckIcon size={20} color="#102217" />
             <Text
               style={{
                 fontSize: 16,
@@ -860,6 +874,7 @@ export default function ExclusionsScreen() {
           </LinearGradient>
         </PressableScale>
         </Animated.View>
+      </PremiumGate>
       </SafeAreaView>
     </View>
   );

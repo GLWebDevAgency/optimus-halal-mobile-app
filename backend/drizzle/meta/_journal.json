@@ -127,6 +127,48 @@
       "when": 1772956800000,
       "tag": "0017_certifiers_last_verified_at",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1773043200000,
+      "tag": "0018_products_v2_enrichment",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1773129600000,
+      "tag": "0019_additives_v2_vegetarian_vegan",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1773216000000,
+      "tag": "0020_additives_health_effects",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1773302400000,
+      "tag": "0021_data_quality_flag",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1773388800000,
+      "tag": "0022_referral_program",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1773475200000,
+      "tag": "0023_devices_lifecycle",
+      "breakpoints": true
     }
   ]
 }

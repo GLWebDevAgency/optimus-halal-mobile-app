@@ -1,14 +1,14 @@
 /**
- * Auth Layout
+ * Auth Layout — Naqiy 2-Tier Model
  *
- * Gère toutes les routes d'authentification:
- * - welcome: Point d'entrée avec choix Magic Link / Classique
- * - magic-link: Connexion passwordless par email
- * - login: Connexion classique (email/password)
- * - signup: Inscription classique
+ * Routes d'authentification pour le modèle Guest / Naqiy+ :
+ * - welcome: Découverte Naqiy, CTA gratuit + Naqiy+
+ * - login: Connexion Naqiy+ (email/password + biométrie)
+ * - signup: Création de compte post-paiement RevenueCat
  * - forgot-password: Demande de réinitialisation
- * - reset-confirmation: Confirmation d'envoi d'email
+ * - reset-code: Saisie du code OTP (6 hex, 15min TTL)
  * - set-new-password: Définir nouveau mot de passe
+ * - password-changed: Confirmation succès
  */
 
 import { Stack } from "expo-router";
@@ -31,22 +31,29 @@ export default function AuthLayout() {
         }}
       >
         <Stack.Screen name="welcome" options={{ animation: "fade" }} />
-        <Stack.Screen name="magic-link" />
         <Stack.Screen name="login" />
         <Stack.Screen name="signup" />
         <Stack.Screen name="forgot-password" />
         <Stack.Screen
-          name="reset-confirmation"
+          name="set-new-password"
           options={{
             animation: "fade",
             animationDuration: 250,
           }}
         />
         <Stack.Screen
-          name="set-new-password"
+          name="reset-code"
+          options={{
+            animation: "fade_from_bottom",
+            animationDuration: 300,
+          }}
+        />
+        <Stack.Screen
+          name="password-changed"
           options={{
             animation: "fade",
-            animationDuration: 250,
+            animationDuration: 300,
+            gestureEnabled: false,
           }}
         />
       </Stack>

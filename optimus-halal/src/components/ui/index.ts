@@ -21,6 +21,7 @@ export { IslamicPattern } from "./IslamicPattern";
 export { ArabicCalligraphy } from "./ArabicCalligraphy";
 export { GlowCard } from "./GlowCard";
 export { PremiumBackground, type PremiumBackgroundProps } from "./PremiumBackground";
+export { PremiumGate } from "./PremiumGate";
 
 export { PressableScale } from "./PressableScale";
 export { StatusPill } from "./StatusPill";

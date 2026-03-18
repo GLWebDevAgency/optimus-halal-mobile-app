@@ -109,6 +109,36 @@ export const favoritesRouter = router({
       return { success: true };
     }),
 
+  syncLocal: protectedProcedure
+    .input(
+      z.object({
+        items: z.array(
+          z.object({
+            productId: z.string().uuid(),
+          })
+        ).max(50),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (input.items.length === 0) return { synced: 0 };
+
+      // Idempotent upsert — ON CONFLICT DO NOTHING (crash-safe, retryable)
+      const values = input.items.map((item) => ({
+        userId: ctx.userId,
+        productId: item.productId,
+      }));
+
+      const result = await ctx.db
+        .insert(favorites)
+        .values(values)
+        .onConflictDoNothing({
+          target: [favorites.userId, favorites.productId],
+        })
+        .returning({ id: favorites.id });
+
+      return { synced: result.length };
+    }),
+
   moveToFolder: protectedProcedure
     .input(
       z.object({

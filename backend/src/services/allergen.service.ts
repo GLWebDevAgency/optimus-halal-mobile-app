@@ -1,126 +1,170 @@
 /**
- * Allergen Normalization Service
+ * Allergen Matching Service
  *
- * Maps user-entered allergen names (FR/EN) to OpenFoodFacts tag format.
- * Cross-matches user profile allergens against product allergens.
+ * Cross-matches user dietary exclusions against structured OFF tags.
+ * Two layers: allergens_tags (high) and traces_tags (medium).
+ * No ingredient text parsing — OFF structured data is the source of truth.
  */
 
 export interface AllergenMatch {
   userAllergen: string;
+  /** Human-readable label (FR) for display in alerts */
+  displayName: string;
   offTag: string;
   matchType: "allergen" | "trace";
   severity: "high" | "medium";
 }
 
-// French/English allergen names → OFF tag format
+// ── User input → canonical allergen ID ──────────────────────────
+
 const ALLERGEN_NORMALIZATION: Record<string, string> = {
   // Milk/Lactose
-  lactose: "en:milk",
-  lait: "en:milk",
-  milk: "en:milk",
-  "produits laitiers": "en:milk",
-  dairy: "en:milk",
+  lactose: "milk", lait: "milk", milk: "milk",
+  "produits laitiers": "milk", dairy: "milk",
 
   // Peanuts
-  arachides: "en:peanuts",
-  "cacahuètes": "en:peanuts",
-  peanuts: "en:peanuts",
+  arachides: "peanuts", "cacahuètes": "peanuts", peanuts: "peanuts",
 
   // Gluten
-  gluten: "en:gluten",
-  "blé": "en:gluten",
-  wheat: "en:gluten",
-  seigle: "en:gluten",
-  orge: "en:gluten",
-  avoine: "en:gluten",
+  gluten: "gluten", "blé": "gluten", wheat: "gluten",
+  seigle: "gluten", orge: "gluten", avoine: "gluten",
 
   // Eggs
-  oeufs: "en:eggs",
-  "\u0153ufs": "en:eggs",
-  eggs: "en:eggs",
+  oeufs: "eggs", "\u0153ufs": "eggs", eggs: "eggs",
 
   // Soy
-  soja: "en:soybeans",
-  soy: "en:soybeans",
-  soybeans: "en:soybeans",
+  soja: "soybeans", soy: "soybeans", soybeans: "soybeans",
 
   // Nuts
-  "fruits \u00e0 coque": "en:nuts",
-  noix: "en:nuts",
-  noisettes: "en:nuts",
-  amandes: "en:nuts",
-  nuts: "en:nuts",
-  almonds: "en:nuts",
-  hazelnuts: "en:nuts",
-  pistaches: "en:nuts",
-  cajou: "en:nuts",
-  "noix de cajou": "en:nuts",
+  "fruits \u00e0 coque": "nuts", noix: "nuts", noisettes: "nuts",
+  amandes: "nuts", nuts: "nuts", almonds: "nuts", hazelnuts: "nuts",
+  pistaches: "nuts", cajou: "nuts", "noix de cajou": "nuts",
 
   // Fish
-  poisson: "en:fish",
-  fish: "en:fish",
+  poisson: "fish", fish: "fish",
 
   // Crustaceans
-  "crustac\u00e9s": "en:crustaceans",
-  crustaceans: "en:crustaceans",
-  crevettes: "en:crustaceans",
-  shrimp: "en:crustaceans",
+  shellfish: "crustaceans", "crustac\u00e9s": "crustaceans",
+  crustaceans: "crustaceans", crevettes: "crustaceans", shrimp: "crustaceans",
 
   // Molluscs
-  mollusques: "en:molluscs",
-  molluscs: "en:molluscs",
+  mollusques: "molluscs", molluscs: "molluscs",
 
   // Celery
-  "c\u00e9leri": "en:celery",
-  celery: "en:celery",
+  "c\u00e9leri": "celery", celery: "celery",
 
   // Mustard
-  moutarde: "en:mustard",
-  mustard: "en:mustard",
+  moutarde: "mustard", mustard: "mustard",
 
   // Sesame
-  "s\u00e9same": "en:sesame-seeds",
-  sesame: "en:sesame-seeds",
+  "s\u00e9same": "sesame", sesame: "sesame",
 
   // Lupin
-  lupin: "en:lupin",
+  lupin: "lupin",
 
   // Sulfites
-  sulfites: "en:sulphur-dioxide-and-sulphites",
-  "dioxyde de soufre": "en:sulphur-dioxide-and-sulphites",
-  "sulphur dioxide": "en:sulphur-dioxide-and-sulphites",
+  sulfites: "sulfites",
+  "dioxyde de soufre": "sulfites",
+  "sulphur dioxide": "sulfites",
 };
 
+// ── Display names (FR) per canonical ID ─────────────────────────
+
+const ALLERGEN_DISPLAY_FR: Record<string, string> = {
+  milk: "Lait",
+  gluten: "Gluten",
+  eggs: "Œufs",
+  peanuts: "Arachides",
+  soybeans: "Soja",
+  nuts: "Fruits à coque",
+  fish: "Poisson",
+  crustaceans: "Crustacés",
+  molluscs: "Mollusques",
+  celery: "Céleri",
+  mustard: "Moutarde",
+  sesame: "Sésame",
+  lupin: "Lupin",
+  sulfites: "Sulfites",
+};
+
+// ── Tag patterns per canonical allergen ──────────────────────────
+
+const ALLERGEN_TAG_PATTERNS: Record<string, string[]> = {
+  milk: ["milk", "dairy", "lactose", "whey", "casein"],
+  gluten: ["gluten", "wheat", "barley", "rye", "oats", "spelt", "kamut", "cereals-containing-gluten"],
+  eggs: ["eggs", "egg"],
+  peanuts: ["peanuts", "peanut"],
+  soybeans: ["soybeans", "soy", "soya"],
+  nuts: ["nuts", "almonds", "hazelnuts", "walnuts", "cashews", "pistachios", "pecans", "macadamia"],
+  fish: ["fish"],
+  crustaceans: ["crustaceans", "shrimp", "crab", "lobster", "prawns"],
+  molluscs: ["molluscs", "squid", "octopus", "mussel", "oyster", "clam", "snail"],
+  celery: ["celery"],
+  mustard: ["mustard"],
+  sesame: ["sesame-seeds", "sesame"],
+  lupin: ["lupin"],
+  sulfites: ["sulphur-dioxide-and-sulphites", "sulfites", "sulphites"],
+};
+
+// ── Matching engine ─────────────────────────────────────────────
+
+/** Strip language prefix from OFF tag: "en:gluten" → "gluten" */
+function stripPrefix(tag: string): string {
+  const idx = tag.indexOf(":");
+  return idx >= 0 ? tag.substring(idx + 1) : tag;
+}
+
+/** Check if any OFF tag matches any pattern for this allergen. */
+function matchesAnyTag(tags: string[], patterns: string[]): string | null {
+  for (const tag of tags) {
+    const bare = stripPrefix(tag).toLowerCase();
+    for (const pattern of patterns) {
+      if (bare === pattern || bare.includes(pattern) || pattern.includes(bare)) {
+        return tag;
+      }
+    }
+  }
+  return null;
+}
+
 /**
- * Cross-match user allergens against product allergens + traces from OpenFoodFacts.
+ * Cross-match user allergens against product OFF structured tags.
+ *
+ * Layer 1: allergens_tags → severity high ("Contient")
+ * Layer 2: traces_tags   → severity medium ("Traces possibles")
  */
 export function matchAllergens(
   userAllergens: string[],
   productAllergenTags: string[],
-  productTracesTags: string[]
+  productTracesTags: string[],
 ): AllergenMatch[] {
   const matches: AllergenMatch[] = [];
+  const matched = new Set<string>();
 
   for (const userAllergen of userAllergens) {
-    const normalized = ALLERGEN_NORMALIZATION[userAllergen.toLowerCase()];
-    if (!normalized) continue;
+    const canonical = ALLERGEN_NORMALIZATION[userAllergen.toLowerCase()];
+    if (!canonical) continue;
 
-    if (productAllergenTags.some((tag) => tag.toLowerCase() === normalized)) {
-      matches.push({
-        userAllergen,
-        offTag: normalized,
-        matchType: "allergen",
-        severity: "high",
-      });
+    const patterns = ALLERGEN_TAG_PATTERNS[canonical];
+    if (!patterns) continue;
+
+    if (matched.has(canonical)) continue;
+
+    const displayName = ALLERGEN_DISPLAY_FR[canonical] ?? userAllergen;
+
+    // Layer 1: Structured allergen tags (high severity)
+    const allergenTag = matchesAnyTag(productAllergenTags, patterns);
+    if (allergenTag) {
+      matches.push({ userAllergen, displayName, offTag: allergenTag, matchType: "allergen", severity: "high" });
+      matched.add(canonical);
+      continue;
     }
 
-    if (productTracesTags.some((tag) => tag.toLowerCase() === normalized)) {
-      matches.push({
-        userAllergen,
-        offTag: normalized,
-        matchType: "trace",
-        severity: "medium",
-      });
+    // Layer 2: Structured trace tags (medium severity)
+    const traceTag = matchesAnyTag(productTracesTags, patterns);
+    if (traceTag) {
+      matches.push({ userAllergen, displayName, offTag: traceTag, matchType: "trace", severity: "medium" });
+      matched.add(canonical);
     }
   }
 

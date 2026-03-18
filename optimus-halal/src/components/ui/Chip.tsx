@@ -6,15 +6,16 @@
 
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import { XIcon } from "phosphor-react-native";
 import { useHaptics } from "@/hooks";
 import { lightTheme, brand, neutral } from "@/theme/colors";
 import { PressableScale } from "./PressableScale";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 export interface ChipProps {
   label: string;
   selected?: boolean;
-  icon?: keyof typeof MaterialIcons.glyphMap;
+  icon?: IconName;
   onClose?: () => void;
   variant?: "default" | "primary";
   onPress?: () => void;
@@ -66,11 +67,9 @@ export const Chip: React.FC<ChipProps> = ({
     >
       <View className={`${baseStyles} ${selectedStyles} ${className}`}>
         {icon && (
-          <MaterialIcons
-            name={icon}
+          <AppIcon name={icon}
             size={16}
-            color={selected ? (variant === "primary" ? lightTheme.textPrimary : brand.white) : neutral[600]}
-          />
+            color={selected ? (variant === "primary" ? lightTheme.textPrimary : brand.white) : neutral[600]} />
         )}
         <Text className={`text-sm ${textStyles}`}>{label}</Text>
         {onClose && (
@@ -78,11 +77,8 @@ export const Chip: React.FC<ChipProps> = ({
             onPress={onClose}
             hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
           >
-            <MaterialIcons
-              name="close"
-              size={16}
-              color={selected ? (variant === "primary" ? lightTheme.textPrimary : brand.white) : neutral[600]}
-            />
+            <XIcon size={16}
+              color={selected ? (variant === "primary" ? lightTheme.textPrimary : brand.white) : neutral[600]} />
           </Pressable>
         )}
       </View>
@@ -94,7 +90,7 @@ export const Chip: React.FC<ChipProps> = ({
  * Chip Group Component
  */
 export interface ChipGroupProps {
-  chips: { id: string; label: string; icon?: keyof typeof MaterialIcons.glyphMap }[];
+  chips: { id: string; label: string; icon?: IconName }[];
   selectedIds: string[];
   onSelectionChange: (ids: string[]) => void;
   multiSelect?: boolean;

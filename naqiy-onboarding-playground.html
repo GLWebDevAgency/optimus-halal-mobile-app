@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Naqiy — Onboarding Redesign Playground</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --green: #13ec6a; --gold: #CFA533; --bg-dark: #0d1b13;
+    --phone-w: 320px; --phone-h: 640px;
+  }
+  body { background:#0a100c; color:#e5e5e5; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:32px 16px; transition:background .3s; }
+  body.light { background:#f0f0ec; color:#1a1a1a; }
+
+  .page-header { display:flex; align-items:center; justify-content:space-between; width:100%; max-width:800px; margin-bottom:28px; }
+  .page-title { font-size:14px; font-weight:600; letter-spacing:.5px; color:#CFA533; text-transform:uppercase; }
+  .page-subtitle { font-size:11px; color:#5a6a60; margin-top:2px; }
+  .toggle-btn { background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12); border-radius:8px; color:#a0a0a0; font-size:12px; padding:6px 12px; cursor:pointer; font-family:inherit; transition:all .2s; }
+  .toggle-btn:hover { background:rgba(255,255,255,.12); color:#fff; }
+  body.light .toggle-btn { background:rgba(0,0,0,.06); border-color:rgba(0,0,0,.12); color:#555; }
+
+  .main { display:flex; gap:32px; align-items:flex-start; width:100%; max-width:800px; }
+
+  /* Phone frame */
+  .phone-frame { width:var(--phone-w); height:var(--phone-h); border-radius:36px; background:#0d1b13; border:2px solid rgba(255,255,255,.12); box-shadow:0 30px 80px rgba(0,0,0,.6); overflow:hidden; position:relative; transition:background .3s; flex-shrink:0; }
+  body.light .phone-frame { background:#f8f7f2; border-color:rgba(0,0,0,.15); box-shadow:0 30px 80px rgba(0,0,0,.2); }
+  .dynamic-island { position:absolute; top:12px; left:50%; transform:translateX(-50%); width:88px; height:26px; background:#000; border-radius:14px; z-index:100; }
+
+  /* Slides */
+  .slides-viewport { position:absolute; inset:0; overflow:hidden; }
+  .slides-track { display:flex; width:500%; height:100%; transition:transform .4s cubic-bezier(.4,0,.2,1); }
+  .slide { width:320px; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 28px 20px; position:relative; overflow:hidden; }
+  .slide-bg-glow { position:absolute; width:260px; height:260px; border-radius:130px; pointer-events:none; top:50%; left:50%; transform:translate(-50%,-60%); filter:blur(60px); }
+
+  /* Hero */
+  .hero-section { display:flex; flex-direction:column; align-items:center; justify-content:center; margin-bottom:20px; position:relative; width:100%; }
+  .logo-circle { width:80px; height:80px; border-radius:24px; background:rgba(19,236,106,.08); border:1.5px solid rgba(19,236,106,.18); display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+  .logo-img { width:64px; height:64px; object-fit:contain; }
+  .logo-n { font-size:36px; font-weight:900; color:#13ec6a; letter-spacing:-1px; line-height:1; }
+  .logo-glow { position:absolute; inset:-16px; border-radius:40px; background:radial-gradient(circle,rgba(19,236,106,.15) 0%,transparent 70%); pointer-events:none; }
+  .seal-icon { width:72px; height:72px; border-radius:20px; background:rgba(207,165,51,.08); border:1.5px solid rgba(207,165,51,.18); display:flex; align-items:center; justify-content:center; font-size:36px; position:relative; }
+  .seal-glow { position:absolute; inset:-16px; border-radius:40px; background:radial-gradient(circle,rgba(207,165,51,.15) 0%,transparent 70%); pointer-events:none; }
+  .qr-icon { width:72px; height:72px; border-radius:18px; background:rgba(19,236,106,.06); border:1.5px solid rgba(19,236,106,.14); display:flex; align-items:center; justify-content:center; font-size:38px; position:relative; }
+  .map-pin-icon { font-size:56px; position:relative; z-index:2; filter:drop-shadow(0 4px 12px rgba(19,236,106,.3)); }
+
+  /* Text */
+  .text-section { text-align:center; width:100%; flex-shrink:0; }
+  .slide-title { font-size:22px; font-weight:700; line-height:1.2; letter-spacing:-.3px; color:#fff; margin-bottom:4px; }
+  body.light .slide-title { color:#0d1b13; }
+  .slide-highlight { font-size:22px; font-weight:800; line-height:1.2; letter-spacing:-.3px; margin-bottom:10px; }
+  .slide-description { font-size:13px; font-weight:400; line-height:1.6; color:#707870; max-width:260px; margin:0 auto; }
+  body.light .slide-description { color:#5a6a60; }
+
+  /* Footer */
+  .phone-footer { position:absolute; bottom:0; left:0; right:0; display:flex; flex-direction:column; align-items:center; padding:0 24px 20px; gap:12px; background:linear-gradient(transparent,rgba(13,27,19,.95)); pointer-events:none; }
+  body.light .phone-footer { background:linear-gradient(transparent,rgba(248,247,242,.95)); }
+  .dot-row { display:flex; gap:5px; align-items:center; pointer-events:all; }
+  .dot { width:6px; height:6px; border-radius:3px; background:rgba(255,255,255,.2); cursor:pointer; transition:all .3s cubic-bezier(.4,0,.2,1); pointer-events:all; }
+  .dot.active { width:24px; background:#13ec6a; }
+  body.light .dot { background:rgba(0,0,0,.15); }
+  body.light .dot.active { background:#0d8a3f; }
+  .next-btn { width:100%; height:44px; border-radius:12px; background:#13ec6a; display:flex; align-items:center; justify-content:center; gap:6px; pointer-events:all; cursor:pointer; border:none; font-size:14px; font-weight:700; color:#0d1b13; font-family:inherit; transition:opacity .2s; }
+  body.light .next-btn { background:#0d8a3f; color:#fff; }
+  .next-btn:hover { opacity:.9; }
+  .next-btn.hidden { opacity:0; pointer-events:none; }
+  .skip-btn { position:absolute; top:46px; right:16px; font-size:12px; font-weight:600; color:#5a6a60; cursor:pointer; padding:6px 10px; border-radius:8px; background:rgba(255,255,255,.04); border:none; font-family:inherit; transition:opacity .3s; z-index:10; }
+  .skip-btn.hidden { opacity:0; pointer-events:none; }
+
+  /* Slide 1 */
+  .brand-tagline { font-size:12px; font-weight:600; color:#CFA533; letter-spacing:.5px; margin-top:6px; margin-bottom:14px; text-align:center; }
+
+  /* Slide 2 - scan result card */
+  .scan-result-card { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07); border-radius:12px; padding:10px 14px; margin-top:14px; width:100%; max-width:220px; display:flex; flex-direction:column; gap:8px; }
+  .scan-status-row { display:flex; align-items:center; gap:6px; }
+  .status-dot { width:8px; height:8px; border-radius:4px; background:#13ec6a; flex-shrink:0; }
+  .scan-status-text { font-size:11px; font-weight:700; color:#13ec6a; }
+  .scan-bottom-row { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .mini-grade-strip { display:flex; align-items:center; gap:2px; }
+  .grade-n { font-size:11px; font-weight:900; color:#CFA533; margin-right:2px; line-height:1; }
+  .grade-pill { border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:900; color:#fff; line-height:1; }
+  .grade-pill.inactive { width:16px; height:16px; opacity:.2; }
+  .grade-pill.active { width:28px; height:18px; opacity:1; }
+  .mini-health { display:flex; align-items:center; gap:5px; }
+  .mini-ring { position:relative; width:32px; height:17px; flex-shrink:0; }
+  .mini-ring svg { position:absolute; top:0; left:0; }
+  .mini-ring-score { position:absolute; bottom:-1px; width:100%; text-align:center; font-size:9px; font-weight:900; color:#13ec6a; line-height:1; }
+  .mini-health-label { font-size:10px; font-weight:700; color:#13ec6a; }
+
+  /* Slide 3 - grade badge explained */
+  .grade-badge-explained { background:rgba(207,165,51,.05); border:1px solid rgba(207,165,51,.12); border-radius:14px; padding:14px 16px; margin-top:16px; width:100%; max-width:240px; display:flex; flex-direction:column; gap:8px; }
+  .grade-strip-full { display:flex; align-items:center; gap:3px; justify-content:center; }
+  .grade-n-full { font-size:14px; font-weight:900; color:#CFA533; margin-right:3px; line-height:1; }
+  .grade-pill-full { border-radius:5px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:900; color:#fff; line-height:1; }
+  .grade-pill-full.inactive { width:22px; height:22px; opacity:.22; }
+  .grade-pill-full.active { width:38px; height:26px; opacity:1; }
+  .grade-labels-row { display:flex; align-items:flex-start; gap:3px; justify-content:center; padding-left:18px; }
+  .grade-label-col { display:flex; flex-direction:column; align-items:center; gap:2px; width:22px; }
+  .grade-label-col.active-col { width:38px; }
+  .grade-label-text { font-size:7px; font-weight:500; color:rgba(255,255,255,.4); text-align:center; line-height:1.2; }
+  body.light .grade-label-text { color:rgba(0,0,0,.4); }
+  .madhab-mini-row { display:flex; align-items:center; justify-content:center; gap:6px; margin-top:4px; padding-top:8px; border-top:1px solid rgba(255,255,255,.06); }
+  .madhab-mini-dot { width:8px; height:8px; border-radius:4px; background:#13ec6a; opacity:.7; }
+  .madhab-mini-label { font-size:10px; font-weight:500; color:rgba(207,165,51,.6); }
+
+  /* Slide 4 - map */
+  .map-container { position:relative; width:100%; height:120px; display:flex; align-items:center; justify-content:center; }
+  .store-mini-card { background:rgba(255,255,255,.04); border:1px solid rgba(207,165,51,.14); border-radius:10px; padding:8px 12px; display:flex; flex-direction:column; gap:4px; min-width:160px; box-shadow:0 8px 24px rgba(0,0,0,.3); }
+  .store-card-top { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .store-card-name { font-size:11px; font-weight:700; color:#fff; flex:1; }
+  body.light .store-card-name { color:#1a1a1a; }
+  .store-dist-badge { font-size:9px; font-weight:700; color:#13ec6a; background:rgba(19,236,106,.08); border:1px solid rgba(19,236,106,.15); padding:2px 5px; border-radius:5px; }
+  .store-card-bottom { display:flex; align-items:center; justify-content:space-between; }
+  .store-cert-badge { display:flex; align-items:center; gap:3px; font-size:9px; font-weight:700; color:#CFA533; background:rgba(207,165,51,.07); border:1px solid rgba(207,165,51,.12); padding:2px 6px; border-radius:5px; }
+  .store-open-dot { width:5px; height:5px; border-radius:3px; background:#13ec6a; }
+  .store-open-text { font-size:9px; font-weight:600; color:#13ec6a; }
+  .store-rating { font-size:9px; font-weight:600; color:rgba(255,255,255,.5); }
+
+  /* Slide 5 - premium CTA */
+  .premium-chips { display:flex; gap:6px; align-items:center; justify-content:center; margin-top:10px; flex-wrap:wrap; }
+  .premium-chip { display:flex; align-items:center; gap:4px; padding:5px 10px; border-radius:20px; background:rgba(207,165,51,.05); border:1px solid rgba(207,165,51,.18); font-size:10px; font-weight:600; color:#CFA533; }
+  .premium-plus-label { font-size:8px; font-weight:800; color:rgba(207,165,51,.5); letter-spacing:.5px; }
+  .health-badge { display:flex; align-items:center; gap:5px; padding:5px 12px; border-radius:10px; background:rgba(19,236,106,.05); border:1px solid rgba(19,236,106,.12); margin-top:8px; font-size:10px; font-weight:600; color:rgba(255,255,255,.5); }
+  .health-badge-dot { width:6px; height:6px; border-radius:3px; background:#13ec6a; }
+  .cta-btns { display:flex; flex-direction:column; gap:8px; width:100%; margin-top:14px; }
+  .cta-primary-btn { height:44px; border-radius:12px; background:#CFA533; display:flex; align-items:center; justify-content:center; gap:6px; font-size:13px; font-weight:700; color:#0d1b13; cursor:pointer; border:none; font-family:inherit; }
+  .cta-secondary-btn { height:40px; border-radius:12px; background:transparent; border:1.5px dashed rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; font-weight:600; color:#707870; cursor:pointer; font-family:inherit; }
+  body.light .cta-secondary-btn { border-color:rgba(0,0,0,.15); }
+  .cta-hint { font-size:10px; font-weight:500; color:#5a6a60; text-align:center; }
+
+  /* Nav arrows */
+  .nav-arrows { display:flex; flex-direction:column; gap:10px; align-items:center; justify-content:center; align-self:center; }
+  .nav-arrow { width:36px; height:36px; border-radius:10px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; color:#a0a0a0; transition:all .2s; user-select:none; flex-shrink:0; }
+  .nav-arrow:hover { background:rgba(255,255,255,.12); color:#fff; }
+  .nav-arrow.disabled { opacity:.25; pointer-events:none; }
+  body.light .nav-arrow { background:rgba(0,0,0,.06); border-color:rgba(0,0,0,.1); color:#555; }
+
+  /* Right panel */
+  .right-panel { flex:1; display:flex; flex-direction:column; gap:20px; min-width:0; }
+  .slide-info-card { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07); border-radius:14px; padding:18px; }
+  body.light .slide-info-card { background:rgba(0,0,0,.04); border-color:rgba(0,0,0,.08); }
+  .slide-info-title { font-size:11px; font-weight:700; letter-spacing:.8px; color:#CFA533; text-transform:uppercase; margin-bottom:10px; }
+  .slide-info-items { display:flex; flex-direction:column; gap:7px; }
+  .slide-info-item { display:flex; align-items:flex-start; gap:8px; font-size:12px; line-height:1.4; color:#a0a0a0; }
+  .changes-badge { display:inline-flex; align-items:center; gap:4px; background:rgba(19,236,106,.08); border:1px solid rgba(19,236,106,.15); border-radius:6px; padding:2px 8px; font-size:10px; font-weight:700; color:#13ec6a; margin-bottom:8px; }
+  .prompt-output { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07); border-radius:14px; padding:16px; }
+  body.light .prompt-output { background:rgba(0,0,0,.04); border-color:rgba(0,0,0,.08); }
+  .prompt-label { font-size:10px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; color:#5a6a60; margin-bottom:8px; }
+  #prompt-text { font-size:12px; line-height:1.6; color:#a0a0a0; font-family:inherit; white-space:pre-wrap; }
+  .copy-btn { margin-top:10px; padding:6px 14px; background:rgba(207,165,51,.1); border:1px solid rgba(207,165,51,.2); border-radius:8px; color:#CFA533; font-size:11px; font-weight:600; font-family:inherit; cursor:pointer; transition:all .2s; }
+  .copy-btn:hover { background:rgba(207,165,51,.18); }
+  .copy-btn.copied { color:#13ec6a; border-color:rgba(19,236,106,.3); background:rgba(19,236,106,.08); }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div>
+    <div class="page-title">✦ Naqiy — Onboarding Redesign</div>
+    <div class="page-subtitle">5 slides · mode expert Naqiy · valider avant code</div>
+  </div>
+  <div>
+    <button class="toggle-btn" id="modeToggle" onclick="toggleMode()">☀ Light</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="nav-arrows">
+    <div class="nav-arrow disabled" id="prevBtn" onclick="navigate(-1)">‹</div>
+    <div class="nav-arrow" id="nextBtn" onclick="navigate(1)">›</div>
+  </div>
+
+  <div class="phone-frame" id="phoneFrame">
+    <div class="dynamic-island"></div>
+    <button class="skip-btn" id="skipBtn">Passer</button>
+
+    <div class="slides-viewport">
+      <div class="slides-track" id="slidesTrack">
+
+        <!-- SLIDE 1: BRAND -->
+        <div class="slide" id="slide-0">
+          <div class="slide-bg-glow" style="background:radial-gradient(circle,rgba(19,236,106,.18) 0%,transparent 70%);opacity:1;"></div>
+          <div class="hero-section">
+            <div class="logo-circle">
+              <div class="logo-glow"></div>
+              <img class="logo-img" src="optimus-halal/assets/images/logo_naqiy.png" alt="Naqiy">
+            </div>
+          </div>
+          <div class="text-section">
+            <div class="slide-title">Bienvenue sur</div>
+            <div class="slide-highlight" style="color:#13ec6a">Naqiy</div>
+            <div class="brand-tagline">Scanne. Comprends. Choisis.</div>
+            <div class="slide-description">L'application halal de confiance. Transparent, rigoureux, pour vous.</div>
+          </div>
+        </div>
+
+        <!-- SLIDE 2: SCANNER + mini scan result -->
+        <div class="slide" id="slide-1">
+          <div class="slide-bg-glow" style="background:radial-gradient(circle,rgba(19,236,106,.12) 0%,transparent 70%);opacity:1;"></div>
+          <div class="hero-section" style="margin-bottom:10px;">
+            <div class="qr-icon">
+              <svg width="38" height="38" viewBox="0 0 256 256" fill="none" stroke="#13ec6a" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"><polyline points="180,40 220,40 220,80"/><polyline points="76,40 36,40 36,80"/><polyline points="180,216 220,216 220,176"/><polyline points="76,216 36,216 36,176"/><line x1="80" y1="88" x2="80" y2="168"/><line x1="112" y1="88" x2="112" y2="168"/><line x1="144" y1="88" x2="144" y2="168"/><line x1="176" y1="88" x2="176" y2="168"/></svg>
+            </div>
+            <div class="scan-result-card">
+              <div class="scan-status-row">
+                <div class="status-dot"></div>
+                <span class="scan-status-text">Halal Certifié</span>
+              </div>
+              <div class="scan-bottom-row">
+                <div class="mini-grade-strip" id="mini-grade-strip"></div>
+                <div class="mini-health">
+                  <div class="mini-ring">
+                    <svg width="32" height="17" viewBox="0 0 32 17">
+                      <path d="M 4 16 A 12 12 0 0 1 28 16" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="3" stroke-linecap="round"/>
+                      <path d="M 4 16 A 12 12 0 0 1 28 16" fill="none" stroke="#13ec6a" stroke-width="3" stroke-linecap="round" stroke-dasharray="37.7" stroke-dashoffset="11.3"/>
+                    </svg>
+                    <div class="mini-ring-score">68</div>
+                  </div>
+                  <span class="mini-health-label">BON</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="text-section">
+            <div class="slide-title">Scannez n'importe quel</div>
+            <div class="slide-highlight" style="color:#13ec6a">produit</div>
+            <div class="slide-description">Verdict halal, score certifieur, score santé — tout en un scan.</div>
+          </div>
+        </div>
+
+        <!-- SLIDE 3: TRUST GRADE expliqué -->
+        <div class="slide" id="slide-2">
+          <div class="slide-bg-glow" style="background:radial-gradient(circle,rgba(207,165,51,.15) 0%,transparent 70%);opacity:1;"></div>
+          <div class="hero-section" style="margin-bottom:10px;">
+            <div class="seal-icon">
+              <div class="seal-glow"></div>
+              <svg width="36" height="36" viewBox="0 0 256 256" fill="none"><path d="M128 24l88 40v56c0 52-36 100-88 112C76 220 40 172 40 120V64z" stroke="#CFA533" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/><polyline points="88,136 112,160 168,104" fill="none" stroke="#CFA533" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="grade-badge-explained">
+              <div class="grade-strip-full" id="grade-strip-full"></div>
+              <div class="grade-labels-row" id="grade-labels-row"></div>
+              <div class="madhab-mini-row">
+                <div class="madhab-mini-dot"></div>
+                <div class="madhab-mini-dot"></div>
+                <div class="madhab-mini-dot"></div>
+                <div class="madhab-mini-dot"></div>
+                <span class="madhab-mini-label">4 écoles analysées</span>
+              </div>
+            </div>
+          </div>
+          <div class="text-section">
+            <div class="slide-title">Score de confiance</div>
+            <div class="slide-highlight" style="color:#CFA533">certifieur</div>
+            <div class="slide-description">Chaque certificateur noté sur 100 critères de rigueur halal.</div>
+          </div>
+        </div>
+
+        <!-- SLIDE 4: MAP + store card -->
+        <div class="slide" id="slide-3">
+          <div class="slide-bg-glow" style="background:radial-gradient(circle,rgba(19,236,106,.10) 0%,transparent 70%);opacity:1;"></div>
+          <div class="hero-section" style="margin-bottom:10px;">
+            <div class="map-container">
+              <span style="position:absolute;left:16px;top:16px;opacity:.4;"><svg width="20" height="20" viewBox="0 0 256 256" fill="#13ec6a"><path d="M128 16a88 88 0 0 0-88 88c0 75 88 128 88 128s88-53 88-128a88 88 0 0 0-88-88Zm0 56a32 32 0 1 1-32 32 32 32 0 0 1 32-32Z"/></svg></span>
+              <span style="position:absolute;right:20px;top:28px;opacity:.3;"><svg width="14" height="14" viewBox="0 0 256 256" fill="#CFA533"><path d="M128 16a88 88 0 0 0-88 88c0 75 88 128 88 128s88-53 88-128a88 88 0 0 0-88-88Zm0 56a32 32 0 1 1-32 32 32 32 0 0 1 32-32Z"/></svg></span>
+              <span style="position:absolute;left:44px;bottom:14px;opacity:.25;"><svg width="12" height="12" viewBox="0 0 256 256" fill="#13ec6a"><path d="M128 16a88 88 0 0 0-88 88c0 75 88 128 88 128s88-53 88-128a88 88 0 0 0-88-88Zm0 56a32 32 0 1 1-32 32 32 32 0 0 1 32-32Z"/></svg></span>
+              <div class="map-pin-icon"><svg width="56" height="56" viewBox="0 0 256 256" fill="#13ec6a"><path d="M128 16a88 88 0 0 0-88 88c0 75 88 128 88 128s88-53 88-128a88 88 0 0 0-88-88Zm0 56a32 32 0 1 1-32 32 32 32 0 0 1 32-32Z"/></svg></div>
+            </div>
+            <div class="store-mini-card">
+              <div class="store-card-top">
+                <span class="store-card-name">La Boucherie Halal</span>
+                <div class="store-dist-badge">0.3 km</div>
+              </div>
+              <div class="store-card-bottom">
+                <div class="store-cert-badge">
+                  <svg width="10" height="10" viewBox="0 0 256 256" fill="#CFA533"><path d="M128 24l88 40v56c0 52-36 100-88 112C76 220 40 172 40 120V64z"/><polyline points="88,136 112,160 168,104" fill="none" stroke="#0d1b13" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  <span>AVS</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:4px;">
+                  <div class="store-open-dot"></div>
+                  <span class="store-open-text">Ouvert</span>
+                  <span class="store-rating">· <svg width="10" height="10" viewBox="0 0 256 256" fill="#CFA533" style="vertical-align:-1px;"><path d="M128 18l30 62 68 10-50 48 12 68-60-32-60 32 12-68-50-48 68-10z"/></svg> 4.6</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="text-section">
+            <div class="slide-title">Le halal</div>
+            <div class="slide-highlight" style="color:#13ec6a">autour de vous</div>
+            <div class="slide-description">Boucheries, restaurants, épiceries certifiés. Carte en temps réel.</div>
+          </div>
+        </div>
+
+        <!-- SLIDE 5: CTA + premium -->
+        <div class="slide" id="slide-4" style="justify-content:center;">
+          <div class="slide-bg-glow" style="background:radial-gradient(circle,rgba(207,165,51,.14) 0%,transparent 70%);opacity:1;top:30%;"></div>
+          <div class="hero-section" style="margin-bottom:6px;">
+            <div class="logo-circle" style="background:rgba(207,165,51,.08);border-color:rgba(207,165,51,.18);">
+              <div style="position:absolute;inset:-16px;border-radius:40px;background:radial-gradient(circle,rgba(207,165,51,.12) 0%,transparent 70%);pointer-events:none;"></div>
+              <img class="logo-img" src="optimus-halal/assets/images/logo_naqiy.png" alt="Naqiy">
+            </div>
+            <div class="premium-chips">
+              <div class="premium-chip"><svg width="14" height="14" viewBox="0 0 256 256" fill="none" stroke="#CFA533" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"><circle cx="128" cy="112" r="40"/><path d="M128 152v72"/><path d="M100 192h56"/></svg><span>Grossesse</span><span class="premium-plus-label">NAQIY+</span></div>
+              <div class="premium-chip"><svg width="14" height="14" viewBox="0 0 256 256" fill="none" stroke="#CFA533" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"><circle cx="128" cy="80" r="40"/><path d="M128 120c-44 0-80 28-80 56v12h160v-12c0-28-36-56-80-56z"/></svg><span>Enfants</span><span class="premium-plus-label">NAQIY+</span></div>
+              <div class="premium-chip"><svg width="14" height="14" viewBox="0 0 256 256" fill="none" stroke="#CFA533" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"><path d="M128 24 L236 200 H20 Z"/><line x1="128" y1="104" x2="128" y2="144"/><circle cx="128" cy="172" r="4" fill="#CFA533"/></svg><span>Allergènes</span><span class="premium-plus-label">NAQIY+</span></div>
+            </div>
+            <div class="health-badge">
+              <div class="health-badge-dot"></div>
+              <span>Score Santé </span>
+              <span style="color:#13ec6a;font-weight:700;">Naqiy V3</span>
+              <span> — ultra précis</span>
+            </div>
+          </div>
+          <div class="text-section">
+            <div class="slide-title">Commencez</div>
+            <div class="slide-highlight" style="color:#CFA533">gratuitement</div>
+            <div class="slide-description">5 scans par jour. Naqiy+ pour le profil santé personnalisé.</div>
+          </div>
+          <div class="cta-btns">
+            <button class="cta-primary-btn"><svg width="16" height="16" viewBox="0 0 256 256" fill="none" stroke="#0d1b13" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"><circle cx="128" cy="80" r="40"/><path d="M128 120c-44 0-80 28-80 56v12h160v-12c0-28-36-56-80-56z"/><line x1="212" y1="56" x2="212" y2="112"/><line x1="184" y1="84" x2="240" y2="84"/></svg><span>Créer un compte</span></button>
+            <button class="cta-secondary-btn"><svg width="16" height="16" viewBox="0 0 256 256" fill="none" stroke="#707870" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"><circle cx="128" cy="128" r="96"/><path d="M128 32a96 96 0 0 1 0 192"/><ellipse cx="128" cy="128" rx="40" ry="96"/><line x1="32" y1="128" x2="224" y2="128"/></svg><span>Explorer sans compte</span></button>
+            <div class="cta-hint">5 scans gratuits par jour</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Footer: dots + next -->
+    <div class="phone-footer">
+      <div class="dot-row" id="dotRow"></div>
+      <button class="next-btn" id="nextBtnPhone" onclick="navigate(1)">
+        <span>Suivant</span><span>→</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Right panel -->
+  <div class="right-panel">
+    <div class="slide-info-card" id="slideInfoCard"></div>
+    <div class="prompt-output">
+      <div class="prompt-label">✦ Résumé des changements</div>
+      <pre id="prompt-text"></pre>
+      <button class="copy-btn" id="copyBtn" onclick="copyPrompt()">Copier</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ───────────────────────────────────────
+var state = { slide: 0, isDark: true };
+var SLIDE_COUNT = 5;
+
+// ── Grade data ──────────────────────────────────
+var GRADES = [
+  { arabic: '١', color: '#22c55e', label: ['Très', 'fiable'] },
+  { arabic: '٢', color: '#84cc16', label: ['Fiable'] },
+  { arabic: '٣', color: '#f59e0b', label: ['Vigi-', 'lance'] },
+  { arabic: '٤', color: '#f97316', label: ['Peu', 'fiable'] },
+  { arabic: '٥', color: '#ef4444', label: ['Insuf-', 'fisant'] },
+];
+var ACTIVE_GRADE = 2; // grade 2 = Fiable (index 1)
+
+// ── Slide metadata ──────────────────────────────
+var SLIDE_META = [
+  {
+    label: 'Slide 1 — Brand',
+    badge: null,
+    items: [
+      ['~', 'Logo officiel Naqiy (remplace lettre N) + tagline gold'],
+      ['–', '"Bienvenue sur Naqiy" — texte inchangé'],
+    ],
+  },
+  {
+    label: 'Slide 2 — Scanner',
+    badge: 'NOUVEAU DÉCORATIF',
+    items: [
+      ['+', 'Mini carte "scan result" glass sous l\'icône QR'],
+      ['+', 'Dot vert + "Halal Certifié"'],
+      ['+', 'NaqiyGradeBadge mini strip N ١٢٣٤٥ (grade 2 actif)'],
+      ['+', 'Mini ScoreRing santé "68 BON"'],
+      ['~', 'Description : "Verdict halal, score certifieur, score santé"'],
+    ],
+  },
+  {
+    label: 'Slide 3 — Trust Grade (remplace Madhab)',
+    badge: 'SLIDE RETRAVAILLÉE',
+    items: [
+      ['★', 'NaqiyGradeBadge strip FULL EXPLIQUÉ : N ١٢٣٤٥'],
+      ['★', 'Grade ٢ actif agrandi avec glow gold'],
+      ['+', 'Labels : Très fiable | Fiable | Vigilance | Peu fiable | Insuffisant'],
+      ['+', '4 dots madhab + "4 écoles analysées"'],
+      ['~', 'Titre : "Score de confiance certifieur"'],
+    ],
+  },
+  {
+    label: 'Slide 4 — Autour de vous',
+    badge: 'MINI STORE CARD',
+    items: [
+      ['+', 'Carte magasin flottante : "La Boucherie Halal"'],
+      ['+', 'Badge certif AVS + rating Star 4.6 + "Ouvert"'],
+      ['+', 'Distance badge "0.3 km"'],
+      ['–', 'Pins flottants conservés'],
+    ],
+  },
+  {
+    label: 'Slide 5 — Commencez',
+    badge: 'CHIPS PREMIUM + PROFIL',
+    items: [
+      ['+', '3 chips Naqiy+ : Grossesse + Enfants + Allergènes (icônes Phosphor)'],
+      ['+', 'Badge "Score Santé Naqiy V3 — ultra précis"'],
+      ['+', 'Logo N gold (cohérence premium)'],
+      ['–', 'Boutons CTA inchangés'],
+    ],
+  },
+];
+
+// ── Safe DOM helper ─────────────────────────────
+function el(tag, attrs) {
+  var node = document.createElement(tag);
+  if (attrs) {
+    Object.keys(attrs).forEach(function(k) {
+      var v = attrs[k];
+      if (k === 'style' && typeof v === 'object') {
+        Object.keys(v).forEach(function(sk) { node.style[sk] = v[sk]; });
+      } else if (k === 'className') {
+        node.className = v;
+      } else {
+        node.setAttribute(k, v);
+      }
+    });
+  }
+  return node;
+}
+
+function txt(s) { return document.createTextNode(s); }
+
+function clearNode(node) {
+  while (node.firstChild) node.removeChild(node.firstChild);
+}
+
+// ── Build mini grade strip (slide 2) ───────────
+function buildMiniGradeStrip() {
+  var container = document.getElementById('mini-grade-strip');
+  if (!container) return;
+  clearNode(container);
+
+  var nLabel = el('span', { className: 'grade-n' });
+  nLabel.appendChild(txt('N'));
+  container.appendChild(nLabel);
+
+  GRADES.forEach(function(g, i) {
+    var isActive = (i + 1) === ACTIVE_GRADE;
+    var pill = el('div', {
+      className: 'grade-pill ' + (isActive ? 'active' : 'inactive'),
+      style: {
+        backgroundColor: g.color,
+        boxShadow: isActive ? ('0 0 8px ' + g.color + '60') : 'none',
+      },
+    });
+    pill.appendChild(txt(g.arabic));
+    container.appendChild(pill);
+  });
+}
+
+// ── Build full grade strip + labels (slide 3) ──
+function buildFullGradeStrip() {
+  var strip = document.getElementById('grade-strip-full');
+  var labels = document.getElementById('grade-labels-row');
+  if (!strip || !labels) return;
+  clearNode(strip);
+  clearNode(labels);
+
+  var nFull = el('span', { className: 'grade-n-full' });
+  nFull.appendChild(txt('N'));
+  strip.appendChild(nFull);
+
+  GRADES.forEach(function(g, i) {
+    var isActive = (i + 1) === ACTIVE_GRADE;
+
+    var pill = el('div', {
+      className: 'grade-pill-full ' + (isActive ? 'active' : 'inactive'),
+      style: {
+        backgroundColor: g.color,
+        boxShadow: isActive ? ('0 0 14px ' + g.color + '80') : 'none',
+      },
+    });
+    pill.appendChild(txt(g.arabic));
+    strip.appendChild(pill);
+
+    var col = el('div', {
+      className: 'grade-label-col' + (isActive ? ' active-col' : ''),
+    });
+    g.label.forEach(function(line) {
+      var lineEl = el('span', {
+        className: 'grade-label-text',
+        style: { color: isActive ? g.color : '' },
+      });
+      lineEl.appendChild(txt(line));
+      col.appendChild(lineEl);
+    });
+    labels.appendChild(col);
+  });
+}
+
+// ── Render preview ──────────────────────────────
+function renderPreview() {
+  var track = document.getElementById('slidesTrack');
+  track.style.transform = 'translateX(-' + (state.slide * 320) + 'px)';
+
+  // Dots
+  var dotRow = document.getElementById('dotRow');
+  clearNode(dotRow);
+  for (var i = 0; i < SLIDE_COUNT; i++) {
+    (function(idx) {
+      var dot = el('div', { className: 'dot' + (idx === state.slide ? ' active' : '') });
+      dot.addEventListener('click', function() { state.slide = idx; updateAll(); });
+      dotRow.appendChild(dot);
+    })(i);
+  }
+
+  // Skip button
+  var skipBtn = document.getElementById('skipBtn');
+  skipBtn.className = 'skip-btn' + (state.slide === SLIDE_COUNT - 1 ? ' hidden' : '');
+
+  // Next btn phone
+  var nextBtnPhone = document.getElementById('nextBtnPhone');
+  nextBtnPhone.className = 'next-btn' + (state.slide === SLIDE_COUNT - 1 ? ' hidden' : '');
+
+  // Nav arrows
+  document.getElementById('prevBtn').className = 'nav-arrow' + (state.slide === 0 ? ' disabled' : '');
+  document.getElementById('nextBtn').className = 'nav-arrow' + (state.slide === SLIDE_COUNT - 1 ? ' disabled' : '');
+
+  // Slide info card
+  var meta = SLIDE_META[state.slide];
+  var infoCard = document.getElementById('slideInfoCard');
+  clearNode(infoCard);
+
+  if (meta.badge) {
+    var badge = el('div', { className: 'changes-badge' });
+    badge.appendChild(txt('✦ ' + meta.badge));
+    infoCard.appendChild(badge);
+  }
+
+  var titleEl = el('div', { className: 'slide-info-title' });
+  titleEl.appendChild(txt(meta.label));
+  infoCard.appendChild(titleEl);
+
+  var list = el('div', { className: 'slide-info-items' });
+  meta.items.forEach(function(pair) {
+    var icon = pair[0], text = pair[1];
+    var item = el('div', { className: 'slide-info-item' });
+
+    var iconColor = icon === '+' ? '#13ec6a' : icon === '★' ? '#CFA533' : icon === '~' ? '#f59e0b' : '#5a6a60';
+    var iconEl = el('span', { style: { color: iconColor, flexShrink: '0' } });
+    iconEl.appendChild(txt(icon));
+    item.appendChild(iconEl);
+
+    var textEl = el('span', {});
+    textEl.appendChild(txt(text));
+    item.appendChild(textEl);
+
+    list.appendChild(item);
+  });
+  infoCard.appendChild(list);
+}
+
+// ── Update prompt ───────────────────────────────
+function updatePrompt() {
+  var meta = SLIDE_META[state.slide];
+  var lines = [meta.label, ''];
+  if (meta.badge) { lines.push('[ ' + meta.badge + ' ]', ''); }
+  var changes = meta.items.filter(function(p) { return p[0] !== '–'; });
+  if (changes.length) {
+    lines.push('Changements vs. version actuelle :');
+    changes.forEach(function(p) { lines.push('  ' + p[0] + ' ' + p[1]); });
+  } else {
+    lines.push('Slide identique, aucun changement requis.');
+  }
+  var promptEl = document.getElementById('prompt-text');
+  clearNode(promptEl);
+  promptEl.appendChild(txt(lines.join('\n')));
+}
+
+// ── Navigate ────────────────────────────────────
+function navigate(dir) {
+  state.slide = Math.max(0, Math.min(SLIDE_COUNT - 1, state.slide + dir));
+  updateAll();
+}
+
+// ── Mode toggle ─────────────────────────────────
+function toggleMode() {
+  state.isDark = !state.isDark;
+  document.body.className = state.isDark ? '' : 'light';
+  var btn = document.getElementById('modeToggle');
+  clearNode(btn);
+  btn.appendChild(txt(state.isDark ? '☀ Light' : '☾ Dark'));
+}
+
+// ── Copy ────────────────────────────────────────
+function copyPrompt() {
+  var text = document.getElementById('prompt-text').textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    var btn = document.getElementById('copyBtn');
+    clearNode(btn);
+    btn.appendChild(txt('✓ Copié !'));
+    btn.className = 'copy-btn copied';
+    setTimeout(function() {
+      clearNode(btn);
+      btn.appendChild(txt('Copier'));
+      btn.className = 'copy-btn';
+    }, 2000);
+  });
+}
+
+// ── updateAll ───────────────────────────────────
+function updateAll() { renderPreview(); updatePrompt(); }
+
+// ── Init ────────────────────────────────────────
+buildMiniGradeStrip();
+buildFullGradeStrip();
+updateAll();
+</script>
+</body>
+</html>

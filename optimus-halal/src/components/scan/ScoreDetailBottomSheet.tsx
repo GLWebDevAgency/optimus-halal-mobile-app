@@ -29,14 +29,14 @@ import Animated, {
   Easing,
   runOnJS,
   useReducedMotion,
-  interpolateColor,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ChartBarIcon, ProhibitIcon, HeartIcon, AppleLogoIcon, FlaskIcon, FactoryIcon, DropIcon, LeafIcon } from "phosphor-react-native";
 import { useTheme } from "@/hooks/useTheme";
-import { useTranslation } from "@/hooks";
+import { useTranslation, useHaptics } from "@/hooks";
 import { halalStatus, darkTheme, lightTheme, getTrustScoreColor } from "@/theme/colors";
 import { CertifierLogo } from "./CertifierLogo";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -68,6 +68,15 @@ export interface TrustScoreDetailUI {
   evidenceLevel: "verified" | "declared" | "inferred" | "unknown";
 }
 
+export interface HealthAxesUI {
+  nutrition: { score: number; max: number; grade?: string } | null;
+  additives: { score: number; max: number; hasHighConcern?: boolean };
+  processing: { score: number; max: number } | null;
+  beverageSugar?: { score: number; max: number };
+  bonuses: { bio: number; aop: number };
+  category: string;
+}
+
 interface ScoreDetailBottomSheetProps {
   visible: boolean;
   certifierId: string | null;
@@ -76,6 +85,7 @@ interface ScoreDetailBottomSheetProps {
   practices: CertifierPracticesUI | null;
   detail: TrustScoreDetailUI | null;
   onClose: () => void;
+  healthAxes?: HealthAxesUI;
 }
 
 // ── Evidence level config ────────────────────────────────
@@ -92,7 +102,7 @@ const EVIDENCE_CONFIG = {
 const BLOCK_CONFIG = [
   {
     key: "ritualValidity" as const,
-    icon: "mosque" as const,      // MaterialIcons doesn't have mosque, use alternative
+    icon: "mosque" as const,
     fallbackIcon: "auto-awesome" as const,
     labelFr: "Validite rituelle",
     labelEn: "Ritual Validity",
@@ -169,7 +179,7 @@ const BlockBar = React.memo(function BlockBar({
   label: string;
   subtitle: string;
   value: number;
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: IconName;
   staggerIndex: number;
   isDark: boolean;
   colors: any;
@@ -200,13 +210,80 @@ const BlockBar = React.memo(function BlockBar({
     <Animated.View style={[styles.blockRow, containerStyle]}>
       <View style={styles.blockHeader}>
         <View style={styles.blockLabelRow}>
-          <MaterialIcons name={icon} size={14} color={barColor} />
+          <AppIcon name={icon} size={14} color={barColor} />
           <Text style={[styles.blockLabel, { color: colors.textPrimary }]} numberOfLines={1}>
             {label}
           </Text>
         </View>
         <Text style={[styles.blockValue, { color: barColor }]}>
           {value}
+        </Text>
+      </View>
+      <View style={[styles.blockBarBg, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }]}>
+        <Animated.View style={[styles.blockBarFill, barStyle]} />
+      </View>
+      <Text style={[styles.blockSubtitle, { color: colors.textMuted }]} numberOfLines={1}>
+        {subtitle}
+      </Text>
+    </Animated.View>
+  );
+});
+
+// ── Health Axis Bar (score/max variant) ──────────────────
+
+const HealthAxisBar = React.memo(function HealthAxisBar({
+  label,
+  subtitle,
+  value,
+  max,
+  icon,
+  staggerIndex,
+  isDark,
+  colors,
+}: {
+  label: string;
+  subtitle: string;
+  value: number;
+  max: number;
+  icon: React.ReactNode;
+  staggerIndex: number;
+  isDark: boolean;
+  colors: any;
+}) {
+  const progress = useSharedValue(0);
+  const opacity = useSharedValue(0);
+  const pct = max > 0 ? Math.round((value / max) * 100) : 0;
+
+  useEffect(() => {
+    opacity.value = withDelay(staggerIndex * 80, withTiming(1, { duration: 300 }));
+    progress.value = withDelay(
+      staggerIndex * 80 + 150,
+      withSpring(pct / 100, { damping: 18, stiffness: 90 }),
+    );
+  }, [pct, staggerIndex, opacity, progress]);
+
+  const barColor = getBlockColor(pct);
+
+  const barStyle = useAnimatedStyle(() => ({
+    width: `${progress.value * 100}%`,
+    backgroundColor: barColor,
+  }));
+
+  const containerStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  return (
+    <Animated.View style={[styles.blockRow, containerStyle]}>
+      <View style={styles.blockHeader}>
+        <View style={styles.blockLabelRow}>
+          {icon}
+          <Text style={[styles.blockLabel, { color: colors.textPrimary }]} numberOfLines={1}>
+            {label}
+          </Text>
+        </View>
+        <Text style={[styles.blockValue, { color: barColor }]}>
+          {value}/{max}
         </Text>
       </View>
       <View style={[styles.blockBarBg, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }]}>
@@ -229,11 +306,13 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
   practices,
   detail,
   onClose,
+  healthAxes,
 }: ScoreDetailBottomSheetProps) {
   const { isDark, colors } = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
+  const { impact } = useHaptics();
 
   const [isMounted, setIsMounted] = useState(false);
   const translateY = useSharedValue(SCREEN_HEIGHT);
@@ -246,6 +325,7 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
     if (visible) {
       setIsMounted(true);
       setShowIndicators(false);
+      impact();
       backdropOpacity.value = withTiming(1, { duration: 200 });
       translateY.value = reducedMotion
         ? 0
@@ -323,7 +403,7 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
     item: { label: string; status: IndicatorStatus },
     index: number,
   ) => {
-    const icon: keyof typeof MaterialIcons.glyphMap =
+    const icon: IconName =
       item.status === "met"
         ? "check-circle"
         : item.status === "notMet"
@@ -338,7 +418,7 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
 
     return (
       <View key={index} style={styles.indicatorRow}>
-        <MaterialIcons name={icon} size={18} color={iconColor} />
+        <AppIcon name={icon} size={18} color={iconColor} />
         <Text style={[styles.indicatorText, { color: colors.textSecondary }]}>
           {item.label}
         </Text>
@@ -389,11 +469,12 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
 
       {/* Sheet */}
       <Animated.View
+        accessibilityViewIsModal
         style={[
           styles.sheet,
           {
             backgroundColor: isDark ? darkTheme.background : lightTheme.backgroundSecondary,
-            paddingBottom: insets.bottom + 20,
+            paddingBottom: insets.bottom + 90,
             maxHeight: SCREEN_HEIGHT * 0.88,
           },
           sheetStyle,
@@ -413,143 +494,246 @@ export const ScoreDetailBottomSheet = React.memo(function ScoreDetailBottomSheet
           />
         </View>
 
-        {/* Header */}
+        {/* Header — switches icon/title based on mode */}
         <View style={styles.header}>
-          <MaterialIcons name="leaderboard" size={22} color={colors.textMuted} />
+          {healthAxes ? (
+            <HeartIcon size={22} color="#ef4444" weight="fill" />
+          ) : (
+            <ChartBarIcon size={22} color={colors.textMuted} />
+          )}
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
-            {t.scanResult.scoreDetailTitle}
+            {healthAxes ? t.scanResult.healthAndNutrition : t.scanResult.scoreDetailTitle}
           </Text>
         </View>
 
-        {/* Current certifier score + evidence badge */}
-        {certifierName && trustScore != null && (
-          <View style={styles.certifierHeaderSection}>
-            <View
-              style={[
-                styles.currentScore,
-                {
-                  backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
-                  borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-                },
-              ]}
-            >
-              {certifierId && (
-                <CertifierLogo certifierId={certifierId} size={22} fallbackColor={scoreColor} />
-              )}
-              <Text style={[styles.currentScoreName, { color: colors.textPrimary }]}>
-                {certifierName}
-              </Text>
-              <Text style={[styles.currentScoreValue, { color: scoreColor }]}>
-                {trustScore}/100
-              </Text>
-            </View>
-
-            {/* Evidence level badge + cap indicator */}
-            <View style={styles.metaBadgeRow}>
-              {evidence && (
-                <View style={[styles.evidenceBadge, { backgroundColor: `${evidence.color}15`, borderColor: `${evidence.color}30` }]}>
-                  <MaterialIcons name={evidence.icon} size={12} color={evidence.color} />
-                  <Text style={[styles.evidenceBadgeText, { color: evidence.color }]}>
-                    {evidence.labelFr}
-                  </Text>
-                </View>
-              )}
-              {detail?.cap != null && (
-                <View style={[styles.capBadge, { backgroundColor: isDark ? "rgba(239,68,68,0.12)" : "rgba(239,68,68,0.08)", borderColor: "rgba(239,68,68,0.25)" }]}>
-                  <MaterialIcons name="block" size={11} color="#ef4444" />
-                  <Text style={[styles.capBadgeText, { color: "#ef4444" }]}>
-                    Cap {detail.cap}
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-        )}
-
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          bounces={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          {/* ════════════════════════════════════════════
-              LAYER 1 — 4-Block Semantic Breakdown
-              ════════════════════════════════════════════ */}
-          {detail && (
+        {/* ════════════════════════════════════════════════════
+            HEALTH AXES MODE — V3 health score breakdown
+            ════════════════════════════════════════════════════ */}
+        {healthAxes ? (
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+            contentContainerStyle={styles.scrollContent}
+          >
             <View style={styles.blocksContainer}>
-              {BLOCK_CONFIG.map((block, i) => (
-                <BlockBar
-                  key={block.key}
-                  label={block.labelFr}
-                  subtitle={block.subtitleFr}
-                  value={detail.blocks[block.key]}
-                  icon={block.fallbackIcon}
-                  staggerIndex={i}
+              {/* Nutrition axis */}
+              {healthAxes.nutrition && (
+                <HealthAxisBar
+                  label={t.scanResult.axisNutrition}
+                  subtitle={healthAxes.nutrition.grade ? `Grade ${healthAxes.nutrition.grade.toUpperCase()}` : t.scanResult.nutritionalQuality}
+                  value={healthAxes.nutrition.score}
+                  max={healthAxes.nutrition.max}
+                  icon={<AppleLogoIcon size={14} color={getBlockColor(Math.round((healthAxes.nutrition.score / healthAxes.nutrition.max) * 100))} />}
+                  staggerIndex={0}
                   isDark={isDark}
                   colors={colors}
                 />
-              ))}
-            </View>
-          )}
+              )}
 
-          {/* Toggle to indicator detail */}
-          {practices && (
-            <Pressable
-              onPress={() => setShowIndicators(!showIndicators)}
-              style={[
-                styles.toggleButton,
-                {
-                  backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
-                  borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
-                },
-              ]}
-            >
-              <MaterialIcons
-                name={showIndicators ? "expand-less" : "expand-more"}
-                size={18}
-                color={colors.textMuted}
+              {/* Additives axis */}
+              <HealthAxisBar
+                label={t.scanResult.axisAdditives}
+                subtitle={healthAxes.additives.hasHighConcern ? t.scanResult.containsConcerningAdditives : t.scanResult.foodAdditives}
+                value={healthAxes.additives.score}
+                max={healthAxes.additives.max}
+                icon={<FlaskIcon size={14} color={getBlockColor(Math.round((healthAxes.additives.score / healthAxes.additives.max) * 100))} />}
+                staggerIndex={1}
+                isDark={isDark}
+                colors={colors}
               />
-              <Text style={[styles.toggleText, { color: colors.textSecondary }]}>
-                {showIndicators
-                  ? t.scanResult.hideIndicators ?? "Masquer le detail"
-                  : t.scanResult.showIndicators ?? "Voir le detail par indicateur"}
-              </Text>
-            </Pressable>
-          )}
 
-          {/* ════════════════════════════════════════════
-              LAYER 2 — Granular Indicator Checklist
-              ════════════════════════════════════════════ */}
-          {showIndicators && practices && (
-            <View style={styles.indicatorsSection}>
-              {renderSection(
-                t.scanResult.themeRitual,
-                ritualIndicators,
-                ritualThemeColor,
-                true,
+              {/* Processing axis */}
+              {healthAxes.processing && (
+                <HealthAxisBar
+                  label={t.scanResult.axisProcessing}
+                  subtitle={t.scanResult.processingLevel}
+                  value={healthAxes.processing.score}
+                  max={healthAxes.processing.max}
+                  icon={<FactoryIcon size={14} color={getBlockColor(Math.round((healthAxes.processing.score / healthAxes.processing.max) * 100))} />}
+                  staggerIndex={2}
+                  isDark={isDark}
+                  colors={colors}
+                />
               )}
-              {renderSection(
-                t.scanResult.themeOps,
-                opsIndicators,
-                colors.textSecondary,
-              )}
-              {renderSection(
-                t.scanResult.themeTayyib,
-                tayyibIndicators,
-                colors.textMuted,
-              )}
-              {renderSection(
-                t.scanResult.themeTransparency,
-                transparencyIndicators,
-                colors.textSecondary,
+
+              {/* Beverage sugar axis (only for beverages) */}
+              {healthAxes.beverageSugar && (
+                <HealthAxisBar
+                  label={t.scanResult.axisBeverageSugar}
+                  subtitle={t.scanResult.addedSugarsContent}
+                  value={healthAxes.beverageSugar.score}
+                  max={healthAxes.beverageSugar.max}
+                  icon={<DropIcon size={14} color={getBlockColor(Math.round((healthAxes.beverageSugar.score / healthAxes.beverageSugar.max) * 100))} />}
+                  staggerIndex={3}
+                  isDark={isDark}
+                  colors={colors}
+                />
               )}
             </View>
-          )}
 
-          {/* Footer — factual, no fatwa */}
-          <Text style={[styles.footerNote, { color: colors.textMuted }]}>
-            {t.scanResult.trustScoreNote}
-          </Text>
-        </ScrollView>
+            {/* Bonus badges */}
+            {(healthAxes.bonuses.bio > 0 || healthAxes.bonuses.aop > 0) && (
+              <View style={styles.bonusBadgeRow}>
+                {healthAxes.bonuses.bio > 0 && (
+                  <View style={[styles.bonusBadge, { backgroundColor: isDark ? "rgba(34,197,94,0.12)" : "rgba(34,197,94,0.08)", borderColor: "rgba(34,197,94,0.25)" }]}>
+                    <LeafIcon size={12} color="#22c55e" weight="fill" />
+                    <Text style={[styles.bonusBadgeText, { color: "#22c55e" }]}>
+                      {t.scanResult.bonusBio} +{healthAxes.bonuses.bio}
+                    </Text>
+                  </View>
+                )}
+                {healthAxes.bonuses.aop > 0 && (
+                  <View style={[styles.bonusBadge, { backgroundColor: isDark ? "rgba(245,158,11,0.12)" : "rgba(245,158,11,0.08)", borderColor: "rgba(245,158,11,0.25)" }]}>
+                    <Text style={[styles.bonusBadgeText, { color: "#f59e0b" }]}>
+                      {t.scanResult.bonusAop} +{healthAxes.bonuses.aop}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Category label */}
+            <View style={styles.categoryRow}>
+              <Text style={[styles.categoryLabel, { color: colors.textMuted }]}>
+                {t.scanResult.categoryLabel} : {healthAxes.category === "general" ? t.scanResult.categoryFood : healthAxes.category === "beverages" ? t.scanResult.categoryBeverage : healthAxes.category}
+              </Text>
+            </View>
+
+            {/* Footer */}
+            <Text style={[styles.footerNote, { color: colors.textMuted }]}>
+              {t.scanResult.scoreFooterNote}
+            </Text>
+          </ScrollView>
+        ) : (
+          /* ════════════════════════════════════════════════════
+             CERTIFIER MODE — Original trust score breakdown
+             ════════════════════════════════════════════════════ */
+          <>
+            {/* Current certifier score + evidence badge */}
+            {certifierName && trustScore != null && (
+              <View style={styles.certifierHeaderSection}>
+                <View
+                  style={[
+                    styles.currentScore,
+                    {
+                      backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
+                      borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                    },
+                  ]}
+                >
+                  {certifierId && (
+                    <CertifierLogo certifierId={certifierId} size={22} fallbackColor={scoreColor} />
+                  )}
+                  <Text style={[styles.currentScoreName, { color: colors.textPrimary }]}>
+                    {certifierName}
+                  </Text>
+                  <Text style={[styles.currentScoreValue, { color: scoreColor }]}>
+                    {trustScore}/100
+                  </Text>
+                </View>
+
+                {/* Evidence level badge + cap indicator */}
+                <View style={styles.metaBadgeRow}>
+                  {evidence && (
+                    <View style={[styles.evidenceBadge, { backgroundColor: `${evidence.color}15`, borderColor: `${evidence.color}30` }]}>
+                      <AppIcon name={evidence.icon} size={12} color={evidence.color} />
+                      <Text style={[styles.evidenceBadgeText, { color: evidence.color }]}>
+                        {evidence.labelFr}
+                      </Text>
+                    </View>
+                  )}
+                  {detail?.cap != null && (
+                    <View style={[styles.capBadge, { backgroundColor: isDark ? "rgba(239,68,68,0.12)" : "rgba(239,68,68,0.08)", borderColor: "rgba(239,68,68,0.25)" }]}>
+                      <ProhibitIcon size={11} color="#ef4444" />
+                      <Text style={[styles.capBadgeText, { color: "#ef4444" }]}>
+                        Cap {detail.cap}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            )}
+
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              bounces={false}
+              contentContainerStyle={styles.scrollContent}
+            >
+              {/* LAYER 1 — 4-Block Semantic Breakdown */}
+              {detail && (
+                <View style={styles.blocksContainer}>
+                  {BLOCK_CONFIG.map((block, i) => (
+                    <BlockBar
+                      key={block.key}
+                      label={block.labelFr}
+                      subtitle={block.subtitleFr}
+                      value={detail.blocks[block.key]}
+                      icon={block.fallbackIcon}
+                      staggerIndex={i}
+                      isDark={isDark}
+                      colors={colors}
+                    />
+                  ))}
+                </View>
+              )}
+
+              {/* Toggle to indicator detail */}
+              {practices && (
+                <Pressable
+                  onPress={() => setShowIndicators(!showIndicators)}
+                  style={[
+                    styles.toggleButton,
+                    {
+                      backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
+                      borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+                    },
+                  ]}
+                >
+                  <AppIcon name={showIndicators ? "expand-less" : "expand-more"}
+                    size={18}
+                    color={colors.textMuted} />
+                  <Text style={[styles.toggleText, { color: colors.textSecondary }]}>
+                    {showIndicators
+                      ? t.scanResult.hideIndicators ?? "Masquer le detail"
+                      : t.scanResult.showIndicators ?? "Voir le detail par indicateur"}
+                  </Text>
+                </Pressable>
+              )}
+
+              {/* LAYER 2 — Granular Indicator Checklist */}
+              {showIndicators && practices && (
+                <View style={styles.indicatorsSection}>
+                  {renderSection(
+                    t.scanResult.themeRitual,
+                    ritualIndicators,
+                    ritualThemeColor,
+                    true,
+                  )}
+                  {renderSection(
+                    t.scanResult.themeOps,
+                    opsIndicators,
+                    colors.textSecondary,
+                  )}
+                  {renderSection(
+                    t.scanResult.themeTayyib,
+                    tayyibIndicators,
+                    colors.textMuted,
+                  )}
+                  {renderSection(
+                    t.scanResult.themeTransparency,
+                    transparencyIndicators,
+                    colors.textSecondary,
+                  )}
+                </View>
+              )}
+
+              {/* Footer — factual, no fatwa */}
+              <Text style={[styles.footerNote, { color: colors.textMuted }]}>
+                {t.scanResult.trustScoreNote}
+              </Text>
+            </ScrollView>
+          </>
+        )}
       </Animated.View>
     </View>
   );
@@ -759,6 +943,35 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
     marginTop: 20,
+  },
+  bonusBadgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 14,
+    paddingLeft: 2,
+  },
+  bonusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  bonusBadgeText: {
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 0.3,
+  },
+  categoryRow: {
+    marginTop: 14,
+    paddingLeft: 2,
+  },
+  categoryLabel: {
+    fontSize: 12,
+    fontWeight: "500",
   },
   footerNote: {
     fontSize: 12,

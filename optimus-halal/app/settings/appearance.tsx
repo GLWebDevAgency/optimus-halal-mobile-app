@@ -15,15 +15,16 @@ import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, CheckIcon, InfoIcon } from "phosphor-react-native";
 import Animated, { FadeIn, FadeInDown, ZoomIn } from "react-native-reanimated";
 import { useHaptics, useTranslation } from "@/hooks";
 
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 const GOLD = "#d4af37";
 
-const THEME_OPTIONS: { id: ThemeMode; labelKey: "automatic" | "light" | "dark"; icon: keyof typeof MaterialIcons.glyphMap }[] = [
+const THEME_OPTIONS: { id: ThemeMode; labelKey: "automatic" | "light" | "dark"; icon: IconName }[] = [
   {
     id: "system",
     labelKey: "automatic",
@@ -78,7 +79,7 @@ export default function AppearanceScreen() {
               className="h-10 w-10 items-center justify-center rounded-full"
               style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }}
             >
-              <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
+              <ArrowLeftIcon size={20} color={colors.textPrimary} />
             </View>
           </Pressable>
           <Text
@@ -107,11 +108,9 @@ export default function AppearanceScreen() {
             style={{ backgroundColor: colors.primaryLight }}
             accessible={false}
           >
-            <MaterialIcons
-              name={effectiveTheme === "dark" ? "dark-mode" : "light-mode"}
+            <AppIcon name={effectiveTheme === "dark" ? "dark-mode" : "light-mode"}
               size={40}
-              color={colors.primary}
-            />
+              color={colors.primary} />
           </View>
           <Text
             style={{ color: colors.textPrimary }}
@@ -157,11 +156,9 @@ export default function AppearanceScreen() {
                       backgroundColor: isSelected ? (isDark ? "rgba(212,175,55,0.15)" : "rgba(212,175,55,0.1)") : colors.buttonSecondary,
                     }}
                   >
-                    <MaterialIcons
-                      name={option.icon}
+                    <AppIcon name={option.icon}
                       size={24}
-                      color={isSelected ? GOLD : colors.textSecondary}
-                    />
+                      color={isSelected ? GOLD : colors.textSecondary} />
                   </View>
 
                   {/* Text Content */}
@@ -191,7 +188,7 @@ export default function AppearanceScreen() {
                   >
                     {isSelected && (
                       <Animated.View entering={ZoomIn.springify()}>
-                        <MaterialIcons name="check" size={16} color="#ffffff" />
+                        <CheckIcon size={16} color="#ffffff" />
                       </Animated.View>
                     )}
                   </View>
@@ -201,14 +198,14 @@ export default function AppearanceScreen() {
           })}
         </Animated.View>
 
-        {/* Info Card */}
+        {/* InfoIcon Card */}
         <Animated.View
           entering={FadeInDown.delay(300).duration(400)}
           className="mt-6 rounded-2xl p-4"
           style={{ backgroundColor: "rgba(212,175,55,0.08)", borderWidth: 1, borderColor: isDark ? "rgba(212,175,55,0.12)" : "rgba(212,175,55,0.15)" }}
         >
           <View className="flex-row items-start gap-3">
-            <MaterialIcons name="info-outline" size={20} color={GOLD} />
+            <InfoIcon size={20} color={GOLD} />
             <View className="flex-1">
               <Text style={{ color: GOLD }} className="text-sm font-medium mb-1">
                 {t.appearance.autoMode}

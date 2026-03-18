@@ -1,8 +1,15 @@
 /**
- * TrustScoreBottomSheet — Explains how the Naqiy trust score is calculated.
+ * TrustScoreBottomSheet — "Pourquoi ce score ?" generic educational sheet.
  *
- * Triggered when user taps the "?" icon next to "Naqiy Score — Confiance certification".
- * Shows the 6 practice indicators (3 positive, 3 negative) with clear explanations.
+ * Explains the Naqiy Trust Grade system (N١→N٥) with:
+ *   - NaqiyGradeBadge strip showing all 5 grades with active highlighted
+ *   - Current certifier score + grade badge
+ *   - 4 themed evaluation blocks (ritual, ops, tayyib, transparency)
+ *   - Madhab-specific note when applicable
+ *
+ * Design: Al-Ilm (transparence épistemique) + Al-Ihsan (springNaqiy)
+ *
+ * @module components/scan/TrustScoreBottomSheet
  */
 
 import React, { useState, useEffect } from "react";
@@ -12,6 +19,7 @@ import {
   StyleSheet,
   Dimensions,
   Pressable,
+  ScrollView,
 } from "react-native";
 import Animated, {
   useSharedValue,
@@ -23,10 +31,24 @@ import Animated, {
   useReducedMotion,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import {
+  InfoIcon,
+  ShieldCheckIcon,
+  GearSixIcon,
+  LeafIcon,
+  EyeIcon,
+} from "phosphor-react-native";
 import { useTheme } from "@/hooks/useTheme";
-import { useTranslation } from "@/hooks";
-import { halalStatus, darkTheme, lightTheme, getTrustScoreColor } from "@/theme/colors";
+import { useTranslation, useHaptics } from "@/hooks";
+import { darkTheme, lightTheme, gold } from "@/theme/colors";
+import { spacing, radius } from "@/theme/spacing";
+import { fontSize, fontWeight } from "@/theme/typography";
+import {
+  NaqiyGradeBadge,
+  TRUST_GRADES,
+  getTrustGradeFromScore,
+  type TrustGrade,
+} from "./NaqiyGradeBadge";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -46,6 +68,44 @@ const MADHAB_DISPLAY: Record<string, string> = {
   hanbali: "Hanbali",
 };
 
+// ── Theme block config ────────────────────────────────────
+
+interface ThemeBlock {
+  icon: typeof ShieldCheckIcon;
+  color: string;
+  titleKey: string;
+  description: string;
+}
+
+const THEME_BLOCKS: ThemeBlock[] = [
+  {
+    icon: ShieldCheckIcon,
+    color: "#ef4444",
+    titleKey: "Validité Rituelle",
+    description: "Abattage rituel, absence d'étourdissement, électronarcose et électrocution post-mortem.",
+  },
+  {
+    icon: GearSixIcon,
+    color: "#22c55e",
+    titleKey: "Assurance Opérationnelle",
+    description: "Contrôleurs salariés, présents à chaque production, sacrificateurs employés.",
+  },
+  {
+    icon: LeafIcon,
+    color: "#8b5cf6",
+    titleKey: "Qualité Produit — Tayyib",
+    description: "Absence de VSM (viande séparée mécaniquement).",
+  },
+  {
+    icon: EyeIcon,
+    color: "#3b82f6",
+    titleKey: "Transparence",
+    description: "Charte publique, rapports d'audit accessibles, liste des entreprises certifiées.",
+  },
+];
+
+// ── Component ────────────────────────────────────────────
+
 export const TrustScoreBottomSheet = React.memo(function TrustScoreBottomSheet({
   visible,
   certifierName,
@@ -57,6 +117,7 @@ export const TrustScoreBottomSheet = React.memo(function TrustScoreBottomSheet({
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
+  const { impact } = useHaptics();
 
   const [isMounted, setIsMounted] = useState(false);
   const translateY = useSharedValue(SCREEN_HEIGHT);
@@ -65,6 +126,7 @@ export const TrustScoreBottomSheet = React.memo(function TrustScoreBottomSheet({
   useEffect(() => {
     if (visible) {
       setIsMounted(true);
+      impact();
       backdropOpacity.value = withTiming(1, { duration: 200 });
       translateY.value = reducedMotion
         ? 0
@@ -76,7 +138,7 @@ export const TrustScoreBottomSheet = React.memo(function TrustScoreBottomSheet({
         { duration: 250, easing: Easing.in(Easing.cubic) },
         (finished) => {
           if (finished) runOnJS(setIsMounted)(false);
-        }
+        },
       );
     }
   }, [visible, reducedMotion, translateY, backdropOpacity, isMounted]);
@@ -89,9 +151,10 @@ export const TrustScoreBottomSheet = React.memo(function TrustScoreBottomSheet({
     opacity: backdropOpacity.value,
   }));
 
-  const scoreColor = trustScore != null ? getTrustScoreColor(trustScore) : halalStatus.haram.base;
-
   if (!isMounted) return null;
+
+  const currentGrade: TrustGrade | null =
+    trustScore != null ? getTrustGradeFromScore(trustScore) : null;
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
@@ -102,11 +165,13 @@ export const TrustScoreBottomSheet = React.memo(function TrustScoreBottomSheet({
 
       {/* Sheet */}
       <Animated.View
+        accessibilityViewIsModal
         style={[
           styles.sheet,
           {
             backgroundColor: isDark ? darkTheme.background : lightTheme.backgroundSecondary,
-            paddingBottom: insets.bottom + 20,
+            paddingBottom: insets.bottom + 90,
+            maxHeight: SCREEN_HEIGHT * 0.88,
           },
           sheetStyle,
         ]}
@@ -116,122 +181,167 @@ export const TrustScoreBottomSheet = React.memo(function TrustScoreBottomSheet({
           <View
             style={[
               styles.handle,
-              {
-                backgroundColor: isDark
-                  ? "rgba(255,255,255,0.15)"
-                  : "rgba(0,0,0,0.12)",
-              },
+              { backgroundColor: isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)" },
             ]}
           />
         </View>
 
         {/* Header */}
         <View style={styles.header}>
-          <MaterialIcons name="info-outline" size={22} color={colors.textMuted} />
+          <InfoIcon size={22} color={isDark ? gold[400] : gold[600]} />
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
             {t.scanResult.trustScoreExplainTitle}
           </Text>
         </View>
 
-        {/* Intro */}
-        <Text style={[styles.intro, { color: colors.textSecondary }]}>
-          {t.scanResult.trustScoreExplainIntro}
-        </Text>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Intro */}
+          <Text style={[styles.intro, { color: colors.textSecondary }]}>
+            {t.scanResult.trustScoreExplainIntro}
+          </Text>
 
-        {/* Current certifier score */}
-        {certifierName && trustScore != null && (
+          {/* ── Naqiy Trust Grade Scale ── */}
           <View
             style={[
-              styles.currentScore,
+              styles.gradeScaleCard,
               {
                 backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
                 borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
               },
             ]}
           >
-            <Text style={[styles.currentScoreName, { color: colors.textPrimary }]}>
-              {certifierName}
+            <Text style={[styles.gradeScaleTitle, { color: isDark ? gold[400] : gold[600] }]}>
+              Échelle Naqiy Trust Grade
             </Text>
-            <Text style={[styles.currentScoreValue, { color: scoreColor }]}>
-              {trustScore}/100
-            </Text>
-          </View>
-        )}
 
-        {/* Madhab-specific note */}
-        {madhab && (
-          <Text style={[styles.madhabNote, { color: colors.textMuted }]}>
-            {t.scanResult.trustScoreMadhabNote.replace("{{madhab}}", MADHAB_DISPLAY[madhab])}
+            {/* Grade strip — shows current certifier grade */}
+            {currentGrade && (
+              <View style={styles.gradeStripCenter}>
+                <NaqiyGradeBadge variant="strip" grade={currentGrade} showLabel />
+              </View>
+            )}
+
+            {/* Grade legend */}
+            <View style={styles.gradeLegend}>
+              {TRUST_GRADES.map((g) => {
+                const isActive = currentGrade?.grade === g.grade;
+                return (
+                  <View
+                    key={g.grade}
+                    style={[
+                      styles.gradeLegendRow,
+                      isActive && {
+                        backgroundColor: `${g.color}${isDark ? "18" : "10"}`,
+                        borderRadius: 8,
+                      },
+                    ]}
+                  >
+                    <View style={[styles.gradeLegendDot, { backgroundColor: g.color }]} />
+                    <Text style={[styles.gradeLegendGrade, { color: g.color }]}>
+                      N{g.arabic}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.gradeLegendLabel,
+                        { color: isActive ? colors.textPrimary : colors.textSecondary },
+                        isActive && { fontWeight: fontWeight.bold },
+                      ]}
+                    >
+                      {g.label}
+                    </Text>
+                    <Text style={[styles.gradeLegendRange, { color: colors.textMuted }]}>
+                      {g.grade === 1 ? "90-100"
+                        : g.grade === 2 ? "70-89"
+                        : g.grade === 3 ? "51-69"
+                        : g.grade === 4 ? "35-50"
+                        : "0-34"}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* Current certifier score */}
+          {certifierName && trustScore != null && currentGrade && (
+            <View
+              style={[
+                styles.currentScore,
+                {
+                  backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
+                  borderColor: `${currentGrade.color}30`,
+                  borderLeftColor: currentGrade.color,
+                  borderLeftWidth: 3,
+                },
+              ]}
+            >
+              <View style={styles.currentScoreInfo}>
+                <Text style={[styles.currentScoreName, { color: colors.textPrimary }]}>
+                  {certifierName}
+                </Text>
+                <Text style={[styles.currentScoreLabel, { color: colors.textMuted }]}>
+                  {trustScore}/100
+                </Text>
+              </View>
+              <NaqiyGradeBadge variant="compact" grade={currentGrade} showLabel />
+            </View>
+          )}
+
+          {/* Madhab-specific note */}
+          {madhab && (
+            <Text style={[styles.madhabNote, { color: colors.textMuted }]}>
+              {t.scanResult.trustScoreMadhabNote.replace("{{madhab}}", MADHAB_DISPLAY[madhab])}
+            </Text>
+          )}
+
+          {/* ── 4 Evaluation Themes ── */}
+          <Text style={[styles.themesTitle, { color: isDark ? gold[400] : gold[600] }]}>
+            Critères d&apos;évaluation
           </Text>
-        )}
 
-        {/* Bloc A — Validite rituelle */}
-        <Text style={[styles.sectionTitle, { color: halalStatus.haram.base }]}>
-          {t.scanResult.themeRitual}
-        </Text>
-        {[
-          t.scanResult.trustScoreNegative1,
-          t.scanResult.trustScoreNegative2,
-          t.scanResult.trustScoreNegative3,
-          t.scanResult.trustScoreNegative5,
-        ].map((label, i) => (
-          <View key={i} style={styles.indicatorRow}>
-            <MaterialIcons name="remove-circle-outline" size={16} color={halalStatus.haram.base} />
-            <Text style={[styles.indicatorText, { color: colors.textSecondary }]}>{label}</Text>
-          </View>
-        ))}
+          {THEME_BLOCKS.map((block, i) => {
+            const Icon = block.icon;
+            return (
+              <View
+                key={i}
+                style={[
+                  styles.themeCard,
+                  {
+                    backgroundColor: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)",
+                    borderColor: `${block.color}${isDark ? "25" : "18"}`,
+                  },
+                ]}
+              >
+                <View style={styles.themeCardHeader}>
+                  <View style={[styles.themeIconCircle, { backgroundColor: `${block.color}15` }]}>
+                    <Icon size={16} color={block.color} weight="fill" />
+                  </View>
+                  <Text style={[styles.themeCardTitle, { color: block.color }]}>
+                    {block.titleKey}
+                  </Text>
+                </View>
+                <Text style={[styles.themeCardDesc, { color: colors.textSecondary }]}>
+                  {block.description}
+                </Text>
+              </View>
+            );
+          })}
 
-        {/* Bloc B — Assurance operationnelle */}
-        <Text style={[styles.sectionTitle, { color: halalStatus.halal.base, marginTop: 16 }]}>
-          {t.scanResult.themeOps}
-        </Text>
-        {[
-          t.scanResult.trustScorePositive1,
-          t.scanResult.trustScorePositive2,
-          t.scanResult.trustScorePositive3,
-        ].map((label, i) => (
-          <View key={i} style={styles.indicatorRow}>
-            <MaterialIcons name="add-circle-outline" size={16} color={halalStatus.halal.base} />
-            <Text style={[styles.indicatorText, { color: colors.textSecondary }]}>{label}</Text>
-          </View>
-        ))}
-
-        {/* Bloc C — Qualite produit (Tayyib) */}
-        <Text style={[styles.sectionTitle, { color: colors.textMuted, marginTop: 16 }]}>
-          {t.scanResult.themeTayyib}
-        </Text>
-        {[
-          t.scanResult.trustScoreNegative4,
-        ].map((label, i) => (
-          <View key={i} style={styles.indicatorRow}>
-            <MaterialIcons name="remove-circle-outline" size={16} color={colors.textMuted} />
-            <Text style={[styles.indicatorText, { color: colors.textSecondary }]}>{label}</Text>
-          </View>
-        ))}
-
-        {/* Bloc D — Transparence */}
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginTop: 16 }]}>
-          {t.scanResult.themeTransparency}
-        </Text>
-        {[
-          t.scanResult.trustScoreTransparency1,
-          t.scanResult.trustScoreTransparency2,
-          t.scanResult.trustScoreTransparency3,
-        ].map((label, i) => (
-          <View key={i} style={styles.indicatorRow}>
-            <MaterialIcons name="visibility" size={16} color={colors.textSecondary} />
-            <Text style={[styles.indicatorText, { color: colors.textSecondary }]}>{label}</Text>
-          </View>
-        ))}
-
-        {/* Footer note */}
-        <Text style={[styles.footerNote, { color: colors.textMuted }]}>
-          {t.scanResult.trustScoreNote}
-        </Text>
+          {/* Footer note */}
+          <Text style={[styles.footerNote, { color: colors.textMuted }]}>
+            {t.scanResult.trustScoreNote}
+          </Text>
+        </ScrollView>
       </Animated.View>
     </View>
   );
 });
+
+// ── Styles ───────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   backdrop: {
@@ -243,14 +353,14 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 24,
+    borderTopLeftRadius: radius["2xl"],
+    borderTopRightRadius: radius["2xl"],
+    paddingHorizontal: spacing["3xl"],
   },
   handleContainer: {
     alignItems: "center",
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
   },
   handle: {
     width: 36,
@@ -261,67 +371,147 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    marginBottom: 12,
-    paddingTop: 8,
+    marginBottom: spacing.lg,
+    paddingTop: spacing.md,
   },
   headerTitle: {
-    fontSize: 17,
-    fontWeight: "700",
+    fontSize: fontSize.h4,
+    fontWeight: fontWeight.bold,
     flex: 1,
   },
-  intro: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 20,
+  scrollContent: {
+    paddingBottom: spacing.md,
   },
+  intro: {
+    fontSize: fontSize.bodySmall,
+    lineHeight: 20,
+    marginBottom: spacing.xl,
+  },
+
+  // Grade scale card
+  gradeScaleCard: {
+    padding: spacing.xl,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    marginBottom: spacing.xl,
+  },
+  gradeScaleTitle: {
+    fontSize: fontSize.caption,
+    fontWeight: fontWeight.bold,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    marginBottom: spacing.lg,
+  },
+  gradeStripCenter: {
+    alignItems: "center",
+    marginBottom: spacing.xl,
+  },
+  gradeLegend: {
+    gap: 4,
+  },
+  gradeLegendRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
+  gradeLegendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  gradeLegendGrade: {
+    fontSize: fontSize.bodySmall,
+    fontWeight: fontWeight.black,
+    width: 28,
+  },
+  gradeLegendLabel: {
+    fontSize: fontSize.bodySmall,
+    fontWeight: fontWeight.medium,
+    flex: 1,
+  },
+  gradeLegendRange: {
+    fontSize: fontSize.micro,
+    fontWeight: fontWeight.medium,
+    fontVariant: ["tabular-nums"],
+  },
+
+  // Current score
   currentScore: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    padding: 14,
-    borderRadius: 12,
+    padding: spacing.xl,
+    borderRadius: radius.md,
     borderWidth: 1,
-    marginBottom: 20,
+    marginBottom: spacing.xl,
+    gap: spacing.md,
+  },
+  currentScoreInfo: {
+    flex: 1,
+    gap: 2,
   },
   currentScoreName: {
-    fontSize: 14,
-    fontWeight: "600",
-    flex: 1,
+    fontSize: fontSize.bodySmall,
+    fontWeight: fontWeight.semiBold,
   },
-  currentScoreValue: {
-    fontSize: 16,
-    fontWeight: "800",
+  currentScoreLabel: {
+    fontSize: fontSize.micro,
+    fontWeight: fontWeight.medium,
   },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: "700",
+
+  // Madhab note
+  madhabNote: {
+    fontSize: fontSize.caption,
+    lineHeight: 17,
+    fontStyle: "italic",
+    marginBottom: spacing.xl,
+    paddingLeft: 4,
+  },
+
+  // Themes
+  themesTitle: {
+    fontSize: fontSize.caption,
+    fontWeight: fontWeight.bold,
     letterSpacing: 0.5,
     textTransform: "uppercase",
-    marginBottom: 10,
+    marginBottom: spacing.lg,
   },
-  indicatorRow: {
+  themeCard: {
+    padding: spacing.lg,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    marginBottom: spacing.md,
+  },
+  themeCardHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    marginBottom: 8,
-    paddingLeft: 4,
+    gap: 8,
+    marginBottom: 6,
   },
-  indicatorText: {
-    fontSize: 14,
-    lineHeight: 19,
+  themeIconCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  themeCardTitle: {
+    fontSize: fontSize.bodySmall,
+    fontWeight: fontWeight.bold,
     flex: 1,
   },
-  footerNote: {
-    fontSize: 12,
-    lineHeight: 17,
-    marginTop: 20,
-    fontStyle: "italic",
+  themeCardDesc: {
+    fontSize: fontSize.caption,
+    lineHeight: 18,
+    paddingLeft: 36,
   },
-  madhabNote: {
-    fontSize: 12,
+
+  // Footer
+  footerNote: {
+    fontSize: fontSize.caption,
     lineHeight: 17,
+    marginTop: spacing["2xl"],
     fontStyle: "italic",
-    marginBottom: 16,
-    paddingLeft: 4,
   },
 });

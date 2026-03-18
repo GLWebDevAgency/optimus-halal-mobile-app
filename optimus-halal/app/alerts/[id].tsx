@@ -24,7 +24,7 @@ import {
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, ArrowSquareOutIcon, BellRingingIcon, CaretRightIcon, ClockIcon, GlobeIcon, ShareNetworkIcon, SparkleIcon } from "phosphor-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Shadow } from "react-native-shadow-2";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
@@ -38,6 +38,7 @@ import { PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { trpc } from "@/lib/trpc";
 import { brand, glass, gold } from "@/theme/colors";
+import { AppIcon, type IconName } from "@/lib/icons";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const COVER_HEIGHT = 340;
@@ -48,7 +49,7 @@ const SEVERITY_CONFIG: Record<
   Severity,
   {
     color: string;
-    icon: keyof typeof MaterialIcons.glyphMap;
+    icon: IconName;
     heroGradientDark: [string, string, string];
     heroGradientLight: [string, string, string];
   }
@@ -73,7 +74,7 @@ const SEVERITY_CONFIG: Record<
   },
 };
 
-const CATEGORY_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
+const CATEGORY_ICONS: Record<string, IconName> = {
   recall: "warning",
   fraud: "gavel",
   boycott: "block",
@@ -206,7 +207,7 @@ export default function AlertDetailScreen() {
             { backgroundColor: isDark ? "rgba(239,68,68,0.12)" : "rgba(239,68,68,0.08)" },
           ]}
         >
-          <MaterialIcons name="notification-important" size={40} color="#ef4444" />
+          <BellRingingIcon size={40} color="#ef4444" />
         </View>
         <Text style={[styles.errorText, { color: colors.textSecondary }]}>
           {t.alerts.notFound}
@@ -266,7 +267,7 @@ export default function AlertDetailScreen() {
               accessibilityRole="button"
               accessibilityLabel={t.common.back}
             >
-              <MaterialIcons name="arrow-back" size={22} color="#fff" />
+              <ArrowLeftIcon size={22} color="#fff" />
             </Pressable>
 
             <Pressable
@@ -275,7 +276,7 @@ export default function AlertDetailScreen() {
               accessibilityRole="button"
               accessibilityLabel={t.alerts.share}
             >
-              <MaterialIcons name="share" size={22} color="#fff" />
+              <ShareNetworkIcon size={22} color="#fff" />
             </Pressable>
           </View>
 
@@ -285,7 +286,7 @@ export default function AlertDetailScreen() {
             style={styles.badgesRow}
           >
             <View style={[styles.severityBadge, { backgroundColor: sevConfig.color }]}>
-              <MaterialIcons name={sevConfig.icon} size={12} color="#fff" />
+              <AppIcon name={sevConfig.icon} size={12} color="#fff" />
               <Text style={styles.badgeText}>
                 {t.alerts.severity[severity]}
               </Text>
@@ -299,7 +300,7 @@ export default function AlertDetailScreen() {
                 },
               ]}
             >
-              <MaterialIcons name={categoryIcon} size={12} color="#fff" />
+              <AppIcon name={categoryIcon} size={12} color="#fff" />
               <Text style={styles.categoryChipText}>
                 {categoryName}
               </Text>
@@ -323,7 +324,7 @@ export default function AlertDetailScreen() {
             style={styles.metaRow}
           >
             <View style={styles.metaItem}>
-              <MaterialIcons name="schedule" size={14} color={colors.textMuted} />
+              <ClockIcon size={14} color={colors.textMuted} />
               <Text style={[styles.metaText, { color: colors.textSecondary }]}>
                 {formattedDate}
               </Text>
@@ -332,7 +333,7 @@ export default function AlertDetailScreen() {
               <>
                 <View style={[styles.metaDot, { backgroundColor: colors.textMuted }]} />
                 <View style={styles.metaItem}>
-                  <MaterialIcons name="language" size={14} color={colors.textMuted} />
+                  <GlobeIcon size={14} color={colors.textMuted} />
                   <Text
                     style={[styles.metaText, { color: colors.textSecondary }]}
                     numberOfLines={1}
@@ -398,7 +399,7 @@ export default function AlertDetailScreen() {
                     end={{ x: 1, y: 1 }}
                     style={[StyleSheet.absoluteFill, { borderRadius: 18 }]}
                   />
-                  <MaterialIcons name="open-in-new" size={18} color="#fff" />
+                  <ArrowSquareOutIcon size={18} color="#fff" />
                   <Text style={styles.ctaText}>{t.alerts.viewSource}</Text>
                   <Text style={styles.ctaDomain}>{sourceHostname}</Text>
                 </PressableScale>
@@ -410,11 +411,8 @@ export default function AlertDetailScreen() {
           {relatedAlerts.length > 0 && (
             <Animated.View entering={FadeInDown.delay(500).duration(500)}>
               <View style={styles.relatedHeader}>
-                <MaterialIcons
-                  name="auto-awesome"
-                  size={16}
-                  color={isDark ? gold[500] : brand.primary}
-                />
+                <SparkleIcon size={16}
+                  color={isDark ? gold[500] : brand.primary} />
                 <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
                   {t.alerts.relatedAlerts}
                 </Text>
@@ -464,11 +462,8 @@ export default function AlertDetailScreen() {
                           })}
                         </Text>
                       </View>
-                      <MaterialIcons
-                        name="arrow-forward-ios"
-                        size={14}
-                        color={isDark ? "rgba(207,165,51,0.40)" : "rgba(0,0,0,0.20)"}
-                      />
+                      <CaretRightIcon size={14}
+                        color={isDark ? "rgba(207,165,51,0.40)" : "rgba(0,0,0,0.20)"} />
                     </PressableScale>
                   </Animated.View>
                 );

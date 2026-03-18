@@ -147,6 +147,74 @@ const EVENTS: NewCertifierEvent[] = [
     isActive: true,
   },
 
+  // ── ACMIF × El Saada — porc dans produits halal (2011) ────
+  {
+    id: "b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e",
+    certifierId: "acmif-mosquee-d-evry",
+    eventType: "controversy",
+    severity: "critical",
+    titleFr: "Porc dans produits El Saada certifiés ACMIF — 4 produits sur 5 contaminés",
+    descriptionFr:
+      "2011 : Des analyses révèlent la présence d'ADN de porc dans 4 produits El Saada sur 5 testés, " +
+      "tous certifiés halal par la Mosquée d'Evry-Courcouronnes (ACMIF). " +
+      "Malgré ce scandale, l'ACMIF continue de certifier El Saada sans mesure corrective documentée. " +
+      "Incident révélateur de l'absence de contrôle indépendant.",
+    sourceName: "Al-Kanz",
+    sourceUrl: "https://www.al-kanz.org/2011/06/07/mosquee-evry-elsaada-porc/",
+    occurredAt: "2011-06-07",
+    resolvedAt: null,
+    resolutionStatus: "ongoing",
+    resolutionNoteFr:
+      "Aucune mesure corrective documentée. L'ACMIF a continué à certifier El Saada.",
+    scoreImpact: -10,
+    isActive: true,
+  },
+
+  // ── ACMIF × Capital magazine — récidive porc (2016) ──────
+  {
+    id: "c9d0e1f2-a3b4-4c5d-6e7f-8a9b0c1d2e3f",
+    certifierId: "acmif-mosquee-d-evry",
+    eventType: "controversy",
+    severity: "critical",
+    titleFr: "Récidive : porc dans produits halal certifiés par la Mosquée d'Evry (Capital, 2016)",
+    descriptionFr:
+      "Juin 2016 : Le magazine Capital révèle la présence de porc dans des produits halal " +
+      "certifiés par la Mosquée d'Evry, notamment Reghalal et El Saada. " +
+      "Seconde occurrence en 5 ans. Preuve systémique que le modèle de contrôle basé sur la confiance " +
+      "et les employés de l'entreprise ne garantit pas la conformité halal.",
+    sourceName: "Al-Kanz / Capital",
+    sourceUrl: "https://www.al-kanz.org/2016/06/04/porc-halal-mosquee-evry/",
+    occurredAt: "2016-06-04",
+    resolvedAt: null,
+    resolutionStatus: "ongoing",
+    resolutionNoteFr:
+      "Aucune réforme structurelle du système de contrôle documentée.",
+    scoreImpact: -10,
+    isActive: true,
+  },
+
+  // ── ACMIF × Oriental Viandes quitte la certification (2023)
+  {
+    id: "d0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a",
+    certifierId: "acmif-mosquee-d-evry",
+    eventType: "separation",
+    severity: "major",
+    titleFr: "Oriental Viandes quitte l'ACMIF pour la Mosquée de Paris",
+    descriptionFr:
+      "Février 2023 : Oriental Viandes, client historique majeur de la Mosquée d'Evry-Courcouronnes, " +
+      "met fin à sa certification ACMIF pour se tourner vers la Mosquée de Paris. " +
+      "Signal de défiance du marché envers le système de contrôle de l'ACMIF.",
+    sourceName: "Al-Kanz",
+    sourceUrl: "https://www.al-kanz.org/2023/02/17/certification-halal-oriental-viandes/",
+    occurredAt: "2023-02-17",
+    resolvedAt: null,
+    resolutionStatus: "ongoing",
+    resolutionNoteFr:
+      "Perte de client confirmée. Aucune communication de l'ACMIF sur des améliorations.",
+    scoreImpact: -5,
+    isActive: true,
+  },
+
   // ── AFCAI × Doux (controversé) ────────────────────────────
   {
     id: "a7b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d",

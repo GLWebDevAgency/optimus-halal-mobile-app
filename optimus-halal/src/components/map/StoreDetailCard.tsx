@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, Pressable, ActivityIndicator, Linking, ScrollView, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowSquareOutIcon, ChatCircleIcon, GlobeIcon, MapTrifoldIcon, NavigationArrowIcon, PhoneIcon, SealCheckIcon, ShareNetworkIcon, SignInIcon, StarIcon, ThumbsUpIcon, XIcon } from "phosphor-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   FadeInUp,
@@ -18,6 +18,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { PressableScale } from "../ui/PressableScale";
 import { CertifierLogo } from "../scan/CertifierLogo";
 import { storeTypeColors } from "@/theme/colors";
+import { AppIcon } from "@/lib/icons";
 import {
   StoreFeatureProperties,
   ThemeColors,
@@ -193,7 +194,7 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                   transition={200}
                 />
               ) : (
-                <MaterialIcons name={typeIcon} size={20} color={typeColor} />
+                <AppIcon name={typeIcon} size={20} color={typeColor} />
               )}
             </View>
             <View className="flex-1">
@@ -222,11 +223,9 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                 accessibilityRole="button"
                 accessibilityLabel={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
               >
-                <MaterialIcons
-                  name={isFavorite ? "favorite" : "favorite-border"}
+                <AppIcon name={isFavorite ? "favorite" : "favorite-border"}
                   size={16}
-                  color={isFavorite ? "#ef4444" : colors.textSecondary}
-                />
+                  color={isFavorite ? "#ef4444" : colors.textSecondary} />
               </Pressable>
             )}
             <Pressable
@@ -236,7 +235,7 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
               accessibilityRole="button"
               accessibilityLabel="Partager"
             >
-              <MaterialIcons name="share" size={16} color={colors.textSecondary} />
+              <ShareNetworkIcon size={16} color={colors.textSecondary} />
             </Pressable>
             <Pressable
               onPress={onClose}
@@ -245,7 +244,7 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
               accessibilityRole="button"
               accessibilityLabel="Fermer"
             >
-              <MaterialIcons name="close" size={18} color={colors.textSecondary} />
+              <XIcon size={18} color={colors.textSecondary} />
             </Pressable>
           </View>
         </View>
@@ -290,7 +289,7 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                   backgroundColor: colors.buttonSecondary,
                 }}
               >
-                <MaterialIcons name={typeIcon} size={36} color={colors.textMuted} />
+                <AppIcon name={typeIcon} size={36} color={colors.textMuted} />
               </View>
             )}
           </Animated.View>
@@ -320,7 +319,7 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                   backgroundColor: colors.primary,
                 }}
               >
-                <MaterialIcons name="directions" size={22} color="#fff" />
+                <SignInIcon size={22} color="#fff" />
               </View>
             </PressableScale>
 
@@ -340,7 +339,7 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                     borderColor: colors.border,
                   }}
                 >
-                  <MaterialIcons name="phone" size={22} color={colors.primary} />
+                  <PhoneIcon size={22} color={colors.primary} />
                 </View>
               </PressableScale>
             ) : null}
@@ -399,7 +398,7 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
               className="px-2.5 py-1 rounded-lg flex-row items-center gap-1"
               style={{ backgroundColor: `${colors.primary}15` }}
             >
-              <MaterialIcons name="verified" size={12} color={colors.primary} />
+              <SealCheckIcon size={12} color={colors.primary} />
               <Text className="text-[11px] font-bold" style={{ color: colors.primary }}>
                 HALAL
               </Text>
@@ -408,7 +407,7 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
 
           {store.averageRating > 0 && (
             <View className="flex-row items-center gap-1">
-              <MaterialIcons name="star" size={14} color="#fbbf24" />
+              <StarIcon size={14} color="#fbbf24" />
               <Text className="text-xs font-bold" style={{ color: colors.textPrimary }}>
                 {store.averageRating.toFixed(1)}
               </Text>
@@ -418,7 +417,7 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
             </View>
           )}
           <View className="flex-row items-center gap-1">
-            <MaterialIcons name="near-me" size={12} color={colors.textMuted} />
+            <NavigationArrowIcon size={12} color={colors.textMuted} />
             <Text className="text-xs" style={{ color: colors.textMuted }}>
               {formatDistance(store.distance)}
             </Text>
@@ -445,7 +444,7 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                   elevation: 4,
                 }}
               >
-                <MaterialIcons name="directions" size={20} color="#fff" />
+                <SignInIcon size={20} color="#fff" />
                 <Text className="text-sm font-bold text-white">{t.map.getDirections}</Text>
               </View>
             </PressableScale>
@@ -464,7 +463,7 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                     borderColor: colors.border,
                   }}
                 >
-                  <MaterialIcons name="phone" size={20} color={colors.primary} />
+                  <PhoneIcon size={20} color={colors.primary} />
                   <Text className="text-sm font-bold" style={{ color: colors.textPrimary }}>
                     {t.map.callStore}
                   </Text>
@@ -669,11 +668,8 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                               >
                                 {star}
                               </Text>
-                              <MaterialIcons
-                                name="star"
-                                size={10}
-                                color="#fbbf24"
-                              />
+                              <StarIcon size={10}
+                                color="#fbbf24" />
                               <View
                                 className="flex-1 h-2 rounded-full overflow-hidden"
                                 style={{
@@ -737,23 +733,18 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                               {review.userName ?? t.map.anonymousUser}
                             </Text>
                             {review.isVerifiedPurchase && (
-                              <MaterialIcons
-                                name="verified"
-                                size={12}
-                                color={colors.primary}
-                              />
+                              <SealCheckIcon size={12}
+                                color={colors.primary} />
                             )}
                           </View>
                           <View className="flex-row items-center gap-0.5">
                             {Array.from({ length: 5 }).map((_, i) => (
-                              <MaterialIcons
-                                key={i}
+                              <AppIcon key={i}
                                 name={
                                   i < review.rating ? "star" : "star-border"
                                 }
                                 size={12}
-                                color="#fbbf24"
-                              />
+                                color="#fbbf24" />
                             ))}
                           </View>
                         </View>
@@ -768,11 +759,8 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                         )}
                         {review.helpfulCount > 0 && (
                           <View className="flex-row items-center gap-1 mt-1.5">
-                            <MaterialIcons
-                              name="thumb-up"
-                              size={10}
-                              color={colors.textMuted}
-                            />
+                            <ThumbsUpIcon size={10}
+                              color={colors.textMuted} />
                             <Text
                               className="text-[10px]"
                               style={{ color: colors.textMuted }}
@@ -793,11 +781,8 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                     className="mt-4"
                   >
                     <View className="flex-row items-center gap-2 mb-2">
-                      <MaterialIcons
-                        name="rate-review"
-                        size={14}
-                        color={colors.textMuted}
-                      />
+                      <ChatCircleIcon size={14}
+                        color={colors.textMuted} />
                       <Text
                         className="text-xs font-bold uppercase tracking-wide"
                         style={{ color: colors.textMuted }}
@@ -806,11 +791,8 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                       </Text>
                       {detail.googleRating != null && (
                         <View className="flex-row items-center gap-1 ml-auto">
-                          <MaterialIcons
-                            name="star"
-                            size={12}
-                            color="#fbbf24"
-                          />
+                          <StarIcon size={12}
+                            color="#fbbf24" />
                           <Text
                             className="text-xs font-bold"
                             style={{ color: colors.textPrimary }}
@@ -888,14 +870,12 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                           </View>
                           <View className="flex-row items-center gap-0.5">
                             {Array.from({ length: 5 }).map((_, i) => (
-                              <MaterialIcons
-                                key={i}
+                              <AppIcon key={i}
                                 name={
                                   i < review.rating ? "star" : "star-border"
                                 }
                                 size={12}
-                                color="#fbbf24"
-                              />
+                                color="#fbbf24" />
                             ))}
                           </View>
                         </View>
@@ -932,11 +912,8 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                             : "rgba(0,0,0,0.03)",
                         }}
                       >
-                        <MaterialIcons
-                          name="language"
-                          size={16}
-                          color={colors.primary}
-                        />
+                        <GlobeIcon size={16}
+                          color={colors.primary} />
                         <Text
                           className="text-sm font-medium flex-1"
                           style={{ color: colors.primary }}
@@ -944,11 +921,8 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                         >
                           {t.map.website}
                         </Text>
-                        <MaterialIcons
-                          name="open-in-new"
-                          size={12}
-                          color={colors.textMuted}
-                        />
+                        <ArrowSquareOutIcon size={12}
+                          color={colors.textMuted} />
                       </View>
                     </PressableScale>
                   )}
@@ -967,11 +941,8 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                             : "rgba(0,0,0,0.03)",
                         }}
                       >
-                        <MaterialIcons
-                          name="map"
-                          size={16}
-                          color={colors.primary}
-                        />
+                        <MapTrifoldIcon size={16}
+                          color={colors.primary} />
                         <Text
                           className="text-sm font-medium flex-1"
                           style={{ color: colors.primary }}
@@ -979,11 +950,8 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                         >
                           {t.map.openOnGoogleMaps}
                         </Text>
-                        <MaterialIcons
-                          name="open-in-new"
-                          size={12}
-                          color={colors.textMuted}
-                        />
+                        <ArrowSquareOutIcon size={12}
+                          color={colors.textMuted} />
                       </View>
                     </PressableScale>
                   )}

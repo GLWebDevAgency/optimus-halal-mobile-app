@@ -188,6 +188,7 @@ export interface ScanBarcodeInput {
   barcode: string;
   latitude?: number;
   longitude?: number;
+  nutritionProfile?: "standard" | "pregnant" | "child" | "athlete" | "elderly";
 }
 
 export interface Product {
@@ -249,6 +250,79 @@ export interface ScanResult {
   warnings: string[];
   alternatives: ProductAlternative[];
   certifierInfo: CertifierInfo | null;
+}
+
+// ============================================
+// V3 — DIETARY ANALYSIS TYPES
+// ============================================
+
+export interface DietaryAnalysis {
+  containsGluten: boolean | null;
+  containsLactose: boolean | null;
+  containsPalmOil: boolean | null;
+  isVegetarian: boolean | null;
+  isVegan: boolean | null;
+}
+
+// ============================================
+// V3 — NUTRIENT BREAKDOWN TYPES
+// ============================================
+
+export type NutrientLevel = "very_low" | "low" | "moderate" | "high" | "very_high";
+
+export interface NutrientBreakdown {
+  nutrient: string;
+  labelKey: string;
+  value: number;
+  unit: string;
+  level: NutrientLevel;
+  dailyValuePercent: number;
+  isBeverage: boolean;
+  isNegative: boolean;
+}
+
+// ============================================
+// V3 — SPECIAL PRODUCT TYPES
+// ============================================
+
+export type SpecialProductType = "honey" | "salt" | "chocolate" | "oil" | "coffee" | "tea";
+
+export interface SpecialProductCriterion {
+  labelKey: string;
+  pass: boolean;
+  descriptionKey: string;
+  icon: string;
+}
+
+export interface SpecialProductInfo {
+  type: SpecialProductType;
+  typeLabelKey: string;
+  criteria: SpecialProductCriterion[];
+  bypassNutriScore: boolean;
+  qualityRatio: number;
+}
+
+// ============================================
+// V3 — SCORE EXCLUSION TYPES
+// ============================================
+
+export type ScoreExclusionReason =
+  | "missing_nutrition_data"
+  | "not_food"
+  | "too_generic"
+  | "alcohol"
+  | "baby_food"
+  | "water";
+
+// ============================================
+// V3 — ADDITIVE HEALTH EFFECT TYPES
+// ============================================
+
+export type HealthEffectType = "endocrine_disruptor" | "allergen" | "irritant" | "carcinogenic";
+
+export interface AdditiveHealthEffect {
+  type: HealthEffectType;
+  confirmed: boolean;
 }
 
 export interface ScanHistoryItem {

@@ -25,7 +25,7 @@ import { PressableScale } from "@/components/ui/PressableScale";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { AppleLogoIcon, ArrowLeftIcon, ArrowRightIcon, CreditCardIcon, HandHeartIcon, LockIcon, MapPinIcon, QuestionIcon, SealCheckIcon } from "phosphor-react-native";
 import { useHaptics, useTheme } from "@/hooks";
 import Animated, {
   FadeIn,
@@ -35,6 +35,7 @@ import Animated, {
 import { LinearGradient } from "expo-linear-gradient";
 
 import { useLocalCartStore } from "@/store";
+import { AppIcon } from "@/lib/icons";
 
 export default function CheckoutScreen() {
   const insets = useSafeAreaInsets();
@@ -79,11 +80,8 @@ export default function CheckoutScreen() {
           hitSlop={8}
         >
           <View className="p-2 -ml-2 rounded-full">
-            <MaterialIcons
-              name="arrow-back"
-              size={24}
-              color={isDark ? "#ffffff" : "#0d1b12"}
-            />
+            <ArrowLeftIcon size={24}
+              color={isDark ? "#ffffff" : "#0d1b12"} />
           </View>
         </Pressable>
 
@@ -126,7 +124,7 @@ export default function CheckoutScreen() {
             <View className="flex-row items-center gap-4 bg-white dark:bg-[#1c3024] p-4 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
               <View className="flex-row items-start gap-4 flex-1">
                 <View className="w-12 h-12 items-center justify-center rounded-lg bg-[#e7f3eb] dark:bg-white/10">
-                  <MaterialIcons name="location-on" size={24} color={isDark ? colors.primary : "#0d1b12"} />
+                  <MapPinIcon size={24} color={isDark ? colors.primary : "#0d1b12"} />
                 </View>
                 <View className="flex-1">
                   <Text className="text-base font-medium text-slate-900 dark:text-white">
@@ -166,11 +164,9 @@ export default function CheckoutScreen() {
                     : "border-gray-100 dark:border-gray-800"
                 } shadow-sm`}
               >
-                <MaterialIcons
-                  name={selectedShipping === "standard" ? "radio-button-checked" : "radio-button-unchecked"}
+                <AppIcon name={selectedShipping === "standard" ? "radio-button-checked" : "radio-button-unchecked"}
                   size={24}
-                  color={selectedShipping === "standard" ? colors.primary : "#9ca3af"}
-                />
+                  color={selectedShipping === "standard" ? colors.primary : "#9ca3af"} />
                 <View className="flex-1">
                   <View className="flex-row justify-between items-center">
                     <Text className="text-base font-medium text-slate-900 dark:text-white">
@@ -196,11 +192,9 @@ export default function CheckoutScreen() {
                     : "border-gray-100 dark:border-gray-800"
                 } shadow-sm`}
               >
-                <MaterialIcons
-                  name={selectedShipping === "express" ? "radio-button-checked" : "radio-button-unchecked"}
+                <AppIcon name={selectedShipping === "express" ? "radio-button-checked" : "radio-button-unchecked"}
                   size={24}
-                  color={selectedShipping === "express" ? colors.primary : "#9ca3af"}
-                />
+                  color={selectedShipping === "express" ? colors.primary : "#9ca3af"} />
                 <View className="flex-1">
                   <View className="flex-row justify-between items-center">
                     <Text className="text-base font-medium text-slate-900 dark:text-white">
@@ -282,7 +276,7 @@ export default function CheckoutScreen() {
                 <View className="gap-4">
                   <View className="relative">
                     <View className="absolute left-3 top-1/2 -translate-y-1/2 z-10">
-                      <MaterialIcons name="credit-card" size={20} color="#9ca3af" />
+                      <CreditCardIcon size={20} color="#9ca3af" />
                     </View>
                     <TextInput
                       className="w-full bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-gray-700 rounded-lg py-2.5 pl-10 pr-10 text-sm text-slate-900 dark:text-white"
@@ -292,7 +286,7 @@ export default function CheckoutScreen() {
                       onChangeText={setCardNumber}
                     />
                     <View className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <MaterialIcons name="lock" size={18} color={colors.primary} />
+                      <LockIcon size={18} color={colors.primary} />
                     </View>
                   </View>
 
@@ -314,7 +308,7 @@ export default function CheckoutScreen() {
                         secureTextEntry
                       />
                       <View className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <MaterialIcons name="help" size={18} color="#9ca3af" />
+                        <QuestionIcon size={18} color="#9ca3af" />
                       </View>
                     </View>
                   </View>
@@ -324,7 +318,7 @@ export default function CheckoutScreen() {
               {paymentTab === "apple" && (
                 <PressableScale>
                   <View className="bg-black py-3.5 rounded-lg flex-row items-center justify-center gap-2">
-                    <MaterialIcons name="apple" size={24} color="#ffffff" />
+                    <AppleLogoIcon size={24} color="#ffffff" />
                     <Text className="text-white font-semibold">
                       Payer avec Apple Pay
                     </Text>
@@ -357,7 +351,7 @@ export default function CheckoutScreen() {
                     transition={200}
                   />
                   <View className="absolute top-1 left-1 bg-white/90 dark:bg-black/80 rounded-full p-0.5">
-                    <MaterialIcons name="verified" size={12} color="#16a34a" />
+                    <SealCheckIcon size={12} color="#16a34a" />
                   </View>
                 </View>
                 <View className="flex-1 h-20 justify-between py-0.5">
@@ -398,7 +392,7 @@ export default function CheckoutScreen() {
             className="rounded-xl p-4 flex-row items-center gap-3 border border-primary/20"
           >
             <View className="bg-white dark:bg-white/10 p-2 rounded-full">
-              <MaterialIcons name="volunteer-activism" size={24} color={colors.primary} />
+              <HandHeartIcon size={24} color={colors.primary} />
             </View>
             <View className="flex-1">
               <Text className="text-sm font-bold text-slate-900 dark:text-white">
@@ -474,7 +468,7 @@ export default function CheckoutScreen() {
             <Text className="font-bold text-base text-[#0d1b12]">
               Passer la commande
             </Text>
-            <MaterialIcons name="arrow-forward" size={18} color="#0d1b12" />
+            <ArrowRightIcon size={18} color="#0d1b12" />
           </View>
         </PressableScale>
       </Animated.View>

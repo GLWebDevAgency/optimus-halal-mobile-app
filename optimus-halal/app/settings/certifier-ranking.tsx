@@ -1,70 +1,151 @@
 /**
- * Certifier Trust Ranking Screen
- * Wired to tRPC certifier.ranking (Sprint 9)
+ * Certifier Trust Ranking Screen — Refonte v2
+ *
+ * NaqiyGradeBadge strip, CertifierLogo, practice icons compactes,
+ * filtrage par grade, legende des pratiques.
  */
 
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback, useState } from "react";
 import {
   View,
   Text,
+  StyleSheet,
   Pressable,
   ActivityIndicator,
   Linking,
+  ScrollView,
 } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
+import { ArrowLeftIcon, CloudSlashIcon, CrownIcon } from "phosphor-react-native";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { trpc } from "@/lib/trpc";
+import { AppIcon, type IconName } from "@/lib/icons";
+import { CertifierLogo } from "@/components/scan/CertifierLogo";
+import {
+  NaqiyGradeBadge,
+  getTrustGradeFromScore,
+  TRUST_GRADES,
+  type TrustGrade,
+} from "@/components/scan/NaqiyGradeBadge";
+import { gold } from "@/theme/colors";
+import { spacing, radius } from "@/theme/spacing";
+import { fontSize, fontWeight } from "@/theme/typography";
 
-const GOLD = "#d4af37";
+const GOLD = gold[500];
 
 // ── Types ─────────────────────────────────────────
 
-interface CertifierItem {
+interface CertifierRankingItem {
   id: string;
   name: string;
   website: string | null;
-  creationYear: number | null;
   halalAssessment: boolean;
-  trustScore: number | null;
-  acceptsStunning: boolean;
-  controllersAreEmployees: boolean;
-  controllersPresentEachProduction: boolean;
+  trustScore: number;
+  trustGrade: TrustGrade;
+  practices: {
+    acceptsStunning: boolean | null;
+    controllersAreEmployees: boolean | null;
+    controllersPresentEachProduction: boolean | null;
+    hasSalariedSlaughterers: boolean | null;
+  };
 }
 
-// ── Helpers ───────────────────────────────────────
+// ── Practice Icon ─────────────────────────────────
 
-function getTrustColor(score: number | null, isDark: boolean) {
-  if (score === null) return isDark ? "#9ca3af" : "#6b7280";
-  if (score >= 80) return isDark ? "#4ade80" : "#16a34a";
-  if (score >= 60) return isDark ? "#fbbf24" : "#ca8a04";
-  if (score >= 40) return isDark ? "#fb923c" : "#ea580c";
-  return isDark ? "#f87171" : "#dc2626";
+interface PracticeDef {
+  icon: IconName;
+  labelKey: string;
+  getValue: (item: CertifierRankingItem) => boolean;
 }
 
-function getTrustBg(score: number | null, isDark: boolean) {
-  if (score === null) return isDark ? "rgba(156,163,175,0.15)" : "rgba(156,163,175,0.1)";
-  if (score >= 80) return isDark ? "rgba(34,197,94,0.15)" : "rgba(34,197,94,0.1)";
-  if (score >= 60) return isDark ? "rgba(234,179,8,0.15)" : "rgba(234,179,8,0.1)";
-  if (score >= 40) return isDark ? "rgba(249,115,22,0.15)" : "rgba(249,115,22,0.1)";
-  return isDark ? "rgba(239,68,68,0.15)" : "rgba(239,68,68,0.1)";
+const PRACTICE_DEFS: PracticeDef[] = [
+  { icon: "restaurant", labelKey: "halalValidated", getValue: (item) => item.halalAssessment },
+  { icon: "flash-off", labelKey: "noStunning", getValue: (item) => item.practices.acceptsStunning === false },
+  { icon: "badge", labelKey: "employees", getValue: (item) => item.practices.controllersAreEmployees === true },
+  { icon: "visibility", labelKey: "permanentPresence", getValue: (item) => item.practices.controllersPresentEachProduction === true },
+];
+
+function PracticeIcon({
+  passed,
+  icon,
+  isDark,
+}: {
+  passed: boolean;
+  icon: IconName;
+  isDark: boolean;
+}) {
+  const bg = passed
+    ? isDark ? "rgba(34,197,94,0.12)" : "rgba(34,197,94,0.08)"
+    : isDark ? "rgba(239,68,68,0.12)" : "rgba(239,68,68,0.08)";
+  const dotColor = passed ? "#22c55e" : "#ef4444";
+  const iconColor = passed
+    ? isDark ? "#4ade80" : "#16a34a"
+    : isDark ? "#f87171" : "#dc2626";
+
+  return (
+    <View style={[styles.practiceIcon, { backgroundColor: bg }]}>
+      <AppIcon name={icon} size={14} color={iconColor} />
+      <View style={[styles.practiceDot, { backgroundColor: dotColor }]} />
+    </View>
+  );
 }
 
-function getTrustLabel(score: number | null, t: ReturnType<typeof useTranslation>["t"]): string {
-  if (score === null) return t.certifierRanking.trustLabels.na;
-  if (score >= 80) return t.certifierRanking.trustLabels.reliable;
-  if (score >= 60) return t.certifierRanking.trustLabels.correct;
-  if (score >= 40) return t.certifierRanking.trustLabels.average;
-  return t.certifierRanking.trustLabels.weak;
+// ── Grade Scale Reference ─────────────────────────
+
+function GradeScaleReference({ isDark }: { isDark: boolean }) {
+  const ranges = ["90-100", "70-89", "51-69", "35-50", "0-34"];
+  return (
+    <View style={[styles.gradeScale, { backgroundColor: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)" }]}>
+      {TRUST_GRADES.map((g, i) => (
+        <View key={g.grade} style={styles.scaleItem}>
+          <View style={[styles.scalePill, { backgroundColor: g.color }]}>
+            <Text style={styles.scalePillText}>{g.arabic}</Text>
+          </View>
+          <Text style={styles.scaleRange}>{ranges[i]}</Text>
+          <Text style={styles.scaleLabel}>{g.label}</Text>
+        </View>
+      ))}
+    </View>
+  );
 }
 
-// ── Certifier Card Component ──────────────────────
+// ── Filter Pill ───────────────────────────────────
+
+function FilterPill({
+  label,
+  active,
+  onPress,
+  isDark,
+}: {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+  isDark: boolean;
+}) {
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityState={{ selected: active }}>
+      <View
+        style={[
+          styles.filterPill,
+          active && styles.filterPillActive,
+          !active && { borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" },
+        ]}
+      >
+        <Text style={[styles.filterPillText, active && styles.filterPillTextActive]}>
+          {label}
+        </Text>
+      </View>
+    </Pressable>
+  );
+}
+
+// ── Certifier Card ────────────────────────────────
 
 const CertifierCard = React.memo(function CertifierCard({
   item,
@@ -74,133 +155,71 @@ const CertifierCard = React.memo(function CertifierCard({
   colors,
   t,
 }: {
-  item: CertifierItem;
+  item: CertifierRankingItem;
   index: number;
   rank: number;
   isDark: boolean;
   colors: ReturnType<typeof useTheme>["colors"];
   t: ReturnType<typeof useTranslation>["t"];
 }) {
-  const trustColor = getTrustColor(item.trustScore, isDark);
-  const trustBg = getTrustBg(item.trustScore, isDark);
-  const trustLabel = getTrustLabel(item.trustScore, t);
+  const grade = item.trustGrade ?? getTrustGradeFromScore(item.trustScore);
 
   return (
-    <Animated.View entering={FadeInDown.delay(index * 60).duration(300)}>
+    <Animated.View entering={FadeInDown.delay(index * 50).duration(300)}>
       <View
-        style={{
-          marginHorizontal: 16,
-          marginBottom: 12,
-          padding: 16,
-          borderRadius: 20,
-          backgroundColor: isDark ? "rgba(255,255,255,0.03)" : colors.card,
-          borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
-          borderWidth: 1,
-        }}
+        style={[
+          styles.certCard,
+          {
+            backgroundColor: isDark ? "rgba(255,255,255,0.04)" : colors.card,
+            borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
+          },
+        ]}
       >
-        {/* Header: Rank + Name + Score */}
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
-          {/* Rank badge */}
+        {/* Row 1: Rank + Logo + Name */}
+        <View style={styles.certTopRow}>
           <View
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 16,
-              backgroundColor: rank <= 3
-                ? isDark ? "rgba(212,175,55,0.15)" : "rgba(212,175,55,0.1)"
-                : (isDark ? "rgba(255,255,255,0.05)" : "#f3f4f6"),
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 12,
-            }}
+            style={[
+              styles.rankBadge,
+              rank <= 3
+                ? { backgroundColor: isDark ? "rgba(212,175,55,0.15)" : "rgba(212,175,55,0.1)" }
+                : { backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#f3f4f6" },
+            ]}
           >
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: "700",
-                color: rank <= 3 ? GOLD : colors.textMuted,
-              }}
-            >
+            <Text style={[styles.rankText, { color: rank <= 3 ? GOLD : colors.textMuted }]}>
               {rank}
             </Text>
           </View>
-
-          {/* Name + year */}
-          <View style={{ flex: 1 }}>
-            <Text
-              style={{ fontSize: 16, fontWeight: "700", color: colors.textPrimary }}
-              numberOfLines={1}
-            >
-              {item.name}
-            </Text>
-            {item.creationYear && (
-              <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 2 }}>
-                {t.certifierRanking.since.replace("{{year}}", String(item.creationYear))}
-              </Text>
-            )}
-          </View>
-
-          {/* Trust Score */}
-          <View
-            style={{
-              backgroundColor: trustBg,
-              borderRadius: 10,
-              paddingHorizontal: 10,
-              paddingVertical: 6,
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ fontSize: 18, fontWeight: "800", color: trustColor }}>
-              {item.trustScore ?? "—"}
-            </Text>
-            <Text style={{ fontSize: 9, fontWeight: "600", color: trustColor, marginTop: 1 }}>
-              {trustLabel}
-            </Text>
-          </View>
+          <CertifierLogo certifierId={item.id} size={34} fallbackColor={grade.color} />
+          <Text style={[styles.certName, { color: colors.textPrimary }]} numberOfLines={1}>
+            {item.name}
+          </Text>
         </View>
 
-        {/* Criteria badges */}
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-          <CriteriaBadge
-            passed={item.halalAssessment}
-            label={t.certifierRanking.criteria.halalValidated}
-            icon="verified"
-            isDark={isDark}
-            colors={colors}
-          />
-          <CriteriaBadge
-            passed={!item.acceptsStunning}
-            label={item.acceptsStunning ? t.certifierRanking.criteria.stunning : t.certifierRanking.criteria.noStunning}
-            icon={item.acceptsStunning ? "flash-on" : "flash-off"}
-            isDark={isDark}
-            colors={colors}
-          />
-          <CriteriaBadge
-            passed={item.controllersAreEmployees}
-            label={t.certifierRanking.criteria.employees}
-            icon="badge"
-            isDark={isDark}
-            colors={colors}
-          />
-          <CriteriaBadge
-            passed={item.controllersPresentEachProduction}
-            label={t.certifierRanking.criteria.permanentPresence}
-            icon="visibility"
-            isDark={isDark}
-            colors={colors}
-          />
+        {/* Row 2: NaqiyGradeBadge strip + score */}
+        <View style={styles.certGradeRow}>
+          <NaqiyGradeBadge variant="strip" grade={grade} showLabel={false} />
+          <Text style={[styles.certScore, { color: grade.color }]}>
+            {item.trustScore}/100
+          </Text>
+        </View>
+
+        {/* Row 3: Practice icons */}
+        <View style={styles.practicesRow}>
+          {PRACTICE_DEFS.map((def) => (
+            <PracticeIcon key={def.icon} passed={def.getValue(item)} icon={def.icon} isDark={isDark} />
+          ))}
         </View>
 
         {/* Website link */}
         {item.website && (
           <PressableScale
-            onPress={() => Linking.openURL(item.website!)}
+            onPress={() => Linking.openURL(item.website!.startsWith("http") ? item.website! : `https://${item.website}`)}
             accessibilityRole="link"
-            accessibilityLabel={`Visiter le site de ${item.name}`}
+            accessibilityLabel={`${t.certifierRanking.officialWebsite} ${item.name}`}
           >
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 12 }}>
-              <MaterialIcons name="open-in-new" size={12} color={GOLD} />
-              <Text style={{ fontSize: 11, color: GOLD, fontWeight: "600" }}>
+            <View style={styles.websiteRow}>
+              <AppIcon name="open-in-new" size={12} color={GOLD} />
+              <Text style={styles.websiteText}>
                 {t.certifierRanking.officialWebsite}
               </Text>
             </View>
@@ -211,70 +230,85 @@ const CertifierCard = React.memo(function CertifierCard({
   );
 });
 
-// ── Criteria Badge ────────────────────────────────
+// ── Legend Card ────────────────────────────────────
 
-function CriteriaBadge({
-  passed,
-  label,
-  icon,
+function PracticeLegend({
   isDark,
   colors,
+  t,
 }: {
-  passed: boolean;
-  label: string;
-  icon: keyof typeof MaterialIcons.glyphMap;
   isDark: boolean;
   colors: ReturnType<typeof useTheme>["colors"];
+  t: ReturnType<typeof useTranslation>["t"];
 }) {
-  const bg = passed
-    ? isDark ? "rgba(34,197,94,0.12)" : "rgba(34,197,94,0.08)"
-    : isDark ? "rgba(239,68,68,0.12)" : "rgba(239,68,68,0.08)";
-  const textColor = passed
-    ? isDark ? "#4ade80" : "#16a34a"
-    : isDark ? "#f87171" : "#dc2626";
+  const legends: { icon: IconName; label: string }[] = [
+    { icon: "restaurant", label: t.certifierRanking.criteria.halalValidated },
+    { icon: "flash-off", label: t.certifierRanking.criteria.noStunning },
+    { icon: "badge", label: t.certifierRanking.criteria.employees },
+    { icon: "visibility", label: t.certifierRanking.criteria.permanentPresence },
+  ];
 
   return (
     <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 4,
-        backgroundColor: bg,
-        borderRadius: 6,
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-      }}
+      style={[
+        styles.legendCard,
+        {
+          backgroundColor: isDark ? "rgba(255,255,255,0.04)" : colors.card,
+          borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
+        },
+      ]}
     >
-      <MaterialIcons
-        name={passed ? "check-circle" : "cancel"}
-        size={12}
-        color={textColor}
-      />
-      <Text style={{ fontSize: 10, fontWeight: "600", color: textColor }}>
-        {label}
+      <Text style={styles.legendTitle}>
+        {t.certifierRanking.legendTitle ?? "PRATIQUES"}
       </Text>
+      <View style={styles.legendGrid}>
+        {legends.map((l) => (
+          <View key={l.icon} style={styles.legendItem}>
+            <View style={[styles.legendIconBox, { backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)" }]}>
+              <AppIcon name={l.icon} size={12} color={colors.textMuted} />
+            </View>
+            <Text style={[styles.legendLabel, { color: colors.textSecondary }]}>{l.label}</Text>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
 
-const certifierKeyExtractor = (item: CertifierItem) => item.id;
-
 // ── Main Screen ───────────────────────────────────
+
+const certifierKeyExtractor = (item: CertifierRankingItem) => item.id;
 
 export default function CertifierRankingScreen() {
   const { isDark, colors } = useTheme();
   const { t } = useTranslation();
+  const [activeFilter, setActiveFilter] = useState<number | null>(null);
 
   const { data, isLoading, isError, refetch } = trpc.certifier.ranking.useQuery(
     undefined,
-    { staleTime: 1000 * 60 * 30 }
+    { staleTime: 1000 * 60 * 30 },
   );
 
-  const items = useMemo(() => (data ?? []) as CertifierItem[], [data]);
-  const trustedCount = useMemo(() => items.filter((c) => c.halalAssessment).length, [items]);
+  const items = useMemo(
+    () => (data ?? []) as CertifierRankingItem[],
+    [data],
+  );
+
+  const filteredItems = useMemo(() => {
+    if (activeFilter === null) return items;
+    return items.filter((c) => {
+      const grade = c.trustGrade ?? getTrustGradeFromScore(c.trustScore);
+      return grade.grade === activeFilter;
+    });
+  }, [items, activeFilter]);
+
+  const trustedCount = useMemo(
+    () => items.filter((c) => c.halalAssessment).length,
+    [items],
+  );
 
   const renderItem = useCallback(
-    ({ item, index }: { item: CertifierItem; index: number }) => (
+    ({ item, index }: { item: CertifierRankingItem; index: number }) => (
       <CertifierCard
         item={item}
         index={index}
@@ -284,7 +318,48 @@ export default function CertifierRankingScreen() {
         t={t}
       />
     ),
-    [isDark, colors, t]
+    [isDark, colors, t],
+  );
+
+  const filters = useMemo(() => {
+    const all = { grade: null, label: t.common?.all ?? "Tous" };
+    const gradeFilters = TRUST_GRADES.map((g) => ({
+      grade: g.grade,
+      label: `N${g.arabic} ${g.label}`,
+    }));
+    return [all, ...gradeFilters];
+  }, [t]);
+
+  const ListHeader = useMemo(
+    () => (
+      <>
+        {/* Grade Scale */}
+        <GradeScaleReference isDark={isDark} />
+
+        {/* Filter Pills */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterRow}
+        >
+          {filters.map((f) => (
+            <FilterPill
+              key={f.grade ?? "all"}
+              label={f.label}
+              active={activeFilter === f.grade}
+              onPress={() => setActiveFilter(f.grade)}
+              isDark={isDark}
+            />
+          ))}
+        </ScrollView>
+      </>
+    ),
+    [isDark, filters, activeFilter],
+  );
+
+  const ListFooter = useMemo(
+    () => <PracticeLegend isDark={isDark} colors={colors} t={t} />,
+    [isDark, colors, t],
   );
 
   return (
@@ -292,99 +367,335 @@ export default function CertifierRankingScreen() {
       <PremiumBackground />
       <SafeAreaView style={{ flex: 1 }}>
         {/* Header */}
-      <Animated.View
-        entering={FadeIn.duration(400)}
-        style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.12)" }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Pressable
-            onPress={() => router.back()}
-            style={{
-              marginEnd: 12,
-              height: 44,
-              width: 44,
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: 22,
-              backgroundColor: isDark ? "rgba(255,255,255,0.03)" : colors.card,
-              borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
-              borderWidth: 1,
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={t.common.back}
-          >
-            <MaterialIcons name="arrow-back" size={20} color={colors.textPrimary} />
-          </Pressable>
-          <View>
-            <Text
-              style={{ fontSize: 24, fontWeight: "700", letterSpacing: -0.5, color: colors.textPrimary }}
-              accessibilityRole="header"
+        <Animated.View
+          entering={FadeIn.duration(400)}
+          style={[
+            styles.header,
+            { borderBottomColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.12)" },
+          ]}
+        >
+          <View style={styles.headerRow}>
+            <Pressable
+              onPress={() => router.back()}
+              style={[
+                styles.backBtn,
+                {
+                  backgroundColor: isDark ? "rgba(255,255,255,0.03)" : colors.card,
+                  borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
+                },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={t.common.back}
             >
-              {t.certifierRanking.title}
-            </Text>
-            <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
-              {(trustedCount > 1 ? t.certifierRanking.validatedCountPlural : t.certifierRanking.validatedCount).replace("{{validated}}", String(trustedCount)).replace("{{total}}", String(items.length))}
-            </Text>
-          </View>
-        </View>
-      </Animated.View>
-
-      {/* Content */}
-      {isLoading ? (
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      ) : isError ? (
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
-          <MaterialIcons name="cloud-off" size={64} color={colors.textMuted} />
-          <Text style={{ color: colors.textSecondary, fontSize: 16, marginTop: 16 }}>
-            {t.certifierRanking.loadError}
-          </Text>
-          <PressableScale
-            onPress={() => refetch()}
-            accessibilityRole="button"
-          >
-            <View style={{
-              marginTop: 20,
-              backgroundColor: colors.primary,
-              paddingHorizontal: 24,
-              paddingVertical: 12,
-              borderRadius: 12,
-            }}>
-              <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
-                {t.common.retry}
+              <ArrowLeftIcon size={20} color={colors.textPrimary} />
+            </Pressable>
+            <View>
+              <Text
+                style={[styles.headerTitle, { color: colors.textPrimary }]}
+                accessibilityRole="header"
+              >
+                {t.certifierRanking.title}
+              </Text>
+              <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
+                {(trustedCount > 1
+                  ? t.certifierRanking.validatedCountPlural
+                  : t.certifierRanking.validatedCount
+                )
+                  .replace("{{validated}}", String(trustedCount))
+                  .replace("{{total}}", String(items.length))}
               </Text>
             </View>
-          </PressableScale>
-        </View>
-      ) : items.length === 0 ? (
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 80 }}>
-          <MaterialIcons name="workspace-premium" size={64} color={colors.textMuted} />
-          <Text style={{ color: colors.textSecondary, fontSize: 18, marginTop: 16 }}>
-            {t.certifierRanking.noCertifiers}
-          </Text>
-          <Text
-            style={{
-              color: colors.textMuted,
-              fontSize: 14,
-              marginTop: 8,
-              textAlign: "center",
-              paddingHorizontal: 32,
-            }}
-          >
-            {t.certifierRanking.noCertifiersDesc}
-          </Text>
-        </View>
-      ) : (
-        <FlashList
-          data={items}
-          keyExtractor={certifierKeyExtractor}
-          renderItem={renderItem}
-          contentContainerStyle={{ paddingTop: 4, paddingBottom: 100 }}
-          showsVerticalScrollIndicator={false}
-        />
+          </View>
+        </Animated.View>
+
+        {/* Content */}
+        {isLoading ? (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        ) : isError ? (
+          <View style={styles.centerContainer}>
+            <CloudSlashIcon size={64} color={colors.textMuted} />
+            <Text style={[styles.errorText, { color: colors.textSecondary }]}>
+              {t.certifierRanking.loadError}
+            </Text>
+            <PressableScale onPress={() => refetch()} accessibilityRole="button">
+              <View style={[styles.retryBtn, { backgroundColor: colors.primary }]}>
+                <Text style={[styles.retryText, { color: isDark ? "#102217" : "#0d1b13" }]}>
+                  {t.common.retry}
+                </Text>
+              </View>
+            </PressableScale>
+          </View>
+        ) : items.length === 0 ? (
+          <View style={styles.centerContainer}>
+            <CrownIcon size={64} color={colors.textMuted} />
+            <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
+              {t.certifierRanking.noCertifiers}
+            </Text>
+            <Text style={[styles.emptyDesc, { color: colors.textMuted }]}>
+              {t.certifierRanking.noCertifiersDesc}
+            </Text>
+          </View>
+        ) : (
+          <FlashList
+            data={filteredItems}
+            keyExtractor={certifierKeyExtractor}
+            renderItem={renderItem}
+            ListHeaderComponent={ListHeader}
+            ListFooterComponent={ListFooter}
+            contentContainerStyle={{ paddingBottom: 100 }}
+            showsVerticalScrollIndicator={false}
+          />
         )}
       </SafeAreaView>
     </View>
   );
 }
+
+// ── Styles ────────────────────────────────────────
+
+const styles = StyleSheet.create({
+  // Header
+  header: {
+    paddingHorizontal: spacing["2xl"],
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.lg,
+    borderBottomWidth: 1,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  backBtn: {
+    marginEnd: spacing.lg,
+    height: 44,
+    width: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 22,
+    borderWidth: 1,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: fontWeight.bold,
+    letterSpacing: -0.5,
+  },
+  headerSubtitle: {
+    fontSize: fontSize.caption,
+    marginTop: 2,
+  },
+
+  // Grade Scale
+  gradeScale: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: spacing.sm,
+    padding: 10,
+    marginHorizontal: spacing.xl,
+    marginTop: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.04)",
+  },
+  scaleItem: {
+    alignItems: "center",
+    gap: 3,
+  },
+  scalePill: {
+    width: 36,
+    height: 22,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scalePillText: {
+    fontSize: 11,
+    fontWeight: fontWeight.black,
+    color: "#fff",
+  },
+  scaleRange: {
+    fontSize: 8,
+    fontWeight: fontWeight.semiBold,
+    color: "#666",
+  },
+  scaleLabel: {
+    fontSize: 7,
+    fontWeight: fontWeight.semiBold,
+    color: "#888",
+  },
+
+  // Filters
+  filterRow: {
+    paddingHorizontal: spacing["2xl"],
+    paddingVertical: spacing.lg,
+    gap: spacing.sm,
+  },
+  filterPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    backgroundColor: "rgba(255,255,255,0.03)",
+  },
+  filterPillActive: {
+    backgroundColor: "rgba(212,175,55,0.15)",
+    borderColor: "rgba(212,175,55,0.3)",
+  },
+  filterPillText: {
+    fontSize: 11,
+    fontWeight: fontWeight.semiBold,
+    color: "#999",
+  },
+  filterPillTextActive: {
+    color: GOLD,
+  },
+
+  // Card
+  certCard: {
+    marginHorizontal: spacing.xl,
+    marginBottom: 10,
+    padding: 14,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+  },
+  certTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 10,
+  },
+  rankBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  rankText: {
+    fontSize: 13,
+    fontWeight: fontWeight.bold,
+  },
+  certName: {
+    fontSize: fontSize.body,
+    fontWeight: fontWeight.bold,
+    flex: 1,
+  },
+  certGradeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  certScore: {
+    fontSize: fontSize.bodySmall,
+    fontWeight: fontWeight.black,
+  },
+
+  // Practice icons
+  practicesRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  practiceIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: radius.sm,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  practiceDot: {
+    position: "absolute",
+    bottom: -2,
+    right: -2,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: "#0C0C0C",
+  },
+
+  // Website
+  websiteRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  websiteText: {
+    fontSize: 11,
+    fontWeight: fontWeight.semiBold,
+    color: GOLD,
+  },
+
+  // Legend
+  legendCard: {
+    marginHorizontal: spacing.xl,
+    marginTop: spacing.md,
+    marginBottom: spacing.xl,
+    padding: spacing.xl,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  legendTitle: {
+    fontSize: fontSize.caption,
+    fontWeight: fontWeight.bold,
+    color: GOLD,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    marginBottom: 10,
+  },
+  legendGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    width: "46%",
+  },
+  legendIconBox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  legendLabel: {
+    fontSize: 11,
+    flex: 1,
+  },
+
+  // States
+  centerContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 32,
+  },
+  errorText: {
+    fontSize: 16,
+    marginTop: 16,
+  },
+  retryBtn: {
+    marginTop: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: radius.md,
+  },
+  retryText: {
+    fontWeight: fontWeight.bold,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    marginTop: 16,
+  },
+  emptyDesc: {
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: "center",
+    paddingHorizontal: 32,
+  },
+});

@@ -1,7 +1,37 @@
 /**
- * Naqiy — Feature Flags Configuration
+ * Naqiy — Configuration & Feature Flags
  *
- * Système de feature flags pour activer/désactiver des fonctionnalités
+ * Système de feature flags pour activer/désactiver des fonctionnalités.
+ * Toutes les flags sont définies dans `defaultFeatureFlags` ci-dessous.
+ *
+ * ┌─────────────────────────┬────────┬──────────────────────────────────────────────┐
+ * │ Flag                    │ Actif  │ Description                                  │
+ * ├─────────────────────────┼────────┼──────────────────────────────────────────────┤
+ * │ marketplaceEnabled      │   ✗    │ Marketplace produits certifiés (Coming Soon) │
+ * │ paymentsEnabled         │   ✓    │ Paiement in-app (RevenueCat)                 │
+ * │ offlineMode             │   ✓    │ Cache hors-ligne MMKV                        │
+ * │ pushNotifications       │   ✓    │ Notifications push (Expo Notifications)      │
+ * │ aiScanner               │   ✗    │ Analyse ingrédients par Gemini AI            │
+ * │ gamificationEnabled     │   ✓    │ XP, niveaux, badges, streak                  │
+ * │ socialSharing           │   ✓    │ Partage de résultats de scan                 │
+ * │ analyticsEnabled        │   ✓    │ PostHog + Sentry analytics                   │
+ * │ socialAuthEnabled       │   ✗    │ Google / Apple Sign-In (OAuth)               │
+ * │ alternativesEnabled     │   ✗    │ Alternatives halal certifiées (V2)           │
+ * │ alertsEnabled           │   ✗    │ Veille éthique halal (alertes push)          │
+ * │ featuredArticlesEnabled │   ✓    │ Section "À la une" sur le home               │
+ * │ paywallEnabled          │   ✓    │ Gate Naqiy+ (paywall RevenueCat)             │
+ * │ favoritesLimitEnabled   │   ✓    │ Limite favoris pour free tier                │
+ * │ scanHistoryLimitEnabled │   ✗    │ Limite historique scans free tier             │
+ * │ offlineCacheEnabled     │   ✗    │ Cache offline premium                        │
+ * │ premiumMapEnabled       │   ✗    │ Carte enrichie premium                       │
+ * │ healthProfileEnabled    │   ✗    │ Profil santé / allergènes personnalisé       │
+ * └─────────────────────────┴────────┴──────────────────────────────────────────────┘
+ *
+ * Pour activer une flag : passer la valeur à `true` dans `defaultFeatureFlags`.
+ * Écrans impactés notables :
+ *   - socialAuthEnabled  → signup.tsx (boutons Google/Apple + divider)
+ *   - alertsEnabled      → profile.tsx (onglet alertes), tabs/_layout
+ *   - marketplaceEnabled → marketplace tab, product pages
  */
 
 export const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN ?? "";
@@ -50,6 +80,8 @@ export interface FeatureFlags {
   alertsEnabled: boolean;
   // Section "À la une" (articles featured sur le home)
   featuredArticlesEnabled: boolean;
+  // Authentification sociale (Google / Apple Sign-In)
+  socialAuthEnabled: boolean;
   // Premium gates
   paywallEnabled: boolean;
   favoritesLimitEnabled: boolean;
@@ -65,18 +97,19 @@ export const defaultFeatureFlags: FeatureFlags = {
   offlineMode: true,
   pushNotifications: true,
   aiScanner: false,
-  gamificationEnabled: true,
+  gamificationEnabled: false, // Désactivé — MVP, gamification différée
   socialSharing: true,
   analyticsEnabled: true,
+  socialAuthEnabled: false, // Désactivé — Google/Apple Sign-In à intégrer (OAuth)
   alternativesEnabled: false, // Désactivé — V2, alternatives certifiées à venir
   alertsEnabled: false, // Désactivé — feature en cours de développement
   featuredArticlesEnabled: true,
   paywallEnabled: true,
   favoritesLimitEnabled: true,
-  scanHistoryLimitEnabled: false,
+  scanHistoryLimitEnabled: true,
   offlineCacheEnabled: false,
   premiumMapEnabled: false,
-  healthProfileEnabled: false,
+  healthProfileEnabled: true,
 };
 
 /**

@@ -1,790 +1,568 @@
 /**
- * Certifications Preferences Screen
- * Design fidèle au template HTML (Light/Dark mode)
+ * Certifications Preferences Screen — Refonte v2
+ *
+ * Donnees live tRPC (plus de hardcode), groupement par NaqiyGrade,
+ * CertifierLogo, NaqiyGradeBadge compact, toggles persistants.
  */
 
-import React, { useState } from "react";
+import React, { useMemo, useCallback } from "react";
 import {
   View,
   Text,
-  ScrollView,
+  StyleSheet,
   Switch,
-  Modal,
-  Pressable,
+  ScrollView,
+  ActivityIndicator,
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
-import Animated, { FadeIn, FadeInDown, FadeInUp, ZoomIn } from "react-native-reanimated";
+import { ArrowLeftIcon, CloudSlashIcon } from "phosphor-react-native";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
 import { usePreferencesStore } from "@/store";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
+import { AppIcon } from "@/lib/icons";
+import { trpc } from "@/lib/trpc";
+import { CertifierLogo } from "@/components/scan/CertifierLogo";
+import {
+  NaqiyGradeBadge,
+  getTrustGradeFromScore,
+  TRUST_GRADES,
+  type TrustGrade,
+} from "@/components/scan/NaqiyGradeBadge";
+import { gold } from "@/theme/colors";
+import { spacing, radius } from "@/theme/spacing";
+import { fontSize, fontWeight } from "@/theme/typography";
 
-const GOLD = "#d4af37";
+const GOLD = gold[500];
 
-// Types
-interface Certification {
-  id: string;
-  code: string;
-  name: string;
-  description: string;
-  color: string;
-  colorDark: string;
-  bgColor: string;
-  bgColorDark: string;
-  borderColor: string;
-  borderColorDark: string;
-  isRecommended?: boolean;
-  details?: {
-    fullName: string;
-    location: string;
-    slaughterMethod: string;
-    stunning: string;
-    control: string;
-    website?: string;
-  };
-}
+// ── Types ─────────────────────────────────────────
 
-interface EthicalCriteria {
+interface RankedCertifier {
   id: string;
   name: string;
-  description: string;
-  icon: keyof typeof MaterialIcons.glyphMap;
-  color: string;
-  colorDark: string;
-  bgColor: string;
-  bgColorDark: string;
-  borderColor: string;
-  borderColorDark: string;
+  website: string | null;
+  halalAssessment: boolean;
+  trustScore: number;
+  trustGrade: TrustGrade;
 }
 
-// Données des certifications halal
-const getHalalCertifications = (primaryColor: string): Certification[] => [
-  {
-    id: "avs",
-    code: "AVS",
-    name: "A Votre Service",
-    description: "Contrôle strict, abattage manuel sans étourdissement, traçabilité indépendante.",
-    color: primaryColor,
-    colorDark: primaryColor,
-    bgColor: "rgba(19, 236, 106, 0.1)",
-    bgColorDark: "rgba(19, 236, 106, 0.1)",
-    borderColor: "rgba(19, 236, 106, 0.2)",
-    borderColorDark: "rgba(19, 236, 106, 0.2)",
-    isRecommended: true,
-    details: {
-      fullName: "Association A Votre Service",
-      location: "France (National)",
-      slaughterMethod: "Abattage manuel uniquement",
-      stunning: "Interdit - Sans étourdissement",
-      control: "Contrôleurs présents en permanence",
-      website: "https://www.avs.fr",
-    },
-  },
-  {
-    id: "achahada",
-    code: "ACH",
-    name: "Achahada",
-    description: "Certification rigoureuse, présence de contrôleurs sur site, transparence totale.",
-    color: "#3b82f6",
-    colorDark: "#60a5fa",
-    bgColor: "rgba(59, 130, 246, 0.1)",
-    bgColorDark: "rgba(59, 130, 246, 0.1)",
-    borderColor: "rgba(59, 130, 246, 0.2)",
-    borderColorDark: "rgba(59, 130, 246, 0.2)",
-    details: {
-      fullName: "Achahada Certification",
-      location: "France (National)",
-      slaughterMethod: "Abattage manuel",
-      stunning: "Interdit - Sans étourdissement",
-      control: "Contrôle régulier sur site",
-      website: "https://www.achahada.fr",
-    },
-  },
-  {
-    id: "argml",
-    code: "ARG",
-    name: "ARGML (Lyon)",
-    description: "Mosquée de Lyon. Autorise l'étourdissement sous conditions, contrôle par échantillonnage.",
-    color: "#6b7280",
-    colorDark: "#9ca3af",
-    bgColor: "rgba(107, 114, 128, 0.1)",
-    bgColorDark: "rgba(107, 114, 128, 0.1)",
-    borderColor: "rgba(107, 114, 128, 0.2)",
-    borderColorDark: "rgba(107, 114, 128, 0.2)",
-    details: {
-      fullName: "Association Rituelle de la Grande Mosquée de Lyon",
-      location: "Région Rhône-Alpes",
-      slaughterMethod: "Abattage manuel et mécanique",
-      stunning: "Autorisé sous conditions",
-      control: "Contrôle par échantillonnage",
-    },
-  },
-  {
-    id: "sfcvh",
-    code: "SFC",
-    name: "SFCVH (Paris)",
-    description: "Société Française de Contrôle de Viande Halal. Contrôle industriel standard.",
-    color: "#6b7280",
-    colorDark: "#9ca3af",
-    bgColor: "rgba(107, 114, 128, 0.1)",
-    bgColorDark: "rgba(107, 114, 128, 0.1)",
-    borderColor: "rgba(107, 114, 128, 0.2)",
-    borderColorDark: "rgba(107, 114, 128, 0.2)",
-    details: {
-      fullName: "Société Française de Contrôle de Viande Halal",
-      location: "Île-de-France",
-      slaughterMethod: "Abattage industriel",
-      stunning: "Variable selon abattoir",
-      control: "Contrôle périodique",
-    },
-  },
-];
+interface GradeGroup {
+  grade: TrustGrade;
+  items: RankedCertifier[];
+}
 
-// Critères éthiques
-const ETHICAL_CRITERIA: EthicalCriteria[] = [
-  {
-    id: "bio",
-    name: "Agriculture Biologique",
-    description: "Privilégier les produits certifiés AB ou Eurofeuille.",
-    icon: "eco",
-    color: "#16a34a",
-    colorDark: "#4ade80",
-    bgColor: "rgba(22, 163, 74, 0.1)",
-    bgColorDark: "rgba(22, 163, 74, 0.2)",
-    borderColor: "rgba(22, 163, 74, 0.2)",
-    borderColorDark: "rgba(22, 163, 74, 0.3)",
-  },
-];
+// ── Certifier Card ────────────────────────────────
+
+function CertifierPrefCard({
+  item,
+  isEnabled,
+  onToggle,
+  isDark,
+  colors,
+}: {
+  item: RankedCertifier;
+  isEnabled: boolean;
+  onToggle: () => void;
+  isDark: boolean;
+  colors: ReturnType<typeof useTheme>["colors"];
+}) {
+  const grade = item.trustGrade ?? getTrustGradeFromScore(item.trustScore);
+  const isN1 = grade.grade === 1;
+
+  return (
+    <View
+      style={[
+        styles.prefCard,
+        {
+          backgroundColor: isDark ? "rgba(255,255,255,0.04)" : colors.card,
+          borderColor: isEnabled
+            ? "rgba(212,175,55,0.4)"
+            : isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
+          opacity: isEnabled ? 1 : 0.65,
+        },
+        isEnabled && styles.prefCardGlow,
+      ]}
+    >
+      <View style={styles.prefTopRow}>
+        <CertifierLogo certifierId={item.id} size={40} fallbackColor={grade.color} />
+        <View style={styles.prefInfo}>
+          {/* Name row */}
+          <View style={styles.prefNameRow}>
+            <Text style={[styles.prefName, { color: colors.textPrimary }]} numberOfLines={1}>
+              {item.name}
+            </Text>
+            <NaqiyGradeBadge variant="compact" grade={grade} />
+            <Text style={[styles.prefScore, { color: grade.color }]}>
+              {item.trustScore}
+            </Text>
+          </View>
+          {/* Badges */}
+          {isN1 && (
+            <View style={styles.prefBadges}>
+              <View style={styles.recommendedBadge}>
+                <AppIcon name="verified" size={10} color={GOLD} />
+                <Text style={styles.recommendedText}>Recommande</Text>
+              </View>
+            </View>
+          )}
+        </View>
+        <Switch
+          value={isEnabled}
+          onValueChange={onToggle}
+          trackColor={{
+            false: isDark ? "#374151" : "#d1d5db",
+            true: colors.primary,
+          }}
+          thumbColor="#ffffff"
+          ios_backgroundColor={isDark ? "#374151" : "#d1d5db"}
+          style={styles.switchScale}
+          accessibilityRole="switch"
+          accessibilityLabel={item.name}
+          accessibilityState={{ checked: isEnabled }}
+        />
+      </View>
+    </View>
+  );
+}
+
+// ── Main Screen ───────────────────────────────────
 
 export default function CertificationsScreen() {
   const { colors, isDark } = useTheme();
   const { t } = useTranslation();
-  const halalCertifications = getHalalCertifications(colors.primary);
   const { certifications, toggleCertification } = usePreferencesStore();
-  const [selectedCert, setSelectedCert] = useState<Certification | null>(null);
-  const [showDetails, setShowDetails] = useState(false);
 
-  const isCertEnabled = (id: string) => certifications.includes(id);
+  const { data, isLoading, isError, refetch } = trpc.certifier.ranking.useQuery(
+    undefined,
+    { staleTime: 1000 * 60 * 30 },
+  );
 
-  const handleToggle = (id: string) => {
-    toggleCertification(id);
-  };
+  const items = useMemo(
+    () => (data ?? []) as RankedCertifier[],
+    [data],
+  );
 
-  const openDetails = (cert: Certification) => {
-    setSelectedCert(cert);
-    setShowDetails(true);
-  };
+  // Group by grade
+  const gradeGroups = useMemo<GradeGroup[]>(() => {
+    const map = new Map<number, GradeGroup>();
+    for (const item of items) {
+      const grade = item.trustGrade ?? getTrustGradeFromScore(item.trustScore);
+      const key = grade.grade;
+      if (!map.has(key)) map.set(key, { grade, items: [] });
+      map.get(key)!.items.push(item);
+    }
+    return Array.from(map.values()).sort((a, b) => a.grade.grade - b.grade.grade);
+  }, [items]);
+
+  const isCertEnabled = useCallback(
+    (id: string) => certifications.includes(id),
+    [certifications],
+  );
 
   return (
     <View style={{ flex: 1 }}>
       <PremiumBackground />
       <SafeAreaView style={{ flex: 1 }}>
-        {/* Header Sticky */}
-      <Animated.View
-        entering={FadeIn.duration(300)}
-        style={{
-          paddingHorizontal: 20,
-          paddingTop: 16,
-          paddingBottom: 8,
-          backgroundColor: isDark ? "rgba(16, 34, 23, 0.95)" : "rgba(246, 248, 247, 0.95)",
-        }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <PressableScale
-            onPress={() => router.back()}
-            accessibilityRole="button"
-            accessibilityLabel="Retour"
-            accessibilityHint="Revenir à l'écran précédent"
-          >
-            <View
-              style={{
-                height: 44,
-                width: 44,
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 22,
-                backgroundColor: isDark ? "rgba(255,255,255,0.05)" : colors.card,
-              }}
-            >
-              <MaterialIcons name="arrow-back" size={22} color={colors.textPrimary} />
-            </View>
-          </PressableScale>
-          <Text
-            style={{ fontSize: 18, fontWeight: "700", color: colors.textPrimary, flex: 1, textAlign: "center" }}
-            accessibilityRole="header"
-          >
-            {t.certifications.title}
-          </Text>
-          <PressableScale
-            accessibilityRole="button"
-            accessibilityLabel="Aide"
-            accessibilityHint="Afficher l'aide sur les certifications"
-          >
-            <View
-              style={{
-                height: 44,
-                width: 44,
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 22,
-                backgroundColor: isDark ? "rgba(255,255,255,0.05)" : colors.card,
-              }}
-            >
-              <MaterialIcons name="help-outline" size={22} color={colors.primary} />
-            </View>
-          </PressableScale>
-        </View>
-      </Animated.View>
-
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 100 }}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Section Titre */}
+        {/* Header */}
         <Animated.View
-          entering={FadeInDown.delay(100).duration(400)}
-          style={{ paddingHorizontal: 20, marginTop: 8, marginBottom: 24 }}
-        >
-          <Text
-            style={{ fontSize: 24, fontWeight: "700", color: colors.textPrimary, marginBottom: 8 }}
-            accessibilityRole="header"
-          >
-            Vos Préférences
-          </Text>
-          <Text style={{ fontSize: 14, color: colors.textSecondary, lineHeight: 20 }}>
-            {t.certifications.description}
-          </Text>
-        </Animated.View>
-
-        {/* Liste des Certifications Halal */}
-        <View style={{ paddingHorizontal: 20, gap: 16 }}>
-          {halalCertifications.map((cert, index) => {
-            const isEnabled = isCertEnabled(cert.id);
-            const cardOpacity = isEnabled ? 1 : 0.8;
-
-            return (
-              <Animated.View
-                key={cert.id}
-                entering={FadeInDown.delay(150 + index * 50).duration(400)}
-                style={{
-                  backgroundColor: isDark ? "rgba(255,255,255,0.03)" : colors.card,
-                  borderRadius: 16,
-                  padding: 16,
-                  opacity: cardOpacity,
-                  borderWidth: 1,
-                  borderColor: isEnabled
-                    ? GOLD
-                    : isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
-                  shadowColor: isEnabled ? GOLD : "#000",
-                  shadowOffset: { width: 0, height: isEnabled ? 0 : 2 },
-                  shadowOpacity: isEnabled ? 0.2 : (isDark ? 0 : 0.05),
-                  shadowRadius: isEnabled ? 12 : 8,
-                  elevation: isEnabled ? 4 : (isDark ? 0 : 2),
-                }}
-              >
-                <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 16 }}>
-                  {/* Badge Code */}
-                  <View
-                    style={{
-                      height: 48,
-                      width: 48,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      borderRadius: 12,
-                      backgroundColor: isDark ? cert.bgColorDark : cert.bgColor,
-                      borderWidth: 1,
-                      borderColor: isDark ? cert.borderColorDark : cert.borderColor,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        fontWeight: "700",
-                        color: isDark ? cert.colorDark : cert.color,
-                      }}
-                    >
-                      {cert.code}
-                    </Text>
-                  </View>
-
-                  {/* Content */}
-                  <View style={{ flex: 1 }}>
-                    {/* Title Row */}
-                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-                      <Text style={{ fontSize: 16, fontWeight: "700", color: colors.textPrimary }}>
-                        {cert.name}
-                      </Text>
-                      <Switch
-                        value={isEnabled}
-                        onValueChange={() => handleToggle(cert.id)}
-                        trackColor={{
-                          false: isDark ? "#374151" : "#d1d5db",
-                          true: colors.primary
-                        }}
-                        thumbColor="#ffffff"
-                        ios_backgroundColor={isDark ? "#374151" : "#d1d5db"}
-                        style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
-                        accessibilityRole="switch"
-                        accessibilityLabel={`Activer ${cert.name}`}
-                        accessibilityState={{ checked: isEnabled }}
-                      />
-                    </View>
-
-                    {/* Description */}
-                    <Text
-                      style={{
-                        fontSize: 12,
-                        color: colors.textSecondary,
-                        lineHeight: 18,
-                        marginBottom: 12,
-                      }}
-                    >
-                      {cert.description}
-                    </Text>
-
-                    {/* Actions Row */}
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                      {cert.isRecommended && (
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: 4,
-                            backgroundColor: "rgba(212, 175, 55, 0.15)",
-                            paddingHorizontal: 8,
-                            paddingVertical: 4,
-                            borderRadius: 6,
-                            borderWidth: 1,
-                            borderColor: "rgba(212, 175, 55, 0.25)",
-                          }}
-                        >
-                          <MaterialIcons
-                            name="verified"
-                            size={12}
-                            color={GOLD}
-                          />
-                          <Text
-                            style={{
-                              fontSize: 10,
-                              fontWeight: "600",
-                              color: GOLD,
-                            }}
-                          >
-                            Recommandé
-                          </Text>
-                        </View>
-                      )}
-                      <PressableScale
-                        onPress={() => openDetails(cert)}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Détails de ${cert.name}`}
-                        accessibilityHint="Afficher les détails de cette certification"
-                      >
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
-                          <Text
-                            style={{
-                              fontSize: 12,
-                              fontWeight: "600",
-                              color: isEnabled ? colors.primary : colors.textSecondary,
-                            }}
-                          >
-                            Détails
-                          </Text>
-                          <MaterialIcons
-                            name="chevron-right"
-                            size={14}
-                            color={isEnabled ? colors.primary : colors.textSecondary}
-                          />
-                        </View>
-                      </PressableScale>
-                    </View>
-                  </View>
-                </View>
-              </Animated.View>
-            );
-          })}
-        </View>
-
-        {/* Section Critères Éthiques */}
-        <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
-          <Animated.Text
-            entering={FadeInDown.delay(400).duration(400)}
-            style={{
-              fontSize: 12,
-              fontWeight: "700",
-              textTransform: "uppercase",
-              letterSpacing: Platform.OS === "android" ? 0.2 : 1,
-              color: GOLD,
-              marginBottom: 12,
-              paddingHorizontal: 4,
-            }}
-            accessibilityRole="header"
-          >
-            Critères Éthiques
-          </Animated.Text>
-
-          {ETHICAL_CRITERIA.map((criteria, index) => {
-            const isEnabled = isCertEnabled(criteria.id);
-
-            return (
-              <Animated.View
-                key={criteria.id}
-                entering={FadeInDown.delay(450 + index * 50).duration(400)}
-                style={{
-                  backgroundColor: isDark ? "rgba(255,255,255,0.03)" : colors.card,
-                  borderRadius: 16,
-                  padding: 16,
-                  borderWidth: 1,
-                  borderColor: isEnabled
-                    ? GOLD
-                    : isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
-                  shadowColor: isEnabled ? GOLD : "#000",
-                  shadowOffset: { width: 0, height: isEnabled ? 0 : 2 },
-                  shadowOpacity: isEnabled ? 0.2 : (isDark ? 0 : 0.05),
-                  shadowRadius: isEnabled ? 12 : 8,
-                  elevation: isEnabled ? 4 : (isDark ? 0 : 2),
-                }}
-              >
-                <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 16 }}>
-                  {/* Icon */}
-                  <View
-                    style={{
-                      height: 48,
-                      width: 48,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      borderRadius: 12,
-                      backgroundColor: isDark ? criteria.bgColorDark : criteria.bgColor,
-                      borderWidth: 1,
-                      borderColor: isDark ? criteria.borderColorDark : criteria.borderColor,
-                    }}
-                  >
-                    <MaterialIcons
-                      name={criteria.icon}
-                      size={24}
-                      color={isDark ? criteria.colorDark : criteria.color}
-                    />
-                  </View>
-
-                  {/* Content */}
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-                      <Text style={{ fontSize: 16, fontWeight: "700", color: colors.textPrimary }}>
-                        {criteria.name}
-                      </Text>
-                      <Switch
-                        value={isEnabled}
-                        onValueChange={() => handleToggle(criteria.id)}
-                        trackColor={{
-                          false: isDark ? "#374151" : "#d1d5db",
-                          true: colors.primary,
-                        }}
-                        thumbColor="#ffffff"
-                        ios_backgroundColor={isDark ? "#374151" : "#d1d5db"}
-                        style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
-                        accessibilityRole="switch"
-                        accessibilityLabel={`Activer ${criteria.name}`}
-                        accessibilityState={{ checked: isEnabled }}
-                      />
-                    </View>
-                    <Text style={{ fontSize: 12, color: colors.textSecondary, lineHeight: 18 }}>
-                      {criteria.description}
-                    </Text>
-                  </View>
-                </View>
-              </Animated.View>
-            );
-          })}
-        </View>
-
-        {/* Info Card */}
-        <Animated.View
-          entering={FadeInUp.delay(500).duration(400)}
-          style={{ paddingHorizontal: 20, marginTop: 24, marginBottom: 32 }}
-        >
-          <View
-            style={{
-              position: "relative",
-              overflow: "hidden",
-              borderRadius: 16,
-              padding: 16,
+          entering={FadeIn.duration(300)}
+          style={[
+            styles.header,
+            {
               backgroundColor: isDark
-                ? "rgba(255,255,255,0.03)"
-                : "rgba(243, 244, 246, 1)",
-              borderWidth: 1,
-              borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
-            }}
-          >
-            {/* Decorative blur */}
-            <View
-              style={{
-                position: "absolute",
-                right: -16,
-                top: -16,
-                height: 80,
-                width: 80,
-                borderRadius: 40,
-                backgroundColor: "rgba(19, 236, 106, 0.1)",
-              }}
-            />
-            <View style={{ flexDirection: "row", gap: 12 }}>
-              <MaterialIcons name="info" size={20} color={colors.primary} style={{ marginTop: 2 }} />
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "700",
-                    color: colors.textPrimary,
-                    marginBottom: 4,
-                  }}
-                >
-                  Pourquoi choisir ?
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 12,
-                    color: colors.textSecondary,
-                    lineHeight: 18,
-                  }}
-                >
-                  Choisir vos certifications permet d&apos;exclure automatiquement les produits qui ne correspondent pas à vos critères religieux ou éthiques lors du scan.
-                </Text>
+                ? "rgba(16, 34, 23, 0.95)"
+                : "rgba(246, 248, 247, 0.95)",
+            },
+          ]}
+        >
+          <View style={styles.headerRow}>
+            <PressableScale
+              onPress={() => router.back()}
+              accessibilityRole="button"
+              accessibilityLabel={t.common.back}
+            >
+              <View
+                style={[
+                  styles.backBtn,
+                  {
+                    backgroundColor: isDark ? "rgba(255,255,255,0.05)" : colors.card,
+                  },
+                ]}
+              >
+                <ArrowLeftIcon size={22} color={colors.textPrimary} />
               </View>
-            </View>
+            </PressableScale>
+            <Text
+              style={[styles.headerTitle, { color: colors.textPrimary }]}
+              accessibilityRole="header"
+            >
+              {t.certifications.title}
+            </Text>
+            <View style={{ width: 44 }} />
           </View>
         </Animated.View>
-      </ScrollView>
 
-      {/* Modal Détails */}
-      <Modal
-        visible={showDetails}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setShowDetails(false)}
-      >
-        <Pressable
-          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}
-          onPress={() => setShowDetails(false)}
-          accessibilityRole="button"
-          accessibilityLabel="Fermer les détails"
-        >
-          <Pressable
-            style={{
-              backgroundColor: colors.background,
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
-              paddingTop: 12,
-              paddingBottom: 40,
-              maxHeight: "80%",
-            }}
-            onPress={(e) => e.stopPropagation()}
+        {isLoading ? (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        ) : isError ? (
+          <View style={styles.centerContainer}>
+            <CloudSlashIcon size={64} color={colors.textMuted} />
+            <Text style={[styles.errorText, { color: colors.textSecondary }]}>
+              {t.certifierRanking.loadError}
+            </Text>
+            <PressableScale onPress={() => refetch()} accessibilityRole="button">
+              <View style={[styles.retryBtn, { backgroundColor: colors.primary }]}>
+                <Text style={{ fontWeight: fontWeight.bold, color: isDark ? "#102217" : "#0d1b13" }}>
+                  {t.common.retry}
+                </Text>
+              </View>
+            </PressableScale>
+          </View>
+        ) : (
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ paddingBottom: 100 }}
+            showsVerticalScrollIndicator={false}
           >
-            {/* Handle */}
-            <View
-              style={{
-                alignSelf: "center",
-                width: 40,
-                height: 4,
-                backgroundColor: "rgba(212,175,55,0.3)",
-                borderRadius: 2,
-                marginBottom: 16,
-              }}
-            />
+            {/* Intro */}
+            <Animated.View
+              entering={FadeInDown.delay(100).duration(400)}
+              style={styles.introBlock}
+            >
+              <Text style={[styles.introText, { color: colors.textSecondary }]}>
+                {t.certifications.description}
+              </Text>
+            </Animated.View>
 
-            {selectedCert && (
-              <ScrollView style={{ paddingHorizontal: 20 }}>
-                {/* Header */}
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 16, marginBottom: 20 }}>
-                  <View
-                    style={{
-                      height: 56,
-                      width: 56,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      borderRadius: 14,
-                      backgroundColor: isDark ? selectedCert.bgColorDark : selectedCert.bgColor,
-                      borderWidth: 1,
-                      borderColor: isDark ? selectedCert.borderColorDark : selectedCert.borderColor,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 20,
-                        fontWeight: "700",
-                        color: isDark ? selectedCert.colorDark : selectedCert.color,
-                      }}
-                    >
-                      {selectedCert.code}
-                    </Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text
-                      style={{ fontSize: 20, fontWeight: "700", color: colors.textPrimary }}
-                      accessibilityRole="header"
-                    >
-                      {selectedCert.name}
-                    </Text>
-                    {selectedCert.isRecommended && (
-                      <Animated.View
-                        entering={ZoomIn.springify()}
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: 4,
-                          marginTop: 4,
-                        }}
-                      >
-                        <MaterialIcons name="verified" size={14} color={GOLD} />
-                        <Text style={{ fontSize: 12, fontWeight: "600", color: GOLD }}>
-                          Recommandé par Naqiy
-                        </Text>
-                      </Animated.View>
-                    )}
-                  </View>
+            {/* Grade groups */}
+            {gradeGroups.map((group, gi) => (
+              <Animated.View
+                key={group.grade.grade}
+                entering={FadeInDown.delay(150 + gi * 80).duration(400)}
+              >
+                {/* Section header */}
+                <View style={styles.sectionHeader}>
+                  <NaqiyGradeBadge variant="compact" grade={group.grade} />
+                  <Text style={styles.sectionTitle}>{group.grade.label}</Text>
+                  <Text style={styles.sectionCount}>({group.items.length})</Text>
                 </View>
 
-                {/* Description */}
-                <Text style={{ fontSize: 14, color: colors.textSecondary, lineHeight: 22, marginBottom: 24 }}>
-                  {selectedCert.description}
-                </Text>
+                {/* Cards */}
+                {group.items.map((item) => (
+                  <CertifierPrefCard
+                    key={item.id}
+                    item={item}
+                    isEnabled={isCertEnabled(item.id)}
+                    onToggle={() => toggleCertification(item.id)}
+                    isDark={isDark}
+                    colors={colors}
+                  />
+                ))}
+              </Animated.View>
+            ))}
 
-                {/* Details List */}
-                {selectedCert.details && (
-                  <View style={{ gap: 16 }}>
-                    <DetailRow
-                      icon="business"
-                      label="Nom complet"
-                      value={selectedCert.details.fullName}
-                      colors={colors}
-                      isDark={isDark}
-                    />
-                    <DetailRow
-                      icon="location-on"
-                      label="Zone d'activité"
-                      value={selectedCert.details.location}
-                      colors={colors}
-                      isDark={isDark}
-                    />
-                    <DetailRow
-                      icon="content-cut"
-                      label="Méthode d'abattage"
-                      value={selectedCert.details.slaughterMethod}
-                      colors={colors}
-                      isDark={isDark}
-                    />
-                    <DetailRow
-                      icon="flash-off"
-                      label="Étourdissement"
-                      value={selectedCert.details.stunning}
-                      colors={colors}
-                      isDark={isDark}
-                      highlight={selectedCert.details.stunning.includes("Interdit")}
-                    />
-                    <DetailRow
-                      icon="verified-user"
-                      label="Type de contrôle"
-                      value={selectedCert.details.control}
-                      colors={colors}
-                      isDark={isDark}
-                    />
-                  </View>
-                )}
-
-                {/* Toggle Button */}
-                <PressableScale
-                  onPress={() => {
-                    handleToggle(selectedCert.id);
-                    setShowDetails(false);
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={isCertEnabled(selectedCert.id) ? `Retirer ${selectedCert.name} des préférences` : `Ajouter ${selectedCert.name} aux préférences`}
-                >
-                  <View
-                    style={{
-                      marginTop: 32,
-                      backgroundColor: isCertEnabled(selectedCert.id) ? colors.buttonSecondary : colors.primary,
-                      paddingVertical: 16,
-                      borderRadius: 12,
-                      alignItems: "center",
-                      flexDirection: "row",
-                      justifyContent: "center",
-                      gap: 8,
-                    }}
-                  >
-                    <MaterialIcons
-                      name={isCertEnabled(selectedCert.id) ? "remove-circle-outline" : "add-circle-outline"}
-                      size={20}
-                      color={isCertEnabled(selectedCert.id) ? colors.textPrimary : (isDark ? "#102217" : "#0d1b13")}
-                    />
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        fontWeight: "700",
-                        color: isCertEnabled(selectedCert.id) ? colors.textPrimary : (isDark ? "#102217" : "#0d1b13"),
-                      }}
-                    >
-                      {isCertEnabled(selectedCert.id) ? "Retirer des préférences" : "Ajouter aux préférences"}
+            {/* Ethical Criteria */}
+            <Text style={styles.ethicalTitle}>
+              {t.certifications.categories?.ethical ?? "Criteres Ethiques"}
+            </Text>
+            <View
+              style={[
+                styles.ethicalCard,
+                {
+                  backgroundColor: isDark ? "rgba(255,255,255,0.04)" : colors.card,
+                  borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
+                },
+              ]}
+            >
+              <View style={styles.ethicalRow}>
+                <View style={styles.ethicalIcon}>
+                  <AppIcon name="eco" size={22} color={isDark ? "#4ade80" : "#16a34a"} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <View style={styles.ethicalNameRow}>
+                    <Text style={[styles.ethicalName, { color: colors.textPrimary }]}>
+                      Agriculture Biologique
                     </Text>
+                    <Switch
+                      value={isCertEnabled("bio")}
+                      onValueChange={() => toggleCertification("bio")}
+                      trackColor={{
+                        false: isDark ? "#374151" : "#d1d5db",
+                        true: colors.primary,
+                      }}
+                      thumbColor="#ffffff"
+                      ios_backgroundColor={isDark ? "#374151" : "#d1d5db"}
+                      style={styles.switchScale}
+                      accessibilityRole="switch"
+                      accessibilityLabel="Agriculture Biologique"
+                      accessibilityState={{ checked: isCertEnabled("bio") }}
+                    />
                   </View>
-                </PressableScale>
-              </ScrollView>
-            )}
-          </Pressable>
-        </Pressable>
-        </Modal>
+                  <Text style={[styles.ethicalDesc, { color: colors.textSecondary }]}>
+                    Privilegier les produits certifies AB ou Eurofeuille.
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Info Card */}
+            <View
+              style={[
+                styles.infoCard,
+                {
+                  backgroundColor: isDark
+                    ? "rgba(255,255,255,0.03)"
+                    : "rgba(243, 244, 246, 1)",
+                  borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
+                },
+              ]}
+            >
+              <View style={styles.infoBlob} />
+              <View style={styles.infoRow}>
+                <AppIcon name="info" size={20} color={colors.primary} />
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.infoTitle, { color: colors.textPrimary }]}>
+                    Pourquoi choisir ?
+                  </Text>
+                  <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+                    Choisir vos certifications permet d&apos;exclure automatiquement
+                    les produits qui ne correspondent pas a vos criteres
+                    religieux ou ethiques lors du scan.
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </ScrollView>
+        )}
       </SafeAreaView>
     </View>
   );
 }
 
-// Composant pour les lignes de détails
-interface DetailRowProps {
-  icon: keyof typeof MaterialIcons.glyphMap;
-  label: string;
-  value: string;
-  colors: ReturnType<typeof useTheme>["colors"];
-  isDark: boolean;
-  highlight?: boolean;
-}
+// ── Styles ────────────────────────────────────────
 
-function DetailRow({ icon, label, value, colors, isDark, highlight }: DetailRowProps) {
-  return (
-    <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
-      <View
-        style={{
-          height: 36,
-          width: 36,
-          alignItems: "center",
-          justifyContent: "center",
-          borderRadius: 10,
-          backgroundColor: highlight
-            ? isDark ? "rgba(34, 197, 94, 0.2)" : "rgba(34, 197, 94, 0.1)"
-            : isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
-        }}
-      >
-        <MaterialIcons
-          name={icon}
-          size={18}
-          color={highlight ? (isDark ? "#4ade80" : "#16a34a") : colors.textSecondary}
-        />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 2 }}>{label}</Text>
-        <Text
-          style={{
-            fontSize: 14,
-            fontWeight: "600",
-            color: highlight ? (isDark ? "#4ade80" : "#16a34a") : colors.textPrimary,
-          }}
-        >
-          {value}
-        </Text>
-      </View>
-    </View>
-  );
-}
+const styles = StyleSheet.create({
+  // Header
+  header: {
+    paddingHorizontal: spacing["2xl"],
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.md,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  backBtn: {
+    height: 44,
+    width: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 22,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: fontWeight.bold,
+    flex: 1,
+    textAlign: "center",
+  },
+
+  // Intro
+  introBlock: {
+    paddingHorizontal: spacing["2xl"],
+    marginTop: spacing.md,
+    marginBottom: spacing["3xl"],
+  },
+  introText: {
+    fontSize: fontSize.body,
+    lineHeight: 20,
+  },
+
+  // Section headers
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    marginHorizontal: spacing["2xl"],
+    marginTop: spacing["2xl"],
+    marginBottom: spacing.lg,
+  },
+  sectionTitle: {
+    fontSize: 11,
+    fontWeight: fontWeight.bold,
+    textTransform: "uppercase",
+    letterSpacing: Platform.OS === "android" ? 0.2 : 1,
+    color: GOLD,
+  },
+  sectionCount: {
+    fontSize: 10,
+    color: "#666",
+  },
+
+  // Pref Card
+  prefCard: {
+    marginHorizontal: spacing.xl,
+    marginBottom: 10,
+    padding: 14,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  prefCardGlow: {
+    shadowColor: GOLD,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  prefTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.lg,
+  },
+  prefInfo: {
+    flex: 1,
+    minWidth: 0,
+  },
+  prefNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  prefName: {
+    fontSize: fontSize.body,
+    fontWeight: fontWeight.bold,
+    flexShrink: 1,
+  },
+  prefScore: {
+    fontSize: fontSize.caption,
+    fontWeight: fontWeight.black,
+  },
+  prefBadges: {
+    flexDirection: "row",
+    marginTop: 4,
+  },
+  recommendedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: "rgba(212,175,55,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(212,175,55,0.2)",
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 5,
+  },
+  recommendedText: {
+    fontSize: 9,
+    fontWeight: fontWeight.bold,
+    color: GOLD,
+  },
+
+  switchScale: {
+    transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }],
+  },
+
+  // Ethical
+  ethicalTitle: {
+    fontSize: 11,
+    fontWeight: fontWeight.bold,
+    textTransform: "uppercase",
+    letterSpacing: Platform.OS === "android" ? 0.2 : 1,
+    color: GOLD,
+    marginHorizontal: spacing["2xl"],
+    marginTop: spacing["3xl"],
+    marginBottom: spacing.lg,
+  },
+  ethicalCard: {
+    marginHorizontal: spacing.xl,
+    padding: spacing.xl,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  ethicalRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.lg,
+  },
+  ethicalIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.md,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(34,197,94,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(34,197,94,0.2)",
+  },
+  ethicalNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
+  ethicalName: {
+    fontSize: fontSize.body,
+    fontWeight: fontWeight.bold,
+  },
+  ethicalDesc: {
+    fontSize: fontSize.caption,
+    lineHeight: 18,
+  },
+
+  // Info card
+  infoCard: {
+    marginHorizontal: spacing.xl,
+    marginTop: spacing["3xl"],
+    marginBottom: spacing["4xl"],
+    padding: spacing.xl,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  infoBlob: {
+    position: "absolute",
+    right: -16,
+    top: -16,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: "rgba(34,197,94,0.08)",
+  },
+  infoRow: {
+    flexDirection: "row",
+    gap: spacing.lg,
+  },
+  infoTitle: {
+    fontSize: fontSize.body,
+    fontWeight: fontWeight.bold,
+    marginBottom: 4,
+  },
+  infoText: {
+    fontSize: fontSize.caption,
+    lineHeight: 18,
+  },
+
+  // States
+  centerContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 32,
+  },
+  errorText: {
+    fontSize: 16,
+    marginTop: 16,
+  },
+  retryBtn: {
+    marginTop: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: radius.md,
+  },
+});

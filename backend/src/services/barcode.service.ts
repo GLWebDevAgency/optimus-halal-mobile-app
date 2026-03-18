@@ -13,12 +13,19 @@ import { aiExtractIngredients, type ExtractionResult } from "./ai-extract/index.
 export interface OpenFoodFactsProduct {
   code: string;
   product_name?: string;
+  generic_name?: string;
   brands?: string;
+  brand_owner?: string;
   categories?: string;
   ingredients_text?: string;
+  ingredients_text_fr?: string;
+  ingredients_text_en?: string;
+  ingredients_text_ar?: string;
   ingredients?: { text?: string; id?: string; percent?: number }[];
   image_url?: string;
   image_front_url?: string;
+  image_ingredients_url?: string;
+  image_nutrition_url?: string;
   nutriments?: Record<string, number | string>;
   nutriscore_grade?: string;
   nova_group?: number;
@@ -26,6 +33,7 @@ export interface OpenFoodFactsProduct {
   labels?: string;
   labels_tags?: string[];
   countries?: string;
+  countries_tags?: string[];
   allergens?: string;
   allergens_tags?: string[];
   traces?: string;
@@ -34,6 +42,12 @@ export interface OpenFoodFactsProduct {
   ingredients_analysis_tags?: string[];
   manufacturing_places?: string;
   origins?: string;
+  origins_tags?: string[];
+  quantity?: string;
+  serving_size?: string;
+  emb_codes?: string;
+  completeness?: number;
+  last_modified_datetime?: string;
 }
 
 /**
@@ -120,12 +134,20 @@ export interface SmartExtractionResult {
   aiEnrichment: ExtractionResult | null;
 }
 
+/** Strip only null bytes — the one thing that breaks JSON serialization.
+ *  Everything else (BOM, control chars, OCR, accents) Gemini handles better than regex. */
+function stripNullBytes(text: string): string {
+  return text.replace(/\x00/g, "");
+}
+
 export async function smartExtractIngredients(
   off: OpenFoodFactsProduct,
 ): Promise<SmartExtractionResult> {
   // Strategy 1: AI extraction from raw text (Gemini/GPT/Claude — always preferred)
+  // Minimal sanitization: only strip null bytes to avoid JSON corruption.
+  // Gemini handles OCR artifacts, BOM, control chars, multilingual text natively.
   if (off.ingredients_text) {
-    const aiResult = await aiExtractIngredients(off.ingredients_text);
+    const aiResult = await aiExtractIngredients(stripNullBytes(off.ingredients_text));
     if (aiResult && aiResult.ingredients.length > 0) {
       logger.info("Ingredients extracted via AI", {
         count: aiResult.ingredients.length,
@@ -221,11 +243,18 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeResult> {
     const product: OpenFoodFactsProduct = {
       code: (p.code as string) ?? barcode,
       product_name: p.product_name as string | undefined,
+      generic_name: p.generic_name as string | undefined,
       brands: p.brands as string | undefined,
+      brand_owner: p.brand_owner as string | undefined,
       categories: p.categories as string | undefined,
       ingredients_text: p.ingredients_text as string | undefined,
+      ingredients_text_fr: p.ingredients_text_fr as string | undefined,
+      ingredients_text_en: p.ingredients_text_en as string | undefined,
+      ingredients_text_ar: p.ingredients_text_ar as string | undefined,
       image_url: p.image_url as string | undefined,
       image_front_url: p.image_front_url as string | undefined,
+      image_ingredients_url: p.image_ingredients_url as string | undefined,
+      image_nutrition_url: p.image_nutrition_url as string | undefined,
       nutriments: p.nutriments as Record<string, number | string> | undefined,
       nutriscore_grade: p.nutriscore_grade as string | undefined,
       nova_group: p.nova_group as number | undefined,
@@ -233,6 +262,7 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeResult> {
       labels: p.labels as string | undefined,
       labels_tags: p.labels_tags as string[] | undefined,
       countries: p.countries as string | undefined,
+      countries_tags: p.countries_tags as string[] | undefined,
       allergens: p.allergens as string | undefined,
       allergens_tags: p.allergens_tags as string[] | undefined,
       traces: p.traces as string | undefined,
@@ -241,6 +271,12 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeResult> {
       ingredients_analysis_tags: p.ingredients_analysis_tags as string[] | undefined,
       manufacturing_places: p.manufacturing_places as string | undefined,
       origins: p.origins as string | undefined,
+      origins_tags: p.origins_tags as string[] | undefined,
+      quantity: p.quantity as string | undefined,
+      serving_size: p.serving_size as string | undefined,
+      emb_codes: p.emb_codes as string | undefined,
+      completeness: p.completeness as number | undefined,
+      last_modified_datetime: p.last_modified_datetime as string | undefined,
     };
 
     const result: BarcodeResult = { found: true, product };
@@ -295,6 +331,8 @@ interface AdditiveAnalysisResult {
   riskPregnant: boolean;
   riskChildren: boolean;
   riskAllergic: boolean;
+  isVegetarian: boolean | null;
+  isVegan: boolean | null;
   madhabOverride?: {
     ruling: HalalStatus;
     explanation: string;
@@ -362,94 +400,15 @@ async function lookupAdditives(
       riskPregnant: add.riskPregnant,
       riskChildren: add.riskChildren,
       riskAllergic: add.riskAllergic,
+      isVegetarian: add.isVegetarian,
+      isVegan: add.isVegan,
       madhabOverride,
     });
-  }
-
-  // Fallback: check tags not found in DB against the hardcoded map
-  for (const tag of tags) {
-    const code = tag
-      .replace(/^en:/, "")
-      .toUpperCase()
-      .replace(/[a-z]$/i, "");
-    if (!dbAdditives.find((a) => a.code === code)) {
-      const fallback = ADDITIVES_HALAL_DB[tag.toLowerCase()];
-      if (fallback) {
-        results.push({
-          code,
-          name: fallback.name,
-          halalStatus: fallback.status,
-          explanation: fallback.explanation,
-          toxicityLevel: "safe",
-          riskPregnant: false,
-          riskChildren: false,
-          riskAllergic: false,
-        });
-      }
-    }
   }
 
   return results;
 }
 
-// ── Legacy Additives Fallback (kept for tags not yet in DB) ─
-
-interface AdditiveInfo {
-  name: string;
-  status: "halal" | "haram" | "doubtful";
-  explanation: string;
-}
-
-const ADDITIVES_HALAL_DB: Record<string, AdditiveInfo> = {
-  "en:e100":  { name: "Curcumine", status: "halal", explanation: "Origine végétale" },
-  "en:e101":  { name: "Riboflavine", status: "halal", explanation: "Synthétique ou végétal" },
-  "en:e120":  { name: "Carmine / Cochenille", status: "haram", explanation: "Colorant rouge 100 % insecte (cochenille). Haram consensus hanafite/chafiite/hanbalite. Exception malikite (Coran 6:145)." },
-  "en:e122":  { name: "Azorubine", status: "halal", explanation: "Colorant synthétique" },
-  "en:e133":  { name: "Bleu brillant", status: "halal", explanation: "Colorant synthétique" },
-  "en:e150a": { name: "Caramel", status: "halal", explanation: "Sucre caramélisé" },
-  "en:e160a": { name: "Bêta-carotène", status: "halal", explanation: "Origine végétale" },
-  "en:e160b": { name: "Annatto", status: "halal", explanation: "Origine végétale" },
-  "en:e170":  { name: "Carbonate de calcium", status: "halal", explanation: "Minéral" },
-  "en:e200":  { name: "Acide sorbique", status: "halal", explanation: "Synthétique" },
-  "en:e202":  { name: "Sorbate de potassium", status: "halal", explanation: "Synthétique" },
-  "en:e270":  { name: "Acide lactique", status: "halal", explanation: "Fermentation végétale" },
-  "en:e300":  { name: "Acide ascorbique", status: "halal", explanation: "Vitamine C synthétique" },
-  "en:e322":  { name: "Lécithine", status: "halal", explanation: "Généralement d'origine soja" },
-  "en:e322i": { name: "Lécithine", status: "halal", explanation: "Généralement d'origine soja" },
-  "en:e330":  { name: "Acide citrique", status: "halal", explanation: "Fermentation" },
-  "en:e331":  { name: "Citrate de sodium", status: "halal", explanation: "Dérivé acide citrique" },
-  "en:e334":  { name: "Acide tartrique", status: "halal", explanation: "Origine végétale" },
-  "en:e400":  { name: "Acide alginique", status: "halal", explanation: "Algues marines" },
-  "en:e407":  { name: "Carraghénane", status: "halal", explanation: "Algues marines" },
-  "en:e410":  { name: "Gomme de caroube", status: "halal", explanation: "Origine végétale" },
-  "en:e412":  { name: "Gomme guar", status: "halal", explanation: "Origine végétale" },
-  "en:e414":  { name: "Gomme arabique", status: "halal", explanation: "Origine végétale" },
-  "en:e415":  { name: "Gomme xanthane", status: "halal", explanation: "Fermentation bactérienne" },
-  "en:e420":  { name: "Sorbitol", status: "halal", explanation: "Origine végétale" },
-  "en:e440":  { name: "Pectine", status: "halal", explanation: "Origine végétale (fruits)" },
-  "en:e441":  { name: "Gélatine", status: "haram", explanation: "Collagène animal : ~50 % porcin, ~35 % bovin dans la production mondiale. Porcine = haram (consensus). Bovine = haram si non-zabiha (majorité). ECFR/Qaradawi acceptent l'istihalah (minorité)." },
-  "en:e460":  { name: "Cellulose", status: "halal", explanation: "Origine végétale" },
-  "en:e471":  { name: "Mono/diglycérides", status: "doubtful", explanation: "Émulsifiant d'origine végétale (soja, palme) ou animale (dont porc). En Europe, ~95 % des E471 sans mention d'origine sont dérivés de graisses animales. Seule la mention « origine végétale » sur l'emballage garantit une source licite." },
-  "en:e472a": { name: "Esters acétiques", status: "doubtful", explanation: "Dérivé E471 — acides gras d'origine animale ou végétale non précisée" },
-  "en:e472b": { name: "Esters lactiques", status: "doubtful", explanation: "Dérivé E471 — acides gras d'origine animale ou végétale non précisée" },
-  "en:e472c": { name: "Esters citriques", status: "doubtful", explanation: "Dérivé E471 — acides gras d'origine animale ou végétale non précisée" },
-  "en:e472e": { name: "Esters DATEM", status: "doubtful", explanation: "Dérivé E471 — acides gras d'origine animale ou végétale non précisée" },
-  "en:e473":  { name: "Esters de saccharose", status: "doubtful", explanation: "Acides gras d'origine animale ou végétale — vérifier la source" },
-  "en:e474":  { name: "Sucroglycérides", status: "doubtful", explanation: "Mélange E473 + E471 — double source potentiellement animale" },
-  "en:e475":  { name: "Esters polyglycérol", status: "doubtful", explanation: "Acides gras d'origine animale ou végétale — vérifier la source" },
-  "en:e476":  { name: "Polyricinoléate", status: "halal", explanation: "Huile de ricin" },
-  "en:e481":  { name: "Stéaroyl lactylate de sodium", status: "doubtful", explanation: "Acide stéarique d'origine animale (suif) ou végétale (palme, coco) — vérifier la source" },
-  "en:e491":  { name: "Monostéarate de sorbitan", status: "doubtful", explanation: "Acide stéarique d'origine animale (suif) ou végétale (palme, coco) — vérifier la source" },
-  "en:e500":  { name: "Bicarbonate de sodium", status: "halal", explanation: "Minéral" },
-  "en:e542":  { name: "Phosphate d'os", status: "haram", explanation: "100 % d'origine animale (os). Haram si porc (consensus) ou bovin non-zabiha (majorité)." },
-  "en:e570":  { name: "Acide stéarique", status: "doubtful", explanation: "Acide gras saturé : suif (~25 %), beurre de cacao (~35 %), palme ou coco. Source animale courante aux USA." },
-  "en:e631":  { name: "Inosinate disodique", status: "doubtful", explanation: "Exhausteur umami : historiquement animal (sardines, porc), de plus en plus par fermentation végétale." },
-  "en:e635":  { name: "Ribonucléotides", status: "doubtful", explanation: "Mélange E627+E631. Le E631 peut être d'origine animale — vérifier la source." },
-  "en:e901":  { name: "Cire d'abeille", status: "halal", explanation: "Produit d'abeille — halal par consensus" },
-  "en:e904":  { name: "Shellac", status: "halal", explanation: "Résine sécrétée par l'insecte lac — halal (consensus : Darul Uloom Karachi, Al-Azhar, MUI, JAKIM). Analogie avec le miel." },
-  "en:e920":  { name: "L-Cystéine", status: "doubtful", explanation: "~80 % plumes de canard, ~10 % synthèse, reste poils de porc/cheveux. Haram si porc/cheveux. Débat pour plumes." },
-  "en:e966":  { name: "Lactitol", status: "halal", explanation: "Dérivé du lactose" },
-};
 
 // ── Ingredient Rulings Engine v4 — DB-Driven ────────────────
 
@@ -642,30 +601,74 @@ const HALAL_LABEL_TAGS = [
 // normalizeCertifierTag() strips known prefixes to resolve both forms.
 
 export const LABEL_TAG_TO_CERTIFIER_ID: Record<string, string> = {
+  // ── AVS ──
   "fr:a-votre-service":                                       "avs-a-votre-service",
   "fr:avs":                                                   "avs-a-votre-service",
+  "en:avs":                                                   "avs-a-votre-service",
+
+  // ── Achahada ──
   "fr:achahada":                                              "achahada",
+
+  // ── Altakwa ──
   "fr:altakwa":                                               "altakwa",
+
+  // ── ARGML — Mosquée de Lyon ──
   "fr:association-rituelle-de-la-grande-mosquee-de-lyon":     "argml-mosquee-de-lyon",
+  "en:association-rituelle-de-la-grande-mosquee-de-lyon":     "argml-mosquee-de-lyon",
   "fr:mosquee-de-lyon":                                       "argml-mosquee-de-lyon",
   "fr:argml":                                                 "argml-mosquee-de-lyon",
-  "fr:societe-francaise-de-controle-de-viande-halal":         "sfcvh-mosquee-de-paris",
+  "fr:grande-mosquee-de-lyon":                                "argml-mosquee-de-lyon",
+  "fr:controle-grande-mosquee-de-lyon-halal":                 "argml-mosquee-de-lyon",
+
+  // ── SFCVH — Mosquée de Paris ──
+  "fr:societe-francaise-de-controle-de-viande-halal":                              "sfcvh-mosquee-de-paris",
+  "en:societe-francaise-de-controle-de-viande-halal":                              "sfcvh-mosquee-de-paris",
+  "en:societe-francaise-de-controle-de-viande-halal-grande-mosquee-de-paris":      "sfcvh-mosquee-de-paris",
+  "fr:societe-francaise-de-controle-de-viande-halal-grande-mosquee-de-paris":      "sfcvh-mosquee-de-paris",
   "fr:sfcvh":                                                 "sfcvh-mosquee-de-paris",
   "fr:mosquee-de-paris":                                      "sfcvh-mosquee-de-paris",
+  "fr:grande-mosquee-de-paris":                               "sfcvh-mosquee-de-paris",
+  "fr:controle-mosquee-de-paris-halal":                       "sfcvh-mosquee-de-paris",
+
+  // ── ACMIF — Mosquée d'Évry-Courcouronnes ──
+  "fr:acmif":                                                 "acmif-mosquee-d-evry",
+  "fr:mosquee-d-evry":                                        "acmif-mosquee-d-evry",
+  "fr:mosquee-d-evry-courcouronnes":                          "acmif-mosquee-d-evry",
+  "fr:mosquee-evry":                                          "acmif-mosquee-d-evry",
+  "fr:controle-de-la-mosquee-d-evry-courcouronnes":           "acmif-mosquee-d-evry",
+  "en:controle-de-la-mosquee-d-evry-courcouronnes":           "acmif-mosquee-d-evry",
+  "en:controledelamosqueedevrycourcouronnes":                  "acmif-mosquee-d-evry",
+  "fr:controle-de-la-mosquee-d-evry-courcouonnes":            "acmif-mosquee-d-evry", // typo OFF
+  "fr:certification-mosquee-evry-courcouronnes":              "acmif-mosquee-d-evry",
+  "fr:halal-mosquee-courcouronnes":                           "acmif-mosquee-d-evry",
+
+  // ── Arrissala ──
   "fr:arrissala":                                             "arrissala",
+
+  // ── Halal Services ──
   "fr:halal-services":                                        "halal-services",
+
+  // ── European Halal Trust ──
   "fr:european-halal-trust":                                  "european-halal-trust",
+
+  // ── HMC ──
   "fr:halal-monitoring-committee":                            "halal-monitoring-committee",
   "en:halal-monitoring-committee":                            "halal-monitoring-committee",
+
+  // ── Khalis Halal ──
   "fr:khalis-halal":                                          "khalis-halal",
+
+  // ── SIDQ ──
   "fr:sidq":                                                  "sidq",
+
+  // ── MCI ──
   "fr:muslim-conseil-international":                          "muslim-conseil-international-mci",
   "fr:mci":                                                   "muslim-conseil-international-mci",
+
+  // ── Others ──
   "fr:halal-correct":                                         "halal-correct",
   "fr:halal-polska":                                          "halal-polska",
   "fr:afcai":                                                 "afcai",
-  "fr:acmif":                                                 "acmif-mosquee-d-evry",
-  "fr:mosquee-d-evry":                                        "acmif-mosquee-d-evry",
   "fr:alamane":                                               "alamane",
   "fr:islamic-centre-aachen":                                 "islamic-centre-aachen",
   "en:islamic-centre-aachen":                                 "islamic-centre-aachen",
@@ -681,6 +684,10 @@ const CERTIFIER_TAG_PREFIXES = [
   "certification-",        // e.g. fr:certification-avs
   "certifie-",             // e.g. fr:certifie-avs
   "certifié-",             // e.g. fr:certifié-avs (accented)
+  "controle-de-la-",       // e.g. fr:controle-de-la-mosquee-d-evry-courcouronnes
+  "controle-de-",          // e.g. fr:controle-de-mosquee-...
+  "controle-",             // e.g. fr:controle-mosquee-de-paris-halal
+  "halal-",                // e.g. fr:halal-mosquee-courcouronnes
 ];
 
 function normalizeCertifierTag(tag: string): string[] {
@@ -812,8 +819,14 @@ export async function analyzeHalalStatus(
         ? `${add.explanation} (selon école ${options.madhab})`
         : add.explanation;
 
-      // Vegetal origin override: upgrade doubtful → halal when text specifies plant source
-      if (effectiveStatus === "doubtful" && hasVegetalOriginContext(
+      // V2: DB-backed vegetarian flag override — most reliable signal
+      // isVegetarian=true means confirmed non-animal → halal for doubtful additives
+      if (effectiveStatus === "doubtful" && add.isVegetarian === true) {
+        effectiveStatus = "halal";
+        effectiveExplanation = `${add.name} — origine végétale confirmée (base de données)`;
+      }
+      // Fallback: regex detection of "(origine végétale)" near the additive in ingredients text
+      else if (effectiveStatus === "doubtful" && hasVegetalOriginContext(
         ingredientsText,
         [add.code, ...add.name.split(/[/\s,()-]+/).filter((w) => w.length >= 4)],
       )) {
