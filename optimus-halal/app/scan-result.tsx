@@ -94,7 +94,7 @@ import { brand as brandTokens, glass, lightTheme } from "@/theme/colors";
 import { fontSize as fontSizeTokens, fontWeight as fontWeightTokens } from "@/theme/typography";
 import { spacing, radius } from "@/theme/spacing";
 import type { NutrientLevel } from "@/services/api/types";
-import { useFeatureFlagsStore, useQuotaStore, useLocalFavoritesStore, useLocalScanHistoryStore, useLocalNutritionProfileStore } from "@/store";
+import { useFeatureFlagsStore, useQuotaStore, useLocalFavoritesStore, useLocalScanHistoryStore, useLocalNutritionProfileStore, useTrialStore } from "@/store";
 import { isAuthenticated as hasStoredTokens } from "@/services/api";
 import { trackEvent } from "@/lib/analytics";
 
@@ -904,8 +904,8 @@ export default function ScanResultScreen() {
         </View>
       </Animated.ScrollView>
 
-      {/* Quota banner — anonymous users only */}
-      {isGuest && remainingScans !== null && remainingScans !== undefined && (
+      {/* Quota banner — anonymous users only, hidden during trial */}
+      {isGuest && !useTrialStore.getState().isTrialActive() && remainingScans !== null && remainingScans !== undefined && (
         <Animated.View
           entering={FadeInUp.delay(1000).duration(400)}
           style={{

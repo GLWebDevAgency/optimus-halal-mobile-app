@@ -96,9 +96,11 @@ export const premiumProcedure = t.procedure.use(isAuthenticated).use(isPremium);
 // ── Quota-checked procedure (anonymous + authenticated) ──────────
 // Allows both guest and authenticated users.
 // Premium (Naqiy+): unlimited, skips quota check.
-// Free (guest OR authenticated with expired/cancelled sub): 5/day via Redis.
+// Trial (first 7 days per deviceId): unlimited, skips quota check.
+// Free (guest post-trial OR authenticated with expired sub): 5/day via Redis.
 // Redis key: deviceId for guests, userId for authenticated free users.
 const DAILY_SCAN_LIMIT = 5;
+const TRIAL_DURATION_DAYS = 7;
 
 const quotaChecked = middleware(async ({ ctx, next }) => {
   // Premium users bypass quota entirely
@@ -113,6 +115,27 @@ const quotaChecked = middleware(async ({ ctx, next }) => {
       code: "BAD_REQUEST",
       message: "Device ID requis (header X-Device-Id)",
     });
+  }
+
+  // Trial check — first 7 days per deviceId are unlimited
+  // Uses a persistent Redis key (no TTL reset) set on first scan
+  if (ctx.deviceId && !ctx.userId) {
+    const trialKey = `trial:start:${ctx.deviceId}`;
+    const trialStart = await ctx.redis.get(trialKey);
+
+    if (!trialStart) {
+      // First ever scan from this device — start trial
+      await ctx.redis.set(trialKey, new Date().toISOString());
+      return next({ ctx: { ...ctx, remainingScans: null } });
+    }
+
+    const startDate = new Date(trialStart);
+    const now = new Date();
+    const diffDays = (now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+    if (diffDays < TRIAL_DURATION_DAYS) {
+      // Still within trial period — unlimited scans
+      return next({ ctx: { ...ctx, remainingScans: null } });
+    }
   }
 
   // Check daily quota in Redis
