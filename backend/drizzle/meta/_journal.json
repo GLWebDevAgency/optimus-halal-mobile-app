@@ -169,6 +169,13 @@
       "when": 1773475200000,
       "tag": "0023_devices_lifecycle",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1773561600000,
+      "tag": "0024_admins",
+      "breakpoints": true
     }
   ]
 }
