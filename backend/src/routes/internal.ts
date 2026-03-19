@@ -100,10 +100,23 @@ internalRoutes.post("/seed-admin", async (c) => {
     return c.json({ error: "Non autorisé" }, 401);
   }
 
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (!adminEmail) {
+    return c.json({ error: "ADMIN_EMAIL not set" }, 400);
+  }
+
   try {
-    const { seedAdmin } = await import("../db/seeds/seed-admin.js");
-    const count = await seedAdmin(db as Parameters<typeof seedAdmin>[0]);
-    return c.json({ success: true, seeded: count });
+    const users = await db.execute(sql`SELECT id FROM users WHERE LOWER(email) = LOWER(${adminEmail}) LIMIT 1`);
+    if (users.length === 0) {
+      return c.json({ error: `User ${adminEmail} not found`, seeded: 0 });
+    }
+    const userId = (users[0] as { id: string }).id;
+    await db.execute(sql`
+      INSERT INTO admins (user_id, role) VALUES (${userId}, 'super_admin')
+      ON CONFLICT (user_id) DO UPDATE SET role = 'super_admin'
+    `);
+    logger.info("Admin seeded via internal endpoint", { email: adminEmail });
+    return c.json({ success: true, seeded: 1, email: adminEmail });
   } catch (err) {
     logger.error("Admin seed failed", {
       error: err instanceof Error ? err.message : String(err),
