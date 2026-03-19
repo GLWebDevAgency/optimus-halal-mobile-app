@@ -92,6 +92,26 @@ internalRoutes.get("/refresh-stores/status", async (c) => {
   });
 });
 
+// ── POST /seed-admin ──────────────────────────────────────────
+// Bootstrap: seed super_admin from ADMIN_EMAIL env var. Idempotent.
+
+internalRoutes.post("/seed-admin", async (c) => {
+  if (!verifyCronSecret(c)) {
+    return c.json({ error: "Non autorisé" }, 401);
+  }
+
+  try {
+    const { seedAdmin } = await import("../db/seeds/seed-admin.js");
+    const count = await seedAdmin(db as Parameters<typeof seedAdmin>[0]);
+    return c.json({ success: true, seeded: count });
+  } catch (err) {
+    logger.error("Admin seed failed", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return c.json({ error: "Seed failed" }, 500);
+  }
+});
+
 // ── POST /cleanup-tokens ─────────────────────────────────────
 // Deletes expired refresh tokens. Called daily by GitHub Actions cron.
 
