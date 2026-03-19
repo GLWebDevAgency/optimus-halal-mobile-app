@@ -1,13 +1,14 @@
 "use client"
 
+import { useState } from "react"
 import {
   Warning,
-  ShieldWarning,
   WarningOctagon,
   Info,
   Clock,
 } from "@phosphor-icons/react"
 
+import { trpc } from "@/lib/trpc"
 import {
   Card,
   CardContent,
@@ -16,58 +17,18 @@ import {
   CardDescription,
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 
-const typeFilters = [
-  { label: "Toutes", active: true },
-  { label: "Boycott", active: false },
-  { label: "Rappel", active: false },
-  { label: "Fraude", active: false },
+type Severity = "critical" | "warning" | "info"
+
+const severityFilters: { label: string; value: Severity | undefined }[] = [
+  { label: "Toutes", value: undefined },
+  { label: "Critiques", value: "critical" },
+  { label: "Avertissements", value: "warning" },
+  { label: "Informations", value: "info" },
 ]
 
-const alerts = [
-  {
-    title: "Rappel produit : E471 d'origine animale detecte dans lot Brossard",
-    description:
-      "Le lot L2026-0315 des Brownie Brossard contient du E471 d'origine porcine non declare. Tous les utilisateurs ayant scanne ce produit ont ete notifies.",
-    type: "recall" as const,
-    severity: "critical" as const,
-    date: "18 mars 2026",
-    affectedProducts: 1,
-    affectedUsers: 342,
-  },
-  {
-    title: "Boycott : ajout de 3 nouvelles marques a la liste",
-    description:
-      "Suite aux decisions de la communaute, les marques XYZ Food, Alpha Snacks et Beta Drinks sont ajoutees au registre de boycott. Raison : financement documente.",
-    type: "boycott" as const,
-    severity: "warning" as const,
-    date: "17 mars 2026",
-    affectedProducts: 47,
-    affectedUsers: 0,
-  },
-  {
-    title: "Fraude potentielle : faux certificat halal sur produit importe",
-    description:
-      "Un certificat halal frauduleux a ete detecte sur un lot de viande importee du Bresil. Le produit est reference sous le code 789123456789. Enquete en cours.",
-    type: "fraud" as const,
-    severity: "critical" as const,
-    date: "15 mars 2026",
-    affectedProducts: 3,
-    affectedUsers: 89,
-  },
-  {
-    title: "Mise a jour : changement de statut AVS pour 12 produits",
-    description:
-      "Le certificateur AVS a mis a jour ses listes. 12 produits passent de 'certifie' a 'en revision'. Les verdicts seront temporairement marques comme douteux.",
-    type: "recall" as const,
-    severity: "info" as const,
-    date: "14 mars 2026",
-    affectedProducts: 12,
-    affectedUsers: 1204,
-  },
-]
-
-function getSeverityIcon(severity: "critical" | "warning" | "info") {
+function getSeverityIcon(severity: Severity) {
   switch (severity) {
     case "critical":
       return <WarningOctagon className="size-5 text-destructive" />
@@ -78,7 +39,7 @@ function getSeverityIcon(severity: "critical" | "warning" | "info") {
   }
 }
 
-function getSeverityBadge(severity: "critical" | "warning" | "info") {
+function getSeverityBadge(severity: Severity) {
   switch (severity) {
     case "critical":
       return <Badge variant="destructive">Critique</Badge>
@@ -93,34 +54,45 @@ function getSeverityBadge(severity: "critical" | "warning" | "info") {
   }
 }
 
-function getTypeBadge(type: "recall" | "boycott" | "fraud") {
-  switch (type) {
-    case "recall":
-      return <Badge variant="outline">Rappel</Badge>
-    case "boycott":
-      return <Badge variant="outline">Boycott</Badge>
-    case "fraud":
-      return <Badge variant="outline">Fraude</Badge>
-  }
+function formatDate(publishedAt: Date | string) {
+  return new Date(publishedAt).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  })
 }
 
 export default function AlertsPage() {
+  const [severity, setSeverity] = useState<Severity | undefined>(undefined)
+
+  const { data, isLoading } = trpc.alert.list.useQuery({
+    severity,
+    limit: 20,
+  })
+
+  const items = data?.items ?? []
+
+  const criticalCount = items.filter((a) => a.severity === "critical").length
+  const warningCount = items.filter((a) => a.severity === "warning").length
+  const infoCount = items.filter((a) => a.severity === "info").length
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Alertes</h1>
         <p className="text-muted-foreground">
-          Suivi des alertes de securite alimentaire et boycotts.
+          Suivi des alertes de securite alimentaire et notifications.
         </p>
       </div>
 
-      {/* Filter badges */}
+      {/* Severity filter badges */}
       <div className="flex flex-wrap gap-2">
-        {typeFilters.map((filter) => (
+        {severityFilters.map((filter) => (
           <Badge
             key={filter.label}
-            variant={filter.active ? "default" : "outline"}
+            variant={severity === filter.value ? "default" : "outline"}
             className="cursor-pointer"
+            onClick={() => setSeverity(filter.value)}
           >
             {filter.label}
           </Badge>
@@ -129,82 +101,91 @@ export default function AlertsPage() {
 
       {/* Stats cards */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card size="sm">
-          <CardContent className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-destructive/10">
-              <ShieldWarning className="size-5 text-destructive" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">2</p>
-              <p className="text-xs text-muted-foreground">Alertes critiques</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card size="sm">
-          <CardContent className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-warning/10">
-              <Warning className="size-5 text-warning" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">1</p>
-              <p className="text-xs text-muted-foreground">Avertissements</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card size="sm">
-          <CardContent className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-              <Info className="size-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">1</p>
-              <p className="text-xs text-muted-foreground">Informations</p>
-            </div>
-          </CardContent>
-        </Card>
+        {isLoading ? (
+          <>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Card size="sm" key={i}>
+                <CardContent className="flex items-center gap-3">
+                  <Skeleton className="size-10 rounded-lg" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-7 w-10" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </>
+        ) : (
+          <>
+            <Card size="sm">
+              <CardContent className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-destructive/10">
+                  <WarningOctagon className="size-5 text-destructive" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{criticalCount}</p>
+                  <p className="text-xs text-muted-foreground">Critiques</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card size="sm">
+              <CardContent className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-warning/10">
+                  <Warning className="size-5 text-warning" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{warningCount}</p>
+                  <p className="text-xs text-muted-foreground">Avertissements</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card size="sm">
+              <CardContent className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
+                  <Info className="size-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{infoCount}</p>
+                  <p className="text-xs text-muted-foreground">Informations</p>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* Alerts list */}
       <div className="space-y-4">
-        {alerts.map((alert) => (
-          <Card key={alert.title}>
-            <CardHeader>
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5">
-                  {getSeverityIcon(alert.severity)}
-                </div>
-                <div className="flex-1 space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {getSeverityBadge(alert.severity)}
-                    {getTypeBadge(alert.type)}
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Chargement...</p>
+        ) : items.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Aucune alerte trouvee.</p>
+        ) : (
+          items.map((alert) => (
+            <Card key={alert.id}>
+              <CardHeader>
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5">
+                    {getSeverityIcon(alert.severity as Severity)}
                   </div>
-                  <CardTitle className="text-base">{alert.title}</CardTitle>
-                  <CardDescription>{alert.description}</CardDescription>
+                  <div className="flex-1 space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {getSeverityBadge(alert.severity as Severity)}
+                    </div>
+                    <CardTitle className="text-base">{alert.title}</CardTitle>
+                    <CardDescription>{alert.summary}</CardDescription>
+                  </div>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-                <div className="flex items-center gap-1">
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Clock className="size-3" />
-                  {alert.date}
+                  {formatDate(alert.publishedAt)}
                 </div>
-                <span>
-                  {alert.affectedProducts} produit
-                  {alert.affectedProducts > 1 ? "s" : ""} concerne
-                  {alert.affectedProducts > 1 ? "s" : ""}
-                </span>
-                {alert.affectedUsers > 0 && (
-                  <span>
-                    {alert.affectedUsers.toLocaleString("fr-FR")} utilisateur
-                    {alert.affectedUsers > 1 ? "s" : ""} notifie
-                    {alert.affectedUsers > 1 ? "s" : ""}
-                  </span>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
     </div>
   )

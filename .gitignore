@@ -125,3 +125,5 @@ stitch.zip
 .superpowers/
 .claude/worktrees/
 .claude/audit-*.md
+.vercel
+.env*.local

@@ -2,7 +2,7 @@
 
 import { SectionContainer } from "@/components/layout/section-container";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Users } from "lucide-react";
+import { ArrowRight, Users } from "@phosphor-icons/react";
 import { motion } from "motion/react";
 
 export function Community() {

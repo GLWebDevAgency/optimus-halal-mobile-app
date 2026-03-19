@@ -5,8 +5,6 @@ import {
   Scan,
   Database,
   Storefront,
-  TrendUp,
-  TrendDown,
   Warning,
   Clock,
 } from "@phosphor-icons/react"
@@ -27,37 +25,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Skeleton } from "@/components/ui/skeleton"
+import { trpc } from "@/lib/trpc"
 
-const kpis = [
-  {
-    label: "Utilisateurs actifs",
-    value: "12 847",
-    change: "+12.5%",
-    trending: "up" as const,
-    icon: Users,
-  },
-  {
-    label: "Scans aujourd'hui",
-    value: "3 294",
-    change: "+8.2%",
-    trending: "up" as const,
-    icon: Scan,
-  },
-  {
-    label: "Produits en BDD",
-    value: "817K",
-    change: "+0.3%",
-    trending: "up" as const,
-    icon: Database,
-  },
-  {
-    label: "Magasins verifies",
-    value: "383",
-    change: "-2.1%",
-    trending: "down" as const,
-    icon: Storefront,
-  },
-]
+// --- Mock data (no endpoint available) ---
 
 const recentScans = [
   {
@@ -97,23 +68,15 @@ const recentScans = [
   },
 ]
 
-const activeAlerts = [
-  {
-    title: "Rappel produit : E471 suspect dans lot Brossard",
-    severity: "critical" as const,
-    date: "18 mars 2026",
-  },
-  {
-    title: "Boycott : nouvelle marque ajoutee a la liste",
-    severity: "warning" as const,
-    date: "17 mars 2026",
-  },
-  {
-    title: "Mise a jour certificateur AVS",
-    severity: "info" as const,
-    date: "16 mars 2026",
-  },
-]
+// --- Helpers ---
+
+function formatNumber(n: number): string {
+  if (n >= 100_000) {
+    const k = Math.round(n / 1_000)
+    return `${k.toLocaleString("fr-FR")}K`
+  }
+  return n.toLocaleString("fr-FR")
+}
 
 function getVerdictVariant(verdict: string) {
   switch (verdict) {
@@ -139,7 +102,39 @@ function getSeverityClasses(severity: "critical" | "warning" | "info") {
   }
 }
 
+function getSeverityLabel(severity: "critical" | "warning" | "info") {
+  switch (severity) {
+    case "critical":
+      return "Critique"
+    case "warning":
+      return "Attention"
+    case "info":
+      return "Info"
+  }
+}
+
+function formatDate(dateString: string | Date): string {
+  const date = new Date(dateString)
+  return date.toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  })
+}
+
+// --- KPI config (static, values filled from query) ---
+
+const kpiConfig = [
+  { key: "totalUsers" as const, label: "Utilisateurs actifs", icon: Users },
+  { key: "totalScans" as const, label: "Scans total", icon: Scan },
+  { key: "totalProducts" as const, label: "Produits en BDD", icon: Database },
+  { key: "totalStores" as const, label: "Magasins verifies", icon: Storefront },
+]
+
 export default function AdminDashboardPage() {
+  const stats = trpc.stats.global.useQuery()
+  const alerts = trpc.alert.list.useQuery({ limit: 3 })
+
   return (
     <div className="space-y-6">
       <div>
@@ -153,8 +148,8 @@ export default function AdminDashboardPage() {
 
       {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {kpis.map((kpi) => (
-          <Card key={kpi.label}>
+        {kpiConfig.map((kpi) => (
+          <Card key={kpi.key}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardDescription className="text-sm font-medium">
                 {kpi.label}
@@ -162,33 +157,22 @@ export default function AdminDashboardPage() {
               <kpi.icon className="size-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{kpi.value}</div>
-              <div className="mt-1 flex items-center gap-1 text-xs">
-                {kpi.trending === "up" ? (
-                  <TrendUp className="size-3 text-success" />
-                ) : (
-                  <TrendDown className="size-3 text-destructive" />
-                )}
-                <span
-                  className={
-                    kpi.trending === "up"
-                      ? "text-success"
-                      : "text-destructive"
-                  }
-                >
-                  {kpi.change}
-                </span>
-                <span className="text-muted-foreground">
-                  vs mois dernier
-                </span>
-              </div>
+              {stats.isLoading ? (
+                <Skeleton className="h-8 w-24" />
+              ) : stats.error ? (
+                <p className="text-sm text-destructive">Erreur de chargement</p>
+              ) : (
+                <div className="text-2xl font-bold">
+                  {formatNumber(stats.data?.[kpi.key] ?? 0)}
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Recent Scans */}
+        {/* Recent Scans (mock) */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Scans recents</CardTitle>
@@ -242,24 +226,56 @@ export default function AdminDashboardPage() {
               Alertes actives
             </CardTitle>
             <CardDescription>
-              {activeAlerts.length} alertes en cours.
+              {alerts.isLoading
+                ? "Chargement..."
+                : alerts.error
+                  ? "Erreur de chargement"
+                  : `${alerts.data?.items.length ?? 0} alerte${(alerts.data?.items.length ?? 0) > 1 ? "s" : ""} en cours.`}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {activeAlerts.map((alert) => (
-                <div
-                  key={alert.title}
-                  className={`rounded-lg border p-3 ${getSeverityClasses(alert.severity)}`}
-                >
-                  <p className="text-sm font-medium">{alert.title}</p>
-                  <div className="mt-1 flex items-center gap-1 text-xs opacity-70">
-                    <Clock className="size-3" />
-                    {alert.date}
+            {alerts.isLoading ? (
+              <p className="text-sm text-muted-foreground">Chargement...</p>
+            ) : alerts.error ? (
+              <p className="text-sm text-destructive">
+                Impossible de charger les alertes.
+              </p>
+            ) : alerts.data?.items.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Aucune alerte active.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {alerts.data?.items.map((alert) => (
+                  <div
+                    key={alert.id}
+                    className={`rounded-lg border p-3 ${getSeverityClasses(alert.severity as "critical" | "warning" | "info")}`}
+                  >
+                    <div className="mb-1 flex items-center gap-2">
+                      <Badge
+                        variant={
+                          alert.severity === "critical"
+                            ? "destructive"
+                            : alert.severity === "warning"
+                              ? "secondary"
+                              : "default"
+                        }
+                        className="text-[10px]"
+                      >
+                        {getSeverityLabel(alert.severity as "critical" | "warning" | "info")}
+                      </Badge>
+                    </div>
+                    <p className="text-sm font-medium">{alert.title}</p>
+                    <div className="mt-1 flex items-center gap-1 text-xs opacity-70">
+                      <Clock className="size-3" />
+                      {alert.publishedAt
+                        ? formatDate(alert.publishedAt)
+                        : formatDate(alert.createdAt)}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

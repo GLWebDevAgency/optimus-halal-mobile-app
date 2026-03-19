@@ -3,7 +3,7 @@
 import { SectionContainer } from "@/components/layout/section-container";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send } from "lucide-react";
+import { PaperPlaneTilt } from "@phosphor-icons/react";
 import { motion } from "motion/react";
 
 export function Newsletter() {
@@ -37,7 +37,7 @@ export function Newsletter() {
             size="lg"
             className="h-12 gap-2 bg-primary px-6 text-primary-foreground"
           >
-            <Send className="size-4" />
+            <PaperPlaneTilt className="size-4" />
             S&apos;inscrire
           </Button>
         </form>

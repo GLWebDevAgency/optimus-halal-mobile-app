@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Clock, Globe, Mail, MapPin, Send } from "lucide-react";
+import { Clock, Globe, Envelope, MapPin, PaperPlaneTilt } from "@phosphor-icons/react";
 import { motion } from "motion/react";
 
 type ContactFormData = {
@@ -36,7 +36,7 @@ const subjects = [
 
 const contactInfo = [
   {
-    icon: Mail,
+    icon: Envelope,
     title: "Email",
     value: "contact@naqiy.app",
   },
@@ -230,7 +230,7 @@ export function Contact() {
                 </div>
 
                 <Button type="submit" size="lg" className="h-12 gap-2">
-                  <Send className="size-4" />
+                  <PaperPlaneTilt className="size-4" />
                   Envoyer
                 </Button>
               </form>

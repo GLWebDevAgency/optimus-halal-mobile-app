@@ -93,6 +93,34 @@ const isPremium = middleware(async ({ ctx, next }) => {
 
 export const premiumProcedure = t.procedure.use(isAuthenticated).use(isPremium);
 
+// ── Admin middleware ──────────────────────────────────────
+const isAdmin = middleware(async ({ ctx, next }) => {
+  if (!ctx.userId) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Authentification requise",
+    });
+  }
+
+  const { admins } = await import("../db/schema/index.js");
+  const { eq } = await import("drizzle-orm");
+
+  const admin = await ctx.db.query.admins.findFirst({
+    where: eq(admins.userId, ctx.userId),
+  });
+
+  if (!admin) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Accès réservé aux administrateurs",
+    });
+  }
+
+  return next({ ctx: { ...ctx, userId: ctx.userId, adminRole: admin.role } });
+});
+
+export const adminProcedure = t.procedure.use(isAuthenticated).use(isAdmin);
+
 // ── Quota-checked procedure (anonymous + authenticated) ──────────
 // Source of truth: `devices` table (PostgreSQL).
 // Redis used only as a fast-path cache for the daily counter.

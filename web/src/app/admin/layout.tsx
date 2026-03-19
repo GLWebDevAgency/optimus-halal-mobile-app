@@ -34,6 +34,8 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
+import { TRPCProvider } from "@/lib/trpc-provider"
+import { AdminAuthProvider, useAdminAuth } from "@/lib/admin-auth"
 
 const navItems = [
   { href: "/admin", label: "Vue d'ensemble", icon: SquaresFour },
@@ -45,12 +47,30 @@ const navItems = [
   { href: "/admin/settings", label: "Paramètres", icon: GearSix },
 ]
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const { user, isLoading, logout } = useAdminAuth()
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    )
+  }
+
+  // Login page renders without sidebar
+  if (pathname === "/admin/login") {
+    return <>{children}</>
+  }
+
+  // Not authenticated — auth provider will redirect
+  if (!user) return null
+
+  const initials = user.displayName
+    ? user.displayName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
+    : user.email.slice(0, 2).toUpperCase()
 
   return (
     <SidebarProvider>
@@ -106,7 +126,7 @@ export default function AdminLayout({
           <SidebarSeparator />
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Déconnexion">
+              <SidebarMenuButton tooltip="Déconnexion" onClick={logout}>
                 <SignOut />
                 <span>Déconnexion</span>
               </SidebarMenuButton>
@@ -116,7 +136,6 @@ export default function AdminLayout({
       </Sidebar>
 
       <SidebarInset>
-        {/* Top header bar */}
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger />
           <Separator orientation="vertical" className="mx-2 h-4" />
@@ -138,16 +157,29 @@ export default function AdminLayout({
             </Button>
 
             <Avatar size="sm">
-              <AvatarFallback>AD</AvatarFallback>
+              <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
           </div>
         </header>
 
-        {/* Main content */}
         <div className="flex-1 overflow-auto p-6">
           {children}
         </div>
       </SidebarInset>
     </SidebarProvider>
+  )
+}
+
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <TRPCProvider>
+      <AdminAuthProvider>
+        <AdminShell>{children}</AdminShell>
+      </AdminAuthProvider>
+    </TRPCProvider>
   )
 }
