@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "name": "naqiy-monorepo",
+  "description": "Naqiy monorepo — web + backend + mobile",
+  "scripts": {
+    "build": "cd web && npm run build"
+  },
+  "dependencies": {
+    "next": "16.1.7"
+  }
+}

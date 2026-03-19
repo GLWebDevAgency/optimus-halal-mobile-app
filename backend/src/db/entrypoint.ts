@@ -76,6 +76,20 @@ if (!isTest) {
     }
     console.log("  ⚠️ Continuing despite seed error (non-production)\n");
   }
+
+  // ── Phase 2b: Seed initial admin ──────────────────────────
+  console.log("▶ Phase 2b: Seeding initial admin...");
+  try {
+    const { seedAdmin } = await import("./seeds/seed-admin.js");
+    const count = await seedAdmin(db);
+    if (count > 0) {
+      console.log(`  ✅ Admin seeded (${count} record)\n`);
+    } else {
+      console.log("  ⏭ Admin seed skipped (no ADMIN_EMAIL or user not found)\n");
+    }
+  } catch (err) {
+    console.warn(`  ⚠️ Admin seed failed: ${(err as Error).message}\n`);
+  }
 } else {
   console.log("▶ Phase 2: Skipping seeds (test environment)\n");
 }
@@ -106,6 +120,8 @@ try {
     "boycott_targets", "ingredient_rulings",
     // Referrals & Devices
     "referrals", "devices",
+    // Admin
+    "admins",
   ];
   const missing = requiredTables.filter((t) => !tables.includes(t));
 

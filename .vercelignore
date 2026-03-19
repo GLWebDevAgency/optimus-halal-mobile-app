@@ -1,0 +1,19 @@
+# Exclude everything except web/ and backend/src/ (needed for tRPC types)
+optimus-halal/
+backend/asset/
+backend/dist/
+backend/drizzle/
+backend/test/
+docs/
+stitch/
+stitch.zip
+stitch_onboarding_reliable_certifications/
+apps-et-sources-infos-medias/
+apps-to-explore/
+tools/
+screenshots/
+*.png
+*.apk
+*.aab
+*.ipa
+*.zip

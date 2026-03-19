@@ -17,6 +17,7 @@ import { additiveRouter } from "./routers/additive.js";
 import { uploadRouter } from "./routers/upload.js";
 import { subscriptionRouter } from "./routers/subscription.js";
 import { referralRouter } from "./routers/referral.js";
+import { adminRouter } from "./routers/admin.js";
 
 export const appRouter = router({
   auth: authRouter,
@@ -37,6 +38,7 @@ export const appRouter = router({
   upload: uploadRouter,
   subscription: subscriptionRouter,
   referral: referralRouter,
+  admin: adminRouter,
 });
 
 export type AppRouter = typeof appRouter;

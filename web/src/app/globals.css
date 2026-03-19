@@ -1,0 +1,456 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: var(--font-plus-jakarta);
+  --font-mono: var(--font-jetbrains-mono);
+  --font-heading: var(--font-plus-jakarta);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
+  --color-gold-muted: var(--gold-muted);
+  --color-halal: var(--halal);
+  --color-halal-foreground: var(--halal-foreground);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* ═══════════════════════════════════════════════════
+   NAQIY DESIGN SYSTEM — LIGHT MODE (SIGNATURE)
+   Gold + Vert halal + Noir profond
+   ═══════════════════════════════════════════════════ */
+:root {
+  --radius: 0.625rem;
+
+  /* Surfaces — blanc chaud crème */
+  --background: oklch(0.98 0.004 90);
+  --foreground: oklch(0.12 0.01 90);
+
+  /* Cards — blanc pur */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.12 0.01 90);
+
+  /* Popovers */
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.12 0.01 90);
+
+  /* Primary — Or Naqiy signature */
+  --primary: oklch(0.72 0.17 82);
+  --primary-foreground: oklch(0.12 0.02 82);
+
+  /* Secondary — Gris chaud léger */
+  --secondary: oklch(0.95 0.006 90);
+  --secondary-foreground: oklch(0.22 0.015 90);
+
+  /* Muted */
+  --muted: oklch(0.95 0.006 90);
+  --muted-foreground: oklch(0.46 0.02 90);
+
+  /* Accent — Or très subtil */
+  --accent: oklch(0.93 0.025 85);
+  --accent-foreground: oklch(0.22 0.015 90);
+
+  /* Destructive — Rouge */
+  --destructive: oklch(0.55 0.24 27);
+  --destructive-foreground: oklch(0.98 0 0);
+
+  /* Success — Vert halal */
+  --success: oklch(0.55 0.18 155);
+  --success-foreground: oklch(0.98 0 0);
+
+  /* Warning — Ambre */
+  --warning: oklch(0.78 0.16 75);
+  --warning-foreground: oklch(0.22 0.06 75);
+
+  /* Borders & Inputs — noir subtil */
+  --border: oklch(0.88 0.01 90);
+  --input: oklch(0.88 0.01 90);
+  --ring: oklch(0.72 0.17 82);
+
+  /* Token Or Naqiy */
+  --gold: oklch(0.72 0.17 82);
+  --gold-foreground: oklch(0.12 0.02 82);
+  --gold-muted: oklch(0.84 0.09 82);
+
+  /* Token Vert halal */
+  --halal: oklch(0.55 0.18 155);
+  --halal-foreground: oklch(0.98 0 0);
+
+  /* Charts — palette chaude */
+  --chart-1: oklch(0.72 0.17 82);
+  --chart-2: oklch(0.55 0.18 155);
+  --chart-3: oklch(0.60 0.14 55);
+  --chart-4: oklch(0.78 0.10 110);
+  --chart-5: oklch(0.50 0.12 30);
+
+  /* Sidebar */
+  --sidebar: oklch(0.97 0.004 90);
+  --sidebar-foreground: oklch(0.12 0.01 90);
+  --sidebar-primary: oklch(0.72 0.17 82);
+  --sidebar-primary-foreground: oklch(0.12 0.02 82);
+  --sidebar-accent: oklch(0.93 0.02 85);
+  --sidebar-accent-foreground: oklch(0.22 0.015 90);
+  --sidebar-border: oklch(0.88 0.01 90);
+  --sidebar-ring: oklch(0.72 0.17 82);
+}
+
+/* ═══════════════════════════════════════════════════
+   NAQIY DESIGN SYSTEM — DARK MODE
+   Noir profond + Or lumineux + Vert halal vif
+   ═══════════════════════════════════════════════════ */
+.dark {
+  /* Surfaces — noir chaud profond */
+  --background: oklch(0.11 0.01 90);
+  --foreground: oklch(0.92 0.01 90);
+
+  /* Cards — noir élevé */
+  --card: oklch(0.16 0.012 90);
+  --card-foreground: oklch(0.92 0.01 90);
+
+  /* Popovers */
+  --popover: oklch(0.16 0.012 90);
+  --popover-foreground: oklch(0.92 0.01 90);
+
+  /* Primary — Or lumineux */
+  --primary: oklch(0.78 0.17 82);
+  --primary-foreground: oklch(0.11 0.02 82);
+
+  /* Secondary */
+  --secondary: oklch(0.20 0.014 90);
+  --secondary-foreground: oklch(0.88 0.01 90);
+
+  /* Muted */
+  --muted: oklch(0.20 0.014 90);
+  --muted-foreground: oklch(0.58 0.03 90);
+
+  /* Accent */
+  --accent: oklch(0.23 0.02 85);
+  --accent-foreground: oklch(0.88 0.01 90);
+
+  /* Destructive */
+  --destructive: oklch(0.65 0.22 25);
+  --destructive-foreground: oklch(0.98 0 0);
+
+  /* Success — Vert halal vif */
+  --success: oklch(0.65 0.20 155);
+  --success-foreground: oklch(0.11 0 0);
+
+  /* Warning */
+  --warning: oklch(0.78 0.16 75);
+  --warning-foreground: oklch(0.11 0.02 75);
+
+  /* Borders — lueur dorée subtile */
+  --border: oklch(1 0.015 85 / 10%);
+  --input: oklch(1 0.015 85 / 14%);
+  --ring: oklch(0.78 0.17 82);
+
+  /* Token Or */
+  --gold: oklch(0.78 0.17 82);
+  --gold-foreground: oklch(0.11 0.02 82);
+  --gold-muted: oklch(0.50 0.09 82);
+
+  /* Token Vert halal */
+  --halal: oklch(0.65 0.20 155);
+  --halal-foreground: oklch(0.11 0 0);
+
+  /* Charts */
+  --chart-1: oklch(0.78 0.17 82);
+  --chart-2: oklch(0.65 0.20 155);
+  --chart-3: oklch(0.65 0.15 55);
+  --chart-4: oklch(0.82 0.12 110);
+  --chart-5: oklch(0.55 0.14 30);
+
+  /* Sidebar */
+  --sidebar: oklch(0.13 0.01 90);
+  --sidebar-foreground: oklch(0.92 0.01 90);
+  --sidebar-primary: oklch(0.78 0.17 82);
+  --sidebar-primary-foreground: oklch(0.11 0.02 82);
+  --sidebar-accent: oklch(0.20 0.016 85);
+  --sidebar-accent-foreground: oklch(0.88 0.01 90);
+  --sidebar-border: oklch(1 0.015 85 / 8%);
+  --sidebar-ring: oklch(0.78 0.17 82);
+}
+
+/* ═══════════════════════════════════════════════════
+   BASE LAYER
+   ═══════════════════════════════════════════════════ */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans scroll-smooth antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-tight text-foreground;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   CUSTOM UTILITIES — NAQIY PREMIUM
+   ═══════════════════════════════════════════════════ */
+
+/* Dégradé or Naqiy sur le texte — riche et profond */
+@utility text-gold-gradient {
+  background: linear-gradient(
+    135deg,
+    oklch(0.82 0.18 85),
+    oklch(0.70 0.17 75),
+    oklch(0.85 0.15 95)
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Dégradé vert halal sur le texte */
+@utility text-halal-gradient {
+  background: linear-gradient(
+    135deg,
+    oklch(0.55 0.18 155),
+    oklch(0.50 0.15 140),
+    oklch(0.60 0.16 165)
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Shimmer doré — reflet de lumière qui traverse */
+@utility gold-shimmer {
+  background: linear-gradient(
+    110deg,
+    oklch(0.78 0.17 82 / 0%) 0%,
+    oklch(0.85 0.18 82 / 30%) 40%,
+    oklch(0.78 0.17 82 / 0%) 60%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+/* Lueur dorée premium — multi-couche */
+@utility gold-glow {
+  box-shadow:
+    0 0 15px oklch(0.78 0.17 82 / 15%),
+    0 0 40px oklch(0.78 0.17 82 / 8%),
+    0 0 80px oklch(0.78 0.17 82 / 4%);
+}
+
+/* Lueur dorée intense (CTAs) */
+@utility gold-glow-intense {
+  box-shadow:
+    0 0 20px oklch(0.78 0.17 82 / 25%),
+    0 0 60px oklch(0.78 0.17 82 / 12%),
+    0 0 120px oklch(0.78 0.17 82 / 6%);
+}
+
+/* Lueur verte halal */
+@utility halal-glow {
+  box-shadow:
+    0 0 20px oklch(0.55 0.18 155 / 12%),
+    0 0 50px oklch(0.55 0.18 155 / 6%);
+}
+
+/* Glass morphism premium — chaud et doré */
+@utility glass {
+  background: oklch(1 0.005 85 / 60%);
+  backdrop-filter: blur(24px) saturate(1.6);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+}
+
+/* Glass dark — pour dark mode */
+@utility glass-dark {
+  background: oklch(0.12 0.01 85 / 70%);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+}
+
+/* Container responsive */
+@utility container {
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+  @media (width >= 640px) {
+    padding-inline: 2rem;
+  }
+  @media (width >= 1400px) {
+    max-width: 1400px;
+  }
+}
+
+/* Bordure dorée subtile */
+@utility border-gold {
+  border-color: oklch(0.78 0.17 82 / 30%);
+}
+
+/* Fond doré très subtil */
+@utility bg-gold-subtle {
+  background-color: oklch(0.78 0.17 82 / 5%);
+}
+
+/* Gradient mesh background — chaleur dorée */
+@utility bg-gold-mesh {
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 40%, oklch(0.78 0.17 82 / 8%) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 60% at 80% 20%, oklch(0.55 0.18 155 / 5%) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 80% at 50% 90%, oklch(0.78 0.17 82 / 6%) 0%, transparent 50%);
+}
+
+/* Phone frame shadow */
+@utility phone-shadow {
+  box-shadow:
+    0 25px 50px -12px oklch(0 0 0 / 25%),
+    0 12px 24px -8px oklch(0 0 0 / 12%),
+    0 0 0 1px oklch(0 0 0 / 8%),
+    inset 0 1px 0 oklch(1 0 0 / 10%);
+}
+
+/* Section divider — ligne dorée subtile */
+@utility divider-gold {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    oklch(0.78 0.17 82 / 20%) 30%,
+    oklch(0.78 0.17 82 / 40%) 50%,
+    oklch(0.78 0.17 82 / 20%) 70%,
+    transparent 100%
+  );
+  height: 1px;
+}
+
+/* Noise texture overlay */
+@utility noise-overlay {
+  position: relative;
+}
+
+/* ═══════════════════════════════════════════════════
+   ANIMATIONS — PREMIUM MOTION
+   ═══════════════════════════════════════════════════ */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  33% { transform: translateY(-6px) rotate(0.5deg); }
+  66% { transform: translateY(-12px) rotate(-0.5deg); }
+}
+
+@keyframes pulse-gold {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(-50%)); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes beam-fall {
+  0% { opacity: 0; transform: translateY(-120%); }
+  10% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(10%); }
+}
+
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px oklch(0.78 0.17 82 / 15%), 0 0 60px oklch(0.78 0.17 82 / 8%);
+  }
+  50% {
+    box-shadow: 0 0 30px oklch(0.78 0.17 82 / 25%), 0 0 80px oklch(0.78 0.17 82 / 12%);
+  }
+}
+
+@keyframes scan-line {
+  0% { transform: translateY(0%); }
+  50% { transform: translateY(400%); }
+  100% { transform: translateY(0%); }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
