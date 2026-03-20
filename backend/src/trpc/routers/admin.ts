@@ -1,11 +1,110 @@
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { eq, sql, ilike, or, desc, asc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure, adminProcedure } from "../trpc.js";
-import { admins, users, safeUserColumns } from "../../db/schema/index.js";
+import { admins, users, safeUserColumns, scans, products } from "../../db/schema/index.js";
 import { logger } from "../../lib/logger.js";
 
 export const adminRouter = router({
+  /**
+   * List users with pagination, search, and tier filter.
+   * Requires admin access.
+   */
+  listUsers: adminProcedure
+    .input(
+      z.object({
+        page: z.number().int().min(1).default(1),
+        limit: z.number().int().min(1).max(100).default(20),
+        search: z.string().trim().optional(),
+        tier: z.enum(["free", "premium"]).optional(),
+        sortBy: z.enum(["createdAt", "totalScans", "email"]).default("createdAt"),
+        sortOrder: z.enum(["asc", "desc"]).default("desc"),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { page, limit, search, tier, sortBy, sortOrder } = input;
+      const offset = (page - 1) * limit;
+
+      // Build WHERE conditions
+      const conditions = [];
+      if (search) {
+        conditions.push(
+          or(
+            ilike(users.email, `%${search}%`),
+            ilike(users.displayName, `%${search}%`)
+          )
+        );
+      }
+      if (tier) {
+        conditions.push(eq(users.subscriptionTier, tier));
+      }
+
+      const where = conditions.length > 0
+        ? sql`${sql.join(conditions.map(c => sql`(${c})`), sql` AND `)}`
+        : undefined;
+
+      // Sort
+      const sortColumn = sortBy === "totalScans" ? users.totalScans
+        : sortBy === "email" ? users.email
+        : users.createdAt;
+      const orderFn = sortOrder === "asc" ? asc : desc;
+
+      // Count
+      const [countResult] = await ctx.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(users)
+        .where(where);
+
+      // Data
+      const items = await ctx.db
+        .select({
+          id: users.id,
+          email: users.email,
+          displayName: users.displayName,
+          subscriptionTier: users.subscriptionTier,
+          madhab: users.madhab,
+          totalScans: users.totalScans,
+          isActive: users.isActive,
+          createdAt: users.createdAt,
+        })
+        .from(users)
+        .where(where)
+        .orderBy(orderFn(sortColumn))
+        .limit(limit)
+        .offset(offset);
+
+      return {
+        items,
+        total: countResult?.count ?? 0,
+        page,
+        totalPages: Math.ceil((countResult?.count ?? 0) / limit),
+      };
+    }),
+
+  /**
+   * Recent scans across all users — for admin dashboard.
+   */
+  recentScans: adminProcedure
+    .input(z.object({ limit: z.number().int().min(1).max(50).default(10) }))
+    .query(async ({ ctx, input }) => {
+      const rows = await ctx.db
+        .select({
+          id: scans.id,
+          barcode: scans.barcode,
+          halalStatus: scans.halalStatus,
+          scannedAt: scans.scannedAt,
+          userEmail: users.email,
+          productName: products.name,
+        })
+        .from(scans)
+        .leftJoin(users, eq(scans.userId, users.id))
+        .leftJoin(products, eq(scans.productId, products.id))
+        .orderBy(desc(scans.scannedAt))
+        .limit(input.limit);
+
+      return rows;
+    }),
+
   /**
    * Check if the authenticated user has admin access.
    * Returns admin info if found, throws FORBIDDEN otherwise.

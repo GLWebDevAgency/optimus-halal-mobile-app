@@ -28,46 +28,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { trpc } from "@/lib/trpc"
 
-// --- Mock data (no endpoint available) ---
-
-const recentScans = [
-  {
-    barcode: "3017620422003",
-    product: "Nutella 400g",
-    user: "mehdi@example.com",
-    verdict: "Douteux",
-    time: "il y a 2 min",
-  },
-  {
-    barcode: "3175681851849",
-    product: "Evian 1.5L",
-    user: "sarah@example.com",
-    verdict: "Halal",
-    time: "il y a 5 min",
-  },
-  {
-    barcode: "3228857000166",
-    product: "Beurre President",
-    user: "karim@example.com",
-    verdict: "Halal",
-    time: "il y a 8 min",
-  },
-  {
-    barcode: "7622210449283",
-    product: "Oreo Original",
-    user: "fatima@example.com",
-    verdict: "Douteux",
-    time: "il y a 12 min",
-  },
-  {
-    barcode: "3046920022651",
-    product: "Lindt Excellence 70%",
-    user: "youssef@example.com",
-    verdict: "Haram",
-    time: "il y a 15 min",
-  },
-]
-
 // --- Helpers ---
 
 function formatNumber(n: number): string {
@@ -78,16 +38,29 @@ function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR")
 }
 
-function getVerdictVariant(verdict: string) {
-  switch (verdict) {
-    case "Halal":
+function getVerdictVariant(status: string | null) {
+  switch (status) {
+    case "halal":
       return "default" as const
-    case "Haram":
+    case "haram":
       return "destructive" as const
-    case "Douteux":
+    case "doubtful":
       return "secondary" as const
     default:
       return "outline" as const
+  }
+}
+
+function getVerdictLabel(status: string | null) {
+  switch (status) {
+    case "halal":
+      return "Halal"
+    case "haram":
+      return "Haram"
+    case "doubtful":
+      return "Douteux"
+    default:
+      return "Inconnu"
   }
 }
 
@@ -122,7 +95,20 @@ function formatDate(dateString: string | Date): string {
   })
 }
 
-// --- KPI config (static, values filled from query) ---
+function timeAgo(date: string | Date): string {
+  const now = new Date()
+  const d = new Date(date)
+  const diffMs = now.getTime() - d.getTime()
+  const diffMin = Math.floor(diffMs / 60000)
+  if (diffMin < 1) return "a l'instant"
+  if (diffMin < 60) return `il y a ${diffMin} min`
+  const diffH = Math.floor(diffMin / 60)
+  if (diffH < 24) return `il y a ${diffH}h`
+  const diffD = Math.floor(diffH / 24)
+  return `il y a ${diffD}j`
+}
+
+// --- KPI config ---
 
 const kpiConfig = [
   { key: "totalUsers" as const, label: "Utilisateurs actifs", icon: Users },
@@ -134,6 +120,7 @@ const kpiConfig = [
 export default function AdminDashboardPage() {
   const stats = trpc.stats.global.useQuery()
   const alerts = trpc.alert.list.useQuery({ limit: 3 })
+  const recentScans = trpc.admin.recentScans.useQuery({ limit: 5 })
 
   return (
     <div className="space-y-6">
@@ -172,49 +159,65 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Recent Scans (mock) */}
+        {/* Recent Scans */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Scans recents</CardTitle>
             <CardDescription>
-              Les 5 derniers scans effectues par les utilisateurs.
+              Les derniers scans effectues par les utilisateurs.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Code-barres</TableHead>
-                  <TableHead>Produit</TableHead>
-                  <TableHead>Utilisateur</TableHead>
-                  <TableHead>Verdict</TableHead>
-                  <TableHead className="text-right">Heure</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentScans.map((scan) => (
-                  <TableRow key={scan.barcode}>
-                    <TableCell className="font-mono text-xs">
-                      {scan.barcode}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {scan.product}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {scan.user}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getVerdictVariant(scan.verdict)}>
-                        {scan.verdict}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right text-muted-foreground">
-                      {scan.time}
-                    </TableCell>
-                  </TableRow>
+            {recentScans.isLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-10 w-full" />
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+            ) : recentScans.error ? (
+              <p className="text-sm text-destructive">
+                Erreur de chargement des scans.
+              </p>
+            ) : recentScans.data?.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Aucun scan enregistre.
+              </p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Code-barres</TableHead>
+                    <TableHead>Produit</TableHead>
+                    <TableHead>Utilisateur</TableHead>
+                    <TableHead>Verdict</TableHead>
+                    <TableHead className="text-right">Heure</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {recentScans.data?.map((scan) => (
+                    <TableRow key={scan.id}>
+                      <TableCell className="font-mono text-xs">
+                        {scan.barcode}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {scan.productName ?? "Produit inconnu"}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {scan.userEmail ?? "—"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getVerdictVariant(scan.halalStatus)}>
+                          {getVerdictLabel(scan.halalStatus)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right text-muted-foreground">
+                        {timeAgo(scan.scannedAt)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
 

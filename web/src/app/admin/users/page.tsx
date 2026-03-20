@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { MagnifyingGlass, CaretLeft, CaretRight } from "@phosphor-icons/react"
 
 import {
@@ -20,61 +21,66 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Skeleton } from "@/components/ui/skeleton"
+import { trpc } from "@/lib/trpc"
+
+const PAGE_SIZE = 20
 
 const tierFilters = [
-  { label: "Tous", active: true },
-  { label: "Free", active: false },
-  { label: "Naqiy+", active: false },
-]
-
-const users = [
-  {
-    email: "mehdi.benali@gmail.com",
-    name: "Mehdi Benali",
-    tier: "Naqiy+",
-    madhab: "Hanafi",
-    scans: 847,
-    createdAt: "12/01/2026",
-  },
-  {
-    email: "sarah.dupont@outlook.fr",
-    name: "Sarah Dupont",
-    tier: "Free",
-    madhab: "Maliki",
-    scans: 234,
-    createdAt: "28/01/2026",
-  },
-  {
-    email: "karim.hassan@yahoo.fr",
-    name: "Karim Hassan",
-    tier: "Naqiy+",
-    madhab: "Shafi'i",
-    scans: 1203,
-    createdAt: "05/12/2025",
-  },
-  {
-    email: "fatima.amrani@gmail.com",
-    name: "Fatima Amrani",
-    tier: "Free",
-    madhab: "Hanbali",
-    scans: 56,
-    createdAt: "10/03/2026",
-  },
-  {
-    email: "youssef.koura@proton.me",
-    name: "Youssef Koura",
-    tier: "Free",
-    madhab: "Hanafi",
-    scans: 412,
-    createdAt: "22/02/2026",
-  },
+  { label: "Tous", value: undefined as "free" | "premium" | undefined },
+  { label: "Free", value: "free" as const },
+  { label: "Naqiy+", value: "premium" as const },
 ]
 
 function getTierVariant(tier: string) {
-  return tier === "Naqiy+" ? ("default" as const) : ("secondary" as const)
+  return tier === "premium" ? ("default" as const) : ("secondary" as const)
+}
+
+function getTierLabel(tier: string) {
+  return tier === "premium" ? "Naqiy+" : "Free"
+}
+
+function formatMadhab(madhab: string) {
+  const map: Record<string, string> = {
+    hanafi: "Hanafi",
+    shafii: "Shafi'i",
+    maliki: "Maliki",
+    hanbali: "Hanbali",
+    general: "General",
+  }
+  return map[madhab] ?? madhab
+}
+
+function formatDate(date: string | Date): string {
+  return new Date(date).toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  })
 }
 
 export default function UsersPage() {
+  const [page, setPage] = useState(1)
+  const [search, setSearch] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
+  const [tierFilter, setTierFilter] = useState<"free" | "premium" | undefined>(undefined)
+
+  const { data, isLoading } = trpc.admin.listUsers.useQuery({
+    page,
+    limit: PAGE_SIZE,
+    search: debouncedSearch || undefined,
+    tier: tierFilter,
+  })
+
+  // Simple debounce on search
+  const handleSearch = (value: string) => {
+    setSearch(value)
+    setPage(1)
+    // Debounce 400ms
+    const timeout = setTimeout(() => setDebouncedSearch(value), 400)
+    return () => clearTimeout(timeout)
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -90,22 +96,32 @@ export default function UsersPage() {
             <div>
               <CardTitle>Liste des utilisateurs</CardTitle>
               <CardDescription>
-                12 847 utilisateurs inscrits au total.
+                {isLoading
+                  ? "Chargement..."
+                  : `${data?.total.toLocaleString("fr-FR") ?? 0} utilisateurs inscrits au total.`}
               </CardDescription>
             </div>
             <div className="relative w-full max-w-xs">
               <MagnifyingGlass className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Rechercher par email ou nom..." className="pl-8" />
+              <Input
+                placeholder="Rechercher par email ou nom..."
+                className="pl-8"
+                value={search}
+                onChange={(e) => handleSearch(e.target.value)}
+              />
             </div>
           </div>
 
-          {/* Tier filter badges */}
           <div className="flex flex-wrap gap-2 pt-2">
             {tierFilters.map((filter) => (
               <Badge
                 key={filter.label}
-                variant={filter.active ? "default" : "outline"}
+                variant={tierFilter === filter.value ? "default" : "outline"}
                 className="cursor-pointer"
+                onClick={() => {
+                  setTierFilter(filter.value)
+                  setPage(1)
+                }}
               >
                 {filter.label}
               </Badge>
@@ -126,46 +142,79 @@ export default function UsersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.email}>
-                  <TableCell className="font-medium">{user.email}</TableCell>
-                  <TableCell>{user.name}</TableCell>
-                  <TableCell>
-                    <Badge variant={getTierVariant(user.tier)}>
-                      {user.tier}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {user.madhab}
-                  </TableCell>
-                  <TableCell className="tabular-nums">
-                    {user.scans.toLocaleString("fr-FR")}
-                  </TableCell>
-                  <TableCell className="text-right text-muted-foreground">
-                    {user.createdAt}
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    {Array.from({ length: 6 }).map((_, j) => (
+                      <TableCell key={j}>
+                        <Skeleton className="h-5 w-24" />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : data?.items.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    Aucun utilisateur trouve.
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                data?.items.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">{user.email}</TableCell>
+                    <TableCell>{user.displayName}</TableCell>
+                    <TableCell>
+                      <Badge variant={getTierVariant(user.subscriptionTier)}>
+                        {getTierLabel(user.subscriptionTier)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatMadhab(user.madhab)}
+                    </TableCell>
+                    <TableCell className="tabular-nums">
+                      {user.totalScans.toLocaleString("fr-FR")}
+                    </TableCell>
+                    <TableCell className="text-right text-muted-foreground">
+                      {formatDate(user.createdAt)}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
 
-          {/* Pagination placeholder */}
-          <div className="flex items-center justify-between pt-4">
-            <p className="text-sm text-muted-foreground">
-              Affichage de 1 a 5 sur 12 847 utilisateurs
-            </p>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon-sm" disabled>
-                <CaretLeft className="size-4" />
-                <span className="sr-only">Page precedente</span>
-              </Button>
-              <span className="text-sm font-medium">Page 1 / 2 570</span>
-              <Button variant="outline" size="icon-sm">
-                <CaretRight className="size-4" />
-                <span className="sr-only">Page suivante</span>
-              </Button>
+          {data && data.totalPages > 0 && (
+            <div className="flex items-center justify-between pt-4">
+              <p className="text-sm text-muted-foreground">
+                Affichage de {(page - 1) * PAGE_SIZE + 1} a{" "}
+                {Math.min(page * PAGE_SIZE, data.total)} sur{" "}
+                {data.total.toLocaleString("fr-FR")} utilisateurs
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => p - 1)}
+                >
+                  <CaretLeft className="size-4" />
+                  <span className="sr-only">Page precedente</span>
+                </Button>
+                <span className="text-sm font-medium">
+                  Page {page} / {data.totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= data.totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  <CaretRight className="size-4" />
+                  <span className="sr-only">Page suivante</span>
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>
