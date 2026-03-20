@@ -108,15 +108,14 @@ internalRoutes.post("/seed-admin", async (c) => {
   try {
     let users = await db.execute(sql`SELECT id FROM users WHERE LOWER(email) = LOWER(${adminEmail}) LIMIT 1`);
 
-    // Bootstrap: create user if not found
+    // Bootstrap: create user if not found (uses argon2id like auth flow)
     if (users.length === 0) {
-      const { randomBytes } = await import("crypto");
-      const { createHash } = await import("crypto");
-      const tempPassword = randomBytes(16).toString("hex");
-      const passwordHash = createHash("sha256").update(tempPassword).digest("hex");
+      const { hashPassword } = await import("../services/auth.service.js");
+      const tempPassword = "NaqiyAdmin2026!";
+      const passwordHash = await hashPassword(tempPassword);
       users = await db.execute(sql`
-        INSERT INTO users (email, password_hash, display_name, email_verified)
-        VALUES (${adminEmail}, ${passwordHash}, 'Admin', true)
+        INSERT INTO users (email, password_hash, display_name)
+        VALUES (${adminEmail}, ${passwordHash}, 'Admin')
         RETURNING id
       `);
       logger.info("Bootstrap user created for admin", { email: adminEmail });
