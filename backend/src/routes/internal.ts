@@ -106,10 +106,22 @@ internalRoutes.post("/seed-admin", async (c) => {
   }
 
   try {
-    const users = await db.execute(sql`SELECT id FROM users WHERE LOWER(email) = LOWER(${adminEmail}) LIMIT 1`);
+    let users = await db.execute(sql`SELECT id FROM users WHERE LOWER(email) = LOWER(${adminEmail}) LIMIT 1`);
+
+    // Bootstrap: create user if not found
     if (users.length === 0) {
-      return c.json({ error: `User ${adminEmail} not found`, seeded: 0 });
+      const { randomBytes } = await import("crypto");
+      const { createHash } = await import("crypto");
+      const tempPassword = randomBytes(16).toString("hex");
+      const passwordHash = createHash("sha256").update(tempPassword).digest("hex");
+      users = await db.execute(sql`
+        INSERT INTO users (email, password_hash, display_name, email_verified)
+        VALUES (${adminEmail}, ${passwordHash}, 'Admin', true)
+        RETURNING id
+      `);
+      logger.info("Bootstrap user created for admin", { email: adminEmail });
     }
+
     const userId = (users[0] as { id: string }).id;
     await db.execute(sql`
       INSERT INTO admins (user_id, role) VALUES (${userId}, 'super_admin')
