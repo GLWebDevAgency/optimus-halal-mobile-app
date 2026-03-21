@@ -328,6 +328,11 @@
   }
 }
 
+/* Police display (titres) — Sora */
+@utility font-display {
+  font-family: var(--font-sora), sans-serif;
+}
+
 /* Bordure dorée subtile */
 @utility border-gold {
   border-color: oklch(0.78 0.17 82 / 30%);
