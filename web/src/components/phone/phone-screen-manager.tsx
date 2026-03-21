@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useRef } from "react";
+import React, { useRef, useMemo } from "react";
 import { AnimatePresence, motion } from "motion/react";
 
 export interface ScreenConfig {
@@ -24,7 +24,6 @@ export function PhoneScreenManager({
   );
 
   const currentScreen = screenMap.get(activeScreen);
-  const currentIndex = screens.findIndex((s) => s.key === activeScreen);
 
   const prevCategoryRef = useRef<string | undefined>(undefined);
   const prevCategory = prevCategoryRef.current;

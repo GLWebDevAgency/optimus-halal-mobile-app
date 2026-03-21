@@ -28,26 +28,24 @@ import { CtaDownload } from "@/components/layout/sections/cta-download";
 import { Footer } from "@/components/layout/sections/footer";
 
 /* ═══════════════════════════════════════════════════════════
-   SCREEN CONFIGS — static so PhoneScreenManager can memoize
-   ═══════════════════════════════════════════════════════════ */
-
-const screens: ScreenConfig[] = [
-  { key: "home", component: <HomeScreen />, category: "home" },
-  { key: "scan", component: <ScanScreen />, category: "scan" },
-  { key: "scanLoading", component: <ScanLoadingScreen />, category: "scan" },
-  { key: "scanResult", component: <ScanResultScreen />, category: "scan" },
-  { key: "map", component: <MapScreen />, category: "map" },
-  { key: "restaurant", component: <RestaurantScreen />, category: "map" },
-  { key: "profile", component: <ProfileScreen />, category: "profile" },
-];
-
-/* ═══════════════════════════════════════════════════════════
    ORCHESTRATOR — ties sections, phone, and transitions together
    ═══════════════════════════════════════════════════════════ */
 
 export function LandingPhoneOrchestrator() {
+  /* ── Screen configs inside component so JSX has access to React tree context ── */
+  const screens: ScreenConfig[] = useMemo(
+    () => [
+      { key: "home", component: <HomeScreen />, category: "home" },
+      { key: "scan", component: <ScanScreen />, category: "scan" },
+      { key: "scanLoading", component: <ScanLoadingScreen />, category: "scan" },
+      { key: "scanResult", component: <ScanResultScreen />, category: "scan" },
+      { key: "map", component: <MapScreen />, category: "map" },
+      { key: "restaurant", component: <RestaurantScreen />, category: "map" },
+      { key: "profile", component: <ProfileScreen />, category: "profile" },
+    ],
+    []
+  );
   /* ── Section refs ── */
-  const heroRef = useRef<HTMLDivElement>(null);
   const scanRef = useRef<HTMLDivElement>(null);
   const analysisRef = useRef<HTMLDivElement>(null);
   const analysisBottomRef = useRef<HTMLDivElement>(null);
@@ -58,7 +56,6 @@ export function LandingPhoneOrchestrator() {
   const ctaRef = useRef<HTMLDivElement>(null);
 
   /* ── Section visibility ── */
-  const heroInView = useInView(heroRef, { amount: 0.4 });
   const scanInView = useInView(scanRef, { amount: 0.4 });
   const analysisInView = useInView(analysisRef, { amount: 0.4 });
   const analysisBottomInView = useInView(analysisBottomRef, { amount: 0.1 });
@@ -88,7 +85,6 @@ export function LandingPhoneOrchestrator() {
     analysisBottomInView,
     analysisInView,
     scanInView,
-    heroInView,
   ]);
 
   /* ── Phone fade: out at SocialProof, back in at CTA ── */
@@ -116,7 +112,7 @@ export function LandingPhoneOrchestrator() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* ─── LEFT COLUMN — Content sections ─── */}
           <div>
-            <div ref={heroRef}>
+            <div>
               <Hero />
             </div>
 
