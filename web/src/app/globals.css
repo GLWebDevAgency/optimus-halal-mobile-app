@@ -459,3 +459,25 @@
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
+
+/* Phone screen replica animations */
+@keyframes scan-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+@keyframes scan-sweep {
+  0% { top: 8px; }
+  50% { top: calc(100% - 10px); }
+  100% { top: 8px; }
+}
+
+@keyframes progress-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes step-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
