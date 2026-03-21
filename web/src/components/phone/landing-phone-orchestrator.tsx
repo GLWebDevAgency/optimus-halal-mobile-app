@@ -23,6 +23,9 @@ import { ScanSection } from "@/components/layout/sections/scan-section";
 import { AnalysisSection } from "@/components/layout/sections/analysis-section";
 import { MapSection } from "@/components/layout/sections/map-section";
 import { PricingSection } from "@/components/layout/sections/pricing";
+import { SocialProofSection } from "@/components/layout/sections/social-proof";
+import { CtaDownload } from "@/components/layout/sections/cta-download";
+import { Footer } from "@/components/layout/sections/footer";
 
 /* ═══════════════════════════════════════════════════════════
    SCREEN CONFIGS — static so PhoneScreenManager can memoize
@@ -39,13 +42,10 @@ const screens: ScreenConfig[] = [
 ];
 
 /* ═══════════════════════════════════════════════════════════
-   ORCHESTRATOR
+   ORCHESTRATOR — ties sections, phone, and transitions together
    ═══════════════════════════════════════════════════════════ */
 
 export function LandingPhoneOrchestrator() {
-  /* ── Container ref for scroll progress ── */
-  const containerRef = useRef<HTMLDivElement>(null);
-
   /* ── Section refs ── */
   const heroRef = useRef<HTMLDivElement>(null);
   const scanRef = useRef<HTMLDivElement>(null);
@@ -54,29 +54,34 @@ export function LandingPhoneOrchestrator() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapBottomRef = useRef<HTMLDivElement>(null);
   const pricingRef = useRef<HTMLDivElement>(null);
+  const socialProofRef = useRef<HTMLDivElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
 
-  /* ── Section visibility (40% threshold) ── */
+  /* ── Section visibility ── */
   const heroInView = useInView(heroRef, { amount: 0.4 });
   const scanInView = useInView(scanRef, { amount: 0.4 });
   const analysisInView = useInView(analysisRef, { amount: 0.4 });
-  const analysisBottomInView = useInView(analysisBottomRef, { amount: 0.4 });
+  const analysisBottomInView = useInView(analysisBottomRef, { amount: 0.1 });
   const mapInView = useInView(mapRef, { amount: 0.4 });
-  const mapBottomInView = useInView(mapBottomRef, { amount: 0.4 });
+  const mapBottomInView = useInView(mapBottomRef, { amount: 0.1 });
   const pricingInView = useInView(pricingRef, { amount: 0.4 });
+  const socialProofInView = useInView(socialProofRef, { amount: 0.3 });
+  const ctaInView = useInView(ctaRef, { amount: 0.3 });
 
   /* ── Derive active screen from section visibility ──
-     Priority: bottom-most visible section wins (user scrolling down).
-     For Analysis & Map, the bottom sentinel triggers the second screen. */
+     Priority: bottom-most visible section wins.
+     CTA returns to HomeScreen. SocialProof keeps last screen. */
   const activeScreen = useMemo(() => {
+    if (ctaInView) return "home";
     if (pricingInView) return "profile";
     if (mapBottomInView) return "restaurant";
     if (mapInView) return "map";
     if (analysisBottomInView) return "scanResult";
     if (analysisInView) return "scanLoading";
     if (scanInView) return "scan";
-    // Default: heroInView or initial state
     return "home";
   }, [
+    ctaInView,
     pricingInView,
     mapBottomInView,
     mapInView,
@@ -85,6 +90,9 @@ export function LandingPhoneOrchestrator() {
     scanInView,
     heroInView,
   ]);
+
+  /* ── Phone fade: out at SocialProof, back in at CTA ── */
+  const phoneVisible = !socialProofInView || ctaInView;
 
   /* ── Dark-to-light background transition ── */
   const { scrollYProgress } = useScroll();
@@ -102,53 +110,68 @@ export function LandingPhoneOrchestrator() {
   );
 
   return (
-    <motion.div ref={containerRef} style={{ backgroundColor, color: textColor }}>
+    <motion.div style={{ backgroundColor, color: textColor }}>
       {/* ── Two-column grid: Content left, Phone right ── */}
       <div className="mx-auto max-w-7xl px-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* ─── LEFT COLUMN — Content sections ─── */}
           <div>
-            {/* Hero */}
             <div ref={heroRef}>
               <Hero />
             </div>
 
-            {/* Scan */}
             <div ref={scanRef}>
               <ScanSection />
             </div>
 
-            {/* Analysis — split into two halves for scanLoading → scanResult */}
+            {/* Analysis — two-phase: scanLoading → scanResult */}
             <div ref={analysisRef}>
               <AnalysisSection />
-              {/* Bottom sentinel: when this is 40% visible, switch to scanResult */}
-              <div ref={analysisBottomRef} className="h-[50vh]" />
+              <div ref={analysisBottomRef} className="h-[30vh]" />
             </div>
 
-            {/* Map — split into two halves for map → restaurant */}
+            {/* Map — two-phase: map → restaurant */}
             <div ref={mapRef}>
               <MapSection />
-              {/* Bottom sentinel: when this is 40% visible, switch to restaurant */}
-              <div ref={mapBottomRef} className="h-[50vh]" />
+              <div ref={mapBottomRef} className="h-[30vh]" />
             </div>
 
-            {/* Pricing */}
             <div ref={pricingRef}>
               <PricingSection />
             </div>
           </div>
 
-          {/* ─── RIGHT COLUMN — Sticky phone ─── */}
-          <StickyPhone>
-            <PhoneFrame>
-              <PhoneScreenManager
-                screens={screens}
-                activeScreen={activeScreen}
-              />
-            </PhoneFrame>
-          </StickyPhone>
+          {/* ─── RIGHT COLUMN — Sticky phone with fade ─── */}
+          <motion.div
+            animate={{
+              opacity: phoneVisible ? 1 : 0,
+              scale: phoneVisible ? 1 : 0.95,
+            }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+          >
+            <StickyPhone>
+              <PhoneFrame>
+                <PhoneScreenManager
+                  screens={screens}
+                  activeScreen={activeScreen}
+                />
+              </PhoneFrame>
+            </StickyPhone>
+          </motion.div>
         </div>
       </div>
+
+      {/* ── Full-width sections (phone fades out/in) ── */}
+      <div ref={socialProofRef}>
+        <SocialProofSection />
+      </div>
+
+      {/* CTA — phone fades back in, returns to HomeScreen */}
+      <div ref={ctaRef}>
+        <CtaDownload />
+      </div>
+
+      <Footer />
     </motion.div>
   );
 }
