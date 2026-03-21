@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { List, Moon, Sun } from "@phosphor-icons/react";
-import { useTheme } from "next-themes";
+import { List } from "@phosphor-icons/react";
+import { motion, useScroll, useTransform } from "motion/react";
+import { NaqiyLogo } from "@/components/brand/naqiy-logo";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -13,117 +13,124 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
 
 const navRoutes = [
-  { href: "#fonctionnalites", label: "Fonctionnalités" },
-  { href: "#comment-ca-marche", label: "Comment ça marche" },
-  { href: "#tarifs", label: "Tarifs" },
-  { href: "#faq", label: "FAQ" },
+  { href: "#features", label: "Fonctionnalités" },
+  { href: "#pricing", label: "Tarifs" },
 ];
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const { theme, setTheme } = useTheme();
+  const { scrollY } = useScroll();
+
+  // Scroll-reactive transforms: transparent dark → frosted light
+  const bgOpacity = useTransform(scrollY, [0, 300], [0, 0.85]);
+  const blurAmount = useTransform(scrollY, [0, 300], [0, 20]);
+  const borderOpacity = useTransform(scrollY, [0, 300], [0, 0.06]);
+
+  // Text color transitions: white → dark
+  const textColor = useTransform(
+    scrollY,
+    [0, 300],
+    ["rgba(255,255,255,0.7)", "rgba(23,23,23,0.7)"]
+  );
+  const textColorHover = useTransform(
+    scrollY,
+    [0, 300],
+    ["rgba(255,255,255,1)", "rgba(23,23,23,1)"]
+  );
+  const logoColor = useTransform(
+    scrollY,
+    [0, 300],
+    ["rgba(255,255,255,1)", "rgba(23,23,23,1)"]
+  );
 
   return (
-    <header className="fixed top-0 z-50 w-full">
-      <div className="mx-auto mt-3 flex max-w-4xl items-center justify-between rounded-2xl border border-border/40 bg-background/70 px-4 py-2 shadow-sm backdrop-blur-2xl lg:mt-5">
-        {/* Logo */}
+    <motion.nav
+      className="fixed inset-x-0 top-0 z-50"
+      style={{
+        backgroundColor: useTransform(
+          bgOpacity,
+          (v) => `rgba(250,250,248,${v})`
+        ),
+        backdropFilter: useTransform(blurAmount, (v) => `blur(${v}px)`),
+        WebkitBackdropFilter: useTransform(blurAmount, (v) => `blur(${v}px)`),
+        borderBottom: useTransform(
+          borderOpacity,
+          (v) => `1px solid rgba(0,0,0,${v})`
+        ),
+      }}
+    >
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+        {/* Left — Logo */}
         <Link href="/" className="flex items-center gap-2.5">
-          <Image
-            src="/images/logo_naqiy.webp"
-            alt="Naqiy"
-            width={30}
-            height={30}
-            className="rounded-lg"
-          />
-          <span className="text-lg font-bold tracking-tight">Naqiy</span>
+          <motion.span style={{ color: logoColor }} className="text-lg font-bold tracking-tight">
+            Naqiy
+          </motion.span>
         </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden items-center gap-0.5 lg:flex">
+        {/* Center — Desktop nav links */}
+        <div className="hidden items-center gap-1 md:flex">
           {navRoutes.map((route) => (
-            <Link
+            <motion.a
               key={route.href}
               href={route.href}
-              className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
+              style={{ color: textColor }}
+              whileHover={{ color: textColorHover.get() }}
             >
               {route.label}
-            </Link>
+            </motion.a>
           ))}
-        </nav>
+        </div>
 
-        {/* Right side */}
-        <div className="flex items-center gap-1.5">
-          {/* Theme toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8 rounded-lg"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            aria-label="Changer le thème"
-          >
-            <Sun className="size-4 rotate-0 scale-100 transition-transform dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute size-4 rotate-90 scale-0 transition-transform dark:rotate-0 dark:scale-100" />
+        {/* Right — CTA + Mobile hamburger */}
+        <div className="flex items-center gap-2">
+          {/* Desktop CTA */}
+          <Button size="sm" className="hidden md:inline-flex">
+            Télécharger
           </Button>
 
-          {/* Desktop CTA */}
-          <Link
-            href="/admin"
-            className="hidden rounded-lg bg-primary px-3.5 py-1.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 lg:inline-flex"
-          >
-            Dashboard
-          </Link>
-
-          {/* Mobile Menu */}
+          {/* Mobile hamburger */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger
-              className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground lg:hidden"
+              className="inline-flex size-8 items-center justify-center rounded-lg md:hidden"
               aria-label="Ouvrir le menu"
             >
-              <List className="size-4" />
+              <motion.span style={{ color: textColor }}>
+                <List className="size-5" />
+              </motion.span>
             </SheetTrigger>
-            <SheetContent side="right" className="w-72 border-border/40">
+            <SheetContent side="right" className="w-72">
               <SheetHeader className="text-left">
                 <SheetTitle className="flex items-center gap-2.5">
-                  <Image
-                    src="/images/logo_naqiy.webp"
-                    alt="Naqiy"
-                    width={24}
-                    height={24}
-                    className="rounded-md"
-                  />
-                  Naqiy
+                  <NaqiyLogo size="sm" />
                 </SheetTitle>
               </SheetHeader>
-              <nav className="mt-6 flex flex-col gap-0.5">
+              <nav className="mt-6 flex flex-col gap-1 px-4">
                 {navRoutes.map((route) => (
-                  <Link
+                  <a
                     key={route.href}
                     href={route.href}
                     onClick={() => setIsOpen(false)}
-                    className={cn(
-                      "rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground",
-                      "transition-colors hover:bg-accent hover:text-foreground"
-                    )}
+                    className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                   >
                     {route.label}
-                  </Link>
+                  </a>
                 ))}
                 <div className="my-3 h-px bg-border" />
-                <Link
-                  href="/admin"
+                <Button
+                  size="sm"
+                  className="w-full"
                   onClick={() => setIsOpen(false)}
-                  className="flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
                 >
-                  Dashboard
-                </Link>
+                  Télécharger
+                </Button>
               </nav>
             </SheetContent>
           </Sheet>
         </div>
       </div>
-    </header>
+    </motion.nav>
   );
 }
