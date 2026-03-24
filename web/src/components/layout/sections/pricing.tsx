@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { SplitText } from "@/components/animations/split-text";
 import { AnimateIn, Stagger, StaggerItem } from "@/components/animations/animate-in";
 import { TiltCard } from "@/components/animations/tilt-card";
+import { CursorGlow } from "@/components/animations/cursor-glow";
 
 /* ═══════════════════════════════════════════════
    DATA
@@ -67,7 +68,7 @@ export { PricingSection as Pricing };
 export function PricingSection() {
   return (
     <section id="pricing" className="relative flex items-center bg-secondary/30 py-20 lg:min-h-screen lg:py-32 overflow-hidden">
-      <div className="mx-auto max-w-5xl px-6">
+      <CursorGlow className="mx-auto max-w-5xl px-6">
         <SplitText
           as="h2"
           className="font-display text-3xl font-bold tracking-tight text-center sm:text-4xl md:text-5xl"
@@ -137,7 +138,7 @@ export function PricingSection() {
             </TiltCard>
           </StaggerItem>
         </Stagger>
-      </div>
+      </CursorGlow>
     </section>
   );
 }
