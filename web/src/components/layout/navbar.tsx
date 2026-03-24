@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { List } from "@phosphor-icons/react";
+import { List, AppleLogo, GooglePlayLogo } from "@phosphor-icons/react";
 import { motion, useScroll, useTransform } from "motion/react";
 import { NaqiyLogo } from "@/components/brand/naqiy-logo";
-import { Button } from "@/components/ui/button";
+
 import {
   Sheet,
   SheetContent,
@@ -65,9 +65,14 @@ export function Navbar() {
         {/* Right — CTA + Mobile hamburger */}
         <div className="flex items-center gap-2">
           {/* Desktop CTA */}
-          <Button size="sm" className="hidden md:inline-flex transition-all duration-200 hover:scale-[1.03] hover:shadow-[0_0_20px_oklch(0.76_0.14_88/15%)]">
-            Télécharger
-          </Button>
+          <a
+            href="#"
+            className="hidden md:inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2 font-display font-bold text-sm text-background transition-all duration-200 hover:scale-[1.03] hover:shadow-[0_0_20px_oklch(0.76_0.14_88/15%)]"
+          >
+            <AppleLogo className="size-4" weight="fill" />
+            <GooglePlayLogo className="size-4" weight="fill" />
+            <span>Download</span>
+          </a>
 
           {/* Mobile hamburger */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -95,13 +100,15 @@ export function Navbar() {
                   </a>
                 ))}
                 <div className="my-3 h-px bg-border" />
-                <Button
-                  size="sm"
-                  className="w-full"
+                <a
+                  href="#"
                   onClick={() => setIsOpen(false)}
+                  className="flex items-center justify-center gap-2 rounded-full bg-foreground px-5 py-2.5 font-display font-bold text-sm text-background transition-all duration-200 hover:scale-[1.02]"
                 >
-                  Télécharger
-                </Button>
+                  <AppleLogo className="size-4" weight="fill" />
+                  <GooglePlayLogo className="size-4" weight="fill" />
+                  <span>Download</span>
+                </a>
               </nav>
             </SheetContent>
           </Sheet>

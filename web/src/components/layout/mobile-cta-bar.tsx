@@ -13,18 +13,15 @@ export function MobileCTABar() {
       className="fixed bottom-0 inset-x-0 z-50 lg:hidden"
       style={{ opacity, y }}
     >
-      <div className="mx-auto flex items-center justify-center gap-3 border-t border-border/50 bg-background/80 px-4 py-3 backdrop-blur-xl">
-        <span className="text-sm font-semibold text-foreground">Télécharger Naqiy</span>
-        <div className="flex gap-2">
-          <a href="#" className="flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background">
-            <AppleLogo className="size-3.5" weight="fill" />
-            iOS
-          </a>
-          <a href="#" className="flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background">
-            <GooglePlayLogo className="size-3.5" weight="fill" />
-            Android
-          </a>
-        </div>
+      <div className="mx-auto flex items-center justify-center border-t border-border/50 bg-background/80 px-4 py-3 backdrop-blur-xl">
+        <a
+          href="#"
+          className="inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-2.5 font-display font-bold text-sm text-background transition-all duration-200 hover:scale-[1.02]"
+        >
+          <AppleLogo className="size-4" weight="fill" />
+          <GooglePlayLogo className="size-4" weight="fill" />
+          <span>Download</span>
+        </a>
       </div>
     </motion.div>
   );

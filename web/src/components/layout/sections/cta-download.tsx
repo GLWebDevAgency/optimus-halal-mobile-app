@@ -40,39 +40,15 @@ export function CtaDownload() {
 
         {/* Store badges — premium glass style */}
         <AnimateIn variant="blur" delay={0.4}>
-          <div className="mt-10 flex flex-col items-center gap-5 sm:flex-row sm:justify-center">
-            {/* App Store */}
+          <div className="mt-10 flex justify-center">
             <a
               href="#"
-              className="border-gradient-gold group relative inline-flex items-center gap-3 rounded-2xl bg-card px-6 py-4 shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.02]"
+              className="border-gradient-gold group relative inline-flex items-center gap-3 rounded-full bg-foreground px-8 py-4 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.03]"
               style={{ animation: "glow-pulse 5s ease-in-out infinite" }}
             >
-              <AppleLogo className="size-8 text-foreground" weight="fill" />
-              <div className="text-left">
-                <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground leading-none">
-                  Télécharger sur
-                </p>
-                <p className="text-lg font-semibold text-foreground leading-tight">
-                  App Store
-                </p>
-              </div>
-            </a>
-
-            {/* Google Play */}
-            <a
-              href="#"
-              className="border-gradient-gold group relative inline-flex items-center gap-3 rounded-2xl bg-card px-6 py-4 shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.02]"
-              style={{ animation: "glow-pulse 5s ease-in-out infinite", animationDelay: "2.5s" }}
-            >
-              <GooglePlayLogo className="size-8 text-foreground" weight="fill" />
-              <div className="text-left">
-                <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground leading-none">
-                  Disponible sur
-                </p>
-                <p className="text-lg font-semibold text-foreground leading-tight">
-                  Google Play
-                </p>
-              </div>
+              <AppleLogo className="size-6 text-background" weight="fill" />
+              <GooglePlayLogo className="size-6 text-background" weight="fill" />
+              <span className="font-display text-lg font-bold text-background">Download</span>
             </a>
           </div>
         </AnimateIn>

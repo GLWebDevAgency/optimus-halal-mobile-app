@@ -122,35 +122,14 @@ export function Hero() {
 
         {/* Store badges */}
         <AnimateIn variant="blur" delay={0.7}>
-          <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
             <a
               href="#"
-              className="border-gradient-gold group inline-flex items-center gap-3 rounded-xl bg-card px-5 py-3 shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.02]"
+              className="border-gradient-gold group inline-flex items-center gap-3 rounded-full bg-foreground px-7 py-3.5 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.03]"
             >
-              <AppleLogo className="size-7 text-foreground" weight="fill" />
-              <div className="text-left">
-                <p className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground leading-none">
-                  Télécharger sur
-                </p>
-                <p className="text-base font-semibold text-foreground leading-tight">
-                  App Store
-                </p>
-              </div>
-            </a>
-
-            <a
-              href="#"
-              className="border-gradient-gold group inline-flex items-center gap-3 rounded-xl bg-card px-5 py-3 shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.02]"
-            >
-              <GooglePlayLogo className="size-7 text-foreground" weight="fill" />
-              <div className="text-left">
-                <p className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground leading-none">
-                  Disponible sur
-                </p>
-                <p className="text-base font-semibold text-foreground leading-tight">
-                  Google Play
-                </p>
-              </div>
+              <AppleLogo className="size-5 text-background" weight="fill" />
+              <GooglePlayLogo className="size-5 text-background" weight="fill" />
+              <span className="font-display text-base font-bold text-background">Download</span>
             </a>
 
             <Link
