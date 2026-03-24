@@ -1,65 +1,101 @@
 "use client";
 
+import { QrCode, AppleLogo, GooglePlayLogo, ArrowDown, Leaf } from "@phosphor-icons/react";
 import { SplitText } from "@/components/animations/split-text";
 import { AnimateIn } from "@/components/animations/animate-in";
 
 export function CtaDownload() {
   return (
-    <section className="relative overflow-hidden bg-[#0a0a0a] py-32">
-      <div className="mx-auto max-w-3xl px-6 text-center">
+    <section className="relative flex items-center overflow-hidden bg-secondary/50 py-20 lg:min-h-screen lg:py-32">
+      {/* Warm ambient glow */}
+      <div
+        className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[700px] w-[700px] rounded-full"
+        style={{
+          background:
+            "radial-gradient(circle, oklch(0.76 0.14 88 / 6%) 0%, oklch(0.76 0.14 88 / 2%) 40%, transparent 70%)",
+          animation: "breathe 6s ease-in-out infinite",
+        }}
+        aria-hidden="true"
+      />
+
+      <div className="mx-auto max-w-4xl px-6 text-center relative z-10">
         {/* Headline */}
         <SplitText
           as="h2"
-          className="font-display text-4xl font-bold tracking-tight text-white md:text-6xl"
+          className="font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-6xl text-glow-gold"
         >
           Prêt à scanner en confiance ?
         </SplitText>
 
         {/* Subtitle */}
         <AnimateIn variant="fadeUp" delay={0.2}>
-          <p className="mt-6 text-lg text-white/60">
-            Rejoins les milliers d&apos;utilisateurs qui font confiance à
-            Naqiy.
+          <p className="mt-6 text-lg text-muted-foreground max-w-xl mx-auto">
+            Rejoins ceux qui ont choisi la transparence.
+            <span className="inline-flex items-center gap-1 ml-1">
+              <Leaf className="size-4 text-leaf" weight="fill" />
+              Gratuit sur iOS et Android.
+            </span>
           </p>
         </AnimateIn>
 
-        {/* Store buttons */}
-        <AnimateIn
-          variant="blur"
-          delay={0.4}
-          className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
-        >
-          {/* App Store */}
-          <a
-            href="#"
-            className="inline-flex items-center gap-3 rounded-xl bg-white px-6 py-3 font-semibold text-black transition hover:bg-white/90"
-          >
-            <svg
-              className="size-5"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              xmlns="http://www.w3.org/2000/svg"
+        {/* Store badges — premium glass style */}
+        <AnimateIn variant="blur" delay={0.4}>
+          <div className="mt-10 flex flex-col items-center gap-5 sm:flex-row sm:justify-center">
+            {/* App Store */}
+            <a
+              href="#"
+              className="border-gradient-gold group relative inline-flex items-center gap-3 rounded-2xl bg-card px-6 py-4 shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.02]"
+              style={{ animation: "glow-pulse 5s ease-in-out infinite" }}
             >
-              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
-            </svg>
-            App Store
-          </a>
+              <AppleLogo className="size-8 text-foreground" weight="fill" />
+              <div className="text-left">
+                <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground leading-none">
+                  Télécharger sur
+                </p>
+                <p className="text-lg font-semibold text-foreground leading-tight">
+                  App Store
+                </p>
+              </div>
+            </a>
 
-          {/* Google Play */}
-          <a
-            href="#"
-            className="inline-flex items-center gap-3 rounded-xl bg-white px-6 py-3 font-semibold text-black transition hover:bg-white/90"
-          >
-            <svg
-              className="size-5"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              xmlns="http://www.w3.org/2000/svg"
+            {/* Google Play */}
+            <a
+              href="#"
+              className="border-gradient-gold group relative inline-flex items-center gap-3 rounded-2xl bg-card px-6 py-4 shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.02]"
+              style={{ animation: "glow-pulse 5s ease-in-out infinite", animationDelay: "2.5s" }}
             >
-              <path d="M3.609 1.814 13.792 12 3.61 22.186a.996.996 0 0 1-.61-.92V2.734a1 1 0 0 1 .609-.92zm10.89 10.893 2.302 2.302-10.937 6.333 8.635-8.635zM18.36 10.2l2.473 1.432a1.006 1.006 0 0 1 0 1.736L18.36 14.8l-2.508-2.508L18.36 10.2zM5.864 3.451l10.937 6.333-2.302 2.302-8.635-8.635z" />
-            </svg>
-            Google Play
-          </a>
+              <GooglePlayLogo className="size-8 text-foreground" weight="fill" />
+              <div className="text-left">
+                <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground leading-none">
+                  Disponible sur
+                </p>
+                <p className="text-lg font-semibold text-foreground leading-tight">
+                  Google Play
+                </p>
+              </div>
+            </a>
+          </div>
+        </AnimateIn>
+
+        {/* QR Code — premium treatment */}
+        <AnimateIn variant="fadeUp" delay={0.6}>
+          <div className="mt-14 inline-flex flex-col items-center gap-4">
+            <div className="relative">
+              {/* Glow behind QR */}
+              <div
+                className="absolute inset-0 rounded-2xl blur-xl opacity-30"
+                style={{ background: "oklch(0.76 0.14 88 / 30%)" }}
+                aria-hidden="true"
+              />
+              <div className="relative rounded-2xl bg-white p-4 shadow-2xl shadow-black/20 ring-1 ring-white/10">
+                <QrCode className="size-28 text-black" weight="fill" />
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground/50">
+              <ArrowDown className="size-3 animate-bounce" />
+              Scanne avec la caméra de ton téléphone
+            </div>
+          </div>
         </AnimateIn>
       </div>
     </section>

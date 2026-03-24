@@ -125,7 +125,7 @@ export function Hero() {
           <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
             <a
               href="#"
-              className="group inline-flex items-center gap-3 rounded-xl border border-border bg-card px-5 py-3 shadow-sm transition-all duration-300 hover:border-gold/30 hover:shadow-md hover:scale-[1.02]"
+              className="border-gradient-gold group inline-flex items-center gap-3 rounded-xl bg-card px-5 py-3 shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.02]"
             >
               <AppleLogo className="size-7 text-foreground" weight="fill" />
               <div className="text-left">
@@ -140,7 +140,7 @@ export function Hero() {
 
             <a
               href="#"
-              className="group inline-flex items-center gap-3 rounded-xl border border-border bg-card px-5 py-3 shadow-sm transition-all duration-300 hover:border-gold/30 hover:shadow-md hover:scale-[1.02]"
+              className="border-gradient-gold group inline-flex items-center gap-3 rounded-xl bg-card px-5 py-3 shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.02]"
             >
               <GooglePlayLogo className="size-7 text-foreground" weight="fill" />
               <div className="text-left">
