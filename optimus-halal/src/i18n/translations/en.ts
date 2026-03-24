@@ -1263,7 +1263,7 @@ export const en: TranslationKeys = {
       noAccount: "Don't have an account?",
       createAccount: "Create account",
       exploreMode: "Explore the app",
-      exploreModeHint: "5 free scans per day, no account needed",
+      exploreModeHint: "Free scans every day, no account needed",
       notYetPlus: "Not yet on Naqiy+?",
       discoverPlus: "Discover →",
       errors: {
@@ -1300,7 +1300,7 @@ export const en: TranslationKeys = {
       privacyLink: "privacy policy",
       submit: "Sign up",
       exploreMode: "Explore without account",
-      exploreModeHint: "5 free scans per day",
+      exploreModeHint: "Free scans every day",
       hasAccount: "Already have an account?",
       loginLink: "Sign in",
       errors: {
@@ -1458,7 +1458,7 @@ export const en: TranslationKeys = {
     skip: "Skip",
     next: "Next",
     start: "Get started",
-    exploreModeHint: "5 free scans per day · no account needed",
+    exploreModeHint: "Free scans every day · no account needed",
     alreadySubscribed: "Already subscribed?",
     login: "Log in",
     slides: {
@@ -1485,7 +1485,7 @@ export const en: TranslationKeys = {
       cta: {
         title: "Start for",
         highlight: "free",
-        description: "5 scans per day. Naqiy+ for personalized health profile.",
+        description: "Free scans every day. Naqiy+ for personalized health profile.",
       },
     },
   },
@@ -1711,7 +1711,7 @@ export const en: TranslationKeys = {
 
   guest: {
     discoveryMode: "Discovery Mode",
-    discoveryDescription: "Scan up to 5 products per day for free. Upgrade to Naqiy+ for unlimited access.",
+    discoveryDescription: "Scan your products every day for free. Upgrade to Naqiy+ for unlimited access.",
     dailyScans: "Today's scans",
     scansToday: "scans today",
     scansRemaining: "{{count}} scans left — Naqiy+ for unlimited",

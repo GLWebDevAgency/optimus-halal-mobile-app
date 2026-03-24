@@ -1275,7 +1275,7 @@ export const fr = {
       noAccount: "Pas encore de compte ?",
       createAccount: "Créer un compte",
       exploreMode: "Explorer l'application",
-      exploreModeHint: "5 scans gratuits par jour, sans compte",
+      exploreModeHint: "Scans gratuits chaque jour, sans compte",
       notYetPlus: "Pas encore Naqiy+ ?",
       discoverPlus: "Découvrir →",
       errors: {
@@ -1312,7 +1312,7 @@ export const fr = {
       privacyLink: "politique de confidentialité",
       submit: "S'inscrire",
       exploreMode: "Explorer sans compte",
-      exploreModeHint: "5 scans gratuits par jour",
+      exploreModeHint: "Scans gratuits chaque jour",
       hasAccount: "Déjà un compte ?",
       loginLink: "Se connecter",
       errors: {
@@ -1478,7 +1478,7 @@ export const fr = {
     skip: "Passer",
     next: "Suivant",
     start: "Commencer",
-    exploreModeHint: "5 scans gratuits par jour · sans compte",
+    exploreModeHint: "Scans gratuits chaque jour · sans compte",
     alreadySubscribed: "Déjà abonné ?",
     login: "Se connecter",
     slides: {
@@ -1505,7 +1505,7 @@ export const fr = {
       cta: {
         title: "Commencez",
         highlight: "gratuitement",
-        description: "5 scans par jour. Naqiy+ pour le profil santé personnalisé.",
+        description: "Scans gratuits chaque jour. Naqiy+ pour le profil santé personnalisé.",
       },
     },
   },
@@ -1739,7 +1739,7 @@ export const fr = {
   // Guest Mode (Anonymous)
   guest: {
     discoveryMode: "Mode Découverte",
-    discoveryDescription: "Scannez jusqu'à 5 produits par jour gratuitement. Passez à Naqiy+ pour un accès illimité.",
+    discoveryDescription: "Scannez vos produits chaque jour gratuitement. Passez à Naqiy+ pour un accès illimité.",
     dailyScans: "Scans du jour",
     scansToday: "scans aujourd'hui",
     scansRemaining: "{{count}} scans restants — Naqiy+ pour l'illimité",

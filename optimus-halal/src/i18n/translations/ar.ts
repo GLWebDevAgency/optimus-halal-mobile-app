@@ -1137,7 +1137,7 @@ export const ar: TranslationKeys = {
       noAccount: "ليس لديك حساب؟",
       createAccount: "إنشاء حساب",
       exploreMode: "استكشف التطبيق",
-      exploreModeHint: "5 عمليات مسح مجانية يومياً، بدون حساب",
+      exploreModeHint: "عمليات مسح مجانية يومياً، بدون حساب",
       notYetPlus: "لم تشترك في نقيّ+ بعد؟",
       discoverPlus: "اكتشف ←",
       errors: {
@@ -1174,7 +1174,7 @@ export const ar: TranslationKeys = {
       privacyLink: "سياسة الخصوصية",
       submit: "التسجيل",
       exploreMode: "استكشف بدون حساب",
-      exploreModeHint: "5 عمليات مسح مجانية يومياً",
+      exploreModeHint: "عمليات مسح مجانية يومياً",
       hasAccount: "لديك حساب بالفعل؟",
       loginLink: "تسجيل الدخول",
       errors: {
@@ -1585,7 +1585,7 @@ export const ar: TranslationKeys = {
 
   guest: {
     discoveryMode: "وضع الاكتشاف",
-    discoveryDescription: "امسح حتى 5 منتجات يومياً مجاناً. اشترك في نقيّ+ للوصول غير المحدود.",
+    discoveryDescription: "امسح منتجاتك يومياً مجاناً. اشترك في نقيّ+ للوصول غير المحدود.",
     dailyScans: "عمليات المسح اليوم",
     scansToday: "مسح اليوم",
     scansRemaining: "{{count}} عمليات مسح متبقية — نقيّ+ للمسح غير المحدود",
