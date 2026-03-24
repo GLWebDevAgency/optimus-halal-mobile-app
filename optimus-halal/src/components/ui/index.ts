@@ -22,6 +22,7 @@ export { ArabicCalligraphy } from "./ArabicCalligraphy";
 export { GlowCard } from "./GlowCard";
 export { PremiumBackground, type PremiumBackgroundProps } from "./PremiumBackground";
 export { PremiumGate } from "./PremiumGate";
+export { AiAnalysisGate } from "./AiAnalysisGate";
 
 export { PressableScale } from "./PressableScale";
 export { StatusPill } from "./StatusPill";
