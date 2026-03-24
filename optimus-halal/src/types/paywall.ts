@@ -3,11 +3,12 @@
  * Used for contextual feature reordering (Yuka-inspired pattern).
  */
 export type PaywallTrigger =
-  | "scan_quota"       // Daily scan limit reached
-  | "favorites"        // Tried to add > 3 favorites
-  | "history"          // Tried to access full scan history
-  | "offline"          // Tried to use offline mode
-  | "health_profile"   // Tried to access health/nutrition profile
-  | "store_favorites"  // Tried to add > 3 store favorites
-  | "search"           // Tried to search products by name
-  | "generic";         // Default (no specific trigger)
+  | "scan_quota"        // 20 scans/day anti-abuse limit reached (rare)
+  | "ai_analysis_quota" // 3 AI analyses/day reached (primary conversion trigger)
+  | "favorites"         // Tried to add > 3 favorites
+  | "history"           // Tried to access full scan history
+  | "offline"           // Tried to use offline mode
+  | "health_profile"    // Tried to access health/nutrition profile
+  | "store_favorites"   // Tried to add > 3 store favorites
+  | "search"            // Tried to search products by name
+  | "generic";          // Default (no specific trigger)
