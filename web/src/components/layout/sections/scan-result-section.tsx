@@ -2,6 +2,7 @@
 
 import { CheckCircle, ChartBar, MagnifyingGlass } from "@phosphor-icons/react";
 import { AnimateIn, Stagger, StaggerItem } from "@/components/animations/animate-in";
+import { TiltCard } from "@/components/animations/tilt-card";
 import { SplitText } from "@/components/animations/split-text";
 
 const resultFeatures = [
@@ -54,21 +55,23 @@ export function ScanResultSection() {
         <Stagger className="mt-10 space-y-4">
           {resultFeatures.map((feature) => (
             <StaggerItem key={feature.title}>
-              <div className="group rounded-2xl border border-border bg-card/50 p-5 backdrop-blur-sm transition-all duration-300 hover:border-border/80 hover:bg-card/70 hover:-translate-y-0.5">
-                <div className="flex items-start gap-4">
-                  <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${feature.bg}`}>
-                    <feature.icon className={`size-5 ${feature.color}`} weight="duotone" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-foreground">
-                      {feature.title}
-                    </p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {feature.description}
-                    </p>
+              <TiltCard>
+                <div className="group rounded-2xl border border-border bg-card/50 p-5 backdrop-blur-sm transition-all duration-300 hover:border-border/80 hover:bg-card/70 hover:-translate-y-0.5">
+                  <div className="flex items-start gap-4">
+                    <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${feature.bg}`}>
+                      <feature.icon className={`size-5 ${feature.color}`} weight="duotone" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground">
+                        {feature.title}
+                      </p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {feature.description}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </TiltCard>
             </StaggerItem>
           ))}
         </Stagger>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SplitText } from "@/components/animations/split-text";
 import { AnimateIn, Stagger, StaggerItem } from "@/components/animations/animate-in";
+import { TiltCard } from "@/components/animations/tilt-card";
 
 /* ═══════════════════════════════════════════════
    DATA
@@ -83,6 +84,7 @@ export function PricingSection() {
         <Stagger className="mt-12 grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           {/* ─── Free card ─── */}
           <StaggerItem>
+            <TiltCard className="h-full">
             <div className="rounded-2xl border border-border bg-card p-8 h-full flex flex-col transition-all duration-300 hover:border-border/80 hover:-translate-y-0.5">
               <p className="text-2xl font-bold text-foreground">Free</p>
               <div className="mt-2">
@@ -100,10 +102,12 @@ export function PricingSection() {
                 Commencer gratuitement
               </Button>
             </div>
+            </TiltCard>
           </StaggerItem>
 
           {/* ─── Naqiy+ card ─── */}
           <StaggerItem>
+            <TiltCard className="h-full">
             <div className="rounded-2xl border-2 border-gold/30 bg-card p-8 relative overflow-hidden h-full flex flex-col transition-all duration-300 hover:border-gold/50 hover:-translate-y-0.5 hover:shadow-[0_0_40px_oklch(0.78_0.17_82_/_8%)]">
               {/* Recommended badge */}
               <Badge className="absolute top-4 right-4 gap-1 bg-gold text-black border-0 font-bold">
@@ -130,6 +134,7 @@ export function PricingSection() {
                 Passer à Naqiy+
               </Button>
             </div>
+            </TiltCard>
           </StaggerItem>
         </Stagger>
       </div>
