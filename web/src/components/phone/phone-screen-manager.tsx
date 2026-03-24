@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useMemo } from "react";
+import React, { useRef, useEffect, useMemo } from "react";
 import { AnimatePresence, motion } from "motion/react";
 
 export interface ScreenConfig {
@@ -34,22 +34,22 @@ export function PhoneScreenManager({
       ? "horizontal"
       : "vertical";
 
-  // Update ref after computing direction so next render can compare
-  if (prevCategory !== currentCategory) {
+  // Update ref after render so next render can compare (useEffect avoids Strict Mode double-render issue)
+  useEffect(() => {
     prevCategoryRef.current = currentCategory;
-  }
+  }, [currentCategory]);
 
   const variants =
     direction === "horizontal"
       ? {
-          initial: { x: "100%", opacity: 0.5 },
-          animate: { x: 0, opacity: 1 },
-          exit: { x: "-30%", opacity: 0 },
+          initial: { x: "100%", opacity: 0.5, filter: "blur(0px)" },
+          animate: { x: 0, opacity: 1, filter: "blur(0px)" },
+          exit: { x: "-30%", opacity: 0, filter: "blur(2px)" },
         }
       : {
-          initial: { y: "100%", opacity: 0.5 },
-          animate: { y: 0, opacity: 1 },
-          exit: { y: "-30%", opacity: 0 },
+          initial: { y: "100%", opacity: 0.5, filter: "blur(0px)" },
+          animate: { y: 0, opacity: 1, filter: "blur(0px)" },
+          exit: { y: "-30%", opacity: 0, filter: "blur(2px)" },
         };
 
   const springTransition = {
