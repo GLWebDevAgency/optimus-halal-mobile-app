@@ -373,7 +373,7 @@ export const useRamadanStore = create<RamadanState>()(
  * Permet un feedback UI instantané sans attendre le réseau.
  * Le backend reste la source de vérité.
  */
-const DAILY_SCAN_LIMIT = 5;
+export const DAILY_SCAN_LIMIT = 20;
 
 function getToday(): string {
   return new Date().toISOString().slice(0, 10);
@@ -423,6 +423,62 @@ export const useQuotaStore = create<QuotaState>()(
     }),
     {
       name: "quota-storage",
+      storage: createJSONStorage(() => mmkvStorage),
+    }
+  )
+);
+
+/**
+ * AI Analysis Quota State (All users — free tier gate)
+ *
+ * Tracks daily AI detailed analysis views.
+ * Free tier: 3 detailed analyses per day.
+ * Naqiy+: unlimited.
+ *
+ * "AI analysis" = viewing the detailed ingredient/health breakdown
+ * powered by Gemini. The basic verdict (halal/haram/douteux) is always free.
+ */
+export const DAILY_AI_ANALYSIS_LIMIT = 3;
+
+interface AiQuotaState {
+  dailyAiUsed: number;
+  lastAiDate: string;
+  incrementAiAnalysis: () => void;
+  getRemainingAiAnalyses: () => number;
+  resetIfNewDay: () => void;
+}
+
+export const useAiQuotaStore = create<AiQuotaState>()(
+  persist(
+    (set, get) => ({
+      dailyAiUsed: 0,
+      lastAiDate: getToday(),
+
+      incrementAiAnalysis: () => {
+        const state = get();
+        const today = getToday();
+        if (state.lastAiDate !== today) {
+          set({ dailyAiUsed: 1, lastAiDate: today });
+        } else {
+          set({ dailyAiUsed: state.dailyAiUsed + 1 });
+        }
+      },
+
+      getRemainingAiAnalyses: () => {
+        const state = get();
+        if (state.lastAiDate !== getToday()) return DAILY_AI_ANALYSIS_LIMIT;
+        return Math.max(0, DAILY_AI_ANALYSIS_LIMIT - state.dailyAiUsed);
+      },
+
+      resetIfNewDay: () => {
+        const state = get();
+        if (state.lastAiDate !== getToday()) {
+          set({ dailyAiUsed: 0, lastAiDate: getToday() });
+        }
+      },
+    }),
+    {
+      name: "ai-quota-storage",
       storage: createJSONStorage(() => mmkvStorage),
     }
   )
