@@ -129,7 +129,7 @@ export function Hero() {
             >
               <AppleLogo className="size-5 text-background" weight="fill" />
               <GooglePlayLogo className="size-5 text-background" weight="fill" />
-              <span className="font-display text-base font-bold text-background">Download</span>
+              <span className="font-display text-base font-bold text-background">Télécharger</span>
             </a>
 
             <Link

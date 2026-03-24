@@ -20,7 +20,7 @@ export function MobileCTABar() {
         >
           <AppleLogo className="size-4" weight="fill" />
           <GooglePlayLogo className="size-4" weight="fill" />
-          <span>Download</span>
+          <span>Télécharger</span>
         </a>
       </div>
     </motion.div>

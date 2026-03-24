@@ -4,7 +4,7 @@ import { QrCode, AppleLogo, GooglePlayLogo, ArrowDown, Leaf } from "@phosphor-ic
 import { SplitText } from "@/components/animations/split-text";
 import { AnimateIn } from "@/components/animations/animate-in";
 
-export function CtaDownload() {
+export function CtaTélécharger() {
   return (
     <section className="relative flex items-center overflow-hidden bg-secondary/50 py-20 lg:min-h-screen lg:py-32">
       {/* Warm ambient glow */}
@@ -48,7 +48,7 @@ export function CtaDownload() {
             >
               <AppleLogo className="size-6 text-background" weight="fill" />
               <GooglePlayLogo className="size-6 text-background" weight="fill" />
-              <span className="font-display text-lg font-bold text-background">Download</span>
+              <span className="font-display text-lg font-bold text-background">Télécharger</span>
             </a>
           </div>
         </AnimateIn>

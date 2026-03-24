@@ -71,7 +71,7 @@ export function Navbar() {
           >
             <AppleLogo className="size-4" weight="fill" />
             <GooglePlayLogo className="size-4" weight="fill" />
-            <span>Download</span>
+            <span>Télécharger</span>
           </a>
 
           {/* Mobile hamburger */}
@@ -107,7 +107,7 @@ export function Navbar() {
                 >
                   <AppleLogo className="size-4" weight="fill" />
                   <GooglePlayLogo className="size-4" weight="fill" />
-                  <span>Download</span>
+                  <span>Télécharger</span>
                 </a>
               </nav>
             </SheetContent>
