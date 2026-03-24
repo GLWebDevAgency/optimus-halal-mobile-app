@@ -3,7 +3,7 @@
 import { motion, useInView, type Variants } from "motion/react";
 import { useRef } from "react";
 
-type AnimateInVariant = "fadeUp" | "fadeDown" | "fadeLeft" | "fadeRight" | "scaleIn" | "blur";
+type AnimateInVariant = "fadeUp" | "fadeDown" | "fadeLeft" | "fadeRight" | "scaleIn" | "blur" | "reveal" | "parallaxUp";
 
 const variants: Record<AnimateInVariant, Variants> = {
   fadeUp: { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } },
@@ -12,6 +12,8 @@ const variants: Record<AnimateInVariant, Variants> = {
   fadeRight: { hidden: { opacity: 0, x: 24 }, visible: { opacity: 1, x: 0 } },
   scaleIn: { hidden: { opacity: 0, scale: 0.8 }, visible: { opacity: 1, scale: 1 } },
   blur: { hidden: { opacity: 0, filter: "blur(6px)" }, visible: { opacity: 1, filter: "blur(0px)" } },
+  reveal: { hidden: { opacity: 0, clipPath: "inset(8% 0 8% 0)" }, visible: { opacity: 1, clipPath: "inset(0% 0 0% 0)" } },
+  parallaxUp: { hidden: { opacity: 0, y: 40, scale: 0.98 }, visible: { opacity: 1, y: 0, scale: 1 } },
 };
 
 interface AnimateInProps {
