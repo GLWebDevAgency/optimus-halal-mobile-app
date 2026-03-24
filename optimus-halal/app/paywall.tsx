@@ -1,7 +1,7 @@
 /**
  * Soft Paywall Screen
  *
- * Affiché quand un utilisateur anonyme atteint sa limite de 5 scans/jour.
+ * Affiché quand un utilisateur atteint sa limite de scans ou d'analyses IA.
  * Design éthique : bouton "Plus tard" TOUJOURS visible, pas de dark pattern.
  */
 
@@ -18,14 +18,13 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useHaptics } from "@/hooks";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
-import { useQuotaStore } from "@/store";
+import { useQuotaStore, DAILY_SCAN_LIMIT, DAILY_AI_ANALYSIS_LIMIT, useAiQuotaStore } from "@/store";
 import { trackEvent } from "@/lib/analytics";
 import { AppIcon } from "@/lib/icons";
 import { restorePurchases, isPremiumCustomer } from "@/services/purchases";
 import { useTrialStore } from "@/store";
 import type { PaywallTrigger } from "@/types/paywall";
 
-const DAILY_SCAN_LIMIT = 5;
 
 export default function PaywallScreen() {
   const insets = useSafeAreaInsets();
@@ -35,12 +34,15 @@ export default function PaywallScreen() {
   const { trigger = "generic" } = useLocalSearchParams<{ trigger?: PaywallTrigger }>();
   const remaining = useQuotaStore((s) => s.getRemainingScans());
   const quotaExhausted = remaining <= 0;
+  const aiRemaining = useAiQuotaStore((s) => s.getRemainingAiAnalyses());
+  const aiQuotaExhausted = aiRemaining <= 0;
   const trialExpired = useTrialStore((s) => s.hasTrialExpired());
   const [isRestoring, setIsRestoring] = React.useState(false);
   const [restoreMessage, setRestoreMessage] = React.useState<string | null>(null);
 
   // Define all features with their associated trigger
   const allFeatures = [
+    { icon: "auto-awesome" as const, text: t.paywall.featureUnlimitedAi, trigger: "ai_analysis_quota" },
     { icon: "all-inclusive" as const, text: t.paywall.featureUnlimitedScans, trigger: "scan_quota" },
     { icon: "favorite" as const, text: t.paywall.featureFavorites, trigger: "favorites" },
     { icon: "history" as const, text: t.paywall.featureHistory, trigger: "history" },
@@ -58,7 +60,9 @@ export default function PaywallScreen() {
   React.useEffect(() => {
     trackEvent("paywall_viewed", {
       remaining_scans: remaining,
+      remaining_ai: aiRemaining,
       quota_exhausted: quotaExhausted,
+      ai_quota_exhausted: aiQuotaExhausted,
       trigger,
     });
   }, []);
@@ -149,9 +153,11 @@ export default function PaywallScreen() {
           <Text className="text-2xl font-bold text-center" style={{ color: colors.textPrimary }}>
             {trialExpired
               ? t.paywall.trialExpired
-              : quotaExhausted
-                ? t.paywall.title
-                : t.paywall.titleRemaining.replace("{n}", String(remaining))}
+              : trigger === "ai_analysis_quota"
+                ? t.paywall.titleAiQuota
+                : quotaExhausted
+                  ? t.paywall.title
+                  : t.paywall.titleRemaining.replace("{n}", String(remaining))}
           </Text>
         </Animated.View>
 
@@ -160,9 +166,11 @@ export default function PaywallScreen() {
           <Text className="text-sm text-center leading-5" style={{ color: colors.textSecondary }}>
             {trialExpired
               ? t.paywall.trialExpiredSubtitle
-              : quotaExhausted
-                ? t.paywall.subtitle
-                : t.paywall.subtitleRemaining}
+              : trigger === "ai_analysis_quota"
+                ? t.paywall.subtitleAiQuota
+                : quotaExhausted
+                  ? t.paywall.subtitle
+                  : t.paywall.subtitleRemaining}
           </Text>
         </Animated.View>
 
@@ -295,7 +303,9 @@ export default function PaywallScreen() {
         {/* Reset info */}
         <Animated.View entering={FadeIn.delay(850).duration(400)} className="mt-2">
           <Text className="text-xs text-center" style={{ color: colors.textMuted }}>
-            {t.paywall.scansResetInfo}
+            {trigger === "ai_analysis_quota"
+              ? t.paywall.aiResetInfo
+              : t.paywall.scansResetInfo}
           </Text>
         </Animated.View>
 
