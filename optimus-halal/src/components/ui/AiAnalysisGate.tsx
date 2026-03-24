@@ -4,7 +4,6 @@ import { SparkleIcon, LockIcon } from "phosphor-react-native";
 import { useAiQuotaStore, useFeatureFlagsStore } from "@/store";
 import { usePremium, useTranslation, useTheme, useHaptics } from "@/hooks";
 import { PressableScale } from "./PressableScale";
-import type { PaywallTrigger } from "@/types/paywall";
 
 interface AiAnalysisGateProps {
   children: React.ReactNode;
@@ -30,27 +29,23 @@ export function AiAnalysisGate({ children }: AiAnalysisGateProps) {
   const { impact } = useHaptics();
   const consumed = useRef(false);
 
-  // Gates inactive when payments disabled (mirrors PremiumGate pattern)
-  if (!flags.paymentsEnabled) {
-    return <>{children}</>;
-  }
+  // Bypass conditions — computed before hooks to respect Rules of Hooks
+  const isBypassed = !flags.paymentsEnabled || isPremium || isTrialActive;
 
-  // Premium or trial — always show
-  if (isPremium || isTrialActive) {
-    return <>{children}</>;
-  }
-
-  // Snapshot quota BEFORE render — consume once per mount
-  const shouldShow = remaining > 0 || consumed.current;
-
-  // Auto-consume on first render when quota available
+  // Auto-consume quota on first render (must be called unconditionally — Rules of Hooks)
   useEffect(() => {
+    if (isBypassed) return;
     if (!consumed.current && remaining > 0) {
       consumed.current = true;
       useAiQuotaStore.getState().incrementAiAnalysis();
     }
-  }, [remaining]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- mount-only
 
+  if (isBypassed) {
+    return <>{children}</>;
+  }
+
+  const shouldShow = remaining > 0 || consumed.current;
   if (shouldShow) {
     return <>{children}</>;
   }
@@ -97,7 +92,7 @@ export function AiAnalysisGate({ children }: AiAnalysisGateProps) {
       <PressableScale
         onPress={() => {
           impact();
-          showPaywall("ai_analysis_quota" as PaywallTrigger);
+          showPaywall("ai_analysis_quota");
         }}
         style={{
           marginTop: 16,
