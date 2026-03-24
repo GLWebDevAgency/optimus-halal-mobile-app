@@ -1,3 +1,4 @@
+import { Envelope, Leaf } from "@phosphor-icons/react";
 import { NaqiyLogo } from "@/components/brand/naqiy-logo";
 import { InstagramIcon } from "@/components/icons/instagram-icon";
 import { XIcon } from "@/components/icons/x-icon";
@@ -23,16 +24,19 @@ const socialLinks = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-white/10 bg-[#0a0a0a] py-16">
-      <div className="mx-auto max-w-6xl px-6">
+    <footer className="relative bg-foreground pt-16 pb-8 overflow-hidden">
+      {/* Top divider — golden gradient line */}
+      <div className="absolute top-0 inset-x-0 h-px divider-gold" aria-hidden="true" />
+
+      <div className="mx-auto max-w-6xl px-6 relative z-10">
         <div className="grid gap-12 md:grid-cols-4">
           {/* Col 1 — Brand */}
           <div>
             <NaqiyLogo size="sm" />
-            <p className="mt-3 text-sm text-white/40">
+            <p className="mt-3 text-sm text-white/50">
               Scanne. Comprends. Choisis.
             </p>
-            <div className="mt-4 flex gap-3">
+            <div className="mt-5 flex gap-3">
               {socialLinks.map((social) => {
                 const Icon = social.icon;
                 return (
@@ -41,10 +45,10 @@ export function Footer() {
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-white/40 transition-colors hover:text-white"
+                    className="flex size-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/60 transition-all duration-300 hover:text-white hover:border-gold/30 hover:bg-gold/10"
                     aria-label={social.label}
                   >
-                    <Icon className="size-5" />
+                    <Icon className="size-4" />
                   </a>
                 );
               })}
@@ -53,12 +57,12 @@ export function Footer() {
 
           {/* Col 2 — Produit */}
           <div>
-            <h3 className="mb-4 text-sm font-semibold text-white">Produit</h3>
+            <h3 className="mb-4 text-xs font-semibold text-white/70 uppercase tracking-wider">Produit</h3>
             <ul className="flex flex-col gap-2.5">
               <li>
                 <a
                   href="#features"
-                  className="text-sm text-white/50 transition hover:text-white"
+                  className="link-underline text-sm text-white/50 transition-colors duration-200 hover:text-white"
                 >
                   Fonctionnalités
                 </a>
@@ -66,7 +70,7 @@ export function Footer() {
               <li>
                 <a
                   href="#pricing"
-                  className="text-sm text-white/50 transition hover:text-white"
+                  className="link-underline text-sm text-white/50 transition-colors duration-200 hover:text-white"
                 >
                   Tarifs
                 </a>
@@ -76,12 +80,12 @@ export function Footer() {
 
           {/* Col 3 — Légal */}
           <div>
-            <h3 className="mb-4 text-sm font-semibold text-white">Légal</h3>
+            <h3 className="mb-4 text-xs font-semibold text-white/70 uppercase tracking-wider">Légal</h3>
             <ul className="flex flex-col gap-2.5">
               <li>
                 <a
                   href="/cgu"
-                  className="text-sm text-white/50 transition hover:text-white"
+                  className="link-underline text-sm text-white/50 transition-colors duration-200 hover:text-white"
                 >
                   Conditions d&apos;utilisation
                 </a>
@@ -89,7 +93,7 @@ export function Footer() {
               <li>
                 <a
                   href="/confidentialite"
-                  className="text-sm text-white/50 transition hover:text-white"
+                  className="link-underline text-sm text-white/50 transition-colors duration-200 hover:text-white"
                 >
                   Politique de confidentialité
                 </a>
@@ -97,7 +101,7 @@ export function Footer() {
               <li>
                 <a
                   href="/mentions-legales"
-                  className="text-sm text-white/50 transition hover:text-white"
+                  className="link-underline text-sm text-white/50 transition-colors duration-200 hover:text-white"
                 >
                   Mentions légales
                 </a>
@@ -107,27 +111,41 @@ export function Footer() {
 
           {/* Col 4 — Contact */}
           <div>
-            <h3 className="mb-4 text-sm font-semibold text-white">Contact</h3>
+            <h3 className="mb-4 text-xs font-semibold text-white/70 uppercase tracking-wider">Contact</h3>
             <ul className="flex flex-col gap-2.5">
               <li>
-                <span className="text-sm text-white/50">
+                <a
+                  href="mailto:contact@naqiy.app"
+                  className="inline-flex items-center gap-2 text-sm text-white/50 transition-colors duration-200 hover:text-white/90"
+                >
+                  <Envelope className="size-3.5" weight="duotone" />
                   contact@naqiy.app
-                </span>
+                </a>
               </li>
               <li>
-                <span className="text-sm text-white/50">
+                <a
+                  href="mailto:support@naqiy.app"
+                  className="inline-flex items-center gap-2 text-sm text-white/50 transition-colors duration-200 hover:text-white/90"
+                >
+                  <Envelope className="size-3.5" weight="duotone" />
                   support@naqiy.app
-                </span>
+                </a>
               </li>
             </ul>
           </div>
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 border-t border-white/10 pt-8">
-          <p className="text-center text-xs text-white/30">
-            &copy; 2026 Naqiy. Tous droits réservés.
-          </p>
+        <div className="mt-12 pt-6">
+          <div className="h-px divider-gold mb-6" />
+          <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
+            <p className="text-xs text-white/30">
+              &copy; 2026 Naqiy&reg;. Tous droits réservés.
+            </p>
+            <p className="inline-flex items-center gap-1 text-xs text-white/30">
+              Fait avec <Leaf className="size-3 text-leaf" weight="fill" /> à Paris
+            </p>
+          </div>
         </div>
       </div>
     </footer>
