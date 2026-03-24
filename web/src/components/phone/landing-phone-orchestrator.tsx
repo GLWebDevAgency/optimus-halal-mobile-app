@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useMemo } from "react";
-import { motion, useScroll, useTransform, useInView } from "motion/react";
+import { useInView } from "motion/react";
 
 import { PhoneFrame } from "@/components/phone/phone-frame";
 import {
@@ -21,14 +21,35 @@ import { ProfileScreen } from "@/components/phone/screens/profile-screen";
 import { Hero } from "@/components/layout/sections/hero";
 import { ScanSection } from "@/components/layout/sections/scan-section";
 import { AnalysisSection } from "@/components/layout/sections/analysis-section";
+import { ScanResultSection } from "@/components/layout/sections/scan-result-section";
 import { MapSection } from "@/components/layout/sections/map-section";
+import { RestaurantDetailSection } from "@/components/layout/sections/restaurant-detail-section";
 import { PricingSection } from "@/components/layout/sections/pricing";
+import { NaqiyScoreSection } from "@/components/layout/sections/naqiy-score-section";
 import { SocialProofSection } from "@/components/layout/sections/social-proof";
+import { ComingSoonSection } from "@/components/layout/sections/coming-soon-section";
 import { CtaDownload } from "@/components/layout/sections/cta-download";
 import { Footer } from "@/components/layout/sections/footer";
 
 /* ═══════════════════════════════════════════════════════════
    ORCHESTRATOR — ties sections, phone, and transitions together
+
+   AIDA funnel order:
+   Grid (phone paired):
+     1. Hero          → home
+     2. Scan          → scan
+     3. Analysis      → scanLoading
+     4. ScanResult    → scanResult
+     5. NaqiyScore    → scanResult
+     6. SocialProof   → home
+     7. Map           → map
+     8. Restaurant    → restaurant
+
+   Full-width (no phone):
+     9. ComingSoon
+    10. Pricing
+    11. CTA
+    12. Footer
    ═══════════════════════════════════════════════════════════ */
 
 export function LandingPhoneOrchestrator() {
@@ -45,106 +66,102 @@ export function LandingPhoneOrchestrator() {
     ],
     []
   );
-  /* ── Section refs ── */
+  /* ── Section refs (grid sections only — phone paired) ── */
   const scanRef = useRef<HTMLDivElement>(null);
   const analysisRef = useRef<HTMLDivElement>(null);
-  const analysisBottomRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapBottomRef = useRef<HTMLDivElement>(null);
-  const pricingRef = useRef<HTMLDivElement>(null);
+  const scanResultRef = useRef<HTMLDivElement>(null);
+  const naqiyScoreRef = useRef<HTMLDivElement>(null);
   const socialProofRef = useRef<HTMLDivElement>(null);
-  const ctaRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const restaurantRef = useRef<HTMLDivElement>(null);
 
   /* ── Section visibility ── */
   const scanInView = useInView(scanRef, { amount: 0.4 });
   const analysisInView = useInView(analysisRef, { amount: 0.4 });
-  const analysisBottomInView = useInView(analysisBottomRef, { amount: 0.1 });
-  const mapInView = useInView(mapRef, { amount: 0.4 });
-  const mapBottomInView = useInView(mapBottomRef, { amount: 0.1 });
-  const pricingInView = useInView(pricingRef, { amount: 0.4 });
+  const scanResultInView = useInView(scanResultRef, { amount: 0.4 });
+  const naqiyScoreInView = useInView(naqiyScoreRef, { amount: 0.4 });
   const socialProofInView = useInView(socialProofRef, { amount: 0.3 });
-  const ctaInView = useInView(ctaRef, { amount: 0.3 });
+  const mapInView = useInView(mapRef, { amount: 0.4 });
+  const restaurantInView = useInView(restaurantRef, { amount: 0.4 });
 
   /* ── Derive active screen from section visibility ──
      Priority: bottom-most visible section wins.
-     CTA returns to HomeScreen. SocialProof keeps last screen. */
+     Each section maps 1:1 to a phone screen. */
   const activeScreen = useMemo(() => {
-    if (ctaInView) return "home";
-    if (pricingInView) return "profile";
-    if (mapBottomInView) return "restaurant";
+    if (restaurantInView) return "restaurant";
     if (mapInView) return "map";
-    if (analysisBottomInView) return "scanResult";
+    if (socialProofInView) return "home";
+    if (naqiyScoreInView) return "scanResult";
+    if (scanResultInView) return "scanResult";
     if (analysisInView) return "scanLoading";
     if (scanInView) return "scan";
     return "home";
   }, [
-    ctaInView,
-    pricingInView,
-    mapBottomInView,
+    restaurantInView,
     mapInView,
-    analysisBottomInView,
+    socialProofInView,
+    naqiyScoreInView,
+    scanResultInView,
     analysisInView,
     scanInView,
   ]);
 
-  /* ── Phone fade: out at SocialProof, back in at CTA ── */
-  const phoneVisible = !socialProofInView || ctaInView;
-
-  /* ── Dark-to-light background transition ── */
-  const { scrollYProgress } = useScroll();
-
-  const backgroundColor = useTransform(
-    scrollYProgress,
-    [0, 0.3, 0.5, 1],
-    ["#0a0a0a", "#0a0a0a", "#fafaf8", "#fafaf8"]
-  );
-
-  const textColor = useTransform(
-    scrollYProgress,
-    [0, 0.3, 0.5, 1],
-    ["#ffffff", "#ffffff", "#1a1a1a", "#1a1a1a"]
-  );
-
   return (
-    <motion.div style={{ backgroundColor, color: textColor }}>
+    <div className="bg-background text-foreground">
       {/* ── Two-column grid: Content left, Phone right ── */}
       <div className="mx-auto max-w-7xl px-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* ─── LEFT COLUMN — Content sections ─── */}
           <div>
-            <div>
+            <div data-snap>
               <Hero />
             </div>
 
-            <div ref={scanRef}>
+            <div className="divider-gold mx-auto max-w-5xl" />
+
+            {/* ─── MOBILE INLINE PHONE — visible below lg ─── */}
+            <div className="flex justify-center py-12 lg:hidden">
+              <div className="scale-[0.85] sm:scale-100 origin-top">
+                <PhoneFrame>
+                  <PhoneScreenManager
+                    screens={screens}
+                    activeScreen={activeScreen}
+                  />
+                </PhoneFrame>
+              </div>
+            </div>
+
+            <div ref={scanRef} data-snap>
               <ScanSection />
             </div>
 
-            {/* Analysis — two-phase: scanLoading → scanResult */}
-            <div ref={analysisRef}>
+            <div ref={analysisRef} data-snap>
               <AnalysisSection />
-              <div ref={analysisBottomRef} className="h-[30vh]" />
             </div>
 
-            {/* Map — two-phase: map → restaurant */}
-            <div ref={mapRef}>
+            <div ref={scanResultRef} data-snap>
+              <ScanResultSection />
+            </div>
+
+            <div ref={naqiyScoreRef} data-snap>
+              <NaqiyScoreSection />
+            </div>
+
+            <div ref={socialProofRef} data-snap>
+              <SocialProofSection />
+            </div>
+
+            <div ref={mapRef} data-snap>
               <MapSection />
-              <div ref={mapBottomRef} className="h-[30vh]" />
             </div>
 
-            <div ref={pricingRef}>
-              <PricingSection />
+            <div ref={restaurantRef} data-snap>
+              <RestaurantDetailSection />
             </div>
           </div>
 
-          {/* ─── RIGHT COLUMN — Sticky phone with fade ─── */}
-          <motion.div
-            animate={{
-              opacity: phoneVisible ? 1 : 0,
-              scale: phoneVisible ? 1 : 0.95,
-            }}
-            transition={{ duration: 0.5, ease: "easeInOut" }}
-          >
+          {/* ─── RIGHT COLUMN — Sticky phone ─── */}
+          <div className="hidden lg:block">
             <StickyPhone>
               <PhoneFrame>
                 <PhoneScreenManager
@@ -153,21 +170,28 @@ export function LandingPhoneOrchestrator() {
                 />
               </PhoneFrame>
             </StickyPhone>
-          </motion.div>
+          </div>
         </div>
       </div>
 
-      {/* ── Full-width sections (phone fades out/in) ── */}
-      <div ref={socialProofRef}>
-        <SocialProofSection />
+      <div className="divider-gold mx-auto max-w-5xl" />
+
+      {/* ── Full-width sections (phone scrolls away naturally) ── */}
+      <div data-snap>
+        <ComingSoonSection />
       </div>
 
-      {/* CTA — phone fades back in, returns to HomeScreen */}
-      <div ref={ctaRef}>
+      <div data-snap>
+        <PricingSection />
+      </div>
+
+      <div className="divider-gold mx-auto max-w-5xl" />
+
+      <div data-snap>
         <CtaDownload />
       </div>
 
       <Footer />
-    </motion.div>
+    </div>
   );
 }
