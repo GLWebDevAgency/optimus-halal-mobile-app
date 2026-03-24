@@ -41,7 +41,7 @@ import Animated, {
   interpolate,
   Extrapolation,
 } from "react-native-reanimated";
-import { IconButton, LevelUpCelebration, PremiumBackground } from "@/components/ui";
+import { IconButton, LevelUpCelebration, PremiumBackground, AiAnalysisGate } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { MadhabBottomSheet } from "@/components/scan/MadhabBottomSheet";
 import { TrustScoreBottomSheet } from "@/components/scan/TrustScoreBottomSheet";
@@ -182,10 +182,7 @@ export default function ScanResultScreen() {
   const detectedAdditives = scanMutation.data?.detectedAdditives ?? [];
   const meQuery = useMe({ enabled: hasStoredTokens() });
   const isGuest = !meQuery.data && (!hasStoredTokens() || meQuery.isError);
-  const localRemaining = useQuotaStore((s) => {
-    if (s.lastScanDate !== new Date().toISOString().slice(0, 10)) return 5;
-    return Math.max(0, 5 - s.dailyScansUsed);
-  });
+  const localRemaining = useQuotaStore((s) => s.getRemainingScans());
   const remainingScans = scanMutation.data?.remainingScans ?? (isGuest ? localRemaining : null);
 
   // Increment local quota counter + save to local history after a successful anonymous scan
@@ -774,8 +771,9 @@ export default function ScanResultScreen() {
             <ScanResultTabBar activeTab={activeTab as 0 | 1} onTabPress={setActiveTab} scrollProgress={scrollProgress} />
           </View>
 
-          {/* PAGER: Halal (page 0) + Health (page 1) */}
-          <ScanResultPager
+          {/* PAGER: Halal (page 0) + Health (page 1) — AI-gated after 3/day */}
+          <AiAnalysisGate>
+            <ScanResultPager
             activeTab={activeTab}
             onPageChange={setActiveTab}
             scrollProgress={scrollProgress}
@@ -906,6 +904,7 @@ export default function ScanResultScreen() {
               />
             }
           />
+          </AiAnalysisGate>
 
           {/* ── Horizon divider ── */}
           <View style={[styles.horizonDivider, { backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.06)" }]} />
