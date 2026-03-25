@@ -113,7 +113,7 @@ export function LandingPhoneOrchestrator() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* ─── LEFT COLUMN — Content sections ─── */}
           <div>
-            <div data-snap>
+            <div>
               <Hero />
             </div>
 
@@ -131,31 +131,31 @@ export function LandingPhoneOrchestrator() {
               </div>
             </div>
 
-            <div ref={scanRef} data-snap>
+            <div ref={scanRef}>
               <ScanSection />
             </div>
 
-            <div ref={analysisRef} data-snap>
+            <div ref={analysisRef}>
               <ScanResultSection />
             </div>
 
-            <div ref={scanResultRef} data-snap>
+            <div ref={scanResultRef}>
               <AnalysisSection />
             </div>
 
-            <div ref={naqiyScoreRef} data-snap>
+            <div ref={naqiyScoreRef}>
               <NaqiyScoreSection />
             </div>
 
-            <div ref={socialProofRef} data-snap>
+            <div ref={socialProofRef}>
               <SocialProofSection />
             </div>
 
-            <div ref={mapRef} data-snap>
+            <div ref={mapRef}>
               <MapSection />
             </div>
 
-            <div ref={restaurantRef} data-snap>
+            <div ref={restaurantRef}>
               <RestaurantDetailSection />
             </div>
           </div>
@@ -177,17 +177,17 @@ export function LandingPhoneOrchestrator() {
       <div className="divider-gold mx-auto max-w-5xl" />
 
       {/* ── Full-width sections (phone scrolls away naturally) ── */}
-      <div data-snap>
+      <div>
         <ComingSoonSection />
       </div>
 
-      <div data-snap>
+      <div>
         <PricingSection />
       </div>
 
       <div className="divider-gold mx-auto max-w-5xl" />
 
-      <div data-snap>
+      <div>
         <CtaDownload />
       </div>
 
