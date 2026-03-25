@@ -106,7 +106,9 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     router.replace("/admin/login")
   }, [router])
 
-  const isLoading = typeof window === "undefined"
+  const [isMounted, setIsMounted] = useState(false)
+  useEffect(() => setIsMounted(true), [])
+  const isLoading = !isMounted
 
   return (
     <AdminAuthContext.Provider value={{ user, isLoading, login, logout }}>
