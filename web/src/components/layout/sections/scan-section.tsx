@@ -27,6 +27,7 @@ export function ScanSection() {
         {/* Heading */}
         <SplitText
           as="h2"
+          ssrVisible
           className="font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl"
         >
           Un doute ? Scanne.

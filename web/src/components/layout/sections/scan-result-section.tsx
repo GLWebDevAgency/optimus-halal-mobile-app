@@ -36,6 +36,7 @@ export function ScanResultSection() {
       <div className="container max-w-xl relative z-10">
         <SplitText
           as="h2"
+          ssrVisible
           className="font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl"
         >
           3 secondes. Zéro doute.
