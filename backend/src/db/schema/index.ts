@@ -20,3 +20,4 @@ export * from "./store-favorites.js";
 export * from "./referrals.js";
 export * from "./devices.js";
 export * from "./admins.js";
+export * from "./waitlist-leads.js";

@@ -7,11 +7,15 @@ import {
   HandHeart,
   Crown,
   Van,
+  CheckCircle,
+  SpinnerGap,
 } from "@phosphor-icons/react";
 import { AnimateIn, Stagger, StaggerItem } from "@/components/animations/animate-in";
 import { SplitText } from "@/components/animations/split-text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { EVENTS } from "@/lib/analytics-events";
+import { useWaitlistJoin } from "@/hooks/use-waitlist-join";
 
 /* ═══════════════════════════════════════════════
    4 piliers — storytelling concis, pas de feature list.
@@ -54,6 +58,8 @@ const pillars = [
 ];
 
 export function ComingSoonSection() {
+  const { state, email, setEmail, submit, track } = useWaitlistJoin({ source: "marketplace" });
+
   return (
     <section className="relative flex items-center overflow-hidden bg-gradient-to-b from-background to-secondary/60 py-16 lg:py-24">
       <div className="mx-auto max-w-5xl px-6 relative z-10">
@@ -71,6 +77,7 @@ export function ComingSoonSection() {
 
           <SplitText
             as="h2"
+            ssrVisible
             className="font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl"
           >
             Halal par conviction. Tayyib par exigence.
@@ -119,20 +126,54 @@ export function ComingSoonSection() {
         {/* ── Newsletter CTA ── */}
         <AnimateIn variant="fadeUp" delay={0.5}>
           <div className="mt-10 text-center">
-            <p className="text-sm text-muted-foreground mb-3">
-              Sois le premier informé du lancement.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="ton@email.com"
-                className="w-full sm:flex-1 h-11 rounded-xl border border-border bg-card px-4 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"
-              />
-              <Button className="h-11 px-5 gold-glow-intense shrink-0 w-full sm:w-auto gap-2">
-                <Bell className="size-4" weight="fill" />
-                Me prévenir
-              </Button>
-            </div>
+            {(state === "idle" || state === "loading") && (
+              <>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Sois le premier informé du lancement.
+                </p>
+                <form
+                  onSubmit={submit}
+                  className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto"
+                >
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onFocus={() => track(EVENTS.MARKETPLACE_TEASER_CLICKED)}
+                    placeholder="ton@email.com"
+                    required
+                    disabled={state === "loading"}
+                    className="w-full sm:flex-1 h-11 rounded-xl border border-border bg-card px-4 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all disabled:opacity-50"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={state === "loading"}
+                    className="h-11 px-5 gold-glow-intense shrink-0 w-full sm:w-auto gap-2"
+                  >
+                    {state === "loading" ? (
+                      <SpinnerGap className="size-4 animate-spin" />
+                    ) : (
+                      <Bell className="size-4" weight="fill" />
+                    )}
+                    Me prévenir
+                  </Button>
+                </form>
+              </>
+            )}
+
+            {state === "success" && (
+              <div className="flex items-center justify-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+                <CheckCircle className="size-4" weight="fill" />
+                <span>C&apos;est noté ! On te prévient dès le lancement.</span>
+              </div>
+            )}
+
+            {state === "already" && (
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <CheckCircle className="size-4" weight="fill" />
+                <span>Tu es déjà sur la liste — on ne t&apos;oublie pas.</span>
+              </div>
+            )}
           </div>
         </AnimateIn>
       </div>

@@ -24,6 +24,7 @@ interface AnimateInProps {
   duration?: number;
   once?: boolean;
   amount?: number;
+  ssrVisible?: boolean;
 }
 
 export function AnimateIn({
@@ -34,6 +35,7 @@ export function AnimateIn({
   duration = 0.6,
   once = true,
   amount = 0.4,
+  ssrVisible = false,
 }: AnimateInProps) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once, amount });
@@ -42,7 +44,7 @@ export function AnimateIn({
     <motion.div
       ref={ref}
       className={className}
-      initial="hidden"
+      initial={ssrVisible ? "visible" : "hidden"}
       animate={isInView ? "visible" : "hidden"}
       variants={variants[variant]}
       transition={{ duration, delay, ease: [0.25, 0.1, 0.25, 1] }}

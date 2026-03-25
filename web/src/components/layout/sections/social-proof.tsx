@@ -5,7 +5,6 @@ import {
   Warning,
   Heartbeat,
   Bell,
-  Brain,
   ShieldCheck,
   ArrowDown,
   MapPin,
@@ -63,6 +62,7 @@ export function SocialProofSection() {
         {/* ── Headline ── */}
         <SplitText
           as="h2"
+          ssrVisible
           className="font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl"
         >
           817 000 produits. Une seule réponse : la tienne.
@@ -143,8 +143,8 @@ export function SocialProofSection() {
                 variant="outline"
                 className="gap-1.5 border-gold/30 bg-gold/5 px-2.5 py-0.5 text-gold text-xs"
               >
-                <Brain className="size-3" weight="fill" />
-                Propulsé par l&apos;IA
+                <ShieldCheck className="size-3" weight="fill" />
+                12 certifieurs évalués
               </Badge>
             </div>
           </div>

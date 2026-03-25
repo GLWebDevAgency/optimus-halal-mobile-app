@@ -91,6 +91,7 @@ export function NaqiyScoreSection() {
 
           <SplitText
             as="h2"
+            ssrVisible
             className="font-display text-2xl font-bold tracking-tight sm:text-4xl md:text-5xl"
           >
             Le NaqiyScore&trade;

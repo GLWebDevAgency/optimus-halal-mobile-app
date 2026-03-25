@@ -8,7 +8,7 @@ import { trpc } from "./trpc";
 
 function getBaseUrl() {
   if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
-  return "http://localhost:3001";
+  return "http://localhost:3000";
 }
 
 export function TRPCProvider({ children }: { children: React.ReactNode }) {

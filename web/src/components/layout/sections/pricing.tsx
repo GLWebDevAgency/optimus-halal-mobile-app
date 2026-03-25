@@ -1,17 +1,20 @@
 "use client";
 
+import { useRef, useEffect } from "react";
 import {
   Check,
-  Heart,
   Crown,
   Leaf,
   ShieldCheck,
 } from "@phosphor-icons/react";
+import { useInView } from "motion/react";
 import { Badge } from "@/components/ui/badge";
 import { SplitText } from "@/components/animations/split-text";
 import { AnimateIn, Stagger, StaggerItem } from "@/components/animations/animate-in";
 import { TiltCard } from "@/components/animations/tilt-card";
 import { CursorGlow } from "@/components/animations/cursor-glow";
+import { useTrack } from "@/lib/posthog";
+import { EVENTS } from "@/lib/analytics-events";
 
 /* ═══════════════════════════════════════════════
    DATA
@@ -28,11 +31,11 @@ const freeFeatures = [
 const plusFeatures = [
   "Tout le gratuit, plus :",
   "Création de profil & synchronisation",
-  "Profil allergènes personnalisé",
-  "Profil santé (diabète, grossesse…)",
-  "4 écoles juridiques au choix",
+  "Alertes allergènes automatiques — gluten, lactose, arachides",
+  "Profil santé adapté — diabète, grossesse, cholestérol",
+  "Ton madhab, ton verdict — Hanafi, Shafi\u2019i, Maliki, Hanbali",
   "Historique illimité & favoris cloud",
-  "Mode hors ligne (100 produits)",
+  "Tes 100 produits favoris même sans réseau",
 ];
 
 /* ═══════════════════════════════════════════════
@@ -42,8 +45,19 @@ const plusFeatures = [
 export { PricingSection as Pricing };
 
 export function PricingSection() {
+  const track = useTrack();
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef, { once: true });
+
+  useEffect(() => {
+    if (isInView) {
+      track(EVENTS.PRICING_VIEWED);
+    }
+  }, [isInView, track]);
+
   return (
     <section
+      ref={sectionRef}
       id="pricing"
       className="relative flex items-center bg-secondary/30 py-16 lg:min-h-svh lg:py-24 overflow-hidden"
     >
@@ -51,6 +65,7 @@ export function PricingSection() {
         {/* ── Headline ── */}
         <SplitText
           as="h2"
+          ssrVisible
           className="font-display text-3xl font-bold tracking-tight text-center sm:text-4xl md:text-5xl"
         >
           Gratuit. Pour de vrai.
@@ -60,7 +75,7 @@ export function PricingSection() {
           <p className="text-sm text-pretty text-muted-foreground mt-3 max-w-lg mx-auto md:text-base">
             Projet indépendant — aucune pub, aucune revente de données.{" "}
             <span className="font-semibold text-foreground">
-              Ton soutien finance directement le développement.
+              Le scan est gratuit. La protection totale, c&apos;est Naqiy+.
             </span>
           </p>
         </AnimateIn>
@@ -109,10 +124,10 @@ export function PricingSection() {
           <StaggerItem>
             <TiltCard className="h-full">
               <div className="rounded-2xl bg-card p-6 relative overflow-hidden h-full flex flex-col shadow-md ring-1 ring-gold/20 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
-                {/* Soutien badge */}
+                {/* Protection badge */}
                 <Badge className="absolute top-4 right-4 gap-1 bg-gold text-black border-0 font-bold">
-                  <Heart className="size-3" weight="fill" />
-                  Soutenir le projet
+                  <ShieldCheck className="size-3" weight="fill" />
+                  Protection complète
                 </Badge>
 
                 <div className="flex items-center gap-2">
@@ -125,10 +140,11 @@ export function PricingSection() {
                   </span>
                   <span className="text-sm text-muted-foreground">/mois</span>
                 </div>
+                <p className="mt-1 text-xs text-leaf font-medium">Essai 7 jours offert</p>
                 <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
                   Profil personnalisé, favoris cloud, historique illimité{" "}
                   <span className="font-medium text-foreground">
-                    — et tu fais grandir un projet utile à la communauté.
+                    — le contrôle total sur ce que mange ta famille.
                   </span>
                 </p>
 
@@ -156,6 +172,9 @@ export function PricingSection() {
                     </li>
                   ))}
                 </ul>
+                <p className="mt-4 pt-3 border-t border-border/50 text-xs text-center text-muted-foreground">
+                  Pour le prix d&apos;un café par mois
+                </p>
               </div>
             </TiltCard>
           </StaggerItem>

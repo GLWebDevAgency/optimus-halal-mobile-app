@@ -34,6 +34,7 @@ export function AnalysisSection() {
       <div className="container max-w-xl">
         <SplitText
           as="h2"
+          ssrVisible
           className="font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl"
         >
           Fini les ingrédients mystérieux

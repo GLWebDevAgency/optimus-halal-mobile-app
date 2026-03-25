@@ -1,7 +1,9 @@
 "use client";
 
-import { useRef, useMemo } from "react";
-import { useInView } from "motion/react";
+import { useRef, useMemo, useEffect } from "react";
+import { useInView, useScroll } from "motion/react";
+import { useTrack } from "@/lib/posthog";
+import { EVENTS } from "@/lib/analytics-events";
 
 import { PhoneFrame } from "@/components/phone/phone-frame";
 import {
@@ -29,6 +31,7 @@ import { NaqiyScoreSection } from "@/components/layout/sections/naqiy-score-sect
 import { SocialProofSection } from "@/components/layout/sections/social-proof";
 import { ComingSoonSection } from "@/components/layout/sections/coming-soon-section";
 import { CtaDownload } from "@/components/layout/sections/cta-download";
+import { WaitlistSection } from "@/components/layout/sections/waitlist-section";
 import { Footer } from "@/components/layout/sections/footer";
 
 /* ═══════════════════════════════════════════════════════════
@@ -46,13 +49,30 @@ import { Footer } from "@/components/layout/sections/footer";
      8. Restaurant    → restaurant
 
    Full-width (no phone):
-     9. ComingSoon
-    10. Pricing
-    11. CTA
-    12. Footer
+     9. Pricing
+    10. Waitlist
+    11. ComingSoon (marketplace teaser)
+    12. CTA
+    13. Footer
    ═══════════════════════════════════════════════════════════ */
 
 export function LandingPhoneOrchestrator() {
+  const track = useTrack();
+  const { scrollYProgress } = useScroll();
+  const firedMilestones = useRef<Set<number>>(new Set());
+
+  useEffect(() => {
+    const milestones = [25, 50, 75, 100];
+    return scrollYProgress.on("change", (v) => {
+      for (const milestone of milestones) {
+        if (v * 100 >= milestone && !firedMilestones.current.has(milestone)) {
+          firedMilestones.current.add(milestone);
+          track(EVENTS.SCROLL_DEPTH, { percent: milestone });
+        }
+      }
+    });
+  }, [scrollYProgress, track]);
+
   /* ── Screen configs inside component so JSX has access to React tree context ── */
   const screens: ScreenConfig[] = useMemo(
     () => [
@@ -113,7 +133,7 @@ export function LandingPhoneOrchestrator() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* ─── LEFT COLUMN — Content sections ─── */}
           <div>
-            <div data-snap>
+            <div>
               <Hero />
             </div>
 
@@ -131,31 +151,31 @@ export function LandingPhoneOrchestrator() {
               </div>
             </div>
 
-            <div ref={scanRef} data-snap>
+            <div ref={scanRef}>
               <ScanSection />
             </div>
 
-            <div ref={analysisRef} data-snap>
+            <div ref={analysisRef}>
               <ScanResultSection />
             </div>
 
-            <div ref={scanResultRef} data-snap>
+            <div ref={scanResultRef}>
               <AnalysisSection />
             </div>
 
-            <div ref={naqiyScoreRef} data-snap>
+            <div ref={naqiyScoreRef}>
               <NaqiyScoreSection />
             </div>
 
-            <div ref={socialProofRef} data-snap>
+            <div ref={socialProofRef}>
               <SocialProofSection />
             </div>
 
-            <div ref={mapRef} data-snap>
+            <div ref={mapRef}>
               <MapSection />
             </div>
 
-            <div ref={restaurantRef} data-snap>
+            <div ref={restaurantRef}>
               <RestaurantDetailSection />
             </div>
           </div>
@@ -177,17 +197,21 @@ export function LandingPhoneOrchestrator() {
       <div className="divider-gold mx-auto max-w-5xl" />
 
       {/* ── Full-width sections (phone scrolls away naturally) ── */}
-      <div data-snap>
-        <ComingSoonSection />
+      <div>
+        <PricingSection />
       </div>
 
-      <div data-snap>
-        <PricingSection />
+      <div>
+        <WaitlistSection />
       </div>
 
       <div className="divider-gold mx-auto max-w-5xl" />
 
-      <div data-snap>
+      <div>
+        <ComingSoonSection />
+      </div>
+
+      <div>
         <CtaDownload />
       </div>
 

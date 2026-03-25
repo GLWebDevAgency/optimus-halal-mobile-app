@@ -5,8 +5,7 @@ import Link from "next/link";
 import {
   ArrowRight,
   ArrowDown,
-  AppleLogo,
-  GooglePlayLogo,
+  Bell,
   ShieldCheck,
   Leaf,
 } from "@phosphor-icons/react";
@@ -15,6 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { AnimateIn } from "@/components/animations/animate-in";
 import { AnimatedCounter } from "@/components/animations/animated-counter";
 import { SplitText } from "@/components/animations/split-text";
+import { useTrack } from "@/lib/posthog";
+import { EVENTS } from "@/lib/analytics-events";
 
 const topCertifiers = [
   { name: "AVS", src: "/images/certifications/avs.webp" },
@@ -22,6 +23,7 @@ const topCertifiers = [
 ];
 
 export function Hero() {
+  const track = useTrack();
   const { scrollY } = useScroll();
 
   // Hero brand block: fades out + lifts up as user scrolls
@@ -97,7 +99,7 @@ export function Hero() {
         </motion.div>
 
         {/* Badge */}
-        <AnimateIn variant="blur" delay={0.15}>
+        <AnimateIn variant="blur" delay={0.15} ssrVisible>
           <Badge
             variant="outline"
             className="mb-5 gap-1.5 border-leaf/30 bg-leaf/5 px-3 py-1 text-leaf"
@@ -109,21 +111,21 @@ export function Hero() {
 
         {/* H1 — Massive tagline */}
         <h1 className="font-display text-4xl font-black tracking-tighter leading-[0.95] text-balance sm:text-5xl md:text-6xl lg:text-7xl">
-          <SplitText as="span" delay={0.2}>
+          <SplitText as="span" delay={0.2} ssrVisible>
             Scanne.
           </SplitText>
           <br />
-          <SplitText as="span" delay={0.5}>
+          <SplitText as="span" delay={0.5} ssrVisible>
             Comprends.
           </SplitText>
           <br />
-          <SplitText as="span" delay={0.8} className="text-gold-gradient">
+          <SplitText as="span" delay={0.8} className="text-gold-gradient" ssrVisible>
             Choisis.
           </SplitText>
         </h1>
 
         {/* Subtitle */}
-        <AnimateIn variant="fadeUp" delay={0.6}>
+        <AnimateIn variant="fadeUp" delay={0.6} ssrVisible>
           <p className="mt-4 max-w-lg text-base leading-relaxed text-pretty text-muted-foreground md:text-lg">
             E471, gélatine, arômes &laquo;&thinsp;naturels&thinsp;&raquo; — tu mérites de savoir.
             Naqiy décrypte chaque produit pour que tu puisses{" "}
@@ -132,15 +134,15 @@ export function Hero() {
         </AnimateIn>
 
         {/* Store badges */}
-        <AnimateIn variant="blur" delay={0.7}>
+        <AnimateIn variant="blur" delay={0.7} ssrVisible>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
             <a
-              href="#"
+              href="#waitlist"
+              onClick={() => track(EVENTS.HERO_CTA_CLICKED)}
               className="border-gradient-gold group inline-flex items-center gap-3 rounded-full bg-foreground px-6 py-3 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.03]"
             >
-              <AppleLogo className="size-5 text-background" weight="fill" />
-              <GooglePlayLogo className="size-5 text-background" weight="fill" />
-              <span className="font-display text-base font-bold text-background">Télécharger</span>
+              <Bell className="size-5 text-background" weight="fill" />
+              <span className="font-display text-base font-bold text-background">Me prévenir du lancement</span>
             </a>
 
             <Link
@@ -154,7 +156,7 @@ export function Hero() {
         </AnimateIn>
 
         {/* Stats micro-strip */}
-        <AnimateIn variant="fadeUp" delay={0.85}>
+        <AnimateIn variant="fadeUp" delay={0.85} ssrVisible>
           <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground/60">
             <span><AnimatedCounter value={817000} suffix="+" className="font-semibold text-foreground/80" /> produits référencés</span>
             <span className="text-border">·</span>
@@ -165,7 +167,7 @@ export function Hero() {
         </AnimateIn>
 
         {/* Trust bar — Top certifiers in France */}
-        <AnimateIn variant="fadeUp" delay={0.9}>
+        <AnimateIn variant="fadeUp" delay={0.9} ssrVisible>
           <div className="mt-6 flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <ShieldCheck className="size-4 text-leaf" weight="fill" />
