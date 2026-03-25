@@ -29,6 +29,7 @@ import { NaqiyScoreSection } from "@/components/layout/sections/naqiy-score-sect
 import { SocialProofSection } from "@/components/layout/sections/social-proof";
 import { ComingSoonSection } from "@/components/layout/sections/coming-soon-section";
 import { CtaDownload } from "@/components/layout/sections/cta-download";
+import { WaitlistSection } from "@/components/layout/sections/waitlist-section";
 import { Footer } from "@/components/layout/sections/footer";
 
 /* ═══════════════════════════════════════════════════════════
@@ -190,6 +191,8 @@ export function LandingPhoneOrchestrator() {
       <div>
         <CtaDownload />
       </div>
+
+      <WaitlistSection />
 
       <Footer />
     </div>

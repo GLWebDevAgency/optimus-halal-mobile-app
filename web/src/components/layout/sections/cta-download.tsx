@@ -1,10 +1,7 @@
 "use client";
 
 import {
-  QrCode,
-  AppleLogo,
-  GooglePlayLogo,
-  ArrowDown,
+  Bell,
   ShieldCheck,
   Package,
   Flask,
@@ -74,6 +71,7 @@ export function CtaDownload() {
         <SplitText
           as="h2"
           className="font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-6xl text-glow-gold"
+          ssrVisible
         >
           Ta famille mérite de savoir
         </SplitText>
@@ -115,37 +113,19 @@ export function CtaDownload() {
           </div>
         </AnimateIn>
 
-        {/* ── Store badges — Apple & Google Play ── */}
+        {/* ── Waitlist CTA ── */}
         <AnimateIn variant="blur" delay={0.45}>
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <div className="mt-10 flex flex-col items-center gap-3">
             <a
-              href="#"
-              className="group inline-flex items-center gap-3 rounded-xl bg-foreground pl-4 pr-5 py-3 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.03]"
+              href="#waitlist"
+              className="inline-flex items-center gap-2.5 rounded-xl bg-gold px-8 py-4 text-base font-semibold text-background shadow-lg shadow-gold/20 transition-all duration-300 hover:bg-gold/90 hover:shadow-xl hover:shadow-gold/30 hover:scale-[1.03] active:scale-[0.98]"
             >
-              <AppleLogo className="size-7 text-background" weight="fill" />
-              <div className="text-left">
-                <p className="text-[10px] leading-none text-background/70">
-                  Télécharger sur l&apos;
-                </p>
-                <p className="text-base font-semibold leading-tight text-background">
-                  App Store
-                </p>
-              </div>
+              <Bell className="size-5" weight="fill" />
+              Rejoindre la liste d&apos;attente
             </a>
-            <a
-              href="#"
-              className="group inline-flex items-center gap-3 rounded-xl bg-foreground pl-4 pr-5 py-3 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.03]"
-            >
-              <GooglePlayLogo className="size-7 text-background" weight="fill" />
-              <div className="text-left">
-                <p className="text-[10px] leading-none text-background/70">
-                  Disponible sur
-                </p>
-                <p className="text-base font-semibold leading-tight text-background">
-                  Google Play
-                </p>
-              </div>
-            </a>
+            <p className="text-sm text-muted-foreground/50">
+              Bient&ocirc;t sur iOS et Android
+            </p>
           </div>
         </AnimateIn>
 
@@ -156,27 +136,6 @@ export function CtaDownload() {
             <p className="text-sm text-muted-foreground">
               Gratuit pour toujours — sans pub, sans revente de données
             </p>
-          </div>
-        </AnimateIn>
-
-        {/* ── QR Code — premium treatment ── */}
-        <AnimateIn variant="fadeUp" delay={0.65}>
-          <div className="mt-12 inline-flex flex-col items-center gap-3">
-            <div className="relative">
-              {/* Glow behind QR */}
-              <div
-                className="absolute inset-0 rounded-2xl blur-xl opacity-30"
-                style={{ background: "oklch(0.76 0.14 88 / 30%)" }}
-                aria-hidden="true"
-              />
-              <div className="relative rounded-2xl bg-white p-4 shadow-2xl shadow-black/20 ring-1 ring-white/10">
-                <QrCode className="size-24 text-black" weight="fill" />
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground/50">
-              <ArrowDown className="size-3 animate-bounce" />
-              Scanne avec la caméra de ton téléphone
-            </div>
           </div>
         </AnimateIn>
       </div>
