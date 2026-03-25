@@ -46,6 +46,8 @@ export {
 
 // Typography
 export {
+  headingFontFamily,
+  bodyFontFamily,
   fontFamily,
   fontSize,
   fontWeight,
@@ -54,6 +56,8 @@ export {
   textStyles,
   rtlFontMultiplier,
   scaleFontForRTL,
+  type HeadingFontFamily,
+  type BodyFontFamily,
   type FontFamily,
   type FontSize,
   type FontWeight,
