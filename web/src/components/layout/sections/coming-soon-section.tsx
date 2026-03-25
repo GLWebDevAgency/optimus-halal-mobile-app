@@ -8,7 +8,7 @@ import {
   Crown,
   Van,
   CheckCircle,
-  CircleNotch,
+  SpinnerGap,
 } from "@phosphor-icons/react";
 import { AnimateIn, Stagger, StaggerItem } from "@/components/animations/animate-in";
 import { SplitText } from "@/components/animations/split-text";
@@ -126,7 +126,7 @@ export function ComingSoonSection() {
         {/* ── Newsletter CTA ── */}
         <AnimateIn variant="fadeUp" delay={0.5}>
           <div className="mt-10 text-center">
-            {(state === "idle" || state === "loading" || state === "error") && (
+            {(state === "idle" || state === "loading") && (
               <>
                 <p className="text-sm text-muted-foreground mb-3">
                   Sois le premier informé du lancement.
@@ -151,18 +151,13 @@ export function ComingSoonSection() {
                     className="h-11 px-5 gold-glow-intense shrink-0 w-full sm:w-auto gap-2"
                   >
                     {state === "loading" ? (
-                      <CircleNotch className="size-4 animate-spin" />
+                      <SpinnerGap className="size-4 animate-spin" />
                     ) : (
                       <Bell className="size-4" weight="fill" />
                     )}
                     Me prévenir
                   </Button>
                 </form>
-                {state === "error" && (
-                  <p className="text-xs text-destructive mt-2">
-                    Une erreur est survenue. R&eacute;essaie.
-                  </p>
-                )}
               </>
             )}
 

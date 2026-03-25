@@ -6,7 +6,7 @@ import {
   GooglePlayLogo,
   CheckCircle,
   EnvelopeSimple,
-  CircleNotch,
+  SpinnerGap,
 } from "@phosphor-icons/react";
 import { SplitText } from "@/components/animations/split-text";
 import { AnimateIn } from "@/components/animations/animate-in";
@@ -63,7 +63,7 @@ export function WaitlistSection() {
         {/* Form */}
         <AnimateIn variant="fadeUp" delay={0.25}>
           <div className="mx-auto mt-10 max-w-lg">
-            {state === "idle" || state === "loading" || state === "error" ? (
+            {state === "idle" || state === "loading" ? (
               <form
                 onSubmit={submit}
                 className="flex flex-col sm:flex-row items-stretch gap-3"
@@ -88,17 +88,12 @@ export function WaitlistSection() {
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-gold px-6 py-3 text-sm font-semibold text-background shadow-lg shadow-gold/20 transition-all duration-300 hover:bg-gold/90 hover:shadow-xl hover:shadow-gold/30 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
                 >
                   {state === "loading" ? (
-                    <CircleNotch className="size-4 animate-spin" />
+                    <SpinnerGap className="size-4 animate-spin" />
                   ) : (
                     <Bell className="size-4" weight="fill" />
                   )}
                   Me pr&eacute;venir
                 </button>
-                {state === "error" && (
-                  <p className="text-xs text-destructive mt-1 sm:col-span-2">
-                    Une erreur est survenue. R&eacute;essaie.
-                  </p>
-                )}
               </form>
             ) : (
               <div className="flex flex-col items-center gap-3 rounded-2xl border border-gold/20 bg-gold/5 px-6 py-6 backdrop-blur-sm">

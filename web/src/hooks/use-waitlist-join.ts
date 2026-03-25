@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { useTrack } from "@/lib/posthog";
 import { EVENTS } from "@/lib/analytics-events";
 
-type WaitlistState = "idle" | "loading" | "success" | "already" | "error";
+type WaitlistState = "idle" | "loading" | "success" | "already";
 
 interface UseWaitlistJoinOptions {
   source?: "landing" | "marketplace" | "navbar" | "cta";
@@ -21,13 +22,22 @@ export function useWaitlistJoin({ source = "landing" }: UseWaitlistJoinOptions =
       if (data.status === "created") {
         setState("success");
         track(EVENTS.WAITLIST_SUBMITTED, { source });
+        toast.success("Bienvenue dans la famille Naqiy !", {
+          description: "Tu seras prévenu dès le lancement.",
+        });
       } else {
         setState("already");
         track(EVENTS.WAITLIST_ALREADY_EXISTS, { source });
+        toast.info("Tu es déjà inscrit !", {
+          description: "On ne t\u2019oublie pas, promis.",
+        });
       }
     },
     onError() {
-      setState("error");
+      setState("idle");
+      toast.error("Une erreur est survenue", {
+        description: "Vérifie ta connexion et réessaie.",
+      });
     },
   });
 
@@ -39,7 +49,6 @@ export function useWaitlistJoin({ source = "landing" }: UseWaitlistJoinOptions =
 
       setState("loading");
 
-      // Capture UTM params from URL
       const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
 
       mutation.mutate({
