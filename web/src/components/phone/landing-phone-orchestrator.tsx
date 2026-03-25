@@ -47,10 +47,11 @@ import { Footer } from "@/components/layout/sections/footer";
      8. Restaurant    → restaurant
 
    Full-width (no phone):
-     9. ComingSoon
-    10. Pricing
-    11. CTA
-    12. Footer
+     9. Pricing
+    10. Waitlist
+    11. ComingSoon (marketplace teaser)
+    12. CTA
+    13. Footer
    ═══════════════════════════════════════════════════════════ */
 
 export function LandingPhoneOrchestrator() {
@@ -179,20 +180,22 @@ export function LandingPhoneOrchestrator() {
 
       {/* ── Full-width sections (phone scrolls away naturally) ── */}
       <div>
-        <ComingSoonSection />
+        <PricingSection />
       </div>
 
       <div>
-        <PricingSection />
+        <WaitlistSection />
       </div>
 
       <div className="divider-gold mx-auto max-w-5xl" />
 
       <div>
-        <CtaDownload />
+        <ComingSoonSection />
       </div>
 
-      <WaitlistSection />
+      <div>
+        <CtaDownload />
+      </div>
 
       <Footer />
     </div>

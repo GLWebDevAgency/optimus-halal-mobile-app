@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Storefront,
   Bell,
@@ -7,11 +8,16 @@ import {
   HandHeart,
   Crown,
   Van,
+  CheckCircle,
 } from "@phosphor-icons/react";
 import { AnimateIn, Stagger, StaggerItem } from "@/components/animations/animate-in";
 import { SplitText } from "@/components/animations/split-text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+
+const STORAGE_KEY = "naqiy.waitlist_emails";
+
+type FormState = "idle" | "success" | "already";
 
 /* ═══════════════════════════════════════════════
    4 piliers — storytelling concis, pas de feature list.
@@ -54,6 +60,28 @@ const pillars = [
 ];
 
 export function ComingSoonSection() {
+  const [email, setEmail] = useState("");
+  const [formState, setFormState] = useState<FormState>("idle");
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const normalized = email.trim().toLowerCase();
+    if (!normalized) return;
+
+    const stored = localStorage.getItem(STORAGE_KEY);
+    const emails: string[] = stored ? (JSON.parse(stored) as string[]) : [];
+
+    if (emails.includes(normalized)) {
+      setFormState("already");
+      return;
+    }
+
+    emails.push(normalized);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(emails));
+    setFormState("success");
+    setEmail("");
+  }
+
   return (
     <section className="relative flex items-center overflow-hidden bg-gradient-to-b from-background to-secondary/60 py-16 lg:py-24">
       <div className="mx-auto max-w-5xl px-6 relative z-10">
@@ -119,20 +147,47 @@ export function ComingSoonSection() {
         {/* ── Newsletter CTA ── */}
         <AnimateIn variant="fadeUp" delay={0.5}>
           <div className="mt-10 text-center">
-            <p className="text-sm text-muted-foreground mb-3">
-              Sois le premier informé du lancement.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="ton@email.com"
-                className="w-full sm:flex-1 h-11 rounded-xl border border-border bg-card px-4 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"
-              />
-              <Button className="h-11 px-5 gold-glow-intense shrink-0 w-full sm:w-auto gap-2">
-                <Bell className="size-4" weight="fill" />
-                Me prévenir
-              </Button>
-            </div>
+            {formState === "idle" && (
+              <>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Sois le premier informé du lancement.
+                </p>
+                <form
+                  onSubmit={handleSubmit}
+                  className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto"
+                >
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="ton@email.com"
+                    required
+                    className="w-full sm:flex-1 h-11 rounded-xl border border-border bg-card px-4 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"
+                  />
+                  <Button
+                    type="submit"
+                    className="h-11 px-5 gold-glow-intense shrink-0 w-full sm:w-auto gap-2"
+                  >
+                    <Bell className="size-4" weight="fill" />
+                    Me prévenir
+                  </Button>
+                </form>
+              </>
+            )}
+
+            {formState === "success" && (
+              <div className="flex items-center justify-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+                <CheckCircle className="size-4" weight="fill" />
+                <span>C&apos;est noté ! On te prévient dès le lancement.</span>
+              </div>
+            )}
+
+            {formState === "already" && (
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <CheckCircle className="size-4" weight="fill" />
+                <span>Tu es déjà sur la liste — on ne t&apos;oublie pas.</span>
+              </div>
+            )}
           </div>
         </AnimateIn>
       </div>
