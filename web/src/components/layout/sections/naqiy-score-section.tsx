@@ -1,15 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { ShieldCheck } from "@phosphor-icons/react";
+import { ShieldCheck, MagnifyingGlass, Knife, Path, Eye } from "@phosphor-icons/react";
 import { AnimateIn, Stagger, StaggerItem } from "@/components/animations/animate-in";
 import { CursorGlow } from "@/components/animations/cursor-glow";
 import { SplitText } from "@/components/animations/split-text";
 import { Badge } from "@/components/ui/badge";
 
 /* ═══════════════════════════════════════════════
-   NAQIY TRUST GRADES — exact replica of mobile app
-   NaqiyGradeBadge.tsx — Arabic numerals ١٢٣٤٥
+   Data
    ═══════════════════════════════════════════════ */
 
 const TRUST_GRADES = [
@@ -20,8 +19,49 @@ const TRUST_GRADES = [
   { grade: 5, arabic: "٥", label: "Pas fiable du tout",  color: "#ef4444", range: "< 35" },
 ] as const;
 
-/** Demo: highlight grade 1 as the "active" one */
 const ACTIVE_GRADE = 1;
+
+const CRITERIA = [
+  {
+    icon: Knife,
+    title: "Méthode d'abattage",
+    description: "Rituel vérifié, mention bismillah, sacrificateur musulman pratiquant.",
+  },
+  {
+    icon: Path,
+    title: "Traçabilité complète",
+    description: "De l'élevage à l'assiette — chaque maillon de la chaîne est audité.",
+  },
+  {
+    icon: Eye,
+    title: "Contrôles terrain",
+    description: "Présence physique en abattoir et en usine, pas seulement sur papier.",
+  },
+  {
+    icon: MagnifyingGlass,
+    title: "Indépendance financière",
+    description: "Le certifieur est-il payé par ceux qu'il certifie ? On le vérifie.",
+  },
+];
+
+const CERTIFIER_LOGOS = [
+  { name: "AVS",           src: "/images/certifications/avs.webp" },
+  { name: "Achahada",      src: "/images/certifications/achahada.webp" },
+  { name: "ACMIF",         src: "/images/certifications/acmif.webp" },
+  { name: "AFCAI",         src: "/images/certifications/afcai.webp" },
+  { name: "Al-Takwa",      src: "/images/certifications/altakwa.webp" },
+  { name: "ARGML",         src: "/images/certifications/argml.webp" },
+  { name: "EHT",           src: "/images/certifications/eht.webp" },
+  { name: "Halal Correct", src: "/images/certifications/halal_correct.webp" },
+  { name: "HMC",           src: "/images/certifications/hmc.webp" },
+  { name: "ICA",           src: "/images/certifications/ica.webp" },
+  { name: "MCI",           src: "/images/certifications/mci.webp" },
+  { name: "SFCVH",         src: "/images/certifications/sfcvh.webp" },
+];
+
+/* ═══════════════════════════════════════════════
+   Component
+   ═══════════════════════════════════════════════ */
 
 export function NaqiyScoreSection() {
   return (
@@ -31,14 +71,14 @@ export function NaqiyScoreSection() {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 70% 50% at 50% 20%, oklch(0.76 0.14 88 / 4%) 0%, transparent 70%)",
+            "radial-gradient(ellipse 70% 50% at 50% 20%, oklch(0.76 0.14 88 / 3%) 0%, transparent 70%)",
         }}
         aria-hidden="true"
       />
 
-      <CursorGlow className="mx-auto max-w-5xl px-6 relative z-10">
-        {/* Header */}
-        <div className="text-center">
+      <CursorGlow className="container relative z-10">
+        {/* ── Header ── */}
+        <div>
           <AnimateIn variant="blur">
             <Badge
               variant="outline"
@@ -51,32 +91,31 @@ export function NaqiyScoreSection() {
 
           <SplitText
             as="h2"
-            className="font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl"
+            className="font-display text-2xl font-bold tracking-tight sm:text-4xl md:text-5xl"
           >
             Le NaqiyScore&trade;
           </SplitText>
 
           <AnimateIn variant="fadeUp" delay={0.2}>
-            <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground leading-relaxed">
-              Un indice de confiance halal de 0 à 100, clair et immédiat.
-              Comme le Nutri-Score pour la nutrition,{" "}
+            <p className="mt-4 max-w-2xl text-base sm:text-lg text-pretty text-muted-foreground leading-relaxed">
+              Tous les certifieurs ne se valent pas.{" "}
               <span className="font-semibold text-foreground">
-                le NaqiyScore&trade; t&apos;aide à choisir en un coup d&apos;œil
-              </span>.
+                Le NaqiyScore&trade; évalue chacun d&apos;eux
+              </span>{" "}
+              sur des critères concrets — pour que tu saches vraiment
+              à qui tu fais confiance.
             </p>
           </AnimateIn>
         </div>
 
-        {/* ─── NaqiyScore Strip — exact replica of mobile GradeStrip ─── */}
+        {/* ── NaqiyScore Strip ── */}
         <AnimateIn variant="fadeUp" delay={0.3}>
-          <div className="mt-14 flex justify-center">
-            <div className="inline-flex items-center gap-1.5 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
-              {/* Gold "N" prefix — signature Naqiy branding */}
+          <div className="mt-14 flex">
+            <div className="inline-flex items-center gap-1.5 rounded-2xl bg-card px-4 py-3 shadow-sm">
               <span className="mr-1 text-lg font-black text-gold select-none">
                 N
               </span>
 
-              {/* 5 grade pills — Arabic numerals */}
               {TRUST_GRADES.map((g) => {
                 const isActive = g.grade === ACTIVE_GRADE;
                 return (
@@ -96,7 +135,6 @@ export function NaqiyScoreSection() {
                 );
               })}
 
-              {/* Active label */}
               <span
                 className="ml-3 text-sm font-semibold hidden sm:inline"
                 style={{ color: TRUST_GRADES[ACTIVE_GRADE - 1].color }}
@@ -107,12 +145,11 @@ export function NaqiyScoreSection() {
           </div>
         </AnimateIn>
 
-        {/* ─── Grade explanation cards ─── */}
-        <Stagger className="mt-12 grid grid-cols-5 gap-2 sm:gap-3 max-w-4xl mx-auto items-stretch">
+        {/* ── Grade explanation cards ── */}
+        <Stagger className="mt-12 grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3 max-w-3xl items-stretch">
           {TRUST_GRADES.map((g) => (
             <StaggerItem key={g.grade} className="h-full">
-              <div className="group h-full text-center rounded-xl border border-border bg-card/50 p-3 sm:p-4 flex flex-col items-center justify-center transition-all duration-300 hover:border-border/80 hover:bg-card hover:shadow-sm">
-                {/* Grade pill */}
+              <div className="group h-full text-center rounded-xl bg-card p-3 sm:p-4 flex flex-col items-center justify-center shadow-sm transition-all duration-300 hover:shadow-md">
                 <div
                   className="inline-flex items-center justify-center rounded-lg text-white font-black mb-2"
                   style={{
@@ -131,11 +168,86 @@ export function NaqiyScoreSection() {
           ))}
         </Stagger>
 
-        {/* Bottom note */}
+        {/* ── Evaluation criteria — what we actually check ── */}
+        <AnimateIn variant="fadeUp" delay={0.5}>
+          <div className="mt-16">
+            <p className="text-sm font-semibold text-foreground tracking-wide uppercase">
+              Ce que nous évaluons
+            </p>
+            <p className="mt-1.5 text-sm text-muted-foreground max-w-md">
+              Chaque certifieur est noté sur des critères vérifiables — pas sur sa réputation.
+            </p>
+          </div>
+        </AnimateIn>
 
-        {/* Brand reinforcement */}
+        <Stagger className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-3 max-w-3xl">
+          {CRITERIA.map((c) => (
+            <StaggerItem key={c.title} className="h-full">
+              <div className="group h-full rounded-xl bg-card p-4 shadow-sm ring-1 ring-border/50 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
+                <div className="inline-flex items-center justify-center size-9 rounded-lg bg-leaf/10 mb-3">
+                  <c.icon className="size-[18px] text-leaf" weight="fill" />
+                </div>
+                <p className="text-sm font-bold text-foreground tracking-tight">
+                  {c.title}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                  {c.description}
+                </p>
+              </div>
+            </StaggerItem>
+          ))}
+        </Stagger>
+
+        {/* ── Certifier marquee ── */}
         <AnimateIn variant="fadeUp" delay={0.7}>
-          <div className="mt-8 flex items-center justify-center gap-3">
+          <div className="mt-16">
+            <p className="text-sm font-semibold text-foreground tracking-wide uppercase">
+              {CERTIFIER_LOGOS.length} certifieurs couverts
+            </p>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              Et ce n&apos;est que le début.
+            </p>
+          </div>
+
+          <div className="mt-6 relative overflow-hidden">
+            {/* Fade edges */}
+            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-background to-transparent" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-background to-transparent" />
+
+            {/* Scrolling track */}
+            <div
+              className="flex items-center gap-10 w-max"
+              style={{
+                animation: "marquee 30s linear infinite",
+              }}
+            >
+              {/* Duplicate for seamless loop */}
+              {[...CERTIFIER_LOGOS, ...CERTIFIER_LOGOS].map((logo, i) => (
+                <div
+                  key={`${logo.name}-${i}`}
+                  className="flex flex-col items-center gap-2 shrink-0"
+                >
+                  <div className="flex items-center justify-center size-14 rounded-xl bg-card shadow-sm ring-1 ring-border/50 p-2">
+                    <Image
+                      src={logo.src}
+                      alt={logo.name}
+                      width={40}
+                      height={40}
+                      className="size-10 object-contain"
+                    />
+                  </div>
+                  <span className="text-[10px] text-muted-foreground/60 font-medium">
+                    {logo.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </AnimateIn>
+
+        {/* ── Brand reinforcement ── */}
+        <AnimateIn variant="fadeUp" delay={0.8}>
+          <div className="mt-10 flex items-center gap-3">
             <Image
               src="/images/logo_naqiy.webp"
               alt="Naqiy"

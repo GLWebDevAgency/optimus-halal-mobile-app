@@ -29,14 +29,15 @@ export function ScanSection() {
           as="h2"
           className="font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl"
         >
-          Scanne n&apos;importe quel produit
+          Un doute ? Scanne.
         </SplitText>
 
         {/* Subtitle */}
         <AnimateIn variant="fadeUp" delay={0.2}>
-          <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground">
-            Un doute au supermarché ? Scanne le produit. En quelques secondes,
-            tu sais exactement ce qu&apos;il contient et s&apos;il te convient.
+          <p className="mt-6 max-w-lg text-lg leading-relaxed text-pretty text-muted-foreground">
+            Au supermarché, devant le rayon, tu hésites. Un scan suffit.
+            En quelques secondes, tu sais{" "}
+            <span className="font-semibold text-foreground">exactement</span> ce qu&apos;il y a dedans.
           </p>
         </AnimateIn>
 

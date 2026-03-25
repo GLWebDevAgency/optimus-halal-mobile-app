@@ -7,26 +7,23 @@ import { SplitText } from "@/components/animations/split-text";
 const details = [
   {
     icon: Clock,
-    title: "Horaires en temps réel",
-    description: "Ouvert maintenant ? Ferme bientôt ? Tu sais avant de te déplacer.",
-    color: "text-sky-500",
-    bg: "bg-sky-500/10",
+    title: "Ouvert ou fermé ? Tu sais avant de partir",
+    description: "Horaires en temps réel. Plus de mauvaises surprises devant un rideau baissé.",
+    color: "text-foreground/60",
   },
   {
     icon: Star,
-    title: "Avis clients vérifiés",
+    title: "Les avis des gens comme toi",
     description:
-      "Notes et avis Google intégrés pour choisir en toute confiance.",
-    color: "text-amber-500",
-    bg: "bg-amber-500/10",
+      "Notes et retours Google intégrés — pas besoin d'ouvrir 3 apps pour se décider.",
+    color: "text-gold",
   },
   {
     icon: Certificate,
-    title: "Certifieurs évalués par Naqiy",
+    title: "Chaque certifieur a sa note de fiabilité",
     description:
-      "AVS, Achahada — chaque organisme est noté selon nos critères de fiabilité.",
+      "AVS, Achahada — Naqiy évalue chaque organisme selon des critères stricts et transparents.",
     color: "text-leaf",
-    bg: "bg-leaf/10",
   },
 ];
 
@@ -38,29 +35,30 @@ export function RestaurantDetailSection() {
           as="h2"
           className="font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl"
         >
-          Tout savoir avant d&apos;y aller
+          Tout vérifier avant de te déplacer
         </SplitText>
 
         <AnimateIn variant="fadeUp" delay={0.2}>
-          <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground">
-            Certifications, horaires, avis — toutes les informations réunies
-            pour que tu choisisses en conscience.
+          <p className="mt-6 max-w-lg text-lg leading-relaxed text-pretty text-muted-foreground">
+            Certification, horaires, avis — toute la fiche du commerce{" "}
+            <span className="font-semibold text-foreground">avant même de sortir de chez toi</span>.
           </p>
         </AnimateIn>
 
-        <Stagger className="mt-10 space-y-4">
+        <Stagger className="mt-10 space-y-3">
           {details.map((detail) => (
             <StaggerItem key={detail.title}>
-              <div className="group rounded-2xl border border-border bg-card/50 p-5 backdrop-blur-sm transition-all duration-300 hover:border-border/80 hover:bg-card/70 hover:-translate-y-0.5">
+              <div className="group rounded-2xl bg-card p-5 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
                 <div className="flex items-start gap-4">
-                  <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${detail.bg}`}>
-                    <detail.icon className={`size-5 ${detail.color}`} weight="duotone" />
-                  </div>
+                  <detail.icon
+                    className={`size-5 shrink-0 mt-0.5 ${detail.color}`}
+                    weight="duotone"
+                  />
                   <div>
                     <p className="font-semibold text-foreground">
                       {detail.title}
                     </p>
-                    <p className="mt-1 text-sm text-muted-foreground">
+                    <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
                       {detail.description}
                     </p>
                   </div>

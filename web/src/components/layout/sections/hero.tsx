@@ -5,13 +5,12 @@ import Link from "next/link";
 import {
   ArrowRight,
   ArrowDown,
-  Sparkle,
   AppleLogo,
   GooglePlayLogo,
   ShieldCheck,
   Leaf,
 } from "@phosphor-icons/react";
-import { motion } from "motion/react";
+import { motion, useScroll, useTransform } from "motion/react";
 import { Badge } from "@/components/ui/badge";
 import { AnimateIn } from "@/components/animations/animate-in";
 import { AnimatedCounter } from "@/components/animations/animated-counter";
@@ -23,8 +22,15 @@ const topCertifiers = [
 ];
 
 export function Hero() {
+  const { scrollY } = useScroll();
+
+  // Hero brand block: fades out + lifts up as user scrolls
+  const brandOpacity = useTransform(scrollY, [0, 300], [1, 0]);
+  const brandY = useTransform(scrollY, [0, 300], [0, -40]);
+  const brandScale = useTransform(scrollY, [0, 300], [1, 0.88]);
+
   return (
-    <section className="relative flex min-h-screen items-center bg-background overflow-hidden">
+    <section className="relative flex min-h-svh items-center bg-background overflow-hidden">
       {/* Animated mesh blob — gold (top-right, drifts) */}
       <div
         className="pointer-events-none absolute -top-40 -right-40 h-[600px] w-[600px] rounded-full"
@@ -54,50 +60,55 @@ export function Hero() {
         aria-hidden="true"
       />
 
-      <div className="container py-20 lg:py-32 relative z-10">
-        {/* ─── Brand hero — spectacular logo reveal ─── */}
-        <AnimateIn variant="blur">
-          <div className="mb-10 flex items-center gap-5">
-            <div className="relative">
-              {/* Glow ring behind logo */}
-              <div
-                className="absolute inset-0 rounded-2xl blur-2xl"
-                style={{ background: "oklch(0.76 0.14 88 / 15%)" }}
-                aria-hidden="true"
-              />
-              <Image
-                src="/images/logo_naqiy.webp"
-                alt="Naqiy"
-                width={72}
-                height={72}
-                className="relative size-[72px] drop-shadow-lg"
-                priority
-              />
+      <div className="container pt-24 pb-10 lg:pt-28 lg:pb-14 relative z-10">
+        {/* ─── Brand hero — large logo that fades on scroll ─── */}
+        <motion.div
+          style={{ opacity: brandOpacity, y: brandY, scale: brandScale }}
+          className="origin-left"
+        >
+          <AnimateIn variant="blur">
+            <div className="mb-6 flex items-center gap-4">
+              <div className="relative">
+                {/* Glow ring behind logo */}
+                <div
+                  className="absolute inset-0 rounded-3xl blur-3xl"
+                  style={{ background: "oklch(0.76 0.14 88 / 18%)" }}
+                  aria-hidden="true"
+                />
+                <Image
+                  src="/images/logo_naqiy.webp"
+                  alt="Naqiy"
+                  width={72}
+                  height={72}
+                  className="relative size-[72px] drop-shadow-xl sm:size-[88px]"
+                  priority
+                />
+              </div>
+              <div>
+                <h2 className="text-4xl font-black tracking-tight text-gold-gradient sm:text-5xl lg:text-6xl">
+                  Naqiy
+                </h2>
+                <p className="text-sm font-medium text-muted-foreground tracking-wide sm:text-base">
+                  L&apos;information halal, pure et transparente
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-4xl font-black tracking-tight text-gold-gradient sm:text-5xl">
-                Naqiy
-              </h2>
-              <p className="text-sm font-medium text-muted-foreground tracking-wide">
-                L&apos;information halal, pure et transparente
-              </p>
-            </div>
-          </div>
-        </AnimateIn>
+          </AnimateIn>
+        </motion.div>
 
         {/* Badge */}
         <AnimateIn variant="blur" delay={0.15}>
           <Badge
             variant="outline"
-            className="mb-8 gap-1.5 border-leaf/30 bg-leaf/5 px-3 py-1 text-leaf"
+            className="mb-5 gap-1.5 border-leaf/30 bg-leaf/5 px-3 py-1 text-leaf"
           >
             <Leaf className="size-3" weight="fill" />
-            La transparence que tu mérites
+            L&apos;information halal, enfin claire
           </Badge>
         </AnimateIn>
 
         {/* H1 — Massive tagline */}
-        <h1 className="font-display text-5xl font-black tracking-tighter leading-[0.95] sm:text-6xl md:text-7xl lg:text-8xl">
+        <h1 className="font-display text-4xl font-black tracking-tighter leading-[0.95] text-balance sm:text-5xl md:text-6xl lg:text-7xl">
           <SplitText as="span" delay={0.2}>
             Scanne.
           </SplitText>
@@ -113,19 +124,19 @@ export function Hero() {
 
         {/* Subtitle */}
         <AnimateIn variant="fadeUp" delay={0.6}>
-          <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground md:text-xl">
-            Ce que tu consommes compte. Naqiy t&apos;aide à
-            {" "}<span className="font-semibold text-foreground">nourrir ta famille en toute sérénité</span>
-            {" "}— avec clarté et confiance.
+          <p className="mt-4 max-w-lg text-base leading-relaxed text-pretty text-muted-foreground md:text-lg">
+            E471, gélatine, arômes &laquo;&thinsp;naturels&thinsp;&raquo; — tu mérites de savoir.
+            Naqiy décrypte chaque produit pour que tu puisses{" "}
+            <span className="font-semibold text-foreground">nourrir ta famille en confiance</span>.
           </p>
         </AnimateIn>
 
         {/* Store badges */}
         <AnimateIn variant="blur" delay={0.7}>
-          <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
             <a
               href="#"
-              className="border-gradient-gold group inline-flex items-center gap-3 rounded-full bg-foreground px-7 py-3.5 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.03]"
+              className="border-gradient-gold group inline-flex items-center gap-3 rounded-full bg-foreground px-6 py-3 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.03]"
             >
               <AppleLogo className="size-5 text-background" weight="fill" />
               <GooglePlayLogo className="size-5 text-background" weight="fill" />
@@ -145,7 +156,7 @@ export function Hero() {
         {/* Stats micro-strip */}
         <AnimateIn variant="fadeUp" delay={0.85}>
           <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground/60">
-            <span><AnimatedCounter value={817000} suffix="+" className="font-semibold text-foreground/80" /> produits analysés</span>
+            <span><AnimatedCounter value={817000} suffix="+" className="font-semibold text-foreground/80" /> produits référencés</span>
             <span className="text-border">·</span>
             <span><AnimatedCounter value={383} className="font-semibold text-foreground/80" /> magasins</span>
             <span className="text-border">·</span>
@@ -155,7 +166,7 @@ export function Hero() {
 
         {/* Trust bar — Top certifiers in France */}
         <AnimateIn variant="fadeUp" delay={0.9}>
-          <div className="mt-12 flex flex-col gap-3">
+          <div className="mt-6 flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <ShieldCheck className="size-4 text-leaf" weight="fill" />
               <span className="text-xs font-medium tracking-wider text-muted-foreground/70 uppercase">
@@ -166,7 +177,7 @@ export function Hero() {
               {topCertifiers.map((cert) => (
                 <div
                   key={cert.name}
-                  className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 shadow-sm"
+                  className="flex items-center gap-2 rounded-lg bg-card px-3 py-1.5 shadow-sm"
                 >
                   <Image
                     src={cert.src}
@@ -189,7 +200,7 @@ export function Hero() {
 
         {/* Scroll indicator */}
         <AnimateIn variant="fadeUp" delay={1.2}>
-          <div className="mt-16 flex flex-col items-center gap-2 text-muted-foreground/40">
+          <div className="mt-6 flex flex-col items-center gap-1 text-muted-foreground/40">
             <motion.div
               animate={{ y: [0, 8, 0] }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}

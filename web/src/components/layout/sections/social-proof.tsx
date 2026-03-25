@@ -1,151 +1,171 @@
 "use client";
 
 import {
-  Star,
-  Barcode,
-  Storefront,
   Scales,
-  Leaf,
-  UserPlus,
-  ChatCircleDots,
-  Trophy,
+  Warning,
+  Heartbeat,
+  Bell,
+  Brain,
   ShieldCheck,
+  ArrowDown,
+  MapPin,
 } from "@phosphor-icons/react";
 import { SplitText } from "@/components/animations/split-text";
 import { AnimateIn, Stagger, StaggerItem } from "@/components/animations/animate-in";
 import { AnimatedCounter } from "@/components/animations/animated-counter";
 import { Badge } from "@/components/ui/badge";
 
-/* ═══════════════════════════════════════════════
-   DATA
-   ═══════════════════════════════════════════════ */
-
-const stats = [
-  { rawValue: 817000, suffix: "+", label: "Produits analysés", icon: Barcode, accent: "gold" as const },
-  { rawValue: 383, suffix: "", label: "Magasins référencés", icon: Storefront, accent: "gold" as const },
-  { rawValue: 5, suffix: "", label: "Écoles juridiques", icon: Scales, accent: "gold" as const },
-  { rawValue: 100, suffix: "%", label: "Gratuit", icon: Leaf, accent: "leaf" as const },
-];
-
-const pioneerCards = [
+const personalizationFeatures = [
   {
-    icon: Star,
-    cta: "Sois le premier à noter Naqiy",
-    description: "Ton avis façonnera l'app pour des milliers de familles.",
+    icon: Scales,
+    title: "Ton madhab, ton verdict",
+    description:
+      "Hanafi, Shafi'i, Maliki, Hanbali — chaque analyse respecte ta pratique. Pas un avis unique pour tout le monde.",
     accent: "gold" as const,
-    ctaLabel: "Donner mon avis",
   },
   {
-    icon: ChatCircleDots,
-    cta: "Partage ton expérience",
-    description: "Dis-nous ce qui compte pour toi. On construit Naqiy avec toi, pas sans toi.",
+    icon: Warning,
+    title: "Tes allergènes, signalés automatiquement",
+    description:
+      "Gluten, lactose, arachides, fruits à coque… Configure une fois, Naqiy t'alerte à chaque scan.",
+    accent: "gold" as const,
+  },
+  {
+    icon: Heartbeat,
+    title: "Ton profil santé, intégré",
+    description:
+      "Diabète, grossesse, cholestérol — Naqiy filtre ce qui compte pour toi et ta famille.",
     accent: "leaf" as const,
-    ctaLabel: "Partager",
   },
   {
-    icon: Trophy,
-    cta: "Deviens membre fondateur",
-    description: "Les premiers utilisateurs auront une place spéciale dans l'histoire de Naqiy.",
+    icon: Bell,
+    title: "Alertes en temps réel",
+    description:
+      "Rappels produits, changement de composition, nouvelles certifications — tu es averti avant tout le monde.",
     accent: "gold" as const,
-    ctaLabel: "Rejoindre",
   },
 ];
-
-/* ═══════════════════════════════════════════════
-   COMPONENT
-   ═══════════════════════════════════════════════ */
 
 export function SocialProofSection() {
   return (
-    <section className="relative flex items-center overflow-hidden bg-secondary/50 py-20 lg:min-h-screen lg:py-32">
+    <section className="relative flex items-center overflow-hidden bg-secondary/50 py-16 lg:min-h-svh lg:py-24">
       {/* Subtle background mesh */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 80% 50% at 50% 0%, oklch(0.76 0.14 88 / 4%) 0%, transparent 60%)",
+            "radial-gradient(ellipse 80% 50% at 50% 0%, oklch(0.76 0.14 88 / 3%) 0%, transparent 60%)",
         }}
         aria-hidden="true"
       />
 
-      <div className="mx-auto max-w-5xl px-6 relative z-10">
+      <div className="container max-w-xl relative z-10">
+        {/* ── Headline ── */}
         <SplitText
           as="h2"
-          className="font-display text-3xl font-bold tracking-tight text-center sm:text-4xl md:text-5xl"
+          className="font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl"
         >
-          Les chiffres parlent déjà
+          817 000 produits. Une seule réponse : la tienne.
         </SplitText>
 
-        <AnimateIn className="text-center">
-          <p className="text-lg text-muted-foreground mt-4 max-w-lg mx-auto">
-            817 000 produits analysés, 383 magasins référencés. La base est solide.
-            Il ne manque que <span className="font-semibold text-foreground">toi</span>.
+        <AnimateIn variant="fadeUp" delay={0.15}>
+          <p className="mt-4 max-w-lg text-base leading-relaxed text-pretty text-muted-foreground md:text-lg">
+            Naqiy analyse tout.{" "}
+            <span className="font-semibold text-foreground">
+              Mais c&apos;est toi qui décides
+            </span>{" "}
+            ce qui compte — ton école, ta santé, tes valeurs.
           </p>
         </AnimateIn>
 
-        {/* Trust badge */}
-        <AnimateIn variant="blur" delay={0.2}>
-          <div className="flex justify-center mt-6">
-            <Badge variant="outline" className="gap-1.5 border-leaf/30 bg-leaf/5 px-3 py-1 text-leaf">
-              <ShieldCheck className="size-3" weight="fill" />
-              Données réelles — mises à jour quotidiennement
-            </Badge>
-          </div>
-        </AnimateIn>
-
-        {/* ─── Stats counters — données réelles ─── */}
-        <Stagger className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
-          {stats.map((stat) => {
-            const isLeaf = stat.accent === "leaf";
+        {/* ── Personalization cards ── */}
+        <Stagger className="mt-8 space-y-2.5">
+          {personalizationFeatures.map((feature) => {
+            const isLeaf = feature.accent === "leaf";
             return (
-              <StaggerItem key={stat.label}>
-                <div className={`text-center group rounded-2xl border border-border/50 bg-card/30 p-5 backdrop-blur-sm transition-all duration-300 ${isLeaf ? "hover:border-leaf/20" : "hover:border-gold/20"} hover:bg-card/60`}>
-                  <stat.icon className={`size-5 mx-auto mb-2 transition-colors ${isLeaf ? "text-leaf/60 group-hover:text-leaf" : "text-gold/60 group-hover:text-gold"}`} weight="duotone" />
-                  <p className="text-3xl font-black text-foreground md:text-4xl">
-                    <AnimatedCounter value={stat.rawValue} suffix={stat.suffix} />
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1 font-medium">{stat.label}</p>
-                </div>
-              </StaggerItem>
-            );
-          })}
-        </Stagger>
-
-        {/* ─── Pioneer cards — appel aux premiers utilisateurs ─── */}
-        <AnimateIn variant="fadeUp" delay={0.3}>
-          <div className="mt-16 text-center">
-            <p className="inline-flex items-center gap-2 text-sm font-semibold text-leaf tracking-wide uppercase">
-              <UserPlus className="size-4" weight="bold" />
-              Pionniers recherchés
-            </p>
-          </div>
-        </AnimateIn>
-
-        <Stagger className="mt-6 grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {pioneerCards.map((card) => {
-            const isLeaf = card.accent === "leaf";
-            return (
-              <StaggerItem key={card.cta}>
-                <div className={`group rounded-2xl border p-6 h-full flex flex-col items-center text-center backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${isLeaf ? "border-leaf/15 bg-gradient-to-b from-leaf/[4%] to-leaf/[1%] hover:border-leaf/25" : "border-gold/15 bg-gradient-to-b from-gold/[4%] to-gold/[1%] hover:border-gold/25"}`}>
-                  <div className={`flex size-12 items-center justify-center rounded-xl transition-colors ${isLeaf ? "bg-leaf/10 group-hover:bg-leaf/15" : "bg-gold/10 group-hover:bg-gold/15"}`}>
-                    <card.icon className={`size-6 ${isLeaf ? "text-leaf" : "text-gold"}`} weight="duotone" />
+              <StaggerItem key={feature.title}>
+                <div className="group rounded-2xl bg-card p-5 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
+                  <div className="flex items-start gap-4">
+                    <feature.icon
+                      className={`size-5 shrink-0 mt-0.5 ${isLeaf ? "text-leaf" : "text-gold"}`}
+                      weight="duotone"
+                    />
+                    <div>
+                      <p className="font-semibold text-foreground">
+                        {feature.title}
+                      </p>
+                      <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+                        {feature.description}
+                      </p>
+                    </div>
                   </div>
-
-                  <p className="mt-4 font-bold text-foreground">
-                    {card.cta}
-                  </p>
-                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                    {card.description}
-                  </p>
-
-                  <button className={`mt-4 rounded-full px-4 py-1.5 text-xs font-semibold transition-all duration-200 hover:scale-[1.03] ${isLeaf ? "border border-leaf/20 text-leaf hover:bg-leaf/5" : "border border-gold/20 text-gold hover:bg-gold/5"}`}>
-                    {card.ctaLabel}
-                  </button>
                 </div>
               </StaggerItem>
             );
           })}
         </Stagger>
+
+        {/* ── Data + AI trust bar ── */}
+        <AnimateIn variant="fadeUp" delay={0.4}>
+          <div className="mt-8 rounded-2xl bg-card p-5 shadow-sm">
+            {/* Stats strip */}
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm">
+              <span>
+                <AnimatedCounter
+                  value={817000}
+                  suffix="+"
+                  className="font-bold text-foreground"
+                />{" "}
+                <span className="text-muted-foreground">produits</span>
+              </span>
+              <span className="text-border hidden sm:inline">·</span>
+              <span>
+                <AnimatedCounter
+                  value={383}
+                  className="font-bold text-foreground"
+                />{" "}
+                <span className="text-muted-foreground">magasins</span>
+              </span>
+              <span className="text-border hidden sm:inline">·</span>
+              <span className="font-bold text-leaf">100% gratuit</span>
+            </div>
+
+            {/* Badges */}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Badge
+                variant="outline"
+                className="gap-1.5 border-leaf/30 bg-leaf/5 px-2.5 py-0.5 text-leaf text-xs"
+              >
+                <ShieldCheck className="size-3" weight="fill" />
+                Données mises à jour quotidiennement
+              </Badge>
+              <Badge
+                variant="outline"
+                className="gap-1.5 border-gold/30 bg-gold/5 px-2.5 py-0.5 text-gold text-xs"
+              >
+                <Brain className="size-3" weight="fill" />
+                Propulsé par l&apos;IA
+              </Badge>
+            </div>
+          </div>
+        </AnimateIn>
+
+        {/* ── Map teaser — open loop ── */}
+        <AnimateIn variant="fadeUp" delay={0.5}>
+          <div className="mt-10 flex flex-col items-center gap-2 text-center">
+            <p className="text-base font-semibold text-foreground">
+              Et quand tu sors de chez toi ?
+            </p>
+            <p className="text-sm text-muted-foreground max-w-sm">
+              Naqiy t&apos;accompagne aussi dehors — boucheries, restaurants,
+              épiceries certifiées près de chez toi.
+            </p>
+            <div className="mt-2 flex items-center gap-1.5 text-gold">
+              <MapPin className="size-4" weight="fill" />
+              <ArrowDown className="size-3.5 animate-bounce" />
+            </div>
+          </div>
+        </AnimateIn>
       </div>
     </section>
   );

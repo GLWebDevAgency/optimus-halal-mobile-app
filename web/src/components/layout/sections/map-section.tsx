@@ -4,26 +4,22 @@ import Image from "next/image";
 import { Storefront, MapPin, Star, Check } from "@phosphor-icons/react";
 import { AnimateIn, Stagger, StaggerItem } from "@/components/animations/animate-in";
 import { SplitText } from "@/components/animations/split-text";
-import { Badge } from "@/components/ui/badge";
 
 const featureItems = [
   {
     icon: Storefront,
-    label: "Revendeurs référencés par AVS & Achahada",
+    label: "Boucheries et épiceries certifiées AVS & Achahada",
     color: "text-leaf",
-    bg: "bg-leaf/10",
   },
   {
     icon: MapPin,
-    label: "Restaurants et boucheries halal vérifiés",
+    label: "Restaurants halal vérifiés près de chez toi",
     color: "text-gold",
-    bg: "bg-gold/10",
   },
   {
     icon: Star,
-    label: "Avis Google et horaires en temps réel",
-    color: "text-amber-500",
-    bg: "bg-amber-500/10",
+    label: "Avis clients, horaires, photos — tout en un",
+    color: "text-foreground/60",
   },
 ];
 
@@ -40,22 +36,21 @@ export function MapSection() {
           as="h2"
           className="font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl"
         >
-          Trouve des magasins certifiés
+          Où manger halal en confiance ?
         </SplitText>
 
         <AnimateIn variant="fadeUp" delay={0.2}>
-          <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground">
-            Des adresses de confiance, vérifiées et certifiées. Pour que chaque
-            sortie reste un moment de sérénité.
+          <p className="mt-6 max-w-lg text-lg leading-relaxed text-pretty text-muted-foreground">
+            T&apos;en as marre de demander &laquo;&thinsp;c&apos;est vraiment halal ici ?&thinsp;&raquo;
+            Chaque adresse est vérifiée. Tu y vas{" "}
+            <span className="font-semibold text-foreground">l&apos;esprit tranquille</span>.
           </p>
         </AnimateIn>
 
         <Stagger className="mt-8 space-y-3">
           {featureItems.map((item) => (
             <StaggerItem key={item.label} className="flex items-center gap-3">
-              <div className={`flex size-6 shrink-0 items-center justify-center rounded-full ${item.bg}`}>
-                <Check className={`size-3.5 ${item.color}`} weight="bold" />
-              </div>
+              <Check className={`size-4 shrink-0 ${item.color}`} weight="bold" />
               <span className="text-foreground">{item.label}</span>
             </StaggerItem>
           ))}
@@ -65,11 +60,11 @@ export function MapSection() {
           <p className="text-xs font-medium tracking-wider text-muted-foreground/70 uppercase mb-3">
             Top certifieurs France — tous consultables dans l&apos;app
           </p>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {certifierLogos.map((logo) => (
               <div
                 key={logo.alt}
-                className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 shadow-sm"
+                className="flex items-center gap-2 rounded-lg bg-card px-3 py-1.5 shadow-sm"
               >
                 <Image
                   src={logo.src}

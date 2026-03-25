@@ -2,33 +2,29 @@
 
 import { CheckCircle, ChartBar, MagnifyingGlass } from "@phosphor-icons/react";
 import { AnimateIn, Stagger, StaggerItem } from "@/components/animations/animate-in";
-import { TiltCard } from "@/components/animations/tilt-card";
 import { SplitText } from "@/components/animations/split-text";
 
 const resultFeatures = [
   {
     icon: CheckCircle,
-    title: "Verdict instantané",
+    title: "Halal, Haram ou Douteux — sans ambiguïté",
     description:
-      "Halal, Haram ou Douteux — un résultat clair adapté à ton école juridique.",
+      "Un verdict clair adapté à ton école juridique, pas un avis flou trouvé sur un forum.",
     color: "text-leaf",
-    bg: "bg-leaf/10",
   },
   {
     icon: ChartBar,
-    title: "NaqiyScore™",
+    title: "Un score clair, de 0 à 100",
     description:
-      "Un score de 0 à 100 pour mesurer le niveau de conformité du produit en un coup d'œil.",
+      "Le NaqiyScore résume tout en un chiffre. Plus il est haut, plus tu peux acheter sereinement.",
     color: "text-gold",
-    bg: "bg-gold/10",
   },
   {
     icon: MagnifyingGlass,
-    title: "Détail par ingrédient",
+    title: "Chaque ingrédient a son dossier",
     description:
-      "Chaque ingrédient est analysé individuellement avec son statut et sa source.",
-    color: "text-sky-500",
-    bg: "bg-sky-500/10",
+      "Statut, source, dalil — tu vois tout. Et si un ingrédient est douteux, on t'explique pourquoi.",
+    color: "text-foreground/60",
   },
 ];
 
@@ -42,36 +38,37 @@ export function ScanResultSection() {
           as="h2"
           className="font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl"
         >
-          Résultat en moins de 3 secondes
+          3 secondes. Zéro doute.
         </SplitText>
 
         <AnimateIn variant="fadeUp" delay={0.2}>
-          <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground">
-            Pas de zone grise. Un verdict clair, un détail par ingrédient,
-            et la transparence que tu mérites pour chaque achat.
+          <p className="mt-6 max-w-lg text-lg leading-relaxed text-pretty text-muted-foreground">
+            Plus besoin de chercher pendant des heures. Tu scannes, tu sais.
+            Et si tu veux comprendre{" "}
+            <span className="font-semibold text-foreground">pourquoi</span>,
+            tout est là — sources incluses.
           </p>
         </AnimateIn>
 
-        <Stagger className="mt-10 space-y-4">
+        <Stagger className="mt-10 space-y-3">
           {resultFeatures.map((feature) => (
             <StaggerItem key={feature.title}>
-              <TiltCard>
-                <div className="group rounded-2xl border border-border bg-card/50 p-5 backdrop-blur-sm transition-all duration-300 hover:border-border/80 hover:bg-card/70 hover:-translate-y-0.5">
-                  <div className="flex items-start gap-4">
-                    <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${feature.bg}`}>
-                      <feature.icon className={`size-5 ${feature.color}`} weight="duotone" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-foreground">
-                        {feature.title}
-                      </p>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {feature.description}
-                      </p>
-                    </div>
+              <div className="group rounded-2xl bg-card p-5 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
+                <div className="flex items-start gap-4">
+                  <feature.icon
+                    className={`size-5 shrink-0 mt-0.5 ${feature.color}`}
+                    weight="duotone"
+                  />
+                  <div>
+                    <p className="font-semibold text-foreground">
+                      {feature.title}
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+                      {feature.description}
+                    </p>
                   </div>
                 </div>
-              </TiltCard>
+              </div>
             </StaggerItem>
           ))}
         </Stagger>

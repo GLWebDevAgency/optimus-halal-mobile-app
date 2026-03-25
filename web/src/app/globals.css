@@ -464,14 +464,14 @@
 
 @utility bg-grid-subtle {
   background-image:
-    linear-gradient(to right, oklch(0.12 0.01 90 / 3%) 1px, transparent 1px),
-    linear-gradient(to bottom, oklch(0.12 0.01 90 / 3%) 1px, transparent 1px);
-  background-size: 24px 24px;
+    linear-gradient(to right, oklch(0.12 0.01 90 / 1.5%) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.12 0.01 90 / 1.5%) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
 
 @utility bg-dot-grid {
-  background-image: radial-gradient(circle, oklch(0.12 0.01 90 / 6%) 1px, transparent 1px);
-  background-size: 24px 24px;
+  background-image: radial-gradient(circle, oklch(0.12 0.01 90 / 3%) 1px, transparent 1px);
+  background-size: 28px 28px;
 }
 
 @utility bg-gold-spotlight {

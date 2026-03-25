@@ -1,89 +1,79 @@
 "use client";
 
-import { Flask, Scales, Trophy, Heartbeat } from "@phosphor-icons/react";
+import { Flask, BookOpen, Heartbeat } from "@phosphor-icons/react";
 import { AnimateIn, Stagger, StaggerItem } from "@/components/animations/animate-in";
-import { TiltCard } from "@/components/animations/tilt-card";
 import { SplitText } from "@/components/animations/split-text";
 
 const features = [
   {
     icon: Flask,
-    title: "Analyse des ingrédients",
+    title: "E471, lécithine, gélatine — enfin des réponses",
     description:
-      "Chaque composant est identifié et vérifié individuellement contre notre base de données.",
+      "Tu n'as plus à chercher sur Google. Chaque ingrédient est décrypté, expliqué et jugé — pour que tu comprennes vraiment ce que tu achètes.",
     accent: "gold" as const,
   },
-  {
-    icon: Scales,
-    title: "Verdict personnalisé",
-    description:
-      "Le résultat s'adapte à ton école juridique : Hanafi, Shafi'i, Maliki ou Hanbali.",
-    accent: "gold" as const,
-  },
-  {
+{
     icon: Heartbeat,
-    title: "Santé & Nutrition",
+    title: "Halal et tayyib — parce que ta santé compte aussi",
     description:
-      "NutriScore, indice NOVA, additifs — parce que le tayyib, c'est aussi prendre soin de son corps.",
+      "NutriScore, additifs à risque, indice NOVA… Le halal, c'est le minimum. Le tayyib, c'est ce que ta famille mérite.",
     accent: "leaf" as const,
   },
   {
-    icon: Trophy,
-    title: "NaqiyScore™",
+    icon: BookOpen,
+    title: "Chaque verdict a ses sources",
     description:
-      "Un score de 0 à 100 pour une compréhension instantanée du niveau de conformité.",
+      "Dalil, avis de savants, références des organismes — tout est transparent. Tu ne nous crois pas sur parole, tu vérifies.",
     accent: "gold" as const,
   },
 ];
 
 export function AnalysisSection() {
   return (
-    <section className="flex items-center bg-gradient-to-b from-background to-secondary/30 py-20 lg:min-h-screen lg:py-32">
+    <section className="flex items-center bg-gradient-to-b from-background to-secondary/30 py-14 lg:min-h-svh lg:py-20">
       <div className="container max-w-xl">
         <SplitText
           as="h2"
           className="font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl"
         >
-          Halal & Tayyib — l&apos;analyse complète
+          Fini les ingrédients mystérieux
         </SplitText>
 
         <AnimateIn variant="fadeUp" delay={0.2}>
-          <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground">
-            <span className="text-base text-leaf/80" dir="rtl">
+          <p className="mt-4 max-w-lg text-base leading-relaxed text-pretty text-muted-foreground md:text-lg">
+            On est tous passés par là : retourner un paquet, lire une liste incompréhensible, et reposer le produit{" "}
+            <span className="font-semibold text-foreground">sans vraiment savoir</span>.
+            C&apos;est terminé.
+          </p>
+
+          {/* Quranic verse — pull-quote */}
+          <blockquote className="mt-5 border-l-2 border-leaf/30 pl-5">
+            <p className="text-lg text-leaf/80 leading-relaxed" dir="rtl">
               «&thinsp;كُلُوا مِمَّا فِي الْأَرْضِ حَلَالًا طَيِّبًا&thinsp;»
-            </span>
-            <br />
-            <span className="text-sm italic text-muted-foreground/70">
+            </p>
+            <cite className="mt-1.5 block text-sm not-italic text-muted-foreground/60">
               Mangez de ce qui est sur terre, licite et pur — Al-Baqara, 2:168
-            </span>
-          </p>
-          <p className="mt-3 max-w-lg text-lg leading-relaxed text-muted-foreground">
-            Naqiy ne se limite pas au halal.
-            On vérifie aussi la qualité nutritionnelle — parce que{" "}
-            <span className="font-semibold text-foreground">
-              ce qui est pur (tayyib) mérite autant d&apos;attention
-            </span>.
-          </p>
+            </cite>
+          </blockquote>
         </AnimateIn>
 
-        <Stagger className="mt-10 space-y-4">
+        <Stagger className="mt-6 space-y-2.5">
           {features.map((feature) => {
             const isLeaf = feature.accent === "leaf";
             return (
               <StaggerItem key={feature.title}>
-                <TiltCard>
-                  <div className={`group rounded-2xl border border-border bg-card/50 p-5 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 ${isLeaf ? "hover:border-leaf/20 hover:bg-card/70" : "hover:border-gold/20 hover:bg-card/70"}`}>
-                    <div className="flex items-start gap-4">
-                      <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${isLeaf ? "bg-leaf/10" : "bg-gold/10"}`}>
-                        <feature.icon className={`size-5 ${isLeaf ? "text-leaf" : "text-gold"}`} weight="duotone" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-foreground">{feature.title}</p>
-                        <p className="mt-1 text-sm text-muted-foreground">{feature.description}</p>
-                      </div>
+                <div className="group rounded-2xl bg-card p-5 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
+                  <div className="flex items-start gap-4">
+                    <feature.icon
+                      className={`size-5 shrink-0 mt-0.5 ${isLeaf ? "text-leaf" : "text-gold"}`}
+                      weight="duotone"
+                    />
+                    <div>
+                      <p className="font-semibold text-foreground">{feature.title}</p>
+                      <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
                     </div>
                   </div>
-                </TiltCard>
+                </div>
               </StaggerItem>
             );
           })}
