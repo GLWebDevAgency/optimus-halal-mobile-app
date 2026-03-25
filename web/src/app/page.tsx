@@ -1,33 +1,18 @@
 import { Navbar } from "@/components/layout/navbar";
-import { Hero } from "@/components/layout/sections/hero";
-import { Stats } from "@/components/layout/sections/stats";
-import { Features } from "@/components/layout/sections/features";
-import { HowItWorks } from "@/components/layout/sections/how-it-works";
-import { Certifiers } from "@/components/layout/sections/certifiers";
-import { NaqiyGradeSection } from "@/components/layout/sections/naqiy-grade";
-import { Testimonials } from "@/components/layout/sections/testimonials";
-import { Pricing } from "@/components/layout/sections/pricing";
-import { Faq } from "@/components/layout/sections/faq";
-import { CtaDownload } from "@/components/layout/sections/cta-download";
-import { Footer } from "@/components/layout/sections/footer";
+import { ScrollProgress } from "@/components/layout/scroll-progress";
+import { MobileCTABar } from "@/components/layout/mobile-cta-bar";
+import { SmoothScroll } from "@/components/animations/smooth-scroll";
+import { GrainOverlay } from "@/components/animations/grain-overlay";
+import { LandingPhoneOrchestrator } from "@/components/phone/landing-phone-orchestrator";
 
 export default function HomePage() {
   return (
-    <>
+    <SmoothScroll>
+      <ScrollProgress />
+      <MobileCTABar />
       <Navbar />
-      <main>
-        <Hero />
-        <Stats />
-        <Features />
-        <HowItWorks />
-        <Certifiers />
-        <NaqiyGradeSection />
-        <Testimonials />
-        <Pricing />
-        <Faq />
-        <CtaDownload />
-      </main>
-      <Footer />
-    </>
+      <GrainOverlay />
+      <LandingPhoneOrchestrator />
+    </SmoothScroll>
   );
 }

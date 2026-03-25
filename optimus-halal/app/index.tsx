@@ -27,6 +27,6 @@ export default function Index() {
     return <Redirect href="/(onboarding)" />;
   }
 
-  // Direct access to tabs — anonymous mode with 5 scans/day
+  // Direct access to tabs — anonymous mode with free scans (AI analyses limited)
   return <Redirect href="/(tabs)" />;
 }

@@ -1,175 +1,216 @@
 "use client";
 
-import { motion } from "motion/react";
-import { ArrowRight, DownloadSimple, Sparkle } from "@phosphor-icons/react";
 import Image from "next/image";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
-  PhoneMockup,
-  PhoneScreen,
-} from "@/components/ui/extras/phone-mockup";
+  ArrowRight,
+  ArrowDown,
+  AppleLogo,
+  GooglePlayLogo,
+  ShieldCheck,
+  Leaf,
+} from "@phosphor-icons/react";
+import { motion, useScroll, useTransform } from "motion/react";
+import { Badge } from "@/components/ui/badge";
+import { AnimateIn } from "@/components/animations/animate-in";
+import { AnimatedCounter } from "@/components/animations/animated-counter";
+import { SplitText } from "@/components/animations/split-text";
 
-const certifiers = [
+const topCertifiers = [
   { name: "AVS", src: "/images/certifications/avs.webp" },
   { name: "Achahada", src: "/images/certifications/achahada.webp" },
-  { name: "Halal Correct", src: "/images/certifications/halal_correct.webp" },
 ];
 
 export function Hero() {
+  const { scrollY } = useScroll();
+
+  // Hero brand block: fades out + lifts up as user scrolls
+  const brandOpacity = useTransform(scrollY, [0, 300], [1, 0]);
+  const brandY = useTransform(scrollY, [0, 300], [0, -40]);
+  const brandScale = useTransform(scrollY, [0, 300], [1, 0.88]);
+
   return (
-    <section className="relative flex min-h-screen items-center overflow-hidden bg-gold-mesh">
-      {/* Subtle radial overlay for depth */}
+    <section className="relative flex min-h-svh items-center bg-background overflow-hidden">
+      {/* Animated mesh blob — gold (top-right, drifts) */}
       <div
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute -top-40 -right-40 h-[600px] w-[600px] rounded-full"
         style={{
-          background:
-            "radial-gradient(ellipse 70% 50% at 70% 50%, oklch(0.78 0.17 82 / 4%) 0%, transparent 70%)",
+          background: "radial-gradient(circle, oklch(0.76 0.14 88 / 8%) 0%, transparent 70%)",
+          animation: "float-slow 20s ease-in-out infinite",
         }}
+        aria-hidden="true"
+      />
+      {/* Animated mesh blob — leaf (bottom-left, drifts opposite) */}
+      <div
+        className="pointer-events-none absolute -bottom-60 -left-40 h-[500px] w-[500px] rounded-full"
+        style={{
+          background: "radial-gradient(circle, oklch(0.50 0.14 142 / 6%) 0%, transparent 70%)",
+          animation: "float-slow 25s ease-in-out infinite reverse",
+        }}
+        aria-hidden="true"
+      />
+      {/* Animated mesh blob — warm (center, subtle) */}
+      <div
+        className="pointer-events-none absolute top-1/3 left-1/4 h-[400px] w-[400px] rounded-full"
+        style={{
+          background: "radial-gradient(circle, oklch(0.90 0.04 88 / 5%) 0%, transparent 60%)",
+          animation: "float-slow 30s ease-in-out infinite",
+          animationDelay: "-10s",
+        }}
+        aria-hidden="true"
       />
 
-      <div className="container relative z-10 py-24 lg:py-32">
-        <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
-          {/* ─── Left column: Typography + CTAs ─── */}
-          <div className="flex flex-col items-start">
-            {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-            >
-              <Badge
-                variant="outline"
-                className="mb-8 gap-1.5 border-gold/30 bg-gold/5 px-3 py-1 text-gold"
-              >
-                <Sparkle className="size-3" />
-                Nouveau — Scanne en toute confiance
-              </Badge>
-            </motion.div>
-
-            {/* H1 — Massive tagline */}
-            <motion.h1
-              className="text-6xl leading-[0.95] font-black tracking-tighter text-foreground sm:text-7xl md:text-8xl"
-              initial={{ opacity: 0, y: 32 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.7,
-                delay: 0.1,
-                ease: [0.25, 0.1, 0.25, 1],
-              }}
-            >
-              Scanne.
-              <br />
-              Comprends.
-              <br />
-              <span className="text-gold-gradient">Choisis.</span>
-            </motion.h1>
-
-            {/* Subtitle */}
-            <motion.p
-              className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground md:text-xl"
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.6,
-                delay: 0.25,
-                ease: [0.25, 0.1, 0.25, 1],
-              }}
-            >
-              L&apos;application halal qui analyse{" "}
-              <span className="font-semibold text-foreground">817K+ produits</span>{" "}
-              selon ta propre école juridique. Gratuit.
-            </motion.p>
-
-            {/* CTAs */}
-            <motion.div
-              className="mt-10 flex flex-col gap-4 sm:flex-row"
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.6,
-                delay: 0.4,
-                ease: [0.25, 0.1, 0.25, 1],
-              }}
-            >
-              <Button
-                size="lg"
-                className="h-12 gap-2 px-8 text-base gold-glow-intense"
-              >
-                <DownloadSimple className="size-4" />
-                Télécharger gratuitement
-              </Button>
-              <Link href="#demo">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="h-12 gap-2 px-8 text-base"
-                >
-                  Voir la démo
-                  <ArrowRight className="size-4" />
-                </Button>
-              </Link>
-            </motion.div>
-
-            {/* Trust bar — Certifier logos */}
-            <motion.div
-              className="mt-12 flex flex-col gap-3"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.65 }}
-            >
-              <span className="text-xs font-medium tracking-wider text-muted-foreground/70 uppercase">
-                Certifié par
-              </span>
-              <div className="flex items-center gap-5">
-                {certifiers.map((cert) => (
-                  <div
-                    key={cert.name}
-                    className="flex items-center gap-2 rounded-lg border border-border/50 bg-card/60 px-3 py-1.5 backdrop-blur-sm"
-                  >
-                    <Image
-                      src={cert.src}
-                      alt={cert.name}
-                      width={20}
-                      height={20}
-                      className="size-5 rounded-sm object-contain"
-                    />
-                    <span className="text-xs font-medium text-muted-foreground">
-                      {cert.name}
-                    </span>
-                  </div>
-                ))}
+      <div className="container pt-24 pb-10 lg:pt-28 lg:pb-14 relative z-10">
+        {/* ─── Brand hero — large logo that fades on scroll ─── */}
+        <motion.div
+          style={{ opacity: brandOpacity, y: brandY, scale: brandScale }}
+          className="origin-left"
+        >
+          <AnimateIn variant="blur">
+            <div className="mb-6 flex items-center gap-4">
+              <div className="relative">
+                {/* Glow ring behind logo */}
+                <div
+                  className="absolute inset-0 rounded-3xl blur-3xl"
+                  style={{ background: "oklch(0.76 0.14 88 / 18%)" }}
+                  aria-hidden="true"
+                />
+                <Image
+                  src="/images/logo_naqiy.webp"
+                  alt="Naqiy"
+                  width={72}
+                  height={72}
+                  className="relative size-[72px] drop-shadow-xl sm:size-[88px]"
+                  priority
+                />
               </div>
+              <div>
+                <h2 className="text-4xl font-black tracking-tight text-gold-gradient sm:text-5xl lg:text-6xl">
+                  Naqiy
+                </h2>
+                <p className="text-sm font-medium text-muted-foreground tracking-wide sm:text-base">
+                  L&apos;information halal, pure et transparente
+                </p>
+              </div>
+            </div>
+          </AnimateIn>
+        </motion.div>
+
+        {/* Badge */}
+        <AnimateIn variant="blur" delay={0.15}>
+          <Badge
+            variant="outline"
+            className="mb-5 gap-1.5 border-leaf/30 bg-leaf/5 px-3 py-1 text-leaf"
+          >
+            <Leaf className="size-3" weight="fill" />
+            L&apos;information halal, enfin claire
+          </Badge>
+        </AnimateIn>
+
+        {/* H1 — Massive tagline */}
+        <h1 className="font-display text-4xl font-black tracking-tighter leading-[0.95] text-balance sm:text-5xl md:text-6xl lg:text-7xl">
+          <SplitText as="span" delay={0.2}>
+            Scanne.
+          </SplitText>
+          <br />
+          <SplitText as="span" delay={0.5}>
+            Comprends.
+          </SplitText>
+          <br />
+          <SplitText as="span" delay={0.8} className="text-gold-gradient">
+            Choisis.
+          </SplitText>
+        </h1>
+
+        {/* Subtitle */}
+        <AnimateIn variant="fadeUp" delay={0.6}>
+          <p className="mt-4 max-w-lg text-base leading-relaxed text-pretty text-muted-foreground md:text-lg">
+            E471, gélatine, arômes &laquo;&thinsp;naturels&thinsp;&raquo; — tu mérites de savoir.
+            Naqiy décrypte chaque produit pour que tu puisses{" "}
+            <span className="font-semibold text-foreground">nourrir ta famille en confiance</span>.
+          </p>
+        </AnimateIn>
+
+        {/* Store badges */}
+        <AnimateIn variant="blur" delay={0.7}>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <a
+              href="#"
+              className="border-gradient-gold group inline-flex items-center gap-3 rounded-full bg-foreground px-6 py-3 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.03]"
+            >
+              <AppleLogo className="size-5 text-background" weight="fill" />
+              <GooglePlayLogo className="size-5 text-background" weight="fill" />
+              <span className="font-display text-base font-bold text-background">Télécharger</span>
+            </a>
+
+            <Link
+              href="#features"
+              className="inline-flex items-center gap-2 px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Voir les fonctionnalités
+              <ArrowRight className="size-3.5" />
+            </Link>
+          </div>
+        </AnimateIn>
+
+        {/* Stats micro-strip */}
+        <AnimateIn variant="fadeUp" delay={0.85}>
+          <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground/60">
+            <span><AnimatedCounter value={817000} suffix="+" className="font-semibold text-foreground/80" /> produits référencés</span>
+            <span className="text-border">·</span>
+            <span><AnimatedCounter value={383} className="font-semibold text-foreground/80" /> magasins</span>
+            <span className="text-border">·</span>
+            <span className="font-semibold text-leaf/70">100% gratuit</span>
+          </div>
+        </AnimateIn>
+
+        {/* Trust bar — Top certifiers in France */}
+        <AnimateIn variant="fadeUp" delay={0.9}>
+          <div className="mt-6 flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="size-4 text-leaf" weight="fill" />
+              <span className="text-xs font-medium tracking-wider text-muted-foreground/70 uppercase">
+                Top certifieurs France
+              </span>
+            </div>
+            <div className="flex items-center gap-4">
+              {topCertifiers.map((cert) => (
+                <div
+                  key={cert.name}
+                  className="flex items-center gap-2 rounded-lg bg-card px-3 py-1.5 shadow-sm"
+                >
+                  <Image
+                    src={cert.src}
+                    alt={cert.name}
+                    width={20}
+                    height={20}
+                    className="size-5 rounded-sm object-contain"
+                  />
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {cert.name}
+                  </span>
+                </div>
+              ))}
+              <span className="text-xs text-muted-foreground/60">
+                + tous les certifieurs dans l&apos;app
+              </span>
+            </div>
+          </div>
+        </AnimateIn>
+
+        {/* Scroll indicator */}
+        <AnimateIn variant="fadeUp" delay={1.2}>
+          <div className="mt-6 flex flex-col items-center gap-1 text-muted-foreground/40">
+            <motion.div
+              animate={{ y: [0, 8, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <ArrowDown className="size-5" />
             </motion.div>
+            <span className="text-xs tracking-widest uppercase">Découvrir</span>
           </div>
-
-          {/* ─── Right column: Phone mockup ─── */}
-          <div className="relative flex justify-center lg:justify-end">
-            {/* Ambient gold orb behind phone */}
-            <div
-              className="pointer-events-none absolute top-1/2 left-1/2 -z-10 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-40"
-              style={{
-                background:
-                  "radial-gradient(circle, oklch(0.78 0.17 82 / 18%) 0%, oklch(0.78 0.17 82 / 6%) 40%, transparent 70%)",
-                animation: "glow-pulse 5s ease-in-out infinite",
-              }}
-            />
-
-            <PhoneMockup showScanLine>
-              <PhoneScreen
-                productName="Nutella 400g"
-                brand="Ferrero"
-                verdict="halal"
-                score={87}
-              />
-            </PhoneMockup>
-          </div>
-        </div>
+        </AnimateIn>
       </div>
-
-      {/* Bottom fade to next section */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
     </section>
   );
 }

@@ -49,14 +49,13 @@ import { useTheme } from "@/hooks/useTheme";
 import { brand, glass, lightTheme, darkTheme, storeTypeColors } from "@/theme/colors";
 import { useHaptics, useUserLocation, useMapStores, usePremium } from "@/hooks";
 import { trpc } from "@/lib/trpc";
-import { useQuotaStore, useLocalFavoritesStore, useLocalStoreFavoritesStore, useTrialStore } from "@/store";
+import { useQuotaStore, useLocalFavoritesStore, useLocalStoreFavoritesStore, useTrialStore, DAILY_SCAN_LIMIT } from "@/store";
 import { defaultFeatureFlags } from "@/constants/config";
 import { AppIcon, type IconName } from "@/lib/icons";
 import { NaqiyBrandSheet } from "@/components/NaqiyBrandSheet";
 
 const logoSource = require("@assets/images/logo_naqiy.webp");
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const DAILY_SCAN_LIMIT = 5;
 const STAGGER_MS = 60;
 
 // ---------------------------------------------------------------------------

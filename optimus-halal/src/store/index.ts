@@ -373,7 +373,7 @@ export const useRamadanStore = create<RamadanState>()(
  * Permet un feedback UI instantané sans attendre le réseau.
  * Le backend reste la source de vérité.
  */
-const DAILY_SCAN_LIMIT = 5;
+export const DAILY_SCAN_LIMIT = 20;
 
 function getToday(): string {
   return new Date().toISOString().slice(0, 10);
@@ -732,7 +732,7 @@ export const useLocalDietaryPreferencesStore = create<DietaryPreferencesState>()
  * Trial State — 7-day full access for new users
  *
  * On first app launch, users get 7 days of full Naqiy+ access.
- * After 7 days: downgrade to free tier (5 scans/day, premium features locked).
+ * After 7 days: downgrade to free tier (scans free, AI analyses limited, premium features locked).
  * trialStartDate is set once and never changes.
  */
 const TRIAL_DURATION_DAYS = 7;

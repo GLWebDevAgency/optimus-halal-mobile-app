@@ -39,13 +39,21 @@ import { initAnalytics, identifyUser, setSuperProperties } from "../src/lib/anal
 import { getDeviceId } from "@/services/api/client";
 import { setNavigationBarTheme } from "@/lib/navigationBar";
 import {
-  useFonts,
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-  Inter_900Black,
-} from "@expo-google-fonts/inter";
+  useFonts as useNunitoFonts,
+  Nunito_400Regular,
+  Nunito_600SemiBold,
+  Nunito_700Bold,
+  Nunito_800ExtraBold,
+  Nunito_900Black,
+} from "@expo-google-fonts/nunito";
+import {
+  useFonts as useNunitoSansFonts,
+  NunitoSans_400Regular,
+  NunitoSans_500Medium,
+  NunitoSans_600SemiBold,
+  NunitoSans_700Bold,
+  NunitoSans_900Black,
+} from "@expo-google-fonts/nunito-sans";
 
 // ── Auth Context — single source of truth for auth state across all screens ──
 // Pattern: Clerk / NextAuth / Firebase Auth — one provider, consumed everywhere.
@@ -362,13 +370,23 @@ export default function RootLayout() {
   const { isDark, effectiveTheme } = useTheme();
   const { setColorScheme } = useNativeWindColorScheme();
 
-  const [fontsLoaded] = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
-    Inter_900Black,
+  const [nunitoLoaded] = useNunitoFonts({
+    Nunito_400Regular,
+    Nunito_600SemiBold,
+    Nunito_700Bold,
+    Nunito_800ExtraBold,
+    Nunito_900Black,
   });
+
+  const [nunitoSansLoaded] = useNunitoSansFonts({
+    NunitoSans_400Regular,
+    NunitoSans_500Medium,
+    NunitoSans_600SemiBold,
+    NunitoSans_700Bold,
+    NunitoSans_900Black,
+  });
+
+  const fontsLoaded = nunitoLoaded && nunitoSansLoaded;
 
   // Sync NativeWind dark mode synchronously before paint to avoid
   // a 1-frame flash where dark: classes lag behind inline colors

@@ -1,10 +1,11 @@
 /**
  * Naqiy Design System — Typography Tokens
  *
- * Font family, size, weight, line-height, and letter-spacing presets.
- * Every text style in the application should derive from these tokens.
+ * Font families:
+ *   • Nunito      → headings (display, h1–h4) — rounded, impactful
+ *   • Nunito Sans → body text (body, caption, micro) — clean, readable
  *
- * Font stack: Inter (loaded via expo-font / Google Fonts).
+ * Loaded via expo-font / @expo-google-fonts.
  * Fallback: system default sans-serif.
  *
  * @module theme/typography
@@ -18,15 +19,34 @@ import { Platform, type TextStyle } from "react-native";
 
 /**
  * Platform-aware font family mapping.
- * On iOS "Inter" is sufficient; on Android the weight-specific file name
- * is required when loaded via expo-font.
+ * On iOS the family name suffices; on Android the weight-specific
+ * file name is required when loaded via expo-font.
  */
+
+/** Nunito — headings & display */
+export const headingFontFamily = {
+  semiBold: Platform.select({ ios: "Nunito-SemiBold", android: "Nunito_600SemiBold", default: "Nunito" }),
+  bold: Platform.select({ ios: "Nunito-Bold", android: "Nunito_700Bold", default: "Nunito" }),
+  extraBold: Platform.select({ ios: "Nunito-ExtraBold", android: "Nunito_800ExtraBold", default: "Nunito" }),
+  black: Platform.select({ ios: "Nunito-Black", android: "Nunito_900Black", default: "Nunito" }),
+} as const;
+
+/** Nunito Sans — body text & UI */
+export const bodyFontFamily = {
+  regular: Platform.select({ ios: "NunitoSans", android: "NunitoSans_400Regular", default: "NunitoSans" }),
+  medium: Platform.select({ ios: "NunitoSans-Medium", android: "NunitoSans_500Medium", default: "NunitoSans" }),
+  semiBold: Platform.select({ ios: "NunitoSans-SemiBold", android: "NunitoSans_600SemiBold", default: "NunitoSans" }),
+  bold: Platform.select({ ios: "NunitoSans-Bold", android: "NunitoSans_700Bold", default: "NunitoSans" }),
+  black: Platform.select({ ios: "NunitoSans-Black", android: "NunitoSans_900Black", default: "NunitoSans" }),
+} as const;
+
+/** Backward-compatible alias — maps to body font (Nunito Sans) */
 export const fontFamily = {
-  regular: Platform.select({ ios: "Inter", android: "Inter_400Regular", default: "Inter" }),
-  medium: Platform.select({ ios: "Inter-Medium", android: "Inter_500Medium", default: "Inter" }),
-  semiBold: Platform.select({ ios: "Inter-SemiBold", android: "Inter_600SemiBold", default: "Inter" }),
-  bold: Platform.select({ ios: "Inter-Bold", android: "Inter_700Bold", default: "Inter" }),
-  black: Platform.select({ ios: "Inter-Black", android: "Inter_900Black", default: "Inter" }),
+  regular: bodyFontFamily.regular,
+  medium: bodyFontFamily.medium,
+  semiBold: bodyFontFamily.semiBold,
+  bold: bodyFontFamily.bold,
+  black: bodyFontFamily.black,
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -55,6 +75,7 @@ export const fontWeight = {
   medium: "500" as const,
   semiBold: "600" as const,
   bold: "700" as const,
+  extraBold: "800" as const,
   black: "900" as const,
 };
 
@@ -94,6 +115,9 @@ export const letterSpacing = {
 /**
  * Ready-to-spread text styles.
  *
+ * Headings (display, h1–h4) → Nunito (rounded, impactful)
+ * Body text (body, caption, micro) → Nunito Sans (clean, readable)
+ *
  * Usage:
  * ```tsx
  * <Text style={textStyles.h1}>Heading</Text>
@@ -102,7 +126,7 @@ export const letterSpacing = {
 export const textStyles = {
   /** Hero display text — splash screens, onboarding headlines. */
   display: {
-    fontFamily: fontFamily.black,
+    fontFamily: headingFontFamily.black,
     fontSize: fontSize.display,
     fontWeight: fontWeight.black,
     lineHeight: lineHeight.display,
@@ -111,7 +135,7 @@ export const textStyles = {
 
   /** Primary heading — screen titles. */
   h1: {
-    fontFamily: fontFamily.bold,
+    fontFamily: headingFontFamily.bold,
     fontSize: fontSize.h1,
     fontWeight: fontWeight.bold,
     lineHeight: lineHeight.h1,
@@ -120,7 +144,7 @@ export const textStyles = {
 
   /** Secondary heading — section titles. */
   h2: {
-    fontFamily: fontFamily.bold,
+    fontFamily: headingFontFamily.bold,
     fontSize: fontSize.h2,
     fontWeight: fontWeight.bold,
     lineHeight: lineHeight.h2,
@@ -129,7 +153,7 @@ export const textStyles = {
 
   /** Tertiary heading — card titles, group headers. */
   h3: {
-    fontFamily: fontFamily.semiBold,
+    fontFamily: headingFontFamily.semiBold,
     fontSize: fontSize.h3,
     fontWeight: fontWeight.semiBold,
     lineHeight: lineHeight.h3,
@@ -138,7 +162,7 @@ export const textStyles = {
 
   /** Quaternary heading — list item titles, labels. */
   h4: {
-    fontFamily: fontFamily.semiBold,
+    fontFamily: headingFontFamily.semiBold,
     fontSize: fontSize.h4,
     fontWeight: fontWeight.semiBold,
     lineHeight: lineHeight.h4,
@@ -147,7 +171,7 @@ export const textStyles = {
 
   /** Default body text. */
   body: {
-    fontFamily: fontFamily.medium,
+    fontFamily: bodyFontFamily.medium,
     fontSize: fontSize.body,
     fontWeight: fontWeight.medium,
     lineHeight: lineHeight.body,
@@ -156,7 +180,7 @@ export const textStyles = {
 
   /** Small body text — secondary descriptions, metadata. */
   bodySmall: {
-    fontFamily: fontFamily.regular,
+    fontFamily: bodyFontFamily.regular,
     fontSize: fontSize.bodySmall,
     fontWeight: fontWeight.regular,
     lineHeight: lineHeight.bodySmall,
@@ -165,7 +189,7 @@ export const textStyles = {
 
   /** Caption text — timestamps, hints, footnotes. */
   caption: {
-    fontFamily: fontFamily.regular,
+    fontFamily: bodyFontFamily.regular,
     fontSize: fontSize.caption,
     fontWeight: fontWeight.regular,
     lineHeight: lineHeight.caption,
@@ -174,7 +198,7 @@ export const textStyles = {
 
   /** Micro text — badges, uppercase labels. */
   micro: {
-    fontFamily: fontFamily.medium,
+    fontFamily: bodyFontFamily.medium,
     fontSize: fontSize.micro,
     fontWeight: fontWeight.medium,
     lineHeight: lineHeight.micro,
@@ -205,6 +229,8 @@ export const scaleFontForRTL = (size: number, isRTL: boolean): number =>
 // Type Exports
 // ---------------------------------------------------------------------------
 
+export type HeadingFontFamily = typeof headingFontFamily;
+export type BodyFontFamily = typeof bodyFontFamily;
 export type FontFamily = typeof fontFamily;
 export type FontSize = typeof fontSize;
 export type FontWeight = typeof fontWeight;

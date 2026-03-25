@@ -33,7 +33,7 @@ import { Image } from "expo-image";
 import { Card, Avatar, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { ProfileSkeleton } from "@/components/skeletons";
-import { useThemeStore, usePreferencesStore, useQuotaStore, useOnboardingStore } from "@/store";
+import { useThemeStore, usePreferencesStore, useQuotaStore, useOnboardingStore, DAILY_SCAN_LIMIT } from "@/store";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth } from "../_layout";
 import { AppIcon, type IconName } from "@/lib/icons";
@@ -187,7 +187,6 @@ export default function ProfileScreen() {
 
   // Quota (anonymous) — use dailyScansUsed for display consistency with home screen
   const dailyScansUsed = useQuotaStore((s) => s.dailyScansUsed);
-  const DAILY_SCAN_LIMIT = 5;
   const quotaExhausted = dailyScansUsed >= DAILY_SCAN_LIMIT;
 
   const { theme } = useThemeStore();

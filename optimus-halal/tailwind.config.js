@@ -80,8 +80,8 @@ module.exports = {
         },
       },
       fontFamily: {
-        display: ["Inter", "system-ui", "sans-serif"],
-        body: ["Inter", "system-ui", "sans-serif"],
+        display: ["Nunito", "system-ui", "sans-serif"],
+        body: ["NunitoSans", "system-ui", "sans-serif"],
       },
       borderRadius: {
         DEFAULT: "0.25rem",

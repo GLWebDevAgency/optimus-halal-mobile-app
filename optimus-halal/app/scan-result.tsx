@@ -182,10 +182,7 @@ export default function ScanResultScreen() {
   const detectedAdditives = scanMutation.data?.detectedAdditives ?? [];
   const meQuery = useMe({ enabled: hasStoredTokens() });
   const isGuest = !meQuery.data && (!hasStoredTokens() || meQuery.isError);
-  const localRemaining = useQuotaStore((s) => {
-    if (s.lastScanDate !== new Date().toISOString().slice(0, 10)) return 5;
-    return Math.max(0, 5 - s.dailyScansUsed);
-  });
+  const localRemaining = useQuotaStore((s) => s.getRemainingScans());
   const remainingScans = scanMutation.data?.remainingScans ?? (isGuest ? localRemaining : null);
 
   // Increment local quota counter + save to local history after a successful anonymous scan
@@ -775,7 +772,7 @@ export default function ScanResultScreen() {
           </View>
 
           {/* PAGER: Halal (page 0) + Health (page 1) */}
-          <ScanResultPager
+            <ScanResultPager
             activeTab={activeTab}
             onPageChange={setActiveTab}
             scrollProgress={scrollProgress}

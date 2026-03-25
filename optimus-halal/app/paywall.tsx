@@ -1,7 +1,7 @@
 /**
  * Soft Paywall Screen
  *
- * Affiché quand un utilisateur anonyme atteint sa limite de 5 scans/jour.
+ * Affiché quand un utilisateur atteint sa limite de scans ou d'analyses IA.
  * Design éthique : bouton "Plus tard" TOUJOURS visible, pas de dark pattern.
  */
 
@@ -18,14 +18,13 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useHaptics } from "@/hooks";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
-import { useQuotaStore } from "@/store";
+import { useQuotaStore, DAILY_SCAN_LIMIT } from "@/store";
 import { trackEvent } from "@/lib/analytics";
 import { AppIcon } from "@/lib/icons";
 import { restorePurchases, isPremiumCustomer } from "@/services/purchases";
 import { useTrialStore } from "@/store";
 import type { PaywallTrigger } from "@/types/paywall";
 
-const DAILY_SCAN_LIMIT = 5;
 
 export default function PaywallScreen() {
   const insets = useSafeAreaInsets();
@@ -42,6 +41,7 @@ export default function PaywallScreen() {
   // Define all features with their associated trigger
   const allFeatures = [
     { icon: "all-inclusive" as const, text: t.paywall.featureUnlimitedScans, trigger: "scan_quota" },
+    { icon: "person-add" as const, text: t.paywall.featureProfile, trigger: "profile_creation" },
     { icon: "favorite" as const, text: t.paywall.featureFavorites, trigger: "favorites" },
     { icon: "history" as const, text: t.paywall.featureHistory, trigger: "history" },
     { icon: "cloud-download" as const, text: t.paywall.featureOffline, trigger: "offline" },
