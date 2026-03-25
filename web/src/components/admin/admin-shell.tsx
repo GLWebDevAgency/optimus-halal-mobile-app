@@ -1,7 +1,9 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useState, useEffect, createContext, useContext, useCallback } from "react"
 import {
   SquaresFour,
   EnvelopeSimple,
@@ -13,6 +15,9 @@ import {
   GearSix,
   SignOut,
   CaretDown,
+  Sun,
+  Moon,
+  ToggleRight,
 } from "@phosphor-icons/react"
 
 import {
@@ -28,20 +33,68 @@ import {
   SidebarFooter,
   SidebarInset,
   SidebarTrigger,
-  SidebarSeparator,
 } from "@/components/ui/sidebar"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { AdminAuthProvider, useAdminAuth } from "@/lib/admin-auth"
+
+/* ── Admin-scoped theme (isolated from landing) ── */
+
+const STORAGE_KEY = "naqiy.admin_theme"
+
+type AdminTheme = "light" | "dark"
+
+const AdminThemeContext = createContext<{
+  theme: AdminTheme
+  toggle: () => void
+}>({ theme: "light", toggle: () => {} })
+
+function useAdminTheme() {
+  return useContext(AdminThemeContext)
+}
+
+function AdminThemeProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setTheme] = useState<AdminTheme>("light")
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY) as AdminTheme | null
+    if (stored === "dark" || stored === "light") setTheme(stored)
+    setMounted(true)
+  }, [])
+
+  const toggle = useCallback(() => {
+    setTheme((prev) => {
+      const next = prev === "dark" ? "light" : "dark"
+      localStorage.setItem(STORAGE_KEY, next)
+      return next
+    })
+  }, [])
+
+  return (
+    <AdminThemeContext.Provider value={{ theme, toggle }}>
+      <div
+        className={theme === "dark" ? "dark" : ""}
+        style={theme === "dark" ? { colorScheme: "dark" } : undefined}
+      >
+        {mounted ? children : (
+          <div className="flex min-h-screen items-center justify-center bg-background">
+            <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        )}
+      </div>
+    </AdminThemeContext.Provider>
+  )
+}
+
+/* ── Nav config ── */
 
 const navItems = [
   { href: "/admin", label: "Vue d'ensemble", icon: SquaresFour, segment: null },
@@ -51,6 +104,7 @@ const navItems = [
   { href: "/admin/stores", label: "Magasins", icon: Storefront, segment: "stores" },
   { href: "/admin/articles", label: "Articles", icon: FileText, segment: "articles" },
   { href: "/admin/alerts", label: "Alertes", icon: Bell, segment: "alerts" },
+  { href: "/admin/flags", label: "Feature Flags", icon: ToggleRight, segment: "flags" },
   { href: "/admin/settings", label: "Paramètres", icon: GearSix, segment: "settings" },
 ]
 
@@ -60,14 +114,31 @@ function getPageTitle(pathname: string): string {
   return item?.label ?? "Admin"
 }
 
+/* ── Theme toggle button ── */
+
+function ThemeToggle() {
+  const { theme, toggle } = useAdminTheme()
+  return (
+    <button
+      onClick={toggle}
+      className="flex size-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+      title={theme === "dark" ? "Mode clair" : "Mode sombre"}
+    >
+      {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+    </button>
+  )
+}
+
+/* ── Shell ── */
+
 function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { user, isLoading, logout } = useAdminAuth()
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
-        <div className="size-6 animate-spin rounded-full border-2 border-gold border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </div>
     )
   }
@@ -85,22 +156,26 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   const pageTitle = getPageTitle(pathname)
 
   return (
-    <SidebarProvider defaultOpen={false}>
-      <Sidebar collapsible="icon" variant="sidebar" className="border-zinc-800 bg-zinc-950">
-        <SidebarHeader>
-          <div className="flex items-center gap-2 px-2 py-1">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-gold">
-              <span className="text-sm font-bold text-zinc-950">N</span>
-            </div>
-            <div className="flex flex-col gap-0.5 leading-none group-data-[collapsible=icon]:hidden">
-              <span className="text-sm font-semibold text-zinc-50">Naqiy</span>
-              <span className="text-xs text-zinc-500">Administration</span>
-            </div>
-          </div>
+    <SidebarProvider>
+      <Sidebar collapsible="icon" variant="sidebar">
+        {/* Logo */}
+        <SidebarHeader className="px-3 py-4">
+          <Link href="/admin" className="flex items-center gap-2">
+            <Image
+              src="/images/logo_naqiy.webp"
+              alt="Naqiy"
+              width={32}
+              height={32}
+              className="size-8 shrink-0 object-contain"
+              priority
+            />
+            <span className="text-sm font-semibold text-foreground group-data-[collapsible=icon]:hidden">
+              Administration
+            </span>
+          </Link>
         </SidebarHeader>
 
-        <SidebarSeparator className="bg-zinc-800" />
-
+        {/* Nav */}
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupContent>
@@ -117,11 +192,6 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                         isActive={isActive}
                         tooltip={item.label}
                         render={<Link href={item.href} />}
-                        className={
-                          isActive
-                            ? "bg-gold/10 text-gold border-l-2 border-gold"
-                            : "text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800/50"
-                        }
                       >
                         <item.icon weight={isActive ? "fill" : "regular"} />
                         <span>{item.label}</span>
@@ -134,14 +204,14 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           </SidebarGroup>
         </SidebarContent>
 
+        {/* Footer */}
         <SidebarFooter>
-          <SidebarSeparator className="bg-zinc-800" />
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
                 tooltip="Déconnexion"
                 onClick={logout}
-                className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10"
+                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
               >
                 <SignOut />
                 <span>Déconnexion</span>
@@ -151,36 +221,40 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="bg-zinc-950">
-        <header className="flex h-14 shrink-0 items-center gap-2 border-b border-zinc-800 px-4">
-          <SidebarTrigger className="text-zinc-400" />
-          <Separator orientation="vertical" className="mx-2 h-4 bg-zinc-800" />
-
-          <h1 className="text-sm font-medium text-zinc-50">{pageTitle}</h1>
-
+      {/* Main */}
+      <SidebarInset>
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+          <SidebarTrigger />
+          <Separator orientation="vertical" className="mx-2 h-4" />
+          <h1 className="text-sm font-medium">{pageTitle}</h1>
           <div className="flex-1" />
 
+          <ThemeToggle />
+
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-zinc-800/50 outline-none">
-              <Avatar size="sm">
-                <AvatarFallback className="bg-zinc-800 text-zinc-300 text-xs">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <CaretDown className="size-3 text-zinc-500 hidden sm:block" />
+            <DropdownMenuTrigger
+              render={
+                <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-accent outline-none" />
+              }
+            >
+              <div className="flex size-7 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
+                {initials}
+              </div>
+              <CaretDown className="size-3 text-muted-foreground hidden sm:block" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col gap-1">
-                  <p className="text-sm font-medium">{user.displayName ?? user.email}</p>
-                  <p className="text-xs text-muted-foreground">{user.email}</p>
-                  <Badge variant="outline" className="w-fit mt-1 text-[10px]">
-                    {user.adminRole === "super_admin" ? "Super Admin" : "Admin"}
-                  </Badge>
-                </div>
-              </DropdownMenuLabel>
+              <div className="px-2 py-1.5">
+                <p className="text-sm font-medium">{user.displayName ?? user.email}</p>
+                <p className="text-xs text-muted-foreground">{user.email}</p>
+                <Badge variant="outline" className="w-fit mt-1 text-[10px]">
+                  {user.adminRole === "super_admin" ? "Super Admin" : "Admin"}
+                </Badge>
+              </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout} className="text-red-400 focus:text-red-400">
+              <DropdownMenuItem
+                onSelect={logout}
+                className="text-destructive focus:text-destructive"
+              >
                 <SignOut className="mr-2 size-4" />
                 Déconnexion
               </DropdownMenuItem>
@@ -198,8 +272,10 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AdminAuthProvider>
-      <AdminShell>{children}</AdminShell>
-    </AdminAuthProvider>
+    <AdminThemeProvider>
+      <AdminAuthProvider>
+        <AdminShell>{children}</AdminShell>
+      </AdminAuthProvider>
+    </AdminThemeProvider>
   )
 }

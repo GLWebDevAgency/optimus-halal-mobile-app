@@ -20,6 +20,7 @@ import { referralRouter } from "./routers/referral.js";
 import { adminRouter } from "./routers/admin.js";
 import { adminWaitlistRouter } from "./routers/admin-waitlist.js";
 import { waitlistRouter } from "./routers/waitlist.js";
+import { featureFlagsRouter } from "./routers/feature-flags.js";
 
 export const appRouter = router({
   auth: authRouter,
@@ -43,6 +44,7 @@ export const appRouter = router({
   admin: adminRouter,
   adminWaitlist: adminWaitlistRouter,
   waitlist: waitlistRouter,
+  featureFlags: featureFlagsRouter,
 });
 
 export type AppRouter = typeof appRouter;

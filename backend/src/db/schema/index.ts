@@ -21,3 +21,4 @@ export * from "./referrals.js";
 export * from "./devices.js";
 export * from "./admins.js";
 export * from "./waitlist-leads.js";
+export * from "./feature-flags.js";

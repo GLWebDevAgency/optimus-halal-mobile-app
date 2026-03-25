@@ -34,6 +34,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/ui";
 import { logger } from "@/lib/logger";
 import { initPurchases } from "@/services/purchases";
+import { useRemoteFlags } from "@/hooks/useRemoteFlags";
 import { initSentry, setGuestContext, setUserContext } from "../src/lib/sentry";
 import { initAnalytics, identifyUser, setSuperProperties } from "../src/lib/analytics";
 import { getDeviceId } from "@/services/api/client";
@@ -270,6 +271,11 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
       refetchAuth: meQuery.refetch,
     };
   }, [tokensReady, meQuery.data, meQuery.isLoading, meQuery.isError, meQuery.refetch]);
+
+  // Step 3: Fetch remote feature flags (after auth resolves)
+  // Enabled for authenticated users only — guests use hardcoded defaults.
+  // Polls every 5min, persists to MMKV for instant next startup.
+  useRemoteFlags({ enabled: !!meQuery.data });
 
   // Upgrade Sentry + PostHog context when returning user is identified
   useEffect(() => {
