@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { AnimatePresence, motion } from "motion/react";
 
 export interface ScreenConfig {
@@ -24,32 +24,39 @@ export function PhoneScreenManager({
   );
 
   const currentScreen = screenMap.get(activeScreen);
-
   const currentCategory = currentScreen?.category;
-  const [prevCategory, setPrevCategory] = useState<string | undefined>(
-    undefined
+
+  // React-recommended "adjusting state during render" pattern
+  // See: https://react.dev/reference/react/useState#storing-information-from-previous-renders
+  const [prev, setPrev] = useState({
+    category: currentCategory,
+    screen: activeScreen,
+  });
+  const [direction, setDirection] = useState<"horizontal" | "vertical">(
+    "vertical"
   );
 
-  const direction =
-    prevCategory !== undefined && prevCategory === currentCategory
-      ? "horizontal"
-      : "vertical";
+  if (activeScreen !== prev.screen) {
+    const nextDirection =
+      prev.category !== undefined && prev.category === currentCategory
+        ? "horizontal"
+        : "vertical";
+    setDirection(nextDirection);
+    setPrev({ category: currentCategory, screen: activeScreen });
+  }
 
-  useEffect(() => {
-    setPrevCategory(currentCategory);
-  }, [currentCategory]);
-
+  // Include both x AND y in all variants to prevent stuck properties
   const variants =
     direction === "horizontal"
       ? {
-          initial: { x: "100%", opacity: 0.5, filter: "blur(0px)" },
-          animate: { x: 0, opacity: 1, filter: "blur(0px)" },
-          exit: { x: "-30%", opacity: 0, filter: "blur(2px)" },
+          initial: { x: "100%", y: 0, opacity: 0.5 },
+          animate: { x: 0, y: 0, opacity: 1 },
+          exit: { x: "-30%", y: 0, opacity: 0 },
         }
       : {
-          initial: { y: "100%", opacity: 0.5, filter: "blur(0px)" },
-          animate: { y: 0, opacity: 1, filter: "blur(0px)" },
-          exit: { y: "-30%", opacity: 0, filter: "blur(2px)" },
+          initial: { x: 0, y: "100%", opacity: 0.5 },
+          animate: { x: 0, y: 0, opacity: 1 },
+          exit: { x: 0, y: "-30%", opacity: 0 },
         };
 
   const springTransition = {
@@ -59,12 +66,15 @@ export function PhoneScreenManager({
     mass: 0.8,
   };
 
+  // First render: initial=false so screen appears immediately without animation
+  const isInitialScreen = prev.screen === activeScreen && direction === "vertical";
+
   return (
     <div className="relative w-full h-full overflow-hidden bg-[#0f0f0f]">
       <AnimatePresence mode="wait">
         <motion.div
           key={activeScreen}
-          initial={variants.initial}
+          initial={isInitialScreen ? false : variants.initial}
           animate={variants.animate}
           exit={variants.exit}
           transition={springTransition}
