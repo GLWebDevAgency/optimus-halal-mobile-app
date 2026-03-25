@@ -10,6 +10,7 @@ interface SplitTextProps {
   delay?: number;
   stagger?: number;
   once?: boolean;
+  ssrVisible?: boolean;
 }
 
 export function SplitText({
@@ -19,6 +20,7 @@ export function SplitText({
   delay = 0,
   stagger = 0.02,
   once = true,
+  ssrVisible = false,
 }: SplitTextProps) {
   const ref = useRef<HTMLElement>(null);
   const isInView = useInView(ref, { once, amount: 0.4 });
@@ -60,7 +62,7 @@ export function SplitText({
                   <motion.span
                     key={ci}
                     style={{ display: "inline-block" }}
-                    initial={{ opacity: 0, rotateX: 90, y: 20 }}
+                    initial={ssrVisible ? { opacity: 1, rotateX: 0, y: 0 } : { opacity: 0, rotateX: 90, y: 20 }}
                     animate={
                       isInView
                         ? { opacity: 1, rotateX: 0, y: 0 }
@@ -80,7 +82,7 @@ export function SplitText({
               {wordIdx < words.length - 1 && (
                 <motion.span
                   style={{ display: "inline-block", whiteSpace: "pre" }}
-                  initial={{ opacity: 0 }}
+                  initial={ssrVisible ? { opacity: 1 } : { opacity: 0 }}
                   animate={isInView ? { opacity: 1 } : { opacity: 0 }}
                   transition={{
                     duration: 0.3,
