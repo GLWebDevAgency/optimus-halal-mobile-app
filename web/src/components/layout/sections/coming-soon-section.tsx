@@ -14,6 +14,8 @@ import { AnimateIn, Stagger, StaggerItem } from "@/components/animations/animate
 import { SplitText } from "@/components/animations/split-text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useTrack } from "@/lib/posthog";
+import { EVENTS } from "@/lib/analytics-events";
 
 const STORAGE_KEY = "naqiy.waitlist_emails";
 
@@ -62,6 +64,7 @@ const pillars = [
 export function ComingSoonSection() {
   const [email, setEmail] = useState("");
   const [formState, setFormState] = useState<FormState>("idle");
+  const track = useTrack();
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -80,6 +83,7 @@ export function ComingSoonSection() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(emails));
     setFormState("success");
     setEmail("");
+    track(EVENTS.WAITLIST_SUBMITTED, { source: "marketplace" });
   }
 
   return (
@@ -160,6 +164,7 @@ export function ComingSoonSection() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    onFocus={() => track(EVENTS.MARKETPLACE_TEASER_CLICKED)}
                     placeholder="ton@email.com"
                     required
                     className="w-full sm:flex-1 h-11 rounded-xl border border-border bg-card px-4 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"

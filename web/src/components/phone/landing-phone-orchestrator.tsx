@@ -1,7 +1,9 @@
 "use client";
 
-import { useRef, useMemo } from "react";
-import { useInView } from "motion/react";
+import { useRef, useMemo, useEffect } from "react";
+import { useInView, useScroll } from "motion/react";
+import { useTrack } from "@/lib/posthog";
+import { EVENTS } from "@/lib/analytics-events";
 
 import { PhoneFrame } from "@/components/phone/phone-frame";
 import {
@@ -55,6 +57,22 @@ import { Footer } from "@/components/layout/sections/footer";
    ═══════════════════════════════════════════════════════════ */
 
 export function LandingPhoneOrchestrator() {
+  const track = useTrack();
+  const { scrollYProgress } = useScroll();
+  const firedMilestones = useRef<Set<number>>(new Set());
+
+  useEffect(() => {
+    const milestones = [25, 50, 75, 100];
+    return scrollYProgress.on("change", (v) => {
+      for (const milestone of milestones) {
+        if (v * 100 >= milestone && !firedMilestones.current.has(milestone)) {
+          firedMilestones.current.add(milestone);
+          track(EVENTS.SCROLL_DEPTH, { percent: milestone });
+        }
+      }
+    });
+  }, [scrollYProgress, track]);
+
   /* ── Screen configs inside component so JSX has access to React tree context ── */
   const screens: ScreenConfig[] = useMemo(
     () => [

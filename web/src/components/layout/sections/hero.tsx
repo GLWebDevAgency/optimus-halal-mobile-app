@@ -14,6 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { AnimateIn } from "@/components/animations/animate-in";
 import { AnimatedCounter } from "@/components/animations/animated-counter";
 import { SplitText } from "@/components/animations/split-text";
+import { useTrack } from "@/lib/posthog";
+import { EVENTS } from "@/lib/analytics-events";
 
 const topCertifiers = [
   { name: "AVS", src: "/images/certifications/avs.webp" },
@@ -21,6 +23,7 @@ const topCertifiers = [
 ];
 
 export function Hero() {
+  const track = useTrack();
   const { scrollY } = useScroll();
 
   // Hero brand block: fades out + lifts up as user scrolls
@@ -135,6 +138,7 @@ export function Hero() {
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
             <a
               href="#waitlist"
+              onClick={() => track(EVENTS.HERO_CTA_CLICKED)}
               className="border-gradient-gold group inline-flex items-center gap-3 rounded-full bg-foreground px-6 py-3 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.03]"
             >
               <Bell className="size-5 text-background" weight="fill" />

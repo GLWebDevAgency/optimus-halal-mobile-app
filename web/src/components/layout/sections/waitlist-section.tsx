@@ -11,6 +11,8 @@ import {
 import { SplitText } from "@/components/animations/split-text";
 import { AnimateIn } from "@/components/animations/animate-in";
 import { Badge } from "@/components/ui/badge";
+import { useTrack } from "@/lib/posthog";
+import { EVENTS } from "@/lib/analytics-events";
 
 const STORAGE_KEY = "naqiy.waitlist_emails";
 
@@ -38,6 +40,7 @@ function storeEmail(email: string): FormState {
 export function WaitlistSection() {
   const [formState, setFormState] = useState<FormState>("idle");
   const [email, setEmail] = useState("");
+  const track = useTrack();
 
   const handleSubmit = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
@@ -46,8 +49,13 @@ export function WaitlistSection() {
       if (!value) return;
       const result = storeEmail(value);
       setFormState(result);
+      if (result === "success") {
+        track(EVENTS.WAITLIST_SUBMITTED);
+      } else {
+        track(EVENTS.WAITLIST_ALREADY_EXISTS);
+      }
     },
-    [email],
+    [email, track],
   );
 
   return (
@@ -110,6 +118,7 @@ export function WaitlistSection() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  onFocus={() => track(EVENTS.WAITLIST_STARTED)}
                   placeholder="ton@email.com"
                   className="flex-1 rounded-xl border border-border/60 bg-background/80 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 shadow-sm backdrop-blur-sm transition-colors focus:border-gold/60 focus:outline-none focus:ring-2 focus:ring-gold/20"
                 />

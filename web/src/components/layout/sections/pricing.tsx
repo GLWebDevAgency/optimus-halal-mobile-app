@@ -1,16 +1,20 @@
 "use client";
 
+import { useRef, useEffect } from "react";
 import {
   Check,
   Crown,
   Leaf,
   ShieldCheck,
 } from "@phosphor-icons/react";
+import { useInView } from "motion/react";
 import { Badge } from "@/components/ui/badge";
 import { SplitText } from "@/components/animations/split-text";
 import { AnimateIn, Stagger, StaggerItem } from "@/components/animations/animate-in";
 import { TiltCard } from "@/components/animations/tilt-card";
 import { CursorGlow } from "@/components/animations/cursor-glow";
+import { useTrack } from "@/lib/posthog";
+import { EVENTS } from "@/lib/analytics-events";
 
 /* ═══════════════════════════════════════════════
    DATA
@@ -41,8 +45,19 @@ const plusFeatures = [
 export { PricingSection as Pricing };
 
 export function PricingSection() {
+  const track = useTrack();
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef, { once: true });
+
+  useEffect(() => {
+    if (isInView) {
+      track(EVENTS.PRICING_VIEWED);
+    }
+  }, [isInView, track]);
+
   return (
     <section
+      ref={sectionRef}
       id="pricing"
       className="relative flex items-center bg-secondary/30 py-16 lg:min-h-svh lg:py-24 overflow-hidden"
     >
