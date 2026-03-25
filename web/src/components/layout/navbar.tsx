@@ -27,6 +27,11 @@ export function Navbar() {
   const bgOpacity = useTransform(scrollY, [0, 200], [0, 0.9]);
   const blurAmount = useTransform(scrollY, [0, 200], [0, 20]);
   const borderOpacity = useTransform(scrollY, [0, 200], [0, 0.08]);
+
+  // Logo: hidden at top, fades in as hero logo fades out
+  const logoOpacity = useTransform(scrollY, [100, 350], [0, 1]);
+  const logoScale = useTransform(scrollY, [100, 350], [0.8, 1]);
+
   return (
     <motion.nav
       className="fixed inset-x-0 top-0 z-50"
@@ -44,10 +49,12 @@ export function Navbar() {
       }}
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-        {/* Left — Logo */}
-        <Link href="/" className="flex items-center">
-          <NaqiyLogo size="sm" variant="brand" />
-        </Link>
+        {/* Left — Logo (fades in on scroll) */}
+        <motion.div style={{ opacity: logoOpacity, scale: logoScale }}>
+          <Link href="/" className="flex items-center">
+            <NaqiyLogo size="sm" variant="brand" />
+          </Link>
+        </motion.div>
 
         {/* Center — Desktop nav links */}
         <div className="hidden items-center gap-1 md:flex">

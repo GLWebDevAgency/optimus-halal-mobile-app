@@ -23,34 +23,66 @@ export function SplitText({
   const ref = useRef<HTMLElement>(null);
   const isInView = useInView(ref, { once, amount: 0.4 });
 
-  const chars = children.split("");
+  // Split into words to preserve word boundaries (prevents mid-word line breaks)
+  const words = children.split(" ");
+
+  let charIndex = 0;
 
   return (
-    <Tag ref={ref as React.RefObject<HTMLElement>} className={className} aria-label={children}>
+    <Tag
+      ref={ref as React.Ref<never>}
+      className={className}
+      aria-label={children}
+      style={{ textWrap: "balance" }}
+    >
       <span className="sr-only">{children}</span>
       <span aria-hidden="true" style={{ perspective: "800px" }}>
-        {chars.map((char, i) => (
-          <motion.span
-            key={i}
-            style={{
-              display: "inline-block",
-              whiteSpace: char === " " ? "pre" : undefined,
-            }}
-            initial={{ opacity: 0, rotateX: 90, y: 20 }}
-            animate={
-              isInView
-                ? { opacity: 1, rotateX: 0, y: 0 }
-                : { opacity: 0, rotateX: 90, y: 20 }
-            }
-            transition={{
-              duration: 0.5,
-              delay: delay + i * stagger,
-              ease: [0.25, 0.1, 0.25, 1],
-            }}
-          >
-            {char}
-          </motion.span>
-        ))}
+        {words.map((word, wordIdx) => {
+          const wordChars = word.split("");
+          const startIndex = charIndex;
+          charIndex += word.length + 1; // +1 for the space
+
+          return (
+            <span key={wordIdx}>
+              {/* Word wrapper — keeps letters together */}
+              <span style={{ whiteSpace: "nowrap" }}>
+                {wordChars.map((char, ci) => (
+                  <motion.span
+                    key={ci}
+                    style={{ display: "inline-block" }}
+                    initial={{ opacity: 0, rotateX: 90, y: 20 }}
+                    animate={
+                      isInView
+                        ? { opacity: 1, rotateX: 0, y: 0 }
+                        : { opacity: 0, rotateX: 90, y: 20 }
+                    }
+                    transition={{
+                      duration: 0.5,
+                      delay: delay + (startIndex + ci) * stagger,
+                      ease: [0.25, 0.1, 0.25, 1],
+                    }}
+                  >
+                    {char}
+                  </motion.span>
+                ))}
+              </span>
+              {/* Space between words (breakable) */}
+              {wordIdx < words.length - 1 && (
+                <motion.span
+                  style={{ display: "inline-block", whiteSpace: "pre" }}
+                  initial={{ opacity: 0 }}
+                  animate={isInView ? { opacity: 1 } : { opacity: 0 }}
+                  transition={{
+                    duration: 0.3,
+                    delay: delay + (startIndex + word.length) * stagger,
+                  }}
+                >
+                  {" "}
+                </motion.span>
+              )}
+            </span>
+          );
+        })}
       </span>
     </Tag>
   );
