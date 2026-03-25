@@ -3,6 +3,7 @@ import { Nunito, Nunito_Sans, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PostHogProvider } from "@/lib/posthog";
+import { TRPCProvider } from "@/lib/trpc-provider";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -163,7 +164,9 @@ export default function RootLayout({
         >
           <TooltipProvider>
             <PostHogProvider>
-              {children}
+              <TRPCProvider>
+                {children}
+              </TRPCProvider>
             </PostHogProvider>
           </TooltipProvider>
         </ThemeProvider>

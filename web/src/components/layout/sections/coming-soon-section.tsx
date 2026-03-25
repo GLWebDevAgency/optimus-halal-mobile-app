@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   Storefront,
   Bell,
@@ -9,17 +8,14 @@ import {
   Crown,
   Van,
   CheckCircle,
+  CircleNotch,
 } from "@phosphor-icons/react";
 import { AnimateIn, Stagger, StaggerItem } from "@/components/animations/animate-in";
 import { SplitText } from "@/components/animations/split-text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useTrack } from "@/lib/posthog";
 import { EVENTS } from "@/lib/analytics-events";
-
-const STORAGE_KEY = "naqiy.waitlist_emails";
-
-type FormState = "idle" | "success" | "already";
+import { useWaitlistJoin } from "@/hooks/use-waitlist-join";
 
 /* ═══════════════════════════════════════════════
    4 piliers — storytelling concis, pas de feature list.
@@ -62,29 +58,7 @@ const pillars = [
 ];
 
 export function ComingSoonSection() {
-  const [email, setEmail] = useState("");
-  const [formState, setFormState] = useState<FormState>("idle");
-  const track = useTrack();
-
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const normalized = email.trim().toLowerCase();
-    if (!normalized) return;
-
-    const stored = localStorage.getItem(STORAGE_KEY);
-    const emails: string[] = stored ? (JSON.parse(stored) as string[]) : [];
-
-    if (emails.includes(normalized)) {
-      setFormState("already");
-      return;
-    }
-
-    emails.push(normalized);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(emails));
-    setFormState("success");
-    setEmail("");
-    track(EVENTS.WAITLIST_SUBMITTED, { source: "marketplace" });
-  }
+  const { state, email, setEmail, submit, track } = useWaitlistJoin({ source: "marketplace" });
 
   return (
     <section className="relative flex items-center overflow-hidden bg-gradient-to-b from-background to-secondary/60 py-16 lg:py-24">
@@ -152,13 +126,13 @@ export function ComingSoonSection() {
         {/* ── Newsletter CTA ── */}
         <AnimateIn variant="fadeUp" delay={0.5}>
           <div className="mt-10 text-center">
-            {formState === "idle" && (
+            {(state === "idle" || state === "loading" || state === "error") && (
               <>
                 <p className="text-sm text-muted-foreground mb-3">
                   Sois le premier informé du lancement.
                 </p>
                 <form
-                  onSubmit={handleSubmit}
+                  onSubmit={submit}
                   className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto"
                 >
                   <input
@@ -168,27 +142,38 @@ export function ComingSoonSection() {
                     onFocus={() => track(EVENTS.MARKETPLACE_TEASER_CLICKED)}
                     placeholder="ton@email.com"
                     required
-                    className="w-full sm:flex-1 h-11 rounded-xl border border-border bg-card px-4 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"
+                    disabled={state === "loading"}
+                    className="w-full sm:flex-1 h-11 rounded-xl border border-border bg-card px-4 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all disabled:opacity-50"
                   />
                   <Button
                     type="submit"
+                    disabled={state === "loading"}
                     className="h-11 px-5 gold-glow-intense shrink-0 w-full sm:w-auto gap-2"
                   >
-                    <Bell className="size-4" weight="fill" />
+                    {state === "loading" ? (
+                      <CircleNotch className="size-4 animate-spin" />
+                    ) : (
+                      <Bell className="size-4" weight="fill" />
+                    )}
                     Me prévenir
                   </Button>
                 </form>
+                {state === "error" && (
+                  <p className="text-xs text-destructive mt-2">
+                    Une erreur est survenue. R&eacute;essaie.
+                  </p>
+                )}
               </>
             )}
 
-            {formState === "success" && (
+            {state === "success" && (
               <div className="flex items-center justify-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
                 <CheckCircle className="size-4" weight="fill" />
                 <span>C&apos;est noté ! On te prévient dès le lancement.</span>
               </div>
             )}
 
-            {formState === "already" && (
+            {state === "already" && (
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <CheckCircle className="size-4" weight="fill" />
                 <span>Tu es déjà sur la liste — on ne t&apos;oublie pas.</span>

@@ -1,62 +1,21 @@
 "use client";
 
-import { useState, useCallback } from "react";
 import {
   Bell,
   AppleLogo,
   GooglePlayLogo,
   CheckCircle,
   EnvelopeSimple,
+  CircleNotch,
 } from "@phosphor-icons/react";
 import { SplitText } from "@/components/animations/split-text";
 import { AnimateIn } from "@/components/animations/animate-in";
 import { Badge } from "@/components/ui/badge";
-import { useTrack } from "@/lib/posthog";
 import { EVENTS } from "@/lib/analytics-events";
-
-const STORAGE_KEY = "naqiy.waitlist_emails";
-
-type FormState = "idle" | "success" | "already";
-
-function getStoredEmails(): string[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as string[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function storeEmail(email: string): FormState {
-  const emails = getStoredEmails();
-  const normalised = email.toLowerCase().trim();
-  if (emails.includes(normalised)) return "already";
-  emails.push(normalised);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(emails));
-  return "success";
-}
+import { useWaitlistJoin } from "@/hooks/use-waitlist-join";
 
 export function WaitlistSection() {
-  const [formState, setFormState] = useState<FormState>("idle");
-  const [email, setEmail] = useState("");
-  const track = useTrack();
-
-  const handleSubmit = useCallback(
-    (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      const value = email.trim();
-      if (!value) return;
-      const result = storeEmail(value);
-      setFormState(result);
-      if (result === "success") {
-        track(EVENTS.WAITLIST_SUBMITTED);
-      } else {
-        track(EVENTS.WAITLIST_ALREADY_EXISTS);
-      }
-    },
-    [email, track],
-  );
+  const { state, email, setEmail, submit, track } = useWaitlistJoin({ source: "landing" });
 
   return (
     <section
@@ -104,9 +63,9 @@ export function WaitlistSection() {
         {/* Form */}
         <AnimateIn variant="fadeUp" delay={0.25}>
           <div className="mx-auto mt-10 max-w-lg">
-            {formState === "idle" ? (
+            {state === "idle" || state === "loading" || state === "error" ? (
               <form
-                onSubmit={handleSubmit}
+                onSubmit={submit}
                 className="flex flex-col sm:flex-row items-stretch gap-3"
               >
                 <label htmlFor="waitlist-email" className="sr-only">
@@ -120,15 +79,26 @@ export function WaitlistSection() {
                   onChange={(e) => setEmail(e.target.value)}
                   onFocus={() => track(EVENTS.WAITLIST_STARTED)}
                   placeholder="ton@email.com"
-                  className="flex-1 rounded-xl border border-border/60 bg-background/80 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 shadow-sm backdrop-blur-sm transition-colors focus:border-gold/60 focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  disabled={state === "loading"}
+                  className="flex-1 rounded-xl border border-border/60 bg-background/80 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 shadow-sm backdrop-blur-sm transition-colors focus:border-gold/60 focus:outline-none focus:ring-2 focus:ring-gold/20 disabled:opacity-50"
                 />
                 <button
                   type="submit"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-gold px-6 py-3 text-sm font-semibold text-background shadow-lg shadow-gold/20 transition-all duration-300 hover:bg-gold/90 hover:shadow-xl hover:shadow-gold/30 hover:scale-[1.02] active:scale-[0.98]"
+                  disabled={state === "loading"}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-gold px-6 py-3 text-sm font-semibold text-background shadow-lg shadow-gold/20 transition-all duration-300 hover:bg-gold/90 hover:shadow-xl hover:shadow-gold/30 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
                 >
-                  <Bell className="size-4" weight="fill" />
+                  {state === "loading" ? (
+                    <CircleNotch className="size-4 animate-spin" />
+                  ) : (
+                    <Bell className="size-4" weight="fill" />
+                  )}
                   Me pr&eacute;venir
                 </button>
+                {state === "error" && (
+                  <p className="text-xs text-destructive mt-1 sm:col-span-2">
+                    Une erreur est survenue. R&eacute;essaie.
+                  </p>
+                )}
               </form>
             ) : (
               <div className="flex flex-col items-center gap-3 rounded-2xl border border-gold/20 bg-gold/5 px-6 py-6 backdrop-blur-sm">
@@ -137,7 +107,7 @@ export function WaitlistSection() {
                   weight="fill"
                 />
                 <p className="text-base font-semibold text-foreground">
-                  {formState === "success"
+                  {state === "success"
                     ? "Tu es sur la liste ! On te pr\u00E9vient tr\u00E8s bient\u00F4t."
                     : "Tu es d\u00E9j\u00E0 inscrit ! On ne t\u2019oublie pas."}
                 </p>

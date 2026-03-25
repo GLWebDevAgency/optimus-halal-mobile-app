@@ -176,6 +176,13 @@
       "when": 1773561600000,
       "tag": "0024_admins",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1774440539820,
+      "tag": "0025_legal_marrow",
+      "breakpoints": true
     }
   ]
 }
