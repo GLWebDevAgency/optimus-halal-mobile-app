@@ -18,6 +18,7 @@ import { uploadRouter } from "./routers/upload.js";
 import { subscriptionRouter } from "./routers/subscription.js";
 import { referralRouter } from "./routers/referral.js";
 import { adminRouter } from "./routers/admin.js";
+import { adminWaitlistRouter } from "./routers/admin-waitlist.js";
 import { waitlistRouter } from "./routers/waitlist.js";
 
 export const appRouter = router({
@@ -40,6 +41,7 @@ export const appRouter = router({
   subscription: subscriptionRouter,
   referral: referralRouter,
   admin: adminRouter,
+  adminWaitlist: adminWaitlistRouter,
   waitlist: waitlistRouter,
 });
 
