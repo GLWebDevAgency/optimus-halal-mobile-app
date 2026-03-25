@@ -34,6 +34,9 @@ const {
   scans,
   notifications,
   notificationSettings,
+  admins,
+  waitlistLeads,
+  devices,
 } = schema;
 
 // ── Stable UUIDs for dev (deterministic, no collisions) ─────
@@ -104,6 +107,8 @@ async function main() {
     .onConflictDoUpdate({
       target: users.id,
       set: {
+        email: "dev@naqiy.fr",
+        passwordHash,
         displayName: "Mehdi Dev",
         level: 5,
         experiencePoints: 2450,
@@ -407,6 +412,158 @@ async function main() {
     .onConflictDoNothing();
   console.log("  ✓ notification settings");
 
+  // ── 11. Admin Record ─────────────────────────────────────
+  console.log("\n▶ Phase 11: Admin (super_admin)");
+  await db
+    .insert(admins)
+    .values({
+      userId: DEV_USER_ID,
+      role: "super_admin",
+    })
+    .onConflictDoUpdate({
+      target: admins.userId,
+      set: { role: "super_admin" },
+    });
+  console.log("  ✓ dev@naqiy.fr → super_admin");
+
+  // ── 12. Extra Users (for admin users page) ──────────────
+  console.log("\n▶ Phase 12: Extra Users");
+  const EXTRA_USERS = [
+    { id: "00000000-0000-4000-a000-000000000002", email: "fatima@naqiy.fr", displayName: "Fatima Benali", city: "Lyon", madhab: "maliki" as const, tier: "premium" as const, totalScans: 156, streak: 12, days: 15 },
+    { id: "00000000-0000-4000-a000-000000000003", email: "youssef@naqiy.fr", displayName: "Youssef Kaddouri", city: "Marseille", madhab: "shafii" as const, tier: "free" as const, totalScans: 23, streak: 3, days: 30 },
+    { id: "00000000-0000-4000-a000-000000000004", email: "amina@naqiy.fr", displayName: "Amina Cherif", city: "Toulouse", madhab: "hanafi" as const, tier: "premium" as const, totalScans: 89, streak: 21, days: 7 },
+    { id: "00000000-0000-4000-a000-000000000005", email: "omar@naqiy.fr", displayName: "Omar Diallo", city: "Paris", madhab: "general" as const, tier: "free" as const, totalScans: 5, streak: 1, days: 2 },
+    { id: "00000000-0000-4000-a000-000000000006", email: "sarah@naqiy.fr", displayName: "Sarah Mansouri", city: "Bordeaux", madhab: "hanbali" as const, tier: "free" as const, totalScans: 45, streak: 7, days: 20 },
+    { id: "00000000-0000-4000-a000-000000000007", email: "ibrahim@naqiy.fr", displayName: "Ibrahim Touré", city: "Lille", madhab: "maliki" as const, tier: "free" as const, totalScans: 12, streak: 0, days: 45 },
+    { id: "00000000-0000-4000-a000-000000000008", email: "khadija@naqiy.fr", displayName: "Khadija El Amrani", city: "Strasbourg", madhab: "hanafi" as const, tier: "premium" as const, totalScans: 201, streak: 30, days: 3 },
+    { id: "00000000-0000-4000-a000-000000000009", email: "bilal@naqiy.fr", displayName: "Bilal Hamidi", city: "Nantes", madhab: "shafii" as const, tier: "free" as const, totalScans: 0, streak: 0, days: 1 },
+    { id: "00000000-0000-4000-a000-00000000000a", email: "meryem@naqiy.fr", displayName: "Meryem Bouzid", city: "Nice", madhab: "general" as const, tier: "free" as const, totalScans: 67, streak: 5, days: 12, banned: true },
+    { id: "00000000-0000-4000-a000-00000000000b", email: "rachid@naqiy.fr", displayName: "Rachid Benslimane", city: "Montpellier", madhab: "maliki" as const, tier: "free" as const, totalScans: 34, streak: 2, days: 25 },
+  ];
+
+  for (const u of EXTRA_USERS) {
+    await db
+      .insert(users)
+      .values({
+        id: u.id,
+        email: u.email,
+        passwordHash,
+        displayName: u.displayName,
+        city: u.city,
+        madhab: u.madhab,
+        subscriptionTier: u.tier,
+        totalScans: u.totalScans,
+        currentStreak: u.streak,
+        longestStreak: Math.max(u.streak, 5),
+        lastScanDate: daysAgo(u.days),
+        createdAt: daysAgo(u.days + Math.floor(Math.random() * 30)),
+        isActive: !u.banned,
+      })
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          displayName: u.displayName,
+          totalScans: u.totalScans,
+          subscriptionTier: u.tier,
+          isActive: !u.banned,
+          updatedAt: new Date(),
+        },
+      });
+  }
+  console.log(`  ✓ ${EXTRA_USERS.length} extra users (all pwd: password123)`);
+
+  // ── 13. Extra scans for charts (spread over 30 days) ────
+  console.log("\n▶ Phase 13: Extra Scans (30-day spread)");
+  const allUserIds = [DEV_USER_ID, ...EXTRA_USERS.map(u => u.id)];
+  let extraScanCount = 0;
+  for (let day = 0; day < 30; day++) {
+    const numScans = Math.floor(Math.random() * 4) + 1; // 1-4 scans per day
+    for (let s = 0; s < numScans; s++) {
+      const userId = allUserIds[Math.floor(Math.random() * allUserIds.length)];
+      const productIdx = Math.floor(Math.random() * PRODUCTS.length);
+      const p = PRODUCTS[productIdx];
+      await db.insert(scans).values({
+        userId,
+        productId: PRODUCT_IDS[p.idx],
+        barcode: p.barcode,
+        halalStatus: p.halalStatus,
+        confidenceScore: p.confidenceScore,
+        scannedAt: new Date(daysAgo(day).getTime() + Math.random() * 86400000),
+      }).onConflictDoNothing();
+      extraScanCount++;
+    }
+  }
+  console.log(`  ✓ ${extraScanCount} extra scans over 30 days`);
+
+  // ── 14. Devices ─────────────────────────────────────────
+  console.log("\n▶ Phase 14: Devices");
+  const DEV_DEVICES = [
+    { deviceId: "dev-iphone-001", userId: DEV_USER_ID, platform: "ios" as const, appVersion: "2.1.0", totalScans: 30 },
+    { deviceId: "dev-android-001", userId: DEV_USER_ID, platform: "android" as const, appVersion: "2.0.5", totalScans: 12 },
+    { deviceId: "dev-android-002", userId: EXTRA_USERS[0].id, platform: "android" as const, appVersion: "2.1.0", totalScans: 100 },
+    { deviceId: "dev-iphone-002", userId: EXTRA_USERS[2].id, platform: "ios" as const, appVersion: "2.1.0", totalScans: 89 },
+  ];
+  for (const d of DEV_DEVICES) {
+    await db
+      .insert(devices)
+      .values(d)
+      .onConflictDoUpdate({
+        target: devices.deviceId,
+        set: { totalScans: d.totalScans, appVersion: d.appVersion },
+      });
+  }
+  console.log(`  ✓ ${DEV_DEVICES.length} devices`);
+
+  // ── 15. Waitlist Leads ──────────────────────────────────
+  console.log("\n▶ Phase 15: Waitlist Leads");
+  const WAITLIST = [
+    { email: "ahmed@gmail.com", source: "landing", utmSource: "google", utmMedium: "cpc", utmCampaign: "halal-app-fr", days: 1 },
+    { email: "nour@outlook.fr", source: "landing", utmSource: "instagram", utmMedium: "social", utmCampaign: "launch-teaser", days: 2 },
+    { email: "leila@yahoo.fr", source: "cta", days: 3 },
+    { email: "karim@hotmail.com", source: "navbar", utmSource: "twitter", utmMedium: "social", utmCampaign: "launch-teaser", days: 4 },
+    { email: "samira@gmail.com", source: "landing", utmSource: "google", utmMedium: "organic", days: 5 },
+    { email: "hassan@proton.me", source: "marketplace", utmSource: "tiktok", utmMedium: "social", utmCampaign: "halal-scanner", days: 6 },
+    { email: "yasmine@gmail.com", source: "landing", utmSource: "facebook", utmMedium: "social", utmCampaign: "ramadan-2026", days: 7 },
+    { email: "mourad@free.fr", source: "cta", days: 8 },
+    { email: "ines@gmail.com", source: "landing", utmSource: "google", utmMedium: "cpc", utmCampaign: "halal-app-fr", days: 9 },
+    { email: "rachid.test@gmail.com", source: "navbar", days: 10 },
+    { email: "hana@icloud.com", source: "landing", utmSource: "instagram", utmMedium: "social", utmCampaign: "launch-teaser", days: 11 },
+    { email: "ali.dev@outlook.com", source: "marketplace", utmSource: "youtube", utmMedium: "video", utmCampaign: "demo-video", days: 12 },
+    { email: "mariam@gmail.com", source: "landing", utmSource: "google", utmMedium: "organic", days: 14 },
+    { email: "sofiane@gmail.com", source: "cta", utmSource: "snapchat", utmMedium: "social", utmCampaign: "halal-scanner", days: 16 },
+    { email: "aisha@yahoo.com", source: "landing", days: 18 },
+    { email: "yassine.b@gmail.com", source: "navbar", utmSource: "google", utmMedium: "cpc", utmCampaign: "ramadan-2026", days: 20 },
+    { email: "malika@orange.fr", source: "landing", utmSource: "facebook", utmMedium: "social", utmCampaign: "launch-teaser", days: 22 },
+    { email: "samir@gmail.com", source: "marketplace", days: 24 },
+    { email: "karima@hotmail.fr", source: "landing", utmSource: "tiktok", utmMedium: "social", utmCampaign: "halal-scanner", days: 26 },
+    { email: "zineb@gmail.com", source: "cta", days: 28 },
+    { email: "tarek@proton.me", source: "landing", utmSource: "google", utmMedium: "organic", days: 1 },
+    { email: "dounia@gmail.com", source: "navbar", utmSource: "instagram", utmMedium: "social", utmCampaign: "ramadan-2026", days: 2 },
+    { email: "ayoub@outlook.fr", source: "landing", utmSource: "google", utmMedium: "cpc", utmCampaign: "halal-app-fr", days: 3 },
+    { email: "salma@gmail.com", source: "marketplace", utmSource: "youtube", utmMedium: "video", utmCampaign: "demo-video", days: 5 },
+    { email: "hamza@free.fr", source: "landing", days: 7 },
+  ];
+
+  for (const w of WAITLIST) {
+    await db
+      .insert(waitlistLeads)
+      .values({
+        email: w.email,
+        source: w.source,
+        locale: "fr",
+        utmSource: w.utmSource ?? null,
+        utmMedium: w.utmMedium ?? null,
+        utmCampaign: w.utmCampaign ?? null,
+        createdAt: daysAgo(w.days),
+        updatedAt: daysAgo(w.days),
+      })
+      .onConflictDoUpdate({
+        target: waitlistLeads.email,
+        set: { source: w.source, updatedAt: new Date() },
+      });
+  }
+  console.log(`  ✓ ${WAITLIST.length} waitlist leads`);
+
   // ── Summary ───────────────────────────────────────────────
   const counts = await Promise.all([
     db.select({ count: sql<number>`count(*)::int` }).from(users),
@@ -419,6 +576,12 @@ async function main() {
     db.select({ count: sql<number>`count(*)::int` }).from(notifications),
   ]);
 
+  const extraCounts = await Promise.all([
+    db.select({ count: sql<number>`count(*)::int` }).from(admins),
+    db.select({ count: sql<number>`count(*)::int` }).from(waitlistLeads),
+    db.select({ count: sql<number>`count(*)::int` }).from(devices),
+  ]);
+
   console.log("\n━━━ Dev Seed Complete ━━━");
   console.log(`  Users:         ${counts[0][0].count}`);
   console.log(`  Products:      ${counts[1][0].count}`);
@@ -428,7 +591,11 @@ async function main() {
   console.log(`  Favorites:     ${counts[5][0].count}`);
   console.log(`  Scans:         ${counts[6][0].count}`);
   console.log(`  Notifications: ${counts[7][0].count}`);
-  console.log("\n  🔑 Login: dev@naqiy.fr / password123");
+  console.log(`  Admins:        ${extraCounts[0][0].count}`);
+  console.log(`  Waitlist:      ${extraCounts[1][0].count}`);
+  console.log(`  Devices:       ${extraCounts[2][0].count}`);
+  console.log("\n  🔑 Admin login: dev@naqiy.fr / password123 (super_admin)");
+  console.log("  🔑 All extra users: password123");
   console.log("  📍 Stores are seeded by entrypoint.ts (real AVS/Achahada data)");
 
   await client.end();

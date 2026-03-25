@@ -71,7 +71,7 @@ internalRoutes.post("/refresh-stores", async (c) => {
     }
   })();
 
-  return c.json({ status: "accepted", lockId }, 202);
+  return c.json({ status: "accepted" }, 202);
 });
 
 // ── GET /refresh-stores/status ────────────────────────────────
@@ -111,7 +111,10 @@ internalRoutes.post("/seed-admin", async (c) => {
     // Bootstrap: create user if not found (uses argon2id like auth flow)
     if (users.length === 0) {
       const { hashPassword } = await import("../services/auth.service.js");
-      const tempPassword = "NaqiyAdmin2026!";
+      const tempPassword = process.env.ADMIN_TEMP_PASSWORD;
+      if (!tempPassword) {
+        return c.json({ error: "ADMIN_TEMP_PASSWORD env var required for bootstrap" }, 400);
+      }
       const passwordHash = await hashPassword(tempPassword);
       users = await db.execute(sql`
         INSERT INTO users (email, password_hash, display_name)

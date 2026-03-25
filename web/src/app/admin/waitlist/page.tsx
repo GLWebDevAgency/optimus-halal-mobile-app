@@ -30,13 +30,6 @@ import { ConfirmDialog } from "@/components/admin/confirm-dialog"
 
 const PAGE_SIZE = 20
 
-const sourceColors: Record<string, string> = {
-  landing: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  marketplace: "bg-purple-500/10 text-purple-400 border-purple-500/20",
-  navbar: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  cta: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-}
-
 function formatDate(date: string | Date): string {
   return new Date(date).toLocaleDateString("fr-FR", {
     day: "2-digit",
@@ -129,9 +122,9 @@ export default function WaitlistPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.isLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-              <Skeleton className="mb-2 h-4 w-20 bg-zinc-800" />
-              <Skeleton className="h-8 w-12 bg-zinc-800" />
+            <div key={i} className="rounded-xl border bg-card p-4">
+              <Skeleton className="mb-2 h-4 w-20" />
+              <Skeleton className="h-8 w-12" />
             </div>
           ))
         ) : (
@@ -154,14 +147,14 @@ export default function WaitlistPage() {
       )}
 
       {/* Table */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50">
-        <div className="flex flex-col gap-3 border-b border-zinc-800 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="rounded-xl border bg-card">
+        <div className="flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <div className="relative">
-              <MagnifyingGlass className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
+              <MagnifyingGlass className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Rechercher par email..."
-                className="w-64 border-zinc-700 bg-zinc-800/50 pl-8 text-zinc-200 placeholder:text-zinc-500"
+                className="w-64 pl-8"
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value)
@@ -170,12 +163,12 @@ export default function WaitlistPage() {
               />
             </div>
             <div className="flex items-center gap-1">
-              <Funnel className="size-4 text-zinc-500" />
+              <Funnel className="size-4 text-muted-foreground" />
               {["landing", "marketplace", "navbar", "cta"].map((src) => (
                 <Badge
                   key={src}
                   variant="outline"
-                  className={`cursor-pointer border-zinc-700 ${sourceFilter === src ? "bg-zinc-700 text-zinc-200" : "text-zinc-500"}`}
+                  className={`cursor-pointer ${sourceFilter === src ? "bg-accent text-accent-foreground" : "text-muted-foreground"}`}
                   onClick={() => {
                     setSourceFilter(sourceFilter === src ? undefined : src)
                     setPage(1)
@@ -191,7 +184,7 @@ export default function WaitlistPage() {
             {selectedIds.size > 0 && (
               <ConfirmDialog
                 trigger={
-                  <Button variant="outline" size="sm" className="border-red-800 text-red-400 hover:bg-red-500/10">
+                  <Button variant="outline" size="sm" className="border-destructive/50 text-destructive hover:bg-destructive/10">
                     <Trash className="mr-1 size-4" />
                     Supprimer ({selectedIds.size})
                   </Button>
@@ -203,12 +196,7 @@ export default function WaitlistPage() {
                 onConfirm={() => bulkDeleteMutation.mutate({ ids: [...selectedIds] })}
               />
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExportCSV}
-              className="border-zinc-700 text-zinc-300"
-            >
+            <Button variant="outline" size="sm" onClick={handleExportCSV}>
               <DownloadSimple className="mr-1 size-4" />
               Export CSV
             </Button>
@@ -217,60 +205,58 @@ export default function WaitlistPage() {
 
         <Table>
           <TableHeader>
-            <TableRow className="border-zinc-800 hover:bg-transparent">
+            <TableRow className="hover:bg-transparent">
               <TableHead className="w-10">
                 <Checkbox
                   checked={data ? selectedIds.size === data.items.length && data.items.length > 0 : false}
                   onCheckedChange={toggleSelectAll}
                 />
               </TableHead>
-              <TableHead className="text-zinc-400">Email</TableHead>
-              <TableHead className="text-zinc-400">Source</TableHead>
-              <TableHead className="text-zinc-400">Locale</TableHead>
-              <TableHead className="text-zinc-400">UTM Campaign</TableHead>
-              <TableHead className="text-right text-zinc-400">Date</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Source</TableHead>
+              <TableHead>Locale</TableHead>
+              <TableHead>UTM Campaign</TableHead>
+              <TableHead className="text-right">Date</TableHead>
               <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i} className="border-zinc-800">
+                <TableRow key={i}>
                   {Array.from({ length: 7 }).map((_, j) => (
                     <TableCell key={j}>
-                      <Skeleton className="h-5 w-20 bg-zinc-800" />
+                      <Skeleton className="h-5 w-20" />
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : data?.items.length === 0 ? (
-              <TableRow className="border-zinc-800">
-                <TableCell colSpan={7} className="py-8 text-center text-zinc-500">
+              <TableRow>
+                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                   Aucun lead trouvé.
                 </TableCell>
               </TableRow>
             ) : (
               data?.items.map((lead) => (
-                <TableRow key={lead.id} className="border-zinc-800 hover:bg-zinc-800/30">
+                <TableRow key={lead.id}>
                   <TableCell>
                     <Checkbox
                       checked={selectedIds.has(lead.id)}
                       onCheckedChange={() => toggleSelect(lead.id)}
                     />
                   </TableCell>
-                  <TableCell className="font-medium text-zinc-200">{lead.email}</TableCell>
+                  <TableCell className="font-medium">{lead.email}</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={sourceColors[lead.source] ?? "text-zinc-400"}>
-                      {lead.source}
-                    </Badge>
+                    <Badge variant="outline">{lead.source}</Badge>
                   </TableCell>
-                  <TableCell className="text-zinc-400">{lead.locale ?? "—"}</TableCell>
-                  <TableCell className="text-zinc-400">{lead.utmCampaign ?? "—"}</TableCell>
-                  <TableCell className="text-right text-zinc-500">{formatDate(lead.createdAt)}</TableCell>
+                  <TableCell className="text-muted-foreground">{lead.locale ?? "—"}</TableCell>
+                  <TableCell className="text-muted-foreground">{lead.utmCampaign ?? "—"}</TableCell>
+                  <TableCell className="text-right text-muted-foreground">{formatDate(lead.createdAt)}</TableCell>
                   <TableCell>
                     <ConfirmDialog
                       trigger={
-                        <button className="rounded p-1 text-zinc-500 hover:bg-red-500/10 hover:text-red-400">
+                        <button className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
                           <Trash className="size-4" />
                         </button>
                       }
@@ -289,8 +275,8 @@ export default function WaitlistPage() {
 
         {/* Pagination */}
         {data && data.totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-3">
-            <p className="text-xs text-zinc-500">
+          <div className="flex items-center justify-between border-t px-4 py-3">
+            <p className="text-xs text-muted-foreground">
               {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, data.total)} sur {data.total}
             </p>
             <div className="flex items-center gap-2">
@@ -299,11 +285,10 @@ export default function WaitlistPage() {
                 size="sm"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => p - 1)}
-                className="border-zinc-700 text-zinc-400"
               >
                 <CaretLeft className="size-4" />
               </Button>
-              <span className="text-xs text-zinc-400">
+              <span className="text-xs text-muted-foreground">
                 {page} / {data.totalPages}
               </span>
               <Button
@@ -311,7 +296,6 @@ export default function WaitlistPage() {
                 size="sm"
                 disabled={page >= data.totalPages}
                 onClick={() => setPage((p) => p + 1)}
-                className="border-zinc-700 text-zinc-400"
               >
                 <CaretRight className="size-4" />
               </Button>

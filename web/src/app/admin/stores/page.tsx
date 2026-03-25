@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { MagnifyingGlass, CaretLeft, CaretRight, MapPin, Star } from "@phosphor-icons/react"
 import { trpc } from "@/lib/trpc"
+import { useDebouncedValue } from "@/hooks/use-debounced-value"
 
 import {
   Card,
@@ -77,23 +78,14 @@ function getTypeVariant(storeType: string) {
 
 export default function StoresPage() {
   const [query, setQuery] = useState("")
-  const [debouncedQuery, setDebouncedQuery] = useState("")
+  const debouncedQuery = useDebouncedValue(query, 400)
   const [storeType, setStoreType] = useState<"supermarket" | "butcher" | "restaurant" | "bakery" | "abattoir" | "wholesaler" | "online" | "other" | undefined>(undefined)
   const [page, setPage] = useState(0)
-
-  // Debounce search query (300ms)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedQuery(query)
-      setPage(0)
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [query])
 
   const offset = page * LIMIT
 
   const { data, isLoading } = trpc.store.search.useQuery({
-    query: debouncedQuery,
+    query: debouncedQuery || undefined,
     storeType,
     limit: LIMIT,
     offset,
@@ -129,7 +121,7 @@ export default function StoresPage() {
                 placeholder="Rechercher par nom ou adresse..."
                 className="pl-8"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => { setQuery(e.target.value); setPage(0) }}
               />
             </div>
           </div>

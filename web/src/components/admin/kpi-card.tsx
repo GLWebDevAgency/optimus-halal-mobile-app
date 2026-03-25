@@ -22,18 +22,13 @@ export function KpiCard({ label, value, trend, icon, className }: KpiCardProps) 
       : value
 
   return (
-    <div
-      className={cn(
-        "rounded-xl border border-zinc-800 bg-zinc-900/50 p-4",
-        className
-      )}
-    >
+    <div className={cn("rounded-xl border bg-card p-4", className)}>
       <div className="flex items-center justify-between">
-        <p className="text-xs font-medium text-zinc-500">{label}</p>
-        {icon && <div className="text-zinc-600">{icon}</div>}
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        {icon && <div className="text-muted-foreground/60">{icon}</div>}
       </div>
       <div className="mt-2 flex items-end gap-2">
-        <p className="text-2xl font-bold text-zinc-50">{formattedValue}</p>
+        <p className="text-2xl font-bold text-foreground">{formattedValue}</p>
         {trend != null && (
           <span
             className={cn(
@@ -42,7 +37,7 @@ export function KpiCard({ label, value, trend, icon, className }: KpiCardProps) 
                 ? "text-emerald-400"
                 : trend < 0
                   ? "text-red-400"
-                  : "text-zinc-500"
+                  : "text-muted-foreground"
             )}
           >
             {trend > 0 ? (

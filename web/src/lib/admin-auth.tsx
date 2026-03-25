@@ -6,7 +6,6 @@ import {
   useState,
   useEffect,
   useCallback,
-  useRef,
   useMemo,
 } from "react"
 import { useRouter, usePathname } from "next/navigation"
@@ -45,17 +44,19 @@ function readStoredUser(): AdminUser | null {
 
 export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const [storedUser, setStoredUser] = useState<AdminUser | null>(readStoredUser)
-  const mounted = useRef(false)
+  const [isMounted, setIsMounted] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
 
-  // Re-verify admin status on mount if we have an existing session.
+  useEffect(() => setIsMounted(true), [])
+
+  // Re-verify admin status on mount and on window focus.
   // This catches cases where the user was removed from admins table.
   const adminCheck = trpc.admin.checkAccess.useQuery(undefined, {
     enabled: !!storedUser,
     retry: false,
-    refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
+    staleTime: 60_000, // 1 min — faster detection of revoked access
   })
 
   // Derive effective user: if admin check failed with FORBIDDEN/UNAUTHORIZED,
@@ -77,17 +78,12 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isRevoked])
 
-  // Track mount for hydration-safe redirect
-  useEffect(() => {
-    mounted.current = true
-  }, [])
-
   // Redirect to login when not authenticated (only after mount)
   useEffect(() => {
-    if (mounted.current && !user && pathname !== "/admin/login") {
+    if (isMounted && !user && pathname !== "/admin/login") {
       router.replace("/admin/login")
     }
-  }, [user, pathname, router])
+  }, [isMounted, user, pathname, router])
 
   const login = useCallback((accessToken: string, refreshToken: string, userData: Omit<AdminUser, "adminRole">, adminRole: AdminRole) => {
     const adminUser: AdminUser = { ...userData, adminRole }
@@ -106,8 +102,6 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     router.replace("/admin/login")
   }, [router])
 
-  const [isMounted, setIsMounted] = useState(false)
-  useEffect(() => setIsMounted(true), [])
   const isLoading = !isMounted
 
   return (

@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState } from "react"
 import { MagnifyingGlass, CaretLeft, CaretRight } from "@phosphor-icons/react"
 
 import { trpc } from "@/lib/trpc"
+import { useDebouncedValue } from "@/hooks/use-debounced-value"
 import {
   Card,
   CardContent,
@@ -72,40 +73,35 @@ function getScoreColor(score: number | null): string {
   return "text-destructive"
 }
 
+function formatDate(date: string | Date): string {
+  return new Date(date).toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  })
+}
+
 export default function ProductsPage() {
-  const [query, setQuery] = useState("")
-  const [debouncedQuery, setDebouncedQuery] = useState("")
-  const [halalStatus, setHalalStatus] = useState<"halal" | "haram" | "doubtful" | "unknown" | undefined>(undefined)
+  const [search, setSearch] = useState("")
+  const [halalStatus, setHalalStatus] = useState<HalalStatus | undefined>(undefined)
   const [page, setPage] = useState(0)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const handleQueryChange = useCallback((value: string) => {
-    setQuery(value)
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current)
-    }
-    debounceRef.current = setTimeout(() => {
-      setDebouncedQuery(value)
-      setPage(0)
-    }, 300)
-  }, [])
-
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current)
-      }
-    }
-  }, [])
+  const debouncedSearch = useDebouncedValue(search, 400)
 
   const offset = page * PAGE_SIZE
 
-  const { data, isLoading } = trpc.product.search.useQuery({
-    query: debouncedQuery,
-    halalStatus,
-    limit: PAGE_SIZE,
-    offset,
-  })
+  const { data, isLoading, isPlaceholderData } = trpc.product.search.useQuery(
+    {
+      query: debouncedSearch || undefined,
+      halalStatus,
+      limit: PAGE_SIZE,
+      offset,
+    },
+    {
+      staleTime: 30_000,
+      placeholderData: (prev) => prev,
+    }
+  )
 
   const items = data?.items ?? []
   const total = data?.total ?? 0
@@ -137,8 +133,11 @@ export default function ProductsPage() {
               <Input
                 placeholder="Rechercher par nom ou code-barres..."
                 className="pl-8"
-                value={query}
-                onChange={(e) => handleQueryChange(e.target.value)}
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value)
+                  setPage(0)
+                }}
               />
             </div>
           </div>
@@ -162,81 +161,69 @@ export default function ProductsPage() {
         </CardHeader>
 
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Code-barres</TableHead>
-                <TableHead>Nom</TableHead>
-                <TableHead>Marque</TableHead>
-                <TableHead>Statut Halal</TableHead>
-                <TableHead>Score confiance</TableHead>
-                <TableHead className="text-right">Dernière MAJ</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <>
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell>
-                        <Skeleton className="h-4 w-28" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-32" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-24" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-5 w-16" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-10" />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Skeleton className="ml-auto h-4 w-20" />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </>
-              ) : (
-                items.map((product) => (
-                  <TableRow key={product.id}>
-                    <TableCell className="font-mono text-xs">
-                      {product.barcode}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {product.name}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {product.brand}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusVariant(product.halalStatus)}>
-                        {getStatusLabel(product.halalStatus)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={`font-semibold ${getScoreColor(product.confidenceScore)}`}
-                      >
-                        {product.confidenceScore !== null
-                          ? product.confidenceScore
-                          : "N/A"}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right text-muted-foreground">
-                      {product.updatedAt
-                        ? new Date(product.updatedAt).toLocaleDateString(
-                            "fr-FR"
-                          )
-                        : "—"}
+          <div className={isPlaceholderData ? "opacity-60 transition-opacity" : ""}>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Code-barres</TableHead>
+                  <TableHead>Nom</TableHead>
+                  <TableHead>Marque</TableHead>
+                  <TableHead>Statut Halal</TableHead>
+                  <TableHead>Score confiance</TableHead>
+                  <TableHead className="text-right">Dernière MAJ</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <>
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-10" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="ml-auto h-4 w-20" /></TableCell>
+                      </TableRow>
+                    ))}
+                  </>
+                ) : items.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                      Aucun produit trouvé.
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  items.map((product) => (
+                    <TableRow key={product.id}>
+                      <TableCell className="font-mono text-xs">
+                        {product.barcode}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {product.name}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {product.brand}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusVariant(product.halalStatus)}>
+                          {getStatusLabel(product.halalStatus)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <span className={`font-semibold ${getScoreColor(product.confidenceScore)}`}>
+                          {product.confidenceScore !== null ? product.confidenceScore : "N/A"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right text-muted-foreground">
+                        {product.updatedAt ? formatDate(product.updatedAt) : "—"}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
 
           {/* Pagination */}
           <div className="flex items-center justify-between pt-4">

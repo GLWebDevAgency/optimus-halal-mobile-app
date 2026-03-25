@@ -1,5 +1,6 @@
 "use client"
 
+import { useId } from "react"
 import { cn } from "@/lib/utils"
 import {
   AreaChart,
@@ -26,46 +27,44 @@ function formatDate(dateStr: string) {
 export function AreaChartCard({
   title,
   data,
-  color = "#d4a853",
+  color = "hsl(var(--primary))",
   className,
 }: AreaChartCardProps) {
+  const gradientId = `gradient-${useId()}`
+
   return (
-    <div
-      className={cn(
-        "rounded-xl border border-zinc-800 bg-zinc-900/50 p-4",
-        className
-      )}
-    >
-      <h3 className="mb-4 text-sm font-medium text-zinc-400">{title}</h3>
+    <div className={cn("rounded-xl border bg-card p-4", className)}>
+      <h3 className="mb-4 text-sm font-medium text-muted-foreground">{title}</h3>
       <div className="h-[220px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data}>
             <defs>
-              <linearGradient id={`gradient-${title}`} x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={color} stopOpacity={0.3} />
                 <stop offset="100%" stopColor={color} stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+            <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
             <XAxis
               dataKey="date"
               tickFormatter={formatDate}
-              tick={{ fill: "#71717a", fontSize: 11 }}
-              axisLine={{ stroke: "#27272a" }}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+              axisLine={{ stroke: "hsl(var(--border))" }}
               tickLine={false}
             />
             <YAxis
-              tick={{ fill: "#71717a", fontSize: 11 }}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
               axisLine={false}
               tickLine={false}
               width={40}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "#18181b",
-                border: "1px solid #27272a",
+                backgroundColor: "hsl(var(--card))",
+                border: "1px solid hsl(var(--border))",
                 borderRadius: 8,
                 fontSize: 12,
+                color: "hsl(var(--foreground))",
               }}
               labelFormatter={(label) => formatDate(String(label))}
               formatter={(value) => [Number(value).toLocaleString("fr-FR"), ""]}
@@ -75,7 +74,7 @@ export function AreaChartCard({
               dataKey="count"
               stroke={color}
               strokeWidth={2}
-              fill={`url(#gradient-${title})`}
+              fill={`url(#${gradientId})`}
             />
           </AreaChart>
         </ResponsiveContainer>

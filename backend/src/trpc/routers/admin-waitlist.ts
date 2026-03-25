@@ -12,7 +12,7 @@ export const adminWaitlistRouter = router({
         page: z.number().int().min(1).default(1),
         limit: z.number().int().min(1).max(100).default(20),
         search: z.string().trim().optional(),
-        source: z.string().optional(),
+        source: z.string().max(100).optional(),
         sortBy: z.enum(["createdAt", "email", "source"]).default("createdAt"),
         sortOrder: z.enum(["asc", "desc"]).default("desc"),
       })
@@ -44,24 +44,26 @@ export const adminWaitlistRouter = router({
             : waitlistLeads.createdAt;
       const orderFn = sortOrder === "asc" ? asc : desc;
 
-      const [countResult] = await ctx.db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(waitlistLeads)
-        .where(where);
+      const [[countResult], items] = await Promise.all([
+        ctx.db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(waitlistLeads)
+          .where(where),
+        ctx.db
+          .select()
+          .from(waitlistLeads)
+          .where(where)
+          .orderBy(orderFn(sortColumn))
+          .limit(limit)
+          .offset(offset),
+      ]);
 
-      const items = await ctx.db
-        .select()
-        .from(waitlistLeads)
-        .where(where)
-        .orderBy(orderFn(sortColumn))
-        .limit(limit)
-        .offset(offset);
-
+      const total = countResult?.count ?? 0;
       return {
         items,
-        total: countResult?.count ?? 0,
+        total,
         page,
-        totalPages: Math.ceil((countResult?.count ?? 0) / limit),
+        totalPages: Math.ceil(total / limit),
       };
     }),
 
@@ -138,8 +140,10 @@ export const adminWaitlistRouter = router({
       return { success: true, deletedCount: result.length };
     }),
 
-  /** Export all waitlist leads as JSON (client converts to CSV) */
+  /** Export waitlist leads as JSON (client converts to CSV). Capped at 50k rows. */
   export: adminProcedure.query(async ({ ctx }) => {
+    logger.info("Admin: waitlist export", { by: ctx.userId });
+
     const rows = await ctx.db
       .select({
         email: waitlistLeads.email,
@@ -151,7 +155,8 @@ export const adminWaitlistRouter = router({
         createdAt: waitlistLeads.createdAt,
       })
       .from(waitlistLeads)
-      .orderBy(desc(waitlistLeads.createdAt));
+      .orderBy(desc(waitlistLeads.createdAt))
+      .limit(50_000);
 
     return rows;
   }),

@@ -65,18 +65,29 @@ export const productRouter = router({
         ? sql`${sql.join(conditions, sql` AND `)}`
         : undefined;
 
-      const items = await ctx.db
-        .select()
-        .from(products)
-        .where(where)
-        .orderBy(desc(products.updatedAt))
-        .limit(input.limit)
-        .offset(input.offset);
-
-      const [{ count }] = await ctx.db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(products)
-        .where(where);
+      const [items, [{ count }]] = await Promise.all([
+        ctx.db
+          .select({
+            id: products.id,
+            barcode: products.barcode,
+            name: products.name,
+            brand: products.brand,
+            halalStatus: products.halalStatus,
+            confidenceScore: products.confidenceScore,
+            imageUrl: products.imageUrl,
+            imageR2Key: products.imageR2Key,
+            updatedAt: products.updatedAt,
+          })
+          .from(products)
+          .where(where)
+          .orderBy(desc(products.updatedAt))
+          .limit(input.limit)
+          .offset(input.offset),
+        ctx.db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(products)
+          .where(where),
+      ]);
 
       return { items: items.map(withResolvedImage), total: count };
     }),

@@ -28,7 +28,7 @@ export default function AdminDashboardPage() {
   if (error) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-sm text-red-400">Erreur de chargement du tableau de bord.</p>
+        <p className="text-sm text-destructive">Erreur de chargement du tableau de bord.</p>
       </div>
     )
   }
@@ -39,9 +39,9 @@ export default function AdminDashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {kpiConfig.map((kpi) =>
           isLoading ? (
-            <div key={kpi.key} className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-              <Skeleton className="mb-2 h-4 w-24 bg-zinc-800" />
-              <Skeleton className="h-8 w-16 bg-zinc-800" />
+            <div key={kpi.key} className="rounded-xl border bg-card p-4">
+              <Skeleton className="mb-2 h-4 w-24" />
+              <Skeleton className="h-8 w-16" />
             </div>
           ) : (
             <KpiCard
@@ -59,13 +59,13 @@ export default function AdminDashboardPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         {isLoading ? (
           <>
-            <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-              <Skeleton className="mb-4 h-4 w-32 bg-zinc-800" />
-              <Skeleton className="h-[220px] w-full bg-zinc-800" />
+            <div className="rounded-xl border bg-card p-4">
+              <Skeleton className="mb-4 h-4 w-32" />
+              <Skeleton className="h-[220px] w-full" />
             </div>
-            <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-              <Skeleton className="mb-4 h-4 w-32 bg-zinc-800" />
-              <Skeleton className="h-[220px] w-full bg-zinc-800" />
+            <div className="rounded-xl border bg-card p-4">
+              <Skeleton className="mb-4 h-4 w-32" />
+              <Skeleton className="h-[220px] w-full" />
             </div>
           </>
         ) : (
@@ -73,7 +73,6 @@ export default function AdminDashboardPage() {
             <AreaChartCard
               title="Inscriptions (30 jours)"
               data={data?.charts.dailySignups ?? []}
-              color="#d4a853"
             />
             <AreaChartCard
               title="Scans (30 jours)"

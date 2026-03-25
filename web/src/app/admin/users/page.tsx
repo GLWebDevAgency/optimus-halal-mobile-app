@@ -59,10 +59,10 @@ export default function UsersPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
           <div className="relative">
-            <MagnifyingGlass className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
+            <MagnifyingGlass className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Rechercher par email ou nom..."
-              className="w-64 border-zinc-700 bg-zinc-800/50 pl-8 text-zinc-200 placeholder:text-zinc-500"
+              className="w-64 pl-8"
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value)
@@ -71,12 +71,12 @@ export default function UsersPage() {
             />
           </div>
           <div className="flex items-center gap-1">
-            <Funnel className="size-4 text-zinc-500" />
+            <Funnel className="size-4 text-muted-foreground" />
             {tierFilters.map((f) => (
               <Badge
                 key={f.label}
                 variant="outline"
-                className={`cursor-pointer border-zinc-700 ${tierFilter === f.value ? "bg-zinc-700 text-zinc-200" : "text-zinc-500"}`}
+                className={`cursor-pointer ${tierFilter === f.value ? "bg-accent text-accent-foreground" : "text-muted-foreground"}`}
                 onClick={() => {
                   setTierFilter(f.value)
                   setPage(1)
@@ -87,39 +87,39 @@ export default function UsersPage() {
             ))}
           </div>
         </div>
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-muted-foreground">
           {isLoading ? "Chargement..." : `${data?.total.toLocaleString("fr-FR") ?? 0} utilisateurs`}
         </p>
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50">
+      <div className="rounded-xl border bg-card">
         <Table>
           <TableHeader>
-            <TableRow className="border-zinc-800 hover:bg-transparent">
-              <TableHead className="text-zinc-400">Email</TableHead>
-              <TableHead className="text-zinc-400">Nom</TableHead>
-              <TableHead className="text-zinc-400">Tier</TableHead>
-              <TableHead className="text-zinc-400">Madhab</TableHead>
-              <TableHead className="text-zinc-400">Scans</TableHead>
-              <TableHead className="text-zinc-400">Statut</TableHead>
-              <TableHead className="text-right text-zinc-400">Inscrit le</TableHead>
+            <TableRow className="hover:bg-transparent">
+              <TableHead>Email</TableHead>
+              <TableHead>Nom</TableHead>
+              <TableHead>Tier</TableHead>
+              <TableHead>Madhab</TableHead>
+              <TableHead>Scans</TableHead>
+              <TableHead>Statut</TableHead>
+              <TableHead className="text-right">Inscrit le</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i} className="border-zinc-800">
+                <TableRow key={i}>
                   {Array.from({ length: 7 }).map((_, j) => (
                     <TableCell key={j}>
-                      <Skeleton className="h-5 w-20 bg-zinc-800" />
+                      <Skeleton className="h-5 w-20" />
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : data?.items.length === 0 ? (
-              <TableRow className="border-zinc-800">
-                <TableCell colSpan={7} className="py-8 text-center text-zinc-500">
+              <TableRow>
+                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                   Aucun utilisateur trouvé.
                 </TableCell>
               </TableRow>
@@ -127,25 +127,25 @@ export default function UsersPage() {
               data?.items.map((user) => (
                 <TableRow
                   key={user.id}
-                  className="cursor-pointer border-zinc-800 hover:bg-zinc-800/30"
+                  className="cursor-pointer"
                   onClick={() => setSelectedUserId(user.id)}
                 >
-                  <TableCell className="font-medium text-zinc-200">{user.email}</TableCell>
-                  <TableCell className="text-zinc-300">{user.displayName}</TableCell>
+                  <TableCell className="font-medium">{user.email}</TableCell>
+                  <TableCell>{user.displayName}</TableCell>
                   <TableCell>
                     <Badge
                       variant="outline"
                       className={
                         user.subscriptionTier === "premium"
-                          ? "border-gold/30 text-gold"
-                          : "border-zinc-600 text-zinc-400"
+                          ? "border-primary/30 text-primary"
+                          : ""
                       }
                     >
                       {user.subscriptionTier === "premium" ? "Naqiy+" : "Free"}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-zinc-400">{user.madhab}</TableCell>
-                  <TableCell className="font-mono text-zinc-300 tabular-nums">
+                  <TableCell className="text-muted-foreground">{user.madhab}</TableCell>
+                  <TableCell className="font-mono tabular-nums">
                     {user.totalScans.toLocaleString("fr-FR")}
                   </TableCell>
                   <TableCell>
@@ -155,7 +155,7 @@ export default function UsersPage() {
                       <Badge variant="destructive" className="text-[10px]">Banni</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-right text-zinc-500">
+                  <TableCell className="text-right text-muted-foreground">
                     {formatDate(user.createdAt)}
                   </TableCell>
                 </TableRow>
@@ -166,8 +166,8 @@ export default function UsersPage() {
 
         {/* Pagination */}
         {data && data.totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-3">
-            <p className="text-xs text-zinc-500">
+          <div className="flex items-center justify-between border-t px-4 py-3">
+            <p className="text-xs text-muted-foreground">
               {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, data.total)} sur {data.total}
             </p>
             <div className="flex items-center gap-2">
@@ -176,11 +176,10 @@ export default function UsersPage() {
                 size="sm"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => p - 1)}
-                className="border-zinc-700 text-zinc-400"
               >
                 <CaretLeft className="size-4" />
               </Button>
-              <span className="text-xs text-zinc-400">
+              <span className="text-xs text-muted-foreground">
                 {page} / {data.totalPages}
               </span>
               <Button
@@ -188,7 +187,6 @@ export default function UsersPage() {
                 size="sm"
                 disabled={page >= data.totalPages}
                 onClick={() => setPage((p) => p + 1)}
-                className="border-zinc-700 text-zinc-400"
               >
                 <CaretRight className="size-4" />
               </Button>

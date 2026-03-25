@@ -58,38 +58,38 @@ export function UserDetailSheet({ userId, onClose }: Props) {
 
   return (
     <Sheet open={!!userId} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full border-zinc-800 bg-zinc-950 sm:max-w-lg overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle className="text-zinc-50">Détail utilisateur</SheetTitle>
+      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetHeader className="border-b px-6 py-4">
+          <SheetTitle>Détail utilisateur</SheetTitle>
         </SheetHeader>
 
         {isLoading ? (
-          <div className="space-y-4 pt-4">
-            <Skeleton className="h-6 w-48 bg-zinc-800" />
-            <Skeleton className="h-4 w-32 bg-zinc-800" />
-            <Skeleton className="h-32 w-full bg-zinc-800" />
+          <div className="space-y-4 px-6 pt-2">
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-32 w-full" />
           </div>
         ) : !data ? (
-          <p className="pt-4 text-sm text-zinc-500">Utilisateur introuvable.</p>
+          <p className="px-6 pt-2 text-sm text-muted-foreground">Utilisateur introuvable.</p>
         ) : (
-          <div className="space-y-6 pt-4">
+          <div className="space-y-6 px-6 pb-6">
             {/* Profile */}
             <div className="space-y-2">
               <div className="flex items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-full bg-zinc-800">
-                  <UserIcon className="size-5 text-zinc-400" />
+                <div className="flex size-10 items-center justify-center rounded-full bg-muted">
+                  <UserIcon className="size-5 text-muted-foreground" />
                 </div>
                 <div>
-                  <p className="font-medium text-zinc-50">{data.user.displayName}</p>
-                  <p className="text-sm text-zinc-400">{data.user.email}</p>
+                  <p className="font-medium">{data.user.displayName}</p>
+                  <p className="text-sm text-muted-foreground">{data.user.email}</p>
                 </div>
               </div>
 
               <div className="flex flex-wrap gap-2 pt-1">
-                <Badge variant="outline" className={data.user.subscriptionTier === "premium" ? "border-gold text-gold" : "border-zinc-600 text-zinc-400"}>
+                <Badge variant="outline" className={data.user.subscriptionTier === "premium" ? "border-primary text-primary" : ""}>
                   {data.user.subscriptionTier === "premium" ? "Naqiy+" : "Free"}
                 </Badge>
-                <Badge variant="outline" className="border-zinc-600 text-zinc-400">
+                <Badge variant="outline">
                   {data.user.madhab}
                 </Badge>
                 {!data.user.isActive && (
@@ -104,41 +104,41 @@ export function UserDetailSheet({ userId, onClose }: Props) {
 
               <div className="grid grid-cols-2 gap-3 pt-2 text-sm">
                 <div>
-                  <p className="text-zinc-500">Scans total</p>
-                  <p className="font-mono text-zinc-200">{data.user.totalScans}</p>
+                  <p className="text-muted-foreground">Scans total</p>
+                  <p className="font-mono">{data.user.totalScans}</p>
                 </div>
                 <div>
-                  <p className="text-zinc-500">Streak</p>
-                  <p className="font-mono text-zinc-200">{data.user.currentStreak}j (max {data.user.longestStreak}j)</p>
+                  <p className="text-muted-foreground">Streak</p>
+                  <p className="font-mono">{data.user.currentStreak}j (max {data.user.longestStreak}j)</p>
                 </div>
                 <div>
-                  <p className="text-zinc-500">Inscrit le</p>
-                  <p className="text-zinc-200">{formatDate(data.user.createdAt)}</p>
+                  <p className="text-muted-foreground">Inscrit le</p>
+                  <p>{formatDate(data.user.createdAt)}</p>
                 </div>
                 <div>
-                  <p className="text-zinc-500">Ville</p>
-                  <p className="text-zinc-200">{data.user.city ?? "—"}</p>
+                  <p className="text-muted-foreground">Ville</p>
+                  <p>{data.user.city ?? "—"}</p>
                 </div>
               </div>
             </div>
 
-            <Separator className="bg-zinc-800" />
+            <Separator />
 
             {/* Devices */}
             <div>
-              <h4 className="mb-2 flex items-center gap-1.5 text-sm font-medium text-zinc-300">
+              <h4 className="mb-2 flex items-center gap-1.5 text-sm font-medium">
                 <DeviceMobile className="size-4" />
                 Appareils ({data.devices.length})
               </h4>
               {data.devices.length === 0 ? (
-                <p className="text-xs text-zinc-500">Aucun appareil enregistré.</p>
+                <p className="text-xs text-muted-foreground">Aucun appareil enregistré.</p>
               ) : (
                 <div className="space-y-2">
                   {data.devices.map((d) => (
-                    <div key={d.id} className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-2 text-xs">
+                    <div key={d.id} className="rounded-lg border bg-card p-2 text-xs">
                       <div className="flex items-center justify-between">
-                        <span className="text-zinc-300">{d.platform ?? "?"} — v{d.appVersion ?? "?"}</span>
-                        <span className="text-zinc-500">{d.totalScans} scans</span>
+                        <span>{d.platform ?? "?"} — v{d.appVersion ?? "?"}</span>
+                        <span className="text-muted-foreground">{d.totalScans} scans</span>
                       </div>
                     </div>
                   ))}
@@ -146,32 +146,30 @@ export function UserDetailSheet({ userId, onClose }: Props) {
               )}
             </div>
 
-            <Separator className="bg-zinc-800" />
+            <Separator />
 
             {/* Recent Scans */}
             <div>
-              <h4 className="mb-2 flex items-center gap-1.5 text-sm font-medium text-zinc-300">
+              <h4 className="mb-2 flex items-center gap-1.5 text-sm font-medium">
                 <Scan className="size-4" />
                 Scans récents ({data.recentScans.length})
               </h4>
               {data.recentScans.length === 0 ? (
-                <p className="text-xs text-zinc-500">Aucun scan.</p>
+                <p className="text-xs text-muted-foreground">Aucun scan.</p>
               ) : (
                 <div className="max-h-48 space-y-1 overflow-y-auto">
                   {data.recentScans.map((s) => (
-                    <div key={s.id} className="flex items-center justify-between rounded px-2 py-1 text-xs hover:bg-zinc-800/50">
-                      <div>
-                        <span className="text-zinc-200">{s.productName ?? s.barcode}</span>
-                      </div>
+                    <div key={s.id} className="flex items-center justify-between rounded px-2 py-1 text-xs hover:bg-accent">
+                      <span>{s.productName ?? s.barcode}</span>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className={
                           s.halalStatus === "halal" ? "border-emerald-500/30 text-emerald-400"
                           : s.halalStatus === "haram" ? "border-red-500/30 text-red-400"
-                          : "border-zinc-600 text-zinc-400"
+                          : ""
                         }>
                           {s.halalStatus ?? "?"}
                         </Badge>
-                        <span className="text-zinc-500">{formatDate(s.scannedAt)}</span>
+                        <span className="text-muted-foreground">{formatDate(s.scannedAt)}</span>
                       </div>
                     </div>
                   ))}
@@ -179,11 +177,11 @@ export function UserDetailSheet({ userId, onClose }: Props) {
               )}
             </div>
 
-            <Separator className="bg-zinc-800" />
+            <Separator />
 
             {/* Admin Actions */}
             <div>
-              <h4 className="mb-3 flex items-center gap-1.5 text-sm font-medium text-zinc-300">
+              <h4 className="mb-3 flex items-center gap-1.5 text-sm font-medium">
                 <ShieldCheck className="size-4" />
                 Actions administrateur
               </h4>
@@ -196,7 +194,7 @@ export function UserDetailSheet({ userId, onClose }: Props) {
                 {data.user.isActive ? (
                   <ConfirmDialog
                     trigger={
-                      <Button variant="outline" size="sm" className="border-red-800 text-red-400 hover:bg-red-500/10">
+                      <Button variant="outline" size="sm" className="border-destructive/50 text-destructive hover:bg-destructive/10">
                         <Prohibit className="mr-1 size-4" />
                         Bannir
                       </Button>
@@ -211,31 +209,34 @@ export function UserDetailSheet({ userId, onClose }: Props) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="border-emerald-800 text-emerald-400 hover:bg-emerald-500/10"
+                    className="border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10"
                     onClick={() => doAction("unban")}
                   >
                     Réactiver
                   </Button>
                 )}
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-zinc-700 text-zinc-300"
-                  onClick={() =>
+                <ConfirmDialog
+                  trigger={
+                    <Button variant="outline" size="sm">
+                      <CrownSimple className="mr-1 size-4" />
+                      {data.user.subscriptionTier === "premium" ? "→ Free" : "→ Naqiy+"}
+                    </Button>
+                  }
+                  title="Changer le tier ?"
+                  description={`${data.user.email} passera de ${data.user.subscriptionTier === "premium" ? "Naqiy+" : "Free"} à ${data.user.subscriptionTier === "premium" ? "Free" : "Naqiy+"}. Requiert super_admin.`}
+                  confirmLabel="Confirmer"
+                  onConfirm={() =>
                     doAction(
                       "change_tier",
                       data.user.subscriptionTier === "premium" ? "free" : "premium"
                     )
                   }
-                >
-                  <CrownSimple className="mr-1 size-4" />
-                  {data.user.subscriptionTier === "premium" ? "→ Free" : "→ Naqiy+"}
-                </Button>
+                />
 
                 <ConfirmDialog
                   trigger={
-                    <Button variant="outline" size="sm" className="border-zinc-700 text-zinc-300">
+                    <Button variant="outline" size="sm">
                       <Key className="mr-1 size-4" />
                       Reset MDP
                     </Button>
@@ -248,7 +249,7 @@ export function UserDetailSheet({ userId, onClose }: Props) {
 
                 <ConfirmDialog
                   trigger={
-                    <Button variant="outline" size="sm" className="border-red-800 text-red-400 hover:bg-red-500/10">
+                    <Button variant="outline" size="sm" className="border-destructive/50 text-destructive hover:bg-destructive/10">
                       <TrashSimple className="mr-1 size-4" />
                       Supprimer GDPR
                     </Button>

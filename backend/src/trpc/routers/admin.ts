@@ -16,6 +16,7 @@ import {
 import { logger } from "../../lib/logger.js";
 import { randomBytes } from "node:crypto";
 import { hashPassword } from "../../services/auth.service.js";
+import { invalidateUserTierCache } from "../context.js";
 
 export const adminRouter = router({
   // ── Dashboard Stats ─────────────────────────────────────────
@@ -51,10 +52,10 @@ export const adminRouter = router({
       // KPI 2 trend: scans 30-60 days ago
       ctx.db.select({ count: sql<number>`count(*)::int` }).from(scans)
         .where(and(gte(scans.scannedAt, prevThirtyDaysAgo), lte(scans.scannedAt, thirtyDaysAgo))),
-      // KPI 3: Total products
-      ctx.db.select({ count: sql<number>`count(*)::int` }).from(products),
-      // KPI 4: Total stores
-      ctx.db.select({ count: sql<number>`count(*)::int` }).from(stores),
+      // KPI 3: Total products (pg_class estimate — avoids 817K row seq scan)
+      ctx.db.execute(sql`SELECT reltuples::int AS count FROM pg_class WHERE relname = 'products'`),
+      // KPI 4: Total stores (pg_class estimate)
+      ctx.db.execute(sql`SELECT reltuples::int AS count FROM pg_class WHERE relname = 'stores'`),
       // KPI 5: Premium users
       ctx.db.select({ count: sql<number>`count(*)::int` }).from(users)
         .where(eq(users.subscriptionTier, "premium")),
@@ -112,11 +113,11 @@ export const adminRouter = router({
           trend: calcTrend(totalScans30d, prevScans30d),
         },
         totalProducts: {
-          value: totalProductsResult[0]?.count ?? 0,
+          value: Number((totalProductsResult[0] as { count?: number })?.count ?? 0),
           trend: null, // static count, no trend
         },
         totalStores: {
-          value: totalStoresResult[0]?.count ?? 0,
+          value: Number((totalStoresResult[0] as { count?: number })?.count ?? 0),
           trend: null,
         },
         premiumUsers: {
@@ -233,6 +234,9 @@ export const adminRouter = router({
         }
 
         case "change_tier": {
+          if (ctx.adminRole !== "super_admin") {
+            throw new TRPCError({ code: "FORBIDDEN", message: "Réservé aux super administrateurs" });
+          }
           if (!input.tier) {
             throw new TRPCError({ code: "BAD_REQUEST", message: "Tier requis" });
           }
@@ -240,18 +244,20 @@ export const adminRouter = router({
             .update(users)
             .set({ subscriptionTier: input.tier })
             .where(eq(users.id, userId));
+          await invalidateUserTierCache(userId);
           logger.info("Admin: tier changed", { userId, tier: input.tier, by: ctx.userId });
           return { success: true, message: `${user.email} → ${input.tier}` };
         }
 
         case "reset_password": {
-          const tempPassword = randomBytes(4).toString("hex"); // 8 chars
+          const tempPassword = randomBytes(16).toString("base64url"); // 128 bits
           const passwordHash = await hashPassword(tempPassword);
           await ctx.db.update(users).set({ passwordHash }).where(eq(users.id, userId));
           // Revoke all refresh tokens to force re-login
           await ctx.db.delete(refreshTokens).where(eq(refreshTokens.userId, userId));
+          // TODO: send tempPassword via email (Resend) instead of returning it
           logger.info("Admin: password reset", { userId, by: ctx.userId });
-          return { success: true, message: `Mot de passe temporaire: ${tempPassword}` };
+          return { success: true, message: `Mot de passe réinitialisé pour ${user.email}. L'utilisateur devra se reconnecter.` };
         }
 
         case "delete_gdpr": {
@@ -305,35 +311,35 @@ export const adminRouter = router({
         : users.createdAt;
       const orderFn = sortOrder === "asc" ? asc : desc;
 
-      // Count
-      const [countResult] = await ctx.db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(users)
-        .where(where);
+      const [[countResult], items] = await Promise.all([
+        ctx.db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(users)
+          .where(where),
+        ctx.db
+          .select({
+            id: users.id,
+            email: users.email,
+            displayName: users.displayName,
+            subscriptionTier: users.subscriptionTier,
+            madhab: users.madhab,
+            totalScans: users.totalScans,
+            isActive: users.isActive,
+            createdAt: users.createdAt,
+          })
+          .from(users)
+          .where(where)
+          .orderBy(orderFn(sortColumn))
+          .limit(limit)
+          .offset(offset),
+      ]);
 
-      // Data
-      const items = await ctx.db
-        .select({
-          id: users.id,
-          email: users.email,
-          displayName: users.displayName,
-          subscriptionTier: users.subscriptionTier,
-          madhab: users.madhab,
-          totalScans: users.totalScans,
-          isActive: users.isActive,
-          createdAt: users.createdAt,
-        })
-        .from(users)
-        .where(where)
-        .orderBy(orderFn(sortColumn))
-        .limit(limit)
-        .offset(offset);
-
+      const total = countResult?.count ?? 0;
       return {
         items,
-        total: countResult?.count ?? 0,
+        total,
         page,
-        totalPages: Math.ceil((countResult?.count ?? 0) / limit),
+        totalPages: Math.ceil(total / limit),
       };
     }),
 
@@ -367,9 +373,15 @@ export const adminRouter = router({
    * Used by the web admin panel after login to verify admin status.
    */
   checkAccess: protectedProcedure.query(async ({ ctx }) => {
-    const admin = await ctx.db.query.admins.findFirst({
-      where: eq(admins.userId, ctx.userId),
-    });
+    const [admin, user] = await Promise.all([
+      ctx.db.query.admins.findFirst({
+        where: eq(admins.userId, ctx.userId),
+      }),
+      ctx.db.query.users.findFirst({
+        where: eq(users.id, ctx.userId),
+        columns: safeUserColumns,
+      }),
+    ]);
 
     if (!admin) {
       throw new TRPCError({
@@ -377,11 +389,6 @@ export const adminRouter = router({
         message: "Accès réservé aux administrateurs",
       });
     }
-
-    const user = await ctx.db.query.users.findFirst({
-      where: eq(users.id, ctx.userId),
-      columns: safeUserColumns,
-    });
 
     return {
       adminId: admin.id,

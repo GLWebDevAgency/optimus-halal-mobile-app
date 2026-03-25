@@ -44,6 +44,9 @@ app.use("/trpc/store.nearby", rateLimit({ windowMs: 60_000, max: 60, keyPrefix: 
 app.use("/trpc/product.search", rateLimit({ windowMs: 60_000, max: 60, keyPrefix: "rl:search" }));
 app.use("/trpc/store.search", rateLimit({ windowMs: 60_000, max: 60, keyPrefix: "rl:search" }));
 app.use("/trpc/auth.*", rateLimit({ windowMs: 60_000, max: 100, keyPrefix: "rl:auth" }));
+// Admin mutations get tighter limits
+app.use("/trpc/admin.*", rateLimit({ windowMs: 60_000, max: 60, keyPrefix: "rl:admin" }));
+app.use("/trpc/adminWaitlist.*", rateLimit({ windowMs: 60_000, max: 60, keyPrefix: "rl:admin" }));
 // General fallback
 app.use("/trpc/*", rateLimit({ windowMs: 60_000, max: 300, keyPrefix: "rl:api" }));
 
