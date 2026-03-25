@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { List, AppleLogo, GooglePlayLogo } from "@phosphor-icons/react";
+import { List, Bell } from "@phosphor-icons/react";
 import { motion, useScroll, useTransform } from "motion/react";
 import { NaqiyLogo } from "@/components/brand/naqiy-logo";
 
@@ -73,12 +73,11 @@ export function Navbar() {
         <div className="flex items-center gap-2">
           {/* Desktop CTA */}
           <a
-            href="#"
+            href="#waitlist"
             className="hidden md:inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2 font-display font-bold text-sm text-background transition-all duration-200 hover:scale-[1.03] hover:shadow-[0_0_20px_oklch(0.76_0.14_88/15%)]"
           >
-            <AppleLogo className="size-4" weight="fill" />
-            <GooglePlayLogo className="size-4" weight="fill" />
-            <span>Télécharger</span>
+            <Bell className="size-4" weight="fill" />
+            <span>Rejoindre la liste</span>
           </a>
 
           {/* Mobile hamburger */}
@@ -108,13 +107,12 @@ export function Navbar() {
                 ))}
                 <div className="my-3 h-px bg-border" />
                 <a
-                  href="#"
+                  href="#waitlist"
                   onClick={() => setIsOpen(false)}
                   className="flex items-center justify-center gap-2 rounded-full bg-foreground px-5 py-2.5 font-display font-bold text-sm text-background transition-all duration-200 hover:scale-[1.02]"
                 >
-                  <AppleLogo className="size-4" weight="fill" />
-                  <GooglePlayLogo className="size-4" weight="fill" />
-                  <span>Télécharger</span>
+                  <Bell className="size-4" weight="fill" />
+                  <span>Rejoindre la liste</span>
                 </a>
               </nav>
             </SheetContent>

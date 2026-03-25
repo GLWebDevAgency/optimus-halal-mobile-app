@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useScroll, useTransform } from "motion/react";
-import { AppleLogo, GooglePlayLogo } from "@phosphor-icons/react";
+import { Bell } from "@phosphor-icons/react";
 
 export function MobileCTABar() {
   const { scrollYProgress } = useScroll();
@@ -15,12 +15,11 @@ export function MobileCTABar() {
     >
       <div className="mx-auto flex items-center justify-center border-t border-border/50 bg-background/80 px-4 py-3 backdrop-blur-xl">
         <a
-          href="#"
+          href="#waitlist"
           className="inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-2.5 font-display font-bold text-sm text-background transition-all duration-200 hover:scale-[1.02]"
         >
-          <AppleLogo className="size-4" weight="fill" />
-          <GooglePlayLogo className="size-4" weight="fill" />
-          <span>Télécharger</span>
+          <Bell className="size-4" weight="fill" />
+          <span>Rejoindre la liste</span>
         </a>
       </div>
     </motion.div>
