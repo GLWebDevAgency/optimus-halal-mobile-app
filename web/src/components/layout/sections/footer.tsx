@@ -25,9 +25,6 @@ const socialLinks = [
 export function Footer() {
   return (
     <footer className="relative bg-foreground pt-16 pb-8 overflow-hidden">
-      {/* Top divider — golden gradient line */}
-      <div className="absolute top-0 inset-x-0 h-px divider-gold" aria-hidden="true" />
-
       <div className="mx-auto max-w-6xl px-6 relative z-10">
         <div className="grid gap-12 md:grid-cols-4">
           {/* Col 1 — Brand */}

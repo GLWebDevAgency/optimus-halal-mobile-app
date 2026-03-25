@@ -7,7 +7,6 @@ import {
   Leaf,
   ShieldCheck,
 } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SplitText } from "@/components/animations/split-text";
 import { AnimateIn, Stagger, StaggerItem } from "@/components/animations/animate-in";
@@ -102,10 +101,6 @@ export function PricingSection() {
                     </li>
                   ))}
                 </ul>
-
-                <Button variant="outline" className="mt-6 w-full">
-                  Télécharger gratuitement
-                </Button>
               </div>
             </TiltCard>
           </StaggerItem>
@@ -161,10 +156,6 @@ export function PricingSection() {
                     </li>
                   ))}
                 </ul>
-
-                <Button className="mt-6 w-full gold-glow-intense">
-                  Passer à Naqiy+
-                </Button>
               </div>
             </TiltCard>
           </StaggerItem>
