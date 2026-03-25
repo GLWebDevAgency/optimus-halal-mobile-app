@@ -118,16 +118,12 @@ function StepNode({ step, index }: { step: Step; index: number }) {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    flexShrink: 0,
-    position: "relative",
-    zIndex: 2,
   };
 
   const lineStyle: React.CSSProperties = {
     width: 2,
     height: 22,
     borderRadius: 1,
-    marginLeft: 13, // center under 28px node
   };
 
   let iconColor: string;
@@ -152,9 +148,10 @@ function StepNode({ step, index }: { step: Step; index: number }) {
     iconColor = GOLD;
   } else {
     Object.assign(nodeStyle, {
+      width: 24,
+      height: 24,
       backgroundColor: "transparent",
       borderColor: "rgba(255,255,255,0.12)",
-      transform: "scale(0.85)",
     });
     Object.assign(lineStyle, {
       backgroundColor: "rgba(255,255,255,0.05)",
@@ -175,8 +172,9 @@ function StepNode({ step, index }: { step: Step; index: number }) {
   };
 
   return (
-    <div>
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+    <div style={{ display: "flex", gap: 12 }}>
+      {/* Left column: node + line, all centered on the same axis */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 28, flexShrink: 0 }}>
         {/* Node + glow ring */}
         <div style={{ position: "relative", width: 28, height: 28, flexShrink: 0 }}>
           {step.status === "active" && (
@@ -195,41 +193,41 @@ function StepNode({ step, index }: { step: Step; index: number }) {
               }}
             />
           )}
-          <div style={nodeStyle}>
+          <div style={{ ...nodeStyle, position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 2 }}>
             {step.status === "completed" ? <CheckIcon /> : step.icon(iconColor)}
           </div>
         </div>
 
-        {/* Label */}
-        <div style={{ flex: 1 }}>
-          <span style={labelStyle}>{step.label}</span>
-          {/* Madhab chips under step 4 */}
-          {index === 3 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
-              {madhabs.map((m) => (
-                <span
-                  key={m}
-                  style={{
-                    padding: "3px 8px",
-                    borderRadius: 8,
-                    backgroundColor: "rgba(212,175,55,0.09)",
-                    border: "1px solid rgba(212,175,55,0.15)",
-                    color: GOLD,
-                    fontSize: 10,
-                    fontWeight: 700,
-                    letterSpacing: "0.05em",
-                  }}
-                >
-                  {m}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Connecting line */}
+        {!isLast && <div style={lineStyle} />}
       </div>
 
-      {/* Connecting line */}
-      {!isLast && <div style={lineStyle} />}
+      {/* Right column: label + madhab chips */}
+      <div style={{ flex: 1, minHeight: 28 }}>
+        <span style={labelStyle}>{step.label}</span>
+        {/* Madhab chips under step 4 */}
+        {index === 3 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+            {madhabs.map((m) => (
+              <span
+                key={m}
+                style={{
+                  padding: "3px 8px",
+                  borderRadius: 8,
+                  backgroundColor: "rgba(212,175,55,0.09)",
+                  border: "1px solid rgba(212,175,55,0.15)",
+                  color: GOLD,
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: "0.05em",
+                }}
+              >
+                {m}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

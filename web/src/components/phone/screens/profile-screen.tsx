@@ -264,11 +264,11 @@ export function ProfileScreen() {
           </div>
 
           {/* Name */}
-          <div className="text-white font-bold mb-0.5" style={{ fontSize: 22 }}>Youssef M.</div>
+          <div className="text-white font-bold mb-0.5" style={{ fontSize: 22 }}>Mehdi L.</div>
 
           {/* Greeting */}
           <div className="mb-3" style={{ fontSize: 14, color: "rgba(255,255,255,0.6)" }}>
-            Salam, Youssef !
+            Salam, Mehdi !
           </div>
 
           {/* Naqiy+ badge with shimmer */}

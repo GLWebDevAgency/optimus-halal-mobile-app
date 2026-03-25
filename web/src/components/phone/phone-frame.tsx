@@ -28,9 +28,8 @@ export function PhoneFrame({ children, className }: PhoneFrameProps) {
       {/* Dynamic island */}
       <div className="absolute top-[18px] left-1/2 -translate-x-1/2 h-[22px] w-[80px] rounded-full bg-black z-20" />
 
-      {/* Screen area */}
-      <div className="absolute inset-[8px] overflow-hidden rounded-[36px] bg-black">
-        {/* Screen content at native resolution, scaled down */}
+      {/* Screen area — isolate stacking context for proper corner clipping */}
+      <div className="absolute inset-[8px] overflow-hidden rounded-[36px] bg-black" style={{ isolation: "isolate" }}>
         <div
           style={{
             position: "absolute",
@@ -40,6 +39,8 @@ export function PhoneFrame({ children, className }: PhoneFrameProps) {
             height: 812,
             transformOrigin: "top left",
             transform: `scale(${scale})`,
+            borderRadius: "36px",
+            overflow: "hidden",
           }}
         >
           {children}

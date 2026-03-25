@@ -38,8 +38,8 @@ import { Footer } from "@/components/layout/sections/footer";
    Grid (phone paired):
      1. Hero          → home
      2. Scan          → scan
-     3. Analysis      → scanLoading
-     4. ScanResult    → scanResult
+     3. ScanResult    → scanLoading
+     4. Analysis      → scanResult
      5. NaqiyScore    → scanResult
      6. SocialProof   → home
      7. Map           → map
@@ -136,11 +136,11 @@ export function LandingPhoneOrchestrator() {
             </div>
 
             <div ref={analysisRef} data-snap>
-              <AnalysisSection />
+              <ScanResultSection />
             </div>
 
             <div ref={scanResultRef} data-snap>
-              <ScanResultSection />
+              <AnalysisSection />
             </div>
 
             <div ref={naqiyScoreRef} data-snap>

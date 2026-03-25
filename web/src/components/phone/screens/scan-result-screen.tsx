@@ -6,6 +6,73 @@ import { BottomTabBar } from "./home-screen";
 const GREEN = "#22c55e";
 const GOLD = "#D4AF37";
 
+/* ── NaqiyGradeBadge strip — exact replica of mobile NaqiyGradeBadge "strip" variant ── */
+
+const TRUST_GRADES = [
+  { grade: 1, arabic: "١", color: "#22c55e" },
+  { grade: 2, arabic: "٢", color: "#84cc16" },
+  { grade: 3, arabic: "٣", color: "#f59e0b" },
+  { grade: 4, arabic: "٤", color: "#f97316" },
+  { grade: 5, arabic: "٥", color: "#ef4444" },
+];
+
+const ACTIVE_GRADE = 1;
+
+function NaqiyGradeStrip() {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 3, marginTop: 6 }}>
+      {/* Gold "N" prefix */}
+      <span
+        style={{
+          fontSize: 11,
+          fontWeight: 900,
+          color: GOLD,
+          marginRight: 2,
+        }}
+      >
+        N
+      </span>
+
+      {/* 5 grade pills — Arabic numerals */}
+      {TRUST_GRADES.map((g) => {
+        const isActive = g.grade === ACTIVE_GRADE;
+        return (
+          <div
+            key={g.grade}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 6,
+              backgroundColor: g.color,
+              opacity: isActive ? 1 : 0.2,
+              width: isActive ? 40 : 20,
+              height: isActive ? 24 : 20,
+              fontSize: isActive ? 13 : 9,
+              fontWeight: 900,
+              color: "white",
+            }}
+          >
+            {g.arabic}
+          </div>
+        );
+      })}
+
+      {/* Active label */}
+      <span
+        style={{
+          fontSize: 11,
+          fontWeight: 600,
+          color: GREEN,
+          marginLeft: 6,
+        }}
+      >
+        Très fiable
+      </span>
+    </div>
+  );
+}
+
 /* ── Icons ─────────────────────────────────────────────── */
 
 function NaqiyLogo() {
@@ -116,17 +183,17 @@ function ScoreRing({ score }: { score: number }) {
   );
 }
 
-/* ── Madhab tabs ───────────────────────────────────────── */
+/* ── Tabs — real app has "Halal" | "Santé" (NOT madhab tabs) ── */
 
-const madhabs = ["Hanafi", "Shafi'i", "Maliki", "Hanbali", "Comparaison"];
-const activeTab = "Maliki";
+const tabs = ["Halal", "Santé"];
+const activeTab = "Halal";
 
 /* ── Ingredient data ───────────────────────────────────── */
 
 const ingredients = [
   { name: "Lécithine de soja", halal: true, note: "Halal" },
   { name: "Arôme vanilline", halal: true, note: "Halal" },
-  { name: "Huile de palme", halal: true, note: "Halal (selon Maliki)" },
+  { name: "Huile de palme", halal: true, note: "Halal" },
 ];
 
 /* ── Nutrition data ────────────────────────────────────── */
@@ -150,7 +217,7 @@ export function ScanResultScreen() {
           paddingTop: 48,
           paddingLeft: 16,
           paddingRight: 16,
-          paddingBottom: 16,
+          paddingBottom: 12,
           flexShrink: 0,
         }}
       >
@@ -171,7 +238,6 @@ export function ScanResultScreen() {
                 overflow: "hidden",
               }}
             >
-              {/* Product image placeholder */}
               <div
                 style={{
                   display: "flex",
@@ -213,12 +279,12 @@ export function ScanResultScreen() {
           </div>
 
           {/* RIGHT: Info stack */}
-          <div style={{ flex: 1, paddingLeft: 12, display: "flex", flexDirection: "column", justifyContent: "center", gap: 4 }}>
+          <div style={{ flex: 1, paddingLeft: 12, display: "flex", flexDirection: "column", justifyContent: "center", gap: 2 }}>
             {/* Micro row */}
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <NaqiyLogo />
               <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
-                NAQIY SCAN · Maliki
+                NAQIY SCAN
               </span>
             </div>
 
@@ -243,15 +309,8 @@ export function ScanResultScreen() {
               Ferrero · 3017620422003
             </div>
 
-            {/* Verdict text */}
-            <div style={{ fontSize: 18, fontWeight: 700, color: GREEN, marginTop: 2 }}>
-              HALAL
-            </div>
-
-            {/* Score */}
-            <div style={{ fontSize: 13, color: GREEN }}>
-              87/100
-            </div>
+            {/* NaqiyGradeBadge strip — replaces plain "HALAL" + score */}
+            <NaqiyGradeStrip />
           </div>
         </div>
       </div>
@@ -276,39 +335,50 @@ export function ScanResultScreen() {
         </div>
       </div>
 
-      {/* ── Madhab Tabs ── */}
+      {/* ── Halal / Santé Tabs — real app tabs ── */}
       <div
         style={{
           display: "flex",
           borderBottom: "1px solid rgba(255,255,255,0.08)",
-          overflowX: "auto",
           flexShrink: 0,
+          position: "relative",
         }}
       >
-        {madhabs.map((m) => {
-          const isActive = m === activeTab;
+        {tabs.map((tab) => {
+          const isActive = tab === activeTab;
           return (
             <div
-              key={m}
+              key={tab}
               style={{
-                padding: "10px 14px",
-                fontSize: 12,
+                flex: 1,
+                padding: "10px 0",
+                fontSize: 13,
                 fontWeight: isActive ? 700 : 500,
-                color: isActive ? "white" : "rgba(255,255,255,0.35)",
-                borderBottom: isActive ? `3px solid ${GREEN}` : "3px solid transparent",
+                color: isActive ? GOLD : "rgba(255,255,255,0.35)",
+                textAlign: "center",
                 whiteSpace: "nowrap",
-                flexShrink: 0,
               }}
             >
-              {m}
+              {tab}
             </div>
           );
         })}
+        {/* Gold animated indicator under active tab */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            width: "50%",
+            height: 2,
+            backgroundColor: GOLD,
+          }}
+        />
       </div>
 
       {/* ── Scrollable content ── */}
       <div style={{ flex: 1, overflowY: "auto", paddingBottom: 120 }}>
-        {/* Verdict Card */}
+        {/* Halal Verdict Card */}
         <div
           style={{
             margin: "12px 16px",
@@ -323,7 +393,7 @@ export function ScanResultScreen() {
             <ScoreRing score={87} />
             <div>
               <div style={{ fontSize: 14, fontWeight: 700, color: "white", marginBottom: 2 }}>
-                Halal selon l&apos;école Maliki
+                Halal
               </div>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
                 Tous les ingrédients conformes
@@ -354,7 +424,7 @@ export function ScanResultScreen() {
           </div>
         </div>
 
-        {/* Health Card */}
+        {/* Health Card — Santé & Nutrition */}
         <div
           style={{
             margin: "0 16px 16px",

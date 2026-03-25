@@ -165,6 +165,7 @@ export function BottomTabBar({ activeTab = "home" }: { activeTab?: string }) {
       style={{
         backgroundColor: "#0a0a0a",
         borderTop: "1px solid rgba(255,255,255,0.06)",
+        zIndex: 20,
       }}
     >
       <TabItem
@@ -242,7 +243,7 @@ function HeroHeader() {
             className="font-extrabold"
             style={{ color: TEXT_PRIMARY, fontSize: 22, letterSpacing: -0.5 }}
           >
-            Salam, Youssef
+            Salam, Mehdi
           </span>
         </div>
 
