@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { BottomTabBar } from "./home-screen";
 
 const GREEN = "#22c55e";
 const GOLD = "#D4AF37";

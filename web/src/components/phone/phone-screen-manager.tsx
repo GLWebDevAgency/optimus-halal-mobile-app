@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { AnimatePresence, motion } from "motion/react";
 
 export interface ScreenConfig {
@@ -25,18 +25,18 @@ export function PhoneScreenManager({
 
   const currentScreen = screenMap.get(activeScreen);
 
-  const prevCategoryRef = useRef<string | undefined>(undefined);
-  const prevCategory = prevCategoryRef.current;
   const currentCategory = currentScreen?.category;
+  const [prevCategory, setPrevCategory] = useState<string | undefined>(
+    undefined
+  );
 
   const direction =
     prevCategory !== undefined && prevCategory === currentCategory
       ? "horizontal"
       : "vertical";
 
-  // Update ref after render so next render can compare (useEffect avoids Strict Mode double-render issue)
   useEffect(() => {
-    prevCategoryRef.current = currentCategory;
+    setPrevCategory(currentCategory);
   }, [currentCategory]);
 
   const variants =

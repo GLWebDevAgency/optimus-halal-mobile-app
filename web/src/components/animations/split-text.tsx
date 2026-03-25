@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useInView } from "motion/react";
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 
 interface SplitTextProps {
   children: string;
@@ -26,7 +26,18 @@ export function SplitText({
   // Split into words to preserve word boundaries (prevents mid-word line breaks)
   const words = children.split(" ");
 
-  let charIndex = 0;
+  // Pre-compute char offsets to avoid mutable variable in render
+  const charOffsets = useMemo(
+    () =>
+      words.reduce<number[]>(
+        (acc, word, i) => [
+          ...acc,
+          i === 0 ? 0 : acc[i - 1] + words[i - 1].length + 1,
+        ],
+        []
+      ),
+    [words]
+  );
 
   return (
     <Tag
@@ -39,8 +50,7 @@ export function SplitText({
       <span aria-hidden="true" style={{ perspective: "800px" }}>
         {words.map((word, wordIdx) => {
           const wordChars = word.split("");
-          const startIndex = charIndex;
-          charIndex += word.length + 1; // +1 for the space
+          const startIndex = charOffsets[wordIdx];
 
           return (
             <span key={wordIdx}>
