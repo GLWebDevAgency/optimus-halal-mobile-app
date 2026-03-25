@@ -72,6 +72,14 @@ export function Footer() {
                   Tarifs
                 </a>
               </li>
+              <li>
+                <a
+                  href="#waitlist"
+                  className="link-underline text-sm text-white/50 transition-colors duration-200 hover:text-white"
+                >
+                  Liste d&apos;attente
+                </a>
+              </li>
             </ul>
           </div>
 
