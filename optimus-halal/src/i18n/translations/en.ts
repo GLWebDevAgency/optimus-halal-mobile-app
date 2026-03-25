@@ -1807,13 +1807,11 @@ export const en: TranslationKeys = {
 
   paywall: {
     title: "You've scanned a lot today!",
-    titleAiQuota: "You've used your 3 AI analyses for today",
     titleRemaining: "You have {n} free scans left",
     subtitle: "Come back tomorrow or upgrade to Naqiy+ to continue without limits.",
-    subtitleAiQuota: "The halal verdict is always free. Upgrade to Naqiy+ for unlimited detailed analyses.",
-    subtitleRemaining: "Go further: unlimited AI analyses, full history, synced favorites.",
-    featureUnlimitedAi: "Unlimited detailed AI analyses",
+    subtitleRemaining: "Go further: full history, synced favorites, personalized profile.",
     featureUnlimitedScans: "Unlimited scans, every day",
+    featureProfile: "Create a profile and sync your data",
     featureFavorites: "Synced favorites and lists",
     featureHistory: "Complete scan history",
     featureOffline: "Offline mode (100 products)",
@@ -1827,7 +1825,6 @@ export const en: TranslationKeys = {
     subscribe: "Support Naqiy",
     later: "Later",
     scansResetInfo: "Your scans reset tomorrow at midnight",
-    aiResetInfo: "Your 3 free AI analyses reset tomorrow at midnight",
     missionFooter: "Your support helps grow the project",
     existingAccount: "I already have a Naqiy+ account",
     restorePurchases: "Restore purchases",
@@ -1837,11 +1834,5 @@ export const en: TranslationKeys = {
     trialBanner: "Free trial — {n} days left",
     trialExpired: "Your 7-day trial has ended",
     trialExpiredSubtitle: "Support the project to keep enjoying all features.",
-  },
-  aiQuota: {
-    gateTitle: "Detailed analysis reserved for Naqiy+",
-    gateSubtitle: "You've used your 3 free AI analyses today. The halal verdict is always accessible.",
-    upgradeCta: "Unlock unlimited analyses",
-    resetInfo: "Your analyses reset tomorrow at midnight",
   },
 };

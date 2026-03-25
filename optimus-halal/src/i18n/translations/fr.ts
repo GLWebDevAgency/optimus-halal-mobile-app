@@ -1836,13 +1836,11 @@ export const fr = {
 
   paywall: {
     title: "Vous avez beaucoup scanné aujourd'hui !",
-    titleAiQuota: "Vous avez utilisé vos 3 analyses IA du jour",
     titleRemaining: "Il vous reste {n} scans gratuits",
     subtitle: "Revenez demain ou passez à Naqiy+ pour continuer sans limite.",
-    subtitleAiQuota: "Le verdict halal reste toujours gratuit. Passez à Naqiy+ pour des analyses détaillées illimitées.",
-    subtitleRemaining: "Allez plus loin : analyses IA illimitées, historique complet, favoris synchronisés.",
-    featureUnlimitedAi: "Analyses IA détaillées illimitées",
+    subtitleRemaining: "Allez plus loin : historique complet, favoris synchronisés, profil personnalisé.",
     featureUnlimitedScans: "Scans illimités, chaque jour",
+    featureProfile: "Créer un profil et synchroniser vos données",
     featureFavorites: "Favoris et listes synchronisées",
     featureHistory: "Historique complet de vos scans",
     featureOffline: "Mode hors ligne (100 produits)",
@@ -1856,7 +1854,6 @@ export const fr = {
     subscribe: "Soutenir Naqiy",
     later: "Plus tard",
     scansResetInfo: "Vos scans se rechargent demain à 00h00",
-    aiResetInfo: "Vos 3 analyses IA gratuites se rechargent demain à 00h00",
     missionFooter: "Votre participation contribue à faire grandir le projet",
     existingAccount: "J'ai déjà un compte Naqiy+",
     restorePurchases: "Restaurer mes achats",
@@ -1866,12 +1863,6 @@ export const fr = {
     trialBanner: "Essai gratuit — {n} jours restants",
     trialExpired: "Votre essai de 7 jours est terminé",
     trialExpiredSubtitle: "Soutenez le projet pour continuer à profiter de toutes les fonctionnalités.",
-  },
-  aiQuota: {
-    gateTitle: "Analyse détaillée réservée à Naqiy+",
-    gateSubtitle: "Vous avez utilisé vos 3 analyses IA gratuites du jour. Le verdict halal reste toujours accessible.",
-    upgradeCta: "Débloquer les analyses illimitées",
-    resetInfo: "Vos analyses se rechargent demain à 00h00",
   },
 };
 

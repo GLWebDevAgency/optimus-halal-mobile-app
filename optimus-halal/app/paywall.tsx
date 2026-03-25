@@ -18,7 +18,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useHaptics } from "@/hooks";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
-import { useQuotaStore, DAILY_SCAN_LIMIT, DAILY_AI_ANALYSIS_LIMIT, useAiQuotaStore } from "@/store";
+import { useQuotaStore, DAILY_SCAN_LIMIT } from "@/store";
 import { trackEvent } from "@/lib/analytics";
 import { AppIcon } from "@/lib/icons";
 import { restorePurchases, isPremiumCustomer } from "@/services/purchases";
@@ -34,16 +34,14 @@ export default function PaywallScreen() {
   const { trigger = "generic" } = useLocalSearchParams<{ trigger?: PaywallTrigger }>();
   const remaining = useQuotaStore((s) => s.getRemainingScans());
   const quotaExhausted = remaining <= 0;
-  const aiRemaining = useAiQuotaStore((s) => s.getRemainingAiAnalyses());
-  const aiQuotaExhausted = aiRemaining <= 0;
   const trialExpired = useTrialStore((s) => s.hasTrialExpired());
   const [isRestoring, setIsRestoring] = React.useState(false);
   const [restoreMessage, setRestoreMessage] = React.useState<string | null>(null);
 
   // Define all features with their associated trigger
   const allFeatures = [
-    { icon: "auto-awesome" as const, text: t.paywall.featureUnlimitedAi, trigger: "ai_analysis_quota" },
     { icon: "all-inclusive" as const, text: t.paywall.featureUnlimitedScans, trigger: "scan_quota" },
+    { icon: "person-add" as const, text: t.paywall.featureProfile, trigger: "profile_creation" },
     { icon: "favorite" as const, text: t.paywall.featureFavorites, trigger: "favorites" },
     { icon: "history" as const, text: t.paywall.featureHistory, trigger: "history" },
     { icon: "cloud-download" as const, text: t.paywall.featureOffline, trigger: "offline" },
@@ -60,9 +58,7 @@ export default function PaywallScreen() {
   React.useEffect(() => {
     trackEvent("paywall_viewed", {
       remaining_scans: remaining,
-      remaining_ai: aiRemaining,
       quota_exhausted: quotaExhausted,
-      ai_quota_exhausted: aiQuotaExhausted,
       trigger,
     });
   }, []);
@@ -153,11 +149,9 @@ export default function PaywallScreen() {
           <Text className="text-2xl font-bold text-center" style={{ color: colors.textPrimary }}>
             {trialExpired
               ? t.paywall.trialExpired
-              : trigger === "ai_analysis_quota"
-                ? t.paywall.titleAiQuota
-                : quotaExhausted
-                  ? t.paywall.title
-                  : t.paywall.titleRemaining.replace("{n}", String(remaining))}
+              : quotaExhausted
+                ? t.paywall.title
+                : t.paywall.titleRemaining.replace("{n}", String(remaining))}
           </Text>
         </Animated.View>
 
@@ -166,11 +160,9 @@ export default function PaywallScreen() {
           <Text className="text-sm text-center leading-5" style={{ color: colors.textSecondary }}>
             {trialExpired
               ? t.paywall.trialExpiredSubtitle
-              : trigger === "ai_analysis_quota"
-                ? t.paywall.subtitleAiQuota
-                : quotaExhausted
-                  ? t.paywall.subtitle
-                  : t.paywall.subtitleRemaining}
+              : quotaExhausted
+                ? t.paywall.subtitle
+                : t.paywall.subtitleRemaining}
           </Text>
         </Animated.View>
 
@@ -303,9 +295,7 @@ export default function PaywallScreen() {
         {/* Reset info */}
         <Animated.View entering={FadeIn.delay(850).duration(400)} className="mt-2">
           <Text className="text-xs text-center" style={{ color: colors.textMuted }}>
-            {trigger === "ai_analysis_quota"
-              ? t.paywall.aiResetInfo
-              : t.paywall.scansResetInfo}
+            {t.paywall.scansResetInfo}
           </Text>
         </Animated.View>
 

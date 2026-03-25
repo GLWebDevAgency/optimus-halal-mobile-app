@@ -1681,13 +1681,11 @@ export const ar: TranslationKeys = {
 
   paywall: {
     title: "لقد قمت بمسح الكثير اليوم!",
-    titleAiQuota: "لقد استخدمت تحليلاتك الثلاثة بالذكاء الاصطناعي لهذا اليوم",
     titleRemaining: "لديك {n} عمليات مسح مجانية متبقية",
     subtitle: "عد غداً أو انتقل إلى Naqiy+ للمتابعة بدون حدود.",
-    subtitleAiQuota: "حكم الحلال مجاني دائماً. انتقل إلى Naqiy+ للتحليلات المفصّلة غير المحدودة.",
-    subtitleRemaining: "اذهب أبعد: تحليلات ذكاء اصطناعي غير محدودة، سجل كامل، مفضلات متزامنة.",
-    featureUnlimitedAi: "تحليلات ذكاء اصطناعي مفصّلة غير محدودة",
+    subtitleRemaining: "اذهب أبعد: سجل كامل، مفضلات متزامنة، ملف شخصي مخصّص.",
     featureUnlimitedScans: "مسح غير محدود، كل يوم",
+    featureProfile: "إنشاء ملف شخصي ومزامنة بياناتك",
     featureFavorites: "مفضلات وقوائم متزامنة",
     featureHistory: "سجل المسح الكامل",
     featureOffline: "وضع بدون إنترنت (100 منتج)",
@@ -1701,7 +1699,6 @@ export const ar: TranslationKeys = {
     subscribe: "دعم Naqiy",
     later: "لاحقاً",
     scansResetInfo: "تتجدد عمليات المسح غداً عند منتصف الليل",
-    aiResetInfo: "تتجدد تحليلاتك الثلاثة المجانية غداً عند منتصف الليل",
     missionFooter: "دعمك يساهم في تطوير المشروع",
     existingAccount: "لديّ حساب Naqiy+ بالفعل",
     restorePurchases: "استعادة المشتريات",
@@ -1711,11 +1708,5 @@ export const ar: TranslationKeys = {
     trialBanner: "تجربة مجانية — {n} أيام متبقية",
     trialExpired: "انتهت فترة التجربة لمدة 7 أيام",
     trialExpiredSubtitle: "ادعم المشروع للاستمتاع بجميع الميزات.",
-  },
-  aiQuota: {
-    gateTitle: "التحليل المفصّل حصري لـ Naqiy+",
-    gateSubtitle: "لقد استخدمت تحليلاتك الثلاثة المجانية بالذكاء الاصطناعي اليوم. حكم الحلال متاح دائماً.",
-    upgradeCta: "فتح التحليلات غير المحدودة",
-    resetInfo: "تتجدد تحليلاتك غداً عند منتصف الليل",
   },
 };

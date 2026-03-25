@@ -4,7 +4,7 @@
  */
 export type PaywallTrigger =
   | "scan_quota"        // 20 scans/day anti-abuse limit reached (rare)
-  | "ai_analysis_quota" // 3 AI analyses/day reached (primary conversion trigger)
+  | "profile_creation"  // Tried to create an account (premium feature)
   | "favorites"         // Tried to add > 3 favorites
   | "history"           // Tried to access full scan history
   | "offline"           // Tried to use offline mode

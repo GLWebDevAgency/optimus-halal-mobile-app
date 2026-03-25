@@ -1,6 +1,12 @@
 "use client";
 
-import { Check, X, Crown } from "@phosphor-icons/react";
+import {
+  Check,
+  Heart,
+  Crown,
+  Leaf,
+  ShieldCheck,
+} from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SplitText } from "@/components/animations/split-text";
@@ -12,132 +18,158 @@ import { CursorGlow } from "@/components/animations/cursor-glow";
    DATA
    ═══════════════════════════════════════════════ */
 
-interface Feature {
-  label: string;
-  included: boolean;
-}
-
-const freeFeatures: Feature[] = [
-  { label: "Scan illimité", included: true },
-  { label: "Verdict halal de base", included: true },
-  { label: "Carte des magasins", included: true },
-  { label: "1 école juridique", included: true },
-  { label: "NaqiyScore™ détaillé", included: false },
-  { label: "Analyse des ingrédients", included: false },
-  { label: "Historique complet", included: false },
+const freeFeatures = [
+  "Scan & verdict halal — toujours gratuit",
+  "Analyse IA complète de chaque produit",
+  "NaqiyScore\u2122 santé & confiance certifieur",
+  "Carte des magasins certifiés",
+  "Historique 7 jours",
 ];
 
-const plusFeatures: Feature[] = [
-  { label: "Scan illimité", included: true },
-  { label: "Verdict halal personnalisé", included: true },
-  { label: "Carte des magasins", included: true },
-  { label: "5 écoles juridiques", included: true },
-  { label: "NaqiyScore™ détaillé", included: true },
-  { label: "Analyse complète des ingrédients", included: true },
-  { label: "Historique illimité", included: true },
+const plusFeatures = [
+  "Tout le gratuit, plus :",
+  "Création de profil & synchronisation",
+  "Profil allergènes personnalisé",
+  "Profil santé (diabète, grossesse…)",
+  "4 écoles juridiques au choix",
+  "Historique illimité & favoris cloud",
+  "Mode hors ligne (100 produits)",
 ];
 
 /* ═══════════════════════════════════════════════
    COMPONENT
    ═══════════════════════════════════════════════ */
 
-function FeatureRow({ feature }: { feature: Feature }) {
-  if (feature.included) {
-    return (
-      <li className="flex items-center gap-3 text-sm text-foreground">
-        <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-leaf/10">
-          <Check className="size-3 text-leaf" weight="bold" />
-        </div>
-        {feature.label}
-      </li>
-    );
-  }
-
-  return (
-    <li className="flex items-center gap-3 text-sm text-muted-foreground/50 line-through">
-      <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-muted/50">
-        <X className="size-3 text-muted-foreground/40" weight="bold" />
-      </div>
-      {feature.label}
-    </li>
-  );
-}
-
 export { PricingSection as Pricing };
 
 export function PricingSection() {
   return (
-    <section id="pricing" className="relative flex items-center bg-secondary/30 py-20 lg:min-h-screen lg:py-32 overflow-hidden">
+    <section
+      id="pricing"
+      className="relative flex items-center bg-secondary/30 py-16 lg:min-h-svh lg:py-24 overflow-hidden"
+    >
       <CursorGlow className="mx-auto max-w-5xl px-6">
+        {/* ── Headline ── */}
         <SplitText
           as="h2"
           className="font-display text-3xl font-bold tracking-tight text-center sm:text-4xl md:text-5xl"
         >
-          Simple et transparent
+          Gratuit. Pour de vrai.
         </SplitText>
 
         <AnimateIn className="text-center">
-          <p className="text-lg text-muted-foreground mt-4">
-            Tout est gratuit. Naqiy+ pour les passionnés.
+          <p className="text-sm text-pretty text-muted-foreground mt-3 max-w-lg mx-auto md:text-base">
+            Projet indépendant — aucune pub, aucune revente de données.{" "}
+            <span className="font-semibold text-foreground">
+              Ton soutien finance directement le développement.
+            </span>
           </p>
         </AnimateIn>
 
-        <Stagger className="mt-12 grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+        {/* ── Cards ── */}
+        <Stagger className="mt-8 grid md:grid-cols-2 gap-5 max-w-3xl mx-auto">
           {/* ─── Free card ─── */}
           <StaggerItem>
             <TiltCard className="h-full">
-            <div className="rounded-2xl border border-border bg-card p-8 h-full flex flex-col transition-all duration-300 hover:border-border/80 hover:-translate-y-0.5">
-              <p className="text-2xl font-bold text-foreground">Free</p>
-              <div className="mt-2">
-                <span className="text-4xl font-black text-foreground">0&euro;</span>
-                <span className="text-sm text-muted-foreground ml-1">/mois</span>
+              <div className="rounded-2xl bg-card p-6 h-full flex flex-col shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
+                <div className="flex items-center gap-2">
+                  <Leaf className="size-5 text-leaf" weight="fill" />
+                  <p className="text-2xl font-bold text-foreground">Gratuit</p>
+                </div>
+                <div className="mt-3">
+                  <span className="text-4xl font-black text-foreground">
+                    0&euro;
+                  </span>
+                  <span className="text-sm text-muted-foreground ml-1">
+                    pour toujours
+                  </span>
+                </div>
+                <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+                  Le verdict halal est toujours là, sans mur payant.
+                  L&apos;essentiel reste accessible à tous.
+                </p>
+
+                <ul className="mt-4 space-y-2.5 flex-1">
+                  {freeFeatures.map((label) => (
+                    <li
+                      key={label}
+                      className="flex items-center gap-3 text-sm text-foreground"
+                    >
+                      <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-leaf/10">
+                        <Check className="size-3 text-leaf" weight="bold" />
+                      </div>
+                      {label}
+                    </li>
+                  ))}
+                </ul>
+
+                <Button variant="outline" className="mt-6 w-full">
+                  Télécharger gratuitement
+                </Button>
               </div>
-
-              <ul className="mt-6 space-y-3 flex-1">
-                {freeFeatures.map((f) => (
-                  <FeatureRow key={f.label} feature={f} />
-                ))}
-              </ul>
-
-              <Button variant="outline" className="mt-8 w-full">
-                Commencer gratuitement
-              </Button>
-            </div>
             </TiltCard>
           </StaggerItem>
 
           {/* ─── Naqiy+ card ─── */}
           <StaggerItem>
             <TiltCard className="h-full">
-            <div className="rounded-2xl border-2 border-gold/30 bg-card p-8 relative overflow-hidden h-full flex flex-col transition-all duration-300 hover:border-gold/50 hover:-translate-y-0.5 hover:shadow-[0_0_40px_oklch(0.78_0.17_82_/_8%)]">
-              {/* Recommended badge */}
-              <Badge className="absolute top-4 right-4 gap-1 bg-gold text-black border-0 font-bold">
-                <Crown className="size-3" weight="fill" />
-                Recommandé
-              </Badge>
+              <div className="rounded-2xl bg-card p-6 relative overflow-hidden h-full flex flex-col shadow-md ring-1 ring-gold/20 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+                {/* Soutien badge */}
+                <Badge className="absolute top-4 right-4 gap-1 bg-gold text-black border-0 font-bold">
+                  <Heart className="size-3" weight="fill" />
+                  Soutenir le projet
+                </Badge>
 
-              <p className="text-2xl font-bold text-gold">Naqiy+</p>
-              <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-4xl font-black text-foreground">4,99&euro;</span>
-                <span className="text-sm text-muted-foreground">/mois</span>
-                <span className="text-xs font-semibold text-gold bg-gold/10 px-2 py-0.5 rounded-full">
-                  &minus;40% annuel
-                </span>
+                <div className="flex items-center gap-2">
+                  <Crown className="size-5 text-gold" weight="fill" />
+                  <p className="text-2xl font-bold text-gold">Naqiy+</p>
+                </div>
+                <div className="mt-3 flex items-baseline gap-2">
+                  <span className="text-4xl font-black text-foreground">
+                    2,99&euro;
+                  </span>
+                  <span className="text-sm text-muted-foreground">/mois</span>
+                </div>
+                <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+                  Profil personnalisé, favoris cloud, historique illimité{" "}
+                  <span className="font-medium text-foreground">
+                    — et tu fais grandir un projet utile à la communauté.
+                  </span>
+                </p>
+
+                <ul className="mt-4 space-y-2.5 flex-1">
+                  {plusFeatures.map((label, i) => (
+                    <li
+                      key={label}
+                      className={`flex items-center gap-3 text-sm ${
+                        i === 0
+                          ? "text-muted-foreground font-medium"
+                          : "text-foreground"
+                      }`}
+                    >
+                      {i === 0 ? (
+                        <ShieldCheck
+                          className="size-5 shrink-0 text-gold"
+                          weight="fill"
+                        />
+                      ) : (
+                        <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-gold/10">
+                          <Check className="size-3 text-gold" weight="bold" />
+                        </div>
+                      )}
+                      {label}
+                    </li>
+                  ))}
+                </ul>
+
+                <Button className="mt-6 w-full gold-glow-intense">
+                  Passer à Naqiy+
+                </Button>
               </div>
-
-              <ul className="mt-6 space-y-3 flex-1">
-                {plusFeatures.map((f) => (
-                  <FeatureRow key={f.label} feature={f} />
-                ))}
-              </ul>
-
-              <Button className="mt-8 w-full gold-glow-intense">
-                Passer à Naqiy+
-              </Button>
-            </div>
             </TiltCard>
           </StaggerItem>
         </Stagger>
+
       </CursorGlow>
     </section>
   );

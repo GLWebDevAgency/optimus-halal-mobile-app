@@ -429,62 +429,6 @@ export const useQuotaStore = create<QuotaState>()(
 );
 
 /**
- * AI Analysis Quota State (All users — free tier gate)
- *
- * Tracks daily AI detailed analysis views.
- * Free tier: 3 detailed analyses per day.
- * Naqiy+: unlimited.
- *
- * "AI analysis" = viewing the detailed ingredient/health breakdown
- * powered by Gemini. The basic verdict (halal/haram/douteux) is always free.
- */
-export const DAILY_AI_ANALYSIS_LIMIT = 3;
-
-interface AiQuotaState {
-  dailyAiUsed: number;
-  lastAiDate: string;
-  incrementAiAnalysis: () => void;
-  getRemainingAiAnalyses: () => number;
-  resetIfNewDay: () => void;
-}
-
-export const useAiQuotaStore = create<AiQuotaState>()(
-  persist(
-    (set, get) => ({
-      dailyAiUsed: 0,
-      lastAiDate: getToday(),
-
-      incrementAiAnalysis: () => {
-        const state = get();
-        const today = getToday();
-        if (state.lastAiDate !== today) {
-          set({ dailyAiUsed: 1, lastAiDate: today });
-        } else {
-          set({ dailyAiUsed: state.dailyAiUsed + 1 });
-        }
-      },
-
-      getRemainingAiAnalyses: () => {
-        const state = get();
-        if (state.lastAiDate !== getToday()) return DAILY_AI_ANALYSIS_LIMIT;
-        return Math.max(0, DAILY_AI_ANALYSIS_LIMIT - state.dailyAiUsed);
-      },
-
-      resetIfNewDay: () => {
-        const state = get();
-        if (state.lastAiDate !== getToday()) {
-          set({ dailyAiUsed: 0, lastAiDate: getToday() });
-        }
-      },
-    }),
-    {
-      name: "ai-quota-storage",
-      storage: createJSONStorage(() => mmkvStorage),
-    }
-  )
-);
-
-/**
  * Local Favorites Store — Guest mode (3 max, MMKV)
  *
  * Allows anonymous users to save up to 3 favorites locally.

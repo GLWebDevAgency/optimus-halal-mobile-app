@@ -41,7 +41,7 @@ import Animated, {
   interpolate,
   Extrapolation,
 } from "react-native-reanimated";
-import { IconButton, LevelUpCelebration, PremiumBackground, AiAnalysisGate } from "@/components/ui";
+import { IconButton, LevelUpCelebration, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { MadhabBottomSheet } from "@/components/scan/MadhabBottomSheet";
 import { TrustScoreBottomSheet } from "@/components/scan/TrustScoreBottomSheet";
@@ -771,8 +771,7 @@ export default function ScanResultScreen() {
             <ScanResultTabBar activeTab={activeTab as 0 | 1} onTabPress={setActiveTab} scrollProgress={scrollProgress} />
           </View>
 
-          {/* PAGER: Halal (page 0) + Health (page 1) — AI-gated after 3/day */}
-          <AiAnalysisGate>
+          {/* PAGER: Halal (page 0) + Health (page 1) */}
             <ScanResultPager
             activeTab={activeTab}
             onPageChange={setActiveTab}
@@ -904,7 +903,6 @@ export default function ScanResultScreen() {
               />
             }
           />
-          </AiAnalysisGate>
 
           {/* ── Horizon divider ── */}
           <View style={[styles.horizonDivider, { backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.06)" }]} />
