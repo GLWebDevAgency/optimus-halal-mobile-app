@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Nunito, Nunito_Sans, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { PostHogProvider } from "@/lib/posthog";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -161,7 +162,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <TooltipProvider>
-            {children}
+            <PostHogProvider>
+              {children}
+            </PostHogProvider>
           </TooltipProvider>
         </ThemeProvider>
       </body>
