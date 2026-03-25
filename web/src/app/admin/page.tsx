@@ -5,282 +5,83 @@ import {
   Scan,
   Database,
   Storefront,
-  Warning,
-  Clock,
+  CrownSimple,
+  EnvelopeSimple,
 } from "@phosphor-icons/react"
-
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
 import { trpc } from "@/lib/trpc"
-
-// --- Helpers ---
-
-function formatNumber(n: number): string {
-  if (n >= 100_000) {
-    const k = Math.round(n / 1_000)
-    return `${k.toLocaleString("fr-FR")}K`
-  }
-  return n.toLocaleString("fr-FR")
-}
-
-function getVerdictVariant(status: string | null) {
-  switch (status) {
-    case "halal":
-      return "default" as const
-    case "haram":
-      return "destructive" as const
-    case "doubtful":
-      return "secondary" as const
-    default:
-      return "outline" as const
-  }
-}
-
-function getVerdictLabel(status: string | null) {
-  switch (status) {
-    case "halal":
-      return "Halal"
-    case "haram":
-      return "Haram"
-    case "doubtful":
-      return "Douteux"
-    default:
-      return "Inconnu"
-  }
-}
-
-function getSeverityClasses(severity: "critical" | "warning" | "info") {
-  switch (severity) {
-    case "critical":
-      return "bg-destructive/10 text-destructive border-destructive/20"
-    case "warning":
-      return "bg-warning/10 text-warning-foreground border-warning/20"
-    case "info":
-      return "bg-primary/10 text-primary border-primary/20"
-  }
-}
-
-function getSeverityLabel(severity: "critical" | "warning" | "info") {
-  switch (severity) {
-    case "critical":
-      return "Critique"
-    case "warning":
-      return "Attention"
-    case "info":
-      return "Info"
-  }
-}
-
-function formatDate(dateString: string | Date): string {
-  const date = new Date(dateString)
-  return date.toLocaleDateString("fr-FR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  })
-}
-
-function timeAgo(date: string | Date): string {
-  const now = new Date()
-  const d = new Date(date)
-  const diffMs = now.getTime() - d.getTime()
-  const diffMin = Math.floor(diffMs / 60000)
-  if (diffMin < 1) return "a l'instant"
-  if (diffMin < 60) return `il y a ${diffMin} min`
-  const diffH = Math.floor(diffMin / 60)
-  if (diffH < 24) return `il y a ${diffH}h`
-  const diffD = Math.floor(diffH / 24)
-  return `il y a ${diffD}j`
-}
-
-// --- KPI config ---
+import { KpiCard } from "@/components/admin/kpi-card"
+import { AreaChartCard } from "@/components/admin/area-chart-card"
 
 const kpiConfig = [
-  { key: "totalUsers" as const, label: "Utilisateurs actifs", icon: Users },
-  { key: "totalScans" as const, label: "Scans total", icon: Scan },
-  { key: "totalProducts" as const, label: "Produits en BDD", icon: Database },
-  { key: "totalStores" as const, label: "Magasins verifies", icon: Storefront },
+  { key: "totalUsers" as const, label: "Utilisateurs", icon: <Users className="size-4" /> },
+  { key: "scansLast30d" as const, label: "Scans (30j)", icon: <Scan className="size-4" /> },
+  { key: "totalProducts" as const, label: "Produits en BDD", icon: <Database className="size-4" /> },
+  { key: "totalStores" as const, label: "Magasins", icon: <Storefront className="size-4" /> },
+  { key: "premiumUsers" as const, label: "Naqiy+", icon: <CrownSimple className="size-4" /> },
+  { key: "waitlistLeads" as const, label: "Waitlist", icon: <EnvelopeSimple className="size-4" /> },
 ]
 
 export default function AdminDashboardPage() {
-  const stats = trpc.stats.global.useQuery()
-  const alerts = trpc.alert.list.useQuery({ limit: 3 })
-  const recentScans = trpc.admin.recentScans.useQuery({ limit: 5 })
+  const { data, isLoading, error } = trpc.admin.dashboardStats.useQuery()
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <p className="text-sm text-red-400">Erreur de chargement du tableau de bord.</p>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Vue d&apos;ensemble
-        </h1>
-        <p className="text-muted-foreground">
-          Bienvenue sur le tableau de bord Naqiy.
-        </p>
+      {/* KPI Grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {kpiConfig.map((kpi) =>
+          isLoading ? (
+            <div key={kpi.key} className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+              <Skeleton className="mb-2 h-4 w-24 bg-zinc-800" />
+              <Skeleton className="h-8 w-16 bg-zinc-800" />
+            </div>
+          ) : (
+            <KpiCard
+              key={kpi.key}
+              label={kpi.label}
+              value={data?.kpis[kpi.key]?.value ?? 0}
+              trend={data?.kpis[kpi.key]?.trend}
+              icon={kpi.icon}
+            />
+          )
+        )}
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {kpiConfig.map((kpi) => (
-          <Card key={kpi.key}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardDescription className="text-sm font-medium">
-                {kpi.label}
-              </CardDescription>
-              <kpi.icon className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {stats.isLoading ? (
-                <Skeleton className="h-8 w-24" />
-              ) : stats.error ? (
-                <p className="text-sm text-destructive">Erreur de chargement</p>
-              ) : (
-                <div className="text-2xl font-bold">
-                  {formatNumber(stats.data?.[kpi.key] ?? 0)}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Recent Scans */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Scans recents</CardTitle>
-            <CardDescription>
-              Les derniers scans effectues par les utilisateurs.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {recentScans.isLoading ? (
-              <div className="space-y-3">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-10 w-full" />
-                ))}
-              </div>
-            ) : recentScans.error ? (
-              <p className="text-sm text-destructive">
-                Erreur de chargement des scans.
-              </p>
-            ) : recentScans.data?.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Aucun scan enregistre.
-              </p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Code-barres</TableHead>
-                    <TableHead>Produit</TableHead>
-                    <TableHead>Utilisateur</TableHead>
-                    <TableHead>Verdict</TableHead>
-                    <TableHead className="text-right">Heure</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentScans.data?.map((scan) => (
-                    <TableRow key={scan.id}>
-                      <TableCell className="font-mono text-xs">
-                        {scan.barcode}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {scan.productName ?? "Produit inconnu"}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {scan.userEmail ?? "—"}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getVerdictVariant(scan.halalStatus)}>
-                          {getVerdictLabel(scan.halalStatus)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right text-muted-foreground">
-                        {timeAgo(scan.scannedAt)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Active Alerts */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Warning className="size-4 text-warning" />
-              Alertes actives
-            </CardTitle>
-            <CardDescription>
-              {alerts.isLoading
-                ? "Chargement..."
-                : alerts.error
-                  ? "Erreur de chargement"
-                  : `${alerts.data?.items.length ?? 0} alerte${(alerts.data?.items.length ?? 0) > 1 ? "s" : ""} en cours.`}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {alerts.isLoading ? (
-              <p className="text-sm text-muted-foreground">Chargement...</p>
-            ) : alerts.error ? (
-              <p className="text-sm text-destructive">
-                Impossible de charger les alertes.
-              </p>
-            ) : alerts.data?.items.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Aucune alerte active.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {alerts.data?.items.map((alert) => (
-                  <div
-                    key={alert.id}
-                    className={`rounded-lg border p-3 ${getSeverityClasses(alert.severity as "critical" | "warning" | "info")}`}
-                  >
-                    <div className="mb-1 flex items-center gap-2">
-                      <Badge
-                        variant={
-                          alert.severity === "critical"
-                            ? "destructive"
-                            : alert.severity === "warning"
-                              ? "secondary"
-                              : "default"
-                        }
-                        className="text-[10px]"
-                      >
-                        {getSeverityLabel(alert.severity as "critical" | "warning" | "info")}
-                      </Badge>
-                    </div>
-                    <p className="text-sm font-medium">{alert.title}</p>
-                    <div className="mt-1 flex items-center gap-1 text-xs opacity-70">
-                      <Clock className="size-3" />
-                      {alert.publishedAt
-                        ? formatDate(alert.publishedAt)
-                        : formatDate(alert.createdAt)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* Charts */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        {isLoading ? (
+          <>
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+              <Skeleton className="mb-4 h-4 w-32 bg-zinc-800" />
+              <Skeleton className="h-[220px] w-full bg-zinc-800" />
+            </div>
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+              <Skeleton className="mb-4 h-4 w-32 bg-zinc-800" />
+              <Skeleton className="h-[220px] w-full bg-zinc-800" />
+            </div>
+          </>
+        ) : (
+          <>
+            <AreaChartCard
+              title="Inscriptions (30 jours)"
+              data={data?.charts.dailySignups ?? []}
+              color="#d4a853"
+            />
+            <AreaChartCard
+              title="Scans (30 jours)"
+              data={data?.charts.dailyScans ?? []}
+              color="#34d399"
+            />
+          </>
+        )}
       </div>
     </div>
   )

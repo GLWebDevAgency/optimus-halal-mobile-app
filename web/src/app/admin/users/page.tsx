@@ -1,18 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { MagnifyingGlass, CaretLeft, CaretRight } from "@phosphor-icons/react"
-
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+  MagnifyingGlass,
+  CaretLeft,
+  CaretRight,
+  Funnel,
+} from "@phosphor-icons/react"
 import {
   Table,
   TableBody,
@@ -21,8 +15,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { trpc } from "@/lib/trpc"
+import { useDebouncedValue } from "@/hooks/use-debounced-value"
+import { UserDetailSheet } from "@/components/admin/user-detail-sheet"
 
 const PAGE_SIZE = 20
 
@@ -31,25 +30,6 @@ const tierFilters = [
   { label: "Free", value: "free" as const },
   { label: "Naqiy+", value: "premium" as const },
 ]
-
-function getTierVariant(tier: string) {
-  return tier === "premium" ? ("default" as const) : ("secondary" as const)
-}
-
-function getTierLabel(tier: string) {
-  return tier === "premium" ? "Naqiy+" : "Free"
-}
-
-function formatMadhab(madhab: string) {
-  const map: Record<string, string> = {
-    hanafi: "Hanafi",
-    shafii: "Shafi'i",
-    maliki: "Maliki",
-    hanbali: "Hanbali",
-    general: "General",
-  }
-  return map[madhab] ?? madhab
-}
 
 function formatDate(date: string | Date): string {
   return new Date(date).toLocaleDateString("fr-FR", {
@@ -62,8 +42,9 @@ function formatDate(date: string | Date): string {
 export default function UsersPage() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState("")
-  const [debouncedSearch, setDebouncedSearch] = useState("")
-  const [tierFilter, setTierFilter] = useState<"free" | "premium" | undefined>(undefined)
+  const debouncedSearch = useDebouncedValue(search, 400)
+  const [tierFilter, setTierFilter] = useState<"free" | "premium" | undefined>()
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
 
   const { data, isLoading } = trpc.admin.listUsers.useQuery({
     page,
@@ -72,151 +53,152 @@ export default function UsersPage() {
     tier: tierFilter,
   })
 
-  // Simple debounce on search
-  const handleSearch = (value: string) => {
-    setSearch(value)
-    setPage(1)
-    // Debounce 400ms
-    const timeout = setTimeout(() => setDebouncedSearch(value), 400)
-    return () => clearTimeout(timeout)
-  }
-
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Utilisateurs</h1>
-        <p className="text-muted-foreground">
-          Gestion des utilisateurs inscrits sur la plateforme.
-        </p>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <CardTitle>Liste des utilisateurs</CardTitle>
-              <CardDescription>
-                {isLoading
-                  ? "Chargement..."
-                  : `${data?.total.toLocaleString("fr-FR") ?? 0} utilisateurs inscrits au total.`}
-              </CardDescription>
-            </div>
-            <div className="relative w-full max-w-xs">
-              <MagnifyingGlass className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher par email ou nom..."
-                className="pl-8"
-                value={search}
-                onChange={(e) => handleSearch(e.target.value)}
-              />
-            </div>
+    <div className="space-y-4">
+      {/* Toolbar */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <MagnifyingGlass className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
+            <Input
+              placeholder="Rechercher par email ou nom..."
+              className="w-64 border-zinc-700 bg-zinc-800/50 pl-8 text-zinc-200 placeholder:text-zinc-500"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value)
+                setPage(1)
+              }}
+            />
           </div>
-
-          <div className="flex flex-wrap gap-2 pt-2">
-            {tierFilters.map((filter) => (
+          <div className="flex items-center gap-1">
+            <Funnel className="size-4 text-zinc-500" />
+            {tierFilters.map((f) => (
               <Badge
-                key={filter.label}
-                variant={tierFilter === filter.value ? "default" : "outline"}
-                className="cursor-pointer"
+                key={f.label}
+                variant="outline"
+                className={`cursor-pointer border-zinc-700 ${tierFilter === f.value ? "bg-zinc-700 text-zinc-200" : "text-zinc-500"}`}
                 onClick={() => {
-                  setTierFilter(filter.value)
+                  setTierFilter(f.value)
                   setPage(1)
                 }}
               >
-                {filter.label}
+                {f.label}
               </Badge>
             ))}
           </div>
-        </CardHeader>
+        </div>
+        <p className="text-xs text-zinc-500">
+          {isLoading ? "Chargement..." : `${data?.total.toLocaleString("fr-FR") ?? 0} utilisateurs`}
+        </p>
+      </div>
 
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Nom</TableHead>
-                <TableHead>Tier</TableHead>
-                <TableHead>Madhab</TableHead>
-                <TableHead>Scans</TableHead>
-                <TableHead className="text-right">Inscrit le</TableHead>
+      {/* Table */}
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-zinc-800 hover:bg-transparent">
+              <TableHead className="text-zinc-400">Email</TableHead>
+              <TableHead className="text-zinc-400">Nom</TableHead>
+              <TableHead className="text-zinc-400">Tier</TableHead>
+              <TableHead className="text-zinc-400">Madhab</TableHead>
+              <TableHead className="text-zinc-400">Scans</TableHead>
+              <TableHead className="text-zinc-400">Statut</TableHead>
+              <TableHead className="text-right text-zinc-400">Inscrit le</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i} className="border-zinc-800">
+                  {Array.from({ length: 7 }).map((_, j) => (
+                    <TableCell key={j}>
+                      <Skeleton className="h-5 w-20 bg-zinc-800" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : data?.items.length === 0 ? (
+              <TableRow className="border-zinc-800">
+                <TableCell colSpan={7} className="py-8 text-center text-zinc-500">
+                  Aucun utilisateur trouvé.
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}>
-                    {Array.from({ length: 6 }).map((_, j) => (
-                      <TableCell key={j}>
-                        <Skeleton className="h-5 w-24" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : data?.items.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                    Aucun utilisateur trouve.
+            ) : (
+              data?.items.map((user) => (
+                <TableRow
+                  key={user.id}
+                  className="cursor-pointer border-zinc-800 hover:bg-zinc-800/30"
+                  onClick={() => setSelectedUserId(user.id)}
+                >
+                  <TableCell className="font-medium text-zinc-200">{user.email}</TableCell>
+                  <TableCell className="text-zinc-300">{user.displayName}</TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={
+                        user.subscriptionTier === "premium"
+                          ? "border-gold/30 text-gold"
+                          : "border-zinc-600 text-zinc-400"
+                      }
+                    >
+                      {user.subscriptionTier === "premium" ? "Naqiy+" : "Free"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-zinc-400">{user.madhab}</TableCell>
+                  <TableCell className="font-mono text-zinc-300 tabular-nums">
+                    {user.totalScans.toLocaleString("fr-FR")}
+                  </TableCell>
+                  <TableCell>
+                    {user.isActive ? (
+                      <span className="text-xs text-emerald-400">Actif</span>
+                    ) : (
+                      <Badge variant="destructive" className="text-[10px]">Banni</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right text-zinc-500">
+                    {formatDate(user.createdAt)}
                   </TableCell>
                 </TableRow>
-              ) : (
-                data?.items.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.email}</TableCell>
-                    <TableCell>{user.displayName}</TableCell>
-                    <TableCell>
-                      <Badge variant={getTierVariant(user.subscriptionTier)}>
-                        {getTierLabel(user.subscriptionTier)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {formatMadhab(user.madhab)}
-                    </TableCell>
-                    <TableCell className="tabular-nums">
-                      {user.totalScans.toLocaleString("fr-FR")}
-                    </TableCell>
-                    <TableCell className="text-right text-muted-foreground">
-                      {formatDate(user.createdAt)}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+              ))
+            )}
+          </TableBody>
+        </Table>
 
-          {data && data.totalPages > 0 && (
-            <div className="flex items-center justify-between pt-4">
-              <p className="text-sm text-muted-foreground">
-                Affichage de {(page - 1) * PAGE_SIZE + 1} a{" "}
-                {Math.min(page * PAGE_SIZE, data.total)} sur{" "}
-                {data.total.toLocaleString("fr-FR")} utilisateurs
-              </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => p - 1)}
-                >
-                  <CaretLeft className="size-4" />
-                  <span className="sr-only">Page precedente</span>
-                </Button>
-                <span className="text-sm font-medium">
-                  Page {page} / {data.totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= data.totalPages}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  <CaretRight className="size-4" />
-                  <span className="sr-only">Page suivante</span>
-                </Button>
-              </div>
+        {/* Pagination */}
+        {data && data.totalPages > 1 && (
+          <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-3">
+            <p className="text-xs text-zinc-500">
+              {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, data.total)} sur {data.total}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+                className="border-zinc-700 text-zinc-400"
+              >
+                <CaretLeft className="size-4" />
+              </Button>
+              <span className="text-xs text-zinc-400">
+                {page} / {data.totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= data.totalPages}
+                onClick={() => setPage((p) => p + 1)}
+                className="border-zinc-700 text-zinc-400"
+              >
+                <CaretRight className="size-4" />
+              </Button>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        )}
+      </div>
+
+      {/* Detail Sheet */}
+      <UserDetailSheet userId={selectedUserId} onClose={() => setSelectedUserId(null)} />
     </div>
   )
 }

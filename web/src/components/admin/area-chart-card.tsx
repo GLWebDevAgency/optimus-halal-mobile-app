@@ -67,8 +67,8 @@ export function AreaChartCard({
                 borderRadius: 8,
                 fontSize: 12,
               }}
-              labelFormatter={formatDate}
-              formatter={(value: number) => [value.toLocaleString("fr-FR"), ""]}
+              labelFormatter={(label) => formatDate(String(label))}
+              formatter={(value) => [Number(value).toLocaleString("fr-FR"), ""]}
             />
             <Area
               type="monotone"
