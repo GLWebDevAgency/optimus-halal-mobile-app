@@ -335,13 +335,20 @@ function DesktopSection() {
 
   /*
    * Architecture : deux panels absolute inset-0, synchronisés.
-   * Les deux panels bougent exactement dans la même fenêtre de scroll.
-   * Panel 1 glisse vers la GAUCHE pendant que Panel 2 entre par la DROITE.
-   * Transition pure translateX (pas de fondu) — comme un swipe iOS.
-   * L'overflow-hidden clippe les deux panels proprement.
+   * Transition pure translateX — swipe iOS.
+   * Easing Apple (ease-in-out cubic fort) : lent aux bords → rapide au centre → lent à l'arrivée.
+   * Scale subtil : le panel sortant rétrécit légèrement, l'entrant s'agrandit → profondeur iOS.
    */
-  const p1X = useTransform(scrollYProgress, [0.30, 0.65], ["0%", "-100%"]);
-  const p2X = useTransform(scrollYProgress, [0.30, 0.65], ["100%", "0%"]);
+
+  // Courbe Apple : ease-in-out cubic fort, signature des transitions iOS/macOS
+  const easeApple = (t: number) =>
+    t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+  const p1X     = useTransform(scrollYProgress, [0.30, 0.65], ["0%", "-100%"], { ease: easeApple });
+  const p2X     = useTransform(scrollYProgress, [0.30, 0.65], ["100%", "0%"],  { ease: easeApple });
+  // Scale : sortant se rétracte, entrant s'avance — crée la sensation de profondeur
+  const p1Scale = useTransform(scrollYProgress, [0.30, 0.65], [1, 0.96],       { ease: easeApple });
+  const p2Scale = useTransform(scrollYProgress, [0.30, 0.65], [0.96, 1],       { ease: easeApple });
 
   return (
     <div
@@ -388,6 +395,8 @@ function DesktopSection() {
               paddingTop: "140px",
               paddingBottom: "56px",
               translateX: p1X,
+              scale: p1Scale,
+              willChange: "transform",
             }}
           >
             <HalalPanelContent />
@@ -400,6 +409,8 @@ function DesktopSection() {
               paddingTop: "140px",
               paddingBottom: "56px",
               translateX: p2X,
+              scale: p2Scale,
+              willChange: "transform",
             }}
           >
             <SantePanelContent />
