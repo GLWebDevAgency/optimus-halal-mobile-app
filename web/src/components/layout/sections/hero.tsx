@@ -105,7 +105,7 @@ export function Hero() {
             className="mb-5 gap-1.5 border-leaf/30 bg-leaf/5 px-3 py-1 text-leaf"
           >
             <Leaf className="size-3" weight="fill" />
-            L&apos;information halal, enfin claire
+            Est-ce que c&apos;est vraiment halal ?
           </Badge>
         </AnimateIn>
 
@@ -127,7 +127,7 @@ export function Hero() {
         {/* Subtitle */}
         <AnimateIn variant="fadeUp" delay={0.6} ssrVisible>
           <p className="mt-4 max-w-lg text-base leading-relaxed text-pretty text-muted-foreground md:text-lg">
-            E471, gélatine, arômes &laquo;&thinsp;naturels&thinsp;&raquo; — tu mérites de savoir.
+            Tu retournes un paquet, tu lis gélatine, E471, lécithine… Tu comprends rien.
             Naqiy décrypte chaque produit pour que tu puisses{" "}
             <span className="font-semibold text-foreground">nourrir ta famille en confiance</span>.
           </p>

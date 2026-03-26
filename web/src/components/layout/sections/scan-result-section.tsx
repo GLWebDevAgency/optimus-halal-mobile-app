@@ -39,15 +39,15 @@ export function ScanResultSection() {
           ssrVisible
           className="font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl"
         >
-          3 secondes. Zéro doute.
+          Des sources. Pas des suppositions.
         </SplitText>
 
         <AnimateIn variant="fadeUp" delay={0.2}>
           <p className="mt-6 max-w-lg text-lg leading-relaxed text-pretty text-muted-foreground">
-            Plus besoin de chercher pendant des heures. Tu scannes, tu sais.
-            Et si tu veux comprendre{" "}
-            <span className="font-semibold text-foreground">pourquoi</span>,
-            tout est là — sources incluses.
+            Chaque ingrédient est décrypté — statut, source, dalil.
+            Quand il y a une divergence entre les savants,{" "}
+            <span className="font-semibold text-foreground">on ne te la cache pas</span>.
+            On te dit ce qu&apos;il en est, et c&apos;est toi qui fais ton choix.
           </p>
         </AnimateIn>
 

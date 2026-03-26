@@ -44,7 +44,8 @@ export function AnalysisSection() {
           <p className="mt-4 max-w-lg text-base leading-relaxed text-pretty text-muted-foreground md:text-lg">
             On est tous passés par là : retourner un paquet, lire une liste incompréhensible, et reposer le produit{" "}
             <span className="font-semibold text-foreground">sans vraiment savoir</span>.
-            C&apos;est terminé.
+            Allah nous a donné une responsabilité individuelle. Ce verset s&apos;adresse à chacun de nous — pas au voisin, pas au vendeur.{" "}
+            <span className="font-semibold text-foreground">À toi.</span>
           </p>
 
           {/* Quranic verse — pull-quote */}
@@ -56,6 +57,20 @@ export function AnalysisSection() {
               Mangez de ce qui est sur terre, licite et pur — Al-Baqara, 2:168
             </cite>
           </blockquote>
+
+          {/* Hadith on doubt */}
+          <blockquote className="mt-4 border-l-2 border-gold/30 pl-5">
+            <p className="text-base text-gold/80 leading-relaxed" lang="ar" dir="rtl">
+              «&thinsp;دَعْ مَا يَرِيبُكَ إِلَىٰ مَا لَا يَرِيبُكَ&thinsp;»
+            </p>
+            <cite className="mt-1.5 block text-sm not-italic text-muted-foreground/60">
+              Délaisse ce qui te fait douter pour ce qui ne te fait pas douter — At-Tirmidhi
+            </cite>
+          </blockquote>
+
+          <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
+            Naqiy t&apos;aide à appliquer ce principe concrètement, au quotidien.
+          </p>
         </AnimateIn>
 
         <Stagger className="mt-6 space-y-2.5">

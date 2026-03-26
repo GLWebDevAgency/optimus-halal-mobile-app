@@ -30,15 +30,15 @@ export function ScanSection() {
           ssrVisible
           className="font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl"
         >
-          Un doute ? Scanne.
+          Un doute ? Un scan. C&apos;est réglé.
         </SplitText>
 
         {/* Subtitle */}
         <AnimateIn variant="fadeUp" delay={0.2}>
           <p className="mt-6 max-w-lg text-lg leading-relaxed text-pretty text-muted-foreground">
-            Au supermarché, devant le rayon, tu hésites. Un scan suffit.
-            En quelques secondes, tu sais{" "}
-            <span className="font-semibold text-foreground">exactement</span> ce qu&apos;il y a dedans.
+            Tu cherches &laquo;&thinsp;E471 halal ou haram&thinsp;&raquo; et tu trouves des avis contradictoires,
+            sans sources claires. Au final, tu achètes dans le doute ou tu reposes le produit.{" "}
+            <span className="font-semibold text-foreground">Naqiy te donne une réponse sourcée, en un scan.</span>
           </p>
         </AnimateIn>
 

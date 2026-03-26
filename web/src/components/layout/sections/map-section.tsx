@@ -42,9 +42,12 @@ export function MapSection() {
 
         <AnimateIn variant="fadeUp" delay={0.2}>
           <p className="mt-6 max-w-lg text-lg leading-relaxed text-pretty text-muted-foreground">
-            T&apos;en as marre de demander &laquo;&thinsp;c&apos;est vraiment halal ici ?&thinsp;&raquo;
-            Chaque adresse est vérifiée. Tu y vas{" "}
-            <span className="font-semibold text-foreground">l&apos;esprit tranquille</span>.
+            Trouver une boucherie halal fiable ou un restaurant certifié près de chez soi,
+            avec les bonnes infos — c&apos;est pas toujours simple.
+            Des milliers de musulmans vivent cette difficulté dans leur ville.{" "}
+            <span className="font-semibold text-foreground">
+              Naqiy t&apos;accompagne aussi dehors.
+            </span>
           </p>
         </AnimateIn>
 

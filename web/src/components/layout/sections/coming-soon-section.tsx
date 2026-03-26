@@ -24,28 +24,28 @@ import { useWaitlistJoin } from "@/hooks/use-waitlist-join";
 
 const pillars = [
   {
-    icon: HandHeart,
-    accent: "from-amber-500/20 to-orange-500/10",
-    iconColor: "text-amber-600 dark:text-amber-400",
-    title: "Ceux qui font les choses bien",
-    description:
-      "Petits pots bébé faits maison, café torréfié à la main, pâtisseries artisanales — on leur donne la vitrine qu'ils méritent.",
-  },
-  {
-    icon: Storefront,
-    accent: "from-emerald-500/20 to-teal-500/10",
-    iconColor: "text-emerald-600 dark:text-emerald-400",
-    title: "Des adresses de confiance",
-    description:
-      "Épiceries, boucheries, commerces vérifiés — tu sais où tu achètes, tu sais ce que tu manges.",
-  },
-  {
     icon: Crown,
     accent: "from-gold/20 to-yellow-500/10",
     iconColor: "text-gold",
     title: "La sélection Naqiy",
     description:
-      "Notre propre gamme halal & tayyib. Sourcée, tracée, irréprochable — l'exigence que ta famille mérite.",
+      "Des marques et produits ultra fiables, vérifiés halal & tayyib — sélectionnés pour toi, sans compromis.",
+  },
+  {
+    icon: HandHeart,
+    accent: "from-amber-500/20 to-orange-500/10",
+    iconColor: "text-amber-600 dark:text-amber-400",
+    title: "Entrepreneurs de la communauté",
+    description:
+      "Petits pots bébé, café torréfié à la main, pâtisseries artisanales — on leur donne la vitrine qu'ils méritent.",
+  },
+  {
+    icon: Storefront,
+    accent: "from-emerald-500/20 to-teal-500/10",
+    iconColor: "text-emerald-600 dark:text-emerald-400",
+    title: "Halal & tayyib partout en France",
+    description:
+      "Même dans les villes les moins fournies — accède aux meilleurs produits sans compromis sur ta pratique.",
   },
   {
     icon: Van,
@@ -53,7 +53,7 @@ const pillars = [
     iconColor: "text-blue-600 dark:text-blue-400",
     title: "Livré chez toi",
     description:
-      "Commande depuis ton canapé, tout arrive à ta porte. Les courses en toute tranquillité.",
+      "Commande depuis ton canapé, tout arrive à ta porte. Consommer halal n'a jamais été aussi simple.",
   },
 ];
 
@@ -80,14 +80,16 @@ export function ComingSoonSection() {
             ssrVisible
             className="font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl"
           >
-            Halal par conviction. Tayyib par exigence.
+            Consommer halal & tayyib, sans compromis.
           </SplitText>
 
           <AnimateIn variant="fadeUp" delay={0.2}>
             <p className="mt-4 max-w-lg mx-auto text-muted-foreground md:text-lg leading-relaxed">
-              Un marketplace qui réunit artisans, commerçants de confiance et nos sélections certifiées —{" "}
+              Un marketplace qui sélectionne les meilleures marques halal & tayyib
+              et met en avant les entrepreneurs de la communauté —{" "}
               <span className="font-semibold text-foreground">
-                parce que ta famille mérite mieux qu&apos;un doute.
+                pour que chaque musulman, même dans les zones les moins fournies,
+                puisse consommer en conscience.
               </span>
             </p>
           </AnimateIn>

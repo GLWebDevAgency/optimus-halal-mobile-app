@@ -65,16 +65,17 @@ export function SocialProofSection() {
           ssrVisible
           className="font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl"
         >
-          817 000 produits. Une seule réponse : la tienne.
+          Indépendant. Transparent. Pour toi.
         </SplitText>
 
         <AnimateIn variant="fadeUp" delay={0.15}>
           <p className="mt-4 max-w-lg text-base leading-relaxed text-pretty text-muted-foreground md:text-lg">
-            Naqiy analyse tout.{" "}
+            Aucune pub, aucune revente de données, aucune marque derrière.
+            Naqiy n&apos;est financé par aucun organisme.{" "}
             <span className="font-semibold text-foreground">
-              Mais c&apos;est toi qui décides
+              C&apos;est toi qui décides
             </span>{" "}
-            ce qui compte — ton école, ta santé, tes valeurs.
+            — ton école juridique, ta santé, tes valeurs.
           </p>
         </AnimateIn>
 
