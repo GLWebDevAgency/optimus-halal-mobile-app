@@ -120,7 +120,8 @@ export function FlagDetailSheet({ flagId, onClose }: Props) {
   const [overrideValue, setOverrideValue] = useState("true")
   const [overrideReason, setOverrideReason] = useState("")
 
-  // Sync from server data
+  // Sync form state from server data (external-system sync — valid useEffect pattern)
+  /* eslint-disable react-hooks/set-state-in-effect -- initializing form from tRPC query */
   useEffect(() => {
     if (data?.flag) {
       setLabel(data.flag.label)
@@ -131,6 +132,7 @@ export function FlagDetailSheet({ flagId, onClose }: Props) {
       setVariants(Array.isArray(data.flag.variants) ? (data.flag.variants as string[]) : [])
     }
   }, [data?.flag])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const updateMutation = trpc.featureFlags.update.useMutation({
     onSuccess: () => {

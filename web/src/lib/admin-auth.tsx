@@ -48,6 +48,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration guard
   useEffect(() => setIsMounted(true), [])
 
   // Re-verify admin status on mount and on window focus.

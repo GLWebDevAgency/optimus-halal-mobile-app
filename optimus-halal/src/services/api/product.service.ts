@@ -56,7 +56,7 @@ export const productService = {
     });
 
     return {
-      products: (result.items ?? []) as Types.Product[],
+      products: (result.items ?? []) as unknown as Types.Product[],
       pagination: {
         page: pagination?.page ?? 1,
         limit: pagination?.limit ?? 20,

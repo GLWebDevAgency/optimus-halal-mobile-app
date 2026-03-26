@@ -61,14 +61,15 @@ function useAdminTheme() {
 }
 
 function AdminThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<AdminTheme>("light")
+  const [theme, setTheme] = useState<AdminTheme>(() => {
+    if (typeof window === "undefined") return "light"
+    const stored = localStorage.getItem(STORAGE_KEY) as AdminTheme | null
+    return stored === "dark" || stored === "light" ? stored : "light"
+  })
   const [mounted, setMounted] = useState(false)
 
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as AdminTheme | null
-    if (stored === "dark" || stored === "light") setTheme(stored)
-    setMounted(true)
-  }, [])
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration guard
+  useEffect(() => { setMounted(true) }, [])
 
   const toggle = useCallback(() => {
     setTheme((prev) => {

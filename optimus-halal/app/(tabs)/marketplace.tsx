@@ -293,10 +293,10 @@ export default function MarketplaceTab() {
         id: p.id,
         name: p.name,
         brand: p.brand,
-        price: p.price,
+        price: null,
         image: p.imageUrl,
         halalStatus: p.halalStatus,
-        certifierName: p.certifierName,
+        certifierName: null,
       })),
     [productsQuery.data?.items],
   );
