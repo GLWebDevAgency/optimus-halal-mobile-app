@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { eq, ilike, desc, sql, and } from "drizzle-orm";
 import { router, protectedProcedure, adminProcedure } from "../trpc.js";
-import { featureFlags, flagUserOverrides, users } from "../../db/schema/index.js";
+import { featureFlags, flagUserOverrides, flagAuditHistory, users } from "../../db/schema/index.js";
 import {
   resolveUserFlags,
   invalidateFlagsCache,
@@ -9,6 +9,7 @@ import {
 } from "../../services/feature-flags.service.js";
 import { logger } from "../../lib/logger.js";
 import { TRPCError } from "@trpc/server";
+import type { db as DB } from "../../db/index.js";
 
 // ── Zod schemas ───────────────────────────────────────────
 
@@ -19,6 +20,50 @@ const flagRuleSchema = z.object({
 });
 
 const flagTypeEnum = z.enum(["boolean", "percentage", "variant"]);
+
+// ── Audit helper ──────────────────────────────────────────
+
+async function logAudit(
+  db: typeof DB,
+  params: {
+    flagId: string;
+    action: string;
+    actorId: string;
+    changes?: Record<string, { old: unknown; new: unknown }>;
+    metadata?: Record<string, unknown>;
+  },
+) {
+  try {
+    await db.insert(flagAuditHistory).values({
+      flagId: params.flagId,
+      action: params.action,
+      actorId: params.actorId,
+      actorType: "admin",
+      changes: params.changes ?? null,
+      metadata: params.metadata ?? null,
+    });
+  } catch {
+    // Non-fatal — never block a mutation because audit logging failed
+    logger.warn("Failed to write flag audit log", { action: params.action, flagId: params.flagId });
+  }
+}
+
+// ── Diff helper for update mutations ──────────────────────
+
+function diffChanges(
+  before: Record<string, unknown>,
+  updates: Record<string, unknown>,
+): Record<string, { old: unknown; new: unknown }> | undefined {
+  const changes: Record<string, { old: unknown; new: unknown }> = {};
+  for (const [key, newVal] of Object.entries(updates)) {
+    if (newVal === undefined) continue;
+    const oldVal = before[key];
+    if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+      changes[key] = { old: oldVal, new: newVal };
+    }
+  }
+  return Object.keys(changes).length > 0 ? changes : undefined;
+}
 
 // ── Router ────────────────────────────────────────────────
 
@@ -32,7 +77,6 @@ export const featureFlagsRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      // Fetch user context server-side (never trust client for tier/madhab)
       const user = await ctx.db.query.users.findFirst({
         where: eq(users.id, ctx.userId),
         columns: { subscriptionTier: true, madhab: true },
@@ -61,15 +105,11 @@ export const featureFlagsRouter = router({
       const conditions = [];
 
       if (input.search) {
-        conditions.push(
-          ilike(featureFlags.label, `%${input.search}%`)
-        );
+        conditions.push(ilike(featureFlags.label, `%${input.search}%`));
       }
-
       if (input.enabled !== undefined) {
         conditions.push(eq(featureFlags.enabled, input.enabled));
       }
-
       if (input.flagType) {
         conditions.push(eq(featureFlags.flagType, input.flagType));
       }
@@ -91,7 +131,7 @@ export const featureFlagsRouter = router({
       return { items, total: count };
     }),
 
-  // ── Admin: get flag by ID (with overrides) ──────────────
+  // ── Admin: get flag by ID (with overrides + audit) ──────
   getById: adminProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
@@ -103,18 +143,26 @@ export const featureFlagsRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Flag introuvable" });
       }
 
-      const overrides = await ctx.db
-        .select({
-          id: flagUserOverrides.id,
-          userId: flagUserOverrides.userId,
-          value: flagUserOverrides.value,
-          reason: flagUserOverrides.reason,
-          createdAt: flagUserOverrides.createdAt,
-        })
-        .from(flagUserOverrides)
-        .where(eq(flagUserOverrides.flagId, input.id));
+      const [overrides, auditLog] = await Promise.all([
+        ctx.db
+          .select({
+            id: flagUserOverrides.id,
+            userId: flagUserOverrides.userId,
+            value: flagUserOverrides.value,
+            reason: flagUserOverrides.reason,
+            createdAt: flagUserOverrides.createdAt,
+          })
+          .from(flagUserOverrides)
+          .where(eq(flagUserOverrides.flagId, input.id)),
+        ctx.db
+          .select()
+          .from(flagAuditHistory)
+          .where(eq(flagAuditHistory.flagId, input.id))
+          .orderBy(desc(flagAuditHistory.createdAt))
+          .limit(50),
+      ]);
 
-      return { flag, overrides };
+      return { flag, overrides, auditLog };
     }),
 
   // ── Admin: create flag ──────────────────────────────────
@@ -148,6 +196,13 @@ export const featureFlagsRouter = router({
         })
         .returning();
 
+      await logAudit(ctx.db, {
+        flagId: flag.id,
+        action: "create",
+        actorId: ctx.userId,
+        metadata: { key: input.key, flagType: input.flagType },
+      });
+
       logger.info("Admin: flag created", { flagKey: input.key, by: ctx.userId });
       await invalidateAllUserFlagsCache();
 
@@ -172,15 +227,28 @@ export const featureFlagsRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { id, ...updates } = input;
 
+      // Fetch current state for diff
+      const before = await ctx.db.query.featureFlags.findFirst({
+        where: eq(featureFlags.id, id),
+      });
+
+      if (!before) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Flag introuvable" });
+      }
+
       const [flag] = await ctx.db
         .update(featureFlags)
         .set({ ...updates, updatedAt: new Date() })
         .where(eq(featureFlags.id, id))
         .returning();
 
-      if (!flag) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Flag introuvable" });
-      }
+      const changes = diffChanges(before as unknown as Record<string, unknown>, updates);
+      await logAudit(ctx.db, {
+        flagId: id,
+        action: "update",
+        actorId: ctx.userId,
+        changes,
+      });
 
       logger.info("Admin: flag updated", { flagKey: flag.key, by: ctx.userId });
       await invalidateAllUserFlagsCache();
@@ -192,6 +260,11 @@ export const featureFlagsRouter = router({
   toggle: adminProcedure
     .input(z.object({ id: z.string().uuid(), enabled: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
+      const before = await ctx.db.query.featureFlags.findFirst({
+        where: eq(featureFlags.id, input.id),
+        columns: { enabled: true },
+      });
+
       const [flag] = await ctx.db
         .update(featureFlags)
         .set({ enabled: input.enabled, updatedAt: new Date() })
@@ -201,6 +274,13 @@ export const featureFlagsRouter = router({
       if (!flag) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Flag introuvable" });
       }
+
+      await logAudit(ctx.db, {
+        flagId: input.id,
+        action: "toggle",
+        actorId: ctx.userId,
+        changes: { enabled: { old: before?.enabled, new: input.enabled } },
+      });
 
       logger.info("Admin: flag toggled", {
         flagKey: flag.key,
@@ -223,14 +303,23 @@ export const featureFlagsRouter = router({
         });
       }
 
-      const [flag] = await ctx.db
-        .delete(featureFlags)
-        .where(eq(featureFlags.id, input.id))
-        .returning();
+      // Log before deletion (cascade will delete audit too, so log first with metadata)
+      const flag = await ctx.db.query.featureFlags.findFirst({
+        where: eq(featureFlags.id, input.id),
+      });
 
       if (!flag) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Flag introuvable" });
       }
+
+      await logAudit(ctx.db, {
+        flagId: input.id,
+        action: "delete",
+        actorId: ctx.userId,
+        metadata: { key: flag.key, label: flag.label },
+      });
+
+      await ctx.db.delete(featureFlags).where(eq(featureFlags.id, input.id));
 
       logger.info("Admin: flag deleted", { flagKey: flag.key, by: ctx.userId });
       await invalidateAllUserFlagsCache();
@@ -263,6 +352,13 @@ export const featureFlagsRouter = router({
         })
         .returning();
 
+      await logAudit(ctx.db, {
+        flagId: input.flagId,
+        action: "set_override",
+        actorId: ctx.userId,
+        metadata: { targetUserId: input.userId, value: input.value, reason: input.reason },
+      });
+
       logger.info("Admin: flag override set", {
         flagId: input.flagId,
         targetUser: input.userId,
@@ -290,6 +386,13 @@ export const featureFlagsRouter = router({
             eq(flagUserOverrides.userId, input.userId)
           )
         );
+
+      await logAudit(ctx.db, {
+        flagId: input.flagId,
+        action: "remove_override",
+        actorId: ctx.userId,
+        metadata: { targetUserId: input.userId },
+      });
 
       logger.info("Admin: flag override removed", {
         flagId: input.flagId,
@@ -327,13 +430,19 @@ export const featureFlagsRouter = router({
           set: { value: input.value, reason: input.reason },
         });
 
+      await logAudit(ctx.db, {
+        flagId: input.flagId,
+        action: "bulk_override",
+        actorId: ctx.userId,
+        metadata: { count: input.userIds.length, reason: input.reason },
+      });
+
       logger.info("Admin: bulk flag override", {
         flagId: input.flagId,
         count: input.userIds.length,
         by: ctx.userId,
       });
 
-      // Invalidate all affected users
       await invalidateAllUserFlagsCache();
 
       return { count: input.userIds.length };

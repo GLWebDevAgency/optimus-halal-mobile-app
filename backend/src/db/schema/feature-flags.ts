@@ -55,7 +55,34 @@ export const flagUserOverrides = pgTable(
   ]
 );
 
+export const flagAuditHistory = pgTable(
+  "flag_audit_history",
+  {
+    id: t.uuid().defaultRandom().primaryKey(),
+    flagId: t
+      .uuid("flag_id")
+      .references(() => featureFlags.id, { onDelete: "cascade" })
+      .notNull(),
+    action: t.varchar({ length: 32 }).notNull(),
+    actorId: t.uuid("actor_id").notNull(),
+    actorType: t.varchar("actor_type", { length: 16 }).notNull().default("admin"),
+    changes: t.jsonb(),
+    metadata: t.jsonb(),
+    createdAt: t
+      .timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    t.index("idx_flag_audit_flag_id").on(table.flagId),
+    t.index("idx_flag_audit_created_at").on(table.createdAt),
+    t.index("idx_flag_audit_actor").on(table.actorId),
+  ]
+);
+
 export type FeatureFlag = typeof featureFlags.$inferSelect;
 export type NewFeatureFlag = typeof featureFlags.$inferInsert;
 export type FlagUserOverride = typeof flagUserOverrides.$inferSelect;
 export type NewFlagUserOverride = typeof flagUserOverrides.$inferInsert;
+export type FlagAuditEntry = typeof flagAuditHistory.$inferSelect;
+export type NewFlagAuditEntry = typeof flagAuditHistory.$inferInsert;
