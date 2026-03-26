@@ -16,9 +16,13 @@ import {
 } from "@/components/ui/sheet";
 
 const navRoutes = [
-  { href: "#features", label: "Fonctionnalités" },
-  { href: "#pricing", label: "Tarifs" },
+  { id: "features", label: "Fonctionnalités" },
+  { id: "pricing", label: "Tarifs" },
 ];
+
+function scrollTo(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -68,27 +72,26 @@ export function Navbar() {
         {/* Center — Desktop nav links */}
         <div className="hidden items-center gap-1 md:flex">
           {navRoutes.map((route) => (
-            <a
-              key={route.href}
-              href={route.href}
+            <button
+              key={route.id}
+              onClick={() => scrollTo(route.id)}
               className="link-underline rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               {route.label}
-            </a>
+            </button>
           ))}
         </div>
 
         {/* Right — CTA + Mobile hamburger */}
         <div className="flex items-center gap-2">
           {/* Desktop CTA */}
-          <a
-            href="#waitlist"
-            onClick={() => track(EVENTS.NAVBAR_CTA_CLICKED)}
+          <button
+            onClick={() => { track(EVENTS.NAVBAR_CTA_CLICKED); scrollTo("waitlist"); }}
             className="hidden md:inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2 font-display font-bold text-sm text-background transition-all duration-200 hover:scale-[1.03] hover:shadow-[0_0_20px_oklch(0.76_0.14_88/15%)]"
           >
             <Bell className="size-4" weight="fill" />
             <span>Rejoindre la liste</span>
-          </a>
+          </button>
 
           {/* Mobile hamburger */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -106,24 +109,22 @@ export function Navbar() {
               </SheetHeader>
               <nav className="mt-6 flex flex-col gap-1 px-4">
                 {navRoutes.map((route) => (
-                  <a
-                    key={route.href}
-                    href={route.href}
-                    onClick={() => setIsOpen(false)}
-                    className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  <button
+                    key={route.id}
+                    onClick={() => { scrollTo(route.id); setIsOpen(false); }}
+                    className="rounded-lg px-3 py-2.5 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                   >
                     {route.label}
-                  </a>
+                  </button>
                 ))}
                 <div className="my-3 h-px bg-border" />
-                <a
-                  href="#waitlist"
-                  onClick={() => { setIsOpen(false); track(EVENTS.NAVBAR_CTA_CLICKED); }}
+                <button
+                  onClick={() => { scrollTo("waitlist"); setIsOpen(false); track(EVENTS.NAVBAR_CTA_CLICKED); }}
                   className="flex items-center justify-center gap-2 rounded-full bg-foreground px-5 py-2.5 font-display font-bold text-sm text-background transition-all duration-200 hover:scale-[1.02]"
                 >
                   <Bell className="size-4" weight="fill" />
                   <span>Rejoindre la liste</span>
-                </a>
+                </button>
               </nav>
             </SheetContent>
           </Sheet>
