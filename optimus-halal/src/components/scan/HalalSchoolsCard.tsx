@@ -70,6 +70,7 @@ export interface HalalSchoolsCardProps {
   /** Certifier numeric score for verdict summary (0-100) */
   certifierScore?: number | null;
   onMadhabChange: (madhab: MadhabId) => void;
+  onMadhabPress?: (verdict: MadhabVerdict) => void;
   onScholarlySourcePress: (data: ScholarlySourceData | ScholarlySourceData[]) => void;
   onTrustScorePress?: () => void;
   onIngredientPress?: (ingredient: string) => void;
@@ -285,6 +286,7 @@ interface MadhabRingRowProps {
   userMadhab: MadhabId;
   certifierData: CertifierInfo | null;
   onSelect: (madhab: MadhabId) => void;
+  onMadhabPress?: (verdict: MadhabVerdict) => void;
 }
 
 function MadhabRingRow({
@@ -293,6 +295,7 @@ function MadhabRingRow({
   userMadhab,
   certifierData,
   onSelect,
+  onMadhabPress,
 }: MadhabRingRowProps) {
   const { t } = useTranslation();
   const { impact } = useHaptics();
@@ -323,6 +326,7 @@ function MadhabRingRow({
             onPress={() => {
               impact();
               onSelect(v.madhab);
+              onMadhabPress?.(v);
             }}
             accessibilityRole="button"
             accessibilityLabel={`${label}: ${v.status}`}
@@ -858,6 +862,7 @@ export function HalalSchoolsCard({
   certifierGrade,
   certifierScore,
   onMadhabChange: _onMadhabChange,
+  onMadhabPress,
   onScholarlySourcePress,
   onTrustScorePress,
   onIngredientPress,
@@ -951,6 +956,7 @@ export function HalalSchoolsCard({
           userMadhab={userMadhab}
           certifierData={certifierData}
           onSelect={handleMadhabSelect}
+          onMadhabPress={onMadhabPress}
         />
       )}
 

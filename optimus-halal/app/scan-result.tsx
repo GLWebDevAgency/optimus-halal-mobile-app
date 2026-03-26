@@ -40,6 +40,7 @@ import Animated, {
   useAnimatedStyle,
   interpolate,
   Extrapolation,
+  withSpring,
 } from "react-native-reanimated";
 import { IconButton, LevelUpCelebration, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
@@ -50,12 +51,12 @@ import { ShareCardView, captureAndShareCard } from "@/components/scan/ShareCard"
 import { NutrientDetailSheet } from "@/components/scan/NutrientDetailSheet";
 import { AlternativesSection, adaptLegacyAlternative } from "@/components/scan/AlternativesSection";
 import { VerdictHero } from "@/components/scan/VerdictHero";
-import { ScanBottomBar } from "@/components/scan/ScanBottomBar";
-import { CompactStickyHeader, COMPACT_HEADER_HEIGHT } from "@/components/scan/CompactStickyHeader";
+import { BottomBarV2 } from "@/components/scan/BottomBarV2";
+import { StickyHeaderV2, STICKY_HEADER_V2_HEIGHT } from "@/components/scan/StickyHeaderV2";
 import { ScanResultTabBar } from "@/components/scan/ScanResultTabBar";
 import { ScanResultPager } from "@/components/scan/ScanResultPager";
 import { HalalSchoolsCard } from "@/components/scan/HalalSchoolsCard";
-import { FeedbackCard } from "@/components/scan/FeedbackCard";
+import { FeedbackBar } from "@/components/scan/FeedbackBar";
 import { ScholarlySourceSheet } from "@/components/scan/ScholarlySourceSheet";
 import { NaqiyAdviceSheet } from "@/components/scan/NaqiyAdviceSheet";
 import { ScanLoadingSkeleton } from "@/components/scan/ScanLoadingSkeleton";
@@ -95,7 +96,7 @@ import { brand as brandTokens, glass, lightTheme } from "@/theme/colors";
 import { fontSize as fontSizeTokens, fontWeight as fontWeightTokens } from "@/theme/typography";
 import { spacing, radius } from "@/theme/spacing";
 import type { NutrientLevel } from "@/services/api/types";
-import { useFeatureFlagsStore, useQuotaStore, useLocalFavoritesStore, useLocalScanHistoryStore, useLocalNutritionProfileStore, useTrialStore } from "@/store";
+import { useFeatureFlagsStore, useQuotaStore, useLocalFavoritesStore, useLocalScanHistoryStore, useLocalNutritionProfileStore, useTrialStore, DAILY_SCAN_LIMIT } from "@/store";
 import { isAuthenticated as hasStoredTokens } from "@/services/api";
 import { trackEvent } from "@/lib/analytics";
 import { buildVerdictSummary } from "@/utils/verdict-summary";
@@ -379,7 +380,7 @@ export default function ScanResultScreen() {
     tabBarLocalY.value = event.nativeEvent.layout.y;
   }, []);
 
-  const stickyHeaderTotalHeight = COMPACT_HEADER_HEIGHT + insets.top;
+  const stickyHeaderTotalHeight = STICKY_HEADER_V2_HEIGHT + insets.top;
 
   // Unified sticky block: header + tab bar share the SAME scroll thresholds
   // so they appear together as one cohesive unit.
@@ -399,6 +400,29 @@ export default function ScanResultScreen() {
       pointerEvents: progress > 0.5 ? "auto" as const : "none" as const,
     };
   });
+
+  // Inline tab bar fades out as sticky header fades in — avoids the duplicate
+  const inlineTabBarStyle = useAnimatedStyle(() => {
+    const progress = interpolate(
+      scrollY.value,
+      [STICKY_START, STICKY_END],
+      [1, 0],
+      Extrapolation.CLAMP,
+    );
+    return {
+      opacity: progress,
+      pointerEvents: progress < 0.1 ? "none" as const : "auto" as const,
+    };
+  });
+
+  // Background scale — pressed down when any bottom sheet opens (iOS card presentation style)
+  const bgScale = useSharedValue(1);
+  const bgScaleStyle = useAnimatedStyle(() => ({
+    flex: 1,
+    transform: [{ scale: bgScale.value }],
+    borderRadius: interpolate(bgScale.value, [0.93, 1], [16, 0], Extrapolation.CLAMP),
+    overflow: "hidden" as const,
+  }));
 
   // ── Product Image Preview Modal ──────────────
   const [showImagePreview, setShowImagePreview] = useState(false);
@@ -645,6 +669,16 @@ export default function ScanResultScreen() {
     indented: false,
   }));
 
+  // Animate background scale when any sheet opens (iOS card presentation style)
+  const anySheetOpen =
+    showTrustScoreSheet || showCertifierPracticesSheet || showScoreDetailSheet ||
+    !!selectedMadhab || showHalalAnalysisSheet || !!selectedNutrient ||
+    selectedScholarlyData !== null || showNaqiyAdviceSheet || infoSheet !== null;
+
+  useEffect(() => {
+    bgScale.value = withSpring(anySheetOpen ? 0.93 : 1, { damping: 22, stiffness: 200, mass: 0.8 });
+  }, [anySheetOpen, bgScale]);
+
   // ── RENDER: Loading ────────────────────────────
   if (scanMutation.isPending || !scribeComplete) {
     return (
@@ -670,6 +704,8 @@ export default function ScanResultScreen() {
   return (
     <View style={{ flex: 1 }}>
       <PremiumBackground />
+      {/* ── Scaled background content (scales down on sheet open, iOS card style) ── */}
+      <Animated.View style={bgScaleStyle}>
       {/* ── Floating Back Button ── */}
       <Animated.View
         entering={FadeInLeft.delay(200).duration(350)}
@@ -766,12 +802,13 @@ export default function ScanResultScreen() {
             />
           )}
 
-          {/* INLINE TAB BAR (measured for sticky clone) */}
-          <View onLayout={handleTabBarLayout}>
-            <ScanResultTabBar activeTab={activeTab as 0 | 1} onTabPress={setActiveTab} scrollProgress={scrollProgress} />
-          </View>
+          {/* TAB BAR + PAGER — wrapped as one unit so horizonContainer gap doesn't split them */}
+          <View>
+            <Animated.View onLayout={handleTabBarLayout} style={inlineTabBarStyle}>
+              <ScanResultTabBar activeTab={activeTab as 0 | 1} onTabPress={setActiveTab} scrollProgress={scrollProgress} />
+            </Animated.View>
 
-          {/* PAGER: Halal (page 0) + Health (page 1) */}
+            {/* PAGER: Halal (page 0) + Health (page 1) */}
             <ScanResultPager
             activeTab={activeTab}
             onPageChange={setActiveTab}
@@ -800,6 +837,7 @@ export default function ScanResultScreen() {
                 certifierGrade={certifierData?.trustGrade?.label ?? null}
                 certifierScore={certifierTrustScore ?? null}
                 onMadhabChange={() => {}}
+                onMadhabPress={setSelectedMadhab}
                 onNaqiyAdvicePress={() => setShowNaqiyAdviceSheet(true)}
                 onScholarlySourcePress={setSelectedScholarlyData}
                 onTrustScorePress={() => setShowCertifierPracticesSheet(true)}
@@ -903,6 +941,7 @@ export default function ScanResultScreen() {
               />
             }
           />
+          </View>
 
           {/* ── Horizon divider ── */}
           <View style={[styles.horizonDivider, { backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.06)" }]} />
@@ -921,7 +960,7 @@ export default function ScanResultScreen() {
           <View style={[styles.horizonDivider, { backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.06)" }]} />
 
           {/* FEEDBACK */}
-          <FeedbackCard staggerIndex={6} />
+          <FeedbackBar productId={product.id} isGuest={isGuest} staggerIndex={6} />
 
           {/* ── Horizon divider ── */}
           <View style={[styles.horizonDivider, { backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.06)" }]} />
@@ -937,7 +976,7 @@ export default function ScanResultScreen() {
       </Animated.ScrollView>
 
       {/* Quota banner — anonymous users only, hidden during trial */}
-      {isGuest && !useTrialStore.getState().isTrialActive() && remainingScans !== null && remainingScans !== undefined && (
+      {isGuest && !useTrialStore.getState().isTrialActive() && remainingScans !== null && remainingScans !== undefined && remainingScans <= Math.ceil(DAILY_SCAN_LIMIT * 0.1) && (
         <Animated.View
           entering={FadeInUp.delay(1000).duration(400)}
           style={{
@@ -1013,24 +1052,17 @@ export default function ScanResultScreen() {
       </Animated.View>
 
       {/* ── Compact Sticky Header (scroll-interpolated) ── */}
-      <CompactStickyHeader
+      <StickyHeaderV2
         scrollY={scrollY}
         heroHeight={HERO_HEIGHT}
         productName={product?.name ?? ""}
-        brand={product?.brand ?? null}
-        imageUrl={product?.imageUrl ?? null}
         effectiveHeroStatus={effectiveHeroStatus as HalalStatusKey}
-        heroLabel={heroLabel}
-        certifierData={certifierData ? { id: certifierData.id, name: certifierData.name } : null}
         trustGrade={certifierData?.trustGrade ?? null}
-        onTrustScorePress={certifierData ? () => {
-          impact();
-          setShowCertifierPracticesSheet(true);
-        } : undefined}
+        onBackPress={handleGoBack}
       />
 
       {/* ── Fixed Bottom Action Bar ── */}
-      <ScanBottomBar
+      <BottomBarV2
         effectiveHeroStatus={effectiveHeroStatus as HalalStatusKey}
         productIsFavorite={productIsFavorite}
         isFavMutating={isFavMutating}
@@ -1038,7 +1070,6 @@ export default function ScanResultScreen() {
         onToggleFavorite={handleToggleFavorite}
         onShare={handleShare}
         onFindStores={handleFindStores}
-        onGoBack={handleGoBack}
         onReport={handleReport}
       />
 
@@ -1104,6 +1135,7 @@ export default function ScanResultScreen() {
         </Pressable>
       </Modal>
 
+      </Animated.View>
       {/* ── Level-Up Celebration Overlay — gamification gated ── */}
       {defaultFeatureFlags.gamificationEnabled && showLevelUp && levelUp && (
         <LevelUpCelebration

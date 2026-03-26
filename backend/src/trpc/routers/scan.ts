@@ -10,6 +10,7 @@ import {
   additives as additivesTable,
   additiveMadhabRulings,
   devices,
+  scanFeedback,
 } from "../../db/schema/index.js";
 import {
   analyzeHalalStatus,
@@ -1245,5 +1246,31 @@ export const scanRouter = router({
       await ctx.db.insert(scans).values(values);
 
       return { imported: values.length };
+    }),
+
+  submitFeedback: protectedProcedure
+    .input(
+      z.object({
+        productId: z.string().uuid(),
+        isCorrect: z.boolean(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .insert(scanFeedback)
+        .values({
+          userId: ctx.userId,
+          productId: input.productId,
+          isCorrect: input.isCorrect,
+        })
+        .onConflictDoUpdate({
+          target: [scanFeedback.userId, scanFeedback.productId],
+          set: {
+            isCorrect: input.isCorrect,
+            updatedAt: new Date(),
+          },
+        });
+
+      return { success: true };
     }),
 });

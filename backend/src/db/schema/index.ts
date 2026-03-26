@@ -22,3 +22,4 @@ export * from "./devices.js";
 export * from "./admins.js";
 export * from "./waitlist-leads.js";
 export * from "./feature-flags.js";
+export * from "./scan-feedback.js";

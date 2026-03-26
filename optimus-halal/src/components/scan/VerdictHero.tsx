@@ -1,16 +1,15 @@
 /**
- * VerdictHero — Compact Verdict-First Hero Section
+ * VerdictHero — Centered Verdict-First Hero Section
  *
- * Displays the halal verdict within 0.5s above the fold.
- * Architecture: 4-layer gradient (L0-L3) + ambient orb (L4),
- * glass card product image with zoom badge + ImagePreviewModal,
- * certifier trust bar OR verdict fallback, personal alerts,
- * and community verified badge.
+ * Layout: product image centered → name → verdict pill (dominant) → certifier chip.
+ * One clear answer above the fold. No information duplication.
  *
- * Design principles (Al-Ihsan):
- *  - Color BEFORE text: gradient appears at T+0ms, text at T+100ms
- *  - springNaqiy (damping:14, stiffness:170, mass:0.9) on all animations
- *  - Informational verdicts: "Composition Conforme" not "Certifié Halal"
+ * Design: Apple-style centered card feel.
+ *   - Image centered at top (120×120, contain, status border)
+ *   - Verdict pill: full-width, status color, bold — #1 visual hierarchy
+ *   - Certifier: single chip, shows trust warning only when score < 60
+ *   - Grade strip removed from hero (lives in CertifierInfoRow section)
+ *   - Barcode: minimal, muted, last
  *
  * @module components/scan/VerdictHero
  */
@@ -24,10 +23,16 @@ import {
   Pressable,
 } from "react-native";
 import { Image } from "expo-image";
-import { ImageBrokenIcon, MagnifyingGlassIcon, QrCodeIcon, UsersThreeIcon } from "phosphor-react-native";
+import {
+  ImageBrokenIcon,
+  MagnifyingGlassIcon,
+  QrCodeIcon,
+  WarningCircleIcon,
+  CheckCircleIcon,
+  CaretRightIcon,
+} from "phosphor-react-native";
 import Animated, {
   FadeIn,
-  FadeInRight,
   ZoomIn,
 } from "react-native-reanimated";
 
@@ -42,7 +47,7 @@ import {
   type HalalStatusKey,
   type StatusVisualConfig,
 } from "./scan-constants";
-import { NaqiyGradeBadge, getTrustGradeFromScore, type TrustGrade } from "./NaqiyGradeBadge";
+import { getTrustGradeFromScore, type TrustGrade } from "./NaqiyGradeBadge";
 import { CertifierLogo } from "./CertifierLogo";
 
 // ── Types ──
@@ -61,15 +66,11 @@ export interface VerdictHeroProps {
   userMadhab: string;
   communityVerifiedCount: number;
   onImagePress: () => void;
-  /** Certifier info for sub-label */
   certifierName?: string | null;
   certifierId?: string | null;
   certifierScore?: number | null;
-  /** Naqiy Trust Grade from certifier (N١→N٥) */
   trustGrade?: TrustGrade | null;
-  /** Callback when the NaqiyGradeBadge strip is pressed */
   onTrustGradePress?: () => void;
-  /** Top safe-area inset so gradient extends behind status bar */
   topInset?: number;
 }
 
@@ -80,7 +81,6 @@ export function VerdictHero({
   effectiveHeroStatus,
   heroLabel,
   userMadhab,
-  communityVerifiedCount,
   onImagePress,
   certifierName,
   certifierId,
@@ -99,218 +99,183 @@ export function VerdictHero({
     ? statusConfig.gradientDark
     : statusConfig.gradientLight;
 
-  // ── Madhab label (displayed in micro header) ──
   const madhabLabel =
     userMadhab !== "general"
       ? t.madhab.options[userMadhab as "hanafi" | "shafii" | "maliki" | "hanbali"]?.label
       : null;
 
-  // ── Render ──
+  // Certifier trust state
+  const isLowTrust = certifierScore !== null && certifierScore !== undefined && certifierScore < 60;
+  const scoreColor = certifierScore !== null && certifierScore !== undefined
+    ? certifierScore >= 70
+      ? (isDark ? "#4ade80" : "#16a34a")
+      : certifierScore >= 40
+        ? (isDark ? "#fbbf24" : "#ca8a04")
+        : (isDark ? "#f87171" : "#dc2626")
+    : colors.textMuted;
+
+  const certifierChipBg = isLowTrust
+    ? isDark ? "rgba(239,68,68,0.10)" : "rgba(239,68,68,0.07)"
+    : isDark ? glass.dark.bg : glass.light.bg;
+  const certifierChipBorder = isLowTrust
+    ? isDark ? "rgba(239,68,68,0.25)" : "rgba(239,68,68,0.18)"
+    : isDark ? glass.dark.border : glass.light.border;
 
   return (
     <View
-      style={[styles.heroGradient, topInset > 0 && { paddingTop: topInset }]}
+      style={[styles.hero, topInset > 0 && { paddingTop: topInset + spacing.md }]}
       accessibilityRole="summary"
       accessibilityLabel={heroLabel}
     >
       {/* Solid status-tinted background */}
-      <View
-        style={[
-          StyleSheet.absoluteFill,
-          { backgroundColor: gradientColors[0] },
-        ]}
-      />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: gradientColors[0] }]} />
 
-      {/* ── ROW 1: HERO LAYOUT ── */}
+      {/* ── Micro header: NAQIY SCAN · Madhab ── */}
+      <View style={styles.microRow}>
+        <Image
+          source={require("@assets/images/logo_naqiy.webp")}
+          style={styles.microLogo}
+          contentFit="contain"
+        />
+        <Text style={[styles.microText, { color: colors.textMuted }]}>
+          NAQIY SCAN{madhabLabel ? ` · ${madhabLabel}` : ""}
+        </Text>
+      </View>
+
+      {/* ── Product image — centered, prominent ── */}
       <Animated.View
-        entering={FadeIn.delay(50).duration(400)}
-        style={styles.heroSplit}
+        entering={ZoomIn.delay(SUSPENSE_DURATION).duration(380).springify().damping(26).stiffness(120)}
+        style={styles.imageContainer}
       >
-        {/* LEFT: Product Image — glass card */}
-        <Animated.View
-          entering={ZoomIn.delay(SUSPENSE_DURATION).duration(400).springify().damping(26).stiffness(120)}
-          style={styles.heroImageColumn}
+        <View
+          style={[
+            styles.imageWrapper,
+            {
+              backgroundColor: isDark ? glass.dark.highlight : "#ffffff",
+              borderColor: statusConfig.color,
+            },
+          ]}
         >
-          <View
-            style={[
-              styles.heroImageWrapper,
-              {
-                backgroundColor: isDark ? glass.dark.highlight : "#ffffff",
-                borderColor: statusConfig.color,
-              },
-            ]}
+          <Pressable
+            onPress={product.imageUrl ? () => { impact(); onImagePress(); } : undefined}
+            accessibilityRole="button"
+            accessibilityLabel={product.name}
+            accessibilityHint={product.imageUrl ? t.scanResult.tapToZoom : undefined}
+            style={product.imageUrl ? styles.imagePress : styles.imagePlaceholder}
           >
-            <Pressable
-              onPress={product.imageUrl ? () => { impact(); onImagePress(); } : undefined}
-              accessibilityRole="button"
-              accessibilityLabel={product.name}
-              accessibilityHint={product.imageUrl ? t.scanResult.tapToZoom : undefined}
-              style={product.imageUrl ? styles.heroImagePress : styles.heroImagePlaceholder}
-            >
-              {product.imageUrl ? (
-                <Image
-                  source={{ uri: product.imageUrl }}
-                  placeholder={{ blurhash: "LGF5]+Yk^6#M@-5c,1J5@[or[Q6." }}
-                  style={styles.heroImage}
-                  contentFit="cover"
-                  transition={200}
-                />
-              ) : (
-                <ImageBrokenIcon size={32} color={colors.textMuted} />
-              )}
-            </Pressable>
-            {/* Zoom badge — bottom-right */}
-            {product.imageUrl && (
-              <View style={[
-                styles.heroZoomBadge,
-                { backgroundColor: isDark ? glass.dark.bg : "#ffffff" },
-              ]}>
-                <MagnifyingGlassIcon size={14} color={colors.textSecondary} />
-              </View>
+            {product.imageUrl ? (
+              <Image
+                source={{ uri: product.imageUrl }}
+                placeholder={{ blurhash: "LGF5]+Yk^6#M@-5c,1J5@[or[Q6." }}
+                style={styles.productImage}
+                contentFit="contain"
+                transition={200}
+              />
+            ) : (
+              <ImageBrokenIcon size={36} color={colors.textMuted} />
             )}
-          </View>
-        </Animated.View>
+          </Pressable>
 
-        {/* RIGHT COLUMN: Info stack */}
-        <View style={styles.heroInfoColumn}>
-          {/* Micro header: Naqiy logo + "NAQIY SCAN · Maliki" */}
-          <View style={styles.heroMicroRow}>
-            <Image
-              source={require("@assets/images/logo_naqiy.webp")}
-              style={{ width: 14, height: 14, opacity: isDark ? 0.5 : 0.35 }}
-              contentFit="contain"
-            />
-            <Text style={[styles.heroMicroText, { color: colors.textMuted }]}>
-              NAQIY SCAN{madhabLabel ? ` · ${madhabLabel}` : ""}
-            </Text>
-          </View>
-
-          {/* Product name */}
-          <Text
-            style={[styles.heroProductName, { color: colors.textPrimary }]}
-            numberOfLines={2}
-            accessibilityRole="header"
-          >
-            {product.name}
-          </Text>
-
-          {/* Brand · Barcode */}
-          <View style={styles.heroBrandRow}>
-            {product.brand && (
-              <Text style={[styles.heroBrandText, { color: colors.textMuted }]} numberOfLines={1}>
-                {product.brand}
-              </Text>
-            )}
-            <View style={styles.heroBarcodeChip}>
-              <QrCodeIcon size={12} color={colors.textMuted} />
-              <Text style={[styles.heroBarcode, { color: colors.textMuted }]}>
-                {product.barcode}
-              </Text>
+          {/* Zoom badge */}
+          {product.imageUrl && (
+            <View style={[
+              styles.zoomBadge,
+              { backgroundColor: isDark ? glass.dark.bg : "#ffffff" },
+            ]}>
+              <MagnifyingGlassIcon size={13} color={colors.textSecondary} />
             </View>
-          </View>
-
-          {/* Verdict — single, prominent */}
-          <Animated.View
-            entering={FadeInRight.delay(SUSPENSE_DURATION + 100).duration(450)}
-          >
-            <Text
-              style={[styles.heroVerdictText, { color: statusConfig.color }]}
-              numberOfLines={1}
-            >
-              {heroLabel}
-            </Text>
-          </Animated.View>
-
-          {/* Certifier sub-label: [logo] name · score/100 */}
-          {certifierName && certifierId && (
-            <Animated.View
-              entering={FadeIn.delay(SUSPENSE_DURATION + 180).duration(400)}
-            >
-              <Pressable
-                onPress={onTrustGradePress}
-                accessibilityRole="button"
-                accessibilityLabel={certifierName}
-                style={({ pressed }) => [
-                  styles.certifierSubRow,
-                  pressed && { opacity: 0.7 },
-                ]}
-              >
-                <CertifierLogo certifierId={certifierId} size={16} />
-                <Text
-                  style={[styles.certifierSubText, { color: colors.textSecondary }]}
-                  numberOfLines={1}
-                >
-                  {certifierName}
-                </Text>
-                {certifierScore !== null && certifierScore !== undefined && (
-                  <Text
-                    style={[
-                      styles.certifierSubScore,
-                      {
-                        color: certifierScore >= 70
-                          ? (isDark ? "#4ade80" : "#16a34a")
-                          : certifierScore >= 40
-                            ? (isDark ? "#fbbf24" : "#ca8a04")
-                            : (isDark ? "#f87171" : "#dc2626"),
-                      },
-                    ]}
-                  >
-                    {certifierScore}/100
-                  </Text>
-                )}
-              </Pressable>
-            </Animated.View>
           )}
-
-          {/* Naqiy Trust Grade strip (certifier only) — tappable → certifier detail */}
-          {trustGrade && (
-            <Animated.View
-              entering={FadeIn.delay(SUSPENSE_DURATION + 250).duration(400)}
-              style={styles.gradeStripRow}
-            >
-              <Pressable
-                onPress={onTrustGradePress}
-                accessibilityRole="button"
-                accessibilityLabel="Détail certifieur"
-                style={({ pressed }) => pressed ? { opacity: 0.7 } : undefined}
-              >
-                <NaqiyGradeBadge variant="strip" grade={trustGrade} showLabel />
-              </Pressable>
-            </Animated.View>
-          )}
-
         </View>
       </Animated.View>
 
-      {/* ── Community badge ── */}
-      {communityVerifiedCount > 0 && (
-        <Animated.View
-          entering={FadeIn.delay(SUSPENSE_DURATION + 350).duration(500)}
-          style={styles.metadataBand}
+      {/* ── Product name — centered ── */}
+      <Animated.View entering={FadeIn.delay(80).duration(350)} style={styles.nameBlock}>
+        <Text
+          style={[styles.productName, { color: colors.textPrimary }]}
+          numberOfLines={2}
+          accessibilityRole="header"
         >
-          <View
-            style={[
-              styles.certifierHeroBadge,
+          {product.name}
+        </Text>
+        {product.brand && (
+          <Text style={[styles.brandText, { color: colors.textMuted }]} numberOfLines={1}>
+            {product.brand}
+          </Text>
+        )}
+      </Animated.View>
+
+      {/* ── VERDICT PILL — dominant visual ── */}
+      <Animated.View
+        entering={FadeIn.delay(SUSPENSE_DURATION + 80).duration(420)}
+        style={styles.verdictPillWrapper}
+      >
+        <View
+          style={[
+            styles.verdictPill,
+            {
+              backgroundColor: statusConfig.color,
+              ...Platform.select({
+                ios: {
+                  shadowColor: statusConfig.color,
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: 0.35,
+                  shadowRadius: 14,
+                },
+                android: { elevation: 8 },
+              }),
+            },
+          ]}
+        >
+          <Text style={styles.verdictPillText} numberOfLines={1}>
+            {heroLabel}
+          </Text>
+        </View>
+      </Animated.View>
+
+      {/* ── Certifier chip — single, concise ── */}
+      {certifierName && certifierId && (
+        <Animated.View
+          entering={FadeIn.delay(SUSPENSE_DURATION + 180).duration(380)}
+          style={styles.certifierChipWrapper}
+        >
+          <Pressable
+            onPress={onTrustGradePress}
+            accessibilityRole="button"
+            accessibilityLabel={certifierName}
+            style={({ pressed }) => [
+              styles.certifierChip,
               {
-                backgroundColor: isDark
-                  ? glass.dark.bg
-                  : glass.light.border,
-                borderColor: isDark
-                  ? glass.dark.borderStrong
-                  : glass.light.borderStrong,
+                backgroundColor: certifierChipBg,
+                borderColor: certifierChipBorder,
+                opacity: pressed ? 0.75 : 1,
               },
             ]}
           >
-            <UsersThreeIcon size={13} color={colors.textMuted} />
-            <Text style={[styles.certifierHeroBadgeText, { color: colors.textSecondary }]}>
-              {(communityVerifiedCount > 1
-                ? t.scanResult.verifiedByCountPlural
-                : t.scanResult.verifiedByCount
-              ).replace("{{count}}", String(communityVerifiedCount))}
+            <CertifierLogo certifierId={certifierId} size={14} />
+            {isLowTrust ? (
+              <WarningCircleIcon size={13} color={scoreColor} weight="fill" />
+            ) : (
+              <CheckCircleIcon size={13} color={scoreColor} weight="fill" />
+            )}
+            <Text
+              style={[styles.certifierChipText, { color: isLowTrust ? scoreColor : colors.textSecondary }]}
+              numberOfLines={1}
+            >
+              {certifierName}
+              {trustGrade ? `  ·  ${trustGrade.label}` : ""}
             </Text>
-          </View>
+            <CaretRightIcon size={11} color={colors.textMuted} />
+          </Pressable>
         </Animated.View>
       )}
+
+      {/* ── Barcode — minimal, bottom ── */}
+      <Animated.View entering={FadeIn.delay(200).duration(300)} style={styles.barcodeRow}>
+        <QrCodeIcon size={10} color={colors.textMuted} />
+        <Text style={[styles.barcodeText, { color: colors.textMuted }]}>
+          {product.barcode}
+        </Text>
+      </Animated.View>
     </View>
   );
 }
@@ -318,55 +283,72 @@ export function VerdictHero({
 // ── Styles ──
 
 const styles = StyleSheet.create({
-  heroGradient: {
+  hero: {
+    alignItems: "center",
     paddingHorizontal: spacing["3xl"],
+    paddingTop: spacing["2xl"],
     paddingBottom: spacing.xl,
     overflow: "hidden",
+    gap: spacing.md,
   },
-  heroSplit: {
+
+  // Micro header
+  microRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    gap: spacing.xl,
+    alignItems: "center",
+    gap: 5,
+    marginBottom: spacing.xs,
   },
-  heroImageColumn: {
+  microLogo: {
+    width: 12,
+    height: 12,
+    opacity: 0.35,
+  },
+  microText: {
+    fontSize: 9,
+    fontWeight: fontWeightTokens.bold,
+    letterSpacing: Platform.OS === "android" ? 0.3 : 1.2,
+    textTransform: "uppercase",
+  },
+
+  // Product image
+  imageContainer: {
     alignItems: "center",
   },
-  heroImageWrapper: {
-    width: 100,
-    height: 100,
-    borderRadius: 20,
+  imageWrapper: {
+    width: 120,
+    height: 120,
+    borderRadius: 24,
     borderWidth: 2.5,
-    padding: 4,
+    padding: 6,
     overflow: "hidden",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.12,
-        shadowRadius: 16,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.14,
+        shadowRadius: 20,
       },
-      android: {
-        elevation: 6,
-      },
+      android: { elevation: 8 },
     }),
   },
-  heroImagePress: {
+  imagePress: {
     flex: 1,
   },
-  heroImagePlaceholder: {
+  imagePlaceholder: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
   },
-  heroImage: {
+  productImage: {
     width: "100%",
     height: "100%",
-    borderRadius: 14,
+    borderRadius: 18,
   },
-  heroZoomBadge: {
+  zoomBadge: {
     position: "absolute",
-    bottom: 4,
-    right: 4,
+    bottom: 6,
+    right: 6,
     width: 22,
     height: 22,
     borderRadius: 11,
@@ -376,98 +358,82 @@ const styles = StyleSheet.create({
       ios: {
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
+        shadowOpacity: 0.12,
         shadowRadius: 4,
       },
-      android: {
-        elevation: 3,
-      },
+      android: { elevation: 3 },
     }),
   },
-  heroInfoColumn: {
-    flex: 1,
-    paddingVertical: spacing.xs,
-    gap: spacing.xs,
-  },
-  heroMicroRow: {
-    flexDirection: "row",
+
+  // Name block
+  nameBlock: {
     alignItems: "center",
-    gap: 6,
+    gap: spacing["2xs"],
+    paddingHorizontal: spacing.md,
   },
-  heroMicroText: {
-    fontSize: 10,
-    fontWeight: fontWeightTokens.bold,
-    letterSpacing: Platform.OS === "android" ? 0.3 : 1.2,
-    textTransform: "uppercase",
-  },
-  heroProductName: {
-    fontSize: fontSizeTokens.body,
-    fontWeight: fontWeightTokens.bold,
-    lineHeight: 20,
-  },
-  heroBrandRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    flexWrap: "wrap",
-  },
-  heroBrandText: {
-    fontSize: fontSizeTokens.caption,
-    fontWeight: fontWeightTokens.medium,
-  },
-  heroBarcodeChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-  },
-  heroBarcode: {
-    fontSize: 10,
-    fontWeight: fontWeightTokens.medium,
-    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
-  },
-  heroVerdictText: {
+  productName: {
     fontSize: fontSizeTokens.h4,
     fontWeight: fontWeightTokens.bold,
+    textAlign: "center",
+    lineHeight: 24,
+  },
+  brandText: {
+    fontSize: fontSizeTokens.caption,
+    fontWeight: fontWeightTokens.medium,
+    textAlign: "center",
+  },
+
+  // Verdict pill
+  verdictPillWrapper: {
+    alignSelf: "stretch",
+    marginTop: spacing.xs,
+  },
+  verdictPill: {
+    borderRadius: radius.xl,
+    paddingVertical: 14,
+    paddingHorizontal: spacing.xl,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  verdictPillText: {
+    fontSize: fontSizeTokens.h4,
+    fontWeight: fontWeightTokens.black,
+    color: "#FFFFFF",
     letterSpacing: 0.3,
-    marginTop: spacing.xs,
+    textAlign: "center",
   },
-  certifierSubRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 4,
+
+  // Certifier chip
+  certifierChipWrapper: {
+    alignSelf: "center",
+    maxWidth: "90%",
   },
-  certifierSubText: {
-    fontSize: 12,
-    fontWeight: "500",
-    flexShrink: 1,
-  },
-  certifierSubScore: {
-    fontSize: 12,
-    fontWeight: "800",
-  },
-  gradeStripRow: {
-    marginTop: spacing.xs,
-  },
-  metadataBand: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-start",
-    flexWrap: "wrap",
-    gap: spacing.md,
-    marginTop: spacing.sm,
-  },
-  certifierHeroBadge: {
+  certifierChip: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.xs,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.full,
     borderWidth: 1,
   },
-  certifierHeroBadgeText: {
-    fontSize: fontSizeTokens.micro,
+  certifierChipText: {
+    fontSize: fontSizeTokens.caption,
     fontWeight: fontWeightTokens.semiBold,
+    flexShrink: 1,
+  },
+
+  // Barcode
+  barcodeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    marginTop: spacing.xs,
+  },
+  barcodeText: {
+    fontSize: 10,
+    fontWeight: fontWeightTokens.medium,
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+    letterSpacing: 0.5,
   },
 });

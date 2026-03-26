@@ -20,7 +20,9 @@ import {
   Dimensions,
   Pressable,
   ScrollView,
+  Platform,
 } from "react-native";
+import { BlurView } from "expo-blur";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -160,6 +162,9 @@ export const TrustScoreBottomSheet = React.memo(function TrustScoreBottomSheet({
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
       {/* Backdrop */}
       <Animated.View style={[styles.backdrop, backdropStyle]}>
+        {Platform.OS === "ios" && (
+          <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
+        )}
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
       </Animated.View>
 
@@ -346,7 +351,7 @@ export const TrustScoreBottomSheet = React.memo(function TrustScoreBottomSheet({
 const styles = StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: Platform.select({ ios: "rgba(0, 0, 0, 0.2)", default: "rgba(0, 0, 0, 0.5)" }),
   },
   sheet: {
     position: "absolute",
