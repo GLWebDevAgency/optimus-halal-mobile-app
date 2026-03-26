@@ -172,9 +172,6 @@ export function PricingSection() {
                     </li>
                   ))}
                 </ul>
-                <p className="mt-4 pt-3 border-t border-border/50 text-xs text-center text-muted-foreground">
-                  Pour le prix d&apos;un café par mois
-                </p>
               </div>
             </TiltCard>
           </StaggerItem>

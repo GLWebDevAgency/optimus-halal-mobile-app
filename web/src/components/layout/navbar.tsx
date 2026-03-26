@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { List, Bell } from "@phosphor-icons/react";
 import { motion, useScroll, useTransform } from "motion/react";
 import { NaqiyLogo } from "@/components/brand/naqiy-logo";
@@ -54,9 +53,16 @@ export function Navbar() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         {/* Left — Logo (fades in on scroll) */}
         <motion.div style={{ opacity: logoOpacity, scale: logoScale }}>
-          <Link href="/" className="flex items-center">
+          <a
+            href="#hero"
+            onClick={(e) => {
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="flex items-center"
+          >
             <NaqiyLogo size="sm" variant="brand" />
-          </Link>
+          </a>
         </motion.div>
 
         {/* Center — Desktop nav links */}

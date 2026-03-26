@@ -242,10 +242,23 @@
     @apply scroll-smooth antialiased;
   }
 
+  /* Pointer cursor — all interactive elements */
+  a,
+  button,
+  [role="button"],
+  [tabindex="0"],
+  label[for],
+  select,
+  summary {
+    cursor: pointer;
+  }
+
   /* Focus states — gold ring on all interactive elements */
   a:focus-visible,
   button:focus-visible,
   input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
   [tabindex]:focus-visible {
     outline: 2px solid oklch(0.76 0.14 88 / 50%);
     outline-offset: 2px;

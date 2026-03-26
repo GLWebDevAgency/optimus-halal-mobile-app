@@ -59,7 +59,7 @@ export function MapSection() {
 
         <AnimateIn delay={0.5} className="mt-10">
           <p className="text-xs font-medium tracking-wider text-muted-foreground/70 uppercase mb-3">
-            Top certifieurs France — tous consultables dans l&apos;app
+            Top certifieurs France — et d&apos;autres à découvrir dans l&apos;app
           </p>
           <div className="flex items-center gap-3">
             {certifierLogos.map((logo) => (

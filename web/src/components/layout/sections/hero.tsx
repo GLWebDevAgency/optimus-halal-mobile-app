@@ -32,7 +32,7 @@ export function Hero() {
   const brandScale = useTransform(scrollY, [0, 300], [1, 0.88]);
 
   return (
-    <section className="relative flex min-h-svh items-center bg-background overflow-hidden">
+    <section id="hero" className="relative flex min-h-svh items-center bg-background overflow-hidden">
       {/* Animated mesh blob — gold (top-right, drifts) */}
       <div
         className="pointer-events-none absolute -top-40 -right-40 h-[600px] w-[600px] rounded-full"
@@ -62,7 +62,7 @@ export function Hero() {
         aria-hidden="true"
       />
 
-      <div className="container pt-24 pb-10 lg:pt-28 lg:pb-14 relative z-10">
+      <div className="container pt-24 pb-16 lg:pt-28 lg:pb-14 relative z-10">
         {/* ─── Brand hero — large logo that fades on scroll ─── */}
         <motion.div
           style={{ opacity: brandOpacity, y: brandY, scale: brandScale }}
@@ -175,7 +175,7 @@ export function Hero() {
                 Top certifieurs France
               </span>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4">
               {topCertifiers.map((cert) => (
                 <div
                   key={cert.name}
@@ -193,8 +193,8 @@ export function Hero() {
                   </span>
                 </div>
               ))}
-              <span className="text-xs text-muted-foreground/60">
-                + tous les certifieurs dans l&apos;app
+              <span className="text-[11px] sm:text-xs text-muted-foreground/60">
+                et d&apos;autres à découvrir dans l&apos;app
               </span>
             </div>
           </div>

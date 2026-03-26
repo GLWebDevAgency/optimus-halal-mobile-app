@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useMemo, useEffect } from "react";
-import { useInView, useScroll } from "motion/react";
+import { useRef, useMemo, useEffect, useState, useCallback } from "react";
+import { useInView, useScroll, motion, AnimatePresence } from "motion/react";
+import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { useTrack } from "@/lib/posthog";
 import { EVENTS } from "@/lib/analytics-events";
 
@@ -55,6 +56,108 @@ import { Footer } from "@/components/layout/sections/footer";
     12. CTA
     13. Footer
    ═══════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════
+   MOBILE PHONE CAROUSEL — swipe-style navigation between screens
+   ═══════════════════════════════════════════════════════════ */
+
+const CAROUSEL_SCREENS = [
+  { key: "home", label: "Accueil" },
+  { key: "scan", label: "Scanner" },
+  { key: "scanLoading", label: "Analyse" },
+  { key: "scanResult", label: "Résultat" },
+  { key: "map", label: "Carte" },
+  { key: "restaurant", label: "Restaurant" },
+  { key: "profile", label: "Profil" },
+] as const;
+
+function MobilePhoneCarousel({ screens }: { screens: ScreenConfig[] }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const goTo = useCallback(
+    (index: number) => {
+      setCurrentIndex(index);
+    },
+    []
+  );
+
+  const prev = useCallback(() => {
+    if (currentIndex > 0) goTo(currentIndex - 1);
+  }, [currentIndex, goTo]);
+
+  const next = useCallback(() => {
+    if (currentIndex < CAROUSEL_SCREENS.length - 1) goTo(currentIndex + 1);
+  }, [currentIndex, goTo]);
+
+  const activeKey = CAROUSEL_SCREENS[currentIndex].key;
+
+  return (
+    <div className="py-12 lg:hidden" role="group" aria-roledescription="carrousel" aria-label="Aperçu des écrans de l'application">
+      {/* Phone + navigation wrapper */}
+      <div className="relative flex items-center justify-center gap-3">
+        {/* Left arrow */}
+        <button
+          onClick={prev}
+          disabled={currentIndex === 0}
+          aria-label="Écran précédent"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-card shadow-sm ring-1 ring-border/50 transition-all duration-200 hover:shadow-md hover:ring-gold/20 disabled:opacity-30 disabled:hover:shadow-sm"
+        >
+          <CaretLeft className="size-4 text-foreground" weight="bold" />
+        </button>
+
+        {/* Phone */}
+        <div className="scale-[0.85] sm:scale-100 origin-top">
+          <PhoneFrame>
+            <PhoneScreenManager
+              screens={screens}
+              activeScreen={activeKey}
+            />
+          </PhoneFrame>
+        </div>
+
+        {/* Right arrow */}
+        <button
+          onClick={next}
+          disabled={currentIndex === CAROUSEL_SCREENS.length - 1}
+          aria-label="Écran suivant"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-card shadow-sm ring-1 ring-border/50 transition-all duration-200 hover:shadow-md hover:ring-gold/20 disabled:opacity-30 disabled:hover:shadow-sm"
+        >
+          <CaretRight className="size-4 text-foreground" weight="bold" />
+        </button>
+      </div>
+
+      {/* Screen label */}
+      <AnimatePresence mode="wait">
+        <motion.p
+          key={activeKey}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.2 }}
+          className="mt-4 text-center text-sm font-medium text-muted-foreground"
+        >
+          {CAROUSEL_SCREENS[currentIndex].label}
+        </motion.p>
+      </AnimatePresence>
+
+      {/* Dot indicators */}
+      <div className="mt-3 flex items-center justify-center gap-1.5">
+        {CAROUSEL_SCREENS.map((screen, i) => (
+          <button
+            key={screen.key}
+            onClick={() => goTo(i)}
+            aria-label={screen.label}
+            className={`h-1.5 rounded-full transition-all duration-300 ${
+              i === currentIndex
+                ? "w-6 bg-gold"
+                : "w-1.5 bg-border hover:bg-muted-foreground/30"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function LandingPhoneOrchestrator() {
   const track = useTrack();
@@ -139,17 +242,8 @@ export function LandingPhoneOrchestrator() {
 
             <div className="divider-gold mx-auto max-w-5xl" />
 
-            {/* ─── MOBILE INLINE PHONE — visible below lg ─── */}
-            <div className="flex justify-center py-12 lg:hidden">
-              <div className="scale-[0.85] sm:scale-100 origin-top">
-                <PhoneFrame>
-                  <PhoneScreenManager
-                    screens={screens}
-                    activeScreen={activeScreen}
-                  />
-                </PhoneFrame>
-              </div>
-            </div>
+            {/* ─── MOBILE PHONE CAROUSEL — visible below lg ─── */}
+            <MobilePhoneCarousel screens={screens} />
 
             <div ref={scanRef}>
               <ScanSection />
