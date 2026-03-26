@@ -74,7 +74,7 @@ export function NaqiyLogo({
         className={cn(iconS.cls, "object-contain")}
         priority
       />
-      <span className={cn(brandTextMap[size], "font-display font-bold tracking-tight text-foreground")}>
+      <span className={cn(brandTextMap[size], "font-display font-bold tracking-tight")}>
         Naqiy
       </span>
     </div>

@@ -9,16 +9,19 @@ const socialLinks = [
     label: "Instagram",
     href: "https://instagram.com/naqiy.app",
     icon: InstagramIcon,
+    active: true,
   },
   {
     label: "X",
     href: "https://x.com/naqiy.app",
     icon: XIcon,
+    active: false,
   },
   {
     label: "LinkedIn",
     href: "https://linkedin.com/company/naqiy",
     icon: LinkedinIcon,
+    active: false,
   },
 ];
 
@@ -29,12 +32,12 @@ export function Footer() {
         <div className="grid gap-12 md:grid-cols-4">
           {/* Col 1 — Brand */}
           <div>
-            <NaqiyLogo size="sm" />
+            <NaqiyLogo size="sm" className="text-white" />
             <p className="mt-3 text-sm text-white/50">
               Scanne. Comprends. Choisis.
             </p>
             <div className="mt-5 flex gap-3">
-              {socialLinks.map((social) => {
+              {socialLinks.filter((s) => s.active).map((social) => {
                 const Icon = social.icon;
                 return (
                   <a

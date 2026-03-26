@@ -149,8 +149,8 @@ const jsonLdOrg = {
     "Naqiy d\u00E9crypte chaque produit alimentaire pour que tu puisses nourrir ta famille en confiance.",
   foundingDate: "2025",
   sameAs: [
-    "https://x.com/naqiy.app",
     "https://instagram.com/naqiy.app",
+    "https://x.com/naqiy.app",
     "https://linkedin.com/company/naqiy",
   ],
   contactPoint: {
