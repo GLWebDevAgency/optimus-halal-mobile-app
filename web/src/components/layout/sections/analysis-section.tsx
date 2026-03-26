@@ -14,9 +14,9 @@ const features = [
   },
 {
     icon: Heartbeat,
-    title: "Halal et tayyib — parce que ta santé compte aussi",
+    title: "Deux scores. Deux exigences.",
     description:
-      "NutriScore, additifs à risque, indice NOVA… Le halal, c'est le minimum. Le tayyib, c'est ce que ta famille mérite.",
+      "Le Naqiy Score juge la licéité halal — certification, traçabilité, indépendance du certifieur. Le Naqiy Score Santé va plus loin : NutriScore, additifs à risque, indice NOVA. Parce que licite n'est pas toujours sain.",
     accent: "leaf" as const,
   },
   {

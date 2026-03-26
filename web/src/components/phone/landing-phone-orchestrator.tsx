@@ -24,7 +24,6 @@ import { ProfileScreen } from "@/components/phone/screens/profile-screen";
 import { Hero } from "@/components/layout/sections/hero";
 import { ScanSection } from "@/components/layout/sections/scan-section";
 import { AnalysisSection } from "@/components/layout/sections/analysis-section";
-import { ScanResultSection } from "@/components/layout/sections/scan-result-section";
 import { MapSection } from "@/components/layout/sections/map-section";
 import { RestaurantDetailSection } from "@/components/layout/sections/restaurant-detail-section";
 import { PricingSection } from "@/components/layout/sections/pricing";
@@ -191,7 +190,6 @@ export function LandingPhoneOrchestrator() {
   );
   /* ── Section refs (grid sections only — phone paired) ── */
   const scanRef = useRef<HTMLDivElement>(null);
-  const analysisRef = useRef<HTMLDivElement>(null);
   const scanResultRef = useRef<HTMLDivElement>(null);
   const naqiyScoreRef = useRef<HTMLDivElement>(null);
   const socialProofRef = useRef<HTMLDivElement>(null);
@@ -200,9 +198,9 @@ export function LandingPhoneOrchestrator() {
 
   /* ── Section visibility ── */
   const scanInView = useInView(scanRef, { amount: 0.4 });
-  const analysisInView = useInView(analysisRef, { amount: 0.4 });
   const scanResultInView = useInView(scanResultRef, { amount: 0.4 });
-  const naqiyScoreInView = useInView(naqiyScoreRef, { amount: 0.4 });
+  /* amount: 0.1 — NaqiyScoreSection fait 250vh, max 40% de visibilité = dépasse le viewport */
+  const naqiyScoreInView = useInView(naqiyScoreRef, { amount: 0.1 });
   const socialProofInView = useInView(socialProofRef, { amount: 0.3 });
   const mapInView = useInView(mapRef, { amount: 0.4 });
   const restaurantInView = useInView(restaurantRef, { amount: 0.4 });
@@ -213,10 +211,9 @@ export function LandingPhoneOrchestrator() {
   const activeScreen = useMemo(() => {
     if (restaurantInView) return "restaurant";
     if (mapInView) return "map";
-    if (socialProofInView) return "home";
+    if (socialProofInView) return "profile";
     if (naqiyScoreInView) return "scanResult";
-    if (scanResultInView) return "scanResult";
-    if (analysisInView) return "scanLoading";
+    if (scanResultInView) return "scanLoading";
     if (scanInView) return "scan";
     return "home";
   }, [
@@ -225,7 +222,6 @@ export function LandingPhoneOrchestrator() {
     socialProofInView,
     naqiyScoreInView,
     scanResultInView,
-    analysisInView,
     scanInView,
   ]);
 
@@ -247,10 +243,6 @@ export function LandingPhoneOrchestrator() {
 
             <div ref={scanRef}>
               <ScanSection />
-            </div>
-
-            <div ref={analysisRef}>
-              <ScanResultSection />
             </div>
 
             <div ref={scanResultRef}>
