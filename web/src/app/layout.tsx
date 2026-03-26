@@ -81,8 +81,8 @@ export const metadata: Metadata = {
     title: "Naqiy — Scanne. Comprends. Choisis.",
     description:
       "Un scan, un verdict halal. 817K+ produits, 12 certifieurs évalués. Gratuit.",
-    creator: "@naqiyapp",
-    site: "@naqiyapp",
+    creator: "@naqiy.app",
+    site: "@naqiy.app",
     images: ["/og-image.png"],
   },
   robots: {
@@ -153,8 +153,8 @@ const jsonLdOrg = {
     "Naqiy d\u00E9crypte chaque produit alimentaire pour que tu puisses nourrir ta famille en confiance.",
   foundingDate: "2025",
   sameAs: [
-    "https://x.com/naqiyapp",
-    "https://instagram.com/naqiyapp",
+    "https://x.com/naqiy.app",
+    "https://instagram.com/naqiy.app",
     "https://linkedin.com/company/naqiy",
   ],
   contactPoint: {

@@ -7,12 +7,12 @@ import { LinkedinIcon } from "@/components/icons/linkedin-icon";
 const socialLinks = [
   {
     label: "Instagram",
-    href: "https://instagram.com/naqiyapp",
+    href: "https://instagram.com/naqiy.app",
     icon: InstagramIcon,
   },
   {
     label: "X",
-    href: "https://x.com/naqiyapp",
+    href: "https://x.com/naqiy.app",
     icon: XIcon,
   },
   {
