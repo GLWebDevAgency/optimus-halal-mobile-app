@@ -253,7 +253,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onSelect={logout}
+                onClick={logout}
                 className="text-destructive focus:text-destructive"
               >
                 <SignOut className="mr-2 size-4" />
