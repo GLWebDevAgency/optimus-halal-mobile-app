@@ -371,14 +371,26 @@ describe("resolveFlag", () => {
       expect(r1).toBe(r2);
     });
 
-    it("falls through to true if variants is empty", () => {
-      const flag = makeFlag({ flagType: "variant", variants: [] });
-      expect(resolveFlag(flag, userId, undefined)).toBe(true);
+    it("returns defaultValue if variants is empty", () => {
+      const flag = makeFlag({ flagType: "variant", variants: [], defaultValue: "v1" });
+      expect(resolveFlag(flag, userId, undefined)).toBe("v1");
     });
 
-    it("falls through to true if variants is null", () => {
-      const flag = makeFlag({ flagType: "variant", variants: null });
-      expect(resolveFlag(flag, userId, undefined)).toBe(true);
+    it("returns defaultValue if variants is null", () => {
+      const flag = makeFlag({ flagType: "variant", variants: null, defaultValue: "v1" });
+      expect(resolveFlag(flag, userId, undefined)).toBe("v1");
+    });
+
+    it("returns defaultValue for variant used as global config (authMode pattern)", () => {
+      const flag = makeFlag({
+        flagType: "variant",
+        enabled: true,
+        defaultValue: "v2",
+        variants: null,
+        rolloutPercentage: 100,
+      });
+      expect(resolveFlag(flag, "any-user-1", undefined)).toBe("v2");
+      expect(resolveFlag(flag, "any-user-2", undefined)).toBe("v2");
     });
 
     it("distributes users across variants", () => {

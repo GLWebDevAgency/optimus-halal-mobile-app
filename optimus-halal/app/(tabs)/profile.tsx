@@ -242,7 +242,7 @@ export default function ProfileScreen() {
           style: "destructive",
           onPress: () => {
             logoutMutation.mutate(undefined, {
-              onSuccess: () => router.replace("/(auth)/welcome"),
+              onSuccess: () => router.replace("/(auth)/login"),
             });
           },
         },
@@ -572,7 +572,7 @@ export default function ProfileScreen() {
             <PressableScale
               onPress={() => {
                 impact();
-                router.push("/(auth)/welcome" as any);
+                router.push("/(auth)/login" as any);
               }}
               accessibilityRole="button"
               accessibilityLabel={t.guest.loginExistingAccount}

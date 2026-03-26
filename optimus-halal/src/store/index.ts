@@ -106,10 +106,14 @@ export const useThemeStore = create<ThemeState>()(
 /**
  * Feature Flags State
  */
+type BooleanFlagKeys = {
+  [K in keyof FeatureFlags]: FeatureFlags[K] extends boolean ? K : never;
+}[keyof FeatureFlags];
+
 interface FeatureFlagsState {
   flags: FeatureFlags;
   updateFlags: (flags: Partial<FeatureFlags>) => void;
-  isFeatureEnabled: (feature: keyof FeatureFlags) => boolean;
+  isFeatureEnabled: (feature: BooleanFlagKeys) => boolean;
 }
 
 export const useFeatureFlagsStore = create<FeatureFlagsState>()((set, get) => ({

@@ -2,8 +2,8 @@
  * Auth Layout — Naqiy 2-Tier Model
  *
  * Routes d'authentification pour le modèle Guest / Naqiy+ :
- * - welcome: Découverte Naqiy, CTA gratuit + Naqiy+
  * - login: Connexion Naqiy+ (email/password + biométrie)
+ * - magic-link: Connexion passwordless (magic link email)
  * - signup: Création de compte post-paiement RevenueCat
  * - forgot-password: Demande de réinitialisation
  * - reset-code: Saisie du code OTP (6 hex, 15min TTL)
@@ -30,8 +30,8 @@ export default function AuthLayout() {
           contentStyle: { backgroundColor: colors.background },
         }}
       >
-        <Stack.Screen name="welcome" options={{ animation: "fade" }} />
-        <Stack.Screen name="login" />
+        <Stack.Screen name="login" options={{ animation: "fade" }} />
+        <Stack.Screen name="magic-link" />
         <Stack.Screen name="signup" />
         <Stack.Screen name="forgot-password" />
         <Stack.Screen

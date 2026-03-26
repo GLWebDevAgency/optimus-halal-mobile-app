@@ -117,6 +117,8 @@ export function resolveFlag(
     return flag.variants[idx];
   }
 
-  // 5. Boolean enabled = true
+  // 5. Variant without allocation array → return defaultValue
+  //    Boolean enabled → return true
+  if (flag.flagType === "variant") return flag.defaultValue;
   return true;
 }

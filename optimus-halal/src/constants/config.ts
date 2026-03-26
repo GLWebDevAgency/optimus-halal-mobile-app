@@ -25,6 +25,7 @@
  * │ offlineCacheEnabled     │   ✗    │ Cache offline premium                        │
  * │ premiumMapEnabled       │   ✗    │ Carte enrichie premium                       │
  * │ healthProfileEnabled    │   ✗    │ Profil santé / allergènes personnalisé       │
+ * │ authMode (variant)      │  "v1"  │ Mode auth: "v1" | "v2" | "hybrid"           │
  * └─────────────────────────┴────────┴──────────────────────────────────────────────┘
  *
  * Pour activer une flag : passer la valeur à `true` dans `defaultFeatureFlags`.
@@ -32,6 +33,7 @@
  *   - socialAuthEnabled  → signup.tsx (boutons Google/Apple + divider)
  *   - alertsEnabled      → profile.tsx (onglet alertes), tabs/_layout
  *   - marketplaceEnabled → marketplace tab, product pages
+ *   - authMode           → welcome.tsx (route vers login ou magic-link)
  */
 
 export const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN ?? "";
@@ -39,23 +41,14 @@ export const POSTHOG_API_KEY = process.env.EXPO_PUBLIC_POSTHOG_API_KEY ?? "";
 export const POSTHOG_HOST = "https://eu.i.posthog.com";
 
 /**
- * Authentication Mode Configuration
- * 
- * V1 = Classic (email/password) only
- * V2 = Magic Link only (passwordless) - DEFAULT
- * HYBRID = Both options available
+ * Authentication Mode
+ *
+ * Controlled via remote feature flag "authMode" (variant type):
+ * - "v1": Classic email/password login
+ * - "v2": Magic Link only (passwordless)
+ * - "hybrid": Both options available on welcome screen
  */
 export type AuthMode = "v1" | "v2" | "hybrid";
-
-export const AUTH_CONFIG = {
-  /**
-   * Mode d'authentification actif
-   * - "v1": Authentification classique (email/password) - ACTIF pour V1
-   * - "v2": Magic Link uniquement (sans mot de passe)
-   * - "hybrid": Les deux options disponibles
-   */
-  mode: "v1" as AuthMode,
-} as const;
 
 export interface FeatureFlags {
   // Marketplace (Phase 2 - désactivé par défaut)
@@ -89,6 +82,8 @@ export interface FeatureFlags {
   offlineCacheEnabled: boolean;
   premiumMapEnabled: boolean;
   healthProfileEnabled: boolean;
+  // Auth mode (variant flag: "v1" | "v2" | "hybrid")
+  authMode: AuthMode;
 }
 
 export const defaultFeatureFlags: FeatureFlags = {
@@ -110,6 +105,7 @@ export const defaultFeatureFlags: FeatureFlags = {
   offlineCacheEnabled: false,
   premiumMapEnabled: false,
   healthProfileEnabled: true,
+  authMode: "v1",
 };
 
 /**

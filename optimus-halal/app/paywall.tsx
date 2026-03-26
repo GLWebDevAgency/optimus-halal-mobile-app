@@ -78,7 +78,7 @@ export default function PaywallScreen() {
   const handleLogin = () => {
     impact();
     trackEvent("paywall_login_tapped");
-    router.replace("/(auth)/welcome" as any);
+    router.replace("/(auth)/login" as any);
   };
 
   const handleRestore = async () => {

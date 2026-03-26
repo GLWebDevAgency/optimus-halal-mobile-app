@@ -39,7 +39,7 @@ import { OnboardingSlide } from "@/components/onboarding";
 import { PremiumBackground, AnimatedPageIndicator } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { ONBOARDING_SLIDES } from "@constants/onboarding";
-import { useOnboardingStore, useTrialStore } from "@/store";
+import { useOnboardingStore, useTrialStore, useFeatureFlagsStore } from "@/store";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SLIDE_COUNT = ONBOARDING_SLIDES.length;
@@ -117,7 +117,9 @@ export default function OnboardingScreen() {
     impact();
     setOnboardingComplete(true);
     useTrialStore.getState().startTrial();
-    router.replace("/(auth)/login");
+    const authMode = useFeatureFlagsStore.getState().flags.authMode;
+    const route = authMode === "v2" ? "/(auth)/magic-link" : "/(auth)/login";
+    router.replace(route);
   }, [impact, setOnboardingComplete]);
 
   // ── Animated skip button opacity (fade out on last slide) ──

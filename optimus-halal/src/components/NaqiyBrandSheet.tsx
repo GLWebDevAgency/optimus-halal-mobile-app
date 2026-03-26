@@ -177,7 +177,7 @@ export function NaqiyBrandSheet({ visible, onClose, isGuest, user }: NaqiyBrandS
             logoutMutation.mutate(undefined, {
               onSuccess: () => {
                 handleClose();
-                setTimeout(() => router.replace("/(auth)/welcome"), 300);
+                setTimeout(() => router.replace("/(auth)/login"), 300);
               },
             });
           },

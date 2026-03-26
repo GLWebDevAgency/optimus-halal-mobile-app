@@ -18,6 +18,7 @@
  *   8. Certifier Events (controversy timeline for radical transparency)
  *   9. Scholarly References (sources catalog + trust score citations)
  *  10. Materialize Trust Scores (compute from raw flags + events, update DB columns)
+ *  11. Feature Flags (mobile app flags — ON CONFLICT DO NOTHING, admin changes preserved)
  *
  * All seeds use ON CONFLICT DO UPDATE (upsert) — safe to re-run on every deploy.
  * Trust scores are computed at runtime by certifier-score.service.ts, but
@@ -184,6 +185,18 @@ export async function seedReferenceData(db: PostgresJsDatabase): Promise<SeedSta
     console.log(`    Trust Scores: ${count} materialized (${Date.now() - t10}ms)`);
   } catch (err) {
     console.warn(`    Trust Scores: skipped (${(err as Error).message})`);
+  }
+
+  // ── Phase 11: Feature Flags ─────────────────────────────
+  // Seeds default flags for mobile app (ON CONFLICT DO NOTHING — admin changes preserved)
+  const t11 = Date.now();
+  try {
+    const { seedFeatureFlags } = await import("./seed-feature-flags.js");
+    const count = await seedFeatureFlags(db);
+    stats.push({ phase: "Feature Flags", count, durationMs: Date.now() - t11 });
+    console.log(`    Feature Flags: ${count} seeded (${Date.now() - t11}ms)`);
+  } catch (err) {
+    console.warn(`    Feature Flags: skipped (${(err as Error).message})`);
   }
 
   // ── Summary ─────────────────────────────────────────────

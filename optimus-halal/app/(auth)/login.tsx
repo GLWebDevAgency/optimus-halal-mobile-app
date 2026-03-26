@@ -383,7 +383,7 @@ export default function LoginScreen() {
                 accessibilityRole="link"
                 onPress={() => {
                   impact();
-                  router.push("/(auth)/welcome");
+                  router.replace("/(tabs)");
                 }}
               >
                 {t.auth.login.discoverPlus}
