@@ -1,0 +1,32 @@
+{
+  "name": "Naqiy — L'information halal, pure et transparente",
+  "short_name": "Naqiy",
+  "description": "Scanne n'importe quel produit alimentaire et obtiens un verdict halal personnalisé selon ton école juridique.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f0e8",
+  "theme_color": "#f5f0e8",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

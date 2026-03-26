@@ -106,6 +106,7 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
+  manifest: "/site.webmanifest",
   category: "technology",
 };
 
@@ -120,7 +121,7 @@ export const viewport: Viewport = {
 
 /* ── JSON-LD structured data (static, no user input — safe) ── */
 
-const jsonLd = {
+const jsonLdApp = {
   "@context": "https://schema.org",
   "@type": "MobileApplication",
   name: "Naqiy",
@@ -136,17 +137,32 @@ const jsonLd = {
     priceCurrency: "EUR",
     description: "Gratuit \u2014 scan et verdict halal toujours accessibles",
   },
-  author: {
-    "@type": "Organization",
-    name: "Naqiy",
-    url: "https://naqiy.app",
-    logo: "https://naqiy.app/images/logo_naqiy_full.png",
-    sameAs: [
-      "https://twitter.com/naqiyapp",
-      "https://instagram.com/naqiyapp",
-    ],
-  },
+  author: { "@id": "https://naqiy.app/#organization" },
   inLanguage: ["fr", "en", "ar"],
+} as const;
+
+const jsonLdOrg = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": "https://naqiy.app/#organization",
+  name: "Naqiy",
+  alternateName: "\u0646\u0642\u064A\u0651",
+  url: "https://naqiy.app",
+  logo: "https://naqiy.app/images/logo_naqiy.webp",
+  description:
+    "Naqiy d\u00E9crypte chaque produit alimentaire pour que tu puisses nourrir ta famille en confiance.",
+  foundingDate: "2025",
+  sameAs: [
+    "https://x.com/naqiyapp",
+    "https://instagram.com/naqiyapp",
+    "https://linkedin.com/company/naqiy",
+  ],
+  contactPoint: {
+    "@type": "ContactPoint",
+    contactType: "Customer Support",
+    email: "support@naqiy.app",
+    availableLanguage: ["French", "English", "Arabic"],
+  },
 } as const;
 
 export default function RootLayout({
@@ -159,8 +175,12 @@ export default function RootLayout({
       <head>
         <script
           type="application/ld+json"
-          // Safe: jsonLd is a static constant, no user input
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          // Safe: static constants, no user input
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdApp) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrg) }}
         />
       </head>
       <body

@@ -49,7 +49,7 @@ export function AnalysisSection() {
 
           {/* Quranic verse — pull-quote */}
           <blockquote className="mt-5 border-l-2 border-leaf/30 pl-5">
-            <p className="text-lg text-leaf/80 leading-relaxed" dir="rtl">
+            <p className="text-lg text-leaf/80 leading-relaxed" lang="ar" dir="rtl">
               «&thinsp;كُلُوا مِمَّا فِي الْأَرْضِ حَلَالًا طَيِّبًا&thinsp;»
             </p>
             <cite className="mt-1.5 block text-sm not-italic text-muted-foreground/60">
