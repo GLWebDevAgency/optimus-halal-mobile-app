@@ -39,8 +39,6 @@ export function PhoneFrame({ children, className }: PhoneFrameProps) {
             height: 812,
             transformOrigin: "top left",
             transform: `scale(${scale})`,
-            borderRadius: "36px",
-            overflow: "hidden",
           }}
         >
           {children}
