@@ -7,6 +7,7 @@ import {
   Crown,
   Van,
 } from "@phosphor-icons/react";
+import { InstagramIcon } from "@/components/icons/instagram-icon";
 import { AnimateIn, Stagger, StaggerItem } from "@/components/animations/animate-in";
 import { SplitText } from "@/components/animations/split-text";
 import { Badge } from "@/components/ui/badge";
@@ -116,6 +117,24 @@ export function ComingSoonSection() {
             </StaggerItem>
           ))}
         </Stagger>
+
+        {/* ── Follow CTA ── */}
+        <AnimateIn variant="fadeUp" delay={0.5}>
+          <div className="mt-10 text-center">
+            <p className="text-sm text-muted-foreground mb-4">
+              Suis l&apos;avancement du projet sur Instagram.
+            </p>
+            <a
+              href="https://instagram.com/naqiy.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2.5 rounded-full bg-foreground px-6 py-3 font-display text-sm font-bold text-background transition-all duration-200 hover:scale-[1.03] hover:shadow-lg"
+            >
+              <InstagramIcon className="size-4" />
+              Suivre @naqiy.app
+            </a>
+          </div>
+        </AnimateIn>
       </div>
     </section>
   );
