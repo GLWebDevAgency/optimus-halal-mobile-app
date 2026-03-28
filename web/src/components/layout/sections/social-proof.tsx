@@ -33,7 +33,7 @@ const personalizationFeatures = [
     icon: Heartbeat,
     title: "Ton profil santé, intégré",
     description:
-      "Diabète, grossesse, cholestérol — Naqiy filtre ce qui compte pour toi et ta famille.",
+      "Enfants, grossesse — Naqiy filtre ce qui compte pour toi et ta famille. Et bientôt, d'autres profils personnalisés (vegan, éthique…).",
     accent: "leaf" as const,
   },
   {

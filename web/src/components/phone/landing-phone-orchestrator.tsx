@@ -12,6 +12,7 @@ import {
   type ScreenConfig,
 } from "@/components/phone/phone-screen-manager";
 import { StickyPhone } from "@/components/phone/sticky-phone";
+import { NaqiyScrollProvider } from "@/components/phone/naqiy-scroll-context";
 
 import { HomeScreen } from "@/components/phone/screens/home-screen";
 import { ScanScreen } from "@/components/phone/screens/scan-screen";
@@ -175,19 +176,6 @@ export function LandingPhoneOrchestrator() {
     });
   }, [scrollYProgress, track]);
 
-  /* ── Screen configs inside component so JSX has access to React tree context ── */
-  const screens: ScreenConfig[] = useMemo(
-    () => [
-      { key: "home", component: <HomeScreen />, category: "home" },
-      { key: "scan", component: <ScanScreen />, category: "scan" },
-      { key: "scanLoading", component: <ScanLoadingScreen />, category: "scan" },
-      { key: "scanResult", component: <ScanResultScreen />, category: "scan" },
-      { key: "map", component: <MapScreen />, category: "map" },
-      { key: "restaurant", component: <RestaurantScreen />, category: "map" },
-      { key: "profile", component: <ProfileScreen />, category: "profile" },
-    ],
-    []
-  );
   /* ── Section refs (grid sections only — phone paired) ── */
   const scanRef = useRef<HTMLDivElement>(null);
   const scanResultRef = useRef<HTMLDivElement>(null);
@@ -195,6 +183,32 @@ export function LandingPhoneOrchestrator() {
   const socialProofRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const restaurantRef = useRef<HTMLDivElement>(null);
+
+  /* ── NaqiyScore scroll progress — passed to ScanResultScreen for tab sync ── */
+  const { scrollYProgress: naqiyScrollProgress } = useScroll({
+    target: naqiyScoreRef,
+    offset: ["start start", "end end"],
+  });
+  const naqiyScrollValue = { scrollYProgress: naqiyScrollProgress };
+
+  /* ── Screen configs inside component so JSX has access to React tree context ── */
+  const screens: ScreenConfig[] = [
+    { key: "home", component: <HomeScreen />, category: "home" },
+    { key: "scan", component: <ScanScreen />, category: "scan" },
+    { key: "scanLoading", component: <ScanLoadingScreen />, category: "scan" },
+    {
+      key: "scanResult",
+      component: (
+        <NaqiyScrollProvider value={naqiyScrollValue}>
+          <ScanResultScreen />
+        </NaqiyScrollProvider>
+      ),
+      category: "scan",
+    },
+    { key: "map", component: <MapScreen />, category: "map" },
+    { key: "restaurant", component: <RestaurantScreen />, category: "map" },
+    { key: "profile", component: <ProfileScreen />, category: "profile" },
+  ];
 
   /* ── Section visibility ── */
   const scanInView = useInView(scanRef, { amount: 0.4 });

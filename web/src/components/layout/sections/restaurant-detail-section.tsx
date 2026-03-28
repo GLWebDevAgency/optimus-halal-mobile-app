@@ -22,7 +22,7 @@ const details = [
     icon: Certificate,
     title: "Chaque certifieur a sa note de fiabilité",
     description:
-      "AVS, Achahada — Naqiy évalue chaque organisme selon des critères stricts et transparents.",
+      "Est-ce que le restaurant est certifié par un organisme de confiance ? Naqiy te le dit clairement pour que tu puisses choisir en toute confiance.",
     color: "text-leaf",
   },
 ];

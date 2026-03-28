@@ -27,11 +27,11 @@ import {
    ═══════════════════════════════════════════════ */
 
 const TRUST_GRADES = [
-  { grade: 1, arabic: "١", label: "Très fiable",    color: "#22c55e", range: "≥ 90" },
-  { grade: 2, arabic: "٢", label: "Fiable",         color: "#84cc16", range: "70–89" },
-  { grade: 3, arabic: "٣", label: "Vigilance",      color: "#f59e0b", range: "51–69" },
-  { grade: 4, arabic: "٤", label: "Peu fiable",     color: "#f97316", range: "35–50" },
-  { grade: 5, arabic: "٥", label: "Non fiable",     color: "#ef4444", range: "< 35" },
+  { grade: 1, arabic: "١", label: "Très fiable",            color: "#22c55e", range: "≥ 90" },
+  { grade: 2, arabic: "٢", label: "Fiable",                 color: "#84cc16", range: "70–89" },
+  { grade: 3, arabic: "٣", label: "Vigilance",              color: "#f59e0b", range: "51–69" },
+  { grade: 4, arabic: "٤", label: "Peu fiable",             color: "#f97316", range: "35–50" },
+  { grade: 5, arabic: "٥", label: "Pas fiable du tout",     color: "#ef4444", range: "< 35" },
 ] as const;
 
 const CRITERIA = [

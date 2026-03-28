@@ -1,38 +1,261 @@
 "use client";
 
 import React from "react";
+import { motion, useTransform } from "motion/react";
+import {
+  Handshake,
+  ShieldWarning,
+  Heart,
+  ShareNetwork,
+  DotsThree,
+  ShieldCheck,
+  Knife,
+  Heartbeat,
+  Warning,
+  CaretRight,
+  Cookie,
+  Drop,
+  Fire,
+  Barbell,
+} from "@phosphor-icons/react";
+import { useNaqiyScroll } from "@/components/phone/naqiy-scroll-context";
+
+/* ═══════════════════════════════════════════════════════════
+   CONSTANTS & DATA — Static mockup matching real mobile app
+   ═══════════════════════════════════════════════════════════ */
 
 const GREEN = "#22c55e";
+const RED = "#ef4444";
+const ORANGE = "#f97316";
 const GOLD = "#D4AF37";
+const YELLOW = "#FECB02";
+const BG = "#0C0C0C";
+const CARD = "#1A1A1A";
+const BORDER = "rgba(255,255,255,0.06)";
+const MUTED = "rgba(255,255,255,0.4)";
 
-/* ── NaqiyGradeBadge strip — exact replica of mobile NaqiyGradeBadge "strip" variant ── */
+/* ── Product ── */
+const PRODUCT = {
+  name: "Cordon Bleu Halal",
+  brand: "Marque Y",
+  barcode: "3266980026417",
+};
 
+/* ── Certifier ── */
+const CERTIFIER = {
+  name: "Certifieur X",
+  score: 2,
+  label: "Pas fiable du tout",
+  color: RED,
+};
+
+/* ── NaqiyGrade strip ── */
 const TRUST_GRADES = [
-  { grade: 1, arabic: "١", color: "#22c55e" },
-  { grade: 2, arabic: "٢", color: "#84cc16" },
-  { grade: 3, arabic: "٣", color: "#f59e0b" },
-  { grade: 4, arabic: "٤", color: "#f97316" },
-  { grade: 5, arabic: "٥", color: "#ef4444" },
+  { grade: 1, arabic: "\u0661", color: "#22c55e" },
+  { grade: 2, arabic: "\u0662", color: "#84cc16" },
+  { grade: 3, arabic: "\u0663", color: "#f59e0b" },
+  { grade: 4, arabic: "\u0664", color: "#f97316" },
+  { grade: 5, arabic: "\u0665", color: "#ef4444" },
+];
+const ACTIVE_GRADE = 5;
+
+/* ── Madhab data ── */
+const MADHABS = [
+  { name: "Hanafi", verdict: "halal" as const, score: 85 },
+  { name: "Shafii", verdict: "halal" as const, score: 79 },
+  { name: "Maliki", verdict: "halal" as const, score: 78 },
+  { name: "Hanbali", verdict: "halal" as const, score: 82 },
 ];
 
-const ACTIVE_GRADE = 1;
+const VERDICT_COLORS: Record<string, string> = {
+  halal: GREEN,
+  doubtful: ORANGE,
+  haram: RED,
+  unknown: "#6b7280",
+};
 
-function NaqiyGradeStrip() {
+const VERDICT_LABELS: Record<string, string> = {
+  halal: "Halal",
+  doubtful: "Douteux",
+  haram: "Haram",
+  unknown: "Inconnu",
+};
+
+/* ── Ingredients ── */
+const INGREDIENTS = [
+  { name: "Viande de poulet", status: "halal" as const },
+  { name: "Chapelure (gluten)", status: "halal" as const },
+  { name: "Arome naturel", status: "halal" as const },
+];
+
+/* ── Health ── */
+const HEALTH = {
+  score: 68,
+  label: "BON",
+  color: GREEN,
+};
+
+const NUTRI_GRADES = [
+  { letter: "A", color: "#038141", active: false },
+  { letter: "B", color: "#85BB2F", active: false },
+  { letter: "C", color: YELLOW, active: true },
+  { letter: "D", color: "#EE8100", active: false },
+  { letter: "E", color: "#E63E11", active: false },
+];
+
+const HEALTH_AXES = [
+  { label: "Nutrition", score: 62, max: 100, color: ORANGE },
+  { label: "Additifs", score: 85, max: 100, color: GREEN },
+];
+
+const NUTRIENTS = [
+  { label: "Energie", value: "1120 kJ", icon: Fire },
+  { label: "Lipides", value: "14.2g", icon: Drop },
+  { label: "Glucides", value: "18.5g", icon: Cookie },
+  { label: "Proteines", value: "11.8g", icon: Barbell },
+];
+
+/* ── Apple ease ── */
+const easeApple = (t: number) =>
+  t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+/* ═══════════════════════════════════════════════════════════
+   SVG COMPONENTS
+   ═══════════════════════════════════════════════════════════ */
+
+function MadhabRing({
+  name,
+  verdict,
+  score,
+}: {
+  name: string;
+  verdict: "halal" | "doubtful" | "haram" | "unknown";
+  score: number;
+}) {
+  const size = 42;
+  const strokeWidth = 3;
+  const r = (size - strokeWidth) / 2;
+  const circ = 2 * Math.PI * r;
+  const offset = circ * (1 - score / 100);
+  const color = VERDICT_COLORS[verdict];
+
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 3, marginTop: 6 }}>
-      {/* Gold "N" prefix */}
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 72, gap: 4 }}>
+      <div style={{ position: "relative", width: size, height: size }}>
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            stroke="rgba(255,255,255,0.06)"
+            strokeWidth={strokeWidth}
+          />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            stroke={color}
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            strokeDasharray={circ}
+            strokeDashoffset={offset}
+            style={{ transform: "rotate(-90deg)", transformOrigin: "center" }}
+          />
+        </svg>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {verdict === "halal" ? (
+            <Handshake size={16} weight="fill" color={color} />
+          ) : (
+            <ShieldWarning size={16} weight="fill" color={color} />
+          )}
+        </div>
+      </div>
+      <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.7)", textAlign: "center" }}>
+        {name}
+      </span>
       <span
         style={{
-          fontSize: 11,
-          fontWeight: 900,
-          color: GOLD,
-          marginRight: 2,
+          fontSize: 8,
+          fontWeight: 700,
+          textTransform: "uppercase",
+          letterSpacing: 0.5,
+          color,
+          backgroundColor: `${color}15`,
+          padding: "1px 5px",
+          borderRadius: 4,
         }}
       >
-        N
+        {VERDICT_LABELS[verdict]}
       </span>
+    </div>
+  );
+}
 
-      {/* 5 grade pills — Arabic numerals */}
+function HealthRing() {
+  const size = 60;
+  const strokeWidth = 5;
+  const r = (size - strokeWidth) / 2;
+  const circ = 2 * Math.PI * r;
+  const offset = circ * (1 - HEALTH.score / 100);
+
+  return (
+    <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="rgba(255,255,255,0.06)"
+          strokeWidth={strokeWidth}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke={HEALTH.color}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={circ}
+          strokeDashoffset={offset}
+          style={{ transform: "rotate(-90deg)", transformOrigin: "center" }}
+        />
+      </svg>
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <span style={{ fontSize: 18, fontWeight: 800, color: HEALTH.color, lineHeight: 1 }}>
+          {HEALTH.score}
+        </span>
+        <span style={{ fontSize: 8, color: MUTED }}>/100</span>
+      </div>
+    </div>
+  );
+}
+
+function NaqiyGradeStrip() {
+  const activeGrade = TRUST_GRADES.find((g) => g.grade === ACTIVE_GRADE)!;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+      <span style={{ fontSize: 10, fontWeight: 900, color: GOLD, marginRight: 1 }}>N</span>
       {TRUST_GRADES.map((g) => {
         const isActive = g.grade === ACTIVE_GRADE;
         return (
@@ -42,12 +265,12 @@ function NaqiyGradeStrip() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              borderRadius: 6,
+              borderRadius: 4,
               backgroundColor: g.color,
               opacity: isActive ? 1 : 0.2,
-              width: isActive ? 40 : 20,
-              height: isActive ? 24 : 20,
-              fontSize: isActive ? 13 : 9,
+              width: isActive ? 32 : 16,
+              height: isActive ? 20 : 16,
+              fontSize: isActive ? 11 : 8,
               fontWeight: 900,
               color: "white",
             }}
@@ -56,314 +279,424 @@ function NaqiyGradeStrip() {
           </div>
         );
       })}
-
-      {/* Active label */}
-      <span
-        style={{
-          fontSize: 11,
-          fontWeight: 600,
-          color: GREEN,
-          marginLeft: 6,
-        }}
-      >
-        Très fiable
+      <span style={{ fontSize: 9, fontWeight: 600, color: activeGrade.color, marginLeft: 4 }}>
+        {CERTIFIER.label}
       </span>
     </div>
   );
 }
 
-/* ── Icons ─────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   TAB CONTENT PANELS
+   ═══════════════════════════════════════════════════════════ */
 
-function NaqiyLogo() {
+function HalalTabContent() {
   return (
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2L2 7l10 5 10-5-10-5z" />
-      <path d="M2 17l10 5 10-5" />
-      <path d="M2 12l10 5 10-5" />
-    </svg>
-  );
-}
-
-function MagnifyIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.35-4.35" />
-    </svg>
-  );
-}
-
-function ShieldCheckIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      <path d="m9 12 2 2 4-4" />
-    </svg>
-  );
-}
-
-function HeartIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-    </svg>
-  );
-}
-
-function ShareIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="18" cy="5" r="3" />
-      <circle cx="6" cy="12" r="3" />
-      <circle cx="18" cy="19" r="3" />
-      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-    </svg>
-  );
-}
-
-function DotsIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="1" />
-      <circle cx="19" cy="12" r="1" />
-      <circle cx="5" cy="12" r="1" />
-    </svg>
-  );
-}
-
-function CheckCircle() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  );
-}
-
-/* ── Score ring SVG ────────────────────────────────────── */
-
-function ScoreRing({ score }: { score: number }) {
-  const r = 27;
-  const circ = 2 * Math.PI * r;
-  const offset = circ * (1 - score / 100);
-
-  return (
-    <div style={{ position: "relative", width: 64, height: 64, flexShrink: 0 }}>
-      <svg width="64" height="64" viewBox="0 0 64 64">
-        <circle cx="32" cy="32" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
-        <circle
-          cx="32"
-          cy="32"
-          r={r}
-          fill="none"
-          stroke={GREEN}
-          strokeWidth="5"
-          strokeLinecap="round"
-          strokeDasharray={circ}
-          strokeDashoffset={offset}
-          style={{ transform: "rotate(-90deg)", transformOrigin: "center" }}
-        />
-      </svg>
-      <span
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "white",
-          fontWeight: 700,
-          fontSize: 18,
-        }}
-      >
-        87
-      </span>
-    </div>
-  );
-}
-
-/* ── Tabs — real app has "Halal" | "Santé" (NOT madhab tabs) ── */
-
-const tabs = ["Halal", "Santé"];
-const activeTab = "Halal";
-
-/* ── Ingredient data ───────────────────────────────────── */
-
-const ingredients = [
-  { name: "Lécithine de soja", halal: true, note: "Halal" },
-  { name: "Arôme vanilline", halal: true, note: "Halal" },
-  { name: "Huile de palme", halal: true, note: "Halal" },
-];
-
-/* ── Nutrition data ────────────────────────────────────── */
-
-const nutrients = [
-  { label: "Énergie", value: "2252 kJ" },
-  { label: "Lipides", value: "30.9g" },
-  { label: "Glucides", value: "57.5g" },
-  { label: "Protéines", value: "6.3g" },
-];
-
-/* ── Main component ────────────────────────────────────── */
-
-export function ScanResultScreen() {
-  return (
-    <div className="relative w-full h-full flex flex-col" style={{ backgroundColor: "#111f15" }}>
-      {/* ── Verdict Hero ── */}
+    <div style={{ padding: "10px 14px", display: "flex", flexDirection: "column", gap: 12 }}>
+      {/* ── Madhab Rings ── */}
       <div
         style={{
-          background: "linear-gradient(180deg, #0a1a10 0%, #0f1e14 50%, #111f15 100%)",
-          paddingTop: 48,
-          paddingLeft: 16,
-          paddingRight: 16,
-          paddingBottom: 12,
-          flexShrink: 0,
+          borderRadius: 14,
+          backgroundColor: CARD,
+          border: `1px solid ${BORDER}`,
+          padding: 14,
         }}
       >
-        {/* Two-column layout */}
-        <div style={{ display: "flex", gap: 0 }}>
-          {/* LEFT: Product image card */}
-          <div style={{ width: "40%", flexShrink: 0 }}>
-            <div
-              style={{
-                position: "relative",
-                borderRadius: 16,
-                border: `2px solid ${GREEN}`,
-                backgroundColor: "rgba(255,255,255,0.06)",
-                aspectRatio: "3/4",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                overflow: "hidden",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: 4,
-                }}
-              >
-                <span style={{ fontSize: 36 }}>🍫</span>
-                <span
-                  style={{
-                    fontSize: 11,
-                    color: "rgba(255,255,255,0.3)",
-                    fontWeight: 600,
-                  }}
-                >
-                  Nutella
-                </span>
-              </div>
-
-              {/* Zoom badge */}
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 8,
-                  right: 8,
-                  width: 32,
-                  height: 32,
-                  borderRadius: "50%",
-                  backgroundColor: "rgba(255,255,255,0.1)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <MagnifyIcon />
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT: Info stack */}
-          <div style={{ flex: 1, paddingLeft: 12, display: "flex", flexDirection: "column", justifyContent: "center", gap: 2 }}>
-            {/* Micro row */}
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <NaqiyLogo />
-              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
-                NAQIY SCAN
-              </span>
-            </div>
-
-            {/* Product name */}
-            <div
-              style={{
-                fontSize: 16,
-                fontWeight: 700,
-                color: "white",
-                lineHeight: 1.3,
-                display: "-webkit-box",
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
-              }}
-            >
-              Nutella 400g
-            </div>
-
-            {/* Brand + barcode */}
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>
-              Ferrero · 3017620422003
-            </div>
-
-            {/* NaqiyGradeBadge strip — replaces plain "HALAL" + score */}
-            <NaqiyGradeStrip />
-          </div>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: GOLD, marginBottom: 10 }}>
+          Avis des ecoles - composition du produit
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          {MADHABS.map((m) => (
+            <MadhabRing key={m.name} name={m.name} verdict={m.verdict} score={m.score} />
+          ))}
         </div>
       </div>
 
-      {/* ── Alert Strip ── */}
-      <div style={{ paddingLeft: 16, paddingRight: 16, paddingTop: 8, paddingBottom: 8 }}>
+      {/* ── Certifier ── */}
+      <div
+        style={{
+          borderRadius: 14,
+          backgroundColor: CARD,
+          border: `1px solid ${BORDER}`,
+          padding: 14,
+        }}
+      >
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: GOLD, marginBottom: 10 }}>
+          Certification - Score de fiabilité certifieur
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              backgroundColor: "rgba(255,255,255,0.06)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <ShieldCheck size={18} weight="fill" color={MUTED} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "white" }}>{CERTIFIER.name}</div>
+            <div style={{ fontSize: 10, color: MUTED }}>Organisme certifieur</div>
+          </div>
+          <div
+            style={{
+              padding: "3px 8px",
+              borderRadius: 6,
+              backgroundColor: `${CERTIFIER.color}15`,
+              border: `1px solid ${CERTIFIER.color}30`,
+            }}
+          >
+            <span style={{ fontSize: 10, fontWeight: 700, color: CERTIFIER.color }}>
+              {CERTIFIER.score}/100
+            </span>
+          </div>
+        </div>
+        <NaqiyGradeStrip />
+      </div>
+
+      {/* ── Ingredients ── */}
+      <div
+        style={{
+          borderRadius: 14,
+          backgroundColor: CARD,
+          border: `1px solid ${BORDER}`,
+          padding: 14,
+        }}
+      >
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: GOLD, marginBottom: 10 }}>
+          Ingredients analyses
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {INGREDIENTS.map((ing) => {
+            const color = VERDICT_COLORS[ing.status];
+            return (
+              <div
+                key={ing.name}
+                style={{ display: "flex", alignItems: "center", gap: 8 }}
+              >
+                <div
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    backgroundColor: color,
+                    flexShrink: 0,
+                  }}
+                />
+                <span style={{ flex: 1, fontSize: 12, color: "rgba(255,255,255,0.7)" }}>
+                  {ing.name}
+                </span>
+                <span style={{ fontSize: 10, fontWeight: 600, color }}>
+                  {VERDICT_LABELS[ing.status]}
+                </span>
+                <CaretRight size={10} color={MUTED} />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SanteTabContent() {
+  return (
+    <div style={{ padding: "10px 14px", display: "flex", flexDirection: "column", gap: 12 }}>
+      {/* ── Health Score ── */}
+      <div
+        style={{
+          borderRadius: 14,
+          backgroundColor: CARD,
+          border: `1px solid ${BORDER}`,
+          padding: 14,
+          display: "flex",
+          alignItems: "center",
+          gap: 14,
+        }}
+      >
+        <HealthRing />
+        <div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: HEALTH.color, textTransform: "uppercase", letterSpacing: 1 }}>
+            {HEALTH.label}
+          </div>
+          <div style={{ fontSize: 10, color: MUTED, marginTop: 2 }}>Score Naqiy Sante</div>
+        </div>
+      </div>
+
+      {/* ── NutriScore ── */}
+      <div
+        style={{
+          borderRadius: 14,
+          backgroundColor: CARD,
+          border: `1px solid ${BORDER}`,
+          padding: 14,
+        }}
+      >
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: GOLD, marginBottom: 10 }}>
+          NutriScore
+        </div>
+        <div style={{ display: "flex", gap: 3 }}>
+          {NUTRI_GRADES.map((g) => (
+            <div
+              key={g.letter}
+              style={{
+                flex: 1,
+                height: g.active ? 28 : 22,
+                borderRadius: 6,
+                backgroundColor: g.color,
+                opacity: g.active ? 1 : 0.3,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                alignSelf: "center",
+                transition: "all 0.2s",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: g.active ? 14 : 10,
+                  fontWeight: 800,
+                  color: "white",
+                }}
+              >
+                {g.letter}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Health Axes ── */}
+      <div
+        style={{
+          borderRadius: 14,
+          backgroundColor: CARD,
+          border: `1px solid ${BORDER}`,
+          padding: 14,
+        }}
+      >
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: GOLD, marginBottom: 10 }}>
+          Axes de sante
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {HEALTH_AXES.map((axis) => (
+            <div key={axis.label}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.7)" }}>{axis.label}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: axis.color }}>
+                  {axis.score}/{axis.max}
+                </span>
+              </div>
+              <div style={{ height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.06)" }}>
+                <div
+                  style={{
+                    height: "100%",
+                    width: `${(axis.score / axis.max) * 100}%`,
+                    borderRadius: 2,
+                    backgroundColor: axis.color,
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Nutrient Grid ── */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 6,
+        }}
+      >
+        {NUTRIENTS.map((n) => {
+          const Icon = n.icon;
+          return (
+            <div
+              key={n.label}
+              style={{
+                borderRadius: 12,
+                backgroundColor: CARD,
+                border: `1px solid ${BORDER}`,
+                padding: "10px 12px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+                <Icon size={10} color={MUTED} />
+                <span style={{ fontSize: 9, color: MUTED }}>{n.label}</span>
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "white" }}>{n.value}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MAIN COMPONENT
+   ═══════════════════════════════════════════════════════════ */
+
+export function ScanResultScreen() {
+  const { scrollYProgress } = useNaqiyScroll();
+
+  /* ── Synchronized tab transition (same range & easing as NaqiyScore panels) ── */
+  const halalX = useTransform(scrollYProgress, [0.30, 0.65], ["0%", "-100%"], { ease: easeApple });
+  const santeX = useTransform(scrollYProgress, [0.30, 0.65], ["100%", "0%"], { ease: easeApple });
+  const indicatorX = useTransform(scrollYProgress, [0.30, 0.65], ["0%", "100%"], { ease: easeApple });
+
+  /* Tab text opacity */
+  const halalTabOpacity = useTransform(scrollYProgress, [0.30, 0.65], [1, 0.4], { ease: easeApple });
+  const santeTabOpacity = useTransform(scrollYProgress, [0.30, 0.65], [0.4, 1], { ease: easeApple });
+
+  return (
+    <div className="relative w-full h-full flex flex-col" style={{ backgroundColor: BG }}>
+      {/* ── Verdict Hero ── */}
+      <div
+        style={{
+          background: `linear-gradient(180deg, #0a0a0a 0%, ${BG} 100%)`,
+          paddingTop: 52,
+          paddingLeft: 16,
+          paddingRight: 16,
+          paddingBottom: 10,
+          flexShrink: 0,
+        }}
+      >
+        {/* Micro label */}
+        <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 6 }}>
+          <div
+            style={{
+              width: 14,
+              height: 14,
+              borderRadius: 4,
+              background: `linear-gradient(135deg, ${GOLD}, ${GOLD}80)`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <span style={{ fontSize: 7, fontWeight: 900, color: "white" }}>N</span>
+          </div>
+          <span style={{ fontSize: 9, fontWeight: 600, color: MUTED, letterSpacing: 1, textTransform: "uppercase" }}>
+            Naqiy Scan
+          </span>
+        </div>
+
+        {/* Product row */}
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          {/* Product image placeholder */}
+          <div
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 12,
+              border: `2px solid ${ORANGE}`,
+              backgroundColor: "rgba(255,255,255,0.04)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <Knife size={24} weight="duotone" color={MUTED} />
+          </div>
+
+          {/* Product info */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                fontSize: 15,
+                fontWeight: 700,
+                color: "white",
+                lineHeight: 1.2,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {PRODUCT.name}
+            </div>
+            <div style={{ fontSize: 10, color: MUTED, marginTop: 2 }}>
+              {PRODUCT.brand} · {PRODUCT.barcode}
+            </div>
+          </div>
+        </div>
+
+        {/* Verdict pill */}
         <div
           style={{
             display: "inline-flex",
             alignItems: "center",
-            gap: 6,
-            padding: "6px 12px",
+            gap: 5,
+            marginTop: 8,
+            padding: "4px 10px",
             borderRadius: 20,
-            backgroundColor: "rgba(34,197,94,0.1)",
-            border: "1px solid rgba(34,197,94,0.15)",
+            backgroundColor: `${ORANGE}15`,
+            border: `1px solid ${ORANGE}25`,
           }}
         >
-          <ShieldCheckIcon />
-          <span style={{ fontSize: 12, color: GREEN, fontWeight: 500 }}>
-            Composition conforme
+          <Warning size={11} weight="fill" color={ORANGE} />
+          <span style={{ fontSize: 10, fontWeight: 600, color: ORANGE }}>
+            Certification Detectee
           </span>
         </div>
       </div>
 
-      {/* ── Halal / Santé Tabs — real app tabs ── */}
+      {/* ── Tab Bar — scroll-synchronized indicator ── */}
       <div
         style={{
           display: "flex",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
-          flexShrink: 0,
           position: "relative",
+          borderBottom: `1px solid ${BORDER}`,
+          flexShrink: 0,
+          backgroundColor: BG,
         }}
       >
-        {tabs.map((tab) => {
-          const isActive = tab === activeTab;
-          return (
-            <div
-              key={tab}
-              style={{
-                flex: 1,
-                padding: "10px 0",
-                fontSize: 13,
-                fontWeight: isActive ? 700 : 500,
-                color: isActive ? GOLD : "rgba(255,255,255,0.35)",
-                textAlign: "center",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {tab}
-            </div>
-          );
-        })}
-        {/* Gold animated indicator under active tab */}
-        <div
+        <motion.div
+          style={{
+            flex: 1,
+            padding: "10px 0",
+            fontSize: 12,
+            fontWeight: 700,
+            textAlign: "center",
+            opacity: halalTabOpacity,
+            color: GOLD,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 4,
+          }}
+        >
+          <Knife size={12} weight="fill" />
+          Halal
+        </motion.div>
+        <motion.div
+          style={{
+            flex: 1,
+            padding: "10px 0",
+            fontSize: 12,
+            fontWeight: 700,
+            textAlign: "center",
+            opacity: santeTabOpacity,
+            color: GOLD,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 4,
+          }}
+        >
+          <Heartbeat size={12} weight="fill" />
+          Sante
+        </motion.div>
+
+        {/* Gold animated indicator */}
+        <motion.div
           style={{
             position: "absolute",
             bottom: 0,
@@ -371,140 +704,41 @@ export function ScanResultScreen() {
             width: "50%",
             height: 2,
             backgroundColor: GOLD,
+            translateX: indicatorX,
           }}
         />
       </div>
 
-      {/* ── Scrollable content ── */}
-      <div style={{ flex: 1, overflowY: "auto", paddingBottom: 120 }}>
-        {/* Halal Verdict Card */}
-        <div
+      {/* ── Tab Content — synchronized horizontal slide ── */}
+      <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+        {/* Halal panel */}
+        <motion.div
           style={{
-            margin: "12px 16px",
-            borderRadius: 16,
-            backgroundColor: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.06)",
-            padding: 16,
+            position: "absolute",
+            inset: 0,
+            overflowY: "auto",
+            translateX: halalX,
+            willChange: "transform",
           }}
         >
-          {/* Score ring + label */}
-          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
-            <ScoreRing score={87} />
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "white", marginBottom: 2 }}>
-                Halal
-              </div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
-                Tous les ingrédients conformes
-              </div>
-            </div>
-          </div>
+          <HalalTabContent />
+          {/* Bottom spacer for action bar */}
+          <div style={{ height: 80 }} />
+        </motion.div>
 
-          {/* Ingredient list */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {ingredients.map((ing) => (
-              <div
-                key={ing.name}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                }}
-              >
-                <CheckCircle />
-                <span style={{ flex: 1, fontSize: 13, color: "rgba(255,255,255,0.7)" }}>
-                  {ing.name}
-                </span>
-                <span style={{ fontSize: 11, color: GREEN, fontWeight: 500 }}>
-                  {ing.note}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Health Card — Santé & Nutrition */}
-        <div
+        {/* Sante panel */}
+        <motion.div
           style={{
-            margin: "0 16px 16px",
-            borderRadius: 16,
-            backgroundColor: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.06)",
-            padding: 16,
+            position: "absolute",
+            inset: 0,
+            overflowY: "auto",
+            translateX: santeX,
+            willChange: "transform",
           }}
         >
-          {/* Header */}
-          <div style={{ fontSize: 14, fontWeight: 700, color: GOLD, marginBottom: 12 }}>
-            Santé &amp; Nutrition
-          </div>
-
-          {/* NutriScore + NOVA row */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-            {/* NutriScore circle */}
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: "50%",
-                backgroundColor: "#E67E22",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <span style={{ color: "white", fontWeight: 700, fontSize: 16 }}>D</span>
-            </div>
-            <div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>NutriScore</div>
-              <div style={{ fontSize: 13, color: "white", fontWeight: 600 }}>D</div>
-            </div>
-
-            <div style={{ width: 1, height: 28, backgroundColor: "rgba(255,255,255,0.08)", marginLeft: 4, marginRight: 4 }} />
-
-            {/* NOVA badge */}
-            <div
-              style={{
-                padding: "4px 10px",
-                borderRadius: 8,
-                backgroundColor: "rgba(239,68,68,0.12)",
-                border: "1px solid rgba(239,68,68,0.2)",
-              }}
-            >
-              <span style={{ fontSize: 11, color: "#ef4444", fontWeight: 600 }}>Groupe 4</span>
-            </div>
-            <div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>NOVA</div>
-              <div style={{ fontSize: 13, color: "white", fontWeight: 600 }}>Ultra-transformé</div>
-            </div>
-          </div>
-
-          {/* 2-column nutrient grid */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 8,
-            }}
-          >
-            {nutrients.map((n) => (
-              <div
-                key={n.label}
-                style={{
-                  padding: "8px 10px",
-                  borderRadius: 8,
-                  backgroundColor: "rgba(255,255,255,0.03)",
-                }}
-              >
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 2 }}>
-                  {n.label}
-                </div>
-                <div style={{ fontSize: 13, color: "white", fontWeight: 600 }}>
-                  {n.value}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+          <SanteTabContent />
+          <div style={{ height: 80 }} />
+        </motion.div>
       </div>
 
       {/* ── Bottom Action Bar ── */}
@@ -514,36 +748,38 @@ export function ScanResultScreen() {
           bottom: 0,
           left: 0,
           right: 0,
-          backgroundColor: "rgba(18,18,18,0.9)",
+          backgroundColor: "rgba(12,12,12,0.88)",
           backdropFilter: "blur(16px)",
           WebkitBackdropFilter: "blur(16px)",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
+          borderTop: `1px solid ${BORDER}`,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          gap: 16,
-          paddingTop: 10,
+          gap: 12,
+          paddingTop: 8,
           paddingBottom: 28,
         }}
       >
-        {[<HeartIcon key="heart" />, <ShareIcon key="share" />, <DotsIcon key="dots" />].map(
-          (icon, i) => (
-            <div
-              key={i}
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 12,
-                backgroundColor: "rgba(255,255,255,0.06)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              {icon}
-            </div>
-          ),
-        )}
+        {[
+          <Heart key="heart" size={18} weight="regular" color="rgba(255,255,255,0.5)" />,
+          <ShareNetwork key="share" size={18} weight="regular" color="rgba(255,255,255,0.5)" />,
+          <DotsThree key="dots" size={18} weight="bold" color="rgba(255,255,255,0.5)" />,
+        ].map((icon, i) => (
+          <div
+            key={i}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+              backgroundColor: "rgba(255,255,255,0.06)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {icon}
+          </div>
+        ))}
       </div>
     </div>
   );
