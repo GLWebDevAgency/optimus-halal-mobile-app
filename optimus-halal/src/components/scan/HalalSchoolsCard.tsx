@@ -18,7 +18,7 @@ import Animated, {
 import {
   MosqueIcon,
   CheckCircleIcon,
-  WarningIcon,
+
   BookOpenIcon,
   LeafIcon,
   FlaskIcon,
@@ -70,6 +70,7 @@ export interface HalalSchoolsCardProps {
   /** Certifier numeric score for verdict summary (0-100) */
   certifierScore?: number | null;
   onMadhabChange: (madhab: MadhabId) => void;
+  onMadhabPress?: (verdict: MadhabVerdict) => void;
   onScholarlySourcePress: (data: ScholarlySourceData | ScholarlySourceData[]) => void;
   onTrustScorePress?: () => void;
   onIngredientPress?: (ingredient: string) => void;
@@ -213,23 +214,11 @@ function VerdictSection({
           </Text>
         )}
 
-        {/* Certifier line with contextual color */}
-        {verdictSummary.certifierLine && (
-          <View style={[styles.verdictCertifierRow, {
-            backgroundColor: certifierScore && certifierScore < 60
-              ? isDark ? "rgba(239,68,68,0.06)" : "rgba(239,68,68,0.04)"
-              : isDark ? "rgba(34,197,94,0.06)" : "rgba(34,197,94,0.04)",
-            borderColor: certifierScore && certifierScore < 60
-              ? isDark ? "rgba(239,68,68,0.12)" : "rgba(239,68,68,0.08)"
-              : isDark ? "rgba(34,197,94,0.12)" : "rgba(34,197,94,0.08)",
-          }]}>
-            <WarningIcon size={12} color={certifierScore && certifierScore < 60 ? "#ef4444" : "#22c55e"} weight="fill" />
-            <Text style={[styles.verdictCertifierInnerText, {
-              color: certifierScore && certifierScore < 60 ? (isDark ? "#f87171" : "#dc2626") : (isDark ? "#4ade80" : "#16a34a"),
-            }]}>
-              {verdictSummary.certifierLine}
-            </Text>
-          </View>
+        {/* Certifier warning — only shown when certifier is present but score missing */}
+        {verdictSummary.certifierLine && certifierScore === null && (
+          <Text style={[styles.verdictTheoreticalText, { color: colors.textMuted }]}>
+            {verdictSummary.certifierLine}
+          </Text>
         )}
       </View>
 
@@ -285,6 +274,7 @@ interface MadhabRingRowProps {
   userMadhab: MadhabId;
   certifierData: CertifierInfo | null;
   onSelect: (madhab: MadhabId) => void;
+  onMadhabPress?: (verdict: MadhabVerdict) => void;
 }
 
 function MadhabRingRow({
@@ -293,6 +283,7 @@ function MadhabRingRow({
   userMadhab,
   certifierData,
   onSelect,
+  onMadhabPress,
 }: MadhabRingRowProps) {
   const { t } = useTranslation();
   const { impact } = useHaptics();
@@ -323,6 +314,7 @@ function MadhabRingRow({
             onPress={() => {
               impact();
               onSelect(v.madhab);
+              onMadhabPress?.(v);
             }}
             accessibilityRole="button"
             accessibilityLabel={`${label}: ${v.status}`}
@@ -858,6 +850,7 @@ export function HalalSchoolsCard({
   certifierGrade,
   certifierScore,
   onMadhabChange: _onMadhabChange,
+  onMadhabPress,
   onScholarlySourcePress,
   onTrustScorePress,
   onIngredientPress,
@@ -951,6 +944,7 @@ export function HalalSchoolsCard({
           userMadhab={userMadhab}
           certifierData={certifierData}
           onSelect={handleMadhabSelect}
+          onMadhabPress={onMadhabPress}
         />
       )}
 

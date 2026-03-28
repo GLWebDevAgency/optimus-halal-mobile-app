@@ -132,9 +132,8 @@ export function buildVerdictSummary(
     }
   } else if (certifierName) {
     certifierLine = verdictT.certifierNoScore.replace("{name}", certifierName);
-  } else {
-    certifierLine = verdictT.certifierNone;
   }
+  // No certifier → certifierLine stays null (row not rendered)
 
   // Theoretical note — only when a certifier is present
   const theoreticalNote = certifierName ? verdictT.theoreticalNote : null;

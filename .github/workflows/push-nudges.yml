@@ -1,0 +1,50 @@
+name: Push Nudges
+
+on:
+  schedule:
+    # Daily at 10:00 AM CET (9:00 UTC) — peak mobile usage window
+    - cron: '0 9 * * *'
+  workflow_dispatch: # Manual trigger for testing
+
+jobs:
+  nudge:
+    name: Send Conversion Push Nudges
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    strategy:
+      matrix:
+        environment: [preview, production]
+
+    steps:
+      - name: Send push nudges
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          API_URL: ${{ matrix.environment == 'production' && secrets.PRODUCTION_API_URL || secrets.PREVIEW_API_URL }}
+          ENV_NAME: ${{ matrix.environment }}
+        run: |
+          if [ -z "$API_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "Skipping ${ENV_NAME} — secrets not configured"
+            exit 0
+          fi
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -H "Content-Type: application/json" \
+            "${API_URL}/internal/send-push-nudges")
+
+          BODY=$(echo "$RESPONSE" | head -n -1)
+          STATUS=$(echo "$RESPONSE" | tail -n 1)
+
+          echo "HTTP Status: ${STATUS}"
+          echo "Response: ${BODY}"
+
+          if [ "${STATUS}" = "200" ]; then
+            SENT=$(echo "${BODY}" | jq -r '.sent // 0')
+            FAILED=$(echo "${BODY}" | jq -r '.failed // 0')
+            echo "Push nudges — ${ENV_NAME}: ${SENT} envoyes, ${FAILED} echoues"
+          else
+            echo "Push nudges echoues sur ${ENV_NAME} (HTTP ${STATUS})"
+            exit 1
+          fi

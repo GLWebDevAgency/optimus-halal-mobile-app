@@ -3,8 +3,8 @@ import Link from "next/link";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 
 export const metadata: Metadata = {
-  title: "Mentions Légales",
-  description: "Mentions légales du site naqiy.app.",
+  title: "Mentions Légales — Naqiy",
+  description: "Mentions légales du site naqiy.app et de l'application Naqiy.",
 };
 
 export default function MentionsLegalesPage() {
@@ -22,17 +22,24 @@ export default function MentionsLegalesPage() {
         Mentions Légales
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Dernière mise à jour : 25 mars 2026
+        Dernière mise à jour : 28 mars 2026
       </p>
 
       <div className="prose prose-neutral mt-10 max-w-none [&_h2]:font-display [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mt-10 [&_h2]:mb-3 [&_p]:text-muted-foreground [&_p]:leading-relaxed [&_li]:text-muted-foreground [&_li]:leading-relaxed">
         <h2>Éditeur</h2>
         <p>
-          Le site <strong>naqiy.app</strong> est édité par :<br />
-          Naqiy — Projet indépendant<br />
-          Paris, France<br />
+          Le site <strong>naqiy.app</strong> et l&apos;application mobile{" "}
+          <strong>Naqiy</strong> sont édités par :
+          <br />
+          Naqiy — Projet indépendant, immatriculation en cours
+          <br />
+          Paris, France
+          <br />
           E-mail :{" "}
-          <a href="mailto:contact@naqiy.app" className="text-gold hover:underline">
+          <a
+            href="mailto:contact@naqiy.app"
+            className="text-gold hover:underline"
+          >
             contact@naqiy.app
           </a>
         </p>
@@ -54,7 +61,8 @@ export default function MentionsLegalesPage() {
           </a>
         </p>
         <p>
-          <strong>API et backend :</strong> Railway Corp., San Francisco, CA, USA —{" "}
+          <strong>API et backend :</strong> Railway Corp., San Francisco, CA,
+          USA —{" "}
           <a
             href="https://railway.app"
             target="_blank"
@@ -64,19 +72,31 @@ export default function MentionsLegalesPage() {
             railway.app
           </a>
         </p>
+        <p>
+          <strong>DNS et CDN :</strong> Cloudflare Inc. —{" "}
+          <a
+            href="https://cloudflare.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gold hover:underline"
+          >
+            cloudflare.com
+          </a>
+        </p>
 
         <h2>Propriété intellectuelle</h2>
         <p>
-          L&apos;ensemble des éléments constituant le site et l&apos;application
-          (textes, graphismes, logiciels, images, logos, icônes, sons, données)
-          sont la propriété exclusive de Naqiy ou font l&apos;objet d&apos;une
-          autorisation d&apos;utilisation.
+          L&apos;ensemble des éléments constituant le site et
+          l&apos;application (textes, graphismes, logiciels, images, logos,
+          icônes, sons, données, algorithmes) sont la propriété exclusive de
+          Naqiy ou font l&apos;objet d&apos;une autorisation
+          d&apos;utilisation.
         </p>
         <p>
           La marque <strong>Naqiy</strong>, le logo et le{" "}
-          <strong>NaqiyScore™</strong> sont des marques déposées ou en cours de
-          dépôt. Toute reproduction non autorisée constitue une contrefaçon
-          passible de sanctions pénales.
+          <strong>NaqiyScore</strong> sont des marques appartenant à Naqiy.
+          Toute reproduction non autorisée constitue une contrefaçon passible de
+          sanctions pénales.
         </p>
 
         <h2>Données personnelles</h2>
@@ -85,6 +105,21 @@ export default function MentionsLegalesPage() {
           données personnelles, veuillez consulter notre{" "}
           <Link href="/confidentialite" className="text-gold hover:underline">
             Politique de Confidentialité
+          </Link>
+          .
+        </p>
+        <p>
+          Délégué à la Protection des Données :{" "}
+          <a href="mailto:dpo@naqiy.app" className="text-gold hover:underline">
+            dpo@naqiy.app
+          </a>
+        </p>
+
+        <h2>Conditions d&apos;utilisation</h2>
+        <p>
+          L&apos;utilisation de l&apos;application et du site est régie par nos{" "}
+          <Link href="/cgu" className="text-gold hover:underline">
+            Conditions Générales d&apos;Utilisation
           </Link>
           .
         </p>
@@ -101,14 +136,18 @@ export default function MentionsLegalesPage() {
             Open Food Facts
           </a>{" "}
           (licence ODbL). Ces données sont enrichies et vérifiées par les
-          systèmes d&apos;analyse de Naqiy.
+          systèmes d&apos;analyse de Naqiy, incluant une intelligence
+          artificielle (Google Gemini) pour l&apos;analyse des ingrédients.
         </p>
 
         <h2>Crédits</h2>
         <ul>
           <li>Icônes : Phosphor Icons (licence MIT)</li>
-          <li>Typographie : Nunito & Nunito Sans (Google Fonts, licence OFL)</li>
-          <li>Framework : Next.js par Vercel</li>
+          <li>
+            Typographie : Nunito &amp; Nunito Sans (Google Fonts, licence OFL)
+          </li>
+          <li>Framework web : Next.js par Vercel</li>
+          <li>Framework mobile : React Native / Expo</li>
         </ul>
       </div>
     </main>

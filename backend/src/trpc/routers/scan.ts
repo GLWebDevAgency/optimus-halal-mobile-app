@@ -10,6 +10,7 @@ import {
   additives as additivesTable,
   additiveMadhabRulings,
   devices,
+  scanFeedback,
 } from "../../db/schema/index.js";
 import {
   analyzeHalalStatus,
@@ -690,6 +691,8 @@ export const scanRouter = router({
               currentStreak: newStreak,
               longestStreak: sql`GREATEST(${users.longestStreak}, ${newStreak})`,
               lastScanDate: now,
+              lastActiveAt: now,
+              firstScanAt: sql`COALESCE(${users.firstScanAt}, ${now})`,
               updatedAt: now,
               ...(usedStreakFreeze
                 ? {
@@ -1027,6 +1030,7 @@ export const scanRouter = router({
               scansToday: isNewDay ? 1 : sql`scans_today + 1`,
               lastScanDate: today,
               totalScans: sql`total_scans + 1`,
+              lastActiveAt: new Date(),
               updatedAt: new Date(),
             })
             .where(eq(devices.deviceId, ctx.deviceId));
@@ -1245,5 +1249,31 @@ export const scanRouter = router({
       await ctx.db.insert(scans).values(values);
 
       return { imported: values.length };
+    }),
+
+  submitFeedback: protectedProcedure
+    .input(
+      z.object({
+        productId: z.string().uuid(),
+        isCorrect: z.boolean(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .insert(scanFeedback)
+        .values({
+          userId: ctx.userId,
+          productId: input.productId,
+          isCorrect: input.isCorrect,
+        })
+        .onConflictDoUpdate({
+          target: [scanFeedback.userId, scanFeedback.productId],
+          set: {
+            isCorrect: input.isCorrect,
+            updatedAt: new Date(),
+          },
+        });
+
+      return { success: true };
     }),
 });

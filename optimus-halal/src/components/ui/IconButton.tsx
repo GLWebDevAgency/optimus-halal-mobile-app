@@ -7,6 +7,7 @@
 import React from "react";
 import { View, Text, StyleSheet, type ViewStyle } from "react-native";
 import { useHaptics } from "@/hooks";
+import { useTheme } from "@/hooks/useTheme";
 import { neutral } from "@/theme/colors";
 import { PressableScale } from "./PressableScale";
 import { AppIcon, type IconName } from "@/lib/icons";
@@ -44,7 +45,11 @@ export const IconButton: React.FC<IconButtonProps> = ({
   accessibilityLabel,
 }) => {
   const { impact } = useHaptics();
+  const { isDark } = useTheme();
   const sizeStyles = sizeConfig[size];
+
+  const filledBg = isDark ? "rgba(38,38,38,0.92)" : "#ffffff";
+  const filledBorder = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)";
 
   const handlePress = () => {
     impact();
@@ -62,7 +67,7 @@ export const IconButton: React.FC<IconButtonProps> = ({
       <View
         style={[
           styles.base,
-          variant === "filled" && styles.filled,
+          variant === "filled" && [styles.filled, { backgroundColor: filledBg, borderColor: filledBorder }],
           variant === "outline" && styles.outline,
           {
             width: sizeStyles.button,

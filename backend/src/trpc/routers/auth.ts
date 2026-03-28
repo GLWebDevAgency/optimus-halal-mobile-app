@@ -2,7 +2,7 @@ import { z } from "zod";
 import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { eq, and, gt, sql } from "drizzle-orm";
 import { router, publicProcedure, protectedProcedure } from "../trpc.js";
-import { users, refreshTokens, safeUserColumns, devices } from "../../db/schema/index.js";
+import { users, refreshTokens, safeUserColumns, devices, pushTokens } from "../../db/schema/index.js";
 import {
   hashPassword,
   verifyPassword,
@@ -88,6 +88,7 @@ export const authRouter = router({
       });
 
       // Link device → user (conversion tracking, source of truth)
+      // Also migrate push token from device to pushTokens table
       if (ctx.deviceId) {
         ctx.db
           .update(devices)
@@ -97,6 +98,24 @@ export const authRouter = router({
             updatedAt: new Date(),
           })
           .where(eq(devices.deviceId, ctx.deviceId))
+          .then(async () => {
+            // Migrate push token: if device had a push token, register it for the user
+            const device = await ctx.db.query.devices.findFirst({
+              where: eq(devices.deviceId, ctx.deviceId!),
+              columns: { pushToken: true, platform: true },
+            });
+            if (device?.pushToken) {
+              await ctx.db
+                .insert(pushTokens)
+                .values({
+                  userId: result.user.id,
+                  token: device.pushToken,
+                  platform: (device.platform ?? "ios") as "ios" | "android",
+                  deviceId: ctx.deviceId,
+                })
+                .catch(() => {});
+            }
+          })
           .catch((err) => {
             logger.warn("Device link failed", { deviceId: ctx.deviceId, error: String(err) });
           });
@@ -172,7 +191,7 @@ export const authRouter = router({
         });
       });
 
-      // Link device → user on login (handles new device for existing user)
+      // Link device → user on login + migrate push token
       if (ctx.deviceId) {
         ctx.db
           .update(devices)
@@ -182,6 +201,24 @@ export const authRouter = router({
             updatedAt: new Date(),
           })
           .where(eq(devices.deviceId, ctx.deviceId))
+          .then(async () => {
+            const device = await ctx.db.query.devices.findFirst({
+              where: eq(devices.deviceId, ctx.deviceId!),
+              columns: { pushToken: true, platform: true },
+            });
+            if (device?.pushToken) {
+              await ctx.db
+                .insert(pushTokens)
+                .values({
+                  userId: user.id,
+                  token: device.pushToken,
+                  platform: (device.platform ?? "ios") as "ios" | "android",
+                  deviceId: ctx.deviceId,
+                })
+                .onConflictDoNothing()
+                .catch(() => {});
+            }
+          })
           .catch((err) => {
             logger.warn("Device link on login failed", { deviceId: ctx.deviceId, error: String(err) });
           });

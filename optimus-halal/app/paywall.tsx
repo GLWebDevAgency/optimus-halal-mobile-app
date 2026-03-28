@@ -6,7 +6,7 @@
  */
 
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, ScrollView } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { XIcon } from "phosphor-react-native";
@@ -20,6 +20,7 @@ import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
 import { useQuotaStore, DAILY_SCAN_LIMIT } from "@/store";
 import { trackEvent } from "@/lib/analytics";
+import { trpc } from "@/lib/trpc";
 import { AppIcon } from "@/lib/icons";
 import { restorePurchases, isPremiumCustomer } from "@/services/purchases";
 import { useTrialStore } from "@/store";
@@ -54,6 +55,8 @@ export default function PaywallScreen() {
     return 0;
   });
 
+  const trackPaywallSeen = trpc.analytics.trackPaywallSeen.useMutation();
+
   // Track paywall view once on mount
   React.useEffect(() => {
     trackEvent("paywall_viewed", {
@@ -61,6 +64,7 @@ export default function PaywallScreen() {
       quota_exhausted: quotaExhausted,
       trigger,
     });
+    trackPaywallSeen.mutate({ trigger });
   }, []);
 
   const handleSubscribe = () => {
@@ -130,9 +134,18 @@ export default function PaywallScreen() {
       </Animated.View>
 
       {/* Content */}
-      <View
-        className="flex-1 justify-center items-center px-6"
-        style={{ paddingTop: insets.top + 60, paddingBottom: insets.bottom + 20 }}
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          paddingHorizontal: 24,
+          paddingTop: insets.top + 60,
+          paddingBottom: insets.bottom + 48,
+        }}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
       >
         {/* Logo */}
         <Animated.View entering={FadeInDown.delay(100).duration(600)}>
@@ -329,7 +342,7 @@ export default function PaywallScreen() {
             </Text>
           </PressableScale>
         </Animated.View>
-      </View>
+      </ScrollView>
     </View>
   );
 }

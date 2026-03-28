@@ -78,6 +78,20 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         backgroundColor: "#0C0C0C",
       },
     ],
+    // Android push notification channel for conversion nudges
+    [
+      "expo-notifications",
+      {
+        androidChannels: [
+          {
+            name: "naqiy_nudge",
+            importance: "high",
+            description: "Notifications Naqiy+",
+            vibrationPattern: [0, 250, 250, 250],
+          },
+        ],
+      },
+    ],
   ],
   runtimeVersion: {
     policy: "appVersion",

@@ -334,8 +334,8 @@ export default function ProfileScreen() {
             )}
           </Animated.View>
 
-          {/* ── Quota Card — only in exploration mode ────── */}
-          {!isTrialActive && (
+          {/* ── Quota Card — only for free guests (not trial, not premium) ────── */}
+          {!isPremium && !isTrialActive && (
             <Animated.View entering={FadeInUp.delay(100).duration(500)} className="mx-4 mb-6">
               <View
                 className="p-4 rounded-2xl"
@@ -369,8 +369,8 @@ export default function ProfileScreen() {
             </Animated.View>
           )}
 
-          {/* ── Naqiy+ CTA — only in exploration mode ──── */}
-          {!isTrialActive && (
+          {/* ── Naqiy+ CTA — only for free guests (not trial, not premium) ──── */}
+          {!isPremium && !isTrialActive && (
             <Animated.View entering={FadeInUp.delay(150).duration(500)} className="mx-4 mb-6">
               <PressableScale
                 onPress={() => {
