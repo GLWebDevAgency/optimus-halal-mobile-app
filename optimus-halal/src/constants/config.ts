@@ -117,8 +117,8 @@ export const APP_CONFIG = {
   VERSION: "1.0.0",
   MIN_VERSION_REQUIRED: "1.0.0",
   SUPPORT_EMAIL: "support@naqiy.app",
-  PRIVACY_POLICY_URL: "https://naqiy.app/privacy",
-  TERMS_URL: "https://naqiy.app/terms",
+  PRIVACY_POLICY_URL: "https://naqiy.app/confidentialite",
+  TERMS_URL: "https://naqiy.app/cgu",
 } as const;
 
 /**
