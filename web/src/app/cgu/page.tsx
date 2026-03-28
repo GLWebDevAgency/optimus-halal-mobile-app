@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   title: "Conditions Générales d'Utilisation — Naqiy",
   description:
     "Conditions générales d'utilisation de l'application Naqiy — scanner halal intelligent.",
+  alternates: {
+    canonical: "https://naqiy.app/cgu",
+  },
 };
 
 export default function CGUPage() {

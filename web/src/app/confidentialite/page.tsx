@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   title: "Politique de Confidentialité — Naqiy",
   description:
     "Politique de confidentialité de l'application Naqiy — comment vos données sont collectées, utilisées et protégées.",
+  alternates: {
+    canonical: "https://naqiy.app/confidentialite",
+  },
 };
 
 export default function ConfidentialitePage() {

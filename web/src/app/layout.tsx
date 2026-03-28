@@ -70,6 +70,10 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://naqiy.app"),
   alternates: {
     canonical: "https://naqiy.app",
+    languages: {
+      "fr-FR": "https://naqiy.app",
+      "x-default": "https://naqiy.app",
+    },
   },
   openGraph: {
     type: "website",
@@ -161,6 +165,27 @@ const jsonLdOrg = {
   },
 } as const;
 
+const jsonLdWebSite = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": "https://naqiy.app/#website",
+  name: "Naqiy",
+  alternateName: ["\u0646\u0642\u064A\u0651", "Naqiy App"],
+  url: "https://naqiy.app",
+  description:
+    "Scanne n\u2019importe quel produit alimentaire et obtiens un verdict halal personnalis\u00E9 selon ton \u00E9cole juridique.",
+  publisher: { "@id": "https://naqiy.app/#organization" },
+  inLanguage: "fr-FR",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: "https://naqiy.app/?q={search_term_string}",
+    },
+    "query-input": "required name=search_term_string",
+  },
+} as const;
+
 const jsonLdFaq = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
@@ -216,6 +241,11 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
+        <script
+          type="application/ld+json"
+          // Safe: static constants, no user input — no XSS risk
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebSite) }}
+        />
         <script
           type="application/ld+json"
           // Safe: static constants, no user input

@@ -5,6 +5,9 @@ import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 export const metadata: Metadata = {
   title: "Mentions Légales — Naqiy",
   description: "Mentions légales du site naqiy.app et de l'application Naqiy.",
+  alternates: {
+    canonical: "https://naqiy.app/mentions-legales",
+  },
 };
 
 export default function MentionsLegalesPage() {
