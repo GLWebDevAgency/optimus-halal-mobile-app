@@ -691,6 +691,8 @@ export const scanRouter = router({
               currentStreak: newStreak,
               longestStreak: sql`GREATEST(${users.longestStreak}, ${newStreak})`,
               lastScanDate: now,
+              lastActiveAt: now,
+              firstScanAt: sql`COALESCE(${users.firstScanAt}, ${now})`,
               updatedAt: now,
               ...(usedStreakFreeze
                 ? {
@@ -1028,6 +1030,7 @@ export const scanRouter = router({
               scansToday: isNewDay ? 1 : sql`scans_today + 1`,
               lastScanDate: today,
               totalScans: sql`total_scans + 1`,
+              lastActiveAt: new Date(),
               updatedAt: new Date(),
             })
             .where(eq(devices.deviceId, ctx.deviceId));

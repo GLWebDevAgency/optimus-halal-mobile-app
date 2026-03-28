@@ -81,6 +81,15 @@ export const users = pgTable(
     }),
     // ── Referral ──
     referralCode: t.varchar("referral_code", { length: 8 }).unique(),
+
+    // ── Lifecycle / Conversion tracking ──
+    firstScanAt: t.timestamp("first_scan_at", { withTimezone: true }),
+    lastActiveAt: t.timestamp("last_active_at", { withTimezone: true }),
+    paywallSeenCount: t.integer("paywall_seen_count").default(0).notNull(),
+    paywallLastSeenAt: t.timestamp("paywall_last_seen_at", { withTimezone: true }),
+    featureBlockedCount: t.integer("feature_blocked_count").default(0).notNull(),
+    quotaHitsCount: t.integer("quota_hits_count").default(0).notNull(),
+    pushNudgeSentAt: t.timestamp("push_nudge_sent_at", { withTimezone: true }),
   },
   (table) => [
     t.uniqueIndex("users_email_idx").on(table.email),

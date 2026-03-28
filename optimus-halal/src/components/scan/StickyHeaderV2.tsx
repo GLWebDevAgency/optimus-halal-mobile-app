@@ -18,14 +18,16 @@ import Animated, {
 } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { CaretLeftIcon } from "phosphor-react-native";
+import { CaretLeftIcon, KnifeIcon, HeartbeatIcon } from "phosphor-react-native";
 
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/hooks";
 import { STATUS_CONFIG, type HalalStatusKey } from "./scan-constants";
 import { NaqiyGradeBadge, type TrustGrade } from "./NaqiyGradeBadge";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { fontSize, fontWeight, fontFamily } from "@/theme/typography";
 import { spacing } from "@/theme/spacing";
+import { gold } from "@/theme/colors";
 
 // ── Constants ────────────────────────────────────────────
 
@@ -40,6 +42,9 @@ export interface StickyHeaderV2Props {
   effectiveHeroStatus: HalalStatusKey;
   trustGrade?: TrustGrade | null;
   onBackPress: () => void;
+  activeTab?: 0 | 1;
+  onTabPress?: (index: number) => void;
+  scrollProgress?: SharedValue<number>;
 }
 
 // ── Component ────────────────────────────────────────────
@@ -51,8 +56,12 @@ export const StickyHeaderV2 = React.memo(function StickyHeaderV2({
   effectiveHeroStatus,
   trustGrade,
   onBackPress,
+  activeTab = 0,
+  onTabPress,
+  scrollProgress,
 }: StickyHeaderV2Props) {
   const { isDark, colors } = useTheme();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
   const SHOW_START = heroHeight * 0.45;
@@ -159,6 +168,42 @@ export const StickyHeaderV2 = React.memo(function StickyHeaderV2({
           <NaqiyGradeBadge variant="micro" grade={trustGrade} />
         )}
       </View>
+
+      {/* ── Compact tab bar with icons ── */}
+      {onTabPress && (
+        <View
+          style={[
+            styles.tabBar,
+            { borderTopColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)" },
+          ]}
+        >
+          {[
+            { label: t.scanResult.tabHalal, Icon: KnifeIcon, index: 0 as const },
+            { label: t.scanResult.tabHealth, Icon: HeartbeatIcon, index: 1 as const },
+          ].map(({ label, Icon, index }) => {
+            const isSelected = activeTab === index;
+            const color = isSelected
+              ? (isDark ? gold[400] : gold[700])
+              : colors.textMuted;
+            return (
+              <PressableScale
+                key={index}
+                onPress={() => onTabPress(index)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: isSelected }}
+                accessibilityLabel={label}
+                style={styles.stickyTab}
+              >
+                <Icon size={14} color={color} weight={isSelected ? "fill" : "regular"} />
+                <Text style={[styles.stickyTabLabel, { color }]}>{label}</Text>
+                {isSelected && (
+                  <View style={[styles.stickyTabIndicator, { backgroundColor: color }]} />
+                )}
+              </PressableScale>
+            );
+          })}
+        </View>
+      )}
     </Animated.View>
   );
 });
@@ -204,6 +249,31 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
+  },
+  tabBar: {
+    flexDirection: "row",
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  stickyTab: {
+    flex: 1,
+    height: 36,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+  },
+  stickyTabLabel: {
+    fontSize: fontSize.caption,
+    fontWeight: fontWeight.semiBold,
+    letterSpacing: 0.2,
+  },
+  stickyTabIndicator: {
+    position: "absolute",
+    bottom: 0,
+    left: "25%",
+    right: "25%",
+    height: 2,
+    borderRadius: 1,
   },
 });
 

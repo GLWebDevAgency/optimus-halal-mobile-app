@@ -197,11 +197,6 @@ export function VerdictHero({
         >
           {product.name}
         </Text>
-        {product.brand && (
-          <Text style={[styles.brandText, { color: colors.textMuted }]} numberOfLines={1}>
-            {product.brand}
-          </Text>
-        )}
       </Animated.View>
 
       {/* ── VERDICT PILL — dominant visual ── */}
@@ -232,45 +227,77 @@ export function VerdictHero({
         </View>
       </Animated.View>
 
-      {/* ── Certifier chip — single, concise ── */}
+      {/* ── Certifier row — single line, compact ── */}
       {certifierName && certifierId && (
         <Animated.View
           entering={FadeIn.delay(SUSPENSE_DURATION + 180).duration(380)}
-          style={styles.certifierChipWrapper}
+          style={styles.certifierRowWrapper}
         >
           <Pressable
             onPress={onTrustGradePress}
             accessibilityRole="button"
             accessibilityLabel={certifierName}
-            style={({ pressed }) => [
-              styles.certifierChip,
-              {
-                backgroundColor: certifierChipBg,
-                borderColor: certifierChipBorder,
-                opacity: pressed ? 0.75 : 1,
-              },
-            ]}
           >
-            <CertifierLogo certifierId={certifierId} size={14} />
-            {isLowTrust ? (
-              <WarningCircleIcon size={13} color={scoreColor} weight="fill" />
-            ) : (
-              <CheckCircleIcon size={13} color={scoreColor} weight="fill" />
+            {({ pressed }) => (
+              <View
+                style={[
+                  styles.certifierRow,
+                  {
+                    backgroundColor: certifierChipBg,
+                    borderColor: certifierChipBorder,
+                    opacity: pressed ? 0.72 : 1,
+                  },
+                ]}
+              >
+                {/* Left: certifier logo — vertically centered */}
+                <CertifierLogo certifierId={certifierId} size={36} fallbackColor={scoreColor} />
+
+                {/* Center: 2-line content */}
+                <View style={styles.certifierContent}>
+                  {/* Line 1: status icon + name */}
+                  <View style={styles.certifierLine1}>
+                    {isLowTrust ? (
+                      <WarningCircleIcon size={13} color={scoreColor} weight="fill" />
+                    ) : (
+                      <CheckCircleIcon size={13} color={scoreColor} weight="fill" />
+                    )}
+                    <Text
+                      style={[styles.certifierName, { color: colors.textPrimary }]}
+                      numberOfLines={1}
+                    >
+                      {certifierName}
+                    </Text>
+                  </View>
+
+                  {/* Line 2: grade centered */}
+                  {trustGrade && (
+                    <Text
+                      style={[styles.certifierGrade, { color: scoreColor }]}
+                      numberOfLines={1}
+                    >
+                      {trustGrade.label}
+                    </Text>
+                  )}
+                </View>
+
+                {/* Right: caret — vertically centered by parent alignItems: "center" */}
+                <CaretRightIcon size={14} color={colors.textMuted} />
+              </View>
             )}
-            <Text
-              style={[styles.certifierChipText, { color: isLowTrust ? scoreColor : colors.textSecondary }]}
-              numberOfLines={1}
-            >
-              {certifierName}
-              {trustGrade ? `  ·  ${trustGrade.label}` : ""}
-            </Text>
-            <CaretRightIcon size={11} color={colors.textMuted} />
           </Pressable>
         </Animated.View>
       )}
 
-      {/* ── Barcode — minimal, bottom ── */}
+      {/* ── Brand · Barcode — minimal, bottom ── */}
       <Animated.View entering={FadeIn.delay(200).duration(300)} style={styles.barcodeRow}>
+        {product.brand && (
+          <>
+            <Text style={[styles.brandText, { color: colors.textMuted }]} numberOfLines={1}>
+              {product.brand}
+            </Text>
+            <Text style={[styles.barcodeSep, { color: colors.textMuted }]}>·</Text>
+          </>
+        )}
         <QrCodeIcon size={10} color={colors.textMuted} />
         <Text style={[styles.barcodeText, { color: colors.textMuted }]}>
           {product.barcode}
@@ -368,7 +395,6 @@ const styles = StyleSheet.create({
   // Name block
   nameBlock: {
     alignItems: "center",
-    gap: spacing["2xs"],
     paddingHorizontal: spacing.md,
   },
   productName: {
@@ -376,11 +402,6 @@ const styles = StyleSheet.create({
     fontWeight: fontWeightTokens.bold,
     textAlign: "center",
     lineHeight: 24,
-  },
-  brandText: {
-    fontSize: fontSizeTokens.caption,
-    fontWeight: fontWeightTokens.medium,
-    textAlign: "center",
   },
 
   // Verdict pill
@@ -403,32 +424,52 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  // Certifier chip
-  certifierChipWrapper: {
-    alignSelf: "center",
-    maxWidth: "90%",
+  // Certifier card (logo left + 2-line content right)
+  certifierRowWrapper: {
+    alignSelf: "stretch",
   },
-  certifierChip: {
+  certifierRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 10,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  certifierContent: {
+    flex: 1,
+    gap: 3,
+  },
+  certifierLine1: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.xs,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.full,
-    borderWidth: 1,
   },
-  certifierChipText: {
-    fontSize: fontSizeTokens.caption,
+  certifierName: {
+    flex: 1,
+    fontSize: fontSizeTokens.bodySmall,
     fontWeight: fontWeightTokens.semiBold,
-    flexShrink: 1,
+  },
+  certifierGrade: {
+    fontSize: fontSizeTokens.caption,
+    fontWeight: fontWeightTokens.bold,
+    textAlign: "center",
   },
 
-  // Barcode
+  // Brand · Barcode row
   barcodeRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 3,
+    gap: spacing.xs,
     marginTop: spacing.xs,
+  },
+  brandText: {
+    fontSize: fontSizeTokens.caption,
+    fontWeight: fontWeightTokens.medium,
+  },
+  barcodeSep: {
+    fontSize: fontSizeTokens.caption,
   },
   barcodeText: {
     fontSize: 10,

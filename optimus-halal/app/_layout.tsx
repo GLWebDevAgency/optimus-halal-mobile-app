@@ -35,6 +35,7 @@ import { OfflineBanner } from "@/components/ui";
 import { logger } from "@/lib/logger";
 import { initPurchases } from "@/services/purchases";
 import { useRemoteFlags } from "@/hooks/useRemoteFlags";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { initSentry, setGuestContext, setUserContext } from "../src/lib/sentry";
 import { initAnalytics, identifyUser, setSuperProperties } from "../src/lib/analytics";
 import { getDeviceId } from "@/services/api/client";
@@ -276,6 +277,11 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
   // Enabled for authenticated users only — guests use hardcoded defaults.
   // Polls every 5min, persists to MMKV for instant next startup.
   useRemoteFlags({ enabled: !!meQuery.data });
+
+  // Step 4: Register push token once auth state resolves
+  // Guest → saves to devices table (no email needed for nudges)
+  // Registered → saves to push_tokens table
+  usePushNotifications({ isGuest: authValue.isGuest, isAuthLoading: authValue.isAuthLoading });
 
   // Upgrade Sentry + PostHog context when returning user is identified
   useEffect(() => {

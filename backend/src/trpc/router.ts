@@ -21,6 +21,7 @@ import { adminRouter } from "./routers/admin.js";
 import { adminWaitlistRouter } from "./routers/admin-waitlist.js";
 import { waitlistRouter } from "./routers/waitlist.js";
 import { featureFlagsRouter } from "./routers/feature-flags.js";
+import { analyticsRouter } from "./routers/analytics.js";
 
 export const appRouter = router({
   auth: authRouter,
@@ -45,6 +46,7 @@ export const appRouter = router({
   adminWaitlist: adminWaitlistRouter,
   waitlist: waitlistRouter,
   featureFlags: featureFlagsRouter,
+  analytics: analyticsRouter,
 });
 
 export type AppRouter = typeof appRouter;

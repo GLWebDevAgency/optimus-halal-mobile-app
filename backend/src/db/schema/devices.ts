@@ -52,6 +52,17 @@ export const devices = pgTable(
     scansToday: t.integer("scans_today").default(0).notNull(),
     totalScans: t.integer("total_scans").default(0).notNull(),
 
+    // ── Lifecycle / Conversion tracking ──
+    lastActiveAt: t.timestamp("last_active_at", { withTimezone: true }),
+    paywallSeenCount: t.integer("paywall_seen_count").default(0).notNull(),
+    paywallLastSeenAt: t.timestamp("paywall_last_seen_at", { withTimezone: true }),
+    featureBlockedCount: t.integer("feature_blocked_count").default(0).notNull(),
+    quotaHitsCount: t.integer("quota_hits_count").default(0).notNull(),
+
+    // ── Push notifications (guest — no email available) ──
+    pushToken: t.text("push_token"),
+    pushNudgeSentAt: t.timestamp("push_nudge_sent_at", { withTimezone: true }),
+
     // ── Timestamps ──
     updatedAt: t
       .timestamp("updated_at", { withTimezone: true })

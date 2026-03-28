@@ -1835,34 +1835,41 @@ export const fr = {
   },
 
   paywall: {
-    title: "Vous avez beaucoup scanné aujourd'hui !",
-    titleRemaining: "Il vous reste {n} scans gratuits",
-    subtitle: "Revenez demain ou passez à Naqiy+ pour continuer sans limite.",
-    subtitleRemaining: "Allez plus loin : historique complet, favoris synchronisés, profil personnalisé.",
+    // Titre adaptatif selon le contexte
+    title: "Limite de scans atteinte",
+    titleRemaining: "Il vous reste {n} scan(s) aujourd'hui",
+    // Sous-titre : repositionne sans culpabiliser
+    subtitle: "Revenez demain ou rejoignez Naqiy+ pour continuer sans limite.",
+    subtitleRemaining: "Avec Naqiy+ : historique complet, favoris synchronisés, profil halal personnalisé.",
+    // Bénéfices — concrets, dans l'ordre de la valeur perçue
     featureUnlimitedScans: "Scans illimités, chaque jour",
-    featureProfile: "Créer un profil et synchroniser vos données",
-    featureFavorites: "Favoris et listes synchronisées",
-    featureHistory: "Historique complet de vos scans",
-    featureOffline: "Mode hors ligne (100 produits)",
+    featureProfile: "Profil halal personnalisé selon votre madhab",
+    featureFavorites: "Favoris et listes synchronisés sur tous vos appareils",
+    featureHistory: "Historique complet de tous vos scans",
+    featureOffline: "Accès hors ligne à 100 produits mémorisés",
     monthly: "Mensuel",
     annual: "Annuel",
-    perMonth: "€/mois",
-    perYear: "€/an",
+    perMonth: "€ / mois",
+    perYear: "€ / an",
+    // Badge de réassurance — CAPS intentionnel pour lisibilité à distance
     cancelAnytime: "SANS ENGAGEMENT",
-    cancelAnytimeDetail: "Résiliable à tout moment, en un clic",
-    freeTrialDays: "7 jours d'essai gratuit",
+    cancelAnytimeDetail: "Résiliation en un clic, à tout moment",
+    freeTrialDays: "7 jours d'essai offerts",
+    // CTA mission — pas "acheter", "soutenir" ancre dans la communauté
     subscribe: "Soutenir Naqiy",
     later: "Plus tard",
-    scansResetInfo: "Vos scans se rechargent demain à 00h00",
-    missionFooter: "Votre participation contribue à faire grandir le projet",
+    scansResetInfo: "Vos scans se rechargent chaque jour à minuit",
+    // Footer mission — ancrage islamique : transparence, communauté, bien commun
+    missionFooter: "Votre abonnement soutient la construction d'une base halal libre et transparente pour toute la communauté.",
     existingAccount: "J'ai déjà un compte Naqiy+",
     restorePurchases: "Restaurer mes achats",
-    restoring: "Restauration en cours…",
+    restoring: "Restauration en cours...",
     noSubscriptionFound: "Aucun abonnement actif trouvé",
-    restoreFailed: "Échec de la restauration. Réessayez plus tard.",
-    trialBanner: "Essai gratuit — {n} jours restants",
-    trialExpired: "Votre essai de 7 jours est terminé",
-    trialExpiredSubtitle: "Soutenez le projet pour continuer à profiter de toutes les fonctionnalités.",
+    restoreFailed: "Echec de la restauration — réessayez plus tard.",
+    trialBanner: "Essai en cours — {n} jours restants",
+    // Trial expiré — pas de culpabilité, ancrage sur la continuité du choix halal
+    trialExpired: "Votre essai Naqiy+ est terminé",
+    trialExpiredSubtitle: "Continuez à manger en conscience. Rejoignez Naqiy+ pour un accès sans limite.",
   },
 };
 

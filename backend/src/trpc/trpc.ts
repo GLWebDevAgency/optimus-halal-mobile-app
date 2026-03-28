@@ -168,6 +168,24 @@ const quotaChecked = middleware(async ({ ctx, next }) => {
   }
 
   if (used >= DAILY_SCAN_LIMIT) {
+    // Track quota hit fire-and-forget (never block the error response)
+    const now = new Date();
+    const { users, devices } = await import("../db/schema/index.js");
+    const { eq, sql } = await import("drizzle-orm");
+
+    if (ctx.userId) {
+      ctx.db.update(users)
+        .set({ quotaHitsCount: sql`${users.quotaHitsCount} + 1`, lastActiveAt: now })
+        .where(eq(users.id, ctx.userId))
+        .catch(() => {});
+    }
+    if (ctx.deviceId) {
+      ctx.db.update(devices)
+        .set({ quotaHitsCount: sql`${devices.quotaHitsCount} + 1`, lastActiveAt: now })
+        .where(eq(devices.deviceId, ctx.deviceId))
+        .catch(() => {});
+    }
+
     throw new TRPCError({
       code: "TOO_MANY_REQUESTS",
       message: JSON.stringify({

@@ -343,6 +343,148 @@ export const adminRouter = router({
       };
     }),
 
+  // ── Conversion Funnel ────────────────────────────────────────
+  /**
+   * Free→Premium conversion funnel for admin dashboard.
+   *
+   * Returns:
+   *  - Global KPIs: conversion rate, hot free users, trial stats
+   *  - "Hot" free users (quota_hits >= 2, active in 7d) — priorité conversion
+   *  - Guest devices with high engagement (no email)
+   *  - Paywall funnel: seen → blocked → converted
+   */
+  conversionFunnel: adminProcedure.query(async ({ ctx }) => {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const [
+      // Registered users: free vs premium counts
+      freeUsersCount,
+      premiumUsersCount,
+      // Free users "chauds" — ont touché le quota récemment
+      hotFreeUsers,
+      // Paywall funnel KPIs (registered users)
+      paywallFunnel,
+      // Guest devices still unconverted (no userId)
+      guestDevicesCount,
+      // Guest devices "chauds"
+      hotGuestDevices,
+      // Trial stats
+      trialStats,
+      // Recent conversions (device → user, last 30d)
+      recentConversions,
+    ] = await Promise.all([
+      // Free users total
+      ctx.db.select({ count: sql<number>`count(*)::int` })
+        .from(users).where(eq(users.subscriptionTier, "free")),
+
+      // Premium users total
+      ctx.db.select({ count: sql<number>`count(*)::int` })
+        .from(users).where(eq(users.subscriptionTier, "premium")),
+
+      // Hot free users: quota_hits >= 2, active last 7d
+      ctx.db.select({
+        id: users.id,
+        email: users.email,
+        displayName: users.displayName,
+        quotaHitsCount: users.quotaHitsCount,
+        paywallSeenCount: users.paywallSeenCount,
+        featureBlockedCount: users.featureBlockedCount,
+        totalScans: users.totalScans,
+        lastActiveAt: users.lastActiveAt,
+        firstScanAt: users.firstScanAt,
+        createdAt: users.createdAt,
+      })
+        .from(users)
+        .where(and(
+          eq(users.subscriptionTier, "free"),
+          gte(users.quotaHitsCount, 2),
+          gte(users.lastActiveAt, sevenDaysAgo),
+        ))
+        .orderBy(desc(users.quotaHitsCount), desc(users.lastActiveAt))
+        .limit(50),
+
+      // Paywall funnel aggregates for registered users
+      ctx.db.select({
+        totalPaywallImpressions: sql<number>`sum(paywall_seen_count)::int`,
+        totalFeatureBlocks: sql<number>`sum(feature_blocked_count)::int`,
+        totalQuotaHits: sql<number>`sum(quota_hits_count)::int`,
+        usersWithPaywallSeen: sql<number>`count(*) filter (where paywall_seen_count > 0)::int`,
+        usersWithQuotaHit: sql<number>`count(*) filter (where quota_hits_count > 0)::int`,
+      })
+        .from(users)
+        .where(eq(users.subscriptionTier, "free")),
+
+      // Guest devices count (not yet converted)
+      ctx.db.select({ count: sql<number>`count(*)::int` })
+        .from(devices).where(sql`converted_at IS NULL`),
+
+      // Hot guest devices: quota_hits >= 2, active last 7d
+      ctx.db.select({
+        deviceId: devices.deviceId,
+        platform: devices.platform,
+        totalScans: devices.totalScans,
+        quotaHitsCount: devices.quotaHitsCount,
+        paywallSeenCount: devices.paywallSeenCount,
+        trialExpiresAt: devices.trialExpiresAt,
+        firstSeenAt: devices.firstSeenAt,
+        lastActiveAt: devices.lastActiveAt,
+      })
+        .from(devices)
+        .where(and(
+          sql`converted_at IS NULL`,
+          gte(devices.quotaHitsCount, 2),
+          gte(devices.lastActiveAt, sevenDaysAgo),
+        ))
+        .orderBy(desc(devices.quotaHitsCount), desc(devices.lastActiveAt))
+        .limit(50),
+
+      // Trial stats: active trials + expired unconverted
+      ctx.db.select({
+        activeTrial: sql<number>`count(*) filter (where trial_expires_at > now() and converted_at is null)::int`,
+        expiredUnconverted: sql<number>`count(*) filter (where trial_expires_at <= now() and converted_at is null)::int`,
+        converted: sql<number>`count(*) filter (where converted_at is not null)::int`,
+      }).from(devices),
+
+      // Recent conversions: devices converted in last 30d
+      ctx.db.select({ count: sql<number>`count(*)::int` })
+        .from(devices)
+        .where(and(
+          sql`converted_at IS NOT NULL`,
+          gte(devices.convertedAt, thirtyDaysAgo),
+        )),
+    ]);
+
+    const freeCount = freeUsersCount[0]?.count ?? 0;
+    const premiumCount = premiumUsersCount[0]?.count ?? 0;
+    const totalRegistered = freeCount + premiumCount;
+    const conversionRate = totalRegistered > 0
+      ? Math.round((premiumCount / totalRegistered) * 100 * 10) / 10
+      : 0;
+
+    return {
+      kpis: {
+        freeUsers: freeCount,
+        premiumUsers: premiumCount,
+        conversionRate, // %
+        guestDevices: guestDevicesCount[0]?.count ?? 0,
+        recentConversions30d: recentConversions[0]?.count ?? 0,
+        trial: trialStats[0] ?? { activeTrial: 0, expiredUnconverted: 0, converted: 0 },
+      },
+      paywallFunnel: paywallFunnel[0] ?? {
+        totalPaywallImpressions: 0,
+        totalFeatureBlocks: 0,
+        totalQuotaHits: 0,
+        usersWithPaywallSeen: 0,
+        usersWithQuotaHit: 0,
+      },
+      // Registered free users with high conversion intent
+      hotFreeUsers,
+      // Anonymous devices with high engagement (push only — no email)
+      hotGuestDevices,
+    };
+  }),
+
   /**
    * Recent scans across all users — for admin dashboard.
    */

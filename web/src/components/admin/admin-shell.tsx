@@ -18,6 +18,7 @@ import {
   Sun,
   Moon,
   ToggleRight,
+  FunnelSimple,
 } from "@phosphor-icons/react"
 
 import {
@@ -101,6 +102,7 @@ const navItems = [
   { href: "/admin", label: "Vue d'ensemble", icon: SquaresFour, segment: null },
   { href: "/admin/waitlist", label: "Waitlist", icon: EnvelopeSimple, segment: "waitlist" },
   { href: "/admin/users", label: "Utilisateurs", icon: Users, segment: "users" },
+  { href: "/admin/conversion", label: "Conversion", icon: FunnelSimple, segment: "conversion" },
   { href: "/admin/products", label: "Produits", icon: Package, segment: "products" },
   { href: "/admin/stores", label: "Magasins", icon: Storefront, segment: "stores" },
   { href: "/admin/articles", label: "Articles", icon: FileText, segment: "articles" },
@@ -114,6 +116,7 @@ function getPageTitle(pathname: string): string {
   const item = navItems.find((i) => i.segment && pathname.startsWith(`/admin/${i.segment}`))
   return item?.label ?? "Admin"
 }
+
 
 /* ── Theme toggle button ── */
 

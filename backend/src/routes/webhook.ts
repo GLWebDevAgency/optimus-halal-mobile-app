@@ -73,6 +73,8 @@ webhookRoutes.post("/revenuecat", async (c) => {
   ];
   const revokeAccess = ["EXPIRATION"];
 
+  const eventTime = new Date();
+
   if (grantAccess.includes(event.type)) {
     await db
       .update(users)
@@ -83,6 +85,7 @@ webhookRoutes.post("/revenuecat", async (c) => {
           : null,
         subscriptionProvider: "revenuecat",
         subscriptionProductId: event.product_id,
+        lastActiveAt: eventTime,
       })
       .where(eq(users.id, userId));
     await invalidateUserTierCache(userId);
@@ -92,6 +95,7 @@ webhookRoutes.post("/revenuecat", async (c) => {
       .set({
         subscriptionTier: "free",
         subscriptionExpiresAt: null,
+        lastActiveAt: eventTime,
       })
       .where(eq(users.id, userId));
     await invalidateUserTierCache(userId);

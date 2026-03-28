@@ -24,6 +24,7 @@ import Animated, {
   Extrapolation,
   type SharedValue,
 } from "react-native-reanimated";
+import { KnifeIcon, HeartbeatIcon } from "phosphor-react-native";
 
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
@@ -111,11 +112,13 @@ export function ScanResultTabBar({
   const tabs = [
     {
       label: t.scanResult.tabHalal,
+      Icon: KnifeIcon,
       index: 0 as const,
       animatedTextStyle: tab0TextStyle,
     },
     {
       label: t.scanResult.tabHealth,
+      Icon: HeartbeatIcon,
       index: 1 as const,
       animatedTextStyle: tab1TextStyle,
     },
@@ -130,8 +133,9 @@ export function ScanResultTabBar({
       ]}
     >
       {/* Tab buttons */}
-      {tabs.map(({ label, index, animatedTextStyle }) => {
+      {tabs.map(({ label, Icon, index, animatedTextStyle }) => {
         const isSelected = activeTab === index;
+        const color = isSelected ? activeTextColor : colors.textMuted;
         return (
           <Pressable
             key={index}
@@ -141,15 +145,12 @@ export function ScanResultTabBar({
             accessibilityState={{ selected: isSelected }}
             accessibilityLabel={label}
           >
-            <Animated.Text
-              style={[
-                styles.tabLabel,
-                { color: isSelected ? activeTextColor : colors.textMuted },
-                animatedTextStyle,
-              ]}
-            >
-              {label}
-            </Animated.Text>
+            <Animated.View style={[styles.tabInner, animatedTextStyle]}>
+              <Icon size={15} color={color} weight={isSelected ? "fill" : "regular"} />
+              <Animated.Text style={[styles.tabLabel, { color }]}>
+                {label}
+              </Animated.Text>
+            </Animated.View>
           </Pressable>
         );
       })}
@@ -180,6 +181,11 @@ const styles = StyleSheet.create({
     height: TAB_BAR_HEIGHT,
     alignItems: "center",
     justifyContent: "center",
+  },
+  tabInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
   },
   tabLabel: {
     fontSize: fontSizeTokens.bodySmall,
