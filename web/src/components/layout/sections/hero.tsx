@@ -127,8 +127,9 @@ export function Hero() {
         {/* Subtitle */}
         <AnimateIn variant="fadeUp" delay={0.6} ssrVisible>
           <p className="mt-4 max-w-lg text-base leading-relaxed text-pretty text-muted-foreground md:text-lg">
-            Tu retournes un paquet, tu lis gélatine, E471, lécithine… Tu comprends rien.
-            Naqiy décrypte chaque produit pour que tu puisses{" "}
+            E471, gélatine, lécithine — tu retournes le paquet et tu ne sais pas.
+            Le certifieur sur l&apos;emballage — tu ne sais pas non plus.
+            Manger halal et tayyib, c&apos;est une responsabilité. Naqiy te donne la clarté pour{" "}
             <span className="font-semibold text-foreground">nourrir ta famille en confiance</span>.
           </p>
         </AnimateIn>
