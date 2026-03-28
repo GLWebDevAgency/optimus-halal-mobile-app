@@ -1,13 +1,13 @@
 # Conditions Generales d'Utilisation — Naqiy
 
-**Derniere mise a jour : 7 mars 2026**
-**Version : 1.0**
+**Derniere mise a jour : 28 mars 2026**
+**Version : 2.0**
 
 ---
 
 ## 1. Objet
 
-Les presentes Conditions Generales d'Utilisation (ci-apres "CGU") ont pour objet de definir les modalites et conditions dans lesquelles **GL Web Dev Agency** (ci-apres "l'Editeur") met a disposition l'application mobile **Naqiy** (ci-apres "l'Application") et les services associes (ci-apres "les Services") aux utilisateurs (ci-apres "l'Utilisateur" ou "vous").
+Les presentes Conditions Generales d'Utilisation (ci-apres "CGU") ont pour objet de definir les modalites et conditions dans lesquelles **Naqiy** (ci-apres "l'Editeur") met a disposition l'application mobile **Naqiy** (ci-apres "l'Application") et les services associes (ci-apres "les Services") aux utilisateurs (ci-apres "l'Utilisateur" ou "vous").
 
 L'utilisation de l'Application implique l'acceptation pleine et entiere des presentes CGU. Si vous n'acceptez pas ces conditions, vous ne devez pas utiliser l'Application.
 
@@ -15,13 +15,10 @@ L'utilisation de l'Application implique l'acceptation pleine et entiere des pres
 
 ## 2. Mentions legales
 
-**Editeur** : GL Web Dev Agency
-**Forme juridique** : [A completer]
-**SIRET** : [A completer]
-**Siege social** : [Adresse a completer]
-**Directeur de la publication** : [Nom a completer]
+**Editeur** : Naqiy — projet independant, immatriculation en cours
+**Siege** : Paris, France
 **Email** : contact@naqiy.app
-**Hebergement** : Railway Corp., 548 Market St, San Francisco, CA 94104, USA
+**Hebergement** : Railway Corp., San Francisco, CA, USA (backend et base de donnees) ; Vercel Inc., Covina, CA, USA (site web)
 
 ---
 
@@ -32,11 +29,12 @@ L'utilisation de l'Application implique l'acceptation pleine et entiere des pres
 Naqiy est une application mobile d'aide a la consommation halal. Elle propose les fonctionnalites suivantes :
 
 - **Scan de produits** : identification de produits alimentaires par code-barres et analyse de leur conformite halal (ingredients, additifs, certification)
-- **Verdicts halal** : attribution d'un statut halal (halal, douteux, haram) fonde sur des sources religieuses referencees et des bases de donnees ouvertes
+- **Verdicts halal** : attribution d'un statut halal (halal, douteux, haram) fonde sur des sources religieuses referencees, des bases de donnees ouvertes et une analyse par intelligence artificielle
+- **NaqiyScore** : indice de confiance certifieur de 0 a 100, evalure par nos recherches independantes
+- **Analyse nutritionnelle** : NutriScore, classification NOVA, additifs identifies
 - **Carte des commerces** : localisation de magasins, boucheries et restaurants certifies halal a proximite
-- **Alertes ethiques** : notifications relatives aux rappels de produits, fraudes a la certification, informations communautaires
 - **Articles** : contenu editorial et educatif sur la consommation halal
-- **Profil et preferences** : personnalisation selon l'ecole juridique (madhab), les allergenes et les restrictions alimentaires
+- **Profil de sante** : adaptation des alertes selon les allergenes, restrictions alimentaires, grossesse
 
 ### 3.2. Nature informative des verdicts
 
@@ -46,9 +44,10 @@ Les analyses sont basees sur :
 - Les donnees publiques d'OpenFoodFacts (base contributive)
 - Les listes d'additifs et ingredients issus de sources religieuses referencees
 - Les informations declarees par les fabricants
-- Les contributions de la communaute
+- L'analyse par intelligence artificielle (Google Gemini) des listes d'ingredients
+- Les evaluations independantes des organismes de certification (NaqiyScore)
 
-L'Editeur ne garantit pas l'exhaustivite, l'exactitude ou l'actualite de ces informations. L'Utilisateur est invite a exercer son propre discernement et a consulter un savant religieux qualifie (alim) pour toute question de jurisprudence islamique.
+L'Editeur ne garantit pas l'exhaustivite, l'exactitude ou l'actualite de ces informations. L'Utilisateur est invite a exercer son propre discernement et a consulter un savant religieux qualifie pour toute question de jurisprudence islamique.
 
 ### 3.3. Dependance aux donnees tierces
 
@@ -61,30 +60,35 @@ L'Application s'appuie sur des sources de donnees externes (OpenFoodFacts, Googl
 
 ## 4. Conditions d'acces
 
-### 4.1. Acces en mode invite (anonyme)
+### 4.1. Mode invite (gratuit, sans compte)
 
-L'Application permet un acces limite sans creation de compte (mode invite). Dans ce mode :
-- Le nombre de scans quotidiens est limite (quota journalier)
-- L'historique des scans n'est pas sauvegarde
-- Les fonctionnalites de favoris, alertes personnalisees et preferences sont indisponibles
-- La geolocalisation est utilisee en temps reel uniquement, sans conservation
+L'Application permet un acces gratuit sans creation de compte (mode invite). Dans ce mode :
 
-### 4.2. Acces avec compte
+- Le scan, le verdict halal et l'analyse IA sont **toujours gratuits**
+- Le nombre de scans quotidiens est limite a un quota journalier (20 scans/jour)
+- Les favoris sont stockes localement sur l'appareil (limite a 3)
+- L'historique des scans n'est pas synchronise entre appareils
+- La carte des magasins est accessible
+- Les articles sont accessibles
 
-La creation d'un compte gratuit permet l'acces a l'ensemble des fonctionnalites de base :
-- Scans illimites (offre gratuite) ou etendus (abonnement Naqiy+)
-- Historique des scans synchronise
-- Favoris et dossiers de favoris
-- Alertes ethiques personnalisees
-- Preferences alimentaires et religieuses
+### 4.2. Periode d'essai (7 jours, sans compte)
 
-### 4.3. Conditions d'inscription
+A l'issue de l'onboarding, l'Utilisateur beneficie automatiquement d'une periode d'essai gratuite de **7 jours**. Pendant cette periode :
 
-Pour creer un compte, l'Utilisateur doit :
-- Etre age d'au moins **16 ans**
-- Fournir une adresse email valide
-- Accepter les presentes CGU et la Politique de Confidentialite
-- Definir un mot de passe securise
+- Toutes les fonctionnalites premium sont accessibles sans creation de compte
+- Aucun moyen de paiement n'est requis
+- Aucune donnee personnelle n'est collectee
+- A l'expiration de la periode d'essai, l'Utilisateur repasse automatiquement en mode invite
+
+### 4.3. Abonnement Naqiy+ (premium, avec compte)
+
+La creation d'un compte est reservee aux utilisateurs ayant souscrit a l'abonnement Naqiy+. L'inscription necessite :
+
+- D'etre age d'au moins **16 ans**
+- De fournir une adresse email valide
+- D'accepter les presentes CGU et la Politique de Confidentialite
+- De definir un mot de passe securise
+- De souscrire a l'abonnement Naqiy+ via Apple App Store ou Google Play Store
 
 L'Utilisateur s'engage a fournir des informations exactes et a les maintenir a jour. Tout compte cree avec des informations manifestement fausses pourra etre suspendu ou supprime.
 
@@ -98,17 +102,22 @@ L'Utilisateur est seul responsable de la confidentialite de ses identifiants de 
 
 ### 5.1. Description
 
-L'Application propose un abonnement premium denomme **Naqiy+** donnant acces a des fonctionnalites avancees, notamment :
-- Scans illimites sans publicite
-- Analyses detaillees des ingredients
-- Acces prioritaire aux nouvelles fonctionnalites
+L'abonnement Naqiy+ donne acces aux fonctionnalites avancees suivantes :
+
+- Creation d'un profil utilisateur personnalise
+- Historique de scan illimite et synchronise entre appareils
+- Favoris cloud illimites avec dossiers personnalises
+- Profil de sante complet (allergenes, restrictions, grossesse, enfants)
+- Preferences par ecole juridique (madhab) avec adaptation des verdicts
 - Support prioritaire
 
-Le contenu exact de l'offre Naqiy+ est decrit sur la page d'abonnement de l'Application et peut evoluer. Toute modification substantielle sera communiquee aux abonnes existants.
+Le contenu exact de l'offre Naqiy+ est decrit sur la page d'abonnement de l'Application et peut evoluer. Toute modification substantielle sera communiquee aux abonnes existants avec un preavis de 30 jours.
 
 ### 5.2. Tarification et paiement
 
-- Les prix sont affiches dans l'Application en euros (EUR), TTC, et peuvent varier selon le pays de l'Utilisateur
+- **Abonnement mensuel** : 2,99 EUR/mois TTC
+- **Abonnement annuel** : 24,99 EUR/an TTC (soit environ 2,08 EUR/mois)
+- Les prix sont affiches dans l'Application et peuvent varier selon le pays de l'Utilisateur et les politiques tarifaires d'Apple ou Google
 - Le paiement est gere exclusivement par les plateformes **Apple App Store** (Apple Inc.) et **Google Play Store** (Google LLC)
 - L'Editeur n'a jamais acces aux informations bancaires ou de paiement de l'Utilisateur
 - Les conditions de paiement, facturation et remboursement sont regies par les conditions generales d'Apple ou de Google, selon la plateforme utilisee
@@ -116,6 +125,7 @@ Le contenu exact de l'offre Naqiy+ est decrit sur la page d'abonnement de l'Appl
 ### 5.3. Renouvellement et resiliation
 
 - L'abonnement est reconduit **tacitement** a chaque periode (mensuelle ou annuelle, selon l'offre souscrite)
+- Le renouvellement est debite dans les 24 heures precedant la fin de la periode en cours
 - L'Utilisateur peut resilier son abonnement a tout moment depuis les parametres de son compte Apple ou Google
 - La resiliation prend effet a la fin de la periode en cours ; l'Utilisateur conserve l'acces aux fonctionnalites premium jusqu'a cette date
 - Aucun remboursement au prorata n'est effectue pour la periode entamee, conformement aux politiques des plateformes Apple et Google
@@ -166,11 +176,11 @@ L'Utilisateur conserve l'integralite de ses droits de propriete intellectuelle s
 
 L'Application, son architecture, son code source, ses interfaces, son design, ses logos, ses textes, ses algorithmes d'analyse et l'ensemble de ses elements constitutifs sont proteges par le droit d'auteur, le droit des marques et le droit des bases de donnees.
 
-La marque **Naqiy** et le logo associe sont la propriete exclusive de GL Web Dev Agency. Toute reproduction, representation ou utilisation non autorisee est interdite.
+La marque **Naqiy**, le logo associe et le **NaqiyScore** sont la propriete exclusive de Naqiy. Toute reproduction, representation ou utilisation non autorisee est interdite.
 
 ### 7.2. Licence d'utilisation
 
-L'Editeur concede a l'Utilisateur un droit d'utilisation personnel, non exclusif, non cessible, non sous-licenciable et revocable de l'Application, pour la duree de son inscription et dans le cadre d'un usage strictement prive et non commercial.
+L'Editeur concede a l'Utilisateur un droit d'utilisation personnel, non exclusif, non cessible, non sous-licenciable et revocable de l'Application, pour la duree de son utilisation et dans le cadre d'un usage strictement prive et non commercial.
 
 ### 7.3. Donnees ouvertes
 
@@ -198,9 +208,9 @@ L'Editeur s'engage a mettre en oeuvre les moyens necessaires pour assurer le bon
 
 ### 8.3. Exclusion de garantie religieuse
 
-**L'Application n'est affiliee a aucun organisme religieux, conseil de la fatwa, mosquee, federation islamique ou autorite religieuse.** Les verdicts et analyses proposes sont le resultat d'un traitement algorithmique fonde sur des donnees publiques et des sources documentaires.
+**L'Application n'est affiliee a aucun organisme religieux, conseil de la fatwa, mosquee, federation islamique ou autorite religieuse.** Les verdicts et analyses proposes sont le resultat d'un traitement algorithmique fonde sur des donnees publiques, des sources documentaires et une intelligence artificielle.
 
-L'Editeur ne fournit aucune garantie quant a la conformite religieuse absolue des verdicts. L'Utilisateur reconnait que la qualification halal d'un produit peut varier selon les ecoles juridiques et les interpretations savantes.
+L'Editeur ne fournit aucune garantie quant a la conformite religieuse absolue des verdicts. L'Utilisateur reconnait que la qualification halal d'un produit peut varier selon les ecoles juridiques (madhab) et les interpretations savantes.
 
 ### 8.4. Force majeure
 
@@ -229,7 +239,7 @@ Pour les fonctionnalites incluses dans l'abonnement Naqiy+, toute suppression su
 
 ## 10. Donnees personnelles
 
-Le traitement des donnees personnelles de l'Utilisateur est regi par notre **Politique de Confidentialite**, accessible dans l'Application et a l'adresse [politique de confidentialite]. Cette Politique de Confidentialite fait partie integrante des presentes CGU.
+Le traitement des donnees personnelles de l'Utilisateur est regi par notre **Politique de Confidentialite**, accessible dans l'Application et a l'adresse [naqiy.app/confidentialite](https://naqiy.app/confidentialite). Cette Politique de Confidentialite fait partie integrante des presentes CGU.
 
 Pour toute question relative a vos donnees personnelles, contactez notre Delegue a la Protection des Donnees : dpo@naqiy.app.
 
@@ -276,29 +286,29 @@ L'Utilisateur peut supprimer son compte a tout moment depuis les parametres de l
 - L'effacement de ses donnees personnelles dans un delai de **30 jours**
 - L'anonymisation de ses Contributions (avis, notes) sauf demande explicite de suppression
 - La perte de l'acces a l'historique de ses scans et favoris
-- La resiliation de fait de l'abonnement Naqiy+ (sans remboursement de la periode en cours)
+- La resiliation de fait de l'abonnement Naqiy+ (sans remboursement de la periode en cours — la gestion de l'abonnement reste a la charge de l'Utilisateur via Apple/Google)
 
 ### 12.3. Consequences de la resiliation
 
-Apres suppression du compte, l'Utilisateur perd l'acces a toutes les fonctionnalites reservees aux membres. Les clauses des presentes CGU relatives a la propriete intellectuelle, la limitation de responsabilite et la loi applicable survivent a la resiliation.
+Apres suppression du compte, l'Utilisateur perd l'acces a toutes les fonctionnalites reservees aux abonnes Naqiy+. L'Application reste utilisable en mode invite (gratuit). Les clauses des presentes CGU relatives a la propriete intellectuelle, la limitation de responsabilite et la loi applicable survivent a la resiliation.
 
 ---
 
-## 13. Liens hypertextes
-
-L'Application peut contenir des liens vers des sites ou services tiers (sources d'articles, sites de certification, liens de partage). L'Editeur n'exerce aucun controle sur ces sites et n'engage pas sa responsabilite quant a leur contenu, leur politique de confidentialite ou leurs pratiques.
-
----
-
-## 14. Notifications push
+## 13. Notifications push
 
 L'Application peut envoyer des notifications push avec le consentement de l'Utilisateur. Ces notifications peuvent concerner :
 
-- Des alertes ethiques (rappels de produits, fraudes)
 - Des informations techniques (mise a jour de l'application)
 - Des communications liees au compte (expiration d'abonnement)
+- Des rappels d'utilisation (non intrusifs)
 
 L'Utilisateur peut desactiver les notifications a tout moment depuis les parametres de son appareil ou de l'Application.
+
+---
+
+## 14. Liens hypertextes
+
+L'Application peut contenir des liens vers des sites ou services tiers (sources d'articles, sites de certification, liens de partage). L'Editeur n'exerce aucun controle sur ces sites et n'engage pas sa responsabilite quant a leur contenu, leur politique de confidentialite ou leurs pratiques.
 
 ---
 
@@ -312,16 +322,13 @@ Les presentes CGU sont regies par le **droit francais**.
 
 En cas de litige relatif a l'interpretation ou a l'execution des presentes CGU, les parties s'engagent a rechercher une solution amiable avant toute action judiciaire.
 
-Conformement aux articles L.611-1 et suivants du Code de la consommation, l'Utilisateur peut recourir gratuitement a un mediateur de la consommation en vue de la resolution amiable du litige. Le mediateur competent est :
-
-**[Nom du mediateur a completer]**
-Site web : [A completer]
+Conformement aux articles L.611-1 et suivants du Code de la consommation, l'Utilisateur peut recourir gratuitement a un mediateur de la consommation en vue de la resolution amiable du litige.
 
 L'Utilisateur peut egalement deposer une reclamation sur la plateforme europeenne de reglement en ligne des litiges : [https://ec.europa.eu/consumers/odr](https://ec.europa.eu/consumers/odr)
 
 ### 15.3. Juridiction competente
 
-A defaut de resolution amiable, tout litige sera soumis aux tribunaux competents du ressort du siege social de l'Editeur, sauf disposition legale imperative contraire (notamment la competence du tribunal du domicile du consommateur).
+A defaut de resolution amiable, tout litige sera soumis aux tribunaux competents de Paris, sauf disposition legale imperative contraire (notamment la competence du tribunal du domicile du consommateur).
 
 ---
 
@@ -355,7 +362,8 @@ Les presentes CGU, la Politique de Confidentialite et, le cas echeant, les condi
 Pour toute question relative aux presentes Conditions Generales d'Utilisation :
 
 - **Email** : contact@naqiy.app
-- **Objet** : [CGU] Votre demande
+- **Support** : support@naqiy.app
+- **Objet recommande** : [CGU] Votre demande
 
 ---
 

@@ -9,7 +9,7 @@
  * Follows Al-Ihsan (springNaqiy), Al-Taqwa (zero dark patterns), Al-Niyyah (servir, pas juger).
  */
 
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import {
   Alert,
   ScrollView,
   Platform,
+  Modal,
 } from "react-native";
 import Animated, {
   useSharedValue,
@@ -86,6 +87,9 @@ export function NaqiyBrandSheet({ visible, onClose, isGuest, user }: NaqiyBrandS
   const language = useLanguageStore((s) => s.language);
   const reducedMotion = useReducedMotion();
 
+  // Modal mounted state — stays true while close animation plays
+  const [mounted, setMounted] = useState(false);
+
   // Animation values
   const translateY = useSharedValue(SCREEN_HEIGHT);
   const backdropOpacity = useSharedValue(0);
@@ -93,6 +97,7 @@ export function NaqiyBrandSheet({ visible, onClose, isGuest, user }: NaqiyBrandS
   // Open/close animation
   useEffect(() => {
     if (visible) {
+      setMounted(true);
       backdropOpacity.value = withTiming(1, { duration: 200 });
       translateY.value = reducedMotion
         ? 0
@@ -101,7 +106,9 @@ export function NaqiyBrandSheet({ visible, onClose, isGuest, user }: NaqiyBrandS
       backdropOpacity.value = withTiming(0, { duration: 150 });
       translateY.value = reducedMotion
         ? SCREEN_HEIGHT
-        : withSpring(SCREEN_HEIGHT, { damping: 20, stiffness: 200 });
+        : withSpring(SCREEN_HEIGHT, { damping: 20, stiffness: 200 }, (finished) => {
+            if (finished) runOnJS(setMounted)(false);
+          });
     }
   }, [visible, reducedMotion]);
 
@@ -119,7 +126,10 @@ export function NaqiyBrandSheet({ visible, onClose, isGuest, user }: NaqiyBrandS
   const handleClose = useCallback(() => {
     backdropOpacity.value = withTiming(0, { duration: 150 });
     translateY.value = withSpring(SCREEN_HEIGHT, { damping: 20, stiffness: 200 }, (finished) => {
-      if (finished) runOnJS(onClose)();
+      if (finished) {
+        runOnJS(onClose)();
+        runOnJS(setMounted)(false);
+      }
     });
   }, [onClose]);
 
@@ -216,12 +226,16 @@ export function NaqiyBrandSheet({ visible, onClose, isGuest, user }: NaqiyBrandS
   const dividerColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
   const sheetBg = isDark ? "#0C0C0C" : "#F8F7F4";
 
-  if (!visible && translateY.value === SCREEN_HEIGHT) return null;
-
   return (
-    <>
+    <Modal
+      visible={mounted}
+      transparent
+      animationType="none"
+      statusBarTranslucent
+      onRequestClose={handleClose}
+    >
       {/* Backdrop */}
-      <Animated.View style={[StyleSheet.absoluteFill, backdropStyle, { zIndex: 100 }]}>
+      <Animated.View style={[StyleSheet.absoluteFill, backdropStyle]}>
         <Pressable
           style={[StyleSheet.absoluteFill, { backgroundColor: isDark ? "rgba(0,0,0,0.6)" : "rgba(0,0,0,0.35)" }]}
           onPress={handleClose}
@@ -241,8 +255,7 @@ export function NaqiyBrandSheet({ visible, onClose, isGuest, user }: NaqiyBrandS
             borderLeftColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)",
             borderRightColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)",
             maxHeight: SHEET_MAX_HEIGHT,
-            paddingBottom: insets.bottom + 80,
-            zIndex: 101,
+            paddingBottom: insets.bottom + 16,
           },
         ]}
       >
@@ -285,7 +298,7 @@ export function NaqiyBrandSheet({ visible, onClose, isGuest, user }: NaqiyBrandS
           )}
         </ScrollView>
       </Animated.View>
-    </>
+    </Modal>
   );
 }
 
@@ -354,13 +367,6 @@ function GuestContent({ isDark, colors, t, theme, onThemeChange, onJoinPlus, onL
           isDark={isDark}
           colors={colors}
         />
-      </View>
-
-      {/* Value proposition — honest, no fake metrics */}
-      <View style={styles.socialProof}>
-        <Text style={[styles.socialProofText, { color: colors.textMuted }]}>
-          {t.brandSheet.valueProposition}
-        </Text>
       </View>
 
       {/* CTA — Join Naqiy+ */}
@@ -532,12 +538,12 @@ function PremiumContent({
         </View>
       )}
 
-      {/* Upgrade CTA for non-premium authenticated users */}
+      {/* Upgrade CTA for non-premium users */}
       {!isPremium && (
         <>
           <Pressable
             onPress={() => {
-              router.push({ pathname: "/paywall" as any, params: { trigger: "generic" } });
+              router.push({ pathname: "/settings/premium" as any });
             }}
             accessibilityRole="button"
             accessibilityLabel={t.brandSheet.upgradeCta}

@@ -127,3 +127,6 @@ stitch.zip
 .claude/audit-*.md
 .vercel
 .env*.local
+
+# ── Generated trackers ─────────────────────────────────────
+*.xlsx

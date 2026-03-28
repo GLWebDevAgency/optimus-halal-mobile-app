@@ -270,7 +270,7 @@ export default function ScanResultScreen() {
   const marketplaceEnabled = isFeatureEnabled("marketplaceEnabled");
   const alternativesQuery = trpc.product.getAlternatives.useQuery(
     { productId: product?.id ?? "", limit: 10 },
-    { enabled: !!product?.id }
+    { enabled: !!product?.id && marketplaceEnabled }
   );
 
   // ── Level-Up Celebration ─────────────────────
@@ -946,15 +946,17 @@ export default function ScanResultScreen() {
           {/* ── Horizon divider ── */}
           <View style={[styles.horizonDivider, { backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.06)" }]} />
 
-          {/* ALTERNATIVES */}
-          <AlternativesSection
-            alternatives={(alternativesQuery.data ?? []).map(adaptLegacyAlternative)}
-            isLoading={alternativesQuery.isLoading}
-            onAlternativePress={(bc: string) => {
-              router.navigate({ pathname: "/scan-result", params: { barcode: bc } });
-            }}
-            staggerIndex={5}
-          />
+          {/* ALTERNATIVES — visible uniquement quand le marketplace est activé */}
+          {marketplaceEnabled && (
+            <AlternativesSection
+              alternatives={(alternativesQuery.data ?? []).map(adaptLegacyAlternative)}
+              isLoading={alternativesQuery.isLoading}
+              onAlternativePress={(bc: string) => {
+                router.navigate({ pathname: "/scan-result", params: { barcode: bc } });
+              }}
+              staggerIndex={5}
+            />
+          )}
 
           {/* ── Horizon divider ── */}
           <View style={[styles.horizonDivider, { backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.06)" }]} />
@@ -1059,6 +1061,9 @@ export default function ScanResultScreen() {
         effectiveHeroStatus={effectiveHeroStatus as HalalStatusKey}
         trustGrade={certifierData?.trustGrade ?? null}
         onBackPress={handleGoBack}
+        activeTab={activeTab as 0 | 1}
+        onTabPress={setActiveTab}
+        scrollProgress={scrollProgress}
       />
 
       {/* ── Fixed Bottom Action Bar ── */}
