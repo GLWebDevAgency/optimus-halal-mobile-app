@@ -692,7 +692,7 @@ export const scanRouter = router({
               longestStreak: sql`GREATEST(${users.longestStreak}, ${newStreak})`,
               lastScanDate: now,
               lastActiveAt: now,
-              firstScanAt: sql`COALESCE(${users.firstScanAt}, ${now})`,
+              firstScanAt: sql`COALESCE(${users.firstScanAt}, ${now.toISOString()})`,
               updatedAt: now,
               ...(usedStreakFreeze
                 ? {
