@@ -151,7 +151,15 @@ export function Footer() {
               &copy; 2026 Naqiy&reg;. Tous droits réservés.
             </p>
             <p className="inline-flex items-center gap-1 text-xs text-white/30">
-              Fait avec <Leaf className="size-3 text-leaf" weight="fill" /> à Paris
+              Réalisation web & mobile <Leaf className="size-3 text-leaf" weight="fill" />{" "}
+              <a
+                href="https://www.linkedin.com/in/ghassene-limame-8a2793ba"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold transition-opacity hover:opacity-80"
+              >
+                <span className="text-gold-gradient">LIMAME Ghassen</span><span className="text-leaf">e</span>
+              </a>
             </p>
           </div>
         </div>
