@@ -316,7 +316,7 @@ function instagramSection(): string {
                   <tr>
                     <td align="center" style="border-radius:12px; background-color:${B.textPrimary};">
                       <a href="${B.instagram}" target="_blank" style="display:inline-block; padding:12px 28px; font-family:${B.fontHeading}; font-size:14px; font-weight:700; color:${B.bgCard}; text-decoration:none; border-radius:12px; background-color:${B.textPrimary}; line-height:1.2; letter-spacing:0.2px;">
-                        @naqiyapp
+                        @naqiy.app
                       </a>
                     </td>
                   </tr>
