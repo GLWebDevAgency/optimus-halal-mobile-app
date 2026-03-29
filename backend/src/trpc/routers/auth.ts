@@ -406,4 +406,37 @@ export const authRouter = router({
 
     return user;
   }),
+
+  deleteAccount: protectedProcedure.mutation(async ({ ctx }) => {
+    // 1. Fetch user email for Redis cleanup
+    const user = await ctx.db.query.users.findFirst({
+      where: eq(users.id, ctx.userId),
+      columns: { id: true, email: true },
+    });
+
+    if (!user) throw notFound("Utilisateur introuvable");
+
+    // 2. Delete user — CASCADE propagates to 22 child tables
+    //    devices.userId → SET NULL (preserves device analytics)
+    await ctx.db.transaction(async (tx) => {
+      await tx.delete(users).where(eq(users.id, ctx.userId));
+    });
+
+    // 3. Redis cleanup (fire-and-forget, non-blocking)
+    const emailKey = user.email.toLowerCase().trim();
+    Promise.all([
+      ctx.redis.del(`user:tier:${ctx.userId}`),
+      ctx.redis.del(`pwd-reset:${emailKey}`),
+      ctx.redis.del(`pwd-reset-attempts:${emailKey}`),
+    ]).catch((err) => {
+      logger.warn("Redis cleanup after account deletion failed", {
+        userId: ctx.userId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    });
+
+    logger.info("Compte supprime", { userId: ctx.userId });
+
+    return { success: true };
+  }),
 });

@@ -24,6 +24,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         "Utilisez Face ID pour une connexion sécurisée.",
       NSLocationWhenInUseUsageDescription:
         "Naqiy utilise votre localisation pour trouver les points de vente à proximité.",
+      NSPhotoLibraryUsageDescription:
+        "Accédez à votre galerie pour scanner un code-barres depuis une photo existante.",
     },
   },
   android: {
@@ -38,7 +40,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "android.permission.ACCESS_FINE_LOCATION",
       "android.permission.ACCESS_COARSE_LOCATION",
       "android.permission.USE_BIOMETRIC",
-      "android.permission.RECORD_AUDIO",
       "android.permission.USE_FINGERPRINT",
     ],
   },

@@ -32,6 +32,7 @@
       }
     },
     "production": {
+      "distribution": "store",
       "autoIncrement": true,
       "env": {
         "APP_VARIANT": "production",
@@ -50,7 +51,7 @@
       },
       "android": {
         "serviceAccountKeyPath": "./google-services-key.json",
-        "track": "internal"
+        "track": "production"
       }
     }
   }

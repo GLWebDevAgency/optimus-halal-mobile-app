@@ -21,7 +21,7 @@ import {
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BellSimpleIcon, CaretRightIcon, FireIcon, GearIcon, GiftIcon, GlobeHemisphereWestIcon, PencilIcon, ScanIcon, SealCheckIcon, SignInIcon, SignOutIcon, StarFourIcon, WifiSlashIcon } from "phosphor-react-native";
-import { useHaptics, useTheme, useLogout, useFavoritesList, useLoyaltyBalance, usePremium } from "@/hooks";
+import { useHaptics, useTheme, useLogout, useFavoritesList, useLoyaltyBalance, usePremium, useDeleteAccount } from "@/hooks";
 import { ImpactFeedbackStyle } from "expo-haptics";
 import Animated, {
   FadeIn,
@@ -184,6 +184,7 @@ export default function ProfileScreen() {
   const { data: favoritesData } = useFavoritesList({ limit: 1, enabled: !!profile });
   const { data: loyalty } = useLoyaltyBalance({ enabled: !!profile });
   const logoutMutation = useLogout();
+  const deleteAccountMutation = useDeleteAccount();
 
   // Quota (anonymous) — use dailyScansUsed for display consistency with home screen
   const dailyScansUsed = useQuotaStore((s) => s.dailyScansUsed);
@@ -249,6 +250,26 @@ export default function ProfileScreen() {
       ]
     );
   }, [logoutMutation, t, impact]);
+
+  const handleDeleteAccount = useCallback(() => {
+    impact(ImpactFeedbackStyle.Medium);
+    Alert.alert(
+      t.editProfile.deleteAccountTitle,
+      t.editProfile.deleteAccountMessage,
+      [
+        { text: t.common.cancel, style: "cancel" },
+        {
+          text: t.editProfile.deleteAccount,
+          style: "destructive",
+          onPress: () => {
+            deleteAccountMutation.mutate(undefined, {
+              onSuccess: () => router.replace("/(auth)/login"),
+            });
+          },
+        },
+      ]
+    );
+  }, [deleteAccountMutation, t, impact]);
 
   const handleReplayOnboarding = useCallback(() => {
     impact();
@@ -1106,8 +1127,15 @@ export default function ProfileScreen() {
               iconBgColor={isDark ? "rgba(34,197,94,0.1)" : "#ecfdf5"}
               iconColor={isDark ? "#4ade80" : "#16a34a"}
               title={t.profile.privacyPolicy}
-              isLast
               onPress={() => Linking.openURL(APP_CONFIG.PRIVACY_POLICY_URL)}
+            />
+            <MenuItem
+              icon="delete"
+              iconBgColor={isDark ? "rgba(239,68,68,0.1)" : "#fee2e2"}
+              iconColor={isDark ? "#f87171" : "#ef4444"}
+              title={t.editProfile.deleteAccount}
+              isLast
+              onPress={handleDeleteAccount}
             />
           </Card>
         </Animated.View>

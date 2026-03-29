@@ -126,3 +126,24 @@ export function useResetPassword() {
     },
   });
 }
+
+export function useDeleteAccount() {
+  const queryClient = useQueryClient();
+
+  return trpc.auth.deleteAccount.useMutation({
+    onSuccess: async () => {
+      trackEvent("account_deleted");
+
+      // Identical cleanup sequence to useLogout
+      queryClient.cancelQueries();
+      await clearTokens();
+      queryClient.clear();
+      useLocalAuthStore.getState().logout();
+      resetUser();
+      clearSentryUser();
+      logoutPurchases().catch((e) =>
+        logger.warn("Auth", "RevenueCat logout after delete failed", String(e))
+      );
+    },
+  });
+}

@@ -40,6 +40,7 @@ export {
   useLogin,
   useRegister,
   useLogout,
+  useDeleteAccount,
   useRequestPasswordReset,
   useResetPassword,
 } from './useAuth';
