@@ -61,8 +61,8 @@ const CERTIFIER_LOGOS = [
    ═══════════════════════════════════════════════ */
 
 const HEALTH_SCORE = { score: 68, label: "BON", color: "#22c55e" } as const;
-const HEALTH_RING_SIZE = 80;
-const HEALTH_RING_R = 34;
+const HEALTH_RING_SIZE = 72;
+const HEALTH_RING_R = 30;
 const HEALTH_RING_STROKE = 5;
 const HEALTH_RING_CIRC = 2 * Math.PI * HEALTH_RING_R;
 
@@ -260,11 +260,11 @@ function SantePanelContent() {
               className="transition-all duration-1000 ease-out"
             />
           </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-0">
             <span className="text-[22px] font-black leading-none" style={{ color: HEALTH_SCORE.color }}>
               {HEALTH_SCORE.score}
             </span>
-            <span className="text-[8px] font-semibold text-muted-foreground/50 mt-0.5">/100</span>
+            <span className="text-[8px] font-semibold text-muted-foreground/50 leading-none -mt-px">/100</span>
           </div>
         </div>
         {/* Label */}
