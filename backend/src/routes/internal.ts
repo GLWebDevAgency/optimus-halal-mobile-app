@@ -175,7 +175,7 @@ internalRoutes.post("/send-push-nudges", async (c) => {
           gte(devices.quotaHitsCount, 3),
           gte(devices.lastActiveAt, fourteenDaysAgo),
           // No nudge in last 7 days
-          sql`(push_nudge_sent_at IS NULL OR push_nudge_sent_at < ${sevenDaysAgo})`,
+          sql`(push_nudge_sent_at IS NULL OR push_nudge_sent_at < ${sevenDaysAgo.toISOString()})`,
         )
       )
       .limit(500);
@@ -215,7 +215,7 @@ internalRoutes.post("/send-push-nudges", async (c) => {
           sql`${users.subscriptionTier} = 'free'`,
           gte(users.quotaHitsCount, 3),
           gte(users.lastActiveAt, fourteenDaysAgo),
-          sql`(${users.pushNudgeSentAt} IS NULL OR ${users.pushNudgeSentAt} < ${sevenDaysAgo})`,
+          sql`(${users.pushNudgeSentAt} IS NULL OR ${users.pushNudgeSentAt} < ${sevenDaysAgo.toISOString()})`,
         )
       )
       .limit(500);
@@ -272,21 +272,21 @@ internalRoutes.post("/send-push-nudges", async (c) => {
     if (quotaEligibleDevices.length > 0) {
       const ids = quotaEligibleDevices.map((d) => d.deviceId);
       db.execute(
-        sql`UPDATE devices SET push_nudge_sent_at = ${nudgeTime} WHERE device_id = ANY(${ids})`
+        sql`UPDATE devices SET push_nudge_sent_at = ${nudgeTime.toISOString()} WHERE device_id = ANY(${ids})`
       ).catch(() => {});
     }
 
     if (trialEligibleDevices.length > 0) {
       const ids = trialEligibleDevices.map((d) => d.deviceId);
       db.execute(
-        sql`UPDATE devices SET push_nudge_sent_at = ${nudgeTime} WHERE device_id = ANY(${ids})`
+        sql`UPDATE devices SET push_nudge_sent_at = ${nudgeTime.toISOString()} WHERE device_id = ANY(${ids})`
       ).catch(() => {});
     }
 
     if (registeredQuotaTokens.length > 0) {
       const userIds = [...new Set(registeredQuotaTokens.map((t) => t.userId))];
       db.execute(
-        sql`UPDATE users SET push_nudge_sent_at = ${nudgeTime} WHERE id = ANY(${userIds})`
+        sql`UPDATE users SET push_nudge_sent_at = ${nudgeTime.toISOString()} WHERE id = ANY(${userIds})`
       ).catch(() => {});
     }
 
