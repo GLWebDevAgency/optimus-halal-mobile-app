@@ -5,6 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { PostHogProvider } from "@/lib/posthog";
 import { TRPCProvider } from "@/lib/trpc-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -279,6 +281,8 @@ export default function RootLayout({
             </PostHogProvider>
           </TooltipProvider>
         </ThemeProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
