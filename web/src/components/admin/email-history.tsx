@@ -35,6 +35,8 @@ const TEMPLATE_LABELS: Record<string, { label: string; color: string }> = {
   trial_reminder: { label: "Trial J5", color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300" },
   trial_expired: { label: "Trial J7", color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300" },
   launch: { label: "Lancement", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" },
+  password_reset: { label: "Reset MDP", color: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300" },
+  account_deletion: { label: "Suppression", color: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300" },
 }
 
 function formatDate(date: string | Date): string {

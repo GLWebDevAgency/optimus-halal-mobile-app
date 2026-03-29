@@ -10,6 +10,7 @@ import {
   sendTrialReminderEmail,
   sendTrialExpiredEmail,
   sendLaunchNotificationEmail,
+  type EmailAuditContext,
 } from "../../services/email.service.js";
 
 const EMAIL_TEMPLATES = [
@@ -22,7 +23,7 @@ const EMAIL_TEMPLATES = [
 
 type EmailTemplate = (typeof EMAIL_TEMPLATES)[number];
 
-const templateSenders: Record<EmailTemplate, (email: string) => Promise<boolean>> = {
+const templateSenders: Record<EmailTemplate, (email: string, ctx?: EmailAuditContext) => Promise<boolean>> = {
   waitlist_confirmation: sendWaitlistConfirmationEmail,
   welcome: sendWelcomeEmail,
   trial_reminder: sendTrialReminderEmail,
@@ -207,38 +208,23 @@ export const adminWaitlistRouter = router({
 
       const sender = templateSenders[input.template];
       const batchId = randomUUID();
+      const auditCtx: EmailAuditContext = { batchId, sentBy: ctx.userId };
       let sent = 0;
       let failed = 0;
 
       // Send in batches of 10 to avoid overwhelming Brevo
+      // Each send is automatically logged to email_sends via sendEmail()
       const BATCH_SIZE = 10;
       for (let i = 0; i < leads.length; i += BATCH_SIZE) {
         const batch = leads.slice(i, i + BATCH_SIZE);
         const results = await Promise.allSettled(
-          batch.map((lead) => sender(lead.email))
+          batch.map((lead) => sender(lead.email, auditCtx))
         );
 
-        // Log each send to email_sends table
-        const rows = batch.map((lead, idx) => {
-          const r = results[idx];
-          const ok = r.status === "fulfilled" && r.value;
-          if (ok) sent++;
+        for (const r of results) {
+          if (r.status === "fulfilled" && r.value) sent++;
           else failed++;
-          return {
-            recipientEmail: lead.email,
-            template: input.template,
-            status: ok ? ("sent" as const) : ("failed" as const),
-            error: ok
-              ? null
-              : r.status === "rejected"
-                ? String(r.reason)
-                : "Brevo returned false",
-            batchId,
-            sentBy: ctx.userId,
-          };
-        });
-
-        await ctx.db.insert(emailSends).values(rows);
+        }
       }
 
       logger.info("Admin: bulk email sent", {

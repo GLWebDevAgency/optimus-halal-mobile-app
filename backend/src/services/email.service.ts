@@ -1,5 +1,8 @@
+import { randomUUID } from "node:crypto";
 import { env } from "../lib/env.js";
 import { logger } from "../lib/logger.js";
+import { db } from "../db/index.js";
+import { emailSends } from "../db/schema/index.js";
 import {
   waitlistConfirmationEmail,
   welcomeEmail,
@@ -11,7 +14,7 @@ import {
 } from "./email-templates.js";
 
 // ---------------------------------------------------------------------------
-// Core send — Brevo transactional API
+// Core send — Brevo transactional API + automatic audit trail
 // ---------------------------------------------------------------------------
 
 interface SendEmailOptions {
@@ -19,6 +22,12 @@ interface SendEmailOptions {
   subject: string;
   htmlContent: string;
   textContent?: string;
+  /** Template name — logged to email_sends for audit trail */
+  template?: string;
+  /** Batch UUID — for bulk sends; auto-generated for single sends */
+  batchId?: string;
+  /** Admin user ID who triggered the send */
+  sentBy?: string;
 }
 
 export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
@@ -29,6 +38,9 @@ export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
     });
     return false;
   }
+
+  let success = false;
+  let error: string | undefined;
 
   try {
     const response = await fetch("https://api.brevo.com/v3/smtp/email", {
@@ -48,32 +60,52 @@ export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
 
     if (!response.ok) {
       const body = await response.text();
-      logger.error("Erreur API Brevo", {
-        status: response.status,
-        body,
-        to: options.to,
-      });
-      return false;
+      error = `HTTP ${response.status}: ${body.slice(0, 200)}`;
+      logger.error("Erreur API Brevo", { status: response.status, body, to: options.to });
+    } else {
+      success = true;
+      logger.info("Email envoyé", { to: options.to, subject: options.subject });
     }
-
-    logger.info("Email envoyé", { to: options.to, subject: options.subject });
-    return true;
   } catch (err) {
-    logger.error("Erreur réseau email", {
-      error: err instanceof Error ? err.message : String(err),
-      to: options.to,
-    });
-    return false;
+    error = err instanceof Error ? err.message : String(err);
+    logger.error("Erreur réseau email", { error, to: options.to });
   }
+
+  // Audit trail — fire-and-forget (ne bloque pas l'appelant)
+  if (options.template) {
+    db.insert(emailSends)
+      .values({
+        recipientEmail: options.to,
+        template: options.template,
+        status: success ? "sent" : "failed",
+        error: error ?? null,
+        batchId: options.batchId ?? randomUUID(),
+        sentBy: options.sentBy ?? null,
+      })
+      .catch((err) =>
+        logger.warn("Échec log email_sends", {
+          error: err instanceof Error ? err.message : String(err),
+        })
+      );
+  }
+
+  return success;
 }
 
 // ---------------------------------------------------------------------------
 // Branded email functions
 // ---------------------------------------------------------------------------
 
+/** Optional audit context for bulk sends initiated by admin */
+export interface EmailAuditContext {
+  batchId?: string;
+  sentBy?: string;
+}
+
 /** Confirmation d'inscription à la waitlist */
 export async function sendWaitlistConfirmationEmail(
-  email: string
+  email: string,
+  ctx?: EmailAuditContext
 ): Promise<boolean> {
   const tpl = waitlistConfirmationEmail();
   return sendEmail({
@@ -81,46 +113,64 @@ export async function sendWaitlistConfirmationEmail(
     subject: tpl.subject,
     htmlContent: tpl.html,
     textContent: tpl.text,
+    template: "waitlist_confirmation",
+    ...ctx,
   });
 }
 
 /** Bienvenue — création de compte + trial 7j Naqiy+ */
-export async function sendWelcomeEmail(email: string): Promise<boolean> {
+export async function sendWelcomeEmail(
+  email: string,
+  ctx?: EmailAuditContext
+): Promise<boolean> {
   const tpl = welcomeEmail();
   return sendEmail({
     to: email,
     subject: tpl.subject,
     htmlContent: tpl.html,
     textContent: tpl.text,
+    template: "welcome",
+    ...ctx,
   });
 }
 
 /** Rappel trial J5 — il reste 2 jours de Naqiy+ */
-export async function sendTrialReminderEmail(email: string): Promise<boolean> {
+export async function sendTrialReminderEmail(
+  email: string,
+  ctx?: EmailAuditContext
+): Promise<boolean> {
   const tpl = trialReminderEmail();
   return sendEmail({
     to: email,
     subject: tpl.subject,
     htmlContent: tpl.html,
     textContent: tpl.text,
+    template: "trial_reminder",
+    ...ctx,
   });
 }
 
 /** Trial expiré J7 — choix subscribe ou gratuit */
-export async function sendTrialExpiredEmail(email: string): Promise<boolean> {
+export async function sendTrialExpiredEmail(
+  email: string,
+  ctx?: EmailAuditContext
+): Promise<boolean> {
   const tpl = trialExpiredEmail();
   return sendEmail({
     to: email,
     subject: tpl.subject,
     htmlContent: tpl.html,
     textContent: tpl.text,
+    template: "trial_expired",
+    ...ctx,
   });
 }
 
 /** Réinitialisation de mot de passe */
 export async function sendPasswordResetEmail(
   email: string,
-  resetCode: string
+  resetCode: string,
+  ctx?: EmailAuditContext
 ): Promise<boolean> {
   const tpl = passwordResetEmail(resetCode);
   return sendEmail({
@@ -128,12 +178,15 @@ export async function sendPasswordResetEmail(
     subject: tpl.subject,
     htmlContent: tpl.html,
     textContent: tpl.text,
+    template: "password_reset",
+    ...ctx,
   });
 }
 
 /** Confirmation de suppression de compte */
 export async function sendAccountDeletionEmail(
-  email: string
+  email: string,
+  ctx?: EmailAuditContext
 ): Promise<boolean> {
   const tpl = accountDeletionEmail();
   return sendEmail({
@@ -141,12 +194,15 @@ export async function sendAccountDeletionEmail(
     subject: tpl.subject,
     htmlContent: tpl.html,
     textContent: tpl.text,
+    template: "account_deletion",
+    ...ctx,
   });
 }
 
 /** Notification de lancement — batch waitlist */
 export async function sendLaunchNotificationEmail(
-  email: string
+  email: string,
+  ctx?: EmailAuditContext
 ): Promise<boolean> {
   const tpl = launchNotificationEmail();
   return sendEmail({
@@ -154,5 +210,7 @@ export async function sendLaunchNotificationEmail(
     subject: tpl.subject,
     htmlContent: tpl.html,
     textContent: tpl.text,
+    template: "launch",
+    ...ctx,
   });
 }
