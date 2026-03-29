@@ -22,7 +22,7 @@ const B = {
   logo: "https://pub-f871593571bd4d04a86a25015aac1057.r2.dev/images/email/logo-full.png",
   iconBase: "https://pub-f871593571bd4d04a86a25015aac1057.r2.dev/images/email",
   site: "https://naqiy.app",
-  instagram: "https://instagram.com/naqiyapp",
+  instagram: "https://instagram.com/naqiy.app",
 
   // Surfaces (light mode — matching :root CSS variables)
   bgBody: "#F5F0E8", // fond crème chaud
