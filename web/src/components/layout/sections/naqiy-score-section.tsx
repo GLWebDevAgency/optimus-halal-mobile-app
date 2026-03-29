@@ -61,8 +61,8 @@ const CERTIFIER_LOGOS = [
    ═══════════════════════════════════════════════ */
 
 const HEALTH_SCORE = { score: 68, label: "BON", color: "#22c55e" } as const;
-const HEALTH_RING_SIZE = 72;
-const HEALTH_RING_R = 30;
+const HEALTH_RING_SIZE = 80;
+const HEALTH_RING_R = 34;
 const HEALTH_RING_STROKE = 5;
 const HEALTH_RING_CIRC = 2 * Math.PI * HEALTH_RING_R;
 
@@ -231,43 +231,41 @@ function SantePanelContent() {
       {/* ── NaqiyScore Santé — ring hero ── */}
       <div className="flex items-center gap-4 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border/50 max-w-sm">
         {/* Circular ring */}
-        <div className="flex flex-col items-center shrink-0">
-          <div className="relative" style={{ width: HEALTH_RING_SIZE, height: HEALTH_RING_SIZE }}>
-            <svg
-              width={HEALTH_RING_SIZE}
-              height={HEALTH_RING_SIZE}
-              viewBox={`0 0 ${HEALTH_RING_SIZE} ${HEALTH_RING_SIZE}`}
-              className="-rotate-90"
-            >
-              <circle
-                cx={HEALTH_RING_SIZE / 2}
-                cy={HEALTH_RING_SIZE / 2}
-                r={HEALTH_RING_R}
-                fill="none"
-                stroke="currentColor"
-                className="text-border/40"
-                strokeWidth={HEALTH_RING_STROKE}
-              />
-              <circle
-                cx={HEALTH_RING_SIZE / 2}
-                cy={HEALTH_RING_SIZE / 2}
-                r={HEALTH_RING_R}
-                fill="none"
-                stroke={HEALTH_SCORE.color}
-                strokeWidth={HEALTH_RING_STROKE}
-                strokeLinecap="round"
-                strokeDasharray={HEALTH_RING_CIRC}
-                strokeDashoffset={HEALTH_RING_CIRC * (1 - HEALTH_SCORE.score / 100)}
-                className="transition-all duration-1000 ease-out"
-              />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-[22px] font-black leading-none" style={{ color: HEALTH_SCORE.color }}>
-                {HEALTH_SCORE.score}
-              </span>
-            </div>
+        <div className="relative shrink-0" style={{ width: HEALTH_RING_SIZE, height: HEALTH_RING_SIZE }}>
+          <svg
+            width={HEALTH_RING_SIZE}
+            height={HEALTH_RING_SIZE}
+            viewBox={`0 0 ${HEALTH_RING_SIZE} ${HEALTH_RING_SIZE}`}
+            className="-rotate-90"
+          >
+            <circle
+              cx={HEALTH_RING_SIZE / 2}
+              cy={HEALTH_RING_SIZE / 2}
+              r={HEALTH_RING_R}
+              fill="none"
+              stroke="currentColor"
+              className="text-border/40"
+              strokeWidth={HEALTH_RING_STROKE}
+            />
+            <circle
+              cx={HEALTH_RING_SIZE / 2}
+              cy={HEALTH_RING_SIZE / 2}
+              r={HEALTH_RING_R}
+              fill="none"
+              stroke={HEALTH_SCORE.color}
+              strokeWidth={HEALTH_RING_STROKE}
+              strokeLinecap="round"
+              strokeDasharray={HEALTH_RING_CIRC}
+              strokeDashoffset={HEALTH_RING_CIRC * (1 - HEALTH_SCORE.score / 100)}
+              className="transition-all duration-1000 ease-out"
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-[22px] font-black leading-none" style={{ color: HEALTH_SCORE.color }}>
+              {HEALTH_SCORE.score}
+            </span>
+            <span className="text-[8px] font-semibold text-muted-foreground/50 mt-0.5">/100</span>
           </div>
-          <span className="text-[9px] font-semibold text-muted-foreground/60 -mt-0.5">/100</span>
         </div>
         {/* Label */}
         <div>

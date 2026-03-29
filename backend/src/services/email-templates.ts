@@ -397,10 +397,10 @@ function scorePreview(): string {
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                   <tr>
                     <!-- Score circle -->
-                    <td width="64" valign="middle" style="padding-right:16px;">
-                      <div style="display:inline-block; width:56px; height:56px; border-radius:50%; border:4px solid #22c55e; text-align:center;">
-                        <span style="font-family:${B.fontHeading}; font-size:22px; font-weight:900; color:#22c55e; line-height:48px; display:block;">68</span>
-                        <span style="font-family:${B.fontBody}; font-size:10px; color:${B.textMuted}; display:block; margin-top:-8px;">/100</span>
+                    <td width="72" valign="middle" style="padding-right:16px;">
+                      <div style="display:inline-block; width:64px; height:64px; border-radius:50%; border:4px solid #22c55e; text-align:center; line-height:1;">
+                        <span style="font-family:${B.fontHeading}; font-size:22px; font-weight:900; color:#22c55e; display:block; padding-top:12px; line-height:1;">68</span>
+                        <span style="font-family:${B.fontBody}; font-size:9px; color:${B.textMuted}; display:block; line-height:1; margin-top:1px;">/100</span>
                       </div>
                     </td>
                     <!-- Label -->
