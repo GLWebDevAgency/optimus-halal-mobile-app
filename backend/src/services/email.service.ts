@@ -1,5 +1,18 @@
 import { env } from "../lib/env.js";
 import { logger } from "../lib/logger.js";
+import {
+  waitlistConfirmationEmail,
+  welcomeEmail,
+  passwordResetEmail,
+  accountDeletionEmail,
+  launchNotificationEmail,
+  trialReminderEmail,
+  trialExpiredEmail,
+} from "./email-templates.js";
+
+// ---------------------------------------------------------------------------
+// Core send — Brevo transactional API
+// ---------------------------------------------------------------------------
 
 interface SendEmailOptions {
   to: string;
@@ -10,7 +23,10 @@ interface SendEmailOptions {
 
 export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
   if (!env.BREVO_API_KEY) {
-    logger.warn("BREVO_API_KEY non configurée — email ignoré");
+    logger.warn("BREVO_API_KEY non configurée — email ignoré", {
+      to: options.to,
+      subject: options.subject,
+    });
     return false;
   }
 
@@ -32,53 +48,111 @@ export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
 
     if (!response.ok) {
       const body = await response.text();
-      logger.error("Erreur API Brevo", { status: response.status, body });
+      logger.error("Erreur API Brevo", {
+        status: response.status,
+        body,
+        to: options.to,
+      });
       return false;
     }
 
+    logger.info("Email envoyé", { to: options.to, subject: options.subject });
     return true;
   } catch (err) {
-    logger.error("Erreur réseau email", { error: err instanceof Error ? err.message : String(err) });
+    logger.error("Erreur réseau email", {
+      error: err instanceof Error ? err.message : String(err),
+      to: options.to,
+    });
     return false;
   }
 }
 
+// ---------------------------------------------------------------------------
+// Branded email functions
+// ---------------------------------------------------------------------------
+
+/** Confirmation d'inscription à la waitlist */
+export async function sendWaitlistConfirmationEmail(
+  email: string
+): Promise<boolean> {
+  const tpl = waitlistConfirmationEmail();
+  return sendEmail({
+    to: email,
+    subject: tpl.subject,
+    htmlContent: tpl.html,
+    textContent: tpl.text,
+  });
+}
+
+/** Bienvenue — création de compte + trial 7j Naqiy+ */
+export async function sendWelcomeEmail(email: string): Promise<boolean> {
+  const tpl = welcomeEmail();
+  return sendEmail({
+    to: email,
+    subject: tpl.subject,
+    htmlContent: tpl.html,
+    textContent: tpl.text,
+  });
+}
+
+/** Rappel trial J5 — il reste 2 jours de Naqiy+ */
+export async function sendTrialReminderEmail(email: string): Promise<boolean> {
+  const tpl = trialReminderEmail();
+  return sendEmail({
+    to: email,
+    subject: tpl.subject,
+    htmlContent: tpl.html,
+    textContent: tpl.text,
+  });
+}
+
+/** Trial expiré J7 — choix subscribe ou gratuit */
+export async function sendTrialExpiredEmail(email: string): Promise<boolean> {
+  const tpl = trialExpiredEmail();
+  return sendEmail({
+    to: email,
+    subject: tpl.subject,
+    htmlContent: tpl.html,
+    textContent: tpl.text,
+  });
+}
+
+/** Réinitialisation de mot de passe */
 export async function sendPasswordResetEmail(
   email: string,
   resetCode: string
 ): Promise<boolean> {
+  const tpl = passwordResetEmail(resetCode);
   return sendEmail({
     to: email,
-    subject: "Réinitialisation de votre mot de passe - Naqiy",
-    htmlContent: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2d7a3e;">Naqiy</h2>
-        <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
-        <p>Votre code de vérification :</p>
-        <div style="background: #f4f4f4; padding: 20px; text-align: center; font-size: 32px; letter-spacing: 8px; font-weight: bold; color: #2d7a3e;">
-          ${resetCode}
-        </div>
-        <p style="color: #666; font-size: 14px;">Ce code expire dans 15 minutes.</p>
-        <p style="color: #666; font-size: 14px;">Si vous n'avez pas fait cette demande, ignorez cet email.</p>
-      </div>
-    `,
+    subject: tpl.subject,
+    htmlContent: tpl.html,
+    textContent: tpl.text,
   });
 }
 
-export async function sendWelcomeEmail(
-  email: string,
-  displayName: string
+/** Confirmation de suppression de compte */
+export async function sendAccountDeletionEmail(
+  email: string
 ): Promise<boolean> {
+  const tpl = accountDeletionEmail();
   return sendEmail({
     to: email,
-    subject: "Bienvenue sur Naqiy !",
-    htmlContent: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2d7a3e;">Bienvenue ${displayName} !</h2>
-        <p>Merci de rejoindre la communauté Naqiy.</p>
-        <p>Commencez dès maintenant à scanner vos produits et découvrez leur statut halal en un instant.</p>
-        <p style="color: #2d7a3e; font-weight: bold;">L'équipe Naqiy</p>
-      </div>
-    `,
+    subject: tpl.subject,
+    htmlContent: tpl.html,
+    textContent: tpl.text,
+  });
+}
+
+/** Notification de lancement — batch waitlist */
+export async function sendLaunchNotificationEmail(
+  email: string
+): Promise<boolean> {
+  const tpl = launchNotificationEmail();
+  return sendEmail({
+    to: email,
+    subject: tpl.subject,
+    htmlContent: tpl.html,
+    textContent: tpl.text,
   });
 }

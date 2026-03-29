@@ -14,6 +14,7 @@ import {
 import {
   sendPasswordResetEmail,
   sendWelcomeEmail,
+  sendAccountDeletionEmail,
 } from "../../services/email.service.js";
 import { unauthorized, conflict, notFound, badRequest } from "../../lib/errors.js";
 import { logger } from "../../lib/logger.js";
@@ -80,7 +81,7 @@ export const authRouter = router({
       });
 
       // Fire-and-forget welcome email (outside transaction)
-      sendWelcomeEmail(result.user.email, result.user.displayName).catch((err) => {
+      sendWelcomeEmail(result.user.email).catch((err) => {
         logger.error("Echec envoi email de bienvenue", {
           email: result.user.email,
           error: err instanceof Error ? err.message : String(err),
@@ -436,6 +437,14 @@ export const authRouter = router({
     });
 
     logger.info("Compte supprime", { userId: ctx.userId });
+
+    // 4. Email de confirmation de suppression (fire-and-forget)
+    sendAccountDeletionEmail(user.email).catch((err) => {
+      logger.warn("Échec envoi email suppression compte", {
+        userId: ctx.userId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    });
 
     return { success: true };
   }),

@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { router, publicProcedure } from "../trpc.js";
 import { waitlistLeads } from "../../db/schema/index.js";
 import { logger } from "../../lib/logger.js";
+import { sendWaitlistConfirmationEmail } from "../../services/email.service.js";
 
 export const waitlistRouter = router({
   /** Inscrit un email à la waitlist (upsert — idempotent) */
@@ -48,6 +49,16 @@ export const waitlistRouter = router({
         source: input.source,
         isNew,
       });
+
+      // Envoyer l'email de confirmation uniquement aux nouveaux inscrits (fire-and-forget)
+      if (isNew) {
+        sendWaitlistConfirmationEmail(input.email).catch((err) => {
+          logger.warn("Échec envoi email waitlist", {
+            email: input.email,
+            error: err instanceof Error ? err.message : String(err),
+          });
+        });
+      }
 
       return { status: isNew ? "created" as const : "existing" as const };
     }),
