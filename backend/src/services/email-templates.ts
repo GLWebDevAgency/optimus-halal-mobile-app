@@ -17,9 +17,10 @@
 // ---------------------------------------------------------------------------
 
 const B = {
-  // Assets (optimized for email — 30KB logo, SVG icons)
-  logo: "https://naqiy.app/images/email/logo-full.png",
-  iconBase: "https://naqiy.app/images/email",
+  // Assets hosted on Cloudflare R2 CDN (reliable for email clients)
+  cdn: "https://pub-f871593571bd4d04a86a25015aac1057.r2.dev",
+  logo: "https://pub-f871593571bd4d04a86a25015aac1057.r2.dev/images/email/logo-full.png",
+  iconBase: "https://pub-f871593571bd4d04a86a25015aac1057.r2.dev/images/email",
   site: "https://naqiy.app",
   instagram: "https://instagram.com/naqiyapp",
 
