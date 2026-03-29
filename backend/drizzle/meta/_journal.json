@@ -218,6 +218,13 @@
       "when": 1774872539820,
       "tag": "0030_push_nudges",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1774958939820,
+      "tag": "0031_email_sends",
+      "breakpoints": true
     }
   ]
 }
