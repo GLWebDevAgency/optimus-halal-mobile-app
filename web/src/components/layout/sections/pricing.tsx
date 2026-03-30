@@ -21,21 +21,21 @@ import { EVENTS } from "@/lib/analytics-events";
    ═══════════════════════════════════════════════ */
 
 const freeFeatures = [
-  "Scan & verdict halal — toujours gratuit",
+  "Scan & verdict halal",
   "10 scans par jour",
   "NaqiyScore\u2122 confiance certifieur",
-  "Carte des magasins certifiés",
-  "3 favoris & 3 derniers scans (local)",
+  "Boucheries & restaurants certifiés de confiance",
+  "3 favoris et 3 derniers scans",
 ];
 
 const plusFeatures = [
-  "Tout le gratuit, sans limites :",
-  "Scans illimités",
-  "Historique & favoris illimités (cloud)",
-  "Alertes allergènes personnalisées",
-  "Profil santé — enfants, grossesse (d\u2019autres bientôt)",
+  "Tout le gratuit, sans aucune limite :",
+  "Scans illimités, chaque jour",
+  "Historique complet & favoris synchronisés (cloud)",
+  "Alertes allergènes sur mesure pour ta famille",
+  "Profil santé — enfants, grossesse (d\u2019autres à venir)",
   "Ton madhab, ton verdict — Hanafi, Shafi\u2019i, Maliki, Hanbali",
-  "Création de profil & synchronisation multi-appareils",
+  "Un profil, tous tes appareils synchronisés",
 ];
 
 /* ═══════════════════════════════════════════════
@@ -73,9 +73,9 @@ export function PricingSection() {
 
         <AnimateIn className="text-center">
           <p className="text-sm text-pretty text-muted-foreground mt-3 max-w-lg mx-auto md:text-base">
-            Projet indépendant — aucune pub, aucune revente de données.{" "}
+            Pas de pub. Pas de revente de données. Projet 100% indépendant.{" "}
             <span className="font-semibold text-foreground">
-              Le scan est gratuit. La protection totale, c&apos;est Naqiy+.
+              Naqiy+ finance le projet — et te donne le contrôle total.
             </span>
           </p>
         </AnimateIn>
@@ -98,9 +98,15 @@ export function PricingSection() {
                     pour toujours
                   </span>
                 </div>
+                <p className="mt-1 text-xs text-gold font-medium">
+                  + 7 jours de Naqiy+ offerts à l&apos;installation
+                </p>
                 <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-                  Le verdict halal, toujours gratuit.
-                  10 scans/jour, 3 favoris enregistrés sur ton téléphone.
+                  Tu télécharges, tu scannes.{" "}
+                  <span className="font-medium text-foreground">
+                    Pas de compte, pas de carte bancaire.
+                  </span>{" "}
+                  Le halal, c&apos;est un droit — pas un luxe.
                 </p>
 
                 <ul className="mt-4 space-y-2.5 flex-1">
@@ -140,12 +146,12 @@ export function PricingSection() {
                   </span>
                   <span className="text-sm text-muted-foreground">/mois</span>
                 </div>
-                <p className="mt-1 text-xs text-leaf font-medium">Essai 7 jours offert</p>
                 <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-                  Scans illimités, alertes allergènes, profil santé{" "}
+                  Tu sais ce que ta famille mange.{" "}
                   <span className="font-medium text-foreground">
-                    — le contrôle total sur ce que mange ta famille.
-                  </span>
+                    Allergènes, profil santé, madhab — tout est personnalisé.
+                  </span>{" "}
+                  Et tu nous aides à rester indépendants.
                 </p>
 
                 <ul className="mt-4 space-y-2.5 flex-1">
