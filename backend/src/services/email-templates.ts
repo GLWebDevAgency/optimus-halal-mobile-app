@@ -763,7 +763,7 @@ export function trialReminderEmail(): {
             Ce que tu perds dans 48h
           </p>
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-            ${featureItem("scan", "Scans illimit&eacute;s", "Repass&eacute; &agrave; 5 scans/jour en mode gratuit.")}
+            ${featureItem("scan", "Scans illimit&eacute;s", "Repass&eacute; &agrave; 10 scans/jour en mode gratuit.")}
             ${featureItem("madhab", "Analyse IA avanc&eacute;e", "Plus d&rsquo;extraction automatique d&rsquo;ingr&eacute;dients.")}
             ${featureItem("health", "Analyse sant&eacute; compl&egrave;te", "Additifs et NOVA r&eacute;serv&eacute;s &agrave; Naqiy+.", "leaf")}
           </table>
@@ -820,7 +820,7 @@ export function trialReminderEmail(): {
 Ton essai Naqiy+ se termine bientôt. Il te reste 48 heures pour profiter de toutes les fonctionnalités premium.
 
 CE QUE TU PERDS DANS 48H :
-- Scans illimités → repassé à 5 scans/jour
+- Scans illimités → repassé à 10 scans/jour
 - Analyse IA avancée → plus d'extraction automatique
 - Analyse santé complète → additifs et NOVA réservés à Naqiy+
 
@@ -874,7 +874,7 @@ export function trialExpiredEmail(): {
                         Gratuit
                       </p>
                       <p style="margin:0 0 8px; font-family:${B.fontBody}; font-size:13px; color:${B.textSecondary}; line-height:22px;">
-                        <span style="color:${B.textMuted};">&#10003;</span> 5 scans / jour
+                        <span style="color:${B.textMuted};">&#10003;</span> 10 scans / jour
                       </p>
                       <p style="margin:0 0 8px; font-family:${B.fontBody}; font-size:13px; color:${B.textSecondary}; line-height:22px;">
                         <span style="color:${B.textMuted};">&#10003;</span> Verdict halal
@@ -957,7 +957,7 @@ export function trialExpiredEmail(): {
 Ton essai Naqiy+ est terminé. Tes 7 jours d'essai sont écoulés. Tu es désormais sur le plan gratuit.
 
 GRATUIT :
-✓ 5 scans / jour
+✓ 10 scans / jour
 ✓ Verdict halal
 ✓ NutriScore
 ✗ Analyse IA

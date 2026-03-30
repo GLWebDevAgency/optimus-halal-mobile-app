@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 import path from "node:path";
 
+const isDev = process.env.NODE_ENV === "development";
+
 const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname),
@@ -17,11 +19,15 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           // Referrer: send origin only on cross-origin, full on same-origin
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          // HSTS — 1 year, include subdomains, preload-ready
-          {
-            key: "Strict-Transport-Security",
-            value: "max-age=31536000; includeSubDomains; preload",
-          },
+          // HSTS — 1 year, include subdomains, preload-ready (prod only)
+          ...(!isDev
+            ? [
+                {
+                  key: "Strict-Transport-Security",
+                  value: "max-age=31536000; includeSubDomains; preload",
+                },
+              ]
+            : []),
           // Permissions Policy — disable sensors we don't use
           {
             key: "Permissions-Policy",
@@ -29,7 +35,6 @@ const nextConfig: NextConfig = {
               "camera=(), microphone=(), geolocation=(), interest-cohort=()",
           },
           // CSP — strict but functional
-          // Allows: self, Vercel Analytics/Speed Insights, PostHog, Google Fonts, inline styles (Next.js needs it)
           {
             key: "Content-Security-Policy",
             value: [
@@ -38,7 +43,15 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: blob: https://*.googleusercontent.com https://pub-f871593571bd4d04a86a25015aac1057.r2.dev",
               "font-src 'self' https://fonts.gstatic.com",
-              "connect-src 'self' https://us.i.posthog.com https://vitals.vercel-insights.com https://va.vercel-scripts.com https://api.naqiy.app https://api-preview.naqiy.app",
+              [
+                "connect-src 'self'",
+                "https://us.i.posthog.com",
+                "https://vitals.vercel-insights.com",
+                "https://va.vercel-scripts.com",
+                "https://api.naqiy.app",
+                "https://api-preview.naqiy.app",
+                ...(isDev ? ["http://localhost:*", "ws://localhost:*"] : []),
+              ].join(" "),
               "frame-ancestors 'self'",
               "base-uri 'self'",
               "form-action 'self'",

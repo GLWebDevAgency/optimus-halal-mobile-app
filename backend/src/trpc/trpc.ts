@@ -128,8 +128,8 @@ export const adminProcedure = t.procedure.use(isAuthenticated).use(isAdmin);
 // Priority chain:
 // 1. Premium (subscriptionTier=premium) → unlimited
 // 2. Trial (device.trialExpiresAt > now AND not converted) → unlimited
-// 3. Free → 5/day quota (DB-backed, Redis-cached)
-const DAILY_SCAN_LIMIT = 5;
+// 3. Free → 10/day quota (DB-backed, Redis-cached)
+const DAILY_SCAN_LIMIT = 10;
 
 const quotaChecked = middleware(async ({ ctx, next }) => {
   // ── 1. Premium bypass ──

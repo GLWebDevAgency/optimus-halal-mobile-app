@@ -377,7 +377,7 @@ export const useRamadanStore = create<RamadanState>()(
  * Permet un feedback UI instantané sans attendre le réseau.
  * Le backend reste la source de vérité.
  */
-export const DAILY_SCAN_LIMIT = 20;
+export const DAILY_SCAN_LIMIT = 10;
 
 function getToday(): string {
   return new Date().toISOString().slice(0, 10);

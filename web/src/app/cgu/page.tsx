@@ -76,7 +76,7 @@ export default function CGUPage() {
         <p>
           <strong>Mode invité (gratuit, sans compte) :</strong> le scan, le
           verdict halal et l&apos;analyse IA sont toujours gratuits. Quota de
-          20 scans/jour, 3 favoris locaux maximum. Aucun compte requis.
+          10 scans/jour, 3 favoris locaux maximum. Aucun compte requis.
         </p>
         <p>
           <strong>Période d&apos;essai (7 jours, sans compte) :</strong> à
