@@ -95,7 +95,7 @@ function PanelIndicator({ progress }: { progress: MotionValue<number> }) {
   const trackWidth = useTransform(progress, [0, 1], ["0%", "100%"]);
 
   return (
-    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+    <div className="relative z-20 shrink-0 flex justify-center pb-8 pointer-events-none">
       <div className="flex items-center gap-3 rounded-full bg-background/70 backdrop-blur-md border border-border/40 px-4 py-2 shadow-xl">
         <span className="text-xs font-semibold text-foreground/60">Halal</span>
         <div className="relative h-0.5 w-16 rounded-full bg-border overflow-hidden">
@@ -179,11 +179,13 @@ function HalalPanelContent() {
       <div className="grid grid-cols-2 gap-2 max-w-sm">
         {CRITERIA.map((c) => (
           <div key={c.title} className="rounded-xl bg-card p-3 shadow-sm ring-1 ring-border/50">
-            <div className="mb-2 inline-flex size-7 items-center justify-center rounded-lg bg-leaf/10">
-              <c.icon className="size-3.5 text-leaf" weight="fill" />
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="inline-flex size-7 items-center justify-center rounded-lg bg-leaf/10 shrink-0">
+                <c.icon className="size-3.5 text-leaf" weight="fill" />
+              </div>
+              <p className="text-xs font-bold text-foreground">{c.title}</p>
             </div>
-            <p className="text-xs font-bold text-foreground">{c.title}</p>
-            <p className="mt-0.5 text-[10px] text-muted-foreground leading-relaxed">{c.description}</p>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">{c.description}</p>
           </div>
         ))}
       </div>
@@ -412,7 +414,8 @@ function DesktopSection() {
       className="relative hidden lg:block"
       style={{ height: "250vh" }}
     >
-      <div className="sticky top-0 h-screen overflow-hidden relative">
+      {/* Sticky frame — flex column so the title sits in normal flow */}
+      <div className="sticky top-0 h-screen overflow-hidden flex flex-col">
 
         {/* Background — gold */}
         <motion.div
@@ -434,22 +437,20 @@ function DesktopSection() {
           aria-hidden="true"
         />
 
-        {/* ── TITRE FIXE ── */}
-        <div className="absolute top-0 left-0 right-0 z-20 pt-20 px-2 pointer-events-none">
+        {/* ── TITRE — normal flow, adapts to any zoom/font-size ── */}
+        <div className="relative z-20 shrink-0 pt-20 pb-4 px-2">
           <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
             Le NaqiyScore™
           </h2>
         </div>
 
-        {/* ── PANELS — overflow-hidden explicite pour clipper les transitions ── */}
-        <div className="absolute inset-0 overflow-hidden">
+        {/* ── PANELS — fill remaining viewport height, overflow-hidden clips transitions ── */}
+        <div className="relative flex-1 min-h-0 overflow-hidden">
 
           {/* Panel 1 — Halal : sort par la gauche */}
           <motion.div
-            className="absolute inset-0 flex flex-col justify-center px-2"
+            className="absolute inset-0 flex flex-col justify-center px-2 pb-14"
             style={{
-              paddingTop: "140px",
-              paddingBottom: "56px",
               translateX: p1X,
               scale: p1Scale,
               willChange: "transform",
@@ -460,10 +461,8 @@ function DesktopSection() {
 
           {/* Panel 2 — Santé : entre par la droite */}
           <motion.div
-            className="absolute inset-0 flex flex-col justify-center px-2"
+            className="absolute inset-0 flex flex-col justify-center px-2 pb-14"
             style={{
-              paddingTop: "140px",
-              paddingBottom: "56px",
               translateX: p2X,
               scale: p2Scale,
               willChange: "transform",
