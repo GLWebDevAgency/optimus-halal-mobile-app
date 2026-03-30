@@ -572,7 +572,7 @@ export const useLocalStoreFavoritesStore = create<LocalStoreFavoritesState>()(
  * Stores last 3 scan results for anonymous users.
  * Naqiy+ users get unlimited cloud history.
  */
-const LOCAL_HISTORY_LIMIT = 50;
+const LOCAL_HISTORY_LIMIT = 3;
 
 export interface LocalScanHistoryItem {
   barcode: string;
@@ -601,14 +601,16 @@ export const useLocalScanHistoryStore = create<LocalScanHistoryState>()(
 
       addScan: (scan) => {
         const state = get();
+        const trialActive = useTrialStore.getState().isTrialActive();
         // Remove duplicate if same barcode was scanned before
         const filtered = state.scans.filter((s) => s.barcode !== scan.barcode);
-        // Prepend new scan, keep only last N
+        // Trial/premium: keep 50 locally as cache; free: keep only 3
+        const limit = trialActive ? 50 : LOCAL_HISTORY_LIMIT;
         set({
           scans: [
             { ...scan, scannedAt: new Date().toISOString() },
             ...filtered,
-          ].slice(0, LOCAL_HISTORY_LIMIT),
+          ].slice(0, limit),
         });
       },
 

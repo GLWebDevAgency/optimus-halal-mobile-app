@@ -22,20 +22,20 @@ import { EVENTS } from "@/lib/analytics-events";
 
 const freeFeatures = [
   "Scan & verdict halal — toujours gratuit",
-  "Analyse IA complète de chaque produit",
-  "NaqiyScore\u2122 santé & confiance certifieur",
+  "10 scans par jour",
+  "NaqiyScore\u2122 confiance certifieur",
   "Carte des magasins certifiés",
-  "Historique 7 jours",
+  "3 favoris & 3 derniers scans (local)",
 ];
 
 const plusFeatures = [
-  "Tout le gratuit, plus :",
-  "Création de profil & synchronisation",
-  "Alertes allergènes automatiques — gluten, lactose, arachides",
-  "Profil santé adapté — diabète, grossesse, cholestérol",
+  "Tout le gratuit, sans limites :",
+  "Scans illimités",
+  "Historique & favoris illimités (cloud)",
+  "Alertes allergènes personnalisées",
+  "Profil santé — diabète, grossesse, cholestérol",
   "Ton madhab, ton verdict — Hanafi, Shafi\u2019i, Maliki, Hanbali",
-  "Historique illimité & favoris cloud",
-  "Tes 100 produits favoris même sans réseau",
+  "Création de profil & synchronisation multi-appareils",
 ];
 
 /* ═══════════════════════════════════════════════
@@ -99,8 +99,8 @@ export function PricingSection() {
                   </span>
                 </div>
                 <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-                  Le verdict halal est toujours là, sans mur payant.
-                  L&apos;essentiel reste accessible à tous.
+                  Le verdict halal, toujours gratuit.
+                  10 scans/jour, 3 favoris enregistrés sur ton téléphone.
                 </p>
 
                 <ul className="mt-4 space-y-2.5 flex-1">
@@ -142,7 +142,7 @@ export function PricingSection() {
                 </div>
                 <p className="mt-1 text-xs text-leaf font-medium">Essai 7 jours offert</p>
                 <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-                  Profil personnalisé, favoris cloud, historique illimité{" "}
+                  Scans illimités, alertes allergènes, profil santé{" "}
                   <span className="font-medium text-foreground">
                     — le contrôle total sur ce que mange ta famille.
                   </span>
