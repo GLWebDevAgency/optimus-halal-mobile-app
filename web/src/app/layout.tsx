@@ -85,7 +85,15 @@ export const metadata: Metadata = {
     description:
       "Un scan, un verdict halal. 817K+ produits analysés, 140+ additifs vérifiés, 12 certifieurs évalués. L'app qui protège ce que ta famille mange. Gratuit.",
     siteName: "Naqiy",
-    /* OG image handled via app/opengraph-image.png file convention */
+    images: [
+      {
+        url: "https://pub-f871593571bd4d04a86a25015aac1057.r2.dev/images/og/default.png",
+        width: 1200,
+        height: 630,
+        alt: "Naqiy — Scanner halal intelligent",
+        type: "image/png",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
@@ -94,7 +102,14 @@ export const metadata: Metadata = {
       "Un scan, un verdict halal. 817K+ produits, 12 certifieurs évalués. Gratuit.",
     creator: "@naqiy.app",
     site: "@naqiy.app",
-    /* Twitter image handled via app/opengraph-image.png file convention */
+    images: [
+      {
+        url: "https://pub-f871593571bd4d04a86a25015aac1057.r2.dev/images/og/default.png",
+        width: 1200,
+        height: 630,
+        alt: "Naqiy — Scanner halal intelligent",
+      },
+    ],
   },
   robots: {
     index: true,
