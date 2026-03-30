@@ -33,7 +33,7 @@ const plusFeatures = [
   "Scans illimités",
   "Historique & favoris illimités (cloud)",
   "Alertes allergènes personnalisées",
-  "Profil santé — diabète, grossesse, cholestérol",
+  "Profil santé — enfants, grossesse (d\u2019autres bientôt)",
   "Ton madhab, ton verdict — Hanafi, Shafi\u2019i, Maliki, Hanbali",
   "Création de profil & synchronisation multi-appareils",
 ];
