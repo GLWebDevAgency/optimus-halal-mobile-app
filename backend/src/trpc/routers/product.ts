@@ -5,10 +5,7 @@ import { products, categories } from "../../db/schema/index.js";
 import { notFound } from "../../lib/errors.js";
 import { findAlternatives } from "../../services/recommendation.service.js";
 import { withResolvedImage } from "../../services/product-lookup.service.js";
-
-function escapeLike(str: string): string {
-  return str.replace(/[%_\\]/g, "\\$&");
-}
+import { escapeLike } from "../../lib/sql-utils.js";
 
 export const productRouter = router({
   getById: publicProcedure

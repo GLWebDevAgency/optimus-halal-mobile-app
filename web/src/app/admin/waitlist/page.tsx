@@ -85,12 +85,26 @@ export default function WaitlistPage() {
     const result = await exportQuery.refetch()
     if (!result.data) return
     const rows = result.data
+
+    // Sanitize a cell value for CSV: escape formula injection and quote properly
+    const csvCell = (val: string | Date | null | undefined): string => {
+      if (val == null) return ""
+      let s = val instanceof Date ? val.toISOString() : String(val)
+      // Prefix formula-triggering characters with a single quote to neutralize them
+      if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`
+      // If the value contains commas, quotes, or newlines, wrap in double-quotes
+      if (/[",\n\r]/.test(s)) s = `"${s.replace(/"/g, '""')}"`
+      return s
+    }
+
     const header = "email,source,locale,utm_source,utm_medium,utm_campaign,created_at"
     const csv = [
       header,
       ...rows.map(
         (r) =>
-          `${r.email},${r.source},${r.locale ?? ""},${r.utmSource ?? ""},${r.utmMedium ?? ""},${r.utmCampaign ?? ""},${r.createdAt}`
+          [r.email, r.source, r.locale, r.utmSource, r.utmMedium, r.utmCampaign, r.createdAt]
+            .map(csvCell)
+            .join(",")
       ),
     ].join("\n")
 

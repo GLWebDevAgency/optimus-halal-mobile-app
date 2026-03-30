@@ -17,6 +17,7 @@ import { logger } from "../../lib/logger.js";
 import { randomBytes } from "node:crypto";
 import { hashPassword } from "../../services/auth.service.js";
 import { invalidateUserTierCache } from "../context.js";
+import { escapeLike } from "../../lib/sql-utils.js";
 
 export const adminRouter = router({
   // ── Dashboard Stats ─────────────────────────────────────────
@@ -292,8 +293,8 @@ export const adminRouter = router({
       if (search) {
         conditions.push(
           or(
-            ilike(users.email, `%${search}%`),
-            ilike(users.displayName, `%${search}%`)
+            ilike(users.email, `%${escapeLike(search)}%`),
+            ilike(users.displayName, `%${escapeLike(search)}%`)
           )
         );
       }

@@ -4,6 +4,7 @@ import { eq, sql, ilike, desc, asc, gte, lte, and, inArray } from "drizzle-orm";
 import { router, adminProcedure } from "../trpc.js";
 import { waitlistLeads, emailSends, users } from "../../db/schema/index.js";
 import { logger } from "../../lib/logger.js";
+import { escapeLike } from "../../lib/sql-utils.js";
 import {
   sendWaitlistConfirmationEmail,
   sendWelcomeEmail,
@@ -50,7 +51,7 @@ export const adminWaitlistRouter = router({
 
       const conditions = [];
       if (search) {
-        conditions.push(ilike(waitlistLeads.email, `%${search}%`));
+        conditions.push(ilike(waitlistLeads.email, `%${escapeLike(search)}%`));
       }
       if (source) {
         conditions.push(eq(waitlistLeads.source, source));
@@ -261,7 +262,7 @@ export const adminWaitlistRouter = router({
       const conditions = [];
       if (template) conditions.push(eq(emailSends.template, template));
       if (status) conditions.push(eq(emailSends.status, status));
-      if (search) conditions.push(ilike(emailSends.recipientEmail, `%${search}%`));
+      if (search) conditions.push(ilike(emailSends.recipientEmail, `%${escapeLike(search)}%`));
 
       const where =
         conditions.length > 0

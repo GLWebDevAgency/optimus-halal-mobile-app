@@ -40,6 +40,8 @@ const envSchema = z.object({
   R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),
   R2_BUCKET_NAME: z.string().default("naqiy"),
   R2_PUBLIC_DOMAIN: z.string().default("pub-f871593571bd4d04a86a25015aac1057.r2.dev"),
+  // RevenueCat webhook auth
+  REVENUECAT_WEBHOOK_SECRET: z.string().min(16).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

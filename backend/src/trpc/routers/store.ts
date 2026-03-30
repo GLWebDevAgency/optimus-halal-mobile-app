@@ -6,10 +6,7 @@ import { stores, storeHours, storeSubscriptions, storeFavorites, reviews, users,
 import { notFound, conflict } from "../../lib/errors.js";
 import { withCache } from "../../lib/cache.js";
 import ngeohash from "ngeohash";
-
-function escapeLike(str: string): string {
-  return str.replace(/[%_\\]/g, "\\$&");
-}
+import { escapeLike } from "../../lib/sql-utils.js";
 
 export const storeRouter = router({
   search: publicProcedure

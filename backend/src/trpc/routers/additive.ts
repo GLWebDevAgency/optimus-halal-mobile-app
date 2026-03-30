@@ -2,10 +2,7 @@ import { z } from "zod";
 import { eq, ilike, or, and, inArray } from "drizzle-orm";
 import { publicProcedure, protectedProcedure, router } from "../trpc.js";
 import { additives, additiveMadhabRulings } from "../../db/schema/index.js";
-
-function escapeLike(str: string): string {
-  return str.replace(/[%_\\]/g, "\\$&");
-}
+import { escapeLike } from "../../lib/sql-utils.js";
 
 export const additiveRouter = router({
   list: publicProcedure

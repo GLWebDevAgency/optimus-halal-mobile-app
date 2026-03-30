@@ -29,13 +29,36 @@ type AdminAuthContextType = {
 
 const AdminAuthContext = createContext<AdminAuthContextType | null>(null)
 
+/** Set or delete the session marker cookie used by proxy.ts to gate admin pages. */
+function setSessionCookie(active: boolean) {
+  if (active) {
+    // SameSite=Strict, Secure, 7-day expiry — not httpOnly so JS can set it.
+    // This is a session *marker*, not a credential — the real auth is the JWT
+    // verified server-side by tRPC adminProcedure on every request.
+    document.cookie = `naqiy_admin_session=1; path=/admin; max-age=${7 * 86400}; SameSite=Strict; Secure`
+  } else {
+    document.cookie = "naqiy_admin_session=; path=/admin; max-age=0; SameSite=Strict; Secure"
+  }
+}
+
 function readStoredUser(): AdminUser | null {
   if (typeof window === "undefined") return null
   try {
     const storedUser = localStorage.getItem("naqiy.admin_user")
     const token = localStorage.getItem("naqiy.access_token")
     if (!storedUser || !token) return null
-    return JSON.parse(storedUser) as AdminUser
+    const parsed: unknown = JSON.parse(storedUser)
+    // Validate shape before trusting
+    if (
+      typeof parsed === "object" && parsed !== null &&
+      "id" in parsed && typeof (parsed as Record<string, unknown>).id === "string" &&
+      "email" in parsed && typeof (parsed as Record<string, unknown>).email === "string" &&
+      "adminRole" in parsed
+    ) {
+      return parsed as AdminUser
+    }
+    localStorage.removeItem("naqiy.admin_user")
+    return null
   } catch {
     localStorage.removeItem("naqiy.admin_user")
     return null
@@ -70,12 +93,13 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
   const user = isRevoked ? null : storedUser
 
-  // Clean up localStorage when access is revoked (external system sync, not state)
+  // Clean up localStorage + session cookie when access is revoked
   useEffect(() => {
     if (isRevoked) {
       localStorage.removeItem("naqiy.access_token")
       localStorage.removeItem("naqiy.refresh_token")
       localStorage.removeItem("naqiy.admin_user")
+      setSessionCookie(false)
     }
   }, [isRevoked])
 
@@ -91,6 +115,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("naqiy.access_token", accessToken)
     localStorage.setItem("naqiy.refresh_token", refreshToken)
     localStorage.setItem("naqiy.admin_user", JSON.stringify(adminUser))
+    setSessionCookie(true)
     setStoredUser(adminUser)
     router.replace("/admin")
   }, [router])
@@ -99,6 +124,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("naqiy.access_token")
     localStorage.removeItem("naqiy.refresh_token")
     localStorage.removeItem("naqiy.admin_user")
+    setSessionCookie(false)
     setStoredUser(null)
     router.replace("/admin/login")
   }, [router])
