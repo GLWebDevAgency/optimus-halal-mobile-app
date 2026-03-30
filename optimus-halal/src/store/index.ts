@@ -377,7 +377,7 @@ export const useRamadanStore = create<RamadanState>()(
  * Permet un feedback UI instantané sans attendre le réseau.
  * Le backend reste la source de vérité.
  */
-export const DAILY_SCAN_LIMIT = 10;
+export const DAILY_SCAN_LIMIT = 15;
 
 function getToday(): string {
   return new Date().toISOString().slice(0, 10);
@@ -433,12 +433,12 @@ export const useQuotaStore = create<QuotaState>()(
 );
 
 /**
- * Local Favorites Store — Guest mode (3 max, MMKV)
+ * Local Favorites Store — Guest mode (10 max, MMKV)
  *
- * Allows anonymous users to save up to 3 favorites locally.
+ * Allows anonymous users to save up to 10 favorites locally.
  * When they create a Naqiy+ account, these migrate to cloud.
  */
-const LOCAL_FAVORITES_LIMIT = 3;
+const LOCAL_FAVORITES_LIMIT = 10;
 
 export interface LocalFavorite {
   productId: string;
@@ -499,12 +499,12 @@ export const useLocalFavoritesStore = create<LocalFavoritesState>()(
 );
 
 /**
- * Local Store Favorites Store — Guest mode (3 max, MMKV)
+ * Local Store Favorites Store — Guest mode (10 max, MMKV)
  *
- * Allows anonymous users to save up to 3 store favorites locally.
+ * Allows anonymous users to save up to 10 store favorites locally.
  * When they create a Naqiy+ account, these migrate to cloud.
  */
-const LOCAL_STORE_FAVORITES_LIMIT = 3;
+const LOCAL_STORE_FAVORITES_LIMIT = 10;
 
 export interface LocalStoreFavorite {
   storeId: string;
@@ -567,12 +567,12 @@ export const useLocalStoreFavoritesStore = create<LocalStoreFavoritesState>()(
 );
 
 /**
- * Local Scan History Store — Guest mode (3 derniers, MMKV)
+ * Local Scan History Store — Guest mode (10 derniers, MMKV)
  *
- * Stores last 3 scan results for anonymous users.
+ * Stores last 10 scan results for anonymous users.
  * Naqiy+ users get unlimited cloud history.
  */
-const LOCAL_HISTORY_LIMIT = 3;
+const LOCAL_HISTORY_LIMIT = 10;
 
 export interface LocalScanHistoryItem {
   barcode: string;

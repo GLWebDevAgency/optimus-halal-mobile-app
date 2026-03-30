@@ -60,18 +60,18 @@ export const favoritesRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // Premium gate: free users limited to 5 favorites
+      // Premium gate: free users limited to 10 favorites
       if (ctx.subscriptionTier !== "premium") {
         const countResult = await ctx.db
           .select({ count: sql<number>`count(*)::int` })
           .from(favorites)
           .where(eq(favorites.userId, ctx.userId))
           .then((r) => r[0] ?? { count: 0 });
-        if (countResult.count >= 5) {
+        if (countResult.count >= 10) {
           throw new TRPCError({
             code: "FORBIDDEN",
             message:
-              "Limite de 5 favoris atteinte. Passez a Naqiy+ pour des favoris illimites.",
+              "Limite de 10 favoris atteinte. Passez a Naqiy+ pour des favoris illimites.",
           });
         }
       }

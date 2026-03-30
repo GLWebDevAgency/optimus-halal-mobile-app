@@ -22,19 +22,21 @@ import { EVENTS } from "@/lib/analytics-events";
 
 const freeFeatures = [
   "Scan & verdict halal",
-  "10 scans par jour",
+  "15 scans par jour",
   "NaqiyScore\u2122 confiance certifieur",
+  "Verdict madhab (consensus des 4 écoles)",
   "Boucheries & restaurants certifiés de confiance",
-  "3 favoris et 3 derniers scans",
+  "10 favoris et 10 derniers scans",
 ];
 
 const plusFeatures = [
   "Tout le gratuit, sans aucune limite :",
-  "Scans illimités, chaque jour",
+  "Scans illimités",
   "Historique complet & favoris synchronisés (cloud)",
+  "Ton madhab, ton verdict personnalisé",
   "Alertes allergènes sur mesure pour ta famille",
   "Profil santé — enfants, grossesse (d\u2019autres à venir)",
-  "Ton madhab, ton verdict — Hanafi, Shafi\u2019i, Maliki, Hanbali",
+  "Alertes boycott",
   "Un profil, tous tes appareils synchronisés",
 ];
 
@@ -105,8 +107,7 @@ export function PricingSection() {
                   Tu télécharges, tu scannes.{" "}
                   <span className="font-medium text-foreground">
                     Pas de compte, pas de carte bancaire.
-                  </span>{" "}
-                  Le halal, c&apos;est un droit — pas un luxe.
+                  </span>
                 </p>
 
                 <ul className="mt-4 space-y-2.5 flex-1">

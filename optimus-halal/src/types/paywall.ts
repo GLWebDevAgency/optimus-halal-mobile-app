@@ -3,7 +3,7 @@
  * Used for contextual feature reordering (Yuka-inspired pattern).
  */
 export type PaywallTrigger =
-  | "scan_quota"        // 10 scans/day limit for free users
+  | "scan_quota"        // 15 scans/day limit for free users
   | "profile_creation"  // Tried to create an account (premium feature)
   | "favorites"         // Tried to add > 3 favorites
   | "history"           // Tried to access full scan history

@@ -375,18 +375,18 @@ export const storeRouter = router({
   addFavorite: protectedProcedure
     .input(z.object({ storeId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      // Premium gate: free users limited to 5 store favorites
+      // Premium gate: free users limited to 10 store favorites
       if (ctx.subscriptionTier !== "premium") {
         const countResult = await ctx.db
           .select({ count: sql<number>`count(*)::int` })
           .from(storeFavorites)
           .where(eq(storeFavorites.userId, ctx.userId))
           .then((r) => r[0] ?? { count: 0 });
-        if (countResult.count >= 5) {
+        if (countResult.count >= 10) {
           throw new TRPCError({
             code: "FORBIDDEN",
             message:
-              "Limite de 5 magasins favoris atteinte. Passez a Naqiy+ pour des favoris illimites.",
+              "Limite de 10 magasins favoris atteinte. Passez a Naqiy+ pour des favoris illimites.",
           });
         }
       }

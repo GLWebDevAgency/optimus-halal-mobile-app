@@ -59,7 +59,7 @@ export default function ConfidentialitePage() {
           <li>
             <strong>Mode invité (gratuit, sans compte) :</strong> aucune donnée
             personnelle. Les scans sont traités localement ou de manière
-            anonyme. Quota de 10 scans/jour, 3 favoris locaux maximum.
+            anonyme. Quota de 15 scans/jour, 10 favoris locaux maximum.
           </li>
           <li>
             <strong>Période d&apos;essai (7 jours, sans compte) :</strong>{" "}
