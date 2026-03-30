@@ -294,7 +294,7 @@ export const en: TranslationKeys = {
     addError: "Failed to add to favorites",
     removeError: "Failed to remove from favorites",
     premiumLimitTitle: "Limit reached",
-    premiumLimitMessage: "You've reached the 5 favorites limit. Upgrade to Naqiy+ for unlimited favorites.",
+    premiumLimitMessage: "You've reached the 10 favorites limit. Upgrade to Naqiy+ for unlimited favorites.",
     alreadyFavorite: "This product is already in your favorites",
     // Tabs
     productsTab: "Products",
@@ -319,7 +319,7 @@ export const en: TranslationKeys = {
       wholesaler: "Wholesalers",
     },
     premiumStoreLimitTitle: "Limit reached",
-    premiumStoreLimitMessage: "You've reached the 5 store favorites limit. Upgrade to Naqiy+ for unlimited favorites.",
+    premiumStoreLimitMessage: "You've reached the 10 store favorites limit. Upgrade to Naqiy+ for unlimited favorites.",
     // Home quick favorites toggle
     quickFavProducts: "Products",
     quickFavStores: "Stores",
@@ -1623,8 +1623,8 @@ export const en: TranslationKeys = {
     analysisHaram: "prohibited element detected",
     analysisDoubtful: "element to verify",
     analysisUnknown: "insufficient data",
-    guestDesc: "Scan a product to find it here. Your last 3 scans are kept.",
-    guestLimit: "Last 3 scans kept — Naqiy+ for unlimited history",
+    guestDesc: "Scan a product to find it here. Your last 10 scans are kept.",
+    guestLimit: "Last 10 scans kept — Naqiy+ for unlimited history",
   },
 
   // Boycott
@@ -1726,7 +1726,7 @@ export const en: TranslationKeys = {
     trialMode: "Trial Mode",
     trialDescription: "Enjoy all features during your free trial. Unlimited scans, favorites, history and more.",
     loginExistingAccount: "I already have an account",
-    favoritesLocked: "3 favorites max — Naqiy+ for unlimited",
+    favoritesLocked: "10 favorites max — Naqiy+ for unlimited",
     favoritesHint: "Upgrade to Naqiy+ to save more favorites",
   },
 

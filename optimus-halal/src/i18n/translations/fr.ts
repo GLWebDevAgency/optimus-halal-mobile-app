@@ -292,7 +292,7 @@ export const fr = {
     addError: "Impossible d'ajouter aux favoris",
     removeError: "Impossible de retirer des favoris",
     premiumLimitTitle: "Limite atteinte",
-    premiumLimitMessage: "Vous avez atteint la limite de 5 favoris. Passez à Naqiy+ pour des favoris illimités.",
+    premiumLimitMessage: "Vous avez atteint la limite de 10 favoris. Passez à Naqiy+ pour des favoris illimités.",
     alreadyFavorite: "Ce produit est déjà dans vos favoris",
     // Tabs
     productsTab: "Produits",
@@ -317,7 +317,7 @@ export const fr = {
       wholesaler: "Grossistes",
     },
     premiumStoreLimitTitle: "Limite atteinte",
-    premiumStoreLimitMessage: "Vous avez atteint la limite de 5 magasins favoris. Passez à Naqiy+ pour des favoris illimités.",
+    premiumStoreLimitMessage: "Vous avez atteint la limite de 10 magasins favoris. Passez à Naqiy+ pour des favoris illimités.",
     // Home quick favorites toggle
     quickFavProducts: "Produits",
     quickFavStores: "Magasins",
@@ -1649,8 +1649,8 @@ export const fr = {
     analysisHaram: "élément interdit détecté",
     analysisDoubtful: "élément à vérifier",
     analysisUnknown: "données insuffisantes",
-    guestDesc: "Scannez un produit pour le retrouver ici. Vos 3 derniers scans sont conservés.",
-    guestLimit: "3 derniers scans conservés — Naqiy+ pour un historique illimité",
+    guestDesc: "Scannez un produit pour le retrouver ici. Vos 10 derniers scans sont conservés.",
+    guestLimit: "10 derniers scans conservés — Naqiy+ pour un historique illimité",
   },
 
   // Boycott
@@ -1754,7 +1754,7 @@ export const fr = {
     trialMode: "Mode Essai",
     trialDescription: "Profitez de toutes les fonctionnalités pendant votre essai gratuit. Scans illimités, favoris, historique et plus.",
     loginExistingAccount: "J'ai déjà un compte",
-    favoritesLocked: "3 favoris max — Naqiy+ pour l'illimité",
+    favoritesLocked: "10 favoris max — Naqiy+ pour l'illimité",
     favoritesHint: "Passez à Naqiy+ pour sauvegarder plus de favoris",
   },
 

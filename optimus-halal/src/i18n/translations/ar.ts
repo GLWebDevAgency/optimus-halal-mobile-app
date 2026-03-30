@@ -278,7 +278,7 @@ export const ar: TranslationKeys = {
     addError: "تعذّرت الإضافة إلى المفضلة",
     removeError: "تعذّر الحذف من المفضلة",
     premiumLimitTitle: "تم بلوغ الحد",
-    premiumLimitMessage: "لقد بلغت حد 5 مفضلات. اشترك في Naqiy+ للمفضلات غير المحدودة.",
+    premiumLimitMessage: "لقد بلغت حد 10 مفضلات. اشترك في Naqiy+ للمفضلات غير المحدودة.",
     alreadyFavorite: "هذا المنتج موجود بالفعل في مفضلاتك",
     // Tabs
     productsTab: "المنتجات",
@@ -303,7 +303,7 @@ export const ar: TranslationKeys = {
       wholesaler: "تجار جملة",
     },
     premiumStoreLimitTitle: "تم بلوغ الحد",
-    premiumStoreLimitMessage: "لقد بلغت حد 5 متاجر مفضلة. اشترك في Naqiy+ للمفضلات غير المحدودة.",
+    premiumStoreLimitMessage: "لقد بلغت حد 10 متاجر مفضلة. اشترك في Naqiy+ للمفضلات غير المحدودة.",
     // Home quick favorites toggle
     quickFavProducts: "المنتجات",
     quickFavStores: "المتاجر",
@@ -1497,8 +1497,8 @@ export const ar: TranslationKeys = {
     analysisHaram: "عنصر محظور مكتشف",
     analysisDoubtful: "عنصر يتطلب تحقق",
     analysisUnknown: "بيانات غير كافية",
-    guestDesc: "امسح منتجاً للعثور عليه هنا. يتم حفظ آخر 3 عمليات مسح.",
-    guestLimit: "آخر 3 عمليات مسح محفوظة — نقيّ+ لسجل غير محدود",
+    guestDesc: "امسح منتجاً للعثور عليه هنا. يتم حفظ آخر 10 عمليات مسح.",
+    guestLimit: "آخر 10 عمليات مسح محفوظة — نقيّ+ لسجل غير محدود",
   },
 
   // Boycott
@@ -1600,7 +1600,7 @@ export const ar: TranslationKeys = {
     trialMode: "وضع التجربة",
     trialDescription: "استمتعوا بجميع الميزات خلال فترة التجربة المجانية. مسح غير محدود، مفضلات، سجل والمزيد.",
     loginExistingAccount: "لدي حساب بالفعل",
-    favoritesLocked: "3 مفضلات كحد أقصى — نقيّ+ للمزيد",
+    favoritesLocked: "10 مفضلات كحد أقصى — نقيّ+ للمزيد",
     favoritesHint: "اشترك في نقيّ+ لحفظ المزيد من المفضلات",
   },
 
