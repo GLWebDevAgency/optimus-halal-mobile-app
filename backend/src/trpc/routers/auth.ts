@@ -282,6 +282,19 @@ export const authRouter = router({
       }
 
       const storedToken = deleted[0];
+
+      // Check if user is still active (banned users cannot refresh)
+      const [user] = await ctx.db
+        .select({ isActive: users.isActive })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      if (!user || !user.isActive) {
+        // Revoke all remaining tokens for this banned user
+        await ctx.db.delete(refreshTokens).where(eq(refreshTokens.userId, userId));
+        throw unauthorized("Compte désactivé");
+      }
+
       const accessToken = await signAccessToken(userId);
       const newTokenId = randomUUID();
       const newRefreshToken = await signRefreshToken(userId, newTokenId);

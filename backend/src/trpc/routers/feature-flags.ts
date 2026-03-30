@@ -8,6 +8,7 @@ import {
   invalidateAllUserFlagsCache,
 } from "../../services/feature-flags.service.js";
 import { logger } from "../../lib/logger.js";
+import { escapeLike } from "../../lib/sql-utils.js";
 import { TRPCError } from "@trpc/server";
 import type { db as DB } from "../../db/index.js";
 
@@ -105,7 +106,7 @@ export const featureFlagsRouter = router({
       const conditions = [];
 
       if (input.search) {
-        conditions.push(ilike(featureFlags.label, `%${input.search}%`));
+        conditions.push(ilike(featureFlags.label, `%${escapeLike(input.search)}%`));
       }
       if (input.enabled !== undefined) {
         conditions.push(eq(featureFlags.enabled, input.enabled));

@@ -89,6 +89,7 @@ app.get("/health", async (c) => {
 });
 
 // ── Webhook Routes ──────────────────────────────────────
+app.use("/webhooks/*", rateLimit({ windowMs: 60_000, max: 30, keyPrefix: "rl:webhook" }));
 app.route("/webhooks", webhookRoutes);
 
 // ── Internal Routes (cron, admin — auth via CRON_SECRET) ──

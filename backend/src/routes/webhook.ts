@@ -3,9 +3,8 @@ import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { users, subscriptionEvents } from "../db/schema/index.js";
 import { logger } from "../lib/logger.js";
+import { env } from "../lib/env.js";
 import { invalidateUserTierCache } from "../trpc/context.js";
-
-const REVENUECAT_SECRET = process.env.REVENUECAT_WEBHOOK_SECRET ?? "";
 
 interface RevenueCatEvent {
   type: string;
@@ -28,10 +27,15 @@ interface RevenueCatPayload {
 export const webhookRoutes = new Hono();
 
 webhookRoutes.post("/revenuecat", async (c) => {
-  // Verify authorization
+  // Verify authorization — secret must be configured and match
+  const secret = env.REVENUECAT_WEBHOOK_SECRET;
+  if (!secret) {
+    logger.error("REVENUECAT_WEBHOOK_SECRET non configuré — webhook rejeté");
+    return c.json({ error: "Webhook non configuré" }, 503);
+  }
   const auth = c.req.header("Authorization");
-  if (!REVENUECAT_SECRET || auth !== `Bearer ${REVENUECAT_SECRET}`) {
-    return c.json({ error: "Non autorise" }, 401);
+  if (auth !== `Bearer ${secret}`) {
+    return c.json({ error: "Non autorisé" }, 401);
   }
 
   const body: RevenueCatPayload = await c.req.json();
