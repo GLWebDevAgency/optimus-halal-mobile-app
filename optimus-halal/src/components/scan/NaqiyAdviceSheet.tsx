@@ -1,14 +1,20 @@
 /**
- * NaqiyAdviceSheet — Bottom sheet displaying the hadith on doubt.
+ * NaqiyAdviceSheet — Bottom sheet displaying contextual scholarly guidance.
  *
- * Shown when `isDoubtful` is true in the verdict summary.
- * Arabic hadith text + translation + source chain + closing counsel.
- * Follows the same animated sheet pattern as ScholarlySourceSheet.
+ * Shows multiple hadiths/verses based on matrixLevel + compositionStatus:
+ *   halal (danger/low/vigilance) → [C, B, A, D]
+ *   doubtful (any)               → [C, B, A, D]
+ *   haram                        → [C, D]
+ *
+ * A = An-Nu'man / Bukhari 52 — foundational hadith on doubt
+ * B = Al-Hassan ibn Ali / Tirmidhi 2518 — "leave doubt for certainty"
+ * C = Al-Baqarah 2:168 — "halal AND tayyib"
+ * D = Abu Hurairah / Muslim 1015 — food impacts du'a
  *
  * @module components/scan/NaqiyAdviceSheet
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -17,6 +23,7 @@ import {
   Dimensions,
   Pressable,
 } from "react-native";
+import { Image } from "expo-image";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -28,7 +35,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
-  SparkleIcon,
   XIcon,
   BookOpenIcon,
   LinkIcon,
@@ -37,17 +43,31 @@ import { useTheme } from "@/hooks/useTheme";
 import { useTranslation, useHaptics } from "@/hooks";
 import { gold } from "@/theme/colors";
 import { darkTheme, lightTheme } from "@/theme/colors";
+import type { MatrixLevel, CompositionStatus, AdviceTextId } from "@/utils/verdict-summary";
+import { selectAdviceTexts } from "@/utils/verdict-summary";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+
+interface AdviceText {
+  title: string;
+  ar: string;
+  translation: string;
+  source: string;
+  chain: string;
+}
 
 interface NaqiyAdviceSheetProps {
   visible: boolean;
   onClose: () => void;
+  matrixLevel: MatrixLevel;
+  compositionStatus: CompositionStatus;
 }
 
 export const NaqiyAdviceSheet = React.memo(function NaqiyAdviceSheet({
   visible,
   onClose,
+  matrixLevel,
+  compositionStatus,
 }: NaqiyAdviceSheetProps) {
   const { isDark, colors } = useTheme();
   const { t } = useTranslation();
@@ -87,13 +107,27 @@ export const NaqiyAdviceSheet = React.memo(function NaqiyAdviceSheet({
     opacity: backdropOpacity.value,
   }));
 
+  const textIds = useMemo(
+    () => selectAdviceTexts(matrixLevel, compositionStatus),
+    [matrixLevel, compositionStatus],
+  );
+
+  const allTexts = useMemo(() => {
+    const v = t.verdict;
+    const map: Record<AdviceTextId, AdviceText> = {
+      A: { title: v.adviceTitle, ar: v.adviceHadithAr, translation: v.adviceHadithTranslation, source: v.adviceSource, chain: v.adviceChain },
+      B: { title: v.adviceTitleB, ar: v.adviceHadithArB, translation: v.adviceHadithTranslationB, source: v.adviceSourceB, chain: v.adviceChainB },
+      C: { title: v.adviceTitleC, ar: v.adviceHadithArC, translation: v.adviceHadithTranslationC, source: v.adviceSourceC, chain: v.adviceChainC },
+      D: { title: v.adviceTitleD, ar: v.adviceHadithArD, translation: v.adviceHadithTranslationD, source: v.adviceSourceD, chain: v.adviceChainD },
+    };
+    return textIds.map((id) => ({ id, ...map[id] }));
+  }, [t, textIds]);
+
   if (!isMounted) return null;
 
   const goldColor = isDark ? gold[400] : gold[700];
   const cardBg = isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)";
   const cardBorder = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
-
-  const hadithTranslation = t.verdict.adviceHadithTranslation;
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
@@ -141,7 +175,11 @@ export const NaqiyAdviceSheet = React.memo(function NaqiyAdviceSheet({
                 },
               ]}
             >
-              <SparkleIcon size={20} color={gold[500]} weight="fill" />
+              <Image
+                source={require("@assets/images/logo_naqiy.webp")}
+                style={styles.headerLogo}
+                contentFit="contain"
+              />
             </View>
             <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
               {t.verdict.naqiyAdvice}
@@ -164,82 +202,82 @@ export const NaqiyAdviceSheet = React.memo(function NaqiyAdviceSheet({
           </Pressable>
         </View>
 
-        {/* Content */}
+        {/* Content — all selected texts */}
         <ScrollView
           style={styles.content}
-          contentContainerStyle={{ paddingBottom: 16 }}
+          contentContainerStyle={{ paddingBottom: 16, gap: 16 }}
           showsVerticalScrollIndicator={false}
         >
-          {/* Card */}
-          <View
-            style={[
-              styles.adviceCard,
-              { backgroundColor: cardBg, borderColor: cardBorder },
-            ]}
-          >
-            {/* Title */}
-            <View style={styles.titleRow}>
-              <BookOpenIcon size={16} color={goldColor} weight="fill" />
+          {allTexts.map((advice) => (
+            <View
+              key={advice.id}
+              style={[
+                styles.adviceCard,
+                { backgroundColor: cardBg, borderColor: cardBorder },
+              ]}
+            >
+              {/* Title */}
+              <View style={styles.titleRow}>
+                <BookOpenIcon size={16} color={goldColor} weight="fill" />
+                <Text
+                  style={[styles.adviceTitle, { color: colors.textPrimary }]}
+                >
+                  {advice.title}
+                </Text>
+              </View>
+
+              {/* Divider */}
+              <View
+                style={[styles.divider, { backgroundColor: cardBorder }]}
+              />
+
+              {/* Arabic text */}
               <Text
-                style={[styles.adviceTitle, { color: colors.textPrimary }]}
+                style={[
+                  styles.arabicText,
+                  { color: isDark ? gold[400] : gold[700] },
+                ]}
               >
-                {t.verdict.adviceTitle}
+                {advice.ar}
               </Text>
-            </View>
 
-            {/* Divider */}
-            <View
-              style={[styles.divider, { backgroundColor: cardBorder }]}
-            />
+              {/* Divider */}
+              <View
+                style={[styles.divider, { backgroundColor: cardBorder }]}
+              />
 
-            {/* Arabic hadith */}
-            <Text
-              style={[
-                styles.arabicText,
-                {
-                  color: isDark ? gold[400] : gold[700],
-                },
-              ]}
-            >
-              {t.verdict.adviceHadithAr}
-            </Text>
-
-            {/* Divider */}
-            <View
-              style={[styles.divider, { backgroundColor: cardBorder }]}
-            />
-
-            {/* Translation */}
-            <Text
-              style={[
-                styles.translationText,
-                { color: colors.textSecondary },
-              ]}
-            >
-              {hadithTranslation}
-            </Text>
-
-            {/* Divider */}
-            <View
-              style={[styles.divider, { backgroundColor: cardBorder }]}
-            />
-
-            {/* Source */}
-            <View style={styles.sourceRow}>
-              <BookOpenIcon size={12} color={goldColor} />
-              <Text style={[styles.sourceText, { color: goldColor }]}>
-                {t.verdict.adviceSource}
+              {/* Translation */}
+              <Text
+                style={[
+                  styles.translationText,
+                  { color: colors.textSecondary },
+                ]}
+              >
+                {advice.translation}
               </Text>
-            </View>
 
-            {/* Chain of transmission */}
-            <View style={styles.sourceRow}>
-              <LinkIcon size={12} color={colors.textMuted} />
-              <Text style={[styles.chainText, { color: colors.textMuted }]}>
-                {t.verdict.adviceChain}
-              </Text>
+              {/* Divider */}
+              <View
+                style={[styles.divider, { backgroundColor: cardBorder }]}
+              />
+
+              {/* Source */}
+              <View style={styles.sourceRow}>
+                <BookOpenIcon size={12} color={goldColor} />
+                <Text style={[styles.sourceText, { color: goldColor }]}>
+                  {advice.source}
+                </Text>
+              </View>
+
+              {/* Chain of transmission */}
+              <View style={styles.sourceRow}>
+                <LinkIcon size={12} color={colors.textMuted} />
+                <Text style={[styles.chainText, { color: colors.textMuted }]}>
+                  {advice.chain}
+                </Text>
+              </View>
             </View>
-          </View>
+          ))}
 
           {/* Closing message */}
           <Text style={[styles.closingText, { color: colors.textSecondary }]}>
@@ -265,7 +303,7 @@ const styles = StyleSheet.create({
     right: 0,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: SCREEN_HEIGHT * 0.72,
+    maxHeight: SCREEN_HEIGHT * 0.85,
   },
   handleContainer: {
     alignItems: "center",
@@ -295,6 +333,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
+  },
+  headerLogo: {
+    width: 22,
+    height: 22,
   },
   headerTitle: {
     fontSize: 17,

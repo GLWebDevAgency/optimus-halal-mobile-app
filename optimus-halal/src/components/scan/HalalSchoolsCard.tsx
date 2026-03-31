@@ -18,15 +18,18 @@ import Animated, {
 import {
   MosqueIcon,
   CheckCircleIcon,
+  ClipboardTextIcon,
+  ListMagnifyingGlassIcon,
 
   BookOpenIcon,
   LeafIcon,
   FlaskIcon,
   SealCheckIcon,
   CaretRightIcon,
-  SparkleIcon,
 } from "phosphor-react-native";
 
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { CertifierLogo } from "./CertifierLogo";
 import { MadhabScoreRing } from "./MadhabScoreRing";
 import { PressableScale } from "@/components/ui/PressableScale";
@@ -44,7 +47,7 @@ import {
 import type { MadhabId, MadhabVerdict, CertifierInfo, DetectedAdditive } from "./scan-types";
 import type { ScholarlySourceData } from "./ScholarlySourceSheet";
 import { CertifierTrustRow } from "./CertifierTrustRow";
-import { buildVerdictSummary } from "@/utils/verdict-summary";
+import { buildVerdictSummary, type MatrixLevel } from "@/utils/verdict-summary";
 
 // ── Types ──
 
@@ -69,6 +72,8 @@ export interface HalalSchoolsCardProps {
   certifierGrade?: string | null;
   /** Certifier numeric score for verdict summary (0-100) */
   certifierScore?: number | null;
+  /** Premium status — free users see consensus read-only, no madhab ring selector */
+  isPremium?: boolean;
   onMadhabChange: (madhab: MadhabId) => void;
   onMadhabPress?: (verdict: MadhabVerdict) => void;
   onScholarlySourcePress: (data: ScholarlySourceData | ScholarlySourceData[]) => void;
@@ -76,6 +81,7 @@ export interface HalalSchoolsCardProps {
   onIngredientPress?: (ingredient: string) => void;
   onAdditivePress?: (additive: DetectedAdditive, ruling?: string) => void;
   onNaqiyAdvicePress?: () => void;
+  onUpsellPress?: () => void;
   staggerIndex?: number;
 }
 
@@ -109,6 +115,37 @@ function getStatusLabel(
   return (t.scanResult as Record<string, string>)[labelKey] ?? status;
 }
 
+// ── Matrix color helpers ──
+
+function getMatrixColor(level: MatrixLevel): string {
+  switch (level) {
+    case "high":
+    case "good":
+      return halalStatusTokens.halal.base;
+    case "vigilance":
+      return halalStatusTokens.doubtful.base;
+    case "low":
+      return halalStatusTokens.doubtful.base;
+    case "danger":
+      return halalStatusTokens.haram.base;
+  }
+}
+
+function getMatrixBg(level: MatrixLevel, isDark: boolean): string {
+  switch (level) {
+    case "high":
+      return isDark ? "rgba(34,197,94,0.12)" : "rgba(34,197,94,0.08)";
+    case "good":
+      return isDark ? "rgba(34,197,94,0.08)" : "rgba(34,197,94,0.06)";
+    case "vigilance":
+      return isDark ? "rgba(249,115,22,0.10)" : "rgba(249,115,22,0.08)";
+    case "low":
+      return isDark ? "rgba(249,115,22,0.14)" : "rgba(249,115,22,0.10)";
+    case "danger":
+      return isDark ? "rgba(239,68,68,0.12)" : "rgba(239,68,68,0.08)";
+  }
+}
+
 // ── A. VerdictSection — intelligent verdict summary + conflict details ──
 
 interface VerdictSectionProps {
@@ -117,7 +154,9 @@ interface VerdictSectionProps {
   certifierName: string | null;
   certifierGrade: string | null;
   certifierScore: number | null;
+  isPremium: boolean;
   onNaqiyAdvicePress?: () => void;
+  onUpsellPress?: () => void;
 }
 
 function VerdictSection({
@@ -126,13 +165,26 @@ function VerdictSection({
   certifierName,
   certifierGrade,
   certifierScore,
+  isPremium,
   onNaqiyAdvicePress,
+  onUpsellPress,
 }: VerdictSectionProps) {
   const { isDark, colors } = useTheme();
   const { t } = useTranslation();
 
-  const status = activeVerdict.status;
-  const statusColor = getStatusColor(status);
+  // Deduplicated conflict count (doubtful + haram items across all schools)
+  const conflictCount = useMemo(() => {
+    const ids = new Set<string>();
+    for (const v of allVerdicts) {
+      for (const i of v.conflictingIngredients ?? []) {
+        if (i.ruling !== "halal") ids.add(i.pattern);
+      }
+      for (const a of v.conflictingAdditives ?? []) {
+        if (a.ruling !== "halal") ids.add(a.code);
+      }
+    }
+    return ids.size;
+  }, [allVerdicts]);
 
   // ── Build intelligent verdict summary ──
   const verdictSummary = useMemo(
@@ -146,10 +198,11 @@ function VerdictSection({
           certifierName,
           certifierGrade,
           certifierScore,
+          conflictCount,
         },
         t.verdict,
       ),
-    [allVerdicts, certifierName, certifierGrade, certifierScore, t.verdict],
+    [allVerdicts, certifierName, certifierGrade, certifierScore, conflictCount, t.verdict],
   );
 
   // ── Conflicts: active school first, then merge from divergent schools ──
@@ -194,53 +247,84 @@ function VerdictSection({
       layout={Layout.springify().damping(14).stiffness(170)}
       style={styles.verdictSection}
     >
-      {/* Verdict Summary Card — premium visual */}
-      <View style={[styles.verdictCard, {
-        backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
-        borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
-      }]}>
-        {/* Fiqh line with icon */}
-        <View style={styles.verdictRow}>
-          <BookOpenIcon size={14} color={statusColor} weight="fill" style={{ marginTop: 2 }} />
-          <Text style={[styles.verdictFiqhText, { color: colors.textPrimary }]}>
-            {verdictSummary.fiqhLine}
-          </Text>
+      {/* Matrix Verdict Card — unified NaqiyScore × composition × consensus */}
+      {/* Free users: tappable → opens upsell sheet */}
+      <Pressable
+        disabled={isPremium || !onUpsellPress}
+        onPress={onUpsellPress}
+        accessibilityRole={!isPremium ? "button" : undefined}
+        accessibilityLabel={!isPremium ? t.verdict.upsellTitle : undefined}
+        style={[styles.verdictCard, {
+          backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
+          borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+        }]}
+      >
+        {/* Matrix label — bold colored badge */}
+        <View style={styles.verdictCardHeader}>
+          <View style={[styles.matrixLabelRow, {
+            backgroundColor: getMatrixBg(verdictSummary.matrixLevel, isDark),
+          }]}>
+            <Text style={[styles.matrixLabelText, {
+              color: getMatrixColor(verdictSummary.matrixLevel),
+            }]}>
+              {verdictSummary.matrixLabel}
+            </Text>
+          </View>
+          {!isPremium && onUpsellPress && (
+            <CaretRightIcon size={14} color={colors.textMuted} weight="bold" />
+          )}
         </View>
 
-        {/* Theoretical note (when certifier present) */}
-        {verdictSummary.theoreticalNote && (
-          <Text style={[styles.verdictTheoreticalText, { color: colors.textMuted }]}>
-            {verdictSummary.theoreticalNote}
-          </Text>
-        )}
+        {/* Matrix phrase — unified explanation */}
+        <Text style={[styles.matrixPhraseText, { color: colors.textPrimary }]}>
+          {verdictSummary.matrixPhrase}
+        </Text>
+      </Pressable>
 
-        {/* Certifier warning — only shown when certifier is present but score missing */}
-        {verdictSummary.certifierLine && certifierScore === null && (
-          <Text style={[styles.verdictTheoreticalText, { color: colors.textMuted }]}>
-            {verdictSummary.certifierLine}
-          </Text>
-        )}
-      </View>
-
-      {/* Naqiy advice button (shown only for doubtful verdicts) */}
+      {/* Naqiy advice button — ultra-premium brand treatment */}
       {verdictSummary.isDoubtful && onNaqiyAdvicePress && (
         <Pressable
           onPress={onNaqiyAdvicePress}
           accessibilityRole="button"
           accessibilityLabel={t.verdict.naqiyAdvice}
-          style={[
-            styles.naqiyAdviceButton,
-            {
-              backgroundColor: isDark
-                ? "rgba(212,175,55,0.08)"
-                : "rgba(212,175,55,0.06)",
-            },
-          ]}
+          style={styles.naqiyAdviceOuter}
         >
-          <SparkleIcon size={14} color={goldColor} weight="fill" />
-          <Text style={[styles.naqiyAdviceButtonText, { color: goldColor }]}>
-            {t.verdict.naqiyAdvice}
-          </Text>
+          <LinearGradient
+            colors={
+              isDark
+                ? [gold[950], "rgba(212,175,55,0.15)", gold[950]]
+                : ["rgba(212,175,55,0.10)", "rgba(75,122,56,0.06)", "rgba(212,175,55,0.10)"]
+            }
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[
+              styles.naqiyAdviceGradient,
+              {
+                borderColor: isDark
+                  ? "rgba(212,175,55,0.25)"
+                  : "rgba(212,175,55,0.30)",
+              },
+            ]}
+          >
+            <Image
+              source={require("@assets/images/logo_naqiy.webp")}
+              style={styles.naqiyAdviceLogo}
+              contentFit="contain"
+            />
+            <Text
+              style={[
+                styles.naqiyAdviceButtonText,
+                { color: isDark ? gold[300] : gold[700] },
+              ]}
+            >
+              {t.verdict.naqiyAdvice}
+            </Text>
+            <CaretRightIcon
+              size={12}
+              color={isDark ? gold[400] : gold[600]}
+              weight="bold"
+            />
+          </LinearGradient>
         </Pressable>
       )}
 
@@ -628,20 +712,20 @@ function HalalSectionHeader({
 // ── E0c. CertifierInfoRow — VerdictHero-style certifier card ──
 // Section title + logo + name + score + progress bar + tier + Naqiy verdict phrase
 
-// Verdict thresholds aligned with Naqiy Trust Index caps:
-// - ≥75: no critical negatives + strong positives → dhabh & tasmiya preserved
-// - ≥55: cap for 2 critical negatives → generally compliant
-// - ≥35: cap for 3 critical negatives → concerning concessions
-// - ≥20: some positives but major ritual failures
-// - <20: no assurance at all
+// Verdict thresholds aligned with NaqiyScore™ scale:
+// - ≥90: Très fiable — top-tier ritual compliance
+// - ≥70: Fiable — solid practices, minor gaps
+// - ≥51: Vigilance — mixed signals, verify
+// - ≥35: Peu fiable — significant concerns
+// - <35: Pas fiable du tout — no assurance
 function getCertifierVerdict(
   score: number,
   t: ReturnType<typeof useTranslation>["t"],
 ): string {
-  if (score >= 75) return t.scanResult.certifierVerdictExcellent as string;
-  if (score >= 55) return t.scanResult.certifierVerdictGood as string;
-  if (score >= 35) return t.scanResult.certifierVerdictAverage as string;
-  if (score >= 20) return t.scanResult.certifierVerdictWeak as string;
+  if (score >= 90) return t.scanResult.certifierVerdictExcellent as string;
+  if (score >= 70) return t.scanResult.certifierVerdictGood as string;
+  if (score >= 51) return t.scanResult.certifierVerdictAverage as string;
+  if (score >= 35) return t.scanResult.certifierVerdictWeak as string;
   return t.scanResult.certifierVerdictVeryWeak as string;
 }
 
@@ -849,6 +933,7 @@ export function HalalSchoolsCard({
   detectedAdditives,
   certifierGrade,
   certifierScore,
+  isPremium = false,
   onMadhabChange: _onMadhabChange,
   onMadhabPress,
   onScholarlySourcePress,
@@ -856,17 +941,20 @@ export function HalalSchoolsCard({
   onIngredientPress,
   onAdditivePress,
   onNaqiyAdvicePress,
+  onUpsellPress,
   staggerIndex = 3,
 }: HalalSchoolsCardProps) {
   const { isDark, colors } = useTheme();
   const { t } = useTranslation();
 
-  const [activeMadhab, setActiveMadhab] = useState<MadhabId>(userMadhab);
+  // Free users: force consensus (general) madhab — no personalized school selection
+  const effectiveUserMadhab = isPremium ? userMadhab : "general";
+  const [activeMadhab, setActiveMadhab] = useState<MadhabId>(effectiveUserMadhab);
 
   // Sync active madhab when profile loads async
   useEffect(() => {
-    setActiveMadhab(userMadhab);
-  }, [userMadhab]);
+    setActiveMadhab(effectiveUserMadhab);
+  }, [effectiveUserMadhab]);
 
   // All source data for "Voir tout" button (deduplicated by sourceRef)
   // Must be before early return to respect Rules of Hooks
@@ -936,29 +1024,23 @@ export function HalalSchoolsCard({
         .mass(SPRING_NAQIY.mass)}
       style={styles.container}
     >
-      {/* ═══ 1. Madhab rings — user picks school ═══ */}
-      {madhabVerdicts.length > 1 && (
-        <MadhabRingRow
-          madhabVerdicts={madhabVerdicts}
-          activeMadhab={activeMadhab}
-          userMadhab={userMadhab}
-          certifierData={certifierData}
-          onSelect={handleMadhabSelect}
-          onMadhabPress={onMadhabPress}
-        />
-      )}
-
-      {/* ═══ 2. Verdict explanation + conflicts (why halal/doubtful/haram) ═══ */}
+      {/* ═══ 1. Verdict summary — always first ═══ */}
+      <HalalSectionHeader
+        icon={<ClipboardTextIcon size={16} color={goldColor} weight="bold" />}
+        title="Résumé"
+      />
       <VerdictSection
         activeVerdict={activeVerdict}
         allVerdicts={madhabVerdicts}
         certifierName={certifierData?.name ?? null}
         certifierGrade={certifierGrade ?? null}
         certifierScore={certifierScore ?? null}
+        isPremium={isPremium}
         onNaqiyAdvicePress={onNaqiyAdvicePress}
+        onUpsellPress={!isPremium ? onUpsellPress : undefined}
       />
 
-      {/* ═══ 3. Certifier card with per-madhab trust score ═══ */}
+      {/* ═══ 2. Certifier card with per-madhab trust score ═══ */}
       {certifierData && (
         <CertifierInfoRow
           certifierData={certifierData}
@@ -966,6 +1048,24 @@ export function HalalSchoolsCard({
           halalTier={halalTier}
           onPress={onTrustScorePress}
         />
+      )}
+
+      {/* ═══ 3. Madhab rings — premium only, hidden when certified ═══ */}
+      {isPremium && !certifierData && madhabVerdicts.length > 1 && (
+        <>
+          <HalalSectionHeader
+            icon={<ListMagnifyingGlassIcon size={16} color={goldColor} weight="bold" />}
+            title="Analyse des ingrédients"
+          />
+          <MadhabRingRow
+            madhabVerdicts={madhabVerdicts}
+            activeMadhab={activeMadhab}
+            userMadhab={effectiveUserMadhab}
+            certifierData={certifierData}
+            onSelect={handleMadhabSelect}
+            onMadhabPress={onMadhabPress}
+          />
+        </>
       )}
 
       {/* ═══ 4. Scholarly Sources ═══ */}
@@ -1072,6 +1172,28 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
     marginLeft: 22, // align with text after icon
   },
+  verdictCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  matrixLabelRow: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  matrixLabelText: {
+    fontSize: 13,
+    fontFamily: fontFamily.bold,
+    fontWeight: fontWeightTokens.bold,
+    letterSpacing: 0.3,
+  },
+  matrixPhraseText: {
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: "500",
+  },
   verdictCertifierRow: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -1087,18 +1209,29 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     flex: 1,
   },
-  naqiyAdviceButton: {
+  naqiyAdviceOuter: {
+    alignSelf: "flex-start",
+  },
+  naqiyAdviceGradient: {
     flexDirection: "row",
     alignItems: "center",
-    alignSelf: "flex-start",
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 10,
+    gap: 8,
+    paddingLeft: 10,
+    paddingRight: 12,
+    paddingVertical: 9,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  naqiyAdviceLogo: {
+    width: 18,
+    height: 18,
+    borderRadius: 4,
   },
   naqiyAdviceButtonText: {
     fontSize: fontSizeTokens.caption,
+    fontFamily: fontFamily.semiBold,
     fontWeight: fontWeightTokens.semiBold,
+    letterSpacing: 0.2,
   },
   conflictList: {
     gap: spacing.sm,

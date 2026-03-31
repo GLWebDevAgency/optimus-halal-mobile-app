@@ -28,7 +28,7 @@ import { KnifeIcon, HeartbeatIcon } from "phosphor-react-native";
 
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
-import { gold } from "@/theme/colors";
+import { gold, primary } from "@/theme/colors";
 import { fontSize as fontSizeTokens, fontWeight as fontWeightTokens } from "@/theme/typography";
 
 // ── Constants ──
@@ -67,20 +67,25 @@ export function ScanResultTabBar({
 
   const tabWidth = containerWidth > 0 ? containerWidth / 2 : 0;
 
-  const indicatorColor = isDark ? gold[400] : gold[600];
-  const activeTextColor = isDark ? gold[400] : gold[700];
+  // Per-tab brand colors: gold for Halal, green for Santé
+  const halalColor = isDark ? gold[400] : gold[700];
+  const santeColor = isDark ? primary[400] : primary[700];
+  const halalIndicator = isDark ? gold[400] : gold[600];
+  const santeIndicator = isDark ? primary[400] : primary[600];
 
-  // Animated indicator translateX: slides from 0 (tab 0) to tabWidth (tab 1)
+  // Animated indicator: slides + interpolates color from gold → green
   const indicatorStyle = useAnimatedStyle(() => {
     const w = containerWidthSV.value;
     if (w === 0) return { opacity: 0 };
     const halfW = w / 2;
+    const progress = scrollProgress.value;
     return {
       opacity: 1,
+      backgroundColor: progress < 0.5 ? halalIndicator : santeIndicator,
       transform: [
         {
           translateX: interpolate(
-            scrollProgress.value,
+            progress,
             [0, 1],
             [0, halfW],
             Extrapolation.CLAMP,
@@ -115,52 +120,52 @@ export function ScanResultTabBar({
       Icon: KnifeIcon,
       index: 0 as const,
       animatedTextStyle: tab0TextStyle,
+      activeColor: halalColor,
     },
     {
       label: t.scanResult.tabHealth,
       Icon: HeartbeatIcon,
       index: 1 as const,
       animatedTextStyle: tab1TextStyle,
+      activeColor: santeColor,
     },
   ];
 
   return (
     <View
       onLayout={handleLayout}
-      style={[
-        styles.container,
-        { borderBottomColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" },
-      ]}
+      style={styles.container}
     >
       {/* Tab buttons */}
-      {tabs.map(({ label, Icon, index, animatedTextStyle }) => {
+      {tabs.map(({ label, Icon, index, animatedTextStyle, activeColor }) => {
         const isSelected = activeTab === index;
-        const color = isSelected ? activeTextColor : colors.textMuted;
+        const color = isSelected ? activeColor : colors.textMuted;
         return (
-          <Pressable
+          <Animated.View
             key={index}
-            style={[styles.tab, tabWidth > 0 ? { width: tabWidth } : { flex: 1 }]}
-            onPress={() => onTabPress(index)}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: isSelected }}
-            accessibilityLabel={label}
+            style={[styles.tab, tabWidth > 0 ? { width: tabWidth } : { flex: 1 }, animatedTextStyle]}
           >
-            <Animated.View style={[styles.tabInner, animatedTextStyle]}>
-              <Icon size={15} color={color} weight={isSelected ? "fill" : "regular"} />
+            <Pressable
+              onPress={() => onTabPress(index)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: isSelected }}
+              accessibilityLabel={label}
+              style={styles.tabInner}
+            >
+              <Icon size={14} color={color} weight={isSelected ? "fill" : "regular"} />
               <Animated.Text style={[styles.tabLabel, { color }]}>
                 {label}
               </Animated.Text>
-            </Animated.View>
-          </Pressable>
+            </Pressable>
+          </Animated.View>
         );
       })}
 
-      {/* Gold animated indicator */}
+      {/* Animated indicator — gold for Halal, green for Santé */}
       <Animated.View
         style={[
           styles.indicator,
           tabWidth > 0 ? { width: tabWidth } : { width: "50%" },
-          { backgroundColor: indicatorColor },
           indicatorStyle,
         ]}
       />
@@ -175,16 +180,15 @@ const styles = StyleSheet.create({
     height: TAB_BAR_HEIGHT,
     flexDirection: "row",
     alignItems: "center",
-    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   tab: {
     height: TAB_BAR_HEIGHT,
-    alignItems: "center",
-    justifyContent: "center",
   },
   tabInner: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: 5,
   },
   tabLabel: {

@@ -28,7 +28,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { defaultFeatureFlags } from "@/constants/config";
 import { BlurView } from "expo-blur";
-import { CaretRightIcon, InfinityIcon, InfoIcon, XIcon } from "phosphor-react-native";
+import { CaretRightIcon, CheckCircleIcon, InfinityIcon, InfoIcon, LockSimpleIcon, XIcon } from "phosphor-react-native";
 import { ImpactFeedbackStyle, NotificationFeedbackType } from "expo-haptics";
 import Animated, {
   FadeInUp,
@@ -59,6 +59,7 @@ import { HalalSchoolsCard } from "@/components/scan/HalalSchoolsCard";
 import { FeedbackBar } from "@/components/scan/FeedbackBar";
 import { ScholarlySourceSheet } from "@/components/scan/ScholarlySourceSheet";
 import { NaqiyAdviceSheet } from "@/components/scan/NaqiyAdviceSheet";
+import { MadhabUpsellSheet } from "@/components/scan/MadhabUpsellSheet";
 import { ScanLoadingSkeleton } from "@/components/scan/ScanLoadingSkeleton";
 import { ScanErrorState, ScanNotFoundState } from "@/components/scan/ScanStates";
 import { AlertPillStrip } from "@/components/scan/AlertPillStrip";
@@ -90,7 +91,7 @@ import {
 } from "@/components/scan/scan-constants";
 import { trpc } from "@/lib/trpc";
 import { useScanBarcode } from "@/hooks/useScan";
-import { useTranslation, useHaptics, useAddFavorite, useRemoveFavorite, useFavoritesList, useMe } from "@/hooks";
+import { useTranslation, useHaptics, useAddFavorite, useRemoveFavorite, useFavoritesList, useMe, usePremium } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
 import { brand as brandTokens, glass, lightTheme } from "@/theme/colors";
 import { fontSize as fontSizeTokens, fontWeight as fontWeightTokens } from "@/theme/typography";
@@ -99,7 +100,7 @@ import type { NutrientLevel } from "@/services/api/types";
 import { useFeatureFlagsStore, useQuotaStore, useLocalFavoritesStore, useLocalScanHistoryStore, useLocalNutritionProfileStore, useTrialStore, DAILY_SCAN_LIMIT } from "@/store";
 import { isAuthenticated as hasStoredTokens } from "@/services/api";
 import { trackEvent } from "@/lib/analytics";
-import { buildVerdictSummary } from "@/utils/verdict-summary";
+import { buildVerdictSummary, type MatrixLevel, type CompositionStatus } from "@/utils/verdict-summary";
 
 // ── Non-allergen tags incorrectly tagged by OpenFoodFacts ──
 const NON_ALLERGEN_TAGS = new Set([
@@ -265,6 +266,9 @@ export default function ScanResultScreen() {
   const ingredientRulings = scanMutation.data?.ingredientRulings ?? [];
   const specialProduct = scanMutation.data?.specialProduct ?? null;
 
+  // ── Premium Status ──────────────────────────
+  const { isPremium, showPaywall } = usePremium();
+
   // ── Feature Flags ────────────────────────────
   const { isFeatureEnabled } = useFeatureFlagsStore();
   const marketplaceEnabled = isFeatureEnabled("marketplaceEnabled");
@@ -317,6 +321,11 @@ export default function ScanResultScreen() {
   // ── Naqiy Advice Bottom Sheet (hadith on doubt) ──
   const [showNaqiyAdviceSheet, setShowNaqiyAdviceSheet] = useState(false);
   const handleCloseNaqiyAdvice = useCallback(() => setShowNaqiyAdviceSheet(false), []);
+
+  // ── Madhab Upsell Bottom Sheet (premium conversion) ──
+  const [showMadhabUpsellSheet, setShowMadhabUpsellSheet] = useState(false);
+  const handleCloseMadhabUpsell = useCallback(() => setShowMadhabUpsellSheet(false), []);
+  const handleMadhabUpgrade = useCallback(() => showPaywall("madhab_detail"), [showPaywall]);
 
   // ── Halal Analysis Bottom Sheet ──────────────
   const [showHalalAnalysisSheet, setShowHalalAnalysisSheet] = useState(false);
@@ -534,6 +543,29 @@ export default function ScanResultScreen() {
     };
   }, [halalStatus, certifierData, certifierTrustScore, madhabVerdicts, t]);
 
+  // Advice context for NaqiyAdviceSheet — derives matrixLevel + compositionStatus
+  const adviceContext = useMemo<{ matrixLevel: MatrixLevel; compositionStatus: CompositionStatus }>(() => {
+    const statuses = madhabVerdicts.map((v) => v.status);
+    const hasHaram = statuses.includes("haram");
+    const hasDoubtful = statuses.includes("doubtful");
+    const compositionStatus: CompositionStatus = hasHaram ? "haram" : hasDoubtful ? "doubtful" : "halal";
+    const isCertified = certifierData?.name != null && certifierTrustScore != null;
+    const score = certifierTrustScore ?? 0;
+
+    let matrixLevel: MatrixLevel = "good";
+    if (isCertified) {
+      if (compositionStatus === "haram") matrixLevel = "danger";
+      else if (compositionStatus === "doubtful") {
+        matrixLevel = score >= 70 ? "vigilance" : score >= 51 ? "low" : "danger";
+      } else {
+        matrixLevel = score >= 90 ? "high" : score >= 70 ? "good" : score >= 51 ? "vigilance" : score >= 35 ? "low" : "danger";
+      }
+    } else {
+      matrixLevel = compositionStatus === "haram" ? "danger" : compositionStatus === "doubtful" ? "vigilance" : "good";
+    }
+    return { matrixLevel, compositionStatus };
+  }, [madhabVerdicts, certifierData, certifierTrustScore]);
+
   const handleShare = useCallback(async () => {
     impact();
     if (!shareData) return;
@@ -634,7 +666,10 @@ export default function ScanResultScreen() {
   // ── Derived data for inline section cards ──────────
 
   // Unified alert array for AlertPillStrip
+  // Free users: no personal alerts (allergens, health, boycott are premium features)
   const allAlerts: PersonalAlert[] = useMemo(() => {
+    if (!isPremium) return [];
+
     const alerts: PersonalAlert[] = [];
 
     // Boycott pill (if active)
@@ -655,7 +690,7 @@ export default function ScanResultScreen() {
     }
 
     return alerts;
-  }, [boycott, personalAlerts]);
+  }, [boycott, personalAlerts, isPremium]);
 
   // Nutrient breakdown for HealthNutritionCard
   const nutrientItems: NutrientItem[] = (nutrientBreakdown ?? []).map((nb: any) => ({
@@ -673,7 +708,7 @@ export default function ScanResultScreen() {
   const anySheetOpen =
     showTrustScoreSheet || showCertifierPracticesSheet || showScoreDetailSheet ||
     !!selectedMadhab || showHalalAnalysisSheet || !!selectedNutrient ||
-    selectedScholarlyData !== null || showNaqiyAdviceSheet || infoSheet !== null;
+    selectedScholarlyData !== null || showNaqiyAdviceSheet || showMadhabUpsellSheet || infoSheet !== null;
 
   useEffect(() => {
     bgScale.value = withSpring(anySheetOpen ? 0.93 : 1, { damping: 22, stiffness: 200, mass: 0.8 });
@@ -817,6 +852,7 @@ export default function ScanResultScreen() {
               <HalalSchoolsCard
                 madhabVerdicts={madhabVerdicts}
                 userMadhab={userMadhab}
+                isPremium={isPremium}
                 certifierData={certifierData ? {
                   id: certifierData.id,
                   name: certifierData.name,
@@ -838,7 +874,8 @@ export default function ScanResultScreen() {
                 certifierScore={certifierTrustScore ?? null}
                 onMadhabChange={() => {}}
                 onMadhabPress={setSelectedMadhab}
-                onNaqiyAdvicePress={() => setShowNaqiyAdviceSheet(true)}
+                onUpsellPress={!isPremium ? () => setShowMadhabUpsellSheet(true) : undefined}
+                onNaqiyAdvicePress={marketplaceEnabled ? () => setShowNaqiyAdviceSheet(true) : undefined}
                 onScholarlySourcePress={setSelectedScholarlyData}
                 onTrustScorePress={() => setShowCertifierPracticesSheet(true)}
                 onAdditivePress={(additive, ruling) => {
@@ -967,6 +1004,111 @@ export default function ScanResultScreen() {
           {/* ── Horizon divider ── */}
           <View style={[styles.horizonDivider, { backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.06)" }]} />
 
+          {/* ── PREMIUM TEASER — locked bloc for free users (Spotify-style) ── */}
+          {!isPremium && isFeatureEnabled("paymentsEnabled") && (
+            <Animated.View entering={FadeInUp.delay(800).duration(400)}>
+              <PressableScale
+                onPress={() => router.push({ pathname: "/paywall" as any, params: { trigger: "generic" } })}
+                accessibilityRole="button"
+                accessibilityLabel={t.scanResult.premiumTeaserCta}
+              >
+                <View
+                  style={{
+                    borderRadius: 16,
+                    overflow: "hidden",
+                    borderWidth: 1,
+                    borderColor: isDark ? "rgba(212,175,55,0.2)" : "rgba(212,175,55,0.15)",
+                  }}
+                >
+                  {/* Gold gradient top bar */}
+                  <View
+                    style={{
+                      height: 3,
+                      backgroundColor: "#d4af37",
+                    }}
+                  />
+                  <View
+                    style={{
+                      padding: 20,
+                      gap: 16,
+                      backgroundColor: isDark ? "rgba(212,175,55,0.06)" : "rgba(212,175,55,0.04)",
+                    }}
+                  >
+                    {/* Header: lock + title */}
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                      <View
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 16,
+                          backgroundColor: isDark ? "rgba(212,175,55,0.15)" : "rgba(212,175,55,0.1)",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <LockSimpleIcon size={16} color="#d4af37" weight="bold" />
+                      </View>
+                      <Text
+                        style={{
+                          fontSize: 15,
+                          fontWeight: "700",
+                          color: isDark ? "#ffffff" : "#0f172a",
+                          flex: 1,
+                        }}
+                      >
+                        {t.scanResult.premiumTeaserTitle}
+                      </Text>
+                    </View>
+
+                    {/* Feature list */}
+                    <View style={{ gap: 10 }}>
+                      {[
+                        t.scanResult.premiumTeaserMadhab,
+                        t.scanResult.premiumTeaserAllergens,
+                        t.scanResult.premiumTeaserBoycott,
+                        t.scanResult.premiumTeaserHealth,
+                      ].map((feature, idx) => (
+                        <View key={idx} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                          <CheckCircleIcon size={14} color="#d4af37" weight="fill" />
+                          <Text
+                            style={{
+                              fontSize: 13,
+                              color: isDark ? "#d1d5db" : "#475569",
+                              fontWeight: "500",
+                            }}
+                          >
+                            {feature}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+
+                    {/* CTA */}
+                    <View
+                      style={{
+                        backgroundColor: isDark ? "#d4af37" : "#0f172a",
+                        height: 40,
+                        borderRadius: 20,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: "700",
+                          color: isDark ? "#0f172a" : "#ffffff",
+                        }}
+                      >
+                        {t.scanResult.premiumTeaserCta}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </PressableScale>
+            </Animated.View>
+          )}
+
           {/* DISCLAIMER — flat inline */}
           <View style={styles.disclaimerRow}>
             <InfoIcon size={14} color={colors.textMuted} style={{ marginTop: 1 }} />
@@ -1076,6 +1218,7 @@ export default function ScanResultScreen() {
         onShare={handleShare}
         onFindStores={handleFindStores}
         onReport={handleReport}
+        onNaqiyAdvicePress={() => setShowNaqiyAdviceSheet(true)}
       />
 
       {/* ── Product Image Preview Modal ── */}
@@ -1245,6 +1388,16 @@ export default function ScanResultScreen() {
       <NaqiyAdviceSheet
         visible={showNaqiyAdviceSheet}
         onClose={handleCloseNaqiyAdvice}
+        matrixLevel={adviceContext.matrixLevel}
+        compositionStatus={adviceContext.compositionStatus}
+      />
+
+      <MadhabUpsellSheet
+        visible={showMadhabUpsellSheet}
+        onClose={handleCloseMadhabUpsell}
+        onUpgrade={handleMadhabUpgrade}
+        madhabVerdicts={madhabVerdicts}
+        certifierData={certifierData}
       />
 
       {/* ── Generic InfoSheet (progressive disclosure for all detail views) ── */}

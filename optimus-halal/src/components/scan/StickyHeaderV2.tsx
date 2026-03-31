@@ -9,7 +9,7 @@
  */
 
 import React, { useMemo } from "react";
-import { Platform, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
   interpolate,
   Extrapolation,
@@ -27,7 +27,7 @@ import { NaqiyGradeBadge, type TrustGrade } from "./NaqiyGradeBadge";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { fontSize, fontWeight, fontFamily } from "@/theme/typography";
 import { spacing } from "@/theme/spacing";
-import { gold } from "@/theme/colors";
+import { gold, primary } from "@/theme/colors";
 
 // ── Constants ────────────────────────────────────────────
 
@@ -171,22 +171,15 @@ export const StickyHeaderV2 = React.memo(function StickyHeaderV2({
 
       {/* ── Compact tab bar with icons ── */}
       {onTabPress && (
-        <View
-          style={[
-            styles.tabBar,
-            { borderTopColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)" },
-          ]}
-        >
+        <View style={styles.tabBar}>
           {[
-            { label: t.scanResult.tabHalal, Icon: KnifeIcon, index: 0 as const },
-            { label: t.scanResult.tabHealth, Icon: HeartbeatIcon, index: 1 as const },
-          ].map(({ label, Icon, index }) => {
+            { label: t.scanResult.tabHalal, Icon: KnifeIcon, index: 0 as const, activeColor: isDark ? gold[400] : gold[700] },
+            { label: t.scanResult.tabHealth, Icon: HeartbeatIcon, index: 1 as const, activeColor: isDark ? primary[400] : primary[700] },
+          ].map(({ label, Icon, index, activeColor }) => {
             const isSelected = activeTab === index;
-            const color = isSelected
-              ? (isDark ? gold[400] : gold[700])
-              : colors.textMuted;
+            const color = isSelected ? activeColor : colors.textMuted;
             return (
-              <PressableScale
+              <Pressable
                 key={index}
                 onPress={() => onTabPress(index)}
                 accessibilityRole="tab"
@@ -199,7 +192,7 @@ export const StickyHeaderV2 = React.memo(function StickyHeaderV2({
                 {isSelected && (
                   <View style={[styles.stickyTabIndicator, { backgroundColor: color }]} />
                 )}
-              </PressableScale>
+              </Pressable>
             );
           })}
         </View>
@@ -252,7 +245,6 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     flexDirection: "row",
-    borderTopWidth: StyleSheet.hairlineWidth,
   },
   stickyTab: {
     flex: 1,

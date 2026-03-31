@@ -22,7 +22,7 @@ import { Image } from "expo-image";
 import { Shadow } from "react-native-shadow-2";
 import { router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowClockwiseIcon, ArrowRightIcon, ArticleIcon, BellIcon, CaretRightIcon, CloudSlashIcon, HamburgerIcon, HeartIcon, MapPinIcon, MapPinPlusIcon, ScanIcon, StorefrontIcon } from "phosphor-react-native";
+import { ArrowClockwiseIcon, ArrowRightIcon, ArticleIcon, BellIcon, CaretRightIcon, CloudSlashIcon, HamburgerIcon, HeartIcon, MapPinIcon, MapPinPlusIcon, ScanIcon, StorefrontIcon, UserCirclePlusIcon } from "phosphor-react-native";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -53,6 +53,7 @@ import { useQuotaStore, useLocalFavoritesStore, useLocalStoreFavoritesStore, use
 import { defaultFeatureFlags } from "@/constants/config";
 import { AppIcon, type IconName } from "@/lib/icons";
 import { NaqiyBrandSheet } from "@/components/NaqiyBrandSheet";
+import { ProfileUpsellSheet } from "@/components/ProfileUpsellSheet";
 
 const logoSource = require("@assets/images/logo_naqiy.webp");
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -696,6 +697,7 @@ export default function HomeScreen() {
   // ---- Quick Favorites tab (products | stores) ----
   const [favTab, setFavTab] = useState<"products" | "stores">("products");
   const [brandSheetVisible, setBrandSheetVisible] = useState(false);
+  const [profileUpsellVisible, setProfileUpsellVisible] = useState(false);
 
   // ---- Map Stores (Around You) ----
   const { location: userLocation } = useUserLocation();
@@ -745,8 +747,10 @@ export default function HomeScreen() {
   // ---- Derived data ----
   const userName = useMemo(() => {
     if (me?.displayName) return me.displayName.split(" ")[0];
-    return t.common.user;
-  }, [me, t]);
+    return null;
+  }, [me]);
+
+  const hasAvatar = !!me?.avatarUrl;
 
   const totalScans = dashboardQuery.data?.totalScans ?? 0;
   const totalReports = dashboardQuery.data?.totalReports ?? 0;
@@ -938,35 +942,96 @@ export default function HomeScreen() {
             entering={FadeInDown.delay(0).duration(500).springify().damping(20)}
             style={styles.headerRow}
           >
-            <View style={styles.headerLeft}>
-              <Avatar
-                size="lg"
-                source={me?.avatarUrl ?? undefined}
-                fallback={userName}
-                borderColor={isPremium ? "none" : "primary"}
-                premiumRing={isPremium}
-              />
+            <Pressable
+              style={styles.headerLeft}
+              onPress={() => {
+                if (isPremium) {
+                  router.push("/(tabs)/profile");
+                } else {
+                  setProfileUpsellVisible(true);
+                }
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={isPremium ? t.home.editProfile : t.home.discoverNaqiyPlus}
+            >
+              {hasAvatar ? (
+                <Avatar
+                  size="lg"
+                  source={me?.avatarUrl ?? undefined}
+                  fallback={userName ?? "N"}
+                  borderColor={isPremium ? "none" : "primary"}
+                  premiumRing={isPremium}
+                />
+              ) : (
+                <View style={[
+                  styles.avatarPlaceholder,
+                  {
+                    borderWidth: isPremium ? 0 : 2,
+                    borderColor: isPremium ? undefined : brand.primary,
+                  },
+                ]}>
+                  {isPremium && (
+                    <LinearGradient
+                      colors={["#D4AF37", "#F5E6A3", "#CFA533", "#D4AF37"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={[StyleSheet.absoluteFill, { borderRadius: 27 }]}
+                    />
+                  )}
+                  <View style={[
+                    styles.avatarPlaceholderInner,
+                    { backgroundColor: isDark ? "#0C0C0C" : colors.background },
+                  ]}>
+                    <UserCirclePlusIcon
+                      size={26}
+                      color={isDark ? "#ffffff" : "#1a1a1a"}
+                      weight="duotone"
+                    />
+                  </View>
+                </View>
+              )}
               <View style={{ marginStart: 12 }}>
-                <Text
-                  style={[
-                    styles.greetingLabel,
-                    {
-                      color: colors.textSecondary,
-                    },
-                  ]}
-                >
-                  {isRamadan ? t.home.greetingRamadan : t.home.greeting}
-                </Text>
-                <Text
-                  style={[
-                    styles.greetingName,
-                    { color: colors.textPrimary },
-                  ]}
-                >
-                  {userName}
-                </Text>
+                {userName ? (
+                  <>
+                    <Text
+                      style={[
+                        styles.greetingLabel,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      {isRamadan ? t.home.greetingRamadan : t.home.greeting}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.greetingName,
+                        { color: colors.textPrimary },
+                      ]}
+                    >
+                      {userName}
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Text
+                      style={[
+                        styles.greetingLabel,
+                        { color: colors.textPrimary, fontWeight: "700" },
+                      ]}
+                    >
+                      {isRamadan ? t.home.greetingRamadan.replace(",", "") : t.home.greetingNoName}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.greetingLabel,
+                        { color: colors.textSecondary, fontWeight: "300" },
+                      ]}
+                    >
+                      {t.home.greetingSubtitle}
+                    </Text>
+                  </>
+                )}
               </View>
-            </View>
+            </Pressable>
 
             {/* Right: Brand Mark + Notification BellIcon */}
             <View style={styles.headerRight}>
@@ -1799,6 +1864,12 @@ export default function HomeScreen() {
         isGuest={isGuest}
         user={me}
       />
+
+      {/* Profile Upsell Bottom Sheet (free/trial users) */}
+      <ProfileUpsellSheet
+        visible={profileUpsellVisible}
+        onClose={() => setProfileUpsellVisible(false)}
+      />
     </View>
   );
 }
@@ -1809,6 +1880,21 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   // ---- Header ----
+  avatarPlaceholder: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  avatarPlaceholderInner: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   headerRight: {
     flexDirection: "row",
     alignItems: "center",

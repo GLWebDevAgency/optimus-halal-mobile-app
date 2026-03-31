@@ -9,9 +9,10 @@
  */
 
 import React, { useCallback, useMemo } from "react";
-import { View, Text, StyleSheet, Platform } from "react-native";
+import { View, Text, StyleSheet, Platform, Pressable } from "react-native";
 import {
   ArrowsClockwise as ArrowsClockwiseIcon,
+  CaretRight as CaretRightIcon,
   Heart as HeartIcon,
   ShareNetwork as ShareNetworkIcon,
   Storefront as StorefrontIcon,
@@ -27,11 +28,13 @@ import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 
+import { Image } from "expo-image";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { useHaptics, useTheme, useTranslation } from "@/hooks";
 import {
   halalStatus as halalStatusTokens,
   glass,
+  gold,
 } from "@/theme/colors";
 import { fontSize, fontWeight, bodyFontFamily } from "@/theme/typography";
 import { spacing, radius } from "@/theme/spacing";
@@ -81,9 +84,12 @@ export interface BottomBarV2Props {
   onShare: () => void;
   onFindStores: () => void;
   onReport: () => void;
+  onNaqiyAdvicePress?: () => void;
 }
 
 // ── Component ────────────────────────────────────────────
+
+const logoSource = require("@assets/images/logo_naqiy.webp");
 
 export const BottomBarV2 = React.memo(function BottomBarV2({
   effectiveHeroStatus,
@@ -93,6 +99,7 @@ export const BottomBarV2 = React.memo(function BottomBarV2({
   onToggleFavorite,
   onShare,
   onFindStores,
+  onNaqiyAdvicePress,
 }: BottomBarV2Props) {
   const insets = useSafeAreaInsets();
   const { isDark, colors } = useTheme();
@@ -158,7 +165,13 @@ export const BottomBarV2 = React.memo(function BottomBarV2({
   const borderColor = isDark ? glass.dark.border : glass.light.border;
 
   const { Icon: CTAIcon } = ctaPreset;
-  const showCTA = marketplaceEnabled || ctaPreset.labelKey !== "whereToBuy";
+  const showCTA = marketplaceEnabled;
+  const showNaqiyAdvice = !marketplaceEnabled && effectiveHeroStatus === "doubtful" && !!onNaqiyAdvicePress;
+
+  const handleNaqiyAdvice = useCallback(() => {
+    impact();
+    onNaqiyAdvicePress?.();
+  }, [impact, onNaqiyAdvicePress]);
 
   const barContent = (
     <View
@@ -223,8 +236,8 @@ export const BottomBarV2 = React.memo(function BottomBarV2({
         </PressableScale>
       </View>
 
-      {/* ── Right: primary CTA (hidden when marketplace disabled and CTA is store-related) ── */}
-      {(marketplaceEnabled || ctaPreset.labelKey !== "whereToBuy") && (
+      {/* ── Right: marketplace CTA ── */}
+      {showCTA && (
         <PressableScale
           onPress={handleCTA}
           style={styles.ctaWrapper}
@@ -257,6 +270,54 @@ export const BottomBarV2 = React.memo(function BottomBarV2({
             </Text>
           </LinearGradient>
         </PressableScale>
+      )}
+
+      {/* ── Right: Naqiy advice CTA (when marketplace off + doubtful) ── */}
+      {showNaqiyAdvice && (
+        <Pressable
+          onPress={handleNaqiyAdvice}
+          style={styles.ctaWrapper}
+          accessibilityRole="button"
+          accessibilityLabel={t.verdict.naqiyAdvice}
+        >
+          <LinearGradient
+            colors={
+              isDark
+                ? [gold[950], "rgba(212,175,55,0.15)", gold[950]]
+                : ["rgba(212,175,55,0.10)", "rgba(75,122,56,0.06)", "rgba(212,175,55,0.10)"]
+            }
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={[
+              styles.adviceButton,
+              {
+                borderColor: isDark
+                  ? "rgba(212,175,55,0.25)"
+                  : "rgba(212,175,55,0.30)",
+              },
+            ]}
+          >
+            <Image
+              source={logoSource}
+              style={styles.adviceLogo}
+              contentFit="contain"
+            />
+            <Text
+              style={[
+                styles.adviceText,
+                { color: isDark ? gold[300] : gold[700] },
+              ]}
+              numberOfLines={1}
+            >
+              {t.verdict.naqiyAdvice}
+            </Text>
+            <CaretRightIcon
+              size={14}
+              color={isDark ? gold[400] : gold[600]}
+              weight="bold"
+            />
+          </LinearGradient>
+        </Pressable>
       )}
     </View>
   );
@@ -352,6 +413,24 @@ const styles = StyleSheet.create({
     fontSize: fontSize.body,
     fontWeight: fontWeight.bold,
     fontFamily: bodyFontFamily.bold,
+  },
+  adviceButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: spacing.lg,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    gap: spacing.sm,
+  },
+  adviceLogo: {
+    width: 20,
+    height: 20,
+  },
+  adviceText: {
+    fontSize: fontSize.bodySmall,
+    fontWeight: fontWeight.semiBold,
+    fontFamily: bodyFontFamily.semiBold,
   },
 });
 

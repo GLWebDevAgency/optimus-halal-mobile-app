@@ -32,6 +32,7 @@ import { usePremium } from "@/hooks/usePremium";
 import { useFeatureFlagsStore } from "@/store";
 import { trackEvent } from "@/lib/analytics";
 import { getOfferings, purchasePackage, restorePurchases } from "@/services/purchases";
+import { isAuthenticated as hasStoredTokens } from "@/services/api";
 import { APP_CONFIG } from "@/constants/config";
 import type { PurchasesPackage } from "react-native-purchases";
 import { AppIcon } from "@/lib/icons";
@@ -194,7 +195,11 @@ export default function PremiumPaywallScreen() {
       setPurchasing(true);
       await purchasePackage(plan.rcPackage);
       trackEvent("premium_purchase_completed", { product_id: selectedPlan });
-      router.back();
+      if (!hasStoredTokens()) {
+        router.replace("/(auth)/signup" as any);
+      } else {
+        router.back();
+      }
     } catch (err: any) {
       if (!err?.userCancelled) {
         Alert.alert("Naqiy+", err?.message ?? "Erreur lors de l'achat");
@@ -210,7 +215,11 @@ export default function PremiumPaywallScreen() {
       setPurchasing(true);
       await restorePurchases();
       Alert.alert("Naqiy+", t.premium.enjoyFeatures);
-      router.back();
+      if (!hasStoredTokens()) {
+        router.replace("/(auth)/signup" as any);
+      } else {
+        router.back();
+      }
     } catch (err: any) {
       Alert.alert("Naqiy+", err?.message ?? "Aucun achat à restaurer");
     } finally {
