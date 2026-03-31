@@ -151,6 +151,7 @@ export const authRouter = router({
           level: true,
           passwordHash: true,
           isActive: true,
+          subscriptionTier: true,
         },
       });
 
@@ -161,6 +162,11 @@ export const authRouter = router({
       const valid = await verifyPassword(user.passwordHash, input.password);
       if (!valid) {
         throw unauthorized("Email ou mot de passe incorrect");
+      }
+
+      // Block login for expired subscribers — connected = always premium
+      if (user.subscriptionTier === "free") {
+        throw unauthorized("SUBSCRIPTION_EXPIRED");
       }
 
       const accessToken = await signAccessToken(user.id);
@@ -285,7 +291,7 @@ export const authRouter = router({
 
       // Check if user is still active (banned users cannot refresh)
       const [user] = await ctx.db
-        .select({ isActive: users.isActive })
+        .select({ isActive: users.isActive, subscriptionTier: users.subscriptionTier })
         .from(users)
         .where(eq(users.id, userId))
         .limit(1);
@@ -293,6 +299,12 @@ export const authRouter = router({
         // Revoke all remaining tokens for this banned user
         await ctx.db.delete(refreshTokens).where(eq(refreshTokens.userId, userId));
         throw unauthorized("Compte désactivé");
+      }
+
+      // Block token refresh for expired subscribers
+      if (user.subscriptionTier === "free") {
+        await ctx.db.delete(refreshTokens).where(eq(refreshTokens.userId, userId));
+        throw unauthorized("SUBSCRIPTION_EXPIRED");
       }
 
       const accessToken = await signAccessToken(userId);

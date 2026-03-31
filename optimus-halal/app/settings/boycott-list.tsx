@@ -11,14 +11,14 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
-import { PremiumBackground } from "@/components/ui";
+import { PremiumBackground, PadlockBottomSheet } from "@/components/ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { ArrowLeftIcon, CheckCircleIcon, CloudSlashIcon } from "phosphor-react-native";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useTheme } from "@/hooks/useTheme";
-import { useTranslation } from "@/hooks";
+import { useTranslation, useCanAccessPremiumData } from "@/hooks";
 import { trpc } from "@/lib/trpc";
 import { AppIcon } from "@/lib/icons";
 
@@ -197,6 +197,8 @@ export default function BoycottListScreen() {
   const { isDark, colors } = useTheme();
   const { t } = useTranslation();
   const [selectedLevel, setSelectedLevel] = useState<BoycottLevel | "all">("all");
+  const canAccess = useCanAccessPremiumData();
+  const [showPadlock, setShowPadlock] = useState(false);
 
   const level = selectedLevel === "all" ? undefined : selectedLevel;
   const { data, isLoading, isError, refetch } = trpc.boycott.list.useQuery(
@@ -208,9 +210,15 @@ export default function BoycottListScreen() {
 
   const renderItem = useCallback(
     ({ item, index }: { item: BoycottItem; index: number }) => (
-      <BoycottCard item={item} index={index} isDark={isDark} colors={colors} t={t} />
+      <Pressable
+        onPress={!canAccess ? () => setShowPadlock(true) : undefined}
+        disabled={canAccess}
+        style={!canAccess ? { opacity: 0.5 } : undefined}
+      >
+        <BoycottCard item={item} index={index} isDark={isDark} colors={colors} t={t} />
+      </Pressable>
     ),
-    [isDark, colors, t]
+    [isDark, colors, t, canAccess]
   );
 
   return (
@@ -252,7 +260,10 @@ export default function BoycottListScreen() {
             const isSelected = selectedLevel === filter.id;
             return (
               <PressableScale
-                onPress={() => setSelectedLevel(filter.id)}
+                onPress={() => {
+                  if (!canAccess) { setShowPadlock(true); return; }
+                  setSelectedLevel(filter.id);
+                }}
                 accessibilityRole="button"
                 accessibilityState={{ selected: isSelected }}
               >
@@ -260,6 +271,7 @@ export default function BoycottListScreen() {
                   paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, marginRight: 8,
                   backgroundColor: isSelected ? colors.primary : (isDark ? "rgba(255,255,255,0.03)" : colors.card),
                   borderColor: isSelected ? colors.primary : (isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)"), borderWidth: 1,
+                  opacity: !canAccess ? 0.5 : 1,
                 }}>
                   <Text style={{
                     fontSize: 12, fontWeight: isSelected ? "700" : "500",
@@ -309,6 +321,11 @@ export default function BoycottListScreen() {
         />
         )}
       </SafeAreaView>
+      <PadlockBottomSheet
+        visible={showPadlock}
+        onClose={() => setShowPadlock(false)}
+        description={t.padlock.boycottDescription}
+      />
     </View>
   );
 }

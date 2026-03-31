@@ -72,7 +72,14 @@ export const fr = {
   // Home Screen
   home: {
     greeting: "Salam,",
+    greetingNoName: "Salam",
     greetingRamadan: "Ramadan Mubarak,",
+    greetingSubtitle: "Qu'est-ce qu'on vérifie ?",
+    editProfile: "Modifier le profil",
+    discoverNaqiyPlus: "Découvrir Naqiy+",
+    upsellTitle: "Personnalise ton profil",
+    upsellMessage: "Avec Naqiy+, personnalise ton profil — et en plus, tu soutiens une bonne cause.",
+    upsellCta: "Découvrir Naqiy+",
     level: "Niveau",
     nearYouSeeAll: "Voir la carte",
     dailyImpact: "Impact Quotidien",
@@ -1050,6 +1057,13 @@ export const fr = {
     feedbackReportOther: "Autre",
     // ─── Certifieur ────────────────────────────
     certifierTrustScore: "Score de confiance",
+    // ─── Premium Teaser (free users) ─────────
+    premiumTeaserTitle: "Aller plus loin avec Naqiy+",
+    premiumTeaserMadhab: "Verdict personnalisé selon ton madhab",
+    premiumTeaserAllergens: "Alertes allergènes pour ta famille",
+    premiumTeaserBoycott: "Alertes boycott en temps réel",
+    premiumTeaserHealth: "Profil santé personnalisé",
+    premiumTeaserCta: "Découvrir Naqiy+",
   },
 
   // Map
@@ -1729,6 +1743,9 @@ export const fr = {
     purchaseComingSoon: "L'achat in-app sera bientot disponible",
     restoreComingSoon: "La restauration sera bientot disponible",
     legal: "L'abonnement se renouvelle automatiquement sauf annulation 24h avant la fin de la periode. Voir nos Conditions d'utilisation et Politique de confidentialite.",
+    expired: "Votre abonnement Naqiy+ a expiré",
+    renewToAccess: "Réabonnez-vous pour accéder à votre compte et retrouver vos données.",
+    renew: "Renouveler Naqiy+",
   },
 
   // Certification Badge
@@ -1807,6 +1824,31 @@ export const fr = {
     short4Unknown: "Analyse incomplète",
     shortMajority: "Conforme selon {n}/4 écoles",
     shortDivergent: "Avis divergents entre écoles",
+    // Matrix verdict — unified NaqiyScore × composition × consensus
+    matrixHighConfidenceLabel: "Confiance élevée",
+    matrixHighConfidencePhrase: "Certifié halal par un organisme très fiable. Aucun ingrédient problématique détecté.",
+    matrixGoodConfidenceLabel: "Confiance correcte",
+    matrixGoodConfidencePhrase: "Certification halal fiable. Composition conforme d'après les 4 écoles.",
+    matrixVigilanceCleanLabel: "Vigilance",
+    matrixVigilanceCleanPhrase: "Le certifieur requiert vigilance ({score}/100). La composition ne montre pas d'ingrédient problématique, mais les garanties rituelles restent limitées.",
+    matrixLowReliabilityLabel: "Peu fiable",
+    matrixLowReliabilityPhrase: "Certifieur peu fiable ({score}/100). Composition sans ingrédient interdit, mais les conditions d'abattage ne sont pas assurées.",
+    matrixNotReliableLabel: "Pas fiable du tout",
+    matrixNotReliablePhrase: "Le certifieur ({name}, {score}/100) n'offre aucune garantie rituelle. Composition sans ingrédient interdit, mais rien ne garantit le respect du dhabh.",
+    matrixDoubtfulHighLabel: "Ingrédient(s) douteux",
+    matrixDoubtfulHighPhrase: "Certifieur fiable, mais {count} ingrédient(s) font débat entre les écoles.",
+    matrixDoubleVigilanceLabel: "Double vigilance",
+    matrixDoubleVigilancePhrase: "Certifieur en vigilance ({score}/100) et ingrédient(s) douteux détecté(s).",
+    matrixNotRecommendedLabel: "Non recommandé",
+    matrixNotRecommendedPhrase: "Certifieur peu fiable ({score}/100) et ingrédient(s) douteux.",
+    matrixHaramLabel: "Ingrédient interdit",
+    matrixHaramPhrase: "{count} ingrédient(s) interdit(s) détecté(s) malgré la certification halal.",
+    matrixNoCertCleanLabel: "Composition conforme",
+    matrixNoCertCleanPhrase: "L'analyse des ingrédients ne révèle aucun élément problématique d'après les 4 écoles.",
+    matrixNoCertDoubtfulLabel: "Ingrédient(s) douteux",
+    matrixNoCertDoubtfulPhrase: "Des ingrédients douteux ont été détectés dans la composition.",
+    matrixNoCertHaramLabel: "Interdit",
+    matrixNoCertHaramPhrase: "Des ingrédients interdits sont présents dans la composition.",
     naqiyAdvice: "Notre conseil Naqiy",
     adviceTitle: "Le hadith du doute",
     adviceHadithAr: "عن النعمان بن بشير رضي الله عنهما قال: سمعت رسول الله ﷺ يقول:\n« الحلال بيّن والحرام بيّن، وبينهما أمور مشتبهات لا يعلمهنّ كثير من الناس، فمن اتّقى الشبهات فقد استبرأ لدينه وعرضه »",
@@ -1814,6 +1856,31 @@ export const fr = {
     adviceSource: "Sahih al-Bukhari (52) & Sahih Muslim (1599)",
     adviceChain: "An-Nu'man ibn Bashir (رضي الله عنهما) → Prophète Muhammad ﷺ",
     adviceClosing: "La décision finale vous appartient. Naqiy vous informe, vous choisissez en conscience.",
+    // Text B — Al-Hassan ibn Ali / Tirmidhi 2518
+    adviceTitleB: "Le principe de précaution",
+    adviceHadithArB: "« دع ما يريبك إلى ما لا يريبك، فإنّ الصّدق طمأنينة وإنّ الكذب ريبة »",
+    adviceHadithTranslationB: "« Laisse ce qui te fait douter pour ce qui ne te fait pas douter. Car la vérité est sérénité et le mensonge est trouble. »",
+    adviceSourceB: "Tirmidhi (2518) & An-Nasa'i (5711)",
+    adviceChainB: "Al-Hassan ibn Ali (رضي الله عنهما) → Prophète Muhammad ﷺ",
+    // Text C — Al-Baqarah 2:168
+    adviceTitleC: "L'injonction du pur et du bon",
+    adviceHadithArC: "« يَا أَيُّهَا النَّاسُ كُلُوا مِمَّا فِي الْأَرْضِ حَلَالًا طَيِّبًا وَلَا تَتَّبِعُوا خُطُوَاتِ الشَّيْطَانِ »",
+    adviceHadithTranslationC: "« Ô hommes ! Mangez de ce qui est sur terre, licite et bon, et ne suivez pas les pas de Satan. »",
+    adviceSourceC: "Coran — Sourate Al-Baqarah (2:168)",
+    adviceChainC: "Parole d'Allah ﷻ — Révélation divine",
+    // Text D — Abu Hurairah / Muslim 1015
+    adviceTitleD: "La nourriture et l'invocation",
+    adviceHadithArD: "« إنّ الله طيّب لا يقبل إلّا طيّبًا... ثمّ ذكر الرّجل يطيل السّفر أشعث أغبر يمدّ يديه إلى السّماء: يا ربّ يا ربّ، ومطعمه حرام ومشربه حرام وملبسه حرام وغُذي بالحرام، فأنّى يُستجاب لذلك؟ »",
+    adviceHadithTranslationD: "« Allah est Bon et n'accepte que ce qui est bon. [...] Puis il mentionna l'homme qui voyage longuement, poussiéreux et décoiffé, levant les mains au ciel : \"Ô Seigneur ! Ô Seigneur !\" — alors que sa nourriture est illicite, sa boisson illicite, ses vêtements illicites, et qu'il s'est nourri d'illicite. Comment serait-il exaucé ? »",
+    adviceSourceD: "Sahih Muslim (1015)",
+    adviceChainD: "Abu Hurairah (رضي الله عنه) → Prophète Muhammad ﷺ",
+    // Madhab upsell
+    upsellTitle: "Analyse détaillée par école",
+    upsellDescription: "Avec Naqiy+, accédez au verdict individuel de chaque école juridique, avec leur score de confiance et les détails de leur raisonnement.",
+    upsellFeature1: "Verdict par madhab (Hanafi, Shafi'i, Maliki, Hanbali)",
+    upsellFeature2: "Score de confiance par école",
+    upsellFeature3: "Détail des divergences entre écoles",
+    upsellCta: "Débloquer avec Naqiy+",
   },
 
   // Paywall (Quota exceeded)
@@ -1873,6 +1940,17 @@ export const fr = {
     // Trial expiré — pas de culpabilité, ancrage sur la continuité du choix halal
     trialExpired: "Votre essai Naqiy+ est terminé",
     trialExpiredSubtitle: "Continuez à manger en conscience. Rejoignez Naqiy+ pour un accès sans limite.",
+  },
+
+  padlock: {
+    featureTitle: "Fonctionnalité Naqiy+",
+    madhabDescription: "Choisissez votre école juridique pour des verdicts halal personnalisés selon votre madhab.",
+    healthDescription: "Configurez vos allergènes et votre profil de santé pour des analyses personnalisées.",
+    exclusionsDescription: "Définissez vos exclusions alimentaires personnalisées pour des alertes sur mesure.",
+    boycottDescription: "Gérez votre liste de boycott éthique pour filtrer les produits concernés.",
+    certificationsDescription: "Sélectionnez vos certifieurs de confiance pour mettre en avant les produits certifiés.",
+    unlock: "Découvrir Naqiy+",
+    close: "Fermer",
   },
 };
 

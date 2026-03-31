@@ -1,4 +1,5 @@
 import { pgTable, pgEnum } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import * as t from "drizzle-orm/pg-core";
 
 export const halalStrictnessEnum = pgEnum("halal_strictness", [
@@ -41,6 +42,7 @@ export const users = pgTable(
     dietaryRestrictions: t.text("dietary_restrictions").array(),
     allergens: t.text().array(),
     madhab: madhabEnum().default("general").notNull(),
+    certificationPreferences: t.text("certification_preferences").array().default(sql`'{}'::text[]`),
     isPregnant: t.boolean("is_pregnant").default(false).notNull(),
     hasChildren: t.boolean("has_children").default(false).notNull(),
     level: t.integer().default(1).notNull(),
@@ -173,6 +175,7 @@ export const safeUserColumns = {
   dietaryRestrictions: true,
   allergens: true,
   madhab: true,
+  certificationPreferences: true,
   isPregnant: true,
   hasChildren: true,
   level: true,
@@ -212,6 +215,7 @@ export const safeUserReturning = {
   dietaryRestrictions: users.dietaryRestrictions,
   allergens: users.allergens,
   madhab: users.madhab,
+  certificationPreferences: users.certificationPreferences,
   isPregnant: users.isPregnant,
   hasChildren: users.hasChildren,
   level: users.level,

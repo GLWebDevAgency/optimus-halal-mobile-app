@@ -14,14 +14,16 @@ import {
   ScrollView,
 } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
-import { PremiumBackground } from "@/components/ui";
+import { PremiumBackground, PadlockBottomSheet } from "@/components/ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { ArrowLeftIcon, CheckIcon, InfoIcon } from "phosphor-react-native";
+import { ArrowLeftIcon, CheckIcon, InfoIcon, LockSimple as LockSimpleIcon } from "phosphor-react-native";
 import Animated, { FadeIn, FadeInDown, ZoomIn } from "react-native-reanimated";
-import { useHaptics, useTranslation } from "@/hooks";
+import { useHaptics, useTranslation, useCanAccessPremiumData } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
 import { trpc } from "@/lib/trpc";
+import { isAuthenticated as hasStoredTokens } from "@/services/api";
+import { usePreferencesStore } from "@/store";
 import { type IconName } from "@/lib/icons";
 
 const GOLD = "#d4af37";
@@ -42,9 +44,11 @@ export default function MadhabScreen() {
   const { colors, isDark } = useTheme();
   const { t } = useTranslation();
   const { impact } = useHaptics();
+  const canSelectSchools = useCanAccessPremiumData();
   const utils = trpc.useUtils();
+  const isAuthenticated = hasStoredTokens();
 
-  const { data: profile } = trpc.profile.getProfile.useQuery();
+  const { data: profile } = trpc.profile.getProfile.useQuery(undefined, { enabled: isAuthenticated });
   const updateProfile = trpc.profile.updateProfile.useMutation({
     onSuccess: () => {
       utils.profile.getProfile.invalidate();
@@ -62,17 +66,29 @@ export default function MadhabScreen() {
     [t]
   );
 
+  const { selectedMadhab, setMadhab } = usePreferencesStore();
   const [selected, setSelected] = useState<MadhabValue>(
-    (profile?.madhab as MadhabValue) ?? "general"
+    (profile?.madhab as MadhabValue) ?? (selectedMadhab as MadhabValue) ?? "general"
   );
+  const [showPadlock, setShowPadlock] = useState(false);
 
   const handleSelect = useCallback(
     async (value: MadhabValue) => {
+      // Lock non-general schools for free post-trial users
+      if (!canSelectSchools && value !== "general") {
+        setShowPadlock(true);
+        return;
+      }
       setSelected(value);
       impact();
-      await updateProfile.mutateAsync({ madhab: value });
+      // Save locally
+      setMadhab(value);
+      // Save to backend if authenticated
+      if (isAuthenticated) {
+        await updateProfile.mutateAsync({ madhab: value });
+      }
     },
-    [impact, updateProfile]
+    [impact, updateProfile, canSelectSchools, setMadhab, isAuthenticated]
   );
 
   return (
@@ -141,7 +157,10 @@ export default function MadhabScreen() {
         </Animated.View>
 
         {/* Options */}
-        {options.map((option, index) => (
+        {options.map((option, index) => {
+          const isLocked = !canSelectSchools && option.value !== "general";
+          const isSelected = selected === option.value;
+          return (
           <Animated.View
             key={option.value}
             entering={FadeInDown.delay(150 + index * 60).duration(400)}
@@ -150,31 +169,32 @@ export default function MadhabScreen() {
             <PressableScale
               onPress={() => handleSelect(option.value)}
               accessibilityRole="radio"
-              accessibilityState={{ checked: selected === option.value }}
+              accessibilityState={{ checked: isSelected }}
               accessibilityLabel={option.label}
-              accessibilityHint={option.description}
+              accessibilityHint={isLocked ? t.padlock.featureTitle : option.description}
             >
               <View
                 className="rounded-2xl p-4 flex-row items-center gap-4"
                 style={{
+                  opacity: isLocked ? 0.5 : 1,
                   backgroundColor: isDark
-                    ? selected === option.value
+                    ? isSelected
                       ? "rgba(212,175,55,0.08)"
                       : "rgba(255,255,255,0.03)"
-                    : selected === option.value
+                    : isSelected
                       ? "rgba(212,175,55,0.05)"
                       : "#ffffff",
-                  borderWidth: selected === option.value ? 2 : 1,
-                  borderColor: selected === option.value
+                  borderWidth: isSelected ? 2 : 1,
+                  borderColor: isSelected
                     ? GOLD
                     : isDark
                       ? "rgba(212,175,55,0.08)"
                       : "rgba(212,175,55,0.1)",
-                  shadowColor: selected === option.value ? GOLD : "transparent",
+                  shadowColor: isSelected ? GOLD : "transparent",
                   shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: selected === option.value ? 0.2 : 0,
-                  shadowRadius: selected === option.value ? 12 : 0,
-                  elevation: selected === option.value ? 4 : 0,
+                  shadowOpacity: isSelected ? 0.2 : 0,
+                  shadowRadius: isSelected ? 12 : 0,
+                  elevation: isSelected ? 4 : 0,
                 }}
               >
                 {/* Radio indicator */}
@@ -182,17 +202,17 @@ export default function MadhabScreen() {
                   className="w-6 h-6 rounded-full items-center justify-center"
                   style={{
                     borderWidth: 2,
-                    borderColor: selected === option.value
+                    borderColor: isSelected
                       ? GOLD
                       : isDark
                         ? "#4b5563"
                         : "#cbd5e1",
-                    backgroundColor: selected === option.value
+                    backgroundColor: isSelected
                       ? GOLD
                       : "transparent",
                   }}
                 >
-                  {selected === option.value && (
+                  {isSelected && !isLocked && (
                     <Animated.View entering={ZoomIn.springify()}>
                       <CheckIcon size={14} color="#fff" />
                     </Animated.View>
@@ -208,10 +228,16 @@ export default function MadhabScreen() {
                     {option.description}
                   </Text>
                 </View>
+
+                {/* Lock icon for locked schools */}
+                {isLocked && (
+                  <LockSimpleIcon size={18} color={colors.textMuted} weight="fill" />
+                )}
               </View>
             </PressableScale>
           </Animated.View>
-        ))}
+          );
+        })}
 
         {/* Saving indicator */}
         {updateProfile.isPending && (
@@ -222,6 +248,12 @@ export default function MadhabScreen() {
           </Animated.View>
         )}
         </ScrollView>
+
+        <PadlockBottomSheet
+          visible={showPadlock}
+          onClose={() => setShowPadlock(false)}
+          description={t.padlock.madhabDescription}
+        />
       </SafeAreaView>
     </View>
   );

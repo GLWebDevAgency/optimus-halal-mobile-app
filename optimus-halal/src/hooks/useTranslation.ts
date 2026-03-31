@@ -4,15 +4,38 @@
 
 import { useCallback } from "react";
 import { Alert, I18nManager } from "react-native";
+import * as Updates from "expo-updates";
 import { useLanguageStore } from "@/store";
 import { getTranslation, isRTL, type Language, type TranslationKeys } from "@/i18n";
 import { setApiLanguage } from "@/services/api";
 import { scaleFontForRTL } from "@/theme/typography";
 
 /**
+ * Restart the app after RTL direction change.
+ * Uses expo-updates in production, DevSettings in dev.
+ */
+async function restartApp(): Promise<void> {
+  try {
+    await Updates.reloadAsync();
+  } catch {
+    // Dev build: expo-updates native module not available
+    // Try DevSettings as fallback
+    try {
+      const { DevSettings } = require("react-native");
+      DevSettings.reload();
+    } catch {
+      Alert.alert(
+        "Redémarrage manuel requis",
+        "Veuillez fermer et rouvrir l'application.",
+      );
+    }
+  }
+}
+
+/**
  * Show a restart dialog when RTL direction changes.
  * `I18nManager.forceRTL` only takes effect after a full app restart,
- * so we prompt the user to restart immediately or defer.
+ * so we prompt the user then restart automatically on confirm.
  */
 function promptRTLRestartIfNeeded(newLang: Language): void {
   const isNewRTL = isRTL(newLang);
@@ -32,20 +55,7 @@ function promptRTLRestartIfNeeded(newLang: Language): void {
     [
       {
         text: isNewRTL ? "إعادة التشغيل" : "Redémarrer",
-        onPress: async () => {
-          try {
-            // @ts-expect-error — expo-updates only available in EAS production builds
-            // eslint-disable-next-line import/no-unresolved
-            const Updates = await import("expo-updates");
-            await (Updates as { reloadAsync: () => Promise<void> }).reloadAsync();
-          } catch {
-            // Fallback for dev builds where native module isn't available
-            Alert.alert(
-              "Redémarrage manuel requis",
-              "Veuillez fermer et rouvrir l'application.",
-            );
-          }
-        },
+        onPress: () => restartApp(),
       },
       {
         text: isNewRTL ? "لاحقاً" : "Plus tard",

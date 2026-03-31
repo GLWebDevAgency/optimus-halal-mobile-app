@@ -82,6 +82,8 @@ export interface FeatureFlags {
   offlineCacheEnabled: boolean;
   premiumMapEnabled: boolean;
   healthProfileEnabled: boolean;
+  // Certifications préférées (sélection certifieurs de confiance)
+  certificationsPreferencesEnabled: boolean;
   // Auth mode (variant flag: "v1" | "v2" | "hybrid")
   authMode: AuthMode;
 }
@@ -105,6 +107,7 @@ export const defaultFeatureFlags: FeatureFlags = {
   offlineCacheEnabled: false,
   premiumMapEnabled: false,
   healthProfileEnabled: true,
+  certificationsPreferencesEnabled: false,
   authMode: "v1",
 };
 

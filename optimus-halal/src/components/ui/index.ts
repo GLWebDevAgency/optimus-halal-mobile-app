@@ -22,6 +22,8 @@ export { ArabicCalligraphy } from "./ArabicCalligraphy";
 export { GlowCard } from "./GlowCard";
 export { PremiumBackground, type PremiumBackgroundProps } from "./PremiumBackground";
 export { PremiumGate } from "./PremiumGate";
+export { PadlockBottomSheet } from "./PadlockBottomSheet";
+export type { PadlockBottomSheetProps } from "./PadlockBottomSheet";
 
 export { PressableScale } from "./PressableScale";
 export { StatusPill } from "./StatusPill";

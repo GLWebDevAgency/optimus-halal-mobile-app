@@ -6,7 +6,7 @@
  * (e.g., E171 TiO2 banned for pregnant, Southampton Six for children).
  */
 
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -15,12 +15,12 @@ import {
   ScrollView,
 } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
-import { PremiumBackground } from "@/components/ui";
+import { PadlockBottomSheet, PremiumBackground } from "@/components/ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { ArrowLeftIcon, BabyIcon, BabyCarriageIcon, CaretRightIcon, ProhibitInsetIcon, ShieldWarningIcon } from "phosphor-react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
-import { useHaptics, useTranslation } from "@/hooks";
+import { useCanAccessPremiumData, useHaptics, useTranslation } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
 import { trpc } from "@/lib/trpc";
 
@@ -31,6 +31,8 @@ export default function HealthProfileScreen() {
   const { t } = useTranslation();
   const { impact } = useHaptics();
   const utils = trpc.useUtils();
+  const [showPadlock, setShowPadlock] = useState(false);
+  const canAccess = useCanAccessPremiumData();
 
   const { data: profile } = trpc.profile.getProfile.useQuery();
   const updateProfile = trpc.profile.updateProfile.useMutation({
@@ -151,13 +153,17 @@ export default function HealthProfileScreen() {
               </View>
               <Switch
                 value={profile?.isPregnant ?? false}
-                onValueChange={(v) => handleToggle("isPregnant", v)}
+                onValueChange={(v) => {
+                  if (!canAccess) { setShowPadlock(true); return; }
+                  handleToggle("isPregnant", v);
+                }}
                 trackColor={{
                   false: isDark ? "#374151" : "#e2e8f0",
                   true: colors.primary,
                 }}
                 thumbColor="#ffffff"
                 accessibilityLabel={t.healthProfile.pregnant.label}
+                style={!canAccess ? { opacity: 0.5 } : undefined}
               />
             </View>
 
@@ -196,13 +202,17 @@ export default function HealthProfileScreen() {
               </View>
               <Switch
                 value={profile?.hasChildren ?? false}
-                onValueChange={(v) => handleToggle("hasChildren", v)}
+                onValueChange={(v) => {
+                  if (!canAccess) { setShowPadlock(true); return; }
+                  handleToggle("hasChildren", v);
+                }}
                 trackColor={{
                   false: isDark ? "#374151" : "#e2e8f0",
                   true: colors.primary,
                 }}
                 thumbColor="#ffffff"
                 accessibilityLabel={t.healthProfile.children.label}
+                style={!canAccess ? { opacity: 0.5 } : undefined}
               />
             </View>
           </View>
@@ -214,7 +224,10 @@ export default function HealthProfileScreen() {
           className="px-4 mb-4"
         >
           <PressableScale
-            onPress={() => router.push("/settings/exclusions" as any)}
+            onPress={() => {
+              if (!canAccess) { setShowPadlock(true); return; }
+              router.push("/settings/exclusions" as any);
+            }}
             accessibilityRole="button"
             accessibilityLabel={t.healthProfile.allergens.description}
           >
@@ -262,6 +275,11 @@ export default function HealthProfileScreen() {
           </Animated.View>
         )}
         </ScrollView>
+        <PadlockBottomSheet
+          visible={showPadlock}
+          onClose={() => setShowPadlock(false)}
+          description={t.padlock.healthDescription}
+        />
       </SafeAreaView>
     </View>
   );

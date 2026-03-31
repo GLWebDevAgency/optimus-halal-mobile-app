@@ -132,6 +132,7 @@ export type { StoreSearchResult, AddressSearchResult, SearchResult } from './use
 // ============================================
 
 export { usePremium } from './usePremium';
+export { useCanAccessPremiumData, useEffectiveMadhab } from './useTrialGuard';
 
 // ============================================
 // LOCAL DATA SYNC HOOK

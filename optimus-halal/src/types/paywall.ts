@@ -11,4 +11,6 @@ export type PaywallTrigger =
   | "health_profile"    // Tried to access health/nutrition profile
   | "store_favorites"   // Tried to add > 10 store favorites
   | "search"            // Tried to search products by name
+  | "madhab_detail"     // Tapped verdict card to see per-madhab breakdown
+  | "feature_locked"    // Generic premium feature locked (padlock UX)
   | "generic";          // Default (no specific trigger)

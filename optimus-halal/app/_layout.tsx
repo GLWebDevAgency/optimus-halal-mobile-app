@@ -27,17 +27,18 @@ import { useTheme, useTranslation } from "@/hooks";
 import { initializeTokens, isAuthenticated as hasStoredTokens, clearTokens, setApiLanguage, setOnAuthFailure } from "@/services/api";
 import { DevScanSeeder } from "@/utils/seed-scan-history";
 import { useMe } from "@/hooks/useAuth";
+import { usePremium } from "@/hooks/usePremium";
 import { isRTL as isRTLLanguage } from "@/i18n";
 import { trpc, createTRPCClientForProvider } from "@/lib/trpc";
 import { useColorScheme as useNativeWindColorScheme } from "nativewind";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/ui";
 import { logger } from "@/lib/logger";
-import { initPurchases } from "@/services/purchases";
+import { initPurchases, logoutPurchases } from "@/services/purchases";
 import { useRemoteFlags } from "@/hooks/useRemoteFlags";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
-import { initSentry, setGuestContext, setUserContext } from "../src/lib/sentry";
-import { initAnalytics, identifyUser, setSuperProperties } from "../src/lib/analytics";
+import { initSentry, setGuestContext, setUserContext, clearSentryUser } from "../src/lib/sentry";
+import { initAnalytics, identifyUser, setSuperProperties, resetUser } from "../src/lib/analytics";
 import { getDeviceId } from "@/services/api/client";
 import { setNavigationBarTheme } from "@/lib/navigationBar";
 import {
@@ -272,6 +273,24 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
       refetchAuth: meQuery.refetch,
     };
   }, [tokensReady, meQuery.data, meQuery.isLoading, meQuery.isError, meQuery.refetch]);
+
+  // ── Force-logout: expired subscription ──
+  // If tokens exist but RevenueCat says not premium and meQuery resolved
+  // with a user → subscription expired, force logout to prevent stale access.
+  const { isPremium, isLoading: premiumLoading } = usePremium();
+
+  useEffect(() => {
+    if (premiumLoading) return;
+    const hasTokens = tokensReady && hasStoredTokens();
+    if (hasTokens && !isPremium && !meQuery.isLoading && meQuery.data) {
+      logger.warn("Auth", "Subscription expired — force logout");
+      clearTokens();
+      queryClient.clear();
+      resetUser();
+      clearSentryUser();
+      logoutPurchases().catch(() => {});
+    }
+  }, [tokensReady, isPremium, premiumLoading, meQuery.data, meQuery.isLoading]);
 
   // Step 3: Fetch remote feature flags (after auth resolves)
   // Enabled for authenticated users only — guests use hardcoded defaults.

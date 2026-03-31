@@ -51,6 +51,7 @@ export const profileRouter = router({
         madhab: z
           .enum(["hanafi", "shafii", "maliki", "hanbali", "general"])
           .optional(),
+        certificationPreferences: z.array(z.string()).max(20).optional(),
         isPregnant: z.boolean().optional(),
         hasChildren: z.boolean().optional(),
         notificationEnabled: z.boolean().optional(),

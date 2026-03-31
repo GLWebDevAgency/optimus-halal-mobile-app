@@ -19,14 +19,6 @@ const LANGUAGES: { code: Language; native: string; flag: string }[] = [
   { code: "fr", native: "Français", flag: "🇫🇷" },
   { code: "en", native: "English", flag: "🇬🇧" },
   { code: "ar", native: "العربية", flag: "🇸🇦" },
-  { code: "tr", native: "Türkçe", flag: "🇹🇷" },
-  { code: "it", native: "Italiano", flag: "🇮🇹" },
-  { code: "de", native: "Deutsch", flag: "🇩🇪" },
-  { code: "es", native: "Español", flag: "🇪🇸" },
-  { code: "pt", native: "Português", flag: "🇵🇹" },
-  { code: "nl", native: "Nederlands", flag: "🇳🇱" },
-  { code: "pl", native: "Polski", flag: "🇵🇱" },
-  { code: "ru", native: "Русский", flag: "🇷🇺" },
 ];
 
 export default function LanguageScreen() {

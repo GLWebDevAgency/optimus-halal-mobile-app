@@ -196,6 +196,18 @@ const FLAGS: FlagSeed[] = [
     variants: null,
   },
 
+  // ── Preferences ─────────────────────────────────────────
+  {
+    key: "certificationsPreferencesEnabled",
+    label: "Certifications préférées",
+    description: "Permet aux utilisateurs de sélectionner leurs certifieurs de confiance pour personnaliser les résultats de scan",
+    flagType: "boolean",
+    enabled: false,
+    defaultValue: false,
+    rolloutPercentage: 100,
+    variants: null,
+  },
+
   // ── Auth ──────────────────────────────────────────────────
   {
     key: "socialAuthEnabled",

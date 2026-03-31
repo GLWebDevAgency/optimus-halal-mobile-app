@@ -21,10 +21,10 @@ import { ArrowLeftIcon, CheckIcon, CheckCircleIcon, MagnifyingGlassIcon, PlusIco
 import Animated, { FadeIn, FadeInDown, SlideInDown, ZoomIn } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { PressableScale } from "@/components/ui/PressableScale";
-import { PremiumBackground, PremiumGate } from "@/components/ui";
+import { PremiumBackground, PadlockBottomSheet } from "@/components/ui";
 import { usePreferencesStore, useFeatureFlagsStore } from "@/store";
 import { useTheme } from "@/hooks/useTheme";
-import { useTranslation } from "@/hooks";
+import { useTranslation, useCanAccessPremiumData } from "@/hooks";
 import { AppIcon, type IconName } from "@/lib/icons";
 import { trpc } from "@/lib/trpc";
 import { isAuthenticated as hasStoredTokens } from "@/services/api";
@@ -201,6 +201,8 @@ export default function ExclusionsScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showPadlock, setShowPadlock] = useState(false);
+  const canAccess = useCanAccessPremiumData();
   const updateProfile = trpc.profile.updateProfile.useMutation();
   const { flags } = useFeatureFlagsStore();
 
@@ -298,7 +300,10 @@ export default function ExclusionsScreen() {
     
     return (
       <PressableScale
-        onPress={() => toggleExclusion(allergen.id)}
+        onPress={() => {
+          if (!canAccess) { setShowPadlock(true); return; }
+          toggleExclusion(allergen.id);
+        }}
         style={{
           width: "100%",
           aspectRatio: 1,
@@ -306,6 +311,7 @@ export default function ExclusionsScreen() {
           padding: 12,
           alignItems: "center",
           justifyContent: "center",
+          opacity: canAccess ? 1 : 0.5,
           backgroundColor: selected ? (isDark ? "rgba(212,175,55,0.15)" : "rgba(212,175,55,0.1)") : (isDark ? "rgba(255,255,255,0.03)" : themeColors.card),
           borderWidth: selected ? 2 : 1,
           borderColor: selected ? GOLD : (isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)"),
@@ -407,13 +413,17 @@ export default function ExclusionsScreen() {
         </View>
         
         <Pressable
-          onPress={() => toggleExclusion(item.id)}
+          onPress={() => {
+            if (!canAccess) { setShowPadlock(true); return; }
+            toggleExclusion(item.id);
+          }}
           style={{
             width: 44,
             height: 44,
             borderRadius: 22,
             alignItems: "center",
             justifyContent: "center",
+            opacity: canAccess ? 1 : 0.5,
           }}
           accessibilityRole="button"
           accessibilityLabel={`Retirer ${item.name}`}
@@ -476,7 +486,10 @@ export default function ExclusionsScreen() {
 
         {/* Finish Button */}
         <PressableScale
-          onPress={handleSave}
+          onPress={() => {
+            if (!canAccess) { setShowPadlock(true); return; }
+            handleSave();
+          }}
           style={{
             width: 40,
             height: 40,
@@ -499,7 +512,6 @@ export default function ExclusionsScreen() {
         </PressableScale>
       </Animated.View>
 
-      <PremiumGate feature="healthProfile" trigger="health_profile">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
@@ -585,6 +597,8 @@ export default function ExclusionsScreen() {
             <TextInput
               value={searchQuery}
               onChangeText={handleSearchChange}
+              editable={canAccess}
+              onPressIn={() => { if (!canAccess) setShowPadlock(true); }}
               placeholder={t.exclusions.searchPlaceholder}
               placeholderTextColor={themeColors.textSecondary}
               style={{
@@ -593,6 +607,7 @@ export default function ExclusionsScreen() {
                 paddingLeft: 12,
                 fontSize: 14,
                 color: themeColors.textPrimary,
+                opacity: canAccess ? 1 : 0.5,
               }}
               accessibilityLabel="Rechercher un ingrédient ou additif"
               accessibilityHint="Saisissez le nom d'un ingrédient ou additif à exclure"
@@ -639,7 +654,10 @@ export default function ExclusionsScreen() {
               {filteredSuggestions.slice(0, 4).map((suggestion, index) => (
                 <PressableScale
                   key={suggestion.id}
-                  onPress={() => addFromSearch(suggestion.id)}
+                  onPress={() => {
+                    if (!canAccess) { setShowPadlock(true); return; }
+                    addFromSearch(suggestion.id);
+                  }}
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
@@ -783,6 +801,7 @@ export default function ExclusionsScreen() {
           {/* Add another exclusion button */}
           <PressableScale
             onPress={() => {
+              if (!canAccess) { setShowPadlock(true); return; }
               // Focus search input or show modal for adding
               setShowSuggestions(true);
             }}
@@ -793,6 +812,7 @@ export default function ExclusionsScreen() {
               borderWidth: 1,
               borderStyle: "dashed",
               borderColor: isDark ? "rgba(212,175,55,0.2)" : "rgba(212,175,55,0.3)",
+              opacity: canAccess ? 1 : 0.5,
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "center",
@@ -833,12 +853,15 @@ export default function ExclusionsScreen() {
         }}
       >
         <PressableScale
-          onPress={handleSave}
+          onPress={() => {
+            if (!canAccess) { setShowPadlock(true); return; }
+            handleSave();
+          }}
           disabled={isSaving}
           style={{
             borderRadius: 16,
             overflow: "hidden",
-            opacity: isSaving ? 0.6 : 1,
+            opacity: !canAccess ? 0.5 : isSaving ? 0.6 : 1,
             shadowColor: "#10b981",
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.4,
@@ -874,7 +897,11 @@ export default function ExclusionsScreen() {
           </LinearGradient>
         </PressableScale>
         </Animated.View>
-      </PremiumGate>
+      <PadlockBottomSheet
+        visible={showPadlock}
+        onClose={() => setShowPadlock(false)}
+        description={t.padlock.exclusionsDescription}
+      />
       </SafeAreaView>
     </View>
   );
