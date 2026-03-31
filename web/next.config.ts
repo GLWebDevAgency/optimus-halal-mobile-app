@@ -39,13 +39,13 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' https://us-assets.i.posthog.com https://va.vercel-scripts.com",
+              "script-src 'self' 'unsafe-inline' https://eu-assets.i.posthog.com https://va.vercel-scripts.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: blob: https://*.googleusercontent.com https://pub-f871593571bd4d04a86a25015aac1057.r2.dev",
               "font-src 'self' https://fonts.gstatic.com",
               [
                 "connect-src 'self'",
-                "https://us.i.posthog.com",
+                "https://eu.i.posthog.com",
                 "https://vitals.vercel-insights.com",
                 "https://va.vercel-scripts.com",
                 "https://api.naqiy.app",
