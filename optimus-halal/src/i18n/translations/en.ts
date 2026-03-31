@@ -1916,4 +1916,18 @@ export const en: TranslationKeys = {
     unlock: "Discover Naqiy+",
     close: "Close",
   },
+  update: {
+    forceTitle: "Update Required",
+    forceDescription:
+      "A new version of Naqiy is available. Update to continue using the app.",
+    updateNow: "Update Now",
+    otaTitle: "Improvement Available",
+    otaDescription:
+      "An improvement is ready to install. Restart to enjoy it.",
+    otaRestart: "Restart",
+    otaLater: "Later",
+    maintenance: "Under Maintenance",
+    maintenanceDescription:
+      "Naqiy is under maintenance. We'll be back very soon.",
+  },
 };

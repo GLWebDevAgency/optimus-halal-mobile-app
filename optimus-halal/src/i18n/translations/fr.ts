@@ -1952,6 +1952,20 @@ export const fr = {
     unlock: "Découvrir Naqiy+",
     close: "Fermer",
   },
+  update: {
+    forceTitle: "Mise à jour requise",
+    forceDescription:
+      "Une nouvelle version de Naqiy est disponible. Mettez à jour pour continuer à utiliser l'application.",
+    updateNow: "Mettre à jour",
+    otaTitle: "Amélioration disponible",
+    otaDescription:
+      "Une amélioration est prête à être installée. Redémarrez pour en profiter.",
+    otaRestart: "Redémarrer",
+    otaLater: "Plus tard",
+    maintenance: "Maintenance en cours",
+    maintenanceDescription:
+      "Naqiy est en cours de maintenance. Nous serons de retour très bientôt.",
+  },
 };
 
 export type TranslationKeys = typeof fr;

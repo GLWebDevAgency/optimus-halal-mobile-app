@@ -126,6 +126,7 @@ stitch.zip
 .claude/worktrees/
 .claude/audit-*.md
 .vercel
+.wrangler/
 .env*.local
 
 # ── Generated trackers ─────────────────────────────────────

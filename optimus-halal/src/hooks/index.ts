@@ -141,6 +141,13 @@ export { useCanAccessPremiumData, useEffectiveMadhab } from './useTrialGuard';
 export { useSyncLocalData } from './useSyncLocalData';
 
 // ============================================
+// APP UPDATE HOOK
+// ============================================
+
+export { useAppUpdate } from './useAppUpdate';
+export type { AppUpdateState } from './useAppUpdate';
+
+// ============================================
 // IMAGE UPLOAD HOOK (R2)
 // ============================================
 // NOT barrel-exported: expo-image-manipulator requires native module.

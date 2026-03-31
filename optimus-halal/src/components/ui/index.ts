@@ -25,6 +25,7 @@ export { PremiumGate } from "./PremiumGate";
 export { PadlockBottomSheet } from "./PadlockBottomSheet";
 export type { PadlockBottomSheetProps } from "./PadlockBottomSheet";
 
+export { ForceUpdateModal, type ForceUpdateModalProps } from "./ForceUpdateModal";
 export { PressableScale } from "./PressableScale";
 export { StatusPill } from "./StatusPill";
 export { TrustRing } from "./TrustRing";

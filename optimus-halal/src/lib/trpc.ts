@@ -13,6 +13,7 @@ import { httpBatchLink } from "@trpc/client";
 import superjson from "superjson";
 import type { AppRouter } from "@backend/trpc/router";
 import { API_CONFIG } from "@services/api/config";
+import { APP_VERSION } from "@/utils/appVersion";
 import {
   getAccessToken,
   getRefreshToken,
@@ -112,7 +113,7 @@ export function createTRPCClientForProvider() {
         headers: async () => {
           const headers: Record<string, string> = {
             "Content-Type": "application/json",
-            "X-App-Version": "1.0.0",
+            "X-App-Version": APP_VERSION,
             "X-Platform": "mobile",
           };
 

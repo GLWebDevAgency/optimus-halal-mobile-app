@@ -36,6 +36,8 @@
  *   - authMode           → welcome.tsx (route vers login ou magic-link)
  */
 
+import { APP_VERSION } from "@/utils/appVersion";
+
 export const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN ?? "";
 export const POSTHOG_API_KEY = process.env.EXPO_PUBLIC_POSTHOG_API_KEY ?? "";
 export const POSTHOG_HOST = "https://eu.i.posthog.com";
@@ -117,7 +119,7 @@ export const defaultFeatureFlags: FeatureFlags = {
 export const APP_CONFIG = {
   APP_NAME: "Naqiy",
   TAGLINE: "Scanne. Comprends. Choisis.",
-  VERSION: "1.0.0",
+  VERSION: APP_VERSION,
   MIN_VERSION_REQUIRED: "1.0.0",
   SUPPORT_EMAIL: "support@naqiy.app",
   PRIVACY_POLICY_URL: "https://naqiy.app/confidentialite",

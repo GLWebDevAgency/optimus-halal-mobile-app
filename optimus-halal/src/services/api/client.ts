@@ -12,6 +12,7 @@ import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import superjson from "superjson";
 import { API_CONFIG, STORAGE_KEYS, HTTP_STATUS, ERROR_CODES } from "./config";
 import { logger } from "@/lib/logger";
+import { APP_VERSION } from "@/utils/appVersion";
 
 import type { AppRouter } from "@backend/trpc/router";
 import type * as Types from "./types";
@@ -259,7 +260,7 @@ function createApiClient() {
           const headers: Record<string, string> = {
             "Content-Type": "application/json",
             "Accept-Language": currentLanguage,
-            "X-App-Version": "1.0.0",
+            "X-App-Version": APP_VERSION,
             "X-Platform": "mobile",
           };
 

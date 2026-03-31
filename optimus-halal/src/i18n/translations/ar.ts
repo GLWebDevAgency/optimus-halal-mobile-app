@@ -1797,4 +1797,18 @@ export const ar: TranslationKeys = {
     unlock: "اكتشف نقيّ+",
     close: "إغلاق",
   },
+  update: {
+    forceTitle: "تحديث مطلوب",
+    forceDescription:
+      "يتوفر إصدار جديد من نقيّ. قم بالتحديث لمتابعة استخدام التطبيق.",
+    updateNow: "تحديث الآن",
+    otaTitle: "تحسين متاح",
+    otaDescription:
+      "تحسين جاهز للتثبيت. أعد التشغيل للاستمتاع به.",
+    otaRestart: "إعادة التشغيل",
+    otaLater: "لاحقاً",
+    maintenance: "صيانة جارية",
+    maintenanceDescription:
+      "نقيّ تحت الصيانة. سنعود قريبًا جدًا.",
+  },
 };

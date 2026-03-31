@@ -16,6 +16,11 @@ import { sql } from "drizzle-orm";
 import { initSentry, Sentry } from "./lib/sentry.js";
 import { webhookRoutes } from "./routes/webhook.js";
 import { internalRoutes } from "./routes/internal.js";
+import { appConfigRoutes } from "./routes/app-config.js";
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
+const pkg = require("../../package.json") as { version: string };
 
 initSentry();
 
@@ -56,7 +61,7 @@ app.get("/health", async (c) => {
   const checks: Record<string, string> = {
     status: "ok",
     service: "naqiy-bff",
-    version: "1.0.0",
+    version: pkg.version,
     timestamp: new Date().toISOString(),
   };
 
@@ -87,6 +92,9 @@ app.get("/health", async (c) => {
 
   return c.json(checks, checks.status === "ok" ? 200 : 503);
 });
+
+// ── App Config (public) ─────────────────────────────────
+app.route("/", appConfigRoutes);
 
 // ── Webhook Routes ──────────────────────────────────────
 app.use("/webhooks/*", rateLimit({ windowMs: 60_000, max: 30, keyPrefix: "rl:webhook" }));

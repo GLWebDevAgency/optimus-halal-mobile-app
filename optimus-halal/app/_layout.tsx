@@ -13,6 +13,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { focusManager, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  Alert,
   AppState,
   I18nManager,
   View,
@@ -28,6 +29,9 @@ import { initializeTokens, isAuthenticated as hasStoredTokens, clearTokens, setA
 import { DevScanSeeder } from "@/utils/seed-scan-history";
 import { useMe } from "@/hooks/useAuth";
 import { usePremium } from "@/hooks/usePremium";
+import { useAppUpdate } from "@/hooks/useAppUpdate";
+import { ForceUpdateModal } from "@/components/ui/ForceUpdateModal";
+import { APP_VERSION } from "@/utils/appVersion";
 import { isRTL as isRTLLanguage } from "@/i18n";
 import { trpc, createTRPCClientForProvider } from "@/lib/trpc";
 import { useColorScheme as useNativeWindColorScheme } from "nativewind";
@@ -222,7 +226,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
     getDeviceId().then((deviceId) => {
       setGuestContext(deviceId);
       setSuperProperties({
-        app_version: "1.0.0",
+        app_version: APP_VERSION,
         tier: "guest",
       });
     }).catch(() => {});
@@ -292,7 +296,23 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
     }
   }, [tokensReady, isPremium, premiumLoading, meQuery.data, meQuery.isLoading]);
 
-  // Step 3: Fetch remote feature flags (after auth resolves)
+  // Step 3: Version check + OTA updates
+  const updateState = useAppUpdate();
+
+  // OTA prompt — non-blocking alert when a new OTA update is downloaded
+  useEffect(() => {
+    if (!updateState.otaReady) return;
+    Alert.alert(
+      t.update.otaTitle,
+      t.update.otaDescription,
+      [
+        { text: t.update.otaLater, style: "cancel" },
+        { text: t.update.otaRestart, onPress: () => updateState.applyOtaUpdate() },
+      ],
+    );
+  }, [updateState.otaReady]);
+
+  // Step 4: Fetch remote feature flags (after auth resolves)
   // Enabled for authenticated users only — guests use hardcoded defaults.
   // Polls every 5min, persists to MMKV for instant next startup.
   useRemoteFlags({ enabled: !!meQuery.data });
@@ -376,6 +396,12 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider value={authValue}>
       {__DEV__ && !isInitializing && <DevScanSeeder isAuthenticated={!!meQuery.data} />}
       {children}
+      {/* Force update — blocks entire UI when app version < minVersion */}
+      <ForceUpdateModal
+        visible={updateState.forceUpdate || updateState.maintenance}
+        storeUrl={updateState.storeUrl}
+        message={updateState.message}
+      />
       {/* AnimatedSplash overlays content — renders on top, exits when ready */}
       {!splashDone && (
         <Pressable
