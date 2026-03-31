@@ -20,7 +20,7 @@ import { appConfigRoutes } from "./routes/app-config.js";
 import { createRequire } from "module";
 
 const require = createRequire(import.meta.url);
-const pkg = require("../../package.json") as { version: string };
+const pkg = require("../package.json") as { version: string };
 
 initSentry();
 
