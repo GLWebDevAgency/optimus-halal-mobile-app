@@ -112,9 +112,10 @@ export interface CertifierInfo {
   /** Certifier slug for CertifierLogo lookup (e.g. "argml-mosquee-de-lyon") */
   id?: string;
   name: string;
-  shortName: string;
-  logoUrl: string | null;
+  shortName?: string;
+  logoUrl?: string | null;
   trustScore: number;
+  [key: string]: unknown;
 }
 
 // ─── Alternatives UI ───────────────────────

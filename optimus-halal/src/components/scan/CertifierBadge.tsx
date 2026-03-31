@@ -87,7 +87,7 @@ export function CertifierBadge({ certifier, size }: CertifierBadgeProps) {
             ]}
             numberOfLines={1}
           >
-            {certifier.shortName.charAt(0).toUpperCase()}
+            {(certifier.shortName ?? certifier.name).charAt(0).toUpperCase()}
           </Text>
         )}
       </View>
