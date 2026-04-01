@@ -111,8 +111,11 @@ export const alertRouter = router({
     }),
 
   getUnreadCount: protectedProcedure.query(async ({ ctx }) => {
-    const [result] = await ctx.db
-      .select({ count: sql<number>`count(*)::int` })
+    const rows = await ctx.db
+      .select({
+        severity: alerts.severity,
+        count: sql<number>`count(*)::int`,
+      })
       .from(alerts)
       .leftJoin(
         alertReadStatus,
@@ -127,9 +130,20 @@ export const alertRouter = router({
           sql`(${alerts.expiresAt} IS NULL OR ${alerts.expiresAt} > NOW())`,
           sql`(${alertReadStatus.isRead} IS NULL OR ${alertReadStatus.isRead} = false)`
         )
-      );
+      )
+      .groupBy(alerts.severity);
 
-    return { count: result?.count ?? 0 };
+    let urgent = 0;
+    let info = 0;
+    for (const row of rows) {
+      if (row.severity === "critical" || row.severity === "warning") {
+        urgent += row.count;
+      } else {
+        info += row.count;
+      }
+    }
+
+    return { count: urgent + info, urgent, info };
   }),
 
   markAllAsRead: protectedProcedure.mutation(async ({ ctx }) => {

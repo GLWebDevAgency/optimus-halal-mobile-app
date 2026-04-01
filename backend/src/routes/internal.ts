@@ -14,6 +14,7 @@ import { redis } from "../lib/redis.js";
 import { logger } from "../lib/logger.js";
 import { Sentry } from "../lib/sentry.js";
 import { refreshStores } from "../services/store-refresh.service.js";
+import { syncRecalls } from "../services/recall-sync.service.js";
 import { sendPushNotifications } from "../services/push-notifications.js";
 import { devices, pushTokens, users } from "../db/schema/index.js";
 import { randomUUID } from "crypto";
@@ -86,6 +87,76 @@ internalRoutes.get("/refresh-stores/status", async (c) => {
   const [lastRun, lockActive] = await Promise.all([
     redis.get("store-refresh:last-run"),
     redis.get("lock:store-refresh"),
+  ]);
+
+  return c.json({
+    lastRun: lastRun ? JSON.parse(lastRun) : null,
+    isRunning: lockActive !== null,
+  });
+});
+
+// ── POST /sync-recalls ───────────────────────────────────────
+// Syncs food safety recalls from RappelConso (data.economie.gouv.fr).
+// Called daily at 6:00 CET by GitHub Actions cron.
+
+internalRoutes.post("/sync-recalls", async (c) => {
+  if (!verifyCronSecret(c)) {
+    return c.json({ error: "Non autorisé" }, 401);
+  }
+
+  const lockId = randomUUID();
+  const acquired = await redis.set("lock:recall-sync", lockId, "EX", 120, "NX");
+
+  if (!acquired) {
+    return c.json({ error: "Sync rappels déjà en cours" }, 409);
+  }
+
+  // Parse optional query params
+  const autoApprove = c.req.query("auto_approve") !== "false";
+
+  (async () => {
+    try {
+      const result = await syncRecalls({ autoApprove });
+      await redis.setex(
+        "recall-sync:last-run",
+        7 * 86400,
+        JSON.stringify(result),
+      );
+    } catch (err) {
+      logger.error("Sync rappels échoué", {
+        error: err instanceof Error ? err.message : String(err),
+      });
+      Sentry.captureException(err);
+      await redis.setex(
+        "recall-sync:last-run",
+        7 * 86400,
+        JSON.stringify({
+          success: false,
+          completedAt: new Date().toISOString(),
+          error: err instanceof Error ? err.message : String(err),
+        }),
+      );
+    } finally {
+      const currentLock = await redis.get("lock:recall-sync");
+      if (currentLock === lockId) {
+        await redis.del("lock:recall-sync");
+      }
+    }
+  })();
+
+  return c.json({ status: "accepted" }, 202);
+});
+
+// ── GET /sync-recalls/status ─────────────────────────────────
+
+internalRoutes.get("/sync-recalls/status", async (c) => {
+  if (!verifyCronSecret(c)) {
+    return c.json({ error: "Non autorisé" }, 401);
+  }
+
+  const [lastRun, lockActive] = await Promise.all([
+    redis.get("recall-sync:last-run"),
+    redis.get("lock:recall-sync"),
   ]);
 
   return c.json({
