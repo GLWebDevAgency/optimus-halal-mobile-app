@@ -43,6 +43,7 @@ interface FeedItem {
   link: string;
   pubDate: string | null;
   description: string | null;
+  imageUrl: string | null;
 }
 
 interface SourceReport {
@@ -71,8 +72,16 @@ function parseRssItems(xmlText: string): FeedItem[] {
       ?? block.match(/<description>(.*?)<\/description>/)?.[1]
       ?? null;
 
+    // Extract image: media:content, enclosure, or img in description
+    const imageUrl =
+      block.match(/<media:content[^>]+url="([^"]+)"/)?.[1]
+      ?? block.match(/<enclosure[^>]+url="([^"]+)"[^>]+type="image/)?.[1]
+      ?? block.match(/<image>([\s\S]*?)<url>(.*?)<\/url>/)?.[2]
+      ?? block.match(/<img[^>]+src="([^"]+)"/)?.[1]
+      ?? null;
+
     if (title) {
-      items.push({ title: title.trim(), link: link.trim(), pubDate, description });
+      items.push({ title: title.trim(), link: link.trim(), pubDate, description, imageUrl });
     }
   }
 
@@ -94,9 +103,12 @@ function parseAtomItems(xmlText: string): FeedItem[] {
       ?? block.match(/<updated>(.*?)<\/updated>/)?.[1]
       ?? null;
     const description = block.match(/<summary.*?>(.*?)<\/summary>/)?.[1] ?? null;
+    const imageUrl = block.match(/<media:content[^>]+url="([^"]+)"/)?.[1]
+      ?? block.match(/<link[^>]+rel="enclosure"[^>]+href="([^"]+)"/)?.[1]
+      ?? null;
 
     if (title) {
-      items.push({ title: title.trim(), link: link.trim(), pubDate, description });
+      items.push({ title: title.trim(), link: link.trim(), pubDate, description, imageUrl });
     }
   }
 
