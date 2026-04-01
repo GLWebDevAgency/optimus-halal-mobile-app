@@ -1651,6 +1651,20 @@ export const ar: TranslationKeys = {
     themeDark: "داكن",
   },
 
+  // Product recalls (scan-time government recall alerts)
+  recalls: {
+    title: "استرجاع منتج",
+    subtitle: "المنتج الذي قمت بمسحه يخضع لعملية استرجاع رسمية.",
+    reasonTitle: "سبب الاسترجاع",
+    risksTitle: "المخاطر الصحية",
+    actionsTitle: "ماذا تفعل؟",
+    precautionsTitle: "الاحتياطات الصحية",
+    distributorsTitle: "نقاط البيع المعنية",
+    geoTitle: "المنطقة الجغرافية",
+    publishedOn: "نُشر في",
+    viewOfficial: "عرض الإشعار الرسمي",
+  },
+
   // Verdict summary (intelligent fiqh + certifier synthesis)
   verdict: {
     fiqh4Halal: "وفقاً للمصادر الفقهية للمذاهب الأربعة، تركيبة هذا المنتج متوافقة مع متطلبات الحلال.",

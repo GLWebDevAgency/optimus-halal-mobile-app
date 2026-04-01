@@ -1777,6 +1777,20 @@ export const en: TranslationKeys = {
     themeDark: "Dark",
   },
 
+  // Product recalls (scan-time government recall alerts)
+  recalls: {
+    title: "Product Recall",
+    subtitle: "The product you just scanned is subject to an official recall.",
+    reasonTitle: "Recall reason",
+    risksTitle: "Health risks",
+    actionsTitle: "What to do",
+    precautionsTitle: "Health precautions",
+    distributorsTitle: "Affected retailers",
+    geoTitle: "Geographic scope",
+    publishedOn: "Published on",
+    viewOfficial: "View official notice",
+  },
+
   // Verdict summary (intelligent fiqh + certifier synthesis)
   verdict: {
     fiqh4Halal: "According to the juridical sources (fiqh) of all 4 schools, this product's composition meets halal requirements.",

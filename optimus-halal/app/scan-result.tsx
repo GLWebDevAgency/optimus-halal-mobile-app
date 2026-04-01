@@ -60,6 +60,7 @@ import { FeedbackBar } from "@/components/scan/FeedbackBar";
 import { ScholarlySourceSheet } from "@/components/scan/ScholarlySourceSheet";
 import { NaqiyAdviceSheet } from "@/components/scan/NaqiyAdviceSheet";
 import { MadhabUpsellSheet } from "@/components/scan/MadhabUpsellSheet";
+import { RecallAlertSheet, type RecallData } from "@/components/scan/RecallAlertSheet";
 import { ScanLoadingSkeleton } from "@/components/scan/ScanLoadingSkeleton";
 import { ScanErrorState, ScanNotFoundState } from "@/components/scan/ScanStates";
 import { AlertPillStrip } from "@/components/scan/AlertPillStrip";
@@ -137,6 +138,7 @@ export default function ScanResultScreen() {
     if (barcode !== prevBarcode.current) {
       prevBarcode.current = barcode;
       hasFired.current = false;
+      recallAutoOpened.current = false;
       // Reset scroll position + sticky header state
       scrollY.value = 0;
       scrollRef.current?.scrollTo?.({ y: 0, animated: false });
@@ -326,6 +328,22 @@ export default function ScanResultScreen() {
   const [showMadhabUpsellSheet, setShowMadhabUpsellSheet] = useState(false);
   const handleCloseMadhabUpsell = useCallback(() => setShowMadhabUpsellSheet(false), []);
   const handleMadhabUpgrade = useCallback(() => showPaywall("madhab_detail"), [showPaywall]);
+
+  // ── Recall Alert Sheet (scan-time product recall) ──
+  const [showRecallSheet, setShowRecallSheet] = useState(false);
+  const handleCloseRecall = useCallback(() => setShowRecallSheet(false), []);
+  const recallQuery = trpc.recall.checkRecall.useQuery(
+    { barcode: barcode ?? "" },
+    { enabled: !!barcode && scanMutation.isSuccess },
+  );
+  // Auto-open recall sheet when a recall is found
+  const recallAutoOpened = useRef(false);
+  useEffect(() => {
+    if (recallQuery.data && !recallAutoOpened.current) {
+      recallAutoOpened.current = true;
+      setShowRecallSheet(true);
+    }
+  }, [recallQuery.data]);
 
   // ── Halal Analysis Bottom Sheet ──────────────
   const [showHalalAnalysisSheet, setShowHalalAnalysisSheet] = useState(false);
@@ -708,7 +726,7 @@ export default function ScanResultScreen() {
   const anySheetOpen =
     showTrustScoreSheet || showCertifierPracticesSheet || showScoreDetailSheet ||
     !!selectedMadhab || showHalalAnalysisSheet || !!selectedNutrient ||
-    selectedScholarlyData !== null || showNaqiyAdviceSheet || showMadhabUpsellSheet || infoSheet !== null;
+    selectedScholarlyData !== null || showNaqiyAdviceSheet || showMadhabUpsellSheet || showRecallSheet || infoSheet !== null;
 
   useEffect(() => {
     bgScale.value = withSpring(anySheetOpen ? 0.93 : 1, { damping: 22, stiffness: 200, mass: 0.8 });
@@ -1398,6 +1416,12 @@ export default function ScanResultScreen() {
         onUpgrade={handleMadhabUpgrade}
         madhabVerdicts={madhabVerdicts}
         certifierData={certifierData}
+      />
+
+      <RecallAlertSheet
+        visible={showRecallSheet}
+        onClose={handleCloseRecall}
+        recall={recallQuery.data ?? null}
       />
 
       {/* ── Generic InfoSheet (progressive disclosure for all detail views) ── */}

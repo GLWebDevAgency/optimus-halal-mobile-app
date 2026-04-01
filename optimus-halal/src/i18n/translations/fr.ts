@@ -1805,6 +1805,20 @@ export const fr = {
     themeDark: "Sombre",
   },
 
+  // Product recalls (scan-time government recall alerts)
+  recalls: {
+    title: "Rappel produit",
+    subtitle: "Le produit que vous venez de scanner fait l'objet d'un rappel officiel.",
+    reasonTitle: "Motif du rappel",
+    risksTitle: "Risques pour la sante",
+    actionsTitle: "Que faire ?",
+    precautionsTitle: "Precautions sanitaires",
+    distributorsTitle: "Points de vente concernes",
+    geoTitle: "Zone geographique",
+    publishedOn: "Publie le",
+    viewOfficial: "Voir la fiche officielle",
+  },
+
   // Verdict summary (intelligent fiqh + certifier synthesis)
   verdict: {
     fiqh4Halal: "D'après les sources juridiques (fiqh) des 4 écoles, la composition de ce produit est conforme aux exigences du halal.",
