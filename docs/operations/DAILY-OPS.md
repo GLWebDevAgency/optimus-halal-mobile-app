@@ -83,34 +83,43 @@ Trois systemes alimentent l'app mobile :
 
 ## 4. Veille automatique (Claude Code Triggers)
 
-### Concept
-Claude Code peut executer des taches planifiees (triggers/schedules) qui :
-- Surveillent les flux RSS de Al-Kanz, AVS, Achahada
-- Detectent du nouveau contenu
-- Te notifient avec un resume + suggestion de draft
+### Architecture
+Claude Cowork (app desktop) execute une tache planifiee locale avec :
+- Acces complet au filesystem (repo Naqiy)
+- Bash (curl, node, pnpm, docker, psql)
+- Internet complet (fetch RSS, scrape)
+- DB locale via Docker (PgBouncer port 6432)
+- Modele Opus 4.6 (analyse ultra-poussee)
 
 ### Configuration
-
-Depuis ton terminal, lance :
-
-```bash
-# Veille quotidienne Al-Kanz + AVS (9h chaque matin)
-claude schedule create \
-  --name "naqiy-veille-halal" \
-  --cron "0 9 * * *" \
-  --prompt "Verifie les derniers articles sur al-kanz.org/feed et avs.fr/actualites. Pour chaque nouveau contenu depuis hier, genere un resume de 2-3 lignes et propose un draft d'alerte ou d'article pour Naqiy. Indique la categorie suggeree (fraude/boycott/certification/communaute pour les alertes, ou blog/partner_news/educational pour les articles). Formate en Markdown."
-```
+1. Ouvrir l'app Claude Desktop → onglet **Cowork** → **Programme**
+2. Cliquer **"+ Nouvelle tache"**
+3. Copier les valeurs depuis `docs/operations/COWORK-VEILLE-PROMPT.md`
+4. Activer **"Maintenir actif"** pour que la tache s'execute meme quand l'app est en arriere-plan
 
 ### Ce que ca fait
-1. Chaque matin a 9h, Claude verifie les sources
-2. S'il y a du nouveau, il te le dit dans ta conversation Claude Code
-3. Tu decides de creer l'alerte/article ou d'ignorer
+1. Chaque matin a 9h, Claude execute le script `backend/scripts/veille-content.ts`
+2. Le script fetch les RSS (Al-Kanz, etc.), detecte les nouveautes
+3. Claude analyse chaque element avec Opus 4.6 et decide : alerte ou article ?
+4. Il insere des **drafts** en DB (is_active=false pour alertes, is_published=false pour articles)
+5. Tu ouvres le dashboard → section brouillons → valides ou modifies
 
-### Sources a surveiller (extensible)
-- `https://www.al-kanz.org/feed/` — RSS halal France
-- `https://www.avs.fr/` — Actualites AVS
-- `https://achahada.com/` — Actualites Achahada
-- `https://rappel.conso.gouv.fr/` — Rappels gouvernementaux (deja automatise)
+### Sources surveillees
+Gerees dans la table `content_sources` (dashboard → admin ou psql) :
+- Al-Kanz (RSS) — halal France, analyses, investigations
+- AVS (website) — certifications, actualites
+- Achahada (website) — certifications
+- BDS France (website) — boycott
+- RappelConso (website) — rappels (deja automatise par le cron backend)
+
+### Ajouter une source
+Dashboard admin → Sources (a venir) ou via psql :
+```bash
+docker exec backend-postgis-1 psql -U postgres -d optimus_halal -c "
+INSERT INTO content_sources (name, url, type, target_type, category_hint)
+VALUES ('Nom', 'https://...', 'rss', 'auto', NULL);
+"
+```
 
 ---
 
