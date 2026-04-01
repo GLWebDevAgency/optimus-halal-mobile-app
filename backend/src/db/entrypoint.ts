@@ -122,6 +122,8 @@ try {
     "referrals", "devices",
     // Admin
     "admins",
+    // Product Safety
+    "product_recalls",
   ];
   const missing = requiredTables.filter((t) => !tables.includes(t));
 

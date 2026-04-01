@@ -1,0 +1,50 @@
+name: Sync RappelConso Recalls
+
+on:
+  schedule:
+    # Daily at 6:00 AM CET (5:00 UTC)
+    - cron: '0 5 * * *'
+  workflow_dispatch: # Manual trigger from GitHub UI
+
+jobs:
+  sync:
+    name: Sync Recalls
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    strategy:
+      matrix:
+        environment: [preview, production]
+
+    steps:
+      - name: Sync RappelConso recalls
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          API_URL: ${{ matrix.environment == 'production' && secrets.PRODUCTION_API_URL || secrets.PREVIEW_API_URL }}
+          ENV_NAME: ${{ matrix.environment }}
+        run: |
+          if [ -z "$API_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "Skipping ${ENV_NAME} — secrets not configured"
+            exit 0
+          fi
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -H "Content-Type: application/json" \
+            "${API_URL}/internal/sync-recalls")
+
+          BODY=$(echo "$RESPONSE" | head -n -1)
+          STATUS=$(echo "$RESPONSE" | tail -n 1)
+
+          echo "HTTP Status: ${STATUS}"
+          echo "Response: ${BODY}"
+
+          if [ "${STATUS}" = "202" ]; then
+            echo "Recall sync accepted on ${ENV_NAME}"
+          elif [ "${STATUS}" = "409" ]; then
+            echo "Recall sync already running on ${ENV_NAME} — skipping"
+          else
+            echo "Recall sync failed on ${ENV_NAME} (HTTP ${STATUS})"
+            exit 1
+          fi
