@@ -55,12 +55,12 @@ SOURCE_IMG="URL_DE_LIMAGE_SOURCE"
 
 curl -sL "$SOURCE_IMG" -o /tmp/veille-cover.jpg
 
-cd backend && node -e "
+cd backend && source .env && node -e "
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const fs = require('fs');
 const s3 = new S3Client({
   region: 'auto',
-  endpoint: 'https://691d06dac6c6375862a1feed0517bd12.r2.cloudflarestorage.com',
+  endpoint: 'https://' + process.env.R2_ACCOUNT_ID + '.r2.cloudflarestorage.com',
   credentials: {
     accessKeyId: process.env.R2_ACCESS_KEY_ID,
     secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
@@ -68,11 +68,11 @@ const s3 = new S3Client({
 });
 const key = 'editorial/${YEAR_MONTH}/${SLUG}.jpg';
 s3.send(new PutObjectCommand({
-  Bucket: 'naqiy',
+  Bucket: process.env.R2_BUCKET_NAME || 'naqiy',
   Key: key,
   Body: fs.readFileSync('/tmp/veille-cover.jpg'),
   ContentType: 'image/jpeg',
-})).then(() => console.log('https://pub-f871593571bd4d04a86a25015aac1057.r2.dev/' + key));
+})).then(() => console.log('https://' + process.env.R2_PUBLIC_DOMAIN + '/' + key));
 "
 
 Note l'URL R2 retournee pour l'utiliser dans le draft.
@@ -176,10 +176,13 @@ Pour tester sans attendre le cron :
 
 ## Variables d'environnement requises
 
-Le dossier de travail doit avoir acces a :
-- `DATABASE_URL` (via .env ou en dur dans le script : `postgresql://postgres:postgres@localhost:6432/optimus_halal`)
-- `R2_ACCESS_KEY_ID` + `R2_SECRET_ACCESS_KEY` (dans backend/.env)
-- `UNSPLASH_ACCESS_KEY` (optionnel — fallback images generiques si absent)
+Toutes les variables sont dans `backend/.env` (gitignored, securise).
+Le prompt utilise `source .env` pour les charger avant les commandes node.
+
+Variables utilisees :
+- `DATABASE_URL` — connexion PgBouncer (`postgresql://postgres:postgres@localhost:6432/optimus_halal`)
+- `R2_ACCOUNT_ID` + `R2_ACCESS_KEY_ID` + `R2_SECRET_ACCESS_KEY` + `R2_PUBLIC_DOMAIN` — upload images
+- `UNSPLASH_ACCESS_KEY` — optionnel, fallback images generiques si absent
 
 ## Ajouter/modifier des sources
 

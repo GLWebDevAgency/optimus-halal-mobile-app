@@ -23,6 +23,7 @@ import { waitlistRouter } from "./routers/waitlist.js";
 import { featureFlagsRouter } from "./routers/feature-flags.js";
 import { analyticsRouter } from "./routers/analytics.js";
 import { recallRouter } from "./routers/recall.js";
+import { contentSourceRouter } from "./routers/content-source.js";
 
 export const appRouter = router({
   auth: authRouter,
@@ -49,6 +50,7 @@ export const appRouter = router({
   featureFlags: featureFlagsRouter,
   analytics: analyticsRouter,
   recall: recallRouter,
+  contentSource: contentSourceRouter,
 });
 
 export type AppRouter = typeof appRouter;

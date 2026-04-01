@@ -20,6 +20,7 @@ import {
   ToggleRight,
   FunnelSimple,
   ShieldWarning,
+  GlobeSimple,
 } from "@phosphor-icons/react"
 
 import {
@@ -109,6 +110,7 @@ const navItems = [
   { href: "/admin/articles", label: "Articles", icon: FileText, segment: "articles" },
   { href: "/admin/alerts", label: "Alertes", icon: Bell, segment: "alerts" },
   { href: "/admin/recalls", label: "Rappels Produit", icon: ShieldWarning, segment: "recalls" },
+  { href: "/admin/veille-sources", label: "Sources Veille", icon: GlobeSimple, segment: "veille-sources" },
   { href: "/admin/flags", label: "Feature Flags", icon: ToggleRight, segment: "flags" },
   { href: "/admin/settings", label: "Paramètres", icon: GearSix, segment: "settings" },
 ]
