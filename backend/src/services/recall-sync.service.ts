@@ -31,13 +31,14 @@ const PAGE_SIZE = 100;
 // ── Types ───────────────────────────────────────────────────
 
 /** Raw record shape from the RappelConso API */
+/** Raw record from RappelConso V2 API (gtin-trie dataset) */
 interface RappelConsoRecord {
-  reference_fiche: string;
+  numero_fiche: string;
   gtin?: number | null;
   categorie_produit?: string;
   sous_categorie_produit?: string;
   marque_produit?: string;
-  noms_des_modeles_ou_references?: string;
+  modeles_ou_references?: string;
   motif_rappel?: string;
   risques_encourus?: string;
   conduites_a_tenir_par_le_consommateur?: string;
@@ -104,7 +105,7 @@ export async function syncRecalls(options?: {
           else skippedDuplicates++;
         } catch (err: unknown) {
           errors++;
-          logger.error(`[recall-sync] Failed to upsert ${record.reference_fiche}`, {
+          logger.error(`[recall-sync] Failed to upsert ${record.numero_fiche}`, {
             error: err instanceof Error ? err.message : String(err),
           });
           Sentry?.captureException(err);
@@ -191,7 +192,7 @@ async function upsertRecall(
   record: RappelConsoRecord,
   autoApprove: boolean,
 ): Promise<"inserted" | "skipped"> {
-  const ref = record.reference_fiche;
+  const ref = record.numero_fiche;
   if (!ref) return "skipped";
 
   const gtin = record.gtin ? String(record.gtin).padStart(13, "0") : null;
@@ -200,7 +201,7 @@ async function upsertRecall(
     sourceReference: ref,
     gtin,
     brandName: record.marque_produit ?? null,
-    productName: record.noms_des_modeles_ou_references ?? null,
+    productName: record.modeles_ou_references ?? null,
     subCategory: record.sous_categorie_produit ?? null,
     recallReason: record.motif_rappel ?? "Motif non précisé",
     healthRisks: record.risques_encourus ?? null,
