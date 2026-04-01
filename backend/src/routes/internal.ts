@@ -209,6 +209,40 @@ internalRoutes.post("/update-source-fetch", async (c) => {
   return c.json({ success: true });
 });
 
+// ── POST /cleanup-seed-alerts ─────────────────────────────────
+// One-shot: removes seed alerts (is_active=true) that were inserted by
+// the old seed pipeline. Keeps Cowork drafts (is_active=false).
+
+internalRoutes.post("/cleanup-seed-alerts", async (c) => {
+  if (!verifyCronSecret(c)) {
+    return c.json({ error: "Non autorisé" }, 401);
+  }
+
+  // Delete read status first (FK constraint)
+  await db.execute(sql`
+    DELETE FROM alert_read_status
+    WHERE alert_id IN (SELECT id FROM alerts WHERE is_active = true)
+  `);
+
+  // Delete seed alerts (all active ones = seed data)
+  const result = await db.execute(sql`
+    DELETE FROM alerts WHERE is_active = true
+  `);
+
+  // Also delete any test drafts
+  await db.execute(sql`
+    DELETE FROM alerts WHERE title LIKE '%[TEST]%'
+  `);
+
+  const remaining = await db.execute(sql`SELECT count(*)::int as count FROM alerts`);
+
+  return c.json({
+    success: true,
+    deleted: (result as unknown as { rowCount?: number }).rowCount ?? 0,
+    remaining: (remaining[0] as { count: number }).count,
+  });
+});
+
 // ── POST /sync-recalls ───────────────────────────────────────
 // Syncs food safety recalls from RappelConso (data.economie.gouv.fr).
 // Called daily at 6:00 CET by GitHub Actions cron.

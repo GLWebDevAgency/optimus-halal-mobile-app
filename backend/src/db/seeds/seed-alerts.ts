@@ -156,17 +156,10 @@ const SEED_ALERTS = [
 export async function seedAlerts(db: PostgresJsDatabase): Promise<number> {
   let count = 0;
 
-  // Upsert categories (recall category removed — handled by product_recalls pipeline)
+  // Upsert categories only — alerts are now managed via admin CMS + Claude Cowork.
+  // SEED_ALERTS kept as reference data but NOT inserted (avoids overwriting editorial content).
   for (const cat of ALERT_CATEGORIES) {
     await db.insert(alertCategories).values(cat).onConflictDoNothing({ target: alertCategories.id });
-    count++;
-  }
-
-  // Clean slate: delete ALL alerts then re-insert.
-  await db.delete(alerts);
-
-  for (const alert of SEED_ALERTS) {
-    await db.insert(alerts).values(alert);
     count++;
   }
 
