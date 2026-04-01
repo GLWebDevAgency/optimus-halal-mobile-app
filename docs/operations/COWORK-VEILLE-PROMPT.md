@@ -21,15 +21,16 @@ Ne jamais inventer de faits. Toujours citer la source URL originale.
 
 ## CONFIGURATION
 
-API_URL : utilise la variable dans backend/.env → PRODUCTION_API_URL, sinon https://api.naqiy.app
-CRON_SECRET : lis la variable CRON_SECRET dans backend/.env
+Toutes les variables necessaires sont dans backend/.env (gitignored).
+Charge-les en debut de session :
 
-Pour les lire :
   cd backend && source .env
-  echo $CRON_SECRET
 
-Si CRON_SECRET n'est pas dans .env, cherche dans les variables Railway :
-  railway variables --json | python3 -c "import sys,json; print(json.load(sys.stdin).get('CRON_SECRET',''))"
+Variables disponibles apres source :
+- PRODUCTION_API_URL (https://api.naqiy.app)
+- CRON_SECRET (auth pour les endpoints internes)
+- R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_PUBLIC_DOMAIN (images)
+- DATABASE_URL (DB dev locale pour le script veille)
 
 ## ETAPE 1 — Fetch les sources
 
@@ -105,7 +106,7 @@ IMPORTANT — REGLES DE SECURITE :
 
 ### Pour une ALERTE :
 
-  curl -s -X POST "${API_URL}/internal/create-draft" \
+  curl -s -X POST "${PRODUCTION_API_URL}/internal/create-draft" \
     -H "Authorization: Bearer ${CRON_SECRET}" \
     -H "Content-Type: application/json" \
     -d '{
@@ -122,7 +123,7 @@ IMPORTANT — REGLES DE SECURITE :
 
 ### Pour un ARTICLE :
 
-  curl -s -X POST "${API_URL}/internal/create-draft" \
+  curl -s -X POST "${PRODUCTION_API_URL}/internal/create-draft" \
     -H "Authorization: Bearer ${CRON_SECRET}" \
     -H "Content-Type: application/json" \
     -d '{
