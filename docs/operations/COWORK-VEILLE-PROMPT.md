@@ -27,18 +27,31 @@ Charge-les en debut de session :
   cd backend && source .env
 
 Variables disponibles apres source :
-- PRODUCTION_API_URL (https://api.naqiy.app)
-- CRON_SECRET (auth pour les endpoints internes)
-- R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_PUBLIC_DOMAIN (images)
-- DATABASE_URL (DB dev locale pour le script veille)
+- PRODUCTION_API_URL (https://api.naqiy.app) — API de production
+- CRON_SECRET — auth pour tous les endpoints /internal/*
+- R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_PUBLIC_DOMAIN — images
+
+IMPORTANT : tu passes TOUJOURS par l'API (jamais d'acces DB direct).
+En dev : PRODUCTION_API_URL=http://localhost:3000
+En prod : PRODUCTION_API_URL=https://api.naqiy.app
+Utilise la valeur dans .env — elle pointe vers la prod par defaut.
 
 ## ETAPE 1 — Fetch les sources
 
-Lance le script de veille (utilise la DB dev locale pour lire les sources) :
+Recupere les sources actives via l'API :
 
-  cd backend && DATABASE_URL="postgresql://postgres:postgres@localhost:6432/optimus_halal" pnpm tsx scripts/veille-content.ts
+  cd backend && source .env
+  SOURCES=$(curl -s "${PRODUCTION_API_URL}/internal/content-sources" \
+    -H "Authorization: Bearer ${CRON_SECRET}")
+  echo "$SOURCES" | python3 -m json.tool
 
-Lis attentivement le rapport JSON en sortie. Chaque item a un champ imageUrl (peut etre null).
+Puis pour chaque source RSS, fetch le feed et detecte les nouveautes :
+
+  curl -s "URL_DU_FEED_RSS" -H "User-Agent: Naqiy-Veille/1.0"
+
+Analyse le XML RSS pour extraire les items recents (titre, lien, date, description, imageUrl).
+Compare avec la date du dernier fetch de la source (champ last_fetched_at dans la reponse).
+Ne garde que les items plus recents que last_fetched_at (ou les 5 plus recents si last_fetched_at est null).
 
 ## ETAPE 2 — Analyse chaque nouvel element
 

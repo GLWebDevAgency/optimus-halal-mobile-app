@@ -7,7 +7,7 @@
  */
 
 import { Hono } from "hono";
-import { sql, and, gte, lte, isNotNull, isNull, eq, desc } from "drizzle-orm";
+import { sql, and, gte, lte, isNotNull, isNull, eq } from "drizzle-orm";
 import { env } from "../lib/env.js";
 import { db } from "../db/index.js";
 import { redis } from "../lib/redis.js";
@@ -183,6 +183,30 @@ internalRoutes.get("/content-sources", async (c) => {
     .orderBy(contentSources.name);
 
   return c.json({ sources });
+});
+
+// ── POST /update-source-fetch ─────────────────────────────────
+// Updates last_fetched_at and last_item_date for a content source.
+// Called by Claude Cowork after fetching a source's RSS feed.
+
+internalRoutes.post("/update-source-fetch", async (c) => {
+  if (!verifyCronSecret(c)) {
+    return c.json({ error: "Non autorisé" }, 401);
+  }
+
+  const { sourceId, lastItemDate, fetchCount } = await c.req.json();
+  if (!sourceId) return c.json({ error: "sourceId requis" }, 400);
+
+  await db
+    .update(contentSources)
+    .set({
+      lastFetchedAt: new Date(),
+      lastItemDate: lastItemDate ? new Date(lastItemDate) : undefined,
+      lastFetchCount: fetchCount ?? 0,
+    })
+    .where(eq(contentSources.id, sourceId));
+
+  return c.json({ success: true });
 });
 
 // ── POST /sync-recalls ───────────────────────────────────────
