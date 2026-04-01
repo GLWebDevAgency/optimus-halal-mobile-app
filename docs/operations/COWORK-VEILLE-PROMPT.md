@@ -45,9 +45,11 @@ Recupere les sources actives via l'API :
     -H "Authorization: Bearer ${CRON_SECRET}")
   echo "$SOURCES" | python3 -m json.tool
 
-Puis pour chaque source RSS, fetch le feed et detecte les nouveautes :
+Puis pour chaque source RSS, fetch le feed et detecte les nouveautes.
+IMPORTANT : utilise un user-agent navigateur (certains sites bloquent les bots) :
 
-  curl -s "URL_DU_FEED_RSS" -H "User-Agent: Naqiy-Veille/1.0"
+  curl -s "URL_DU_FEED_RSS" \
+    -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 
 Analyse le XML RSS pour extraire les items recents (titre, lien, date, description, imageUrl).
 Compare avec la date du dernier fetch de la source (champ last_fetched_at dans la reponse).
