@@ -22,7 +22,7 @@ import { Image } from "expo-image";
 import { Shadow } from "react-native-shadow-2";
 import { router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowClockwiseIcon, ArrowRightIcon, ArticleIcon, BellIcon, CaretRightIcon, CloudSlashIcon, HamburgerIcon, HeartIcon, MapPinIcon, MapPinPlusIcon, ScanIcon, StorefrontIcon, UserCirclePlusIcon } from "phosphor-react-native";
+import { ArrowClockwiseIcon, ArrowRightIcon, ArticleIcon, BellIcon, BellSimpleRingingIcon, CaretRightIcon, CloudSlashIcon, HamburgerIcon, HeartIcon, MapPinIcon, MapPinPlusIcon, ScanIcon, StorefrontIcon, UserCirclePlusIcon, WarningIcon } from "phosphor-react-native";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -240,6 +240,148 @@ const QuickActionCard = React.memo(function QuickActionCard({
                 <AppIcon name={icon}
                   size={22}
                   color={iconColor ?? brand.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={[
+                    styles.quickActionTitle,
+                    { color: isDark ? darkTheme.textPrimary : lightTheme.textPrimary },
+                  ]}
+                >
+                  {title}
+                </Text>
+                <Text
+                  style={[
+                    styles.quickActionSub,
+                    { color: isDark ? darkTheme.textSecondary : lightTheme.textSecondary },
+                  ]}
+                >
+                  {subtitle}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </PressableScale>
+      </Shadow>
+    </Animated.View>
+  );
+});
+
+// ---- Alert Quick Action Card (dual badges + pulse) ----
+interface AlertQuickActionCardProps {
+  title: string;
+  subtitle: string;
+  isDark: boolean;
+  urgentCount: number;
+  infoCount: number;
+  index: number;
+  onPress: () => void;
+}
+
+const AlertQuickActionCard = React.memo(function AlertQuickActionCard({
+  title,
+  subtitle,
+  isDark,
+  urgentCount,
+  infoCount,
+  index,
+  onPress,
+}: AlertQuickActionCardProps) {
+  const { impact } = useHaptics();
+
+  const handlePress = useCallback(() => {
+    impact();
+    onPress();
+  }, [impact, onPress]);
+
+  const hasUrgent = urgentCount > 0;
+
+  return (
+    <Animated.View
+      entering={FadeInDown.delay(240 + index * STAGGER_MS)
+        .duration(500)
+        .springify()
+        .damping(18)}
+      style={[styles.quickActionHalf]}
+    >
+      <Shadow
+        distance={4}
+        startColor={isDark ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.04)"}
+        offset={[0, 1]}
+        style={{ borderRadius: 20, width: "100%" }}
+      >
+        <PressableScale
+          onPress={handlePress}
+          accessibilityRole="button"
+          accessibilityLabel={title}
+          accessibilityHint={subtitle}
+        >
+          <View
+            style={[
+              styles.quickActionGlass,
+              {
+                backgroundColor: isDark ? glass.dark.bg : glass.light.bg,
+                borderColor: isDark
+                  ? glass.dark.border
+                  : "rgba(212,175,55,0.10)",
+              },
+            ]}
+          >
+            {/* Directional halo from scanner card */}
+            <LinearGradient
+              colors={
+                isDark
+                  ? ["rgba(207,165,51,0.18)", "rgba(207,165,51,0.07)", "transparent"]
+                  : ["rgba(19,236,106,0.12)", "rgba(19,236,106,0.04)", "transparent"]
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 0.5 }}
+              style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
+              pointerEvents="none"
+            />
+            <View style={styles.quickActionContent}>
+              {/* Dual icon badges */}
+              <View style={styles.alertBadgesRow}>
+                {/* Urgent badge (warning) */}
+                <View
+                  style={[
+                    styles.alertBadgeIcon,
+                    {
+                      backgroundColor: isDark
+                        ? "rgba(245,158,11,0.15)"
+                        : "rgba(245,158,11,0.08)",
+                    },
+                  ]}
+                >
+                  <WarningIcon size={18} color="#f59e0b" weight={hasUrgent ? "fill" : "regular"} />
+                  {urgentCount > 0 && (
+                    <View style={[styles.alertCountBadge, { backgroundColor: "#ef4444" }]}>
+                      <Text style={styles.alertCountText}>
+                        {urgentCount > 9 ? "9+" : urgentCount}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                {/* Info badge (bell) */}
+                <View
+                  style={[
+                    styles.alertBadgeIcon,
+                    {
+                      backgroundColor: isDark
+                        ? "rgba(59,130,246,0.15)"
+                        : "rgba(59,130,246,0.08)",
+                    },
+                  ]}
+                >
+                  <BellSimpleRingingIcon size={18} color="#3b82f6" weight={infoCount > 0 ? "fill" : "regular"} />
+                  {infoCount > 0 && (
+                    <View style={[styles.alertCountBadge, { backgroundColor: "#3b82f6" }]}>
+                      <Text style={styles.alertCountText}>
+                        {infoCount > 9 ? "9+" : infoCount}
+                      </Text>
+                    </View>
+                  )}
+                </View>
               </View>
               <View style={{ flex: 1 }}>
                 <Text
@@ -758,6 +900,8 @@ export default function HomeScreen() {
   const currentStreak = me?.currentStreak ?? 0;
   const unreadCount = unreadQuery.data?.count ?? 0;
   const alertUnreadCount = alertUnreadQuery.data?.count ?? 0;
+  const alertUrgentCount = alertUnreadQuery.data?.urgent ?? 0;
+  const alertInfoCount = alertUnreadQuery.data?.info ?? 0;
 
   const favoriteProducts = useMemo(() => {
     if (isGuest) {
@@ -1327,17 +1471,12 @@ export default function HomeScreen() {
             </View>
             {/* Row 2 */}
             <View style={styles.quickActionsRow}>
-              <QuickActionCard
-                icon="shield"
+              <AlertQuickActionCard
                 title={t.home.alertsSection.split("&")[0].trim()}
                 subtitle={t.home.alertsSeeAll}
                 isDark={isDark}
-                iconBgColor={
-                  isDark
-                    ? "rgba(245,158,11,0.15)"
-                    : "rgba(245,158,11,0.08)"
-                }
-                iconColor="#f59e0b"
+                urgentCount={alertUrgentCount}
+                infoCount={alertInfoCount}
                 index={2}
                 onPress={() => handleNavigate("alerts")}
               />
@@ -2034,6 +2173,34 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
+  },
+  alertBadgesRow: {
+    flexDirection: "row",
+    gap: 6,
+  },
+  alertBadgeIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  alertCountBadge: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 3,
+  },
+  alertCountText: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: "#ffffff",
+    letterSpacing: -0.3,
   },
   quickActionTitlePrimary: {
     fontSize: 15,

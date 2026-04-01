@@ -1206,6 +1206,12 @@ export const fr = {
     swipeToDismiss: "Glisser pour masquer",
     noAlerts: "Aucune alerte pour le moment",
     empty: "Vous êtes à jour !",
+    groupToday: "Aujourd'hui",
+    groupThisWeek: "Cette semaine",
+    groupOlder: "Plus ancien",
+    unlockAll: "Debloquer toutes les alertes",
+    upsellTitle: "alertes supplementaires disponibles",
+    upsellSub: "Passez a Naqiy+ pour un historique complet",
   },
 
   // Report
@@ -1803,6 +1809,20 @@ export const fr = {
     themeLight: "Clair",
     themeSystem: "Système",
     themeDark: "Sombre",
+  },
+
+  // Product recalls (scan-time government recall alerts)
+  recalls: {
+    title: "Rappel produit",
+    subtitle: "Le produit que vous venez de scanner fait l'objet d'un rappel officiel.",
+    reasonTitle: "Motif du rappel",
+    risksTitle: "Risques pour la sante",
+    actionsTitle: "Que faire ?",
+    precautionsTitle: "Precautions sanitaires",
+    distributorsTitle: "Points de vente concernes",
+    geoTitle: "Zone geographique",
+    publishedOn: "Publie le",
+    viewOfficial: "Voir la fiche officielle",
   },
 
   // Verdict summary (intelligent fiqh + certifier synthesis)

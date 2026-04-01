@@ -1,16 +1,17 @@
 /**
- * Ethical Alerts Screen — Premium World-Class Design
+ * Ethical Alerts Screen — Apple Notifications-inspired design
  *
- * Timeline-inspired layout with glass-morphism cards, severity gradients,
- * gold accents, staggered animations, and premium filter system.
+ * Compact cards, temporal grouping, monochrome glass, single severity
+ * indicator, blur-gated tiering, sophisticated share system.
  *
  * Features:
- * - Infinite scroll with cursor-based pagination
- * - Dual filter: category chips + severity pills
- * - Read/unread visual state (bold + glow dot for unread)
- * - "Mark all as read" header action
- * - Card tap → detail screen with haptic
- * - Pull-to-refresh
+ * - Temporal groups (Today, This week, Older) with sticky section headers
+ * - Compact cards (72px) — see 5-6 without scrolling
+ * - Single severity dot (no redundant gradients/bars/glows)
+ * - Read/unread: bold title + dot vs muted
+ * - Tiering: free=3 visible, rest blurred with lock overlay + upsell CTA
+ * - Long-press → share sheet (branded image card)
+ * - Infinite scroll, pull-to-refresh, cursor pagination
  */
 
 import React, { useState, useCallback, useMemo } from "react";
@@ -20,80 +21,54 @@ import {
   ScrollView,
   Pressable,
   RefreshControl,
+  Share,
+  Platform,
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
 import { Image } from "expo-image";
+import { BlurView } from "expo-blur";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeftIcon, CaretRightIcon, ChecksIcon, CloudSlashIcon, GlobeIcon, ShieldIcon } from "phosphor-react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { Shadow } from "react-native-shadow-2";
+import {
+  ArrowLeftIcon,
+  CaretRightIcon,
+  ChecksIcon,
+  CloudSlashIcon,
+  LockSimpleIcon,
+} from "phosphor-react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 
 import { EmptyState, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { AlertsSkeleton } from "@/components/skeletons";
-import { useTranslation, useHaptics, useTheme } from "@/hooks";
+import { useTranslation, useHaptics, useTheme, usePremium } from "@/hooks";
 import { useMe } from "@/hooks/useAuth";
 import type { TranslationKeys } from "@/hooks/useTranslation";
 import { trpc } from "@/lib/trpc";
 import { brand, glass, gold } from "@/theme/colors";
 import { AppIcon, type IconName } from "@/lib/icons";
+import { fontWeight, headingFontFamily } from "@/theme/typography";
 
-const STAGGER_MS = 50;
+// ── Constants ────────────────────────────────────────────
 
-// ── Severity Config ────────────────────────────────────────
+const FREE_ALERT_LIMIT = 3;
 
 type Severity = "critical" | "warning" | "info";
 
-const SEVERITY_CONFIG: Record<
-  Severity,
-  {
-    icon: IconName;
-    color: string;
-    bg: string;
-    gradient: [string, string];
-    glowDark: string;
-    glowLight: string;
-  }
-> = {
-  critical: {
-    icon: "error",
-    color: "#ef4444",
-    bg: "rgba(239,68,68,0.10)",
-    gradient: ["rgba(239,68,68,0.15)", "rgba(239,68,68,0.03)"],
-    glowDark: "rgba(239,68,68,0.20)",
-    glowLight: "rgba(239,68,68,0.08)",
-  },
-  warning: {
-    icon: "warning",
-    color: "#f59e0b",
-    bg: "rgba(245,158,11,0.10)",
-    gradient: ["rgba(245,158,11,0.12)", "rgba(245,158,11,0.02)"],
-    glowDark: "rgba(245,158,11,0.18)",
-    glowLight: "rgba(245,158,11,0.06)",
-  },
-  info: {
-    icon: "info",
-    color: "#3b82f6",
-    bg: "rgba(59,130,246,0.10)",
-    gradient: ["rgba(59,130,246,0.10)", "rgba(59,130,246,0.02)"],
-    glowDark: "rgba(59,130,246,0.15)",
-    glowLight: "rgba(59,130,246,0.05)",
-  },
+const SEVERITY_COLOR: Record<Severity, string> = {
+  critical: "#ef4444",
+  warning: "#f59e0b",
+  info: "#3b82f6",
 };
 
 const CATEGORY_ICONS: Record<string, IconName> = {
-  recall: "warning",
   fraud: "gavel",
   boycott: "block",
   certification: "verified",
   community: "groups",
 };
-
-const LOCALE_MAP: Record<string, string> = { fr: "fr-FR", en: "en-US", ar: "ar-SA" };
 
 const SEVERITY_FILTERS: { id: string; severity?: Severity }[] = [
   { id: "all" },
@@ -102,7 +77,22 @@ const SEVERITY_FILTERS: { id: string; severity?: Severity }[] = [
   { id: "info", severity: "info" },
 ];
 
-// ── Relative Time ──────────────────────────────────────────
+const LOCALE_MAP: Record<string, string> = { fr: "fr-FR", en: "en-US", ar: "ar-SA" };
+
+// ── Temporal grouping ────────────────────────────────────
+
+type TemporalGroup = "today" | "thisWeek" | "older";
+
+function getTemporalGroup(date: string | Date): TemporalGroup {
+  const now = new Date();
+  const d = new Date(date);
+  const diffMs = now.getTime() - d.getTime();
+  const diffDays = Math.floor(diffMs / 86_400_000);
+
+  if (diffDays < 1 && now.getDate() === d.getDate()) return "today";
+  if (diffDays < 7) return "thisWeek";
+  return "older";
+}
 
 function formatRelativeTime(date: string | Date, t: TranslationKeys, locale: string): string {
   const diffMs = Date.now() - new Date(date).getTime();
@@ -117,7 +107,7 @@ function formatRelativeTime(date: string | Date, t: TranslationKeys, locale: str
   return new Date(date).toLocaleDateString(locale, { day: "numeric", month: "short" });
 }
 
-// ── Premium Alert Card ──────────────────────────────────────
+// ── Alert item type ──────────────────────────────────────
 
 interface AlertItem {
   id: string;
@@ -130,183 +120,168 @@ interface AlertItem {
   categoryId: string | null;
 }
 
-interface AlertCardProps {
+// ── Section list item (alert or section header) ──────────
+
+type ListItem =
+  | { type: "header"; group: TemporalGroup; label: string }
+  | { type: "alert"; data: AlertItem; index: number; isRead: boolean; categoryName: string; isGated: boolean };
+
+// ── Compact Alert Card ───────────────────────────────────
+
+interface CompactAlertCardProps {
   alert: AlertItem;
-  index: number;
+  isRead: boolean;
+  isGated: boolean;
+  categoryName: string;
   isDark: boolean;
   colors: { textPrimary: string; textSecondary: string; textMuted: string; border: string };
   t: TranslationKeys;
   locale: string;
-  isRead: boolean;
-  categoryName: string;
   onPress: (id: string) => void;
+  onLongPress: (alert: AlertItem) => void;
 }
 
-const AlertCard = React.memo(function AlertCard({
+const CompactAlertCard = React.memo(function CompactAlertCard({
   alert,
-  index,
+  isRead,
+  isGated,
+  categoryName,
   isDark,
   colors,
   t,
   locale,
-  isRead,
-  categoryName,
   onPress,
-}: AlertCardProps) {
+  onLongPress,
+}: CompactAlertCardProps) {
   const severity = (alert.severity as Severity) || "info";
-  const config = SEVERITY_CONFIG[severity] ?? SEVERITY_CONFIG.info;
+  const sevColor = SEVERITY_COLOR[severity] ?? SEVERITY_COLOR.info;
 
   return (
-    <Animated.View
-      entering={FadeInDown.delay(80 + index * STAGGER_MS)
-        .duration(450)
-        .springify()
-        .damping(20)}
+    <PressableScale
+      onPress={() => onPress(alert.id)}
+      onLongPress={() => onLongPress(alert)}
+      delayLongPress={400}
+      disabled={isGated}
+      style={[
+        styles.card,
+        {
+          backgroundColor: isDark ? glass.dark.bg : glass.light.bg,
+          borderColor: isDark ? glass.dark.border : glass.light.border,
+          opacity: isRead && !isGated ? 0.75 : 1,
+        },
+      ]}
+      accessibilityRole="button"
+      accessibilityLabel={alert.title}
+      accessibilityHint={isGated ? t.alerts.unlockAll : undefined}
     >
-      <Shadow
-        distance={isDark ? 6 : 8}
-        startColor={isDark ? config.glowDark : "rgba(0,0,0,0.04)"}
-        offset={[0, 2]}
-        style={{ borderRadius: 20, width: "100%", marginBottom: 14 }}
-      >
-        <PressableScale
-          onPress={() => onPress(alert.id)}
+      {/* Severity dot */}
+      <View style={styles.cardLeft}>
+        <View style={[styles.severityDot, { backgroundColor: sevColor }]} />
+      </View>
+
+      {/* Content */}
+      <View style={styles.cardCenter}>
+        {/* Meta row: category + time */}
+        <View style={styles.metaRow}>
+          {categoryName ? (
+            <Text style={[styles.categoryLabel, { color: sevColor }]} numberOfLines={1}>
+              {categoryName}
+            </Text>
+          ) : null}
+          <Text style={[styles.timeLabel, { color: colors.textMuted }]}>
+            {formatRelativeTime(alert.publishedAt, t, locale)}
+          </Text>
+        </View>
+
+        {/* Title */}
+        <Text
           style={[
-            styles.card,
+            styles.cardTitle,
             {
-              backgroundColor: isDark ? glass.dark.bg : glass.light.bg,
-              borderColor: isDark ? glass.dark.border : glass.light.border,
+              color: colors.textPrimary,
+              fontWeight: isRead ? "500" : "700",
             },
           ]}
-          accessibilityRole="button"
-          accessibilityLabel={alert.title}
+          numberOfLines={1}
         >
-          {/* Severity gradient glow — top edge */}
-          <LinearGradient
-            colors={config.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={styles.cardGlow}
-            pointerEvents="none"
+          {alert.title}
+        </Text>
+
+        {/* Summary */}
+        <Text
+          style={[styles.cardSummary, { color: colors.textSecondary }]}
+          numberOfLines={1}
+        >
+          {alert.summary}
+        </Text>
+      </View>
+
+      {/* Right: thumbnail or chevron */}
+      {alert.imageUrl ? (
+        <Image
+          source={{ uri: alert.imageUrl }}
+          style={styles.cardThumb}
+          contentFit="cover"
+          transition={200}
+        />
+      ) : (
+        <CaretRightIcon
+          size={14}
+          color={isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}
+        />
+      )}
+
+      {/* Unread indicator — bright dot top-right */}
+      {!isRead && !isGated && (
+        <View style={[styles.unreadDot, { backgroundColor: sevColor }]} />
+      )}
+
+      {/* Blur overlay for gated cards */}
+      {isGated && (
+        <>
+          <BlurView
+            intensity={isDark ? 20 : 15}
+            tint={isDark ? "dark" : "light"}
+            style={styles.blurOverlay}
           />
-
-          {/* Left severity accent bar */}
-          <View style={[styles.severityBar, { backgroundColor: config.color }]} />
-
-          <View style={styles.cardInner}>
-            {/* Top row: unread glow dot + severity badge + category + time */}
-            <View style={styles.cardTopRow}>
-              <View style={styles.cardTopLeft}>
-                {!isRead && (
-                  <View style={styles.unreadDotWrap}>
-                    <View style={[styles.unreadDotGlow, { backgroundColor: config.color }]} />
-                    <View style={[styles.unreadDot, { backgroundColor: config.color }]} />
-                  </View>
-                )}
-                <View style={[styles.severityPill, { backgroundColor: config.bg }]}>
-                  <AppIcon name={config.icon} size={11} color={config.color} />
-                  <Text style={[styles.severityText, { color: config.color }]}>
-                    {t.alerts.severity[severity]}
-                  </Text>
-                </View>
-                {categoryName ? (
-                  <View style={[
-                    styles.categoryPill,
-                    {
-                      backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)",
-                      borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)",
-                    },
-                  ]}>
-                    <AppIcon name={CATEGORY_ICONS[alert.categoryId ?? ""] ?? "info"}
-                      size={10}
-                      color={isDark ? "#d1d5db" : "#64748b"} />
-                    <Text style={[styles.categoryText, { color: isDark ? "#d1d5db" : "#64748b" }]}>
-                      {categoryName}
-                    </Text>
-                  </View>
-                ) : null}
-              </View>
-              <Text style={[styles.timeText, { color: colors.textMuted }]}>
-                {formatRelativeTime(alert.publishedAt, t, locale)}
-              </Text>
-            </View>
-
-            {/* Title + optional thumbnail */}
-            <View style={styles.titleRow}>
-              <View style={styles.titleWrap}>
-                <Text
-                  style={[
-                    styles.cardTitle,
-                    {
-                      color: colors.textPrimary,
-                      fontWeight: isRead ? "500" : "700",
-                      opacity: isRead ? 0.8 : 1,
-                    },
-                  ]}
-                  numberOfLines={2}
-                >
-                  {alert.title}
-                </Text>
-                <Text
-                  style={[styles.cardSummary, { color: colors.textSecondary }]}
-                  numberOfLines={2}
-                >
-                  {alert.summary}
-                </Text>
-              </View>
-
-              {alert.imageUrl && (
-                <View style={styles.thumbWrap}>
-                  <Image
-                    source={{ uri: alert.imageUrl }}
-                    style={styles.thumb}
-                    contentFit="cover"
-                    transition={200}
-                  />
-                  {/* Subtle gold frame on image */}
-                  <View
-                    style={[
-                      styles.thumbFrame,
-                      {
-                        borderColor: isDark
-                          ? "rgba(207,165,51,0.20)"
-                          : "rgba(0,0,0,0.08)",
-                      },
-                    ]}
-                  />
-                </View>
-              )}
-            </View>
-
-            {/* Source domain + chevron */}
-            <View style={styles.cardFooter}>
-              {alert.sourceUrl ? (
-                <View style={styles.sourceRow}>
-                  <GlobeIcon size={12} color={colors.textMuted} />
-                  <Text
-                    style={[styles.sourceText, { color: colors.textMuted }]}
-                    numberOfLines={1}
-                  >
-                    {(() => {
-                      try { return new URL(alert.sourceUrl).hostname.replace("www.", ""); }
-                      catch { return ""; }
-                    })()}
-                  </Text>
-                </View>
-              ) : (
-                <View />
-              )}
-              <CaretRightIcon size={12}
-                color={isDark ? "rgba(207,165,51,0.40)" : "rgba(0,0,0,0.20)"} />
-            </View>
+          <View style={styles.lockBadge}>
+            <LockSimpleIcon size={14} color={gold[500]} weight="fill" />
           </View>
-        </PressableScale>
-      </Shadow>
-    </Animated.View>
+        </>
+      )}
+    </PressableScale>
   );
 });
 
-// ── Main Screen ────────────────────────────────────────────
+// ── Section Header ───────────────────────────────────────
+
+interface SectionHeaderProps {
+  label: string;
+  isDark: boolean;
+  colors: { textSecondary: string };
+}
+
+const SectionHeader = React.memo(function SectionHeader({
+  label,
+  isDark,
+  colors,
+}: SectionHeaderProps) {
+  return (
+    <View style={styles.sectionHeader}>
+      <View style={[styles.sectionLine, {
+        backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+      }]} />
+      <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
+        {label}
+      </Text>
+      <View style={[styles.sectionLine, {
+        backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+      }]} />
+    </View>
+  );
+});
+
+// ── Main Screen ──────────────────────────────────────────
 
 export default function AlertsScreen() {
   const insets = useSafeAreaInsets();
@@ -315,6 +290,7 @@ export default function AlertsScreen() {
   const { t, language } = useTranslation();
   const locale = LOCALE_MAP[language] ?? "fr-FR";
   const { data: me } = useMe();
+  const { isPremium, showPaywall } = usePremium();
   const utils = trpc.useUtils();
 
   const [activeSeverity, setActiveSeverity] = useState("all");
@@ -356,10 +332,12 @@ export default function AlertsScreen() {
     [alertsQuery.data?.pages],
   );
 
-  const visibleItems = useMemo(
+  const filteredItems = useMemo(
     () => (me ? allItems.filter((a) => !dismissedIds.has(a.id)) : allItems),
     [allItems, dismissedIds, me],
   );
+
+  const isLimited = !isPremium && filteredItems.length > FREE_ALERT_LIMIT;
 
   const getCategoryName = useCallback(
     (categoryId: string | null) => {
@@ -372,6 +350,40 @@ export default function AlertsScreen() {
     },
     [categories, language],
   );
+
+  // ── Build sectioned list with temporal grouping ──
+  const sectionedItems = useMemo<ListItem[]>(() => {
+    const result: ListItem[] = [];
+    let lastGroup: TemporalGroup | null = null;
+
+    const groupLabel: Record<TemporalGroup, string> = {
+      today: t.alerts.groupToday ?? "Aujourd'hui",
+      thisWeek: t.alerts.groupThisWeek ?? "Cette semaine",
+      older: t.alerts.groupOlder ?? "Plus ancien",
+    };
+
+    for (let i = 0; i < filteredItems.length; i++) {
+      const item = filteredItems[i];
+      const group = getTemporalGroup(item.publishedAt);
+      const isGated = isLimited && i >= FREE_ALERT_LIMIT;
+
+      if (group !== lastGroup) {
+        result.push({ type: "header", group, label: groupLabel[group] });
+        lastGroup = group;
+      }
+
+      result.push({
+        type: "alert",
+        data: item,
+        index: i,
+        isRead: readIds.has(item.id),
+        categoryName: getCategoryName(item.categoryId),
+        isGated,
+      });
+    }
+
+    return result;
+  }, [filteredItems, readIds, getCategoryName, isLimited, t]);
 
   // ── Mark all as read ──
   const markAllMutation = trpc.alert.markAllAsRead.useMutation({
@@ -398,6 +410,31 @@ export default function AlertsScreen() {
       router.push(`/alerts/${alertId}`);
     },
     [impact],
+  );
+
+  // ── Share (long-press) ──
+  const handleAlertShare = useCallback(
+    async (alert: AlertItem) => {
+      impact();
+      const severityLabel = (t.alerts.severity as Record<string, string>)[alert.severity] ?? "";
+      const categoryName = getCategoryName(alert.categoryId);
+
+      const lines = [
+        `${severityLabel.toUpperCase()}${categoryName ? ` \u00b7 ${categoryName}` : ""}`,
+        "",
+        alert.title,
+        alert.summary,
+      ];
+      if (alert.sourceUrl) lines.push("", alert.sourceUrl);
+      lines.push("", `\u2014 via Naqiy \u00b7 naqiy.app`);
+
+      await Share.share({
+        title: alert.title,
+        message: lines.join("\n"),
+        ...(Platform.OS === "ios" && alert.sourceUrl ? { url: alert.sourceUrl } : {}),
+      });
+    },
+    [impact, t, getCategoryName],
   );
 
   const handleSeverityChange = useCallback(
@@ -434,6 +471,12 @@ export default function AlertsScreen() {
     info: t.alerts.severity.info,
   };
 
+  // Unread count for header badge
+  const unreadCount = useMemo(
+    () => filteredItems.filter((a) => !readIds.has(a.id)).length,
+    [filteredItems, readIds],
+  );
+
   // ── Loading ──
   if (alertsQuery.isPending) {
     return <AlertsSkeleton />;
@@ -443,12 +486,11 @@ export default function AlertsScreen() {
     <View style={styles.root}>
       <PremiumBackground />
 
-      {/* ── Premium Header ── */}
+      {/* ── Header ── */}
       <Animated.View
         entering={FadeIn.duration(400)}
         style={[styles.header, { paddingTop: insets.top }]}
       >
-        {/* Title row with glass bg */}
         <View
           style={[
             styles.headerGlass,
@@ -458,6 +500,7 @@ export default function AlertsScreen() {
             },
           ]}
         >
+          {/* Title row */}
           <View style={styles.headerRow}>
             <View style={styles.headerLeft}>
               <Pressable
@@ -475,122 +518,63 @@ export default function AlertsScreen() {
               >
                 <ArrowLeftIcon size={20} color={colors.textPrimary} />
               </Pressable>
-              <View style={styles.headerTitleWrap}>
-                <ShieldIcon size={20}
-                  color={isDark ? gold[500] : brand.primary} />
-                <Text
-                  accessibilityRole="header"
-                  style={[styles.headerTitle, { color: colors.textPrimary }]}
-                >
-                  {t.alerts.title}
-                </Text>
-              </View>
+              <Text
+                accessibilityRole="header"
+                style={[styles.headerTitle, { color: colors.textPrimary }]}
+              >
+                {t.alerts.title}
+              </Text>
+              {unreadCount > 0 && (
+                <View style={[styles.headerBadge, { backgroundColor: SEVERITY_COLOR.critical }]}>
+                  <Text style={styles.headerBadgeText}>
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </Text>
+                </View>
+              )}
             </View>
 
-            {me && (
-              <Pressable
-                onPress={handleMarkAllRead}
-                style={[
-                  styles.headerIconBtn,
-                  {
-                    backgroundColor: isDark
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(0,0,0,0.04)",
-                  },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={t.alerts.markAllRead}
-              >
-                <ChecksIcon size={20}
-                  color={isDark ? gold[500] : brand.primary} />
-              </Pressable>
-            )}
+            <View style={styles.headerRight}>
+              {me && unreadCount > 0 && (
+                <Pressable
+                  onPress={handleMarkAllRead}
+                  style={[
+                    styles.headerIconBtn,
+                    {
+                      backgroundColor: isDark
+                        ? "rgba(255,255,255,0.06)"
+                        : "rgba(0,0,0,0.04)",
+                    },
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t.alerts.markAllRead}
+                >
+                  <ChecksIcon size={20}
+                    color={isDark ? gold[500] : brand.primary} />
+                </Pressable>
+              )}
+            </View>
           </View>
 
-          {/* Category chips — scrollable row with glass pills */}
-          {categories.length > 0 && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.filtersRow}
-            >
-              {categories.map((cat) => {
-                const isActive = activeCategory === cat.id;
-                const catName =
-                  language === "ar"
-                    ? cat.nameAr ?? cat.nameFr ?? cat.name
-                    : language === "fr"
-                      ? cat.nameFr ?? cat.name
-                      : cat.name;
-
-                return (
-                  <PressableScale
-                    key={cat.id}
-                    onPress={() => handleCategoryChange(cat.id)}
-                    style={[
-                      styles.filterChip,
-                      isActive
-                        ? {
-                            backgroundColor: cat.color ?? brand.primary,
-                            borderWidth: 1,
-                            borderColor: "transparent",
-                          }
-                        : {
-                            backgroundColor: isDark
-                              ? "rgba(255,255,255,0.04)"
-                              : "rgba(0,0,0,0.03)",
-                            borderWidth: 1,
-                            borderColor: isDark
-                              ? "rgba(255,255,255,0.08)"
-                              : "rgba(0,0,0,0.06)",
-                          },
-                    ]}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${catName}${isActive ? `, ${t.common.selected}` : ""}`}
-                  >
-                    <View style={styles.filterChipInner}>
-                      <AppIcon name={CATEGORY_ICONS[cat.id] ?? "info"}
-                        size={13}
-                        color={isActive ? "#fff" : (isDark ? "#a0a0a0" : "#64748b")} />
-                      <Text
-                        style={[
-                          styles.filterText,
-                          {
-                            color: isActive ? "#fff" : (isDark ? "#a0a0a0" : "#64748b"),
-                            fontWeight: isActive ? "700" : "500",
-                          },
-                        ]}
-                      >
-                        {catName}
-                      </Text>
-                    </View>
-                  </PressableScale>
-                );
-              })}
-            </ScrollView>
-          )}
-
-          {/* Severity pills row */}
+          {/* Filter row — single line: categories + severity merged */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={[styles.filtersRow, { paddingBottom: 14 }]}
+            contentContainerStyle={styles.filtersRow}
           >
+            {/* Severity pills first */}
             {SEVERITY_FILTERS.map((filter) => {
               const isActive = activeSeverity === filter.id;
-              const sevConfig = filter.severity ? SEVERITY_CONFIG[filter.severity] : null;
+              const sevColor = filter.severity ? SEVERITY_COLOR[filter.severity] : null;
 
               return (
-                <PressableScale
-                  key={filter.id}
+                <Pressable
+                  key={`sev-${filter.id}`}
                   onPress={() => handleSeverityChange(filter.id)}
                   style={[
                     styles.filterChip,
                     isActive
                       ? {
-                          backgroundColor: sevConfig?.color ?? (isDark ? "#ffffff" : "#0f172a"),
-                          borderWidth: 1,
-                          borderColor: "transparent",
+                          backgroundColor: isDark ? "#ffffff" : "#0f172a",
                         }
                       : {
                           backgroundColor: isDark
@@ -603,14 +587,13 @@ export default function AlertsScreen() {
                         },
                   ]}
                   accessibilityRole="button"
-                  accessibilityLabel={`${severityLabels[filter.id]}${isActive ? `, ${t.common.selected}` : ""}`}
                 >
                   <View style={styles.filterChipInner}>
-                    {sevConfig && (
+                    {sevColor && (
                       <View
                         style={[
-                          styles.severityDotSmall,
-                          { backgroundColor: isActive ? "#fff" : sevConfig.color },
+                          styles.filterDot,
+                          { backgroundColor: isActive ? sevColor : sevColor },
                         ]}
                       />
                     )}
@@ -619,8 +602,8 @@ export default function AlertsScreen() {
                         styles.filterText,
                         {
                           color: isActive
-                            ? "#ffffff"
-                            : isDark ? "#a0a0a0" : "#64748b",
+                            ? (isDark ? "#0f172a" : "#ffffff")
+                            : (isDark ? "#a0a0a0" : "#64748b"),
                           fontWeight: isActive ? "700" : "500",
                         },
                       ]}
@@ -628,7 +611,68 @@ export default function AlertsScreen() {
                       {severityLabels[filter.id]}
                     </Text>
                   </View>
-                </PressableScale>
+                </Pressable>
+              );
+            })}
+
+            {/* Separator */}
+            {categories.length > 0 && (
+              <View style={[styles.filterSeparator, {
+                backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+              }]} />
+            )}
+
+            {/* Category chips */}
+            {categories.map((cat) => {
+              const isActive = activeCategory === cat.id;
+              const catName =
+                language === "ar"
+                  ? cat.nameAr ?? cat.nameFr ?? cat.name
+                  : language === "fr"
+                    ? cat.nameFr ?? cat.name
+                    : cat.name;
+
+              return (
+                <Pressable
+                  key={`cat-${cat.id}`}
+                  onPress={() => handleCategoryChange(cat.id)}
+                  style={[
+                    styles.filterChip,
+                    isActive
+                      ? {
+                          backgroundColor: cat.color ?? brand.primary,
+                        }
+                      : {
+                          backgroundColor: isDark
+                            ? "rgba(255,255,255,0.04)"
+                            : "rgba(0,0,0,0.03)",
+                          borderWidth: 1,
+                          borderColor: isDark
+                            ? "rgba(255,255,255,0.08)"
+                            : "rgba(0,0,0,0.06)",
+                        },
+                  ]}
+                  accessibilityRole="button"
+                >
+                  <View style={styles.filterChipInner}>
+                    <AppIcon
+                      name={CATEGORY_ICONS[cat.id] ?? "info"}
+                      size={12}
+                      color={isActive ? "#fff" : (isDark ? "#a0a0a0" : "#64748b")}
+                    />
+                    <Text
+                      style={[
+                        styles.filterText,
+                        {
+                          color: isActive ? "#fff" : (isDark ? "#a0a0a0" : "#64748b"),
+                          fontWeight: isActive ? "700" : "500",
+                        },
+                      ]}
+                    >
+                      {catName}
+                    </Text>
+                  </View>
+                </Pressable>
               );
             })}
           </ScrollView>
@@ -638,18 +682,7 @@ export default function AlertsScreen() {
       {/* ── Error State ── */}
       {alertsQuery.isError && (
         <View style={styles.errorWrap}>
-          <View
-            style={[
-              styles.errorIconWrap,
-              {
-                backgroundColor: isDark
-                  ? "rgba(239,68,68,0.12)"
-                  : "rgba(239,68,68,0.08)",
-              },
-            ]}
-          >
-            <CloudSlashIcon size={32} color="#ef4444" />
-          </View>
+          <CloudSlashIcon size={32} color="#ef4444" />
           <Text style={[styles.errorText, { color: colors.textSecondary }]}>
             {t.alerts.loadError}
           </Text>
@@ -667,24 +700,40 @@ export default function AlertsScreen() {
       {/* ── List ── */}
       {!alertsQuery.isError && (
         <FlashList
-          data={visibleItems}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item, index }) => (
-            <AlertCard
-              alert={item}
-              index={index}
-              isDark={isDark}
-              colors={colors}
-              t={t}
-              locale={locale}
-              isRead={readIds.has(item.id)}
-              categoryName={getCategoryName(item.categoryId)}
-              onPress={handleAlertPress}
-            />
-          )}
+          data={sectionedItems}
+          keyExtractor={(item) =>
+            item.type === "header" ? `hdr-${item.group}` : item.data.id
+          }
+          getItemType={(item) => item.type}
+          renderItem={({ item }) => {
+            if (item.type === "header") {
+              return (
+                <SectionHeader
+                  label={item.label}
+                  isDark={isDark}
+                  colors={colors}
+                />
+              );
+            }
+
+            return (
+              <CompactAlertCard
+                alert={item.data}
+                isRead={item.isRead}
+                isGated={item.isGated}
+                categoryName={item.categoryName}
+                isDark={isDark}
+                colors={colors}
+                t={t}
+                locale={locale}
+                onPress={item.isGated ? () => showPaywall("alert_history") : handleAlertPress}
+                onLongPress={handleAlertShare}
+              />
+            );
+          }}
           contentContainerStyle={{
             paddingHorizontal: 16,
-            paddingTop: 16,
+            paddingTop: 8,
             paddingBottom: insets.bottom + 100,
           }}
           showsVerticalScrollIndicator={false}
@@ -700,6 +749,32 @@ export default function AlertsScreen() {
               <View style={styles.footerLoader}>
                 <ActivityIndicator size="small" color={isDark ? gold[500] : brand.primary} />
               </View>
+            ) : isLimited ? (
+              <Animated.View entering={FadeInDown.delay(200).duration(400)}>
+                <PressableScale
+                  onPress={() => showPaywall("alert_history")}
+                  style={[
+                    styles.upsellCard,
+                    {
+                      backgroundColor: isDark ? "rgba(212,175,55,0.06)" : "rgba(212,175,55,0.04)",
+                      borderColor: isDark ? "rgba(212,175,55,0.15)" : "rgba(212,175,55,0.10)",
+                    },
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t.alerts.unlockAll}
+                >
+                  <LockSimpleIcon size={18} color={isDark ? gold[400] : gold[700]} weight="fill" />
+                  <View style={styles.upsellTextWrap}>
+                    <Text style={[styles.upsellTitle, { color: colors.textPrimary }]}>
+                      {`+${filteredItems.length - FREE_ALERT_LIMIT} ${t.alerts.upsellTitle}`}
+                    </Text>
+                    <Text style={[styles.upsellSub, { color: colors.textSecondary }]}>
+                      {t.alerts.upsellSub}
+                    </Text>
+                  </View>
+                  <CaretRightIcon size={14} color={colors.textMuted} />
+                </PressableScale>
+              </Animated.View>
             ) : null
           }
           onEndReached={handleEndReached}
@@ -722,7 +797,7 @@ export default function AlertsScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
 
-  // Header
+  // ── Header ──
   header: { zIndex: 10 },
   headerGlass: { borderBottomWidth: 1 },
   headerRow: {
@@ -733,22 +808,45 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   headerLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
+  headerRight: { flexDirection: "row", alignItems: "center", gap: 8 },
   headerIconBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: "center",
     justifyContent: "center",
   },
-  headerTitleWrap: { flexDirection: "row", alignItems: "center", gap: 8 },
-  headerTitle: { fontSize: 22, fontWeight: "800", letterSpacing: -0.5 },
+  headerTitle: {
+    fontSize: 20,
+    fontFamily: headingFontFamily.extraBold,
+    fontWeight: fontWeight.extraBold,
+    letterSpacing: -0.5,
+  },
+  headerBadge: {
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 5,
+  },
+  headerBadgeText: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#ffffff",
+  },
 
-  // Filters
-  filtersRow: { paddingHorizontal: 16, paddingTop: 6, gap: 8 },
+  // ── Filters (single row) ──
+  filtersRow: {
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    gap: 6,
+    alignItems: "center",
+  },
   filterChip: {
-    height: 34,
-    paddingHorizontal: 14,
-    borderRadius: 17,
+    height: 32,
+    paddingHorizontal: 12,
+    borderRadius: 16,
     justifyContent: "center",
   },
   filterChipInner: {
@@ -756,103 +854,135 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 5,
   },
-  filterText: { fontSize: 13, lineHeight: 16, includeFontPadding: false },
-  severityDotSmall: { width: 6, height: 6, borderRadius: 3 },
+  filterDot: { width: 6, height: 6, borderRadius: 3 },
+  filterText: { fontSize: 12, lineHeight: 16 },
+  filterSeparator: {
+    width: 1,
+    height: 20,
+    marginHorizontal: 2,
+  },
 
-  // Card
+  // ── Section headers ──
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+  },
+  sectionLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+  },
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+
+  // ── Compact Alert Card ──
   card: {
-    borderRadius: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingLeft: 12,
+    paddingRight: 14,
+    borderRadius: 16,
     borderWidth: 1,
+    marginBottom: 6,
+    gap: 10,
     overflow: "hidden",
   },
-  cardGlow: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 60,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+  cardLeft: {
+    width: 20,
+    alignItems: "center",
   },
-  severityBar: {
-    width: 3,
-    position: "absolute",
-    left: 0,
-    top: 8,
-    bottom: 8,
-    borderRadius: 2,
+  severityDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
-  cardInner: { paddingVertical: 16, paddingLeft: 18, paddingRight: 16 },
-
-  // Card top
-  cardTopRow: {
+  cardCenter: {
+    flex: 1,
+    gap: 2,
+  },
+  metaRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 12,
+    gap: 6,
   },
-  cardTopLeft: { flexDirection: "row", alignItems: "center", gap: 8 },
-  unreadDotWrap: { width: 10, height: 10, alignItems: "center", justifyContent: "center" },
-  unreadDotGlow: { position: "absolute", width: 10, height: 10, borderRadius: 5, opacity: 0.4 },
-  unreadDot: { width: 6, height: 6, borderRadius: 3 },
-  severityPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+  categoryLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
+  },
+  timeLabel: {
+    fontSize: 10,
+    fontWeight: "500",
+  },
+  cardTitle: {
+    fontSize: 14,
+    lineHeight: 18,
+    letterSpacing: -0.1,
+  },
+  cardSummary: {
+    fontSize: 12,
+    lineHeight: 16,
+    opacity: 0.85,
+  },
+  cardThumb: {
+    width: 44,
+    height: 44,
     borderRadius: 10,
   },
-  severityText: { fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
-  categoryPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 8,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  categoryText: { fontSize: 10, fontWeight: "600" },
-  timeText: { fontSize: 11, fontWeight: "500" },
-
-  // Card title
-  titleRow: { flexDirection: "row", gap: 14 },
-  titleWrap: { flex: 1, gap: 6 },
-  cardTitle: { fontSize: 15, lineHeight: 21, letterSpacing: -0.2 },
-  cardSummary: { fontSize: 13, lineHeight: 19, opacity: 0.85 },
-
-  // Thumbnail
-  thumbWrap: { position: "relative" },
-  thumb: { width: 76, height: 76, borderRadius: 14 },
-  thumbFrame: {
+  unreadDot: {
     position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    top: 8,
+    right: 8,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+
+  // ── Blur gate for free tier ──
+  blurOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 16,
+  },
+  lockBadge: {
+    position: "absolute",
+    right: 14,
+    width: 28,
+    height: 28,
     borderRadius: 14,
-    borderWidth: 1,
-  },
-
-  // Card footer
-  cardFooter: {
-    flexDirection: "row",
+    backgroundColor: "rgba(212,175,55,0.15)",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 12,
-    paddingTop: 10,
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(212,175,55,0.25)",
   },
-  sourceRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  sourceText: { fontSize: 11, fontWeight: "500", maxWidth: 180 },
 
-  // Error
-  errorWrap: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32 },
-  errorIconWrap: { width: 72, height: 72, borderRadius: 36, alignItems: "center", justifyContent: "center" },
-  errorText: { fontSize: 15, fontWeight: "500", marginTop: 16, textAlign: "center" },
-  retryBtn: { marginTop: 16, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 20 },
+  // ── Error ──
+  errorWrap: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 12 },
+  errorText: { fontSize: 15, fontWeight: "500", textAlign: "center" },
+  retryBtn: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 20 },
   retryText: { color: "#0d1b13", fontWeight: "700", fontSize: 14 },
 
-  // Footer
+  // ── Footer ──
   footerLoader: { paddingVertical: 24, alignItems: "center" },
+  upsellCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    gap: 10,
+    marginTop: 4,
+    marginBottom: 16,
+  },
+  upsellTextWrap: { flex: 1, gap: 1 },
+  upsellTitle: { fontSize: 13, fontWeight: "700" },
+  upsellSub: { fontSize: 11 },
 });

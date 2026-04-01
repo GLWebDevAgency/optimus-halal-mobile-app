@@ -1,12 +1,31 @@
 import { z } from "zod";
 import { eq, and, desc, sql, gt, lt } from "drizzle-orm";
-import { router, publicProcedure, protectedProcedure } from "../trpc.js";
+import { router, publicProcedure, protectedProcedure, adminProcedure } from "../trpc.js";
 import {
   alerts,
   alertCategories,
   alertReadStatus,
 } from "../../db/schema/index.js";
 import { notFound } from "../../lib/errors.js";
+
+// ── Admin validation schemas ────────────────────────────
+
+const createAlertSchema = z.object({
+  title: z.string().min(5).max(255),
+  summary: z.string().min(10).max(500),
+  content: z.string().min(10),
+  severity: z.enum(["info", "warning", "critical"]).default("info"),
+  priority: z.enum(["low", "medium", "high", "critical"]).default("medium"),
+  categoryId: z.string().max(50).optional(),
+  imageUrl: z.string().url().optional().nullable(),
+  sourceUrl: z.string().url().optional().nullable(),
+  isActive: z.boolean().default(true),
+  expiresAt: z.string().datetime().optional().nullable(),
+});
+
+const updateAlertSchema = createAlertSchema.partial().extend({
+  id: z.string().uuid(),
+});
 
 export const alertRouter = router({
   list: publicProcedure
@@ -111,8 +130,11 @@ export const alertRouter = router({
     }),
 
   getUnreadCount: protectedProcedure.query(async ({ ctx }) => {
-    const [result] = await ctx.db
-      .select({ count: sql<number>`count(*)::int` })
+    const rows = await ctx.db
+      .select({
+        severity: alerts.severity,
+        count: sql<number>`count(*)::int`,
+      })
       .from(alerts)
       .leftJoin(
         alertReadStatus,
@@ -127,9 +149,20 @@ export const alertRouter = router({
           sql`(${alerts.expiresAt} IS NULL OR ${alerts.expiresAt} > NOW())`,
           sql`(${alertReadStatus.isRead} IS NULL OR ${alertReadStatus.isRead} = false)`
         )
-      );
+      )
+      .groupBy(alerts.severity);
 
-    return { count: result?.count ?? 0 };
+    let urgent = 0;
+    let info = 0;
+    for (const row of rows) {
+      if (row.severity === "critical" || row.severity === "warning") {
+        urgent += row.count;
+      } else {
+        info += row.count;
+      }
+    }
+
+    return { count: urgent + info, urgent, info };
   }),
 
   markAllAsRead: protectedProcedure.mutation(async ({ ctx }) => {
@@ -196,4 +229,110 @@ export const alertRouter = router({
 
     return { readIds, dismissedIds };
   }),
+
+  // ── Admin CRUD ──────────────────────────────────────
+
+  /** Admin: list all alerts (active + inactive) with stats */
+  adminList: adminProcedure
+    .input(
+      z.object({
+        severity: z.enum(["info", "warning", "critical"]).optional(),
+        category: z.string().optional(),
+        isActive: z.boolean().optional(),
+        limit: z.number().min(1).max(100).default(50),
+        offset: z.number().min(0).default(0),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const conditions: ReturnType<typeof eq>[] = [];
+      if (input.severity) conditions.push(eq(alerts.severity, input.severity));
+      if (input.category) conditions.push(eq(alerts.categoryId, input.category));
+      if (input.isActive !== undefined) conditions.push(eq(alerts.isActive, input.isActive));
+
+      const [items, [stats]] = await Promise.all([
+        ctx.db
+          .select()
+          .from(alerts)
+          .where(conditions.length > 0 ? and(...conditions) : undefined)
+          .orderBy(desc(alerts.publishedAt))
+          .limit(input.limit)
+          .offset(input.offset),
+        ctx.db
+          .select({
+            total: sql<number>`count(*)::int`,
+            active: sql<number>`count(*) filter (where ${alerts.isActive} = true)::int`,
+            inactive: sql<number>`count(*) filter (where ${alerts.isActive} = false)::int`,
+          })
+          .from(alerts),
+      ]);
+
+      return { items, stats: stats ?? { total: 0, active: 0, inactive: 0 } };
+    }),
+
+  /** Admin: create a new alert */
+  create: adminProcedure
+    .input(createAlertSchema)
+    .mutation(async ({ ctx, input }) => {
+      const [alert] = await ctx.db
+        .insert(alerts)
+        .values({
+          ...input,
+          expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
+          publishedAt: new Date(),
+        })
+        .returning();
+
+      return alert;
+    }),
+
+  /** Admin: update an existing alert */
+  update: adminProcedure
+    .input(updateAlertSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { id, expiresAt, ...data } = input;
+
+      const [updated] = await ctx.db
+        .update(alerts)
+        .set({
+          ...data,
+          ...(expiresAt !== undefined ? { expiresAt: expiresAt ? new Date(expiresAt) : null } : {}),
+        })
+        .where(eq(alerts.id, id))
+        .returning();
+
+      if (!updated) throw notFound("Alerte");
+      return updated;
+    }),
+
+  /** Admin: toggle active status */
+  toggleActive: adminProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.db.query.alerts.findFirst({
+        where: eq(alerts.id, input.id),
+        columns: { isActive: true },
+      });
+      if (!existing) throw notFound("Alerte");
+
+      const [updated] = await ctx.db
+        .update(alerts)
+        .set({ isActive: !existing.isActive })
+        .where(eq(alerts.id, input.id))
+        .returning();
+
+      return updated;
+    }),
+
+  /** Admin: delete an alert (hard delete, cascades read status) */
+  delete: adminProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const [deleted] = await ctx.db
+        .delete(alerts)
+        .where(eq(alerts.id, input.id))
+        .returning({ id: alerts.id });
+
+      if (!deleted) throw notFound("Alerte");
+      return { success: true, id: deleted.id };
+    }),
 });

@@ -1,21 +1,24 @@
 /**
  * Alert seed — called by run-all.ts
  *
- * Seeds alert categories + alerts based on REAL events from verified sources:
- * - Al-Kanz (al-kanz.org) — real articles, verified URLs
- * - RappelConso (rappel.conso.gouv.fr) — real government recalls
- * - AVS (avs.fr) — real certification authority
- * - DGCCRF — real investigations
- * - OCI, BDS — real communiqués
+ * Seeds alert categories + alerts based on REAL events from verified sources.
+ * Categories: fraud, boycott, certification, community.
  *
- * Deduplication: uses title-based matching to prevent duplicate inserts.
+ * NOTE: "recall" category removed — product recalls are handled by the
+ * automated RappelConso sync pipeline (product_recalls table).
+ * Alerts are for editorial content that has NO government data source.
+ *
+ * Sources:
+ * - Al-Kanz (al-kanz.org) — verified halal industry news
+ * - AVS (avs.fr) — certification authority communiqués
+ * - DGCCRF — fraud investigations
+ * - OCI, BDS — institutional communiqués
  */
 
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { alertCategories, alerts } from "../schema/alerts.js";
 
 const ALERT_CATEGORIES = [
-  { id: "recall", name: "Product Recall", nameFr: "Rappel Produit", nameAr: "استرجاع منتج", icon: "warning", color: "#ef4444" },
   { id: "fraud", name: "Halal Fraud", nameFr: "Fraude Halal", nameAr: "احتيال حلال", icon: "gavel", color: "#f97316" },
   { id: "boycott", name: "Boycott Alert", nameFr: "Alerte Boycott", nameAr: "تنبيه مقاطعة", icon: "block", color: "#dc2626" },
   { id: "certification", name: "Certification Update", nameFr: "Mise à jour Certification", nameAr: "تحديث الشهادة", icon: "verified", color: "#1de560" },
@@ -24,53 +27,9 @@ const ALERT_CATEGORIES = [
 
 /**
  * All alerts below are based on REAL, verified events.
- * Sources are real URLs from Al-Kanz, RappelConso, or institutional sites.
+ * Sources are real URLs from Al-Kanz, AVS, or institutional sites.
  */
 const SEED_ALERTS = [
-  // ── RECALL (4) — Real RappelConso & Al-Kanz reports ──────
-  {
-    title: "Salmonelle : rappel de poulets halal certifiés SFCVH",
-    summary: "Des poulets halal certifiés SFCVH rappelés pour contamination à la salmonelle. Source : Al-Kanz / RappelConso.",
-    content: "RappelConso a publié un rappel concernant des poulets certifiés halal par la SFCVH. La salmonelle a été détectée lors de contrôles sanitaires de la DGCCRF. Les consommateurs ayant acheté ces produits sont invités à ne pas les consommer et à les rapporter en point de vente pour remboursement. Cet incident illustre l'importance de croiser certification halal et sécurité alimentaire — un axe clé de la veille Naqiy.",
-    severity: "critical" as const,
-    priority: "critical" as const,
-    categoryId: "recall",
-    sourceUrl: "https://www.al-kanz.org/2026/02/09/salmonelle-poulets-halal-sfcvh-mosquee-paris/",
-    imageUrl: "https://images.unsplash.com/photo-1587593810167-a84920ea0781?w=800",
-    publishedAt: new Date("2026-02-09T10:00:00Z"),
-  },
-  {
-    title: "Listeria : retrait de merguez halal — DGCCRF",
-    summary: "La DGCCRF ordonne le retrait de merguez halal après détection de Listeria monocytogenes.",
-    content: "Suite à un contrôle sanitaire, la DGCCRF a ordonné le retrait immédiat de merguez halal contaminées par Listeria monocytogenes. La Listeria est la première cause de rappels alimentaires en France (2 973 rappels sur RappelConso). Risque grave pour les personnes immunodéprimées et les femmes enceintes. Les consommateurs sont invités à rapporter le produit en magasin pour remboursement.",
-    severity: "critical" as const,
-    priority: "critical" as const,
-    categoryId: "recall",
-    sourceUrl: "https://rappel.conso.gouv.fr/",
-    imageUrl: "https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=800",
-    publishedAt: new Date("2026-02-18T08:30:00Z"),
-  },
-  {
-    title: "Allergènes non déclarés : biscuits orientaux retirés",
-    summary: "RappelConso signale le retrait de biscuits pour traces de sésame non déclarées — 568 rappels de ce type en France.",
-    content: "RappelConso signale le retrait de biscuits fourrés aux dattes pour traces de sésame non déclarées sur l'emballage. Les allergènes non déclarés représentent 568 rappels sur la plateforme gouvernementale, constituant un risque critique pour les consommateurs allergiques. Cette catégorie de rappels est particulièrement pertinente pour la communauté halal qui consomme fréquemment des produits d'import.",
-    severity: "warning" as const,
-    priority: "high" as const,
-    categoryId: "recall",
-    sourceUrl: "https://rappel.conso.gouv.fr/",
-    publishedAt: new Date("2026-02-22T11:00:00Z"),
-  },
-  {
-    title: "Anomalie d'étiquetage : viande halal sans mention de lot",
-    summary: "365 rappels pour anomalies d'étiquetage sur RappelConso — un enjeu de traçabilité halal.",
-    content: "RappelConso recense 365 rappels pour anomalies d'étiquetage, un problème directement lié à la confiance halal. Quand l'étiquetage est défaillant, la traçabilité de la chaîne halal est compromise. Les consommateurs ne peuvent pas vérifier l'origine, le lot, ni la certification du produit. Naqiy intègrera à terme le lookup RappelConso par code-barres (GTIN) pour détecter ces anomalies au scan.",
-    severity: "warning" as const,
-    priority: "medium" as const,
-    categoryId: "recall",
-    sourceUrl: "https://data.economie.gouv.fr/explore/dataset/rappelconso-v2-gtin-espaces",
-    publishedAt: new Date("2026-01-20T14:00:00Z"),
-  },
-
   // ── FRAUD (3) — Real Al-Kanz & DGCCRF reports ──────
   {
     title: "UK : prison ferme pour un grossiste en faux halal",
@@ -185,7 +144,7 @@ const SEED_ALERTS = [
   {
     title: "RappelConso V2 : les codes-barres GTIN désormais disponibles",
     summary: "L'API gouvernementale RappelConso intègre les codes-barres — 12 442 rappels alimentaires consultables.",
-    content: "Depuis novembre 2024, l'API RappelConso V2 inclut les codes-barres GTIN (EAN-13) dans ses données. Cela signifie qu'à chaque scan de produit, il est possible de vérifier instantanément si le produit fait l'objet d'un rappel de sécurité alimentaire par le gouvernement français. 12 442 rappels alimentaires sont consultables, dont 2 973 pour Listeria et 1 071 pour Salmonella. Naqiy intégrera cette source pour protéger aussi la sécurité physique du consommateur.",
+    content: "Depuis novembre 2024, l'API RappelConso V2 inclut les codes-barres GTIN (EAN-13) dans ses données. Cela signifie qu'à chaque scan de produit, il est possible de vérifier instantanément si le produit fait l'objet d'un rappel de sécurité alimentaire par le gouvernement français. 12 442 rappels alimentaires sont consultables, dont 2 973 pour Listeria et 1 071 pour Salmonella. Naqiy intègre cette source pour protéger aussi la sécurité physique du consommateur.",
     severity: "info" as const,
     priority: "medium" as const,
     categoryId: "community",
@@ -197,17 +156,15 @@ const SEED_ALERTS = [
 export async function seedAlerts(db: PostgresJsDatabase): Promise<number> {
   let count = 0;
 
-  // Upsert categories
+  // Upsert categories (recall category removed — handled by product_recalls pipeline)
   for (const cat of ALERT_CATEGORIES) {
     await db.insert(alertCategories).values(cat).onConflictDoNothing({ target: alertCategories.id });
     count++;
   }
 
   // Clean slate: delete ALL alerts then re-insert.
-  // All current alerts are seed data. onDelete: "cascade" on alertReadStatus handles cleanup.
   await db.delete(alerts);
 
-  // Insert fresh
   for (const alert of SEED_ALERTS) {
     await db.insert(alerts).values(alert);
     count++;

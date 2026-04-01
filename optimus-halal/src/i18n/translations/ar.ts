@@ -1075,6 +1075,12 @@ export const ar: TranslationKeys = {
     swipeToDismiss: "اسحب للإخفاء",
     noAlerts: "لا توجد تنبيهات حالياً",
     empty: "أنت على اطلاع بكل شيء!",
+    groupToday: "اليوم",
+    groupThisWeek: "هذا الأسبوع",
+    groupOlder: "أقدم",
+    unlockAll: "فتح جميع التنبيهات",
+    upsellTitle: "تنبيهات إضافية متاحة",
+    upsellSub: "انتقل إلى نقيّ+ للاطلاع على السجل الكامل",
   },
   report: {
     title: "إبلاغ",
@@ -1649,6 +1655,20 @@ export const ar: TranslationKeys = {
     themeLight: "فاتح",
     themeSystem: "النظام",
     themeDark: "داكن",
+  },
+
+  // Product recalls (scan-time government recall alerts)
+  recalls: {
+    title: "استرجاع منتج",
+    subtitle: "المنتج الذي قمت بمسحه يخضع لعملية استرجاع رسمية.",
+    reasonTitle: "سبب الاسترجاع",
+    risksTitle: "المخاطر الصحية",
+    actionsTitle: "ماذا تفعل؟",
+    precautionsTitle: "الاحتياطات الصحية",
+    distributorsTitle: "نقاط البيع المعنية",
+    geoTitle: "المنطقة الجغرافية",
+    publishedOn: "نُشر في",
+    viewOfficial: "عرض الإشعار الرسمي",
   },
 
   // Verdict summary (intelligent fiqh + certifier synthesis)

@@ -7,15 +7,16 @@
  */
 
 import { Hono } from "hono";
-import { sql, and, gte, lte, isNotNull, isNull } from "drizzle-orm";
+import { sql, and, gte, lte, isNotNull, isNull, eq } from "drizzle-orm";
 import { env } from "../lib/env.js";
 import { db } from "../db/index.js";
 import { redis } from "../lib/redis.js";
 import { logger } from "../lib/logger.js";
 import { Sentry } from "../lib/sentry.js";
 import { refreshStores } from "../services/store-refresh.service.js";
+import { syncRecalls } from "../services/recall-sync.service.js";
 import { sendPushNotifications } from "../services/push-notifications.js";
-import { devices, pushTokens, users } from "../db/schema/index.js";
+import { devices, pushTokens, users, alerts, articles, contentSources } from "../db/schema/index.js";
 import { randomUUID } from "crypto";
 
 export const internalRoutes = new Hono();
@@ -86,6 +87,190 @@ internalRoutes.get("/refresh-stores/status", async (c) => {
   const [lastRun, lockActive] = await Promise.all([
     redis.get("store-refresh:last-run"),
     redis.get("lock:store-refresh"),
+  ]);
+
+  return c.json({
+    lastRun: lastRun ? JSON.parse(lastRun) : null,
+    isRunning: lockActive !== null,
+  });
+});
+
+// ── POST /create-draft ───────────────────────────────────────
+// Creates a draft alert or article. Used by Claude Cowork veille task.
+// ONLY inserts drafts (is_active=false / is_published=false).
+// Protected by CRON_SECRET — same auth as all internal endpoints.
+
+internalRoutes.post("/create-draft", async (c) => {
+  if (!verifyCronSecret(c)) {
+    return c.json({ error: "Non autorisé" }, 401);
+  }
+
+  const body = await c.req.json();
+  const { type } = body; // "alert" or "article"
+
+  try {
+    if (type === "alert") {
+      const { title, summary, content, severity, priority, categoryId, imageUrl, sourceUrl } = body;
+      if (!title || !summary || !content) {
+        return c.json({ error: "title, summary, content requis" }, 400);
+      }
+
+      const [draft] = await db
+        .insert(alerts)
+        .values({
+          title,
+          summary,
+          content,
+          severity: severity ?? "info",
+          priority: priority ?? "medium",
+          categoryId: categoryId ?? "community",
+          imageUrl: imageUrl ?? null,
+          sourceUrl: sourceUrl ?? null,
+          isActive: false, // ALWAYS draft — admin validates
+        })
+        .returning({ id: alerts.id, title: alerts.title });
+
+      return c.json({ success: true, type: "alert", id: draft.id, title: draft.title });
+
+    } else if (type === "article") {
+      const { title, slug, excerpt, content: articleContent, coverImage, author, articleType, tags, readTimeMinutes, externalLink } = body;
+      if (!title || !slug) {
+        return c.json({ error: "title, slug requis" }, 400);
+      }
+
+      const [draft] = await db
+        .insert(articles)
+        .values({
+          title,
+          slug,
+          excerpt: excerpt ?? null,
+          content: articleContent ?? null,
+          coverImage: coverImage ?? null,
+          author: author ?? "Naqiy Team",
+          type: articleType ?? "blog",
+          tags: tags ?? [],
+          readTimeMinutes: readTimeMinutes ?? 3,
+          externalLink: externalLink ?? null,
+          isPublished: false, // ALWAYS draft — admin validates
+        })
+        .returning({ id: articles.id, title: articles.title });
+
+      return c.json({ success: true, type: "article", id: draft.id, title: draft.title });
+
+    } else {
+      return c.json({ error: "type doit être 'alert' ou 'article'" }, 400);
+    }
+  } catch (err) {
+    logger.error("Create draft failed", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return c.json({ error: "Création du draft échouée" }, 500);
+  }
+});
+
+// ── GET /content-sources ─────────────────────────────────────
+// Lists active content sources. Used by Claude Cowork to know what to fetch.
+
+internalRoutes.get("/content-sources", async (c) => {
+  if (!verifyCronSecret(c)) {
+    return c.json({ error: "Non autorisé" }, 401);
+  }
+
+  const sources = await db
+    .select()
+    .from(contentSources)
+    .where(eq(contentSources.isActive, true))
+    .orderBy(contentSources.name);
+
+  return c.json({ sources });
+});
+
+// ── POST /update-source-fetch ─────────────────────────────────
+// Updates last_fetched_at and last_item_date for a content source.
+// Called by Claude Cowork after fetching a source's RSS feed.
+
+internalRoutes.post("/update-source-fetch", async (c) => {
+  if (!verifyCronSecret(c)) {
+    return c.json({ error: "Non autorisé" }, 401);
+  }
+
+  const { sourceId, lastItemDate, fetchCount } = await c.req.json();
+  if (!sourceId) return c.json({ error: "sourceId requis" }, 400);
+
+  await db
+    .update(contentSources)
+    .set({
+      lastFetchedAt: new Date(),
+      lastItemDate: lastItemDate ? new Date(lastItemDate) : undefined,
+      lastFetchCount: fetchCount ?? 0,
+    })
+    .where(eq(contentSources.id, sourceId));
+
+  return c.json({ success: true });
+});
+
+// ── POST /sync-recalls ───────────────────────────────────────
+// Syncs food safety recalls from RappelConso (data.economie.gouv.fr).
+// Called daily at 6:00 CET by GitHub Actions cron.
+
+internalRoutes.post("/sync-recalls", async (c) => {
+  if (!verifyCronSecret(c)) {
+    return c.json({ error: "Non autorisé" }, 401);
+  }
+
+  const lockId = randomUUID();
+  const acquired = await redis.set("lock:recall-sync", lockId, "EX", 120, "NX");
+
+  if (!acquired) {
+    return c.json({ error: "Sync rappels déjà en cours" }, 409);
+  }
+
+  // Parse optional query params
+  const autoApprove = c.req.query("auto_approve") !== "false";
+
+  (async () => {
+    try {
+      const result = await syncRecalls({ autoApprove });
+      await redis.setex(
+        "recall-sync:last-run",
+        7 * 86400,
+        JSON.stringify(result),
+      );
+    } catch (err) {
+      logger.error("Sync rappels échoué", {
+        error: err instanceof Error ? err.message : String(err),
+      });
+      Sentry.captureException(err);
+      await redis.setex(
+        "recall-sync:last-run",
+        7 * 86400,
+        JSON.stringify({
+          success: false,
+          completedAt: new Date().toISOString(),
+          error: err instanceof Error ? err.message : String(err),
+        }),
+      );
+    } finally {
+      const currentLock = await redis.get("lock:recall-sync");
+      if (currentLock === lockId) {
+        await redis.del("lock:recall-sync");
+      }
+    }
+  })();
+
+  return c.json({ status: "accepted" }, 202);
+});
+
+// ── GET /sync-recalls/status ─────────────────────────────────
+
+internalRoutes.get("/sync-recalls/status", async (c) => {
+  if (!verifyCronSecret(c)) {
+    return c.json({ error: "Non autorisé" }, 401);
+  }
+
+  const [lastRun, lockActive] = await Promise.all([
+    redis.get("recall-sync:last-run"),
+    redis.get("lock:recall-sync"),
   ]);
 
   return c.json({

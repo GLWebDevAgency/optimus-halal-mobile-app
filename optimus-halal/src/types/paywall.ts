@@ -12,5 +12,6 @@ export type PaywallTrigger =
   | "store_favorites"   // Tried to add > 10 store favorites
   | "search"            // Tried to search products by name
   | "madhab_detail"     // Tapped verdict card to see per-madhab breakdown
+  | "alert_history"     // Tried to access full alert history (free: 3 most recent)
   | "feature_locked"    // Generic premium feature locked (padlock UX)
   | "generic";          // Default (no specific trigger)
