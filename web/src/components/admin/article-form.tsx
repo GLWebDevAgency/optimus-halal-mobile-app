@@ -28,7 +28,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { toast } from "sonner"
 
@@ -229,12 +228,15 @@ export function ArticleForm({ initialData, mode }: ArticleFormProps) {
               >
                 {form.isPublished ? "Depublier" : "Publier"}
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-destructive"
+                onClick={() => setShowDeleteDialog(true)}
+              >
+                <Trash className="size-4" />
+              </Button>
               <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="text-destructive">
-                    <Trash className="size-4" />
-                  </Button>
-                </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Supprimer l&apos;article ?</DialogTitle>
