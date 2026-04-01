@@ -187,7 +187,19 @@ export default function RecallsPage() {
           )}
           <Button
             size="sm"
-            onClick={() => syncMutation.mutate({ autoApprove })}
+            variant="outline"
+            onClick={() => syncMutation.mutate({ autoApprove, fullSync: true })}
+            disabled={syncMutation.isPending || syncStatus?.isRunning}
+            title="Re-synchronise les 30 derniers jours"
+          >
+            <ArrowsClockwise
+              className={`mr-1.5 size-4 ${syncMutation.isPending ? "animate-spin" : ""}`}
+            />
+            Full Sync
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => syncMutation.mutate({ autoApprove, fullSync: false })}
             disabled={syncMutation.isPending || syncStatus?.isRunning}
           >
             <ArrowsClockwise

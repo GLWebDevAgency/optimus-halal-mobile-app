@@ -214,6 +214,8 @@ export const recallRouter = router({
     .input(
       z.object({
         autoApprove: z.boolean().default(true),
+        /** Force full re-sync (resets the since date to 30 days ago) */
+        fullSync: z.boolean().default(false),
       }),
     )
     .mutation(async ({ input }) => {
@@ -221,6 +223,11 @@ export const recallRouter = router({
       const lockActive = await redis.get("lock:recall-sync");
       if (lockActive) {
         return { success: false, error: "Sync deja en cours", isRunning: true };
+      }
+
+      // If full sync requested, reset the since date first
+      if (input.fullSync) {
+        await redis.del("recall-sync:last-since");
       }
 
       // Run sync synchronously (admin can wait for result)
