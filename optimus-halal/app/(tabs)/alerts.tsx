@@ -64,7 +64,6 @@ const SEVERITY_COLOR: Record<Severity, string> = {
 };
 
 const CATEGORY_ICONS: Record<string, IconName> = {
-  recall: "warning",
   fraud: "gavel",
   boycott: "block",
   certification: "verified",
