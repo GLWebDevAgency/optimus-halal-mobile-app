@@ -43,7 +43,7 @@ Trois systemes alimentent l'app mobile :
 
 ### Comment creer une alerte ?
 1. **Dashboard → Alertes → "+ Nouvelle alerte"**
-2. Choisir la **categorie** (fraude / boycott / certification / communaute)
+2. Choisir la **categorie** (rappel produit / fraude / boycott / certification / communaute)
 3. Choisir la **severite** (info / avertissement / critique)
 4. Remplir **titre** (court, percutant) + **resume** (1-2 lignes) + **contenu** (details)
 5. Ajouter l'**URL source** (Al-Kanz, AVS, DGCCRF, etc.)

@@ -54,6 +54,7 @@ const SEVERITY_CONFIG: Record<Severity, { icon: typeof WarningOctagon; color: st
 }
 
 const CATEGORIES = [
+  { id: "recall", label: "Rappel Produit" },
   { id: "fraud", label: "Fraude Halal" },
   { id: "boycott", label: "Alerte Boycott" },
   { id: "certification", label: "Mise a jour Certification" },
@@ -207,7 +208,7 @@ export default function AlertsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Alertes</h1>
           <p className="text-muted-foreground">
-            Veille ethique — fraude, boycott, certification, communaute.
+            Veille ethique — rappels produit, fraude, boycott, certification, communaute.
           </p>
         </div>
         <Button onClick={handleNew}>

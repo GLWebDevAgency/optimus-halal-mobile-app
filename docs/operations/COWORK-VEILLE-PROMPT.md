@@ -65,7 +65,7 @@ Pour chaque item dans le rapport :
 
 ### Alert ou Article ?
 - ALERTE : evenement factuel, court, action immediate (fraude, certificat retire, boycott, nouveau partenariat)
-  Categories : fraud, boycott, certification, community
+  Categories : recall, fraud, boycott, certification, community
   Severite : critical (danger immediat), warning (attention requise), info (bonne nouvelle)
 - ARTICLE : contenu long, educatif, analyse, guide, partenariat, tendance marche
   Types : blog, partner_news, educational, community
