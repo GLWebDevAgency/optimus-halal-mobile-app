@@ -158,7 +158,7 @@ export async function syncRecalls(options?: {
 
 async function fetchPage(since: string, offset: number): Promise<RappelConsoRecord[]> {
   const where = [
-    `categorie_produit='Alimentation'`,
+    `categorie_produit='alimentation'`,
     `date_publication>='${since}'`,
   ].join(" AND ");
 

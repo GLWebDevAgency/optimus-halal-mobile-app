@@ -74,12 +74,24 @@ Pour chaque item dans le rapport :
 
 Pour chaque draft article, tu DOIS avoir une image de couverture uploadee sur R2.
 
-### 3a. Si l'item a une imageUrl (provient du RSS)
-Telecharge et uploade sur R2 :
+### 3a. Recuperer l'image de couverture
+
+Pour CHAQUE article/alerte, essaie dans cet ordre :
+1. imageUrl du RSS (si non null et non tronquee — doit se terminer par .jpg/.png/.webp)
+2. og:image de la page web de l'article (TOUJOURS essayer si pas d'image RSS valide) :
+
+  OG_IMG=$(curl -sL "URL_DE_LARTICLE" \
+    -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36" \
+    | grep -oP 'property="og:image"\s+content="\K[^"]+' | head -1)
+  echo "og:image: $OG_IMG"
+
+3. Si og:image absent ou echoue → utilise les images fallback (etape 3b)
+
+### Uploader l'image sur R2
 
   SLUG="le-slug"
   YEAR_MONTH=$(date +%Y-%m)
-  SOURCE_IMG="URL_IMAGE"
+  SOURCE_IMG="URL_IMAGE_OBTENUE"
   curl -sL "$SOURCE_IMG" -o /tmp/veille-cover.jpg
 
   cd backend && source .env && node -e "

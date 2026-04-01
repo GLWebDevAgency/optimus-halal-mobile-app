@@ -145,6 +145,32 @@ function parseAtomItems(xmlText: string): FeedItem[] {
   return items;
 }
 
+// ── OG Image Fallback ──────────────────────────────────
+
+const BROWSER_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
+
+async function fetchOgImage(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(8000),
+      headers: { "User-Agent": BROWSER_UA },
+    });
+    if (!response.ok) return null;
+    const html = await response.text();
+    const ogMatch = html.match(/property="og:image"\s+content="([^"]+)"/);
+    if (ogMatch?.[1]) return ogMatch[1];
+    const ogMatch2 = html.match(/content="([^"]+)"\s+property="og:image"/);
+    return ogMatch2?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function isValidImageUrl(url: string | null): boolean {
+  if (!url) return false;
+  return /\.(jpg|jpeg|png|webp|gif)(\?|$)/i.test(url) && url.length > 20;
+}
+
 // ── Fetch source ───────────────────────────────────────
 
 async function fetchSource(source: ContentSource): Promise<SourceReport> {
@@ -164,7 +190,7 @@ async function fetchSource(source: ContentSource): Promise<SourceReport> {
     const response = await fetch(source.url, {
       signal: AbortSignal.timeout(FETCH_TIMEOUT),
       headers: {
-        "User-Agent": "Naqiy-Veille/1.0 (naqiy.app)",
+        "User-Agent": BROWSER_UA,
         Accept: "application/rss+xml, application/atom+xml, application/xml, text/xml, text/html",
       },
     });
@@ -198,6 +224,18 @@ async function fetchSource(source: ContentSource): Promise<SourceReport> {
         const itemDate = new Date(item.pubDate);
         if (itemDate > cutoff) {
           report.newItems.push(item);
+        }
+      }
+    }
+
+    // Enrich items missing images with og:image from article pages
+    for (const item of report.newItems) {
+      if (!isValidImageUrl(item.imageUrl) && item.link) {
+        console.log("    Fetching og:image for:", item.link.slice(0, 60));
+        const ogImg = await fetchOgImage(item.link);
+        if (ogImg) {
+          item.imageUrl = ogImg;
+          console.log("    -> Found:", ogImg.slice(0, 80));
         }
       }
     }
