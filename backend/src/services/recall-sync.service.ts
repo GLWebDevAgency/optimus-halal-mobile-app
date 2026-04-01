@@ -18,6 +18,7 @@ import { db } from "../db/index.js";
 import { productRecalls } from "../db/schema/product-recalls.js";
 import { logger } from "../lib/logger.js";
 import { Sentry } from "../lib/sentry.js";
+import { redis } from "../lib/redis.js";
 
 // ── API Config ──────────────────────────────────────────────
 
@@ -74,7 +75,7 @@ export async function syncRecalls(options?: {
   const startedAt = new Date().toISOString();
   const autoApprove = options?.autoApprove ?? true;
   const maxPages = options?.maxPages ?? 10;
-  const since = options?.since ?? getDefaultSinceDate();
+  const since = options?.since ?? await getSmartSinceDate();
 
   let fetched = 0;
   let inserted = 0;
@@ -129,6 +130,10 @@ export async function syncRecalls(options?: {
     };
 
     logger.info(`[recall-sync] Complete: ${inserted} inserted, ${skippedDuplicates} dupes, ${errors} errors (${durationMs}ms)`);
+
+    // Persist sync date so next run only fetches the delta
+    await persistSyncDate(startedAt.split("T")[0]);
+
     return result;
   } catch (err: unknown) {
     logger.error("[recall-sync] Fatal error", {
@@ -233,9 +238,28 @@ function extractFirstUrl(raw: string | undefined | null): string | null {
   return match?.[0] ?? null;
 }
 
-/** Default: sync last 30 days on first run, then daily delta */
-function getDefaultSinceDate(): string {
+const REDIS_LAST_SYNC_KEY = "recall-sync:last-since";
+
+/**
+ * Smart since date:
+ *   - First run (no Redis key): fetch last 30 days (bootstrap)
+ *   - Subsequent runs: fetch since last successful sync date (delta only)
+ *
+ * This avoids re-fetching the same 1000 records every day.
+ * The ON CONFLICT DO NOTHING is still a safety net for edge cases.
+ */
+async function getSmartSinceDate(): Promise<string> {
+  const lastSince = await redis.get(REDIS_LAST_SYNC_KEY);
+  if (lastSince) return lastSince;
+
+  // First run: bootstrap with last 30 days
   const d = new Date();
   d.setDate(d.getDate() - 30);
   return d.toISOString().split("T")[0];
+}
+
+/** Persist the sync date after a successful run */
+async function persistSyncDate(date: string): Promise<void> {
+  // Keep forever (no TTL) — overwritten on each successful sync
+  await redis.set(REDIS_LAST_SYNC_KEY, date);
 }
