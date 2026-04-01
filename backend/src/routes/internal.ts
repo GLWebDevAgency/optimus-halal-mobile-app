@@ -209,37 +209,43 @@ internalRoutes.post("/update-source-fetch", async (c) => {
   return c.json({ success: true });
 });
 
-// ── POST /cleanup-seed-alerts ─────────────────────────────────
-// One-shot: removes seed alerts (is_active=true) that were inserted by
-// the old seed pipeline. Keeps Cowork drafts (is_active=false).
+// ── POST /cleanup-recalls ─────────────────────────────────────
+// Cleans up recall alerts + product_recalls for a fresh re-sync.
+// Resets Redis sync date so next sync bootstraps from scratch.
 
-internalRoutes.post("/cleanup-seed-alerts", async (c) => {
+internalRoutes.post("/cleanup-recalls", async (c) => {
   if (!verifyCronSecret(c)) {
     return c.json({ error: "Non autorisé" }, 401);
   }
 
-  // Delete read status first (FK constraint)
+  // Delete recall-type alerts + their read status
   await db.execute(sql`
     DELETE FROM alert_read_status
-    WHERE alert_id IN (SELECT id FROM alerts WHERE is_active = true)
+    WHERE alert_id IN (SELECT id FROM alerts WHERE category_id = 'recall')
   `);
+  const alertsDeleted = await db.execute(sql`DELETE FROM alerts WHERE category_id = 'recall'`);
 
-  // Delete seed alerts (all active ones = seed data)
-  const result = await db.execute(sql`
-    DELETE FROM alerts WHERE is_active = true
+  // Delete test drafts
+  await db.execute(sql`DELETE FROM alerts WHERE title LIKE '%[TEST]%'`);
+
+  // Delete all product_recalls
+  const recallsDeleted = await db.execute(sql`DELETE FROM product_recalls`);
+
+  // Reset Redis sync date for fresh bootstrap
+  await redis.del("recall-sync:last-since");
+  await redis.del("recall-sync:last-run");
+
+  const remaining = await db.execute(sql`
+    SELECT
+      (SELECT count(*)::int FROM alerts) as alerts,
+      (SELECT count(*)::int FROM product_recalls) as recalls
   `);
-
-  // Also delete any test drafts
-  await db.execute(sql`
-    DELETE FROM alerts WHERE title LIKE '%[TEST]%'
-  `);
-
-  const remaining = await db.execute(sql`SELECT count(*)::int as count FROM alerts`);
 
   return c.json({
     success: true,
-    deleted: (result as unknown as { rowCount?: number }).rowCount ?? 0,
-    remaining: (remaining[0] as { count: number }).count,
+    alertsDeleted: (alertsDeleted as unknown as { rowCount?: number }).rowCount ?? 0,
+    recallsDeleted: (recallsDeleted as unknown as { rowCount?: number }).rowCount ?? 0,
+    remaining: remaining[0],
   });
 });
 

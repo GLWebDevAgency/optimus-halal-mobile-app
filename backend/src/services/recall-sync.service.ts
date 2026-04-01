@@ -245,8 +245,15 @@ async function upsertRecall(
     .onConflictDoNothing({ target: productRecalls.sourceReference })
     .returning({ id: productRecalls.id });
 
-  // Auto-create a critical alert for each new recall
-  if (rows.length > 0) {
+  // Auto-create a critical alert ONLY for recent, high-risk recalls.
+  // All recalls are stored in product_recalls for scan-time barcode matching,
+  // but only severe food safety risks get a visible alert (avoids alert spam).
+  const isRecentEnough = values.publishedAt.getTime() > Date.now() - 7 * 86_400_000; // 7 days
+  const isHighRisk = /listeri|salmonel|e\.?\s?coli|allergèn|allergen|toxin|botuli|hépatite|hepatit|staphylo|campylo|norovir/i.test(
+    `${values.recallReason} ${values.healthRisks ?? ""}`,
+  );
+
+  if (rows.length > 0 && isRecentEnough && isHighRisk) {
     const recallId = rows[0].id;
     const brand = (values.brandName ?? "").trim();
     const product = (record.libelle ?? values.productName ?? "").trim();
