@@ -58,6 +58,13 @@ export interface RecallData {
   sourceUrl: string | null;
   publishedAt: string | Date;
   recallEndDate: string | Date | null;
+  lotIdentification: string | null;
+  saleStartDate: string | null;
+  saleEndDate: string | null;
+  temperatureStorage: string | null;
+  compensation: string | null;
+  legalNature: string | null;
+  contactNumber: string | null;
 }
 
 interface RecallInfoSectionProps {
@@ -263,6 +270,87 @@ export const RecallInfoSection = React.memo(function RecallInfoSection({
           delay={nextDelay()}
           isDark={isDark}
           colors={colors}
+        />
+      )}
+
+      {/* ── Lot Identification ── */}
+      {data.lotIdentification && (
+        <InfoCard
+          icon={<BarcodeIcon size={16} color={accent} weight="bold" />}
+          title="Identification du lot"
+          content={data.lotIdentification.replace(/\$/g, "  |  ").replace(/\|  $/, "").trim()}
+          delay={nextDelay()}
+          isDark={isDark}
+          colors={colors}
+          accent={accent}
+        />
+      )}
+
+      {/* ── Sale Dates ── */}
+      {(data.saleStartDate || data.saleEndDate) && (
+        <InfoCard
+          icon={<CalendarIcon size={16} color={colors.textSecondary} weight="bold" />}
+          title="Periode de commercialisation"
+          content={
+            data.saleStartDate && data.saleEndDate
+              ? `Du ${data.saleStartDate} au ${data.saleEndDate}`
+              : data.saleStartDate
+                ? `A partir du ${data.saleStartDate}`
+                : `Jusqu'au ${data.saleEndDate}`
+          }
+          delay={nextDelay()}
+          isDark={isDark}
+          colors={colors}
+        />
+      )}
+
+      {/* ── Temperature / Storage ── */}
+      {data.temperatureStorage && (
+        <InfoCard
+          icon={<ThermometerIcon size={16} color={colors.textSecondary} weight="bold" />}
+          title="Conservation"
+          content={data.temperatureStorage}
+          delay={nextDelay()}
+          isDark={isDark}
+          colors={colors}
+        />
+      )}
+
+      {/* ── Compensation ── */}
+      {data.compensation && (
+        <InfoCard
+          icon={<SwapIcon size={16} color="#22c55e" weight="bold" />}
+          title="Compensation"
+          content={data.compensation}
+          delay={nextDelay()}
+          isDark={isDark}
+          colors={colors}
+          accent="#22c55e"
+        />
+      )}
+
+      {/* ── Legal Nature ── */}
+      {data.legalNature && (
+        <InfoCard
+          icon={<ScalesIcon size={16} color={colors.textSecondary} weight="bold" />}
+          title="Nature du rappel"
+          content={data.legalNature}
+          delay={nextDelay()}
+          isDark={isDark}
+          colors={colors}
+        />
+      )}
+
+      {/* ── Contact ── */}
+      {data.contactNumber && (
+        <InfoCard
+          icon={<PhoneIcon size={16} color={accent} weight="bold" />}
+          title="Contact"
+          content={data.contactNumber}
+          delay={nextDelay()}
+          isDark={isDark}
+          colors={colors}
+          accent={accent}
         />
       )}
 

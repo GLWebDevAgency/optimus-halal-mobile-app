@@ -109,6 +109,13 @@ export const alertRouter = router({
             sourceUrl: recall.sourceUrl,
             publishedAt: recall.publishedAt,
             recallEndDate: recall.recallEndDate,
+            lotIdentification: (recall as Record<string, unknown>).lotIdentification as string | null ?? null,
+            saleStartDate: (recall as Record<string, unknown>).saleStartDate as string | null ?? null,
+            saleEndDate: (recall as Record<string, unknown>).saleEndDate as string | null ?? null,
+            temperatureStorage: (recall as Record<string, unknown>).temperatureStorage as string | null ?? null,
+            compensation: (recall as Record<string, unknown>).compensation as string | null ?? null,
+            legalNature: (recall as Record<string, unknown>).legalNature as string | null ?? null,
+            contactNumber: (recall as Record<string, unknown>).contactNumber as string | null ?? null,
           };
         }
       }

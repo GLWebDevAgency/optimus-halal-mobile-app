@@ -253,6 +253,13 @@
       "when": 1775304539820,
       "tag": "0035_alerts_recall_link",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1775390939820,
+      "tag": "0036_product_recalls_full_data",
+      "breakpoints": true
     }
   ]
 }

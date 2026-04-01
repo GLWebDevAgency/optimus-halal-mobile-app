@@ -222,6 +222,13 @@ async function upsertRecall(
     imageUrl: extractFirstUrl(record.liens_vers_les_images),
     pdfUrl: record.lien_vers_affichette_pdf ?? null,
     sourceUrl: record.lien_vers_la_fiche_rappel ?? null,
+    lotIdentification: record.identification_produits ?? null,
+    saleStartDate: record.date_debut_commercialisation ?? null,
+    saleEndDate: record.date_date_fin_commercialisation ?? null,
+    temperatureStorage: record.temperature_conservation ?? null,
+    compensation: record.modalites_de_compensation ?? null,
+    legalNature: record.nature_juridique_rappel ?? null,
+    contactNumber: record.numero_contact ?? null,
     status: autoApprove ? "approved" : "pending",
     autoApproved: autoApprove,
     publishedAt: record.date_publication

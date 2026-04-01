@@ -45,6 +45,20 @@ export const productRecalls = pgTable(
     reviewedAt: t.timestamp("reviewed_at", { withTimezone: true }),
     /** True if approved by auto-approval rule (no manual review) */
     autoApproved: t.boolean("auto_approved").default(false).notNull(),
+    /** Lot identification (GTIN$lot$type$date) */
+    lotIdentification: t.text("lot_identification"),
+    /** Sale start date (YYYY-MM-DD) */
+    saleStartDate: t.varchar("sale_start_date", { length: 20 }),
+    /** Sale end date (YYYY-MM-DD) */
+    saleEndDate: t.varchar("sale_end_date", { length: 20 }),
+    /** Temperature/storage instructions */
+    temperatureStorage: t.text("temperature_storage"),
+    /** Compensation method (exchange, refund, etc.) */
+    compensation: t.varchar({ length: 255 }),
+    /** Legal nature of the recall */
+    legalNature: t.varchar("legal_nature", { length: 255 }),
+    /** Contact phone number */
+    contactNumber: t.varchar("contact_number", { length: 50 }),
     /** When the recall was published by RappelConso */
     publishedAt: t
       .timestamp("published_at", { withTimezone: true })
