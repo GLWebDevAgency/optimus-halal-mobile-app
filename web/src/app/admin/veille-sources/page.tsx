@@ -22,9 +22,6 @@ import { trpc } from "@/lib/trpc"
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -421,7 +418,7 @@ export default function SourcesPage() {
                 ))}
               </div>
               <p className="text-xs text-muted-foreground">
-                "Auto" laisse Claude decider si le contenu doit devenir une alerte ou un article.
+                &laquo;Auto&raquo; laisse Claude decider si le contenu doit devenir une alerte ou un article.
               </p>
             </div>
 

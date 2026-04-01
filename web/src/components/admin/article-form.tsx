@@ -4,7 +4,6 @@ import { useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import {
   ArrowLeft,
-  Eye,
   FloppyDisk,
   PaperPlaneTilt,
   Trash,
@@ -16,7 +15,6 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch"
 import {
   Card,
   CardContent,
@@ -103,7 +101,6 @@ export function ArticleForm({ initialData, mode }: ArticleFormProps) {
   })
 
   const [tagInput, setTagInput] = useState("")
-  const [showPreview, setShowPreview] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   const createMutation = trpc.article.create.useMutation({
@@ -240,9 +237,9 @@ export function ArticleForm({ initialData, mode }: ArticleFormProps) {
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Supprimer l'article ?</DialogTitle>
+                    <DialogTitle>Supprimer l&apos;article ?</DialogTitle>
                     <DialogDescription>
-                      Cette action est irreversible. L'article sera definitivement supprime.
+                      Cette action est irreversible. L&apos;article sera definitivement supprime.
                     </DialogDescription>
                   </DialogHeader>
                   <DialogFooter>

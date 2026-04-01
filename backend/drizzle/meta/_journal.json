@@ -232,6 +232,20 @@
       "when": 1775045339820,
       "tag": "0032_user_certification_preferences",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1775131739820,
+      "tag": "0033_product_recalls",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1775218139820,
+      "tag": "0034_content_sources",
+      "breakpoints": true
     }
   ]
 }

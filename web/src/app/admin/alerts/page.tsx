@@ -506,7 +506,7 @@ export default function AlertsPage() {
           <DialogHeader>
             <DialogTitle>Supprimer cette alerte ?</DialogTitle>
             <DialogDescription>
-              Cette action est irreversible. L'alerte et son historique de lecture seront supprimes.
+              Cette action est irreversible. L&apos;alerte et son historique de lecture seront supprimes.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
