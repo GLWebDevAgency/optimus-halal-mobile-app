@@ -7,7 +7,7 @@
  */
 
 import { Hono } from "hono";
-import { sql, and, gte, lte, isNotNull, isNull } from "drizzle-orm";
+import { sql, and, gte, lte, isNotNull, isNull, eq, desc } from "drizzle-orm";
 import { env } from "../lib/env.js";
 import { db } from "../db/index.js";
 import { redis } from "../lib/redis.js";
@@ -16,7 +16,7 @@ import { Sentry } from "../lib/sentry.js";
 import { refreshStores } from "../services/store-refresh.service.js";
 import { syncRecalls } from "../services/recall-sync.service.js";
 import { sendPushNotifications } from "../services/push-notifications.js";
-import { devices, pushTokens, users } from "../db/schema/index.js";
+import { devices, pushTokens, users, alerts, articles, contentSources } from "../db/schema/index.js";
 import { randomUUID } from "crypto";
 
 export const internalRoutes = new Hono();
@@ -93,6 +93,96 @@ internalRoutes.get("/refresh-stores/status", async (c) => {
     lastRun: lastRun ? JSON.parse(lastRun) : null,
     isRunning: lockActive !== null,
   });
+});
+
+// ── POST /create-draft ───────────────────────────────────────
+// Creates a draft alert or article. Used by Claude Cowork veille task.
+// ONLY inserts drafts (is_active=false / is_published=false).
+// Protected by CRON_SECRET — same auth as all internal endpoints.
+
+internalRoutes.post("/create-draft", async (c) => {
+  if (!verifyCronSecret(c)) {
+    return c.json({ error: "Non autorisé" }, 401);
+  }
+
+  const body = await c.req.json();
+  const { type } = body; // "alert" or "article"
+
+  try {
+    if (type === "alert") {
+      const { title, summary, content, severity, priority, categoryId, imageUrl, sourceUrl } = body;
+      if (!title || !summary || !content) {
+        return c.json({ error: "title, summary, content requis" }, 400);
+      }
+
+      const [draft] = await db
+        .insert(alerts)
+        .values({
+          title,
+          summary,
+          content,
+          severity: severity ?? "info",
+          priority: priority ?? "medium",
+          categoryId: categoryId ?? "community",
+          imageUrl: imageUrl ?? null,
+          sourceUrl: sourceUrl ?? null,
+          isActive: false, // ALWAYS draft — admin validates
+        })
+        .returning({ id: alerts.id, title: alerts.title });
+
+      return c.json({ success: true, type: "alert", id: draft.id, title: draft.title });
+
+    } else if (type === "article") {
+      const { title, slug, excerpt, content: articleContent, coverImage, author, articleType, tags, readTimeMinutes, externalLink } = body;
+      if (!title || !slug) {
+        return c.json({ error: "title, slug requis" }, 400);
+      }
+
+      const [draft] = await db
+        .insert(articles)
+        .values({
+          title,
+          slug,
+          excerpt: excerpt ?? null,
+          content: articleContent ?? null,
+          coverImage: coverImage ?? null,
+          author: author ?? "Naqiy Team",
+          type: articleType ?? "blog",
+          tags: tags ?? [],
+          readTimeMinutes: readTimeMinutes ?? 3,
+          externalLink: externalLink ?? null,
+          isPublished: false, // ALWAYS draft — admin validates
+        })
+        .returning({ id: articles.id, title: articles.title });
+
+      return c.json({ success: true, type: "article", id: draft.id, title: draft.title });
+
+    } else {
+      return c.json({ error: "type doit être 'alert' ou 'article'" }, 400);
+    }
+  } catch (err) {
+    logger.error("Create draft failed", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return c.json({ error: "Création du draft échouée" }, 500);
+  }
+});
+
+// ── GET /content-sources ─────────────────────────────────────
+// Lists active content sources. Used by Claude Cowork to know what to fetch.
+
+internalRoutes.get("/content-sources", async (c) => {
+  if (!verifyCronSecret(c)) {
+    return c.json({ error: "Non autorisé" }, 401);
+  }
+
+  const sources = await db
+    .select()
+    .from(contentSources)
+    .where(eq(contentSources.isActive, true))
+    .orderBy(contentSources.name);
+
+  return c.json({ sources });
 });
 
 // ── POST /sync-recalls ───────────────────────────────────────

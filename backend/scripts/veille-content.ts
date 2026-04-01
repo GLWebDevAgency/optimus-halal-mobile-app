@@ -21,6 +21,36 @@
 
 import postgres from "postgres";
 
+// Support --env prod|dev flag
+const envArg = process.argv.find((a) => a.startsWith("--env="))?.split("=")[1]
+  ?? (process.argv.includes("--prod") ? "prod" : "dev");
+
+// Load the right .env file
+if (envArg === "prod") {
+  // Load .env.production.local for production DATABASE_URL + R2 keys
+  const { readFileSync } = await import("fs");
+  const { resolve } = await import("path");
+  try {
+    const envPath = resolve(import.meta.dirname ?? ".", ".env.production.local");
+    const envContent = readFileSync(envPath, "utf-8");
+    for (const line of envContent.split("\n")) {
+      const trimmed = line.trim();
+      if (trimmed && !trimmed.startsWith("#")) {
+        const [key, ...rest] = trimmed.split("=");
+        if (key && rest.length > 0) {
+          process.env[key.trim()] = rest.join("=").trim();
+        }
+      }
+    }
+    console.log("[env] Loaded .env.production.local (PRODUCTION)\n");
+  } catch {
+    console.error("[env] ERROR: .env.production.local not found. Copy .env.production.local.example and fill in Railway URL.\n");
+    process.exit(1);
+  }
+} else {
+  console.log("[env] Using dev environment (localhost)\n");
+}
+
 const DB_URL = process.env.DATABASE_URL ?? "postgresql://postgres:postgres@localhost:6432/optimus_halal";
 const sql = postgres(DB_URL, { max: 1, idle_timeout: 5 });
 
