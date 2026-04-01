@@ -10,6 +10,8 @@ import {
   XCircle,
   ArrowSquareOut,
   CheckFat,
+  ArrowsClockwise,
+  Lightning,
 } from "@phosphor-icons/react"
 
 import { trpc } from "@/lib/trpc"
@@ -143,6 +145,19 @@ export default function RecallsPage() {
     },
   })
 
+  const [autoApprove, setAutoApprove] = useState(true)
+
+  const syncMutation = trpc.recall.triggerSync.useMutation({
+    onSuccess: () => {
+      utils.recall.adminList.invalidate()
+      utils.recall.syncStatus.invalidate()
+    },
+  })
+
+  const { data: syncStatus } = trpc.recall.syncStatus.useQuery(undefined, {
+    refetchInterval: syncMutation.isPending ? 3000 : false,
+  })
+
   const items = data?.items ?? []
   const counts = data?.counts ?? { pending: 0, approved: 0, rejected: 0 }
 
@@ -158,17 +173,94 @@ export default function RecallsPage() {
             Rappels de securite alimentaire RappelConso — moderation et suivi.
           </p>
         </div>
-        {counts.pending > 0 && (
+        <div className="flex items-center gap-2">
+          {counts.pending > 0 && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => bulkApproveMutation.mutate()}
+              disabled={bulkApproveMutation.isPending}
+            >
+              <CheckFat className="mr-1.5 size-4" />
+              Tout approuver ({counts.pending})
+            </Button>
+          )}
           <Button
             size="sm"
-            onClick={() => bulkApproveMutation.mutate()}
-            disabled={bulkApproveMutation.isPending}
+            onClick={() => syncMutation.mutate({ autoApprove })}
+            disabled={syncMutation.isPending || syncStatus?.isRunning}
           >
-            <CheckFat className="mr-1.5 size-4" />
-            Tout approuver ({counts.pending})
+            <ArrowsClockwise
+              className={`mr-1.5 size-4 ${syncMutation.isPending ? "animate-spin" : ""}`}
+            />
+            {syncMutation.isPending ? "Sync en cours..." : "Sync RappelConso"}
           </Button>
-        )}
+        </div>
       </div>
+
+      {/* Sync controls card */}
+      <Card size="sm">
+        <CardContent className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Lightning className="size-5 text-amber-500" />
+            <div>
+              <p className="text-sm font-medium">Approbation automatique</p>
+              <p className="text-xs text-muted-foreground">
+                {autoApprove
+                  ? "Les rappels synchronises sont publies immediatement"
+                  : "Les rappels synchronises necessitent une validation manuelle"}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setAutoApprove(!autoApprove)}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
+              autoApprove ? "bg-emerald-500" : "bg-muted"
+            }`}
+            role="switch"
+            aria-checked={autoApprove}
+          >
+            <span
+              className={`pointer-events-none inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                autoApprove ? "translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </button>
+        </CardContent>
+      </Card>
+
+      {/* Last sync info */}
+      {syncStatus?.lastRun && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Clock className="size-3" />
+          <span>
+            Derniere sync :{" "}
+            {new Date(syncStatus.lastRun.completedAt).toLocaleString("fr-FR")}{" "}
+            — {syncStatus.lastRun.inserted ?? 0} nouveaux,{" "}
+            {syncStatus.lastRun.skippedDuplicates ?? 0} doublons
+          </span>
+          {!syncStatus.lastRun.success && (
+            <Badge variant="destructive" className="text-[10px]">
+              Echec
+            </Badge>
+          )}
+        </div>
+      )}
+
+      {/* Sync result toast */}
+      {syncMutation.isSuccess && syncMutation.data?.success && "inserted" in syncMutation.data && (
+        <Card size="sm" className="border-emerald-500/20 bg-emerald-500/5">
+          <CardContent className="flex items-center gap-3 text-sm">
+            <CheckCircle className="size-5 text-emerald-500" />
+            <span>
+              Sync terminee : {syncMutation.data.inserted} nouveaux rappels,{" "}
+              {syncMutation.data.skippedDuplicates} doublons ignores
+              {syncMutation.data.errors > 0 &&
+                `, ${syncMutation.data.errors} erreurs`}
+            </span>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats cards */}
       <div className="grid gap-4 sm:grid-cols-3">

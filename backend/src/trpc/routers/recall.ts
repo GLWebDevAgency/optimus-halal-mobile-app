@@ -10,6 +10,8 @@ import { eq, and, desc, sql } from "drizzle-orm";
 import { router, publicProcedure, adminProcedure } from "../trpc.js";
 import { productRecalls } from "../../db/schema/product-recalls.js";
 import { admins } from "../../db/schema/admins.js";
+import { syncRecalls } from "../../services/recall-sync.service.js";
+import { redis } from "../../lib/redis.js";
 
 export const recallRouter = router({
   /**
@@ -202,5 +204,50 @@ export const recallRouter = router({
       .returning({ id: productRecalls.id });
 
     return { success: true, count: rows.length };
+  }),
+
+  /**
+   * Admin: manually trigger RappelConso sync.
+   * Same logic as POST /internal/sync-recalls but authenticated via admin session.
+   */
+  triggerSync: adminProcedure
+    .input(
+      z.object({
+        autoApprove: z.boolean().default(true),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      // Check if sync is already running
+      const lockActive = await redis.get("lock:recall-sync");
+      if (lockActive) {
+        return { success: false, error: "Sync deja en cours", isRunning: true };
+      }
+
+      // Run sync synchronously (admin can wait for result)
+      const result = await syncRecalls({ autoApprove: input.autoApprove });
+
+      // Store result in Redis for status endpoint
+      await redis.setex(
+        "recall-sync:last-run",
+        7 * 86400,
+        JSON.stringify(result),
+      );
+
+      return result;
+    }),
+
+  /**
+   * Admin: get last sync status.
+   */
+  syncStatus: adminProcedure.query(async () => {
+    const [lastRun, lockActive] = await Promise.all([
+      redis.get("recall-sync:last-run"),
+      redis.get("lock:recall-sync"),
+    ]);
+
+    return {
+      lastRun: lastRun ? JSON.parse(lastRun) : null,
+      isRunning: lockActive !== null,
+    };
   }),
 });
