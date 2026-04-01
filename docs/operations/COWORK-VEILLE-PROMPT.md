@@ -131,43 +131,57 @@ IMPORTANT — REGLES DE SECURITE :
 - Tu ne peux PAS publier, modifier ou supprimer — seul l'admin humain le fait
 - L'authentification utilise le CRON_SECRET (meme niveau de securite que les crons)
 
+IMPORTANT SUR LES APOSTROPHES :
+Le contenu francais contient des apostrophes (l'organisme, l'abattage, etc.).
+Pour eviter les problemes d'echappement shell, utilise TOUJOURS un fichier
+temporaire JSON au lieu de passer le JSON en argument -d inline.
+
 ### Pour une ALERTE :
+
+  cat > /tmp/naqiy-draft.json << 'ENDJSON'
+  {
+    "type": "alert",
+    "title": "TITRE ICI",
+    "summary": "RESUME 1-2 LIGNES",
+    "content": "CONTENU COMPLET AVEC L'APOSTROPHE",
+    "severity": "info",
+    "priority": "medium",
+    "categoryId": "community",
+    "imageUrl": "URL_IMAGE_R2_OU_NULL",
+    "sourceUrl": "URL_SOURCE_ORIGINALE"
+  }
+  ENDJSON
 
   curl -s -X POST "${PRODUCTION_API_URL}/internal/create-draft" \
     -H "Authorization: Bearer ${CRON_SECRET}" \
     -H "Content-Type: application/json" \
-    -d '{
-      "type": "alert",
-      "title": "TITRE",
-      "summary": "RESUME 1-2 LIGNES",
-      "content": "CONTENU COMPLET",
-      "severity": "info",
-      "priority": "medium",
-      "categoryId": "community",
-      "imageUrl": "URL_IMAGE_R2_OU_NULL",
-      "sourceUrl": "URL_SOURCE_ORIGINALE"
-    }'
+    -d @/tmp/naqiy-draft.json
 
 ### Pour un ARTICLE :
 
+  cat > /tmp/naqiy-draft.json << 'ENDJSON'
+  {
+    "type": "article",
+    "title": "TITRE ICI",
+    "slug": "slug-kebab-case",
+    "excerpt": "EXTRAIT AVEC L'APOSTROPHE",
+    "content": "# Titre\n\nContenu Markdown avec l'apostrophe et d'autres caractères spéciaux.\n\n## Section\n\nParagraphe complet.",
+    "coverImage": "URL_IMAGE_R2",
+    "author": "Naqiy Team",
+    "articleType": "partner_news",
+    "tags": ["tag1","tag2"],
+    "readTimeMinutes": 3,
+    "externalLink": "URL_SOURCE"
+  }
+  ENDJSON
+
   curl -s -X POST "${PRODUCTION_API_URL}/internal/create-draft" \
     -H "Authorization: Bearer ${CRON_SECRET}" \
     -H "Content-Type: application/json" \
-    -d '{
-      "type": "article",
-      "title": "TITRE",
-      "slug": "slug-kebab-case",
-      "excerpt": "EXTRAIT 2-3 LIGNES",
-      "content": "CONTENU MARKDOWN",
-      "coverImage": "URL_IMAGE_R2",
-      "author": "Naqiy Team",
-      "articleType": "partner_news",
-      "tags": ["tag1","tag2"],
-      "readTimeMinutes": 3,
-      "externalLink": "URL_SOURCE"
-    }'
+    -d @/tmp/naqiy-draft.json
 
 Verifie que chaque curl retourne {"success":true}. Si erreur, affiche le message.
+Nettoie le fichier temporaire a la fin : rm -f /tmp/naqiy-draft.json
 
 ## ETAPE 5 — Resume final
 
