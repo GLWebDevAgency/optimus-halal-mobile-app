@@ -36,6 +36,8 @@ import { useHaptics } from "@/hooks";
 import { useMe } from "@/hooks/useAuth";
 import { PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
+import { NaqiyMarkdown } from "@/components/ui/NaqiyMarkdown";
+import { RecallInfoSection } from "@/components/content/RecallInfoSection";
 import { trpc } from "@/lib/trpc";
 import { brand, glass, gold } from "@/theme/colors";
 import { AppIcon, type IconName } from "@/lib/icons";
@@ -371,39 +373,37 @@ export default function AlertDetailScreen() {
             {alert.summary}
           </Animated.Text>
 
-          {/* Full content */}
+          {/* Content — dual mode: structured recall cards vs markdown */}
           <Animated.View entering={FadeInDown.delay(400).duration(500)}>
-            <Text style={[styles.body, { color: colors.textPrimary }]}>
-              {alert.content}
-            </Text>
+            {alert.recallData ? (
+              <RecallInfoSection data={alert.recallData} />
+            ) : (
+              <NaqiyMarkdown accentColor={sevConfig.color}>
+                {alert.content}
+              </NaqiyMarkdown>
+            )}
           </Animated.View>
 
-          {/* Source CTA — premium button with severity accent */}
-          {alert.sourceUrl && (
+          {/* Source CTA — only for non-recall alerts (recalls have their own buttons) */}
+          {!alert.recallData && alert.sourceUrl && (
             <Animated.View entering={FadeInDown.delay(450).duration(500)}>
-              <Shadow
-                distance={8}
-                startColor={`${sevConfig.color}20`}
-                offset={[0, 4]}
-                style={{ borderRadius: 18, width: "100%", marginTop: 28 }}
+              <PressableScale
+                onPress={handleOpenSource}
+                style={[
+                  styles.ctaButton,
+                  { backgroundColor: isDark ? "#ffffff" : "#0f172a" },
+                ]}
+                accessibilityRole="link"
+                accessibilityLabel={t.alerts.viewSource}
               >
-                <PressableScale
-                  onPress={handleOpenSource}
-                  style={styles.ctaButton}
-                  accessibilityRole="link"
-                  accessibilityLabel={t.alerts.viewSource}
-                >
-                  <LinearGradient
-                    colors={[sevConfig.color, `${sevConfig.color}cc`]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={[StyleSheet.absoluteFill, { borderRadius: 18 }]}
-                  />
-                  <ArrowSquareOutIcon size={18} color="#fff" />
-                  <Text style={styles.ctaText}>{t.alerts.viewSource}</Text>
-                  <Text style={styles.ctaDomain}>{sourceHostname}</Text>
-                </PressableScale>
-              </Shadow>
+                <ArrowSquareOutIcon size={18} color={isDark ? "#0f172a" : "#ffffff"} />
+                <Text style={[styles.ctaText, { color: isDark ? "#0f172a" : "#ffffff" }]}>
+                  {t.alerts.viewSource}
+                </Text>
+                <Text style={[styles.ctaDomain, { color: isDark ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.6)" }]}>
+                  {sourceHostname}
+                </Text>
+              </PressableScale>
             </Animated.View>
           )}
 
@@ -571,11 +571,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     paddingVertical: 16,
-    borderRadius: 18,
-    overflow: "hidden",
+    borderRadius: 22,
+    marginTop: 28,
   },
-  ctaText: { color: "#fff", fontSize: 16, fontWeight: "700" },
-  ctaDomain: { color: "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: "500" },
+  ctaText: { fontSize: 15, fontWeight: "700" },
+  ctaDomain: { fontSize: 12, fontWeight: "500" },
 
   // Related alerts
   relatedHeader: {

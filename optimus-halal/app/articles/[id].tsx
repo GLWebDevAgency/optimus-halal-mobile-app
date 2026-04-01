@@ -31,6 +31,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useHaptics } from "@/hooks";
 import { PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
+import { NaqiyMarkdown } from "@/components/ui/NaqiyMarkdown";
 import { trpc } from "@/lib/trpc";
 import { brand, gold } from "@/theme/colors";
 
@@ -264,12 +265,10 @@ export default function ArticleDetailScreen() {
             </Animated.Text>
           )}
 
-          {/* Body content */}
+          {/* Body content — rendered as rich Markdown */}
           {article.content && (
             <Animated.View entering={FadeInDown.delay(400).duration(500)}>
-              <Text style={[styles.body, { color: colors.textPrimary }]}>
-                {article.content}
-              </Text>
+              <NaqiyMarkdown>{article.content}</NaqiyMarkdown>
             </Animated.View>
           )}
 
