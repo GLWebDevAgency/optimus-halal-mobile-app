@@ -1197,6 +1197,9 @@ export const en: TranslationKeys = {
     swipeToDismiss: "Swipe to dismiss",
     noAlerts: "No alerts at the moment",
     empty: "You're all caught up!",
+    unlockAll: "Unlock all alerts",
+    upsellTitle: "more alerts available",
+    upsellSub: "Upgrade to Naqiy+ for full history",
   },
 
   // Report

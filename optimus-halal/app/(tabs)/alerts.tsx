@@ -27,7 +27,7 @@ import { Image } from "expo-image";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeftIcon, CaretRightIcon, ChecksIcon, CloudSlashIcon, GlobeIcon, ShieldIcon } from "phosphor-react-native";
+import { ArrowLeftIcon, CaretRightIcon, ChecksIcon, CloudSlashIcon, GlobeIcon, LockSimpleIcon, ShieldIcon } from "phosphor-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Shadow } from "react-native-shadow-2";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
@@ -35,7 +35,7 @@ import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { EmptyState, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { AlertsSkeleton } from "@/components/skeletons";
-import { useTranslation, useHaptics, useTheme } from "@/hooks";
+import { useTranslation, useHaptics, useTheme, usePremium } from "@/hooks";
 import { useMe } from "@/hooks/useAuth";
 import type { TranslationKeys } from "@/hooks/useTranslation";
 import { trpc } from "@/lib/trpc";
@@ -315,7 +315,11 @@ export default function AlertsScreen() {
   const { t, language } = useTranslation();
   const locale = LOCALE_MAP[language] ?? "fr-FR";
   const { data: me } = useMe();
+  const { isPremium, showPaywall } = usePremium();
   const utils = trpc.useUtils();
+
+  // Free users see only the 3 most recent alerts (safety-first: critical always visible)
+  const FREE_ALERT_LIMIT = 3;
 
   const [activeSeverity, setActiveSeverity] = useState("all");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -356,9 +360,16 @@ export default function AlertsScreen() {
     [alertsQuery.data?.pages],
   );
 
-  const visibleItems = useMemo(
+  const filteredItems = useMemo(
     () => (me ? allItems.filter((a) => !dismissedIds.has(a.id)) : allItems),
     [allItems, dismissedIds, me],
+  );
+
+  // Tiering: free users see only the N most recent alerts
+  const isLimited = !isPremium && filteredItems.length > FREE_ALERT_LIMIT;
+  const visibleItems = useMemo(
+    () => (isLimited ? filteredItems.slice(0, FREE_ALERT_LIMIT) : filteredItems),
+    [filteredItems, isLimited],
   );
 
   const getCategoryName = useCallback(
@@ -700,6 +711,32 @@ export default function AlertsScreen() {
               <View style={styles.footerLoader}>
                 <ActivityIndicator size="small" color={isDark ? gold[500] : brand.primary} />
               </View>
+            ) : isLimited ? (
+              <Animated.View entering={FadeInDown.delay(200).duration(400)}>
+                <PressableScale
+                  onPress={() => showPaywall("alert_history")}
+                  style={[
+                    styles.upsellCard,
+                    {
+                      backgroundColor: isDark ? "rgba(212,175,55,0.06)" : "rgba(212,175,55,0.04)",
+                      borderColor: isDark ? "rgba(212,175,55,0.15)" : "rgba(212,175,55,0.10)",
+                    },
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t.alerts.unlockAll ?? "Debloquer toutes les alertes"}
+                >
+                  <LockSimpleIcon size={20} color={isDark ? gold[400] : gold[700]} weight="fill" />
+                  <View style={styles.upsellTextWrap}>
+                    <Text style={[styles.upsellTitle, { color: colors.textPrimary }]}>
+                      {t.alerts.upsellTitle ?? `+${filteredItems.length - FREE_ALERT_LIMIT} alertes disponibles`}
+                    </Text>
+                    <Text style={[styles.upsellSub, { color: colors.textSecondary }]}>
+                      {t.alerts.upsellSub ?? "Passez a Naqiy+ pour un historique complet"}
+                    </Text>
+                  </View>
+                  <CaretRightIcon size={16} color={colors.textMuted} />
+                </PressableScale>
+              </Animated.View>
             ) : null
           }
           onEndReached={handleEndReached}
@@ -855,4 +892,25 @@ const styles = StyleSheet.create({
 
   // Footer
   footerLoader: { paddingVertical: 24, alignItems: "center" },
+  upsellCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    gap: 12,
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  upsellTextWrap: {
+    flex: 1,
+    gap: 2,
+  },
+  upsellTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  upsellSub: {
+    fontSize: 12,
+  },
 });

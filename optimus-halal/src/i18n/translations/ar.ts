@@ -1075,6 +1075,9 @@ export const ar: TranslationKeys = {
     swipeToDismiss: "اسحب للإخفاء",
     noAlerts: "لا توجد تنبيهات حالياً",
     empty: "أنت على اطلاع بكل شيء!",
+    unlockAll: "فتح جميع التنبيهات",
+    upsellTitle: "تنبيهات إضافية متاحة",
+    upsellSub: "انتقل إلى نقيّ+ للاطلاع على السجل الكامل",
   },
   report: {
     title: "إبلاغ",

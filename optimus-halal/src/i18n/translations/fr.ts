@@ -1206,6 +1206,9 @@ export const fr = {
     swipeToDismiss: "Glisser pour masquer",
     noAlerts: "Aucune alerte pour le moment",
     empty: "Vous êtes à jour !",
+    unlockAll: "Debloquer toutes les alertes",
+    upsellTitle: "alertes supplementaires disponibles",
+    upsellSub: "Passez a Naqiy+ pour un historique complet",
   },
 
   // Report
