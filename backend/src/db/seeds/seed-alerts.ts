@@ -19,6 +19,7 @@ import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { alertCategories, alerts } from "../schema/alerts.js";
 
 const ALERT_CATEGORIES = [
+  { id: "recall", name: "Product Recall", nameFr: "Rappel Produit", nameAr: "استرجاع منتج", icon: "warning", color: "#ef4444" },
   { id: "fraud", name: "Halal Fraud", nameFr: "Fraude Halal", nameAr: "احتيال حلال", icon: "gavel", color: "#f97316" },
   { id: "boycott", name: "Boycott Alert", nameFr: "Alerte Boycott", nameAr: "تنبيه مقاطعة", icon: "block", color: "#dc2626" },
   { id: "certification", name: "Certification Update", nameFr: "Mise à jour Certification", nameAr: "تحديث الشهادة", icon: "verified", color: "#1de560" },

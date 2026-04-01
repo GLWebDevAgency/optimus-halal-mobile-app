@@ -75,6 +75,7 @@ const SEVERITY_CONFIG: Record<
 };
 
 const CATEGORY_ICONS: Record<string, IconName> = {
+  recall: "warning",
   fraud: "gavel",
   boycott: "block",
   certification: "verified",

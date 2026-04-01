@@ -83,7 +83,37 @@ export const alertRouter = router({
         where: eq(alerts.id, input.id),
       });
       if (!alert) throw notFound("Alerte introuvable");
-      return alert;
+
+      // If recall-type alert, join product_recalls data
+      let recallData = null;
+      if (alert.productRecallId) {
+        const { productRecalls } = await import("../../db/schema/product-recalls.js");
+        const recall = await ctx.db.query.productRecalls.findFirst({
+          where: eq(productRecalls.id, alert.productRecallId),
+        });
+        if (recall) {
+          recallData = {
+            id: recall.id,
+            gtin: recall.gtin,
+            brandName: recall.brandName,
+            productName: recall.productName,
+            subCategory: recall.subCategory,
+            recallReason: recall.recallReason,
+            healthRisks: recall.healthRisks,
+            consumerActions: recall.consumerActions,
+            healthPrecautions: recall.healthPrecautions,
+            distributors: recall.distributors,
+            geoScope: recall.geoScope,
+            imageUrl: recall.imageUrl,
+            pdfUrl: recall.pdfUrl,
+            sourceUrl: recall.sourceUrl,
+            publishedAt: recall.publishedAt,
+            recallEndDate: recall.recallEndDate,
+          };
+        }
+      }
+
+      return { ...alert, recallData };
     }),
 
   getCategories: publicProcedure.query(async ({ ctx }) => {

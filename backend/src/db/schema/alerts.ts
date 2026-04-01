@@ -1,6 +1,7 @@
 import { pgTable, pgEnum } from "drizzle-orm/pg-core";
 import * as t from "drizzle-orm/pg-core";
 import { users } from "./users.js";
+import { productRecalls } from "./product-recalls.js";
 
 export const alertSeverityEnum = pgEnum("alert_severity", [
   "info",
@@ -38,6 +39,10 @@ export const alerts = pgTable(
     productId: t.uuid("product_id"),
     storeId: t.uuid("store_id"),
     sourceUrl: t.text("source_url"),
+    /** FK to product_recalls for recall-type alerts (auto-created by sync) */
+    productRecallId: t
+      .uuid("product_recall_id")
+      .references(() => productRecalls.id, { onDelete: "set null" }),
     publishedAt: t
       .timestamp("published_at", { withTimezone: true })
       .defaultNow()

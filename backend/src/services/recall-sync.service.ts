@@ -16,6 +16,7 @@
 
 import { db } from "../db/index.js";
 import { productRecalls } from "../db/schema/product-recalls.js";
+import { alerts } from "../db/schema/alerts.js";
 import { logger } from "../lib/logger.js";
 import { Sentry } from "../lib/sentry.js";
 import { redis } from "../lib/redis.js";
@@ -33,12 +34,14 @@ const PAGE_SIZE = 100;
 /** Raw record shape from the RappelConso API */
 /** Raw record from RappelConso V2 API (gtin-trie dataset) */
 interface RappelConsoRecord {
+  id?: number;
   numero_fiche: string;
   gtin?: number | null;
   categorie_produit?: string;
   sous_categorie_produit?: string;
   marque_produit?: string;
   modeles_ou_references?: string;
+  libelle?: string;
   motif_rappel?: string;
   risques_encourus?: string;
   conduites_a_tenir_par_le_consommateur?: string;
@@ -50,6 +53,13 @@ interface RappelConsoRecord {
   lien_vers_la_fiche_rappel?: string;
   date_publication?: string;
   date_de_fin_de_la_procedure_de_rappel?: string;
+  date_debut_commercialisation?: string;
+  date_date_fin_commercialisation?: string;
+  identification_produits?: string;
+  modalites_de_compensation?: string;
+  nature_juridique_rappel?: string;
+  numero_contact?: string;
+  temperature_conservation?: string;
 }
 
 export interface RecallSyncResult {
@@ -227,6 +237,69 @@ async function upsertRecall(
     .values(values)
     .onConflictDoNothing({ target: productRecalls.sourceReference })
     .returning({ id: productRecalls.id });
+
+  // Auto-create a critical alert for each new recall
+  if (rows.length > 0) {
+    const recallId = rows[0].id;
+    const brand = (values.brandName ?? "").trim();
+    const product = (record.libelle ?? values.productName ?? "").trim();
+    const title = brand && product
+      ? `Rappel : ${brand} — ${product}`.slice(0, 255)
+      : `Rappel produit : ${values.recallReason}`.slice(0, 255);
+
+    // Build structured summary
+    const summary = [
+      values.recallReason,
+      values.healthRisks ? ` — ${values.healthRisks}` : "",
+    ].join("").slice(0, 500);
+
+    // Build rich content with all available data
+    const contentParts: string[] = [
+      `**Motif du rappel** : ${values.recallReason}`,
+    ];
+    if (values.healthRisks) contentParts.push(`\n\n**Risques encourus** : ${values.healthRisks}`);
+    if (record.conduites_a_tenir_par_le_consommateur) {
+      const actions = record.conduites_a_tenir_par_le_consommateur.replace(/\|/g, ", ");
+      contentParts.push(`\n\n**Que faire** : ${actions}`);
+    }
+    if (values.healthPrecautions) contentParts.push(`\n\n**Precautions sanitaires** : ${values.healthPrecautions}`);
+    if (record.modalites_de_compensation) contentParts.push(`\n\n**Compensation** : ${record.modalites_de_compensation}`);
+    if (values.distributors) contentParts.push(`\n\n**Distributeurs concernes** : ${values.distributors}`);
+    if (values.geoScope) contentParts.push(`\n\n**Zone geographique** : ${values.geoScope}`);
+    if (record.identification_produits) {
+      const lots = record.identification_produits.replace(/\$/g, " | ").trim();
+      contentParts.push(`\n\n**Identification** : ${lots}`);
+    }
+    if (record.date_debut_commercialisation) contentParts.push(`\n\n**Commercialisation** : du ${record.date_debut_commercialisation}${record.date_date_fin_commercialisation ? ` au ${record.date_date_fin_commercialisation}` : ""}`);
+    if (record.temperature_conservation) contentParts.push(`\n\n**Conservation** : ${record.temperature_conservation}`);
+    if (record.nature_juridique_rappel) contentParts.push(`\n\n**Nature du rappel** : ${record.nature_juridique_rappel}`);
+    if (record.numero_contact) contentParts.push(`\n\n**Contact** : ${record.numero_contact}`);
+    if (values.pdfUrl) contentParts.push(`\n\n**Affichette PDF** : ${values.pdfUrl}`);
+
+    try {
+      await db
+        .insert(alerts)
+        .values({
+          title,
+          summary,
+          content: contentParts.join(""),
+          severity: "critical",
+          priority: "critical",
+          categoryId: "recall",
+          imageUrl: values.imageUrl,
+          sourceUrl: values.sourceUrl,
+          productRecallId: recallId,
+          isActive: autoApprove,
+          publishedAt: values.publishedAt,
+        })
+        .onConflictDoNothing();
+    } catch (err: unknown) {
+      // Non-blocking: log but don't fail the recall sync
+      logger.error(`[recall-sync] Failed to create alert for ${ref}`, {
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
 
   return rows.length > 0 ? "inserted" : "skipped";
 }
