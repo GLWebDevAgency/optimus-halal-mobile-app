@@ -177,15 +177,17 @@ const CompactAlertCard = React.memo(function CompactAlertCard({
       accessibilityLabel={alert.title}
       accessibilityHint={isGated ? t.alerts.unlockAll : undefined}
     >
-      {/* Left: severity strip (always) + image flush behind it */}
+      {/* Left: severity strip + image flush (borderline top/left/bottom) */}
       <View style={[styles.severityStrip, { backgroundColor: sevColor }]} />
       {hasImage && (
-        <Image
-          source={{ uri: alert.imageUrl! }}
-          style={styles.cardImage}
-          contentFit="cover"
-          transition={200}
-        />
+        <View style={styles.cardImageWrap}>
+          <Image
+            source={{ uri: alert.imageUrl! }}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            transition={200}
+          />
+        </View>
       )}
 
       {/* Right: all text content */}
@@ -911,10 +913,9 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 14,
     borderBottomLeftRadius: 14,
   },
-  // Image flush left — fixed width, stretches vertically with card
-  cardImage: {
+  // Image wrapper — View stretches vertically, Image fills it via absoluteFill
+  cardImageWrap: {
     width: 80,
-    alignSelf: "stretch",
   },
   // Text content — right side
   cardContent: {
