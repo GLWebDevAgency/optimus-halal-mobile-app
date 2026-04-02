@@ -20,7 +20,7 @@ import { PressableScale } from "@/components/ui/PressableScale";
 import { CertifierLogo } from "@/components/scan/CertifierLogo";
 import { NaqiyGradeBadge, getTrustGradeFromScore } from "@/components/scan/NaqiyGradeBadge";
 import { useTheme, useTranslation, useHaptics } from "@/hooks";
-import { halalStatus as statusColors } from "@/theme/colors";
+import { halalStatus as statusColors, gold } from "@/theme/colors";
 import { AppIcon } from "@/lib/icons";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -274,10 +274,10 @@ export const ProductFavoriteCard = React.memo(function ProductFavoriteCard({
               </Text>
             )}
 
-            {/* 3. 🌿 Analyse Naqiy : */}
+            {/* 3. 🌿 Analyse Naqiy : (bold, doré) */}
             <View style={styles.analyseNaqiyRow}>
               <Image source={NAQIY_LOGO} style={styles.naqiyLogo} contentFit="contain" />
-              <Text style={[styles.italicLabel, { color: colors.textMuted }]}>
+              <Text style={[styles.analyseNaqiyText, { color: isDark ? gold[400] : gold[700] }]}>
                 Analyse Naqiy :
               </Text>
             </View>
@@ -374,7 +374,8 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 2 },
   brandText: { fontSize: 11, flexShrink: 1 },
   dot: { width: 2.5, height: 2.5, borderRadius: 1.25 },
-  analyseNaqiyRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 },
+  analyseNaqiyRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 4 },
+  analyseNaqiyText: { fontSize: 11, fontWeight: "800", letterSpacing: 0.2 },
   naqiyLogo: { width: 14, height: 14 },
   italicLabel: { fontSize: 10, fontWeight: "500", fontStyle: "italic" },
   certifierNameRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 2 },
