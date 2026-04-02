@@ -80,7 +80,7 @@ function GradeStrip({
 }) {
   return (
     <div className={cn("flex items-center gap-1", className)}>
-      <span className="mr-0.5 text-xs font-black text-primary">N</span>
+      <img src="/images/logo_naqiy.webp" alt="N" className="mr-0.5 h-4 w-4" />
 
       {TRUST_GRADES.map((g) => {
         const isActive = g.grade === grade.grade;
@@ -132,7 +132,7 @@ function GradeCompact({
         className="flex items-center gap-0.5 rounded-lg px-2 py-1"
         style={{ backgroundColor: grade.color }}
       >
-        <span className="text-[9px] font-black text-primary">N</span>
+        <img src="/images/logo_naqiy.webp" alt="N" className="h-3 w-3" />
         <span className="text-sm font-black text-white">{grade.arabic}</span>
       </div>
       {showLabel && (
@@ -162,7 +162,7 @@ function GradeMicro({
       )}
       style={{ backgroundColor: grade.color }}
     >
-      <span className="text-[7px] font-black text-primary">N</span>
+      <img src="/images/logo_naqiy.webp" alt="N" className="h-2.5 w-2.5" />
       <span className="text-[11px] font-black text-white">{grade.arabic}</span>
     </div>
   );

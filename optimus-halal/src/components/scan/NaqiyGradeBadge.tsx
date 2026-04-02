@@ -14,10 +14,14 @@
 
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { Image } from "expo-image";
 import { gold } from "@/theme/colors";
 import { spacing, radius } from "@/theme/spacing";
 import { fontSize, fontWeight } from "@/theme/typography";
 import { useTheme } from "@/hooks/useTheme";
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const NAQIY_LOGO = require("../../../assets/images/logo_naqiy.webp");
 
 // ── Types ────────────────────────────────────────────────
 
@@ -100,8 +104,8 @@ function GradeStrip({
 }) {
   return (
     <View style={styles.stripContainer}>
-      {/* Gold "N" prefix */}
-      <Text style={styles.stripNaqiyN}>N</Text>
+      {/* Naqiy micro-logo */}
+      <Image source={NAQIY_LOGO} style={styles.stripLogo} contentFit="contain" />
 
       {/* 5 grade pills */}
       {TRUST_GRADES.map((g) => {
@@ -150,7 +154,7 @@ function GradeCompact({
   return (
     <View style={styles.compactContainer}>
       <View style={[styles.compactBadge, { backgroundColor: grade.color }]}>
-        <Text style={styles.compactN}>N</Text>
+        <Image source={NAQIY_LOGO} style={styles.compactLogo} contentFit="contain" />
         <Text style={styles.compactArabic}>{grade.arabic}</Text>
       </View>
       {showLabel && (
@@ -167,7 +171,7 @@ function GradeCompact({
 function GradeMicro({ grade }: { grade: TrustGrade }) {
   return (
     <View style={[styles.microBadge, { backgroundColor: grade.color }]}>
-      <Text style={styles.microN}>N</Text>
+      <Image source={NAQIY_LOGO} style={styles.microLogo} contentFit="contain" />
       <Text style={styles.microArabic}>{grade.arabic}</Text>
     </View>
   );
@@ -182,10 +186,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 3,
   },
-  stripNaqiyN: {
-    fontSize: 11,
-    fontWeight: fontWeight.black,
-    color: gold[500],
+  stripLogo: {
+    width: 16,
+    height: 16,
     marginRight: 2,
   },
   stripPill: {
@@ -231,10 +234,9 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 7,
   },
-  compactN: {
-    fontSize: 9,
-    fontWeight: fontWeight.black,
-    color: gold[500],
+  compactLogo: {
+    width: 12,
+    height: 12,
   },
   compactArabic: {
     fontSize: 13,
@@ -255,10 +257,9 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 6,
   },
-  microN: {
-    fontSize: 7,
-    fontWeight: fontWeight.black,
-    color: gold[500],
+  microLogo: {
+    width: 10,
+    height: 10,
   },
   microArabic: {
     fontSize: 11,
