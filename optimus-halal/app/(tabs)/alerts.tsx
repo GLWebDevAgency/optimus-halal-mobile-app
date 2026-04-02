@@ -909,7 +909,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 10,
     overflow: "hidden",
-    minHeight: 100,
   },
   // Image flush left (top/left/bottom edges of card)
   cardImageWrap: {
@@ -917,8 +916,7 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   cardImage: {
-    width: 88,
-    height: "100%",
+    ...StyleSheet.absoluteFillObject,
   },
   imageSeverityDot: {
     position: "absolute",
