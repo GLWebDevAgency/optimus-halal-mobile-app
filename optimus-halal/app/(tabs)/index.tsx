@@ -441,7 +441,7 @@ const FeaturedCard = React.memo(function FeaturedCard({
     <Animated.View
       entering={FadeInRight.delay(420 + index * 80).duration(500)}
     >
-      <Shadow distance={8} startColor={isDark ? "rgba(19,236,106,0.15)" : "rgba(0,0,0,0.06)"} offset={[0, 2]} style={{ borderRadius: 24, width: "100%", marginBottom: 16 }}>
+      <Shadow distance={6} startColor={isDark ? "rgba(0,0,0,0.25)" : "rgba(0,0,0,0.08)"} offset={[0, 3]} style={{ borderRadius: 24, width: "100%", marginBottom: 16 }}>
         <PressableScale
           onPress={onPress}
           accessibilityRole="button"
