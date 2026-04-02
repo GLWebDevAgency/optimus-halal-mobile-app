@@ -55,6 +55,8 @@ export function getTrustGradeFromScore(score: number): TrustGrade {
 interface StripProps {
   variant: "strip";
   grade: TrustGrade;
+  /** Show the Naqiy micro-logo before the strip (default: true) */
+  showLogo?: boolean;
   /** Show label text next to the strip (default: true) */
   showLabel?: boolean;
 }
@@ -81,7 +83,7 @@ export const NaqiyGradeBadge = React.memo(function NaqiyGradeBadge(
   const { isDark } = useTheme();
 
   if (props.variant === "strip") {
-    return <GradeStrip grade={props.grade} showLabel={props.showLabel ?? true} isDark={isDark} />;
+    return <GradeStrip grade={props.grade} showLabel={props.showLabel ?? true} showLogo={props.showLogo ?? true} isDark={isDark} />;
   }
 
   if (props.variant === "compact") {
@@ -96,16 +98,18 @@ export const NaqiyGradeBadge = React.memo(function NaqiyGradeBadge(
 function GradeStrip({
   grade,
   showLabel,
+  showLogo = true,
   isDark,
 }: {
   grade: TrustGrade;
   showLabel: boolean;
+  showLogo?: boolean;
   isDark: boolean;
 }) {
   return (
     <View style={styles.stripContainer}>
-      {/* Naqiy micro-logo */}
-      <Image source={NAQIY_LOGO} style={styles.stripLogo} contentFit="contain" />
+      {/* Naqiy micro-logo (can be hidden when logo is shown elsewhere) */}
+      {showLogo && <Image source={NAQIY_LOGO} style={styles.stripLogo} contentFit="contain" />}
 
       {/* 5 grade pills */}
       {TRUST_GRADES.map((g) => {
