@@ -177,20 +177,15 @@ const CompactAlertCard = React.memo(function CompactAlertCard({
       accessibilityLabel={alert.title}
       accessibilityHint={isGated ? t.alerts.unlockAll : undefined}
     >
-      {/* Left: image flush (top/left/bottom) or severity strip */}
-      {hasImage ? (
-        <View style={styles.cardImageWrap}>
-          <Image
-            source={{ uri: alert.imageUrl! }}
-            style={styles.cardImage}
-            contentFit="cover"
-            transition={200}
-          />
-          {/* Severity indicator overlaid on image — bottom-left dot */}
-          <View style={[styles.imageSeverityDot, { backgroundColor: sevColor }]} />
-        </View>
-      ) : (
-        <View style={[styles.severityStrip, { backgroundColor: sevColor }]} />
+      {/* Left: severity strip (always) + image flush behind it */}
+      <View style={[styles.severityStrip, { backgroundColor: sevColor }]} />
+      {hasImage && (
+        <Image
+          source={{ uri: alert.imageUrl! }}
+          style={styles.cardImage}
+          contentFit="cover"
+          transition={200}
+        />
       )}
 
       {/* Right: all text content */}
@@ -910,29 +905,16 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     overflow: "hidden",
   },
-  // Image flush left (top/left/bottom edges of card)
-  cardImageWrap: {
-    width: 88,
-    position: "relative",
-  },
-  cardImage: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  imageSeverityDot: {
-    position: "absolute",
-    bottom: 6,
-    left: 6,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    borderWidth: 1.5,
-    borderColor: "rgba(0,0,0,0.3)",
-  },
-  // Severity strip fallback (no image)
+  // Severity strip — always visible on left edge
   severityStrip: {
     width: 3.5,
     borderTopLeftRadius: 14,
     borderBottomLeftRadius: 14,
+  },
+  // Image flush left — fixed width, stretches vertically with card
+  cardImage: {
+    width: 80,
+    alignSelf: "stretch",
   },
   // Text content — right side
   cardContent: {
