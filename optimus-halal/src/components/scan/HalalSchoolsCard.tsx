@@ -128,6 +128,8 @@ function getMatrixColor(level: MatrixLevel): string {
       return halalStatusTokens.doubtful.base;
     case "danger":
       return halalStatusTokens.haram.base;
+    case "unknown":
+      return halalStatusTokens.unknown.base;
   }
 }
 
@@ -143,6 +145,8 @@ function getMatrixBg(level: MatrixLevel, isDark: boolean): string {
       return isDark ? "rgba(249,115,22,0.14)" : "rgba(249,115,22,0.10)";
     case "danger":
       return isDark ? "rgba(239,68,68,0.12)" : "rgba(239,68,68,0.08)";
+    case "unknown":
+      return isDark ? "rgba(107,114,128,0.12)" : "rgba(107,114,128,0.08)";
   }
 }
 

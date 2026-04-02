@@ -66,9 +66,9 @@ const VERDICT_CONFIG: Record<string, VerdictVisual> = {
     weight: "fill",
   },
   unknown: {
-    icon: "help-outline",
+    icon: "detective",
     color: halalStatus.unknown.base,
-    weight: "regular",
+    weight: "fill",
   },
 };
 

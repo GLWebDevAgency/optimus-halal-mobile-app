@@ -40,6 +40,7 @@ import { PremiumBackground } from "@/components/ui";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { trpc } from "@/lib/trpc";
+import { STORE_CERTIFIER_TO_ID } from "@/components/map/types";
 
 const { width } = Dimensions.get("window");
 
@@ -555,13 +556,18 @@ export default function FavoritesScreen() {
             <FlashList
               data={filteredStores}
               keyExtractor={(item) => item.id}
-              renderItem={({ item, index }) => (
-                <StoreFavoriteCard
-                  store={item}
-                  index={index}
-                  onRemove={handleRemoveStore}
-                />
-              )}
+              renderItem={({ item, index }) => {
+                const certId = STORE_CERTIFIER_TO_ID[item.certifier] ?? item.certifier;
+                const scores = certifierScoreMap.get(certId);
+                return (
+                  <StoreFavoriteCard
+                    store={item}
+                    certifierTrustScore={scores?.trustScore ?? null}
+                    index={index}
+                    onRemove={handleRemoveStore}
+                  />
+                );
+              }}
               contentContainerStyle={{ paddingBottom: 100 }}
               showsVerticalScrollIndicator={false}
               ListFooterComponent={
@@ -636,11 +642,13 @@ function EmptyProducts({
         accessibilityRole="button"
         accessibilityLabel={t.favorites.scanProduct}
       >
-        <ScanIcon size={18}
-          color={isDark ? "#102217" : "#0d1b13"} />
-        <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
-          {t.favorites.scanProduct}
-        </Text>
+        <View style={styles.btnRow}>
+          <ScanIcon size={18}
+            color={isDark ? "#102217" : "#0d1b13"} />
+          <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
+            {t.favorites.scanProduct}
+          </Text>
+        </View>
       </PressableScale>
     </View>
   );
@@ -670,11 +678,13 @@ function EmptyStores({
         accessibilityRole="button"
         accessibilityLabel={t.favorites.exploreMap}
       >
-        <MapTrifoldIcon size={18}
-          color={isDark ? "#102217" : "#0d1b13"} />
-        <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
-          {t.favorites.exploreMap}
-        </Text>
+        <View style={styles.btnRow}>
+          <MapTrifoldIcon size={18}
+            color={isDark ? "#102217" : "#0d1b13"} />
+          <Text style={{ color: isDark ? "#102217" : "#0d1b13", fontWeight: "700" }}>
+            {t.favorites.exploreMap}
+          </Text>
+        </View>
       </PressableScale>
     </View>
   );
@@ -723,17 +733,19 @@ function ProductsFooter({
         accessibilityRole="button"
         accessibilityLabel={t.favorites.scanProduct}
       >
-        <ScanIcon size={16}
-          color={isDark ? "#102217" : "#0d1b13"} />
-        <Text
-          style={{
-            fontSize: 12,
-            fontWeight: "700",
-            color: isDark ? "#102217" : "#0d1b13",
-          }}
-        >
-          {t.favorites.scanProduct}
-        </Text>
+        <View style={styles.footerBtnInner}>
+          <ScanIcon size={16}
+            color={isDark ? "#102217" : "#0d1b13"} />
+          <Text
+            style={{
+              fontSize: 12,
+              fontWeight: "700",
+              color: isDark ? "#102217" : "#0d1b13",
+            }}
+          >
+            {t.favorites.scanProduct}
+          </Text>
+        </View>
       </PressableScale>
     </Animated.View>
   );
@@ -783,17 +795,19 @@ function StoresFooter({
         accessibilityRole="button"
         accessibilityLabel={t.favorites.exploreMap}
       >
-        <MapTrifoldIcon size={16}
-          color={isDark ? "#102217" : "#0d1b13"} />
-        <Text
-          style={{
-            fontSize: 12,
-            fontWeight: "700",
-            color: isDark ? "#102217" : "#0d1b13",
-          }}
-        >
-          {t.favorites.exploreMap}
-        </Text>
+        <View style={styles.footerBtnInner}>
+          <MapTrifoldIcon size={16}
+            color={isDark ? "#102217" : "#0d1b13"} />
+          <Text
+            style={{
+              fontSize: 12,
+              fontWeight: "700",
+              color: isDark ? "#102217" : "#0d1b13",
+            }}
+          >
+            {t.favorites.exploreMap}
+          </Text>
+        </View>
       </PressableScale>
     </Animated.View>
   );
@@ -897,11 +911,18 @@ const styles = StyleSheet.create({
   },
   footerBtn: {
     marginTop: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 10,
+  },
+  footerBtnInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  btnRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
 });

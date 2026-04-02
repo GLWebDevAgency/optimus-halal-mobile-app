@@ -8,7 +8,7 @@
  * combining NaqiyScore™ thresholds + composition analysis + consensus.
  */
 
-export type MatrixLevel = "high" | "good" | "vigilance" | "low" | "danger";
+export type MatrixLevel = "high" | "good" | "vigilance" | "low" | "danger" | "unknown";
 
 export interface VerdictSummaryInput {
   madhabVerdicts: Array<{ madhab: string; status: string }>;
@@ -19,7 +19,7 @@ export interface VerdictSummaryInput {
   conflictCount?: number;
 }
 
-export type CompositionStatus = "halal" | "doubtful" | "haram";
+export type CompositionStatus = "halal" | "doubtful" | "haram" | "unknown";
 
 export type AdviceTextId = "A" | "B" | "C" | "D";
 
@@ -91,6 +91,10 @@ interface VerdictTranslations {
   matrixNoCertDoubtfulPhrase: string;
   matrixNoCertHaramLabel: string;
   matrixNoCertHaramPhrase: string;
+  matrixNoCertUnknownLabel: string;
+  matrixNoCertUnknownPhrase: string;
+  matrixCertUnknownLabel: string;
+  matrixCertUnknownPhrase: string;
 }
 
 export function buildVerdictSummary(
@@ -182,10 +186,14 @@ export function buildVerdictSummary(
 
   // ── Matrix verdict (V2) ──
   // Composition status: conservative — any haram/doubtful in ANY school triggers it
+  // All unknown = insufficient data (not "clean")
   const isCertified = certifierName !== null && certifierScore !== null;
   const hasHaram = statuses.includes("haram");
   const hasDoubtful = statuses.includes("doubtful");
-  const compositionStatus = hasHaram ? "haram" : hasDoubtful ? "doubtful" : "halal";
+  const isAllUnknown = statuses.every((s) => s === "unknown");
+  const compositionStatus: CompositionStatus = isAllUnknown
+    ? "unknown"
+    : hasHaram ? "haram" : hasDoubtful ? "doubtful" : "halal";
   const score = certifierScore ?? 0;
   const count = conflictCount > 0 ? String(conflictCount) : "1";
 
@@ -193,7 +201,17 @@ export function buildVerdictSummary(
   let matrixPhrase: string;
   let matrixLevel: MatrixLevel;
 
-  if (isCertified) {
+  if (compositionStatus === "unknown") {
+    // All schools unknown — insufficient data, regardless of certification
+    if (isCertified) {
+      matrixLabel = verdictT.matrixCertUnknownLabel;
+      matrixPhrase = verdictT.matrixCertUnknownPhrase;
+    } else {
+      matrixLabel = verdictT.matrixNoCertUnknownLabel;
+      matrixPhrase = verdictT.matrixNoCertUnknownPhrase;
+    }
+    matrixLevel = "unknown";
+  } else if (isCertified) {
     if (compositionStatus === "haram") {
       // Certified + Haram → any score
       matrixLabel = verdictT.matrixHaramLabel;

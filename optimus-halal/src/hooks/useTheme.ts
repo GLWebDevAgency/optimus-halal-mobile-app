@@ -29,10 +29,12 @@ export const useTheme = () => {
   const { theme, setTheme } = useThemeStore();
   const { isRamadan } = useRamadanMode();
 
-  // Determine le theme effectif (light ou dark)
+  // Effective theme: Appearance.setColorScheme() syncs the native runtime,
+  // so useColorScheme() always returns the correct resolved value.
+  // For "system", we read the OS preference; for explicit choice, use it directly.
   const effectiveTheme: "light" | "dark" =
     theme === "system"
-      ? (systemColorScheme ?? "light")
+      ? (systemColorScheme ?? "dark")
       : theme;
 
   const isDark = effectiveTheme === "dark";

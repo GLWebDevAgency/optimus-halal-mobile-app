@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, Pressable, ActivityIndicator, Linking, ScrollView, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
-import { ArrowSquareOutIcon, ChatCircleIcon, GlobeIcon, MapTrifoldIcon, NavigationArrowIcon, PhoneIcon, SealCheckIcon, ShareNetworkIcon, SignInIcon, StarIcon, ThumbsUpIcon, XIcon } from "phosphor-react-native";
+import { ArrowSquareOutIcon, ChatCircleIcon, GlobeIcon, MapTrifoldIcon, NavigationArrowIcon, PhoneIcon, SealCheckIcon, ShareNetworkIcon, StarIcon, ThumbsUpIcon, XIcon } from "phosphor-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   FadeInUp,
@@ -17,7 +17,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useTheme } from "@/hooks/useTheme";
 import { PressableScale } from "../ui/PressableScale";
 import { CertifierLogo } from "../scan/CertifierLogo";
-import { storeTypeColors } from "@/theme/colors";
+import { storeTypeColors, gold } from "@/theme/colors";
 import { AppIcon } from "@/lib/icons";
 import {
   StoreFeatureProperties,
@@ -138,8 +138,21 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
   const typeColor =
     storeTypeColors[store.storeType as keyof typeof storeTypeColors]?.base ?? colors.primary;
 
-  // Current day of week in Europe/Paris (matches backend EXTRACT(DOW FROM NOW() AT TIME ZONE 'Europe/Paris'))
-  const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" })).getDay();
+  // Current day of week in Europe/Paris — Hermes doesn't support toLocaleString timeZone option,
+  // so we manually compute Paris local time using UTC offset (CET=+1, CEST=+2).
+  const today = (() => {
+    const now = new Date();
+    // Determine if CEST (last Sunday of March → last Sunday of October)
+    const year = now.getUTCFullYear();
+    const marchLast = new Date(Date.UTC(year, 2, 31));
+    const dstStart = new Date(Date.UTC(year, 2, 31 - marchLast.getUTCDay(), 1)); // 01:00 UTC
+    const octLast = new Date(Date.UTC(year, 9, 31));
+    const dstEnd = new Date(Date.UTC(year, 9, 31 - octLast.getUTCDay(), 1)); // 01:00 UTC
+    const isCEST = now.getTime() >= dstStart.getTime() && now.getTime() < dstEnd.getTime();
+    const parisOffset = isCEST ? 2 : 1;
+    const parisTime = new Date(now.getTime() + parisOffset * 3600_000);
+    return parisTime.getUTCDay();
+  })();
 
   // Google photos from detail (enriched data)
   const googlePhotos = detail?.googlePhotos?.filter(Boolean) ?? [];
@@ -319,7 +332,7 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                   backgroundColor: colors.primary,
                 }}
               >
-                <SignInIcon size={22} color="#fff" />
+                <NavigationArrowIcon size={22} color="#fff" weight="fill" />
               </View>
             </PressableScale>
 
@@ -444,7 +457,7 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                   elevation: 4,
                 }}
               >
-                <SignInIcon size={20} color="#fff" />
+                <NavigationArrowIcon size={20} color="#fff" weight="fill" />
                 <Text className="text-sm font-bold text-white">{t.map.getDirections}</Text>
               </View>
             </PressableScale>
@@ -522,26 +535,45 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                   </Animated.View>
                 )}
 
-                {/* Description */}
-                {detail.description && (
-                  <Animated.View
-                    entering={FadeInDown.delay(80).duration(250)}
-                    className="mt-4"
+                {/* Store Details — type + practical info */}
+                <Animated.View
+                  entering={FadeInDown.delay(80).duration(250)}
+                  className="mt-4"
+                >
+                  <Text
+                    className="text-xs font-bold uppercase tracking-wide mb-2"
+                    style={{ color: colors.textMuted }}
                   >
-                    <Text
-                      className="text-xs font-bold uppercase tracking-wide mb-2"
-                      style={{ color: colors.textMuted }}
-                    >
-                      {t.map.storeDetail}
-                    </Text>
-                    <Text
-                      className="text-sm leading-5"
-                      style={{ color: colors.textSecondary }}
-                    >
-                      {detail.description}
-                    </Text>
-                  </Animated.View>
-                )}
+                    {t.map.storeDetail}
+                  </Text>
+                  <View
+                    className="rounded-xl overflow-hidden px-3 py-2.5"
+                    style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)", gap: 8 }}
+                  >
+                    {/* Store type with color */}
+                    <View className="flex-row items-center gap-2">
+                      <AppIcon name={STORE_TYPE_ICON[store.storeType] ?? "store"} size={14} color={storeTypeColors[store.storeType as keyof typeof storeTypeColors]?.base ?? colors.textMuted} />
+                      <Text className="text-sm font-semibold" style={{ color: storeTypeColors[store.storeType as keyof typeof storeTypeColors]?.base ?? colors.textPrimary }}>
+                        {store.storeType.charAt(0).toUpperCase() + store.storeType.slice(1)}
+                      </Text>
+                    </View>
+                    {/* Website */}
+                    {detail.website && (
+                      <Pressable onPress={() => Linking.openURL(detail.website!)} className="flex-row items-center gap-2">
+                        <GlobeIcon size={14} color={isDark ? gold[400] : gold[700]} />
+                        <Text className="text-sm font-bold" style={{ color: isDark ? gold[400] : gold[700] }} numberOfLines={1}>
+                          {detail.website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
+                        </Text>
+                      </Pressable>
+                    )}
+                    {/* Description if available */}
+                    {detail.description && (
+                      <Text className="text-xs leading-4 mt-1" style={{ color: colors.textMuted }}>
+                        {detail.description}
+                      </Text>
+                    )}
+                  </View>
+                </Animated.View>
 
                 {/* Weekly hours */}
                 {detail.hours.length > 0 && (
@@ -585,39 +617,44 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                                   (e) => `${e.openTime} \u2013 ${e.closeTime}`,
                                 )
                                 .join(", ");
+
                           return (
                             <View
                               key={day}
-                              className="flex-row items-center justify-between px-3 py-2"
-                              style={
-                                isToday
-                                  ? {
-                                      backgroundColor: isDark
-                                        ? "rgba(255,255,255,0.08)"
-                                        : "rgba(0,0,0,0.05)",
-                                    }
-                                  : undefined
-                              }
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                paddingHorizontal: 12,
+                                paddingVertical: 11,
+                                backgroundColor: isToday
+                                  ? isDark
+                                    ? "rgba(255,255,255,0.06)"
+                                    : "rgba(0,0,0,0.04)"
+                                  : undefined,
+                              }}
                             >
                               <Text
-                                className={`text-sm ${isToday ? "font-bold" : "font-medium"}`}
                                 style={{
+                                  fontSize: 13,
+                                  fontWeight: isToday ? "700" : "400",
                                   color: isToday
                                     ? colors.textPrimary
-                                    : colors.textSecondary,
+                                    : colors.textMuted,
                                 }}
                               >
                                 {dayLabel}
-                                {isToday ? " \u2022" : ""}
                               </Text>
                               <Text
-                                className={`text-sm ${isToday ? "font-bold" : ""}`}
                                 style={{
+                                  fontSize: 13,
+                                  fontWeight: isToday ? "600" : "400",
+                                  fontVariant: ["tabular-nums"],
                                   color: allClosed
-                                    ? isDark
-                                      ? "#f87171"
-                                      : "#dc2626"
-                                    : colors.textSecondary,
+                                    ? isDark ? "#f87171" : "#dc2626"
+                                    : isToday
+                                      ? colors.textPrimary
+                                      : colors.textMuted,
                                 }}
                               >
                                 {timeStr}
@@ -646,17 +683,26 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                       )}
                     </Text>
 
+                    {/* Histogram sub-label */}
+                    {detail.ratingHistogram && (
+                      <Text
+                        style={{ fontSize: 10, color: colors.textMuted, marginBottom: 4 }}
+                      >
+                        {(() => {
+                          const total = Object.values(detail.ratingHistogram).reduce((a, b) => a + b, 0);
+                          return `${total} avis analysés — ${detail.googleReviewsData?.length ?? 0} derniers affichés`;
+                        })()}
+                      </Text>
+                    )}
+
                     {/* Rating histogram */}
                     {detail.ratingHistogram && (
                       <View className="mb-3">
                         {[5, 4, 3, 2, 1].map((star) => {
                           const count =
                             detail.ratingHistogram[star] ?? 0;
-                          const maxCount = Math.max(
-                            ...Object.values(detail.ratingHistogram),
-                            1,
-                          );
-                          const pct = (count / maxCount) * 100;
+                          const totalHistogram = Object.values(detail.ratingHistogram).reduce((a, b) => a + b, 0);
+                          const pct = totalHistogram > 0 ? (count / totalHistogram) * 100 : 0;
                           return (
                             <View
                               key={star}
@@ -739,12 +785,12 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                           </View>
                           <View className="flex-row items-center gap-0.5">
                             {Array.from({ length: 5 }).map((_, i) => (
-                              <AppIcon key={i}
-                                name={
-                                  i < review.rating ? "star" : "star-border"
-                                }
+                              <StarIcon
+                                key={i}
                                 size={12}
-                                color="#fbbf24" />
+                                weight={i < review.rating ? "fill" : "regular"}
+                                color={i < review.rating ? "#fbbf24" : (isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)")}
+                              />
                             ))}
                           </View>
                         </View>
@@ -811,6 +857,15 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                       )}
                     </View>
 
+                    <Text
+                      className="text-[10px] mb-2 -mt-1"
+                      style={{ color: colors.textMuted }}
+                    >
+                      {detail.googleReviewCount != null
+                        ? `${detail.googleReviewCount} avis — ${detail.googleReviewsData.length} derniers affichés`
+                        : `${detail.googleReviewsData.length} avis affichés`}
+                    </Text>
+
                     {detail.googleReviewsData.map((review) => (
                       <View
                         key={review.id}
@@ -870,12 +925,12 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                           </View>
                           <View className="flex-row items-center gap-0.5">
                             {Array.from({ length: 5 }).map((_, i) => (
-                              <AppIcon key={i}
-                                name={
-                                  i < review.rating ? "star" : "star-border"
-                                }
+                              <StarIcon
+                                key={i}
                                 size={12}
-                                color="#fbbf24" />
+                                weight={i < review.rating ? "fill" : "regular"}
+                                color={i < review.rating ? "#fbbf24" : (isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)")}
+                              />
                             ))}
                           </View>
                         </View>

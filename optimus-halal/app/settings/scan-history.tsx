@@ -18,7 +18,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
-import { ArrowLeftIcon, CloudSlashIcon, FlaskIcon, PackageIcon } from "phosphor-react-native";
+import { ArrowLeftIcon, CloudSlashIcon, PackageIcon } from "phosphor-react-native";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useScanHistory, useMe, usePremium } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
@@ -31,14 +31,30 @@ import { useLocalScanHistoryStore, useFeatureFlagsStore } from "@/store";
 import { isAuthenticated as hasStoredTokens } from "@/services/api";
 import { MadhabScoreRing } from "@/components/scan/MadhabScoreRing";
 import { CertifierLogo } from "@/components/scan/CertifierLogo";
-import { CertifierTrustRow } from "@/components/scan/CertifierTrustRow";
+import { NaqiyGradeBadge, getTrustGradeFromScore } from "@/components/scan/NaqiyGradeBadge";
 import { halalStatus as halalStatusTokens, gold } from "@/theme/colors";
 import { AppIcon, type IconName } from "@/lib/icons";
+
 
 const LOCALE_MAP: Record<string, string> = { fr: "fr-FR", en: "en-US", ar: "ar-SA" };
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const NAQIY_LOGO = require("../../assets/images/logo_naqiy.webp");
+
+function formatDate(date: string | Date, t: ReturnType<typeof useTranslation>["t"], locale: string): string {
+  const d = new Date(date);
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffMin = Math.floor(diffMs / 60_000);
+  const diffH = Math.floor(diffMs / 3_600_000);
+  const diffDays = Math.floor(diffMs / 86_400_000);
+
+  if (diffMin < 1) return t.alerts.timeAgoJustNow;
+  if (diffMin < 60) return t.alerts.timeAgoMinutes.replace("{{count}}", String(diffMin));
+  if (diffH < 24) return t.alerts.timeAgoHours.replace("{{count}}", String(diffH));
+  if (diffDays < 7) return t.alerts.timeAgoDays.replace("{{count}}", String(diffDays));
+  return d.toLocaleDateString(locale, { day: "numeric", month: "short" });
+}
 
 // ── Analysis verdict config per status ──
 const ANALYSIS_CONFIG: Record<string, { icon: IconName; color: string; key: "analysisHalal" | "analysisHaram" | "analysisDoubtful" | "analysisUnknown" }> = {
@@ -100,65 +116,33 @@ const MADHAB_LABEL = {
   hanbali: "Hanbali",
 } as const;
 
-// Short display names — acronym + context for mosques
+// Display names — same mapping as ProductFavoriteCard
 const CERTIFIER_SHORT: Record<string, string> = {
   achahada: "Achahada",
-  "acmif-mosquee-d-evry": "ACMIF - Mosquée d'Évry",
+  "acmif-mosquee-d-evry": "ACMIF - Mosquée d'Évry-Courcouronnes",
   afcai: "AFCAI",
   alamane: "Alamane",
   altakwa: "Al-Takwa",
   "argml-mosquee-de-lyon": "ARGML - Mosquée de Lyon",
   arrissala: "Arrissala",
-  "avs-a-votre-service": "AVS",
-  "european-halal-trust": "EHT",
+  "avs-a-votre-service": "AVS - À Votre Service",
+  "european-halal-trust": "European Halal Trust",
   "halal-correct": "Halal Correct",
   "halal-monitoring-committee": "HMC",
   "halal-polska": "Halal Polska",
   "halal-services": "Halal Services",
   "islamic-centre-aachen": "ICA - Aachen",
-  "khalis-halal": "Khalis",
+  "khalis-halal": "Khalis Halal",
   "muslim-conseil-international-mci": "MCI",
   "sfcvh-mosquee-de-paris": "SFCVH - Mosquée de Paris",
   sidq: "SIDQ",
 };
 
-function getShortName(certifierId: string): string {
-  return CERTIFIER_SHORT[certifierId] ?? certifierId.split("-")[0].toUpperCase();
+function getCertifierDisplayName(certifierId: string): string {
+  return CERTIFIER_SHORT[certifierId] ?? certifierId.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 }
 
-function formatDate(date: string | Date, t: ReturnType<typeof useTranslation>["t"], locale: string): string {
-  const d = new Date(date);
-  const now = new Date();
-  const diffMs = now.getTime() - d.getTime();
-  const diffMin = Math.floor(diffMs / 60_000);
-  const diffH = Math.floor(diffMs / 3_600_000);
-  const diffDays = Math.floor(diffMs / 86_400_000);
 
-  if (diffMin < 1) return t.alerts.timeAgoJustNow;
-  if (diffMin < 60) return t.alerts.timeAgoMinutes.replace("{{count}}", String(diffMin));
-  if (diffH < 24) return t.alerts.timeAgoHours.replace("{{count}}", String(diffH));
-  if (diffDays < 7) return t.alerts.timeAgoDays.replace("{{count}}", String(diffDays));
-  return d.toLocaleDateString(locale, { day: "numeric", month: "short" });
-}
-
-/** Derive tier label from confidence + certifier + status */
-function getTierDescription(
-  confidence: number | null,
-  certifierId: string | null,
-  halalStatus: string | null,
-  t: ReturnType<typeof useTranslation>["t"],
-): string {
-  if (confidence == null || confidence === 0) {
-    return t.scanHistory.tierNoData;
-  }
-  if (confidence >= 0.90 && certifierId) {
-    return t.scanHistory.tierCertified;
-  }
-  if (halalStatus === "haram" || halalStatus === "doubtful") {
-    return t.scanHistory.tierSensitive;
-  }
-  return t.scanHistory.tierAnalyzed;
-}
 
 // ── Types ─────────────────────────────────────────
 
@@ -208,8 +192,6 @@ const ScanRow = React.memo(function ScanRow({ item, index, isDark, colors, t, la
   const status = ((item.product?.halalStatus ?? item.halalStatus) ?? "unknown") as HalalStatus;
   const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.unknown;
   const gradientColors = isDark ? config.gradientDark : config.gradientLight;
-  const confidence = item.product?.confidenceScore ?? item.confidenceScore;
-
   const certifierId = item.product?.certifierId ?? null;
   const certifierName = item.product?.certifierName ?? null;
 
@@ -231,7 +213,7 @@ const ScanRow = React.memo(function ScanRow({ item, index, isDark, colors, t, la
   const analysisConfig = ANALYSIS_CONFIG[status] ?? ANALYSIS_CONFIG.unknown;
   const effectiveGradient = isDark ? effectiveConfig.gradientDark : effectiveConfig.gradientLight;
 
-  const tierText = getTierDescription(confidence, certifierId, status, t);
+  const gradeLabel = trustScore != null ? getTrustGradeFromScore(trustScore).label : null;
   const madhabLabel = userMadhab !== "general" && userMadhab in MADHAB_LABEL
     ? MADHAB_LABEL[userMadhab as keyof typeof MADHAB_LABEL]
     : "";
@@ -314,6 +296,7 @@ const ScanRow = React.memo(function ScanRow({ item, index, isDark, colors, t, la
             >
               {item.product?.name ?? t.scanHistory.unknownProduct}
             </Text>
+            {/* 2. Marque · Date */}
             <View style={styles.metaRow}>
               {item.product?.brand && (
                 <>
@@ -328,57 +311,46 @@ const ScanRow = React.memo(function ScanRow({ item, index, isDark, colors, t, la
               </Text>
             </View>
 
-            {/* Tier + Certifier badge rows */}
-            {certifierId ? (
-              <View style={styles.certifierBlock}>
-                {/* Row 1: "Certification :" label */}
-                <Text style={[styles.certifiedByLabel, { color: colors.textMuted }]}>
-                  {t.scanHistory.certifiedBy}
+            {/* 3. 🌿 Analyse Naqiy : */}
+            <View style={styles.analyseNaqiyRow}>
+              <Image source={NAQIY_LOGO} style={styles.naqiyLogo} contentFit="contain" />
+              <Text style={[styles.analyseNaqiyText, { color: isDark ? gold[400] : gold[700] }]}>
+                Analyse Naqiy :
+              </Text>
+            </View>
+
+            {/* 4. Certifieur : 🏷 Nom (only if certified) */}
+            {certifierId && (
+              <View style={styles.certifierNameRow}>
+                <Text style={[styles.italicLabel, { color: colors.textMuted }]}>
+                  Certifieur :
                 </Text>
-                {/* Row 2: Logo + Name + Grade strip */}
-                {trustScore != null ? (
-                  <CertifierTrustRow
-                    variant="inline"
-                    certifierId={certifierId}
-                    certifierName={getShortName(certifierId)}
-                    trustScore={trustScore}
-                    showScore={false}
-                  />
-                ) : (
-                  <View style={styles.certifierGradeRow}>
-                    <CertifierLogo certifierId={certifierId} size={14} fallbackColor={effectiveConfig.color} />
-                    <Text style={[styles.certifierShort, { color: colors.textSecondary }]} numberOfLines={1}>
-                      {getShortName(certifierId)}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            ) : (
-              <View style={styles.tierRow}>
-                <FlaskIcon size={10}
-                  color={`${effectiveConfig.color}${isDark ? "90" : "70"}`} />
-                <Text
-                  style={[styles.tierText, { color: `${effectiveConfig.color}${isDark ? "CC" : "99"}` }]}
-                  numberOfLines={1}
-                >
-                  {tierText}
+                <CertifierLogo certifierId={certifierId} size={14} fallbackColor={effectiveConfig.color} />
+                <Text style={[styles.certifierShort, { color: colors.textPrimary }]} numberOfLines={1}>
+                  {getCertifierDisplayName(certifierId)}
                 </Text>
               </View>
             )}
 
-            {/* Analysis composition row — on ALL cards */}
-            <View style={styles.analysisRow}>
-              <Image source={NAQIY_LOGO} style={styles.naqiyLogo} contentFit="contain" />
-              <Text style={[styles.analysisLabel, { color: colors.textMuted }]}>
-                {t.scanHistory.analysisLabel}
+            {/* 5. ①②③④⑤ Vigilance + Adjectif (only if trustScore) */}
+            {trustScore != null && (
+              <View style={styles.gradeRow}>
+                <NaqiyGradeBadge variant="strip" grade={getTrustGradeFromScore(trustScore)} showLabel={false} showLogo={false} />
+                {gradeLabel && (
+                  <Text style={[styles.gradeAdjectif, { color: getTrustGradeFromScore(trustScore).color }]}>
+                    {gradeLabel}
+                  </Text>
+                )}
+              </View>
+            )}
+
+            {/* 6. Composition : ✓ conforme */}
+            <View style={styles.compositionRow}>
+              <Text style={[styles.italicLabel, { color: colors.textMuted }]}>
+                Composition :
               </Text>
-              <AppIcon name={analysisConfig.icon}
-                size={10}
-                color={analysisConfig.color} />
-              <Text
-                style={[styles.analysisText, { color: analysisConfig.color }]}
-                numberOfLines={1}
-              >
+              <AppIcon name={analysisConfig.icon} size={10} color={analysisConfig.color} />
+              <Text style={[styles.compositionText, { color: analysisConfig.color }]} numberOfLines={1}>
                 {t.scanHistory[analysisConfig.key]}
               </Text>
             </View>
@@ -387,7 +359,7 @@ const ScanRow = React.memo(function ScanRow({ item, index, isDark, colors, t, la
           {/* ── MadhabScoreRing — score number in center ── */}
           <MadhabScoreRing
             label={madhabLabel}
-            verdict={effectiveStatus === "unknown" ? "doubtful" : effectiveStatus}
+            verdict={effectiveStatus}
             trustScore={trustScore}
             staggerIndex={index}
             showScore
@@ -697,14 +669,14 @@ const styles = StyleSheet.create({
   brandText: { fontSize: 11, flexShrink: 1 },
   dot: { width: 2.5, height: 2.5, borderRadius: 1.25 },
   dateText: { fontSize: 10 },
-  tierRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 3 },
-  certifierBlock: { marginTop: 3, gap: 2 },
-  certifiedByLabel: { fontSize: 9, fontWeight: "500", fontStyle: "italic" },
-  certifierGradeRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+  analyseNaqiyRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 4 },
+  analyseNaqiyText: { fontSize: 11, fontWeight: "800", letterSpacing: 0.2 },
+  naqiyLogo: { width: 14, height: 14 },
+  italicLabel: { fontSize: 10, fontWeight: "500", fontStyle: "italic" },
+  certifierNameRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 2 },
   certifierShort: { fontSize: 10, fontWeight: "700", flexShrink: 1 },
-  tierText: { fontSize: 10, fontWeight: "600", flexShrink: 1 },
-  analysisRow: { flexDirection: "row", alignItems: "center", gap: 3, marginTop: 3 },
-  naqiyLogo: { width: 12, height: 12 },
-  analysisLabel: { fontSize: 9, fontWeight: "500" },
-  analysisText: { fontSize: 9, fontWeight: "700", flexShrink: 1 },
+  gradeRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 },
+  gradeAdjectif: { fontSize: 10, fontWeight: "700" },
+  compositionRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
+  compositionText: { fontSize: 10, fontWeight: "700", flexShrink: 1 },
 });

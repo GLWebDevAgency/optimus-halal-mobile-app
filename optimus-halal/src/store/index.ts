@@ -4,6 +4,7 @@
  * Store principal pour l'état global de l'application
  */
 
+import { Appearance } from "react-native";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { User, ScanRecord, Store } from "@/types";
@@ -93,12 +94,21 @@ interface ThemeState {
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
-      theme: "system", // Respecte la preference systeme de l'utilisateur
-      setTheme: (theme) => set({ theme }),
+      theme: "system",
+      setTheme: (theme) => {
+        // Sync native runtime: StatusBar, KeyboardAppearance, ActionSheets, etc.
+        Appearance.setColorScheme(theme === "system" ? null : theme);
+        set({ theme });
+      },
     }),
     {
       name: "theme-storage",
       storage: createJSONStorage(() => mmkvStorage),
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+        // Restore native color scheme on app launch
+        Appearance.setColorScheme(state.theme === "system" ? null : state.theme);
+      },
     }
   )
 );

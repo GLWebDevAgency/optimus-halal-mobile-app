@@ -54,6 +54,10 @@ const T = {
   matrixNoCertDoubtfulPhrase: "Ingrédients douteux détectés.",
   matrixNoCertHaramLabel: "Interdit",
   matrixNoCertHaramPhrase: "Ingrédients interdits présents.",
+  matrixNoCertUnknownLabel: "Données insuffisantes",
+  matrixNoCertUnknownPhrase: "Données insuffisantes pour analyser.",
+  matrixCertUnknownLabel: "Données insuffisantes",
+  matrixCertUnknownPhrase: "Données insuffisantes malgré certification.",
 };
 
 // ── Helpers ──
@@ -368,10 +372,11 @@ describe("Not Certified", () => {
     expect(r.matrixLevel).toBe("danger");
   });
 
-  it("all 4 unknown → treated as clean (Composition conforme)", () => {
+  it("all 4 unknown → insufficient data (not clean)", () => {
     const r = build({ madhabVerdicts: make4Schools("unknown") });
-    expect(r.matrixLabel).toBe("Composition conforme");
-    expect(r.matrixLevel).toBe("good");
+    expect(r.matrixLabel).toBe("Données insuffisantes");
+    expect(r.matrixLevel).toBe("unknown");
+    expect(r.compositionStatus).toBe("unknown");
   });
 
   it("certifier name without score → treated as not certified for matrix", () => {

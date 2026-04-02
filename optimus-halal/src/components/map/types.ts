@@ -34,6 +34,17 @@ export const STORE_TYPE_ICON: Record<string, IconName> = {
   other: "store",
 };
 
+export const STORE_TYPE_COLOR: Record<string, string> = {
+  butcher: "#ef4444",
+  restaurant: "#f97316",
+  supermarket: "#3b82f6",
+  bakery: "#d4af37",
+  wholesaler: "#8b5cf6",
+  abattoir: "#6b7280",
+  online: "#06b6d4",
+  other: "#6b7280",
+};
+
 export const CARD_WIDTH = 280;
 
 export function formatDistance(meters: number): string {

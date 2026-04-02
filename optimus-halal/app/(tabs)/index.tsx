@@ -22,7 +22,7 @@ import { Image } from "expo-image";
 import { Shadow } from "react-native-shadow-2";
 import { router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowClockwiseIcon, ArrowRightIcon, ArticleIcon, BellIcon, BellSimpleRingingIcon, CaretRightIcon, CloudSlashIcon, HamburgerIcon, HeartIcon, MapPinIcon, MapPinPlusIcon, ScanIcon, StorefrontIcon, UserCirclePlusIcon, WarningIcon } from "phosphor-react-native";
+import { ArrowClockwiseIcon, ArrowRightIcon, ArticleIcon, BellIcon, BellSimpleRingingIcon, CaretRightIcon, CloudSlashIcon, HamburgerIcon, HeartIcon, MapPinIcon, MapPinPlusIcon, ScanIcon, StarIcon, StorefrontIcon, UserCirclePlusIcon, WarningIcon } from "phosphor-react-native";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -39,7 +39,7 @@ import { Avatar, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { HomeSkeleton } from "@/components/skeletons";
 import { CertifierLogo } from "@/components/scan/CertifierLogo";
-import { openStatusColor, openStatusLabel, STORE_CERTIFIER_TO_ID } from "@/components/map/types";
+import { openStatusColor, openStatusLabel, STORE_CERTIFIER_TO_ID, STORE_TYPE_COLOR } from "@/components/map/types";
 import type { StoreFeatureProperties } from "@/components/map/types";
 import { useAuth } from "../_layout";
 import { useFavoritesList } from "@/hooks/useFavorites";
@@ -551,6 +551,7 @@ const DiscoverStoreCard = React.memo(function DiscoverStoreCard({
   const hasOpenStatus = store.openStatus && store.openStatus !== "unknown";
   const statusColor = hasOpenStatus ? openStatusColor(store.openStatus!, isDark) : undefined;
   const certifierId = STORE_CERTIFIER_TO_ID[store.certifier];
+  const typeColor = STORE_TYPE_COLOR[store.storeType] ?? STORE_TYPE_COLOR.other;
 
   return (
     <Animated.View entering={FadeInRight.delay(400 + index * 80).duration(500)}>
@@ -560,79 +561,96 @@ const DiscoverStoreCard = React.memo(function DiscoverStoreCard({
         accessibilityLabel={`${store.name}${hasOpenStatus ? `, ${openStatusLabel(store.openStatus!, t)}` : ""}`}
       >
         <View
-          className="w-[200px] h-[120px] rounded-[18px] overflow-hidden p-3 justify-end"
           style={{
-            backgroundColor: isDark ? glass.dark.bg : glass.light.bg,
+            width: 220,
+            height: 140,
+            borderRadius: 18,
+            overflow: "hidden",
             borderWidth: 1,
-            borderColor: isDark ? glass.dark.border : glass.light.border,
+            borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
           }}
         >
-          {store.imageUrl ? (
-            <Image
-              source={{ uri: store.imageUrl }}
-              style={[StyleSheet.absoluteFill, { opacity: 0.65 }]}
-              contentFit="cover"
-              transition={200}
-            />
-          ) : (
-            <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', opacity: 0.1 }]}>
-               <HamburgerIcon size={48} color={isDark ? "#fff" : "#000"} />
-            </View>
-          )}
-          <LinearGradient
-            colors={["transparent", isDark ? "rgba(15,23,42,0.9)" : "rgba(255,255,255,0.95)"]}
-            locations={[0, 0.8]}
-            style={StyleSheet.absoluteFill}
-          />
+          {/* ── Image zone — top ~64% (90px), full opacity ── */}
+          <View style={{ height: 90, overflow: "hidden" }}>
+            {store.imageUrl ? (
+              <Image
+                source={{ uri: store.imageUrl }}
+                style={{ width: 220, height: 90 }}
+                contentFit="cover"
+                transition={200}
+              />
+            ) : (
+              <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)" }}>
+                <HamburgerIcon size={32} color={isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)"} />
+              </View>
+            )}
 
-          {/* ── Open/Closed badge — top right corner ── */}
-          {hasOpenStatus && (
-            <View style={{
-              position: "absolute", top: 8, right: 8, zIndex: 20,
-              flexDirection: "row", alignItems: "center", gap: 3,
-              paddingHorizontal: 6, paddingVertical: 3,
-              borderRadius: 6,
-              backgroundColor: isDark ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.85)",
-            }}>
+            {/* Glass badges floating over image */}
+            {hasOpenStatus && (
               <View style={{
-                width: 5, height: 5, borderRadius: 2.5,
-                backgroundColor: statusColor,
-              }} />
-              <Text style={{
-                fontSize: 9, fontWeight: "700",
-                color: statusColor,
-                textTransform: "uppercase",
-                letterSpacing: 0.2,
+                position: "absolute", top: 7, right: 7,
+                flexDirection: "row", alignItems: "center", gap: 3,
+                paddingHorizontal: 6, paddingVertical: 3,
+                borderRadius: 6,
+                backgroundColor: isDark ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.88)",
               }}>
-                {openStatusLabel(store.openStatus!, t)}
-              </Text>
-            </View>
-          )}
+                <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: statusColor }} />
+                <Text style={{
+                  fontSize: 9, fontWeight: "700",
+                  color: statusColor,
+                  textTransform: "uppercase",
+                  letterSpacing: 0.2,
+                }}>
+                  {openStatusLabel(store.openStatus!, t)}
+                </Text>
+              </View>
+            )}
 
-          {/* ── Text overlay — bottom ── */}
-          <View style={{ position: "relative", zIndex: 10, gap: 2 }}>
-            {/* Row 1: Store name — full width */}
+            {store.averageRating > 0 && (
+              <View style={{
+                position: "absolute", top: 7, left: 7,
+                flexDirection: "row", alignItems: "center", gap: 2,
+                paddingHorizontal: 5, paddingVertical: 3,
+                borderRadius: 6,
+                backgroundColor: isDark ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.88)",
+              }}>
+                <StarIcon size={9} color="#f59e0b" weight="fill" />
+                <Text style={{ fontSize: 9, fontWeight: "800", color: isDark ? "#fff" : "#111" }}>
+                  {store.averageRating.toFixed(1)}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* ── Info zone — bottom ~36% (50px), opaque background ── */}
+          <View style={{
+            flex: 1,
+            paddingHorizontal: 10,
+            paddingVertical: 6,
+            justifyContent: "center",
+            backgroundColor: isDark ? "#111" : "#fff",
+            gap: 2,
+          }}>
             <Text
-              style={{ fontSize: 14, fontWeight: "700", color: colors.textPrimary }}
+              style={{ fontSize: 13, fontWeight: "700", color: colors.textPrimary, letterSpacing: -0.2 }}
               numberOfLines={1}
             >
               {store.name}
             </Text>
-
-            {/* Row 2: Category + CERTIFIÉ + certifier micro-logo */}
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Text style={{ fontSize: 10, fontWeight: "500", color: brand.gold }} numberOfLines={1}>
+              <Text style={{ fontSize: 9.5, fontWeight: "700", color: typeColor }} numberOfLines={1}>
                 {store.storeType.toUpperCase()}
-                {store.halalCertified ? " • CERTIFIÉ" : ""}
               </Text>
-              {certifierId && (
-                <View style={{
-                  width: 16, height: 16, borderRadius: 4,
-                  backgroundColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)",
-                  alignItems: "center", justifyContent: "center",
-                }}>
-                  <CertifierLogo certifierId={certifierId} size={12} />
-                </View>
+              {store.halalCertified && (
+                <>
+                  <View style={{ width: 2, height: 2, borderRadius: 1, backgroundColor: colors.textMuted }} />
+                  <Text style={{ fontSize: 9.5, fontWeight: "700", color: brand.gold }}>
+                    CERTIFIÉ
+                  </Text>
+                  {certifierId && (
+                    <CertifierLogo certifierId={certifierId} size={11} />
+                  )}
+                </>
               )}
             </View>
           </View>
@@ -1613,7 +1631,7 @@ export default function HomeScreen() {
                 gap: 12,
               }}
               decelerationRate="fast"
-              snapToInterval={212}
+              snapToInterval={232}
               snapToAlignment="start"
             >
               {nearbyStores.map((store, index) => (
