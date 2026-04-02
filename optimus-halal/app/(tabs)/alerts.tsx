@@ -177,21 +177,20 @@ const CompactAlertCard = React.memo(function CompactAlertCard({
       accessibilityLabel={alert.title}
       accessibilityHint={isGated ? t.alerts.unlockAll : undefined}
     >
-      {/* Left: severity strip + image flush (borderline top/left/bottom) */}
-      <View style={[styles.severityStrip, { backgroundColor: sevColor }]} />
-      {hasImage && (
-        <View style={styles.cardImageWrap}>
-          <Image
-            source={{ uri: alert.imageUrl! }}
-            style={StyleSheet.absoluteFill}
-            contentFit="cover"
-            transition={200}
-          />
-        </View>
+      {/* Left col: image (or severity strip if no image) */}
+      {hasImage ? (
+        <Image
+          source={{ uri: alert.imageUrl! }}
+          style={styles.cardImage}
+          contentFit="cover"
+          transition={200}
+        />
+      ) : (
+        <View style={[styles.severityStripNoImage, { backgroundColor: sevColor }]} />
       )}
 
-      {/* Right: all text content */}
-      <View style={[styles.cardContent, !hasImage && styles.cardContentNoImage]}>
+      {/* Right col: text content */}
+      <View style={styles.cardContent}>
         {/* Meta row: category pill + time */}
         <View style={styles.metaRow}>
           {categoryName ? (
@@ -230,13 +229,6 @@ const CompactAlertCard = React.memo(function CompactAlertCard({
           {alert.summary}
         </Text>
       </View>
-
-      {/* Chevron — far right */}
-      <CaretRightIcon
-        size={14}
-        color={isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)"}
-        style={styles.cardChevron}
-      />
 
       {/* Unread indicator — bright dot top-right */}
       {!isRead && !isGated && (
@@ -901,34 +893,31 @@ const styles = StyleSheet.create({
   // ── Compact Alert Card ──
   card: {
     flexDirection: "row",
-    alignItems: "stretch",
+    height: 110,
     borderRadius: 14,
     borderWidth: 1,
     marginBottom: 10,
     overflow: "hidden",
   },
-  // Severity strip — always visible on left edge
-  severityStrip: {
-    width: 3.5,
+  // Image — left column, fills full card height
+  cardImage: {
+    width: 90,
+    height: 110,
+  },
+  // Severity strip fallback when no image
+  severityStripNoImage: {
+    width: 4,
+    height: 110,
     borderTopLeftRadius: 14,
     borderBottomLeftRadius: 14,
   },
-  // Image wrapper — stretch full card height, Image fills via absoluteFill
-  cardImageWrap: {
-    width: 80,
-    alignSelf: "stretch",
-    minHeight: 80,
-  },
-  // Text content — right side
+  // Text — right column
   cardContent: {
     flex: 1,
-    paddingVertical: 12,
-    paddingLeft: 12,
-    gap: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    gap: 3,
     justifyContent: "center",
-  },
-  cardContentNoImage: {
-    paddingLeft: 10,
   },
   metaRow: {
     flexDirection: "row",
@@ -968,10 +957,6 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     opacity: 0.7,
     marginTop: 2,
-  },
-  cardChevron: {
-    alignSelf: "center",
-    marginRight: 12,
   },
   unreadDot: {
     position: "absolute",
