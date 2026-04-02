@@ -11,7 +11,7 @@
  */
 
 import React, { useCallback } from "react";
-import { Pressable, StyleSheet, type PressableProps, type ViewStyle, type StyleProp } from "react-native";
+import { Pressable, type PressableProps, type ViewStyle, type StyleProp } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -57,16 +57,10 @@ export const PressableScale = React.memo(function PressableScale({
   );
 
   return (
-    <Animated.View style={[style, animStyle]}>
-      <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut} style={styles.fill} {...rest}>
-        {children}
-      </Pressable>
-    </Animated.View>
+    <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut} style={style} {...rest}>
+      <Animated.View style={animStyle}>{children}</Animated.View>
+    </Pressable>
   );
-});
-
-const styles = StyleSheet.create({
-  fill: { flex: 1 },
 });
 
 export default PressableScale;

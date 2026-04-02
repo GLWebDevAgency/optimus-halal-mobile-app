@@ -165,89 +165,93 @@ const CompactAlertCard = React.memo(function CompactAlertCard({
       onLongPress={() => onLongPress(alert)}
       delayLongPress={400}
       disabled={isGated}
-      style={[
-        styles.card,
-        {
-          backgroundColor: isDark ? glass.dark.bg : glass.light.bg,
-          borderColor: isDark ? glass.dark.border : glass.light.border,
-          opacity: isRead && !isGated ? 0.6 : 1,
-        },
-      ]}
+      style={[styles.cardOuter, { opacity: isRead && !isGated ? 0.6 : 1 }]}
       accessibilityRole="button"
       accessibilityLabel={alert.title}
       accessibilityHint={isGated ? t.alerts.unlockAll : undefined}
     >
-      {/* Left col: image (or severity strip if no image) */}
-      {hasImage ? (
-        <Image
-          source={{ uri: alert.imageUrl! }}
-          style={styles.cardImage}
-          contentFit="cover"
-          transition={200}
-        />
-      ) : (
-        <View style={[styles.severityStripNoImage, { backgroundColor: sevColor }]} />
-      )}
+      {/* Inner row container — this is where layout lives */}
+      <View
+        style={[
+          styles.cardInner,
+          {
+            backgroundColor: isDark ? glass.dark.bg : glass.light.bg,
+            borderColor: isDark ? glass.dark.border : glass.light.border,
+          },
+        ]}
+      >
+        {/* Left col: image (or severity strip if no image) */}
+        {hasImage ? (
+          <Image
+            source={{ uri: alert.imageUrl! }}
+            style={styles.cardImage}
+            contentFit="cover"
+            transition={200}
+          />
+        ) : (
+          <View style={[styles.severityStripNoImage, { backgroundColor: sevColor }]} />
+        )}
 
-      {/* Right col: text content */}
-      <View style={styles.cardContent}>
-        {/* Meta row: category pill + time */}
-        <View style={styles.metaRow}>
-          {categoryName ? (
-            <View style={[styles.categoryPill, { backgroundColor: `${sevColor}18` }]}>
-              <View style={[styles.categoryPillDot, { backgroundColor: sevColor }]} />
-              <Text style={[styles.categoryLabel, { color: sevColor }]} numberOfLines={1}>
-                {categoryName}
-              </Text>
-            </View>
-          ) : null}
-          <Text style={[styles.timeLabel, { color: colors.textMuted }]}>
-            {formatRelativeTime(alert.publishedAt, t, locale)}
+        {/* Right col: text content */}
+        <View style={styles.cardContent}>
+          {/* Meta row: category pill + time */}
+          <View style={styles.metaRow}>
+            {categoryName ? (
+              <View style={[styles.categoryPill, { backgroundColor: `${sevColor}18` }]}>
+                <View style={[styles.categoryPillDot, { backgroundColor: sevColor }]} />
+                <Text style={[styles.categoryLabel, { color: sevColor }]} numberOfLines={1}>
+                  {categoryName}
+                </Text>
+              </View>
+            ) : null}
+            <Text style={[styles.timeLabel, { color: colors.textMuted }]}>
+              {formatRelativeTime(alert.publishedAt, t, locale)}
+            </Text>
+          </View>
+
+          {/* Title */}
+          <Text
+            style={[
+              styles.cardTitle,
+              {
+                color: colors.textPrimary,
+                fontWeight: isRead ? "500" : "700",
+                fontFamily: isRead ? undefined : headingFontFamily.bold,
+              },
+            ]}
+            numberOfLines={2}
+          >
+            {alert.title}
+          </Text>
+
+          {/* Summary */}
+          <Text
+            style={[styles.cardSummary, { color: colors.textSecondary }]}
+            numberOfLines={1}
+          >
+            {alert.summary}
           </Text>
         </View>
 
-        {/* Title */}
-        <Text
-          style={[
-            styles.cardTitle,
-            {
-              color: colors.textPrimary,
-              fontWeight: isRead ? "500" : "700",
-              fontFamily: isRead ? undefined : headingFontFamily.bold,
-            },
-          ]}
-          numberOfLines={2}
-        >
-          {alert.title}
-        </Text>
+        {/* Unread indicator */}
+        {!isRead && !isGated && (
+          <View style={[styles.unreadDot, { backgroundColor: sevColor }]} />
+        )}
 
-        {/* Summary */}
-        <Text
-          style={[styles.cardSummary, { color: colors.textSecondary }]}
-          numberOfLines={2}
-        >
-          {alert.summary}
-        </Text>
+        {/* Blur overlay for gated cards */}
+        {isGated && (
+          <>
+            <BlurView
+              intensity={isDark ? 20 : 15}
+              tint={isDark ? "dark" : "light"}
+              style={styles.blurOverlay}
+            />
+            <View style={styles.lockBadge}>
+              <LockSimpleIcon size={14} color={gold[500]} weight="fill" />
+            </View>
+          </>
+        )}
       </View>
-
-      {/* Unread indicator — bright dot top-right */}
-      {!isRead && !isGated && (
-        <View style={[styles.unreadDot, { backgroundColor: sevColor }]} />
-      )}
-
-      {/* Blur overlay for gated cards */}
-      {isGated && (
-        <>
-          <BlurView
-            intensity={isDark ? 20 : 15}
-            tint={isDark ? "dark" : "light"}
-            style={styles.blurOverlay}
-          />
-          <View style={styles.lockBadge}>
-            <LockSimpleIcon size={14} color={gold[500]} weight="fill" />
-          </View>
-        </>
-      )}
     </PressableScale>
   );
 });
@@ -891,12 +895,14 @@ const styles = StyleSheet.create({
   },
 
   // ── Compact Alert Card ──
-  card: {
+  cardOuter: {
+    marginBottom: 10,
+  },
+  cardInner: {
     flexDirection: "row",
     height: 110,
     borderRadius: 14,
     borderWidth: 1,
-    marginBottom: 10,
     overflow: "hidden",
   },
   // Image — left column, fills full card height
