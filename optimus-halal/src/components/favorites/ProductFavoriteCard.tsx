@@ -1,12 +1,15 @@
 /**
- * ProductFavoriteCard — Premium full-width card for product favorites.
+ * ProductFavoriteCard — Premium full-width card mirroring ScanRow design.
  *
- * Mirrors the scan-history ScanRow design: status-tinted gradient background,
- * accent line, product image, certifier row, analysis verdict, and
- * MadhabScoreRing. Includes an unfavorite heart button.
+ * Layout: [accent | image | info column | MadhabScoreRing]
+ * Info: name, brand · StatusPill, certifier trust row (or tier label),
+ *       Naqiy composition verdict. Heart unfavorite top-right.
+ *
+ * Same visual DNA as scan-history ScanRow: status-tinted gradient,
+ * accent line, CertifierTrustRow with N١→N٥ grade strip.
  */
 
-import React, { useMemo } from "react";
+import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -17,8 +20,9 @@ import { PressableScale } from "@/components/ui/PressableScale";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { CertifierTrustRow } from "@/components/scan/CertifierTrustRow";
 import { CertifierLogo } from "@/components/scan/CertifierLogo";
+import { getTrustGradeFromScore } from "@/components/scan/NaqiyGradeBadge";
 import { useTheme, useTranslation, useHaptics } from "@/hooks";
-import { halalStatus as statusColors, gold } from "@/theme/colors";
+import { halalStatus as statusColors } from "@/theme/colors";
 import { AppIcon } from "@/lib/icons";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -26,7 +30,7 @@ const NAQIY_LOGO = require("../../../assets/images/logo_naqiy.webp");
 
 export const CARD_WIDTH = "100%";
 
-// ── Status gradient config (same as scan-history) ───────────
+// ── Status visuals (identical to scan-history) ──────────
 type HalalStatus = "halal" | "haram" | "doubtful" | "unknown";
 
 interface StatusVisual {
@@ -58,15 +62,16 @@ const STATUS_CONFIG: Record<HalalStatus, StatusVisual> = {
   },
 };
 
-const ANALYSIS_CONFIG: Record<string, { icon: "check-circle" | "cancel" | "warning" | "help-outline"; color: string; key: string }> = {
-  halal: { icon: "check-circle", color: statusColors.halal.base, key: "conforme" },
-  haram: { icon: "cancel", color: statusColors.haram.base, key: "non conforme" },
-  doubtful: { icon: "warning", color: statusColors.doubtful.base, key: "incertain" },
-  unknown: { icon: "help-outline", color: statusColors.unknown.base, key: "indéterminé" },
+const ANALYSIS_KEY: Record<string, string> = {
+  halal: "analysisHalal",
+  haram: "analysisHaram",
+  doubtful: "analysisDoubtful",
+  unknown: "analysisUnknown",
 };
 
 // ── Props ────────────────────────────────────────────────
-interface ProductFavoriteCardProps {
+
+export interface ProductFavoriteCardProps {
   product: {
     id: string;
     barcode: string;
@@ -79,14 +84,33 @@ interface ProductFavoriteCardProps {
     certifierName: string | null;
     certifierLogo: string | null;
     certifierId?: string | null;
-    trustScore?: number | null;
   };
+  /** Certifier trust scores (from certifier.ranking query) */
+  certifierScores?: {
+    trustScore: number;
+    trustScoreHanafi: number | null;
+    trustScoreShafii: number | null;
+    trustScoreMaliki: number | null;
+    trustScoreHanbali: number | null;
+  } | null;
+  /** User's madhab preference */
+  userMadhab?: string;
   index: number;
   onRemove: (productId: string) => void;
 }
 
+const MADHAB_SCORE_KEY = {
+  hanafi: "trustScoreHanafi",
+  shafii: "trustScoreShafii",
+  maliki: "trustScoreMaliki",
+  hanbali: "trustScoreHanbali",
+} as const;
+
+
 export const ProductFavoriteCard = React.memo(function ProductFavoriteCard({
   product,
+  certifierScores,
+  userMadhab = "general",
   index,
   onRemove,
 }: ProductFavoriteCardProps) {
@@ -98,11 +122,39 @@ export const ProductFavoriteCard = React.memo(function ProductFavoriteCard({
   const status = (product.halalStatus ?? "unknown") as HalalStatus;
   const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.unknown;
   const gradient = isDark ? config.gradientDark : config.gradientLight;
-  const analysis = ANALYSIS_CONFIG[status] ?? ANALYSIS_CONFIG.unknown;
 
   const certifierId = product.certifierId ?? null;
   const certifierName = product.certifierName ?? null;
-  const trustScore = product.trustScore ?? null;
+
+  // Resolve per-madhab trust score (same logic as scan-history)
+  const trustScore = (() => {
+    if (!certifierScores) return null;
+    if (userMadhab !== "general" && userMadhab in MADHAB_SCORE_KEY) {
+      const key = MADHAB_SCORE_KEY[userMadhab as keyof typeof MADHAB_SCORE_KEY];
+      return certifierScores[key] ?? certifierScores.trustScore;
+    }
+    return certifierScores.trustScore;
+  })();
+
+  // Effective status: downgrade halal → doubtful if trust < 70
+  const effectiveStatus: HalalStatus =
+    status === "halal" && trustScore !== null && trustScore < 70
+      ? "doubtful"
+      : status;
+  const effectiveConfig = STATUS_CONFIG[effectiveStatus] ?? STATUS_CONFIG.unknown;
+  const effectiveGradient = isDark ? effectiveConfig.gradientDark : effectiveConfig.gradientLight;
+
+  // Grade adjective
+  const gradeLabel = trustScore != null ? getTrustGradeFromScore(trustScore).label : null;
+
+  const analysisKey = ANALYSIS_KEY[status] ?? ANALYSIS_KEY.unknown;
+  const analysisText = (t.scanHistory as Record<string, string>)[analysisKey] ?? "";
+  const analysisConfig = {
+    halal: { icon: "check-circle" as const, color: statusColors.halal.base },
+    haram: { icon: "cancel" as const, color: statusColors.haram.base },
+    doubtful: { icon: "warning" as const, color: statusColors.doubtful.base },
+    unknown: { icon: "help-outline" as const, color: statusColors.unknown.base },
+  }[status] ?? { icon: "help-outline" as const, color: statusColors.unknown.base };
 
   const handleView = () => {
     impact();
@@ -127,14 +179,14 @@ export const ProductFavoriteCard = React.memo(function ProductFavoriteCard({
             styles.card,
             {
               borderColor: isDark
-                ? `${config.color}20`
-                : `${config.color}15`,
+                ? `${effectiveConfig.color}20`
+                : `${effectiveConfig.color}15`,
             },
           ]}
         >
           {/* L0: Status gradient background */}
           <LinearGradient
-            colors={[...gradient]}
+            colors={[...effectiveGradient]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}
@@ -155,7 +207,7 @@ export const ProductFavoriteCard = React.memo(function ProductFavoriteCard({
           <View
             style={[
               styles.accentLine,
-              { backgroundColor: `${config.color}${isDark ? "60" : "40"}` },
+              { backgroundColor: `${effectiveConfig.color}${isDark ? "60" : "40"}` },
             ]}
           />
 
@@ -165,7 +217,7 @@ export const ProductFavoriteCard = React.memo(function ProductFavoriteCard({
               styles.imageBox,
               {
                 backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.8)",
-                borderColor: isDark ? `${config.color}20` : `${config.color}12`,
+                borderColor: isDark ? `${effectiveConfig.color}20` : `${effectiveConfig.color}12`,
               },
             ]}
           >
@@ -191,7 +243,7 @@ export const ProductFavoriteCard = React.memo(function ProductFavoriteCard({
               {product.name}
             </Text>
 
-            {/* Brand */}
+            {/* Brand · StatusPill */}
             <View style={styles.metaRow}>
               {product.brand && (
                 <>
@@ -208,53 +260,60 @@ export const ProductFavoriteCard = React.memo(function ProductFavoriteCard({
             {certifierId && certifierName && trustScore != null ? (
               <View style={styles.certifierBlock}>
                 <Text style={[styles.certifiedByLabel, { color: colors.textMuted }]}>
-                  Certification :
+                  {(t.scanHistory as Record<string, string>).certifiedBy ?? "Certification :"}
                 </Text>
-                <CertifierTrustRow
-                  variant="inline"
-                  certifierId={certifierId}
-                  certifierName={certifierName}
-                  trustScore={trustScore}
-                  showScore={false}
-                />
+                <View style={styles.certifierGradeRow}>
+                  <CertifierTrustRow
+                    variant="inline"
+                    certifierId={certifierId}
+                    certifierName={certifierName}
+                    trustScore={trustScore}
+                    showScore={false}
+                  />
+                  {gradeLabel && (
+                    <Text style={[styles.gradeAdjectif, { color: getTrustGradeFromScore(trustScore).color }]}>
+                      {gradeLabel}
+                    </Text>
+                  )}
+                </View>
               </View>
             ) : certifierId && certifierName ? (
-              <View style={styles.certifierRow}>
-                <CertifierLogo certifierId={certifierId} size={14} fallbackColor={config.color} />
+              <View style={styles.certifierSimpleRow}>
+                <CertifierLogo certifierId={certifierId} size={14} fallbackColor={effectiveConfig.color} />
                 <Text style={[styles.certifierShort, { color: colors.textSecondary }]} numberOfLines={1}>
                   {certifierName}
                 </Text>
               </View>
             ) : (
               <View style={styles.tierRow}>
-                <FlaskIcon size={10} color={`${config.color}${isDark ? "90" : "70"}`} />
-                <Text style={[styles.tierText, { color: `${config.color}${isDark ? "CC" : "99"}` }]} numberOfLines={1}>
-                  Analysé par Naqiy
+                <FlaskIcon size={10} color={`${effectiveConfig.color}${isDark ? "90" : "70"}`} />
+                <Text style={[styles.tierText, { color: `${effectiveConfig.color}${isDark ? "CC" : "99"}` }]} numberOfLines={1}>
+                  {(t.scanHistory as Record<string, string>).tierAnalyzed ?? "Analysé par Naqiy"}
                 </Text>
               </View>
             )}
 
-            {/* Analysis composition row */}
+            {/* Naqiy analysis composition row */}
             <View style={styles.analysisRow}>
               <Image source={NAQIY_LOGO} style={styles.naqiyLogo} contentFit="contain" />
               <Text style={[styles.analysisLabel, { color: colors.textMuted }]}>
-                Composition :
+                {(t.scanHistory as Record<string, string>).analysisLabel ?? "Composition :"}
               </Text>
-              <AppIcon name={analysis.icon} size={10} color={analysis.color} />
-              <Text style={[styles.analysisText, { color: analysis.color }]} numberOfLines={1}>
-                {analysis.key}
+              <AppIcon name={analysisConfig.icon} size={10} color={analysisConfig.color} />
+              <Text style={[styles.analysisText, { color: analysisConfig.color }]} numberOfLines={1}>
+                {analysisText}
               </Text>
             </View>
           </View>
 
-          {/* Heart unfavorite — top-right */}
+          {/* Heart unfavorite — top-right overlay */}
           <PressableScale
             onPress={handleRemove}
             style={styles.heartBtn}
             accessibilityLabel={t.favorites.removeConfirm}
           >
             <View style={[styles.heartCircle, { backgroundColor: isDark ? "rgba(239,68,68,0.12)" : "rgba(239,68,68,0.08)" }]}>
-              <HeartIcon size={16} color="#ef4444" weight="fill" />
+              <HeartIcon size={14} color="#ef4444" weight="fill" />
             </View>
           </PressableScale>
         </View>
@@ -297,7 +356,9 @@ const styles = StyleSheet.create({
   dot: { width: 2.5, height: 2.5, borderRadius: 1.25 },
   certifierBlock: { marginTop: 3, gap: 2 },
   certifiedByLabel: { fontSize: 9, fontWeight: "500", fontStyle: "italic" },
-  certifierRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 3 },
+  certifierGradeRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  gradeAdjectif: { fontSize: 9, fontWeight: "700" },
+  certifierSimpleRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 3 },
   certifierShort: { fontSize: 10, fontWeight: "700", flexShrink: 1 },
   tierRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 3 },
   tierText: { fontSize: 10, fontWeight: "600", flexShrink: 1 },
@@ -305,15 +366,11 @@ const styles = StyleSheet.create({
   naqiyLogo: { width: 12, height: 12 },
   analysisLabel: { fontSize: 9, fontWeight: "500" },
   analysisText: { fontSize: 9, fontWeight: "700", flexShrink: 1 },
-  heartBtn: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-  },
+  heartBtn: { position: "absolute", top: 6, right: 6 },
   heartCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
   },

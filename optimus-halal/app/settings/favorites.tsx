@@ -39,6 +39,7 @@ import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
+import { trpc } from "@/lib/trpc";
 
 const { width } = Dimensions.get("window");
 
@@ -93,6 +94,7 @@ interface MappedProduct {
   category: string | null;
   filterCategory: string;
   confidenceScore: number | null;
+  certifierId: string | null;
   certifierName: string | null;
   certifierLogo: string | null;
 }
@@ -192,6 +194,35 @@ export default function FavoritesScreen() {
   const { data: me } = useMe();
   const isAuth = !!me;
 
+  // ── Certifier trust scores + user madhab (for MadhabScoreRing) ──
+  const certifierRanking = trpc.certifier.ranking.useQuery(undefined, {
+    staleTime: 1000 * 60 * 30, // 30min cache
+  });
+  const { data: userProfile } = trpc.profile.getProfile.useQuery(undefined, { enabled: isAuth });
+  const userMadhab = (userProfile?.madhab as string) ?? "general";
+
+  const certifierScoreMap = useMemo(() => {
+    const map = new Map<string, {
+      trustScore: number;
+      trustScoreHanafi: number | null;
+      trustScoreShafii: number | null;
+      trustScoreMaliki: number | null;
+      trustScoreHanbali: number | null;
+    }>();
+    if (certifierRanking.data) {
+      for (const c of certifierRanking.data) {
+        map.set(c.id, {
+          trustScore: c.trustScore,
+          trustScoreHanafi: null,
+          trustScoreShafii: null,
+          trustScoreMaliki: null,
+          trustScoreHanbali: null,
+        });
+      }
+    }
+    return map;
+  }, [certifierRanking.data]);
+
   // ── Product Favorites (Auth) ──
   const {
     data: rawProductFavorites,
@@ -245,6 +276,7 @@ export default function FavoritesScreen() {
           category: fav.product!.category ?? null,
           filterCategory: mapToFilterCategory(fav.product!.category),
           confidenceScore: fav.product!.confidenceScore ?? null,
+          certifierId: fav.product!.certifierId ?? null,
           certifierName: fav.product!.certifierName ?? null,
           certifierLogo: fav.product!.certifierLogo ?? null,
         }));
@@ -260,6 +292,7 @@ export default function FavoritesScreen() {
       category: null,
       filterCategory: "food",
       confidenceScore: null,
+      certifierId: null,
       certifierName: null,
       certifierLogo: null,
     }));
@@ -489,6 +522,8 @@ export default function FavoritesScreen() {
               renderItem={({ item, index }) => (
                 <ProductFavoriteCard
                   product={item}
+                  certifierScores={item.certifierId ? certifierScoreMap.get(item.certifierId) ?? null : null}
+                  userMadhab={userMadhab}
                   index={index}
                   onRemove={handleRemoveProduct}
                 />
