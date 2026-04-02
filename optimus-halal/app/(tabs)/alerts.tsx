@@ -913,9 +913,11 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 14,
     borderBottomLeftRadius: 14,
   },
-  // Image wrapper — View stretches vertically, Image fills it via absoluteFill
+  // Image wrapper — stretch full card height, Image fills via absoluteFill
   cardImageWrap: {
     width: 80,
+    alignSelf: "stretch",
+    minHeight: 80,
   },
   // Text content — right side
   cardContent: {
