@@ -157,6 +157,8 @@ const CompactAlertCard = React.memo(function CompactAlertCard({
   const severity = (alert.severity as Severity) || "info";
   const sevColor = SEVERITY_COLOR[severity] ?? SEVERITY_COLOR.info;
 
+  const hasImage = !!alert.imageUrl;
+
   return (
     <PressableScale
       onPress={() => onPress(alert.id)}
@@ -175,21 +177,24 @@ const CompactAlertCard = React.memo(function CompactAlertCard({
       accessibilityLabel={alert.title}
       accessibilityHint={isGated ? t.alerts.unlockAll : undefined}
     >
-      {/* Severity accent — left edge strip */}
-      <View style={[styles.severityStrip, { backgroundColor: sevColor }]} />
+      {/* Left: image flush (top/left/bottom) or severity strip */}
+      {hasImage ? (
+        <View style={styles.cardImageWrap}>
+          <Image
+            source={{ uri: alert.imageUrl! }}
+            style={styles.cardImage}
+            contentFit="cover"
+            transition={200}
+          />
+          {/* Severity indicator overlaid on image — bottom-left dot */}
+          <View style={[styles.imageSeverityDot, { backgroundColor: sevColor }]} />
+        </View>
+      ) : (
+        <View style={[styles.severityStrip, { backgroundColor: sevColor }]} />
+      )}
 
-      {/* Thumbnail — right-aligned, prominent */}
-      {alert.imageUrl ? (
-        <Image
-          source={{ uri: alert.imageUrl }}
-          style={styles.cardThumb}
-          contentFit="cover"
-          transition={200}
-        />
-      ) : null}
-
-      {/* Content */}
-      <View style={styles.cardCenter}>
+      {/* Right: all text content */}
+      <View style={[styles.cardContent, !hasImage && styles.cardContentNoImage]}>
         {/* Meta row: category pill + time */}
         <View style={styles.metaRow}>
           {categoryName ? (
@@ -229,13 +234,12 @@ const CompactAlertCard = React.memo(function CompactAlertCard({
         </Text>
       </View>
 
-      {/* Chevron when no thumbnail */}
-      {!alert.imageUrl && (
-        <CaretRightIcon
-          size={14}
-          color={isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}
-        />
-      )}
+      {/* Chevron — far right */}
+      <CaretRightIcon
+        size={14}
+        color={isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)"}
+        style={styles.cardChevron}
+      />
 
       {/* Unread indicator — bright dot top-right */}
       {!isRead && !isGated && (
@@ -900,26 +904,48 @@ const styles = StyleSheet.create({
   // ── Compact Alert Card ──
   card: {
     flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 14,
-    paddingLeft: 0,
-    paddingRight: 16,
+    alignItems: "stretch",
     borderRadius: 14,
     borderWidth: 1,
     marginBottom: 10,
-    gap: 12,
     overflow: "hidden",
+    minHeight: 100,
   },
+  // Image flush left (top/left/bottom edges of card)
+  cardImageWrap: {
+    width: 88,
+    position: "relative",
+  },
+  cardImage: {
+    width: 88,
+    height: "100%",
+  },
+  imageSeverityDot: {
+    position: "absolute",
+    bottom: 6,
+    left: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: "rgba(0,0,0,0.3)",
+  },
+  // Severity strip fallback (no image)
   severityStrip: {
-    width: 3,
-    alignSelf: "stretch",
+    width: 3.5,
     borderTopLeftRadius: 14,
     borderBottomLeftRadius: 14,
   },
-  cardCenter: {
+  // Text content — right side
+  cardContent: {
     flex: 1,
+    paddingVertical: 12,
+    paddingLeft: 12,
     gap: 4,
-    paddingVertical: 2,
+    justifyContent: "center",
+  },
+  cardContentNoImage: {
+    paddingLeft: 10,
   },
   metaRow: {
     flexDirection: "row",
@@ -957,18 +983,17 @@ const styles = StyleSheet.create({
   cardSummary: {
     fontSize: 12,
     lineHeight: 17,
-    opacity: 0.75,
-    marginTop: 1,
+    opacity: 0.7,
+    marginTop: 2,
   },
-  cardThumb: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
+  cardChevron: {
+    alignSelf: "center",
+    marginRight: 12,
   },
   unreadDot: {
     position: "absolute",
-    top: 10,
-    right: 10,
+    top: 8,
+    right: 8,
     width: 7,
     height: 7,
     borderRadius: 3.5,
