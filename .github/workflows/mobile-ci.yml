@@ -180,3 +180,36 @@ jobs:
       # To enable iOS: eas credentials --platform ios (interactive), then change to --platform all
       - name: Build Production (Android)
         run: eas build --platform android --profile production --non-interactive --no-wait
+
+  # ── EAS Update Production (OTA) ─────────────────
+  # Runs on: MANUAL TRIGGER ONLY (workflow_dispatch with ota-production)
+  # Pushes JS-only hotfixes to production installs without a new store binary.
+  # ⚠️ Only trigger after validating the OTA on preview channel first!
+  eas-update-production:
+    name: OTA Update (Production)
+    runs-on: ubuntu-latest
+    needs: check
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'ota-production'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.14'
+          cache: pnpm
+          cache-dependency-path: optimus-halal/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: 16
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Publish OTA Update (Production)
+        run: eas update --auto --non-interactive --channel production
