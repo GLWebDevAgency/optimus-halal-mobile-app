@@ -878,6 +878,18 @@ export default function HomeScreen() {
     enabled: !!me && defaultFeatureFlags.alertsEnabled,
     staleTime: 30_000,
   });
+
+  // Refetch unread counts every time the home tab is focused
+  // (e.g. after reading alerts, scanning products, navigating back)
+  useFocusEffect(
+    useCallback(() => {
+      if (me) {
+        unreadQuery.refetch();
+        alertUnreadQuery.refetch();
+      }
+    }, [me?.id]),
+  );
+
   const articlesQuery = trpc.article.list.useQuery(
     { limit: 5 },
     { enabled: true, staleTime: 120_000 },

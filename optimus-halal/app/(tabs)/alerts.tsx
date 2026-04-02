@@ -29,7 +29,7 @@ import {
 import { Image } from "expo-image";
 import { BlurView } from "expo-blur";
 import { FlashList } from "@shopify/flash-list";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   ArrowLeftIcon,
@@ -319,6 +319,16 @@ export default function AlertsScreen() {
     enabled: !!me,
     staleTime: 30_000,
   });
+
+  // Refetch read status when returning to alerts tab (after reading alert details)
+  useFocusEffect(
+    useCallback(() => {
+      if (me) {
+        readStatusQuery.refetch();
+        alertsQuery.refetch();
+      }
+    }, [me?.id]),
+  );
   const readIds = useMemo(
     () => new Set(readStatusQuery.data?.readIds ?? []),
     [readStatusQuery.data?.readIds],
