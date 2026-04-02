@@ -440,78 +440,86 @@ const FeaturedCard = React.memo(function FeaturedCard({
   return (
     <Animated.View
       entering={FadeInRight.delay(420 + index * 80).duration(500)}
+      style={{ marginBottom: 16 }}
     >
-      <Shadow distance={6} startColor={isDark ? "rgba(0,0,0,0.25)" : "rgba(0,0,0,0.08)"} offset={[0, 3]} style={{ borderRadius: 24, width: "100%", marginBottom: 16 }}>
-        <PressableScale
-          onPress={onPress}
-          accessibilityRole="button"
-          accessibilityLabel={item.title}
-          accessibilityHint={item.subtitle}
+      <PressableScale
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={item.title}
+        accessibilityHint={item.subtitle}
+      >
+        <View
+          style={[
+            styles.featuredCard,
+            {
+              borderColor: isDark
+                ? glass.dark.border
+                : glass.light.border,
+            },
+          ]}
         >
-          <View style={styles.featuredCard}>
-            {/* Background */}
-            {item.coverImage ? (
-              <Image
-                source={{ uri: item.coverImage }}
-                style={StyleSheet.absoluteFill}
-                contentFit="cover"
-                transition={200}
-                accessible={false}
-              />
-            ) : (
-              <LinearGradient
-                colors={
-                  isDark
-                    ? [darkTheme.card, darkTheme.background]
-                    : ["#f0fdf4", "#ecfdf5"]
-                }
-                style={StyleSheet.absoluteFill}
-              />
-            )}
-
-            {/* Scrim overlay */}
+          {/* Background */}
+          {item.coverImage ? (
+            <Image
+              source={{ uri: item.coverImage }}
+              style={StyleSheet.absoluteFill}
+              contentFit="cover"
+              transition={200}
+              accessible={false}
+            />
+          ) : (
             <LinearGradient
-              colors={[
-                "transparent",
-                "rgba(0,0,0,0.35)",
-                "rgba(0,0,0,0.85)",
-              ]}
-              locations={[0, 0.5, 1]}
+              colors={
+                isDark
+                  ? [darkTheme.card, darkTheme.background]
+                  : ["#f0fdf4", "#ecfdf5"]
+              }
               style={StyleSheet.absoluteFill}
             />
+          )}
 
-            {/* Badge top-left */}
-            <View style={styles.featuredBadgeWrap}>
-              <View
-                style={[
-                  styles.featuredBadge,
-                  { backgroundColor: item.badgeColor },
-                ]}
-              >
-                <Text style={styles.featuredBadgeText}>{item.badgeLabel}</Text>
-              </View>
-            </View>
+          {/* Scrim overlay */}
+          <LinearGradient
+            colors={[
+              "transparent",
+              "rgba(0,0,0,0.35)",
+              "rgba(0,0,0,0.85)",
+            ]}
+            locations={[0, 0.5, 1]}
+            style={StyleSheet.absoluteFill}
+          />
 
-            {/* Content bottom */}
-            <View style={styles.featuredContent}>
-              <Text style={styles.featuredTitle} numberOfLines={2}>
-                {item.title}
-              </Text>
-              <Text style={styles.featuredSubtitle} numberOfLines={1}>
-                {item.subtitle}
-              </Text>
-            </View>
-
-            {/* Accent left border */}
+          {/* Badge top-left */}
+          <View style={styles.featuredBadgeWrap}>
             <View
               style={[
-                styles.featuredAccent,
-                { backgroundColor: item.accentColor },
+                styles.featuredBadge,
+                { backgroundColor: item.badgeColor },
               ]}
-            />
+            >
+              <Text style={styles.featuredBadgeText}>{item.badgeLabel}</Text>
+            </View>
           </View>
-        </PressableScale>
-      </Shadow>
+
+          {/* Content bottom */}
+          <View style={styles.featuredContent}>
+            <Text style={styles.featuredTitle} numberOfLines={2}>
+              {item.title}
+            </Text>
+            <Text style={styles.featuredSubtitle} numberOfLines={1}>
+              {item.subtitle}
+            </Text>
+          </View>
+
+          {/* Accent left border */}
+          <View
+            style={[
+              styles.featuredAccent,
+              { backgroundColor: item.accentColor },
+            ]}
+          />
+        </View>
+      </PressableScale>
     </Animated.View>
   );
 });
@@ -2240,6 +2248,7 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH * 0.7,
     height: 170,
     borderRadius: 18,
+    borderWidth: 1,
     overflow: "hidden",
   },
   featuredBadgeWrap: {
