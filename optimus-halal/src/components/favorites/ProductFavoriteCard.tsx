@@ -13,7 +13,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { HeartIcon, FlaskIcon, PackageIcon } from "phosphor-react-native";
+import { HeartIcon, PackageIcon } from "phosphor-react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { PressableScale } from "@/components/ui/PressableScale";
@@ -282,8 +282,8 @@ export const ProductFavoriteCard = React.memo(function ProductFavoriteCard({
               </Text>
             </View>
 
-            {/* 4. Certifieur : 🏷 nom */}
-            {certifierId ? (
+            {/* 4. Certifieur : 🏷 nom (only if certified) */}
+            {certifierId && (
               <View style={styles.certifierNameRow}>
                 <Text style={[styles.italicLabel, { color: colors.textMuted }]}>
                   Certifieur :
@@ -291,13 +291,6 @@ export const ProductFavoriteCard = React.memo(function ProductFavoriteCard({
                 <CertifierLogo certifierId={certifierId} size={14} fallbackColor={effectiveConfig.color} />
                 <Text style={[styles.certifierShort, { color: colors.textPrimary }]} numberOfLines={1}>
                   {getCertifierDisplayName(certifierId)}
-                </Text>
-              </View>
-            ) : (
-              <View style={styles.tierRow}>
-                <FlaskIcon size={10} color={`${effectiveConfig.color}${isDark ? "90" : "70"}`} />
-                <Text style={[styles.tierText, { color: `${effectiveConfig.color}${isDark ? "CC" : "99"}` }]} numberOfLines={1}>
-                  Composition analysée
                 </Text>
               </View>
             )}
@@ -380,8 +373,6 @@ const styles = StyleSheet.create({
   italicLabel: { fontSize: 10, fontWeight: "500", fontStyle: "italic" },
   certifierNameRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 2 },
   certifierShort: { fontSize: 10, fontWeight: "700", flexShrink: 1 },
-  tierRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
-  tierText: { fontSize: 10, fontWeight: "600", flexShrink: 1 },
   gradeRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 },
   gradeAdjectif: { fontSize: 10, fontWeight: "700" },
   compositionRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
