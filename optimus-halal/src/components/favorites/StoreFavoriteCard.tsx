@@ -1,29 +1,37 @@
 /**
- * StoreFavoriteCard — Full-width card for favorite stores.
+ * StoreFavoriteCard — Premium full-width card for favorite stores.
  *
- * Shows: store image/logo, name, type with colored icon, certifier badge,
- * star rating, city, and action buttons (directions, call, unfavorite).
+ * Consistent with the Naqiy design system: glass border, larger image,
+ * type + certifier badges, star rating, city, and action buttons.
+ * Heart unfavorite always accessible.
  */
 
 import React from "react";
 import { View, Text, StyleSheet, Linking } from "react-native";
 import { Image } from "expo-image";
-import { HeartIcon, PhoneIcon, SealCheckIcon, SignInIcon, StarIcon } from "phosphor-react-native";
+import {
+  HeartIcon,
+  NavigationArrowIcon,
+  PhoneIcon,
+  SealCheckIcon,
+  StarIcon,
+} from "phosphor-react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { useTheme, useTranslation, useHaptics } from "@/hooks";
-import { brand, neutral } from "@/theme/colors";
+import { brand, glass, gold } from "@/theme/colors";
 import { AppIcon, type IconName } from "@/lib/icons";
+import { headingFontFamily, fontWeight as fw } from "@/theme/typography";
 
-const STORE_TYPE_CONFIG: Record<string, { icon: IconName; color: string; label: string }> = {
-  butcher: { icon: "restaurant", color: "#ef4444", label: "Boucherie" },
-  restaurant: { icon: "restaurant-menu", color: "#f97316", label: "Restaurant" },
-  supermarket: { icon: "shopping-cart", color: "#3b82f6", label: "Supermarché" },
-  bakery: { icon: "bakery-dining", color: "#d4af37", label: "Boulangerie" },
-  wholesaler: { icon: "warehouse", color: "#8b5cf6", label: "Grossiste" },
-  abattoir: { icon: "factory", color: "#6b7280", label: "Abattoir" },
-  online: { icon: "language", color: "#06b6d4", label: "En ligne" },
-  other: { icon: "store", color: "#6b7280", label: "Autre" },
+const STORE_TYPE_CONFIG: Record<string, { icon: IconName; color: string }> = {
+  butcher: { icon: "restaurant", color: "#ef4444" },
+  restaurant: { icon: "restaurant-menu", color: "#f97316" },
+  supermarket: { icon: "shopping-cart", color: "#3b82f6" },
+  bakery: { icon: "bakery-dining", color: "#d4af37" },
+  wholesaler: { icon: "warehouse", color: "#8b5cf6" },
+  abattoir: { icon: "factory", color: "#6b7280" },
+  online: { icon: "language", color: "#06b6d4" },
+  other: { icon: "store", color: "#6b7280" },
 };
 
 const CERTIFIER_LABELS: Record<string, string> = {
@@ -72,7 +80,7 @@ export const StoreFavoriteCard = React.memo(function StoreFavoriteCard({
   const hasRating = store.averageRating > 0;
   const hasPhone = !!store.phone;
   const storeTypeLabel =
-    (t.favorites.storeCategories as Record<string, string>)[store.storeType] ?? typeConfig.label;
+    (t.favorites.storeCategories as Record<string, string>)[store.storeType] ?? store.storeType;
 
   const handleDirections = () => {
     impact();
@@ -97,95 +105,124 @@ export const StoreFavoriteCard = React.memo(function StoreFavoriteCard({
       entering={FadeInDown.delay(Math.min(index * 60, 360)).duration(350).springify()}
     >
       <PressableScale
-        style={[styles.card, { backgroundColor: colors.card, borderColor: colors.borderLight }]}
+        style={styles.outer}
         accessibilityRole="button"
         accessibilityLabel={store.name}
       >
-        {/* Image */}
-        <View style={styles.imageBox}>
-          {imageSource ? (
-            <Image
-              source={{ uri: imageSource }}
-              style={styles.image}
-              contentFit="cover"
-              transition={200}
-            />
-          ) : (
-            <View style={[styles.image, styles.placeholderImage, { backgroundColor: isDark ? "#1f1f1f" : "#f0ede8" }]}>
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: isDark ? glass.dark.bg : glass.light.bg,
+              borderColor: isDark ? glass.dark.border : glass.light.border,
+            },
+          ]}
+        >
+          {/* Store image — left side, rounded */}
+          <View
+            style={[
+              styles.imageBox,
+              {
+                backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
+              },
+            ]}
+          >
+            {imageSource ? (
+              <Image
+                source={{ uri: imageSource }}
+                style={styles.imageFill}
+                contentFit="cover"
+                transition={200}
+              />
+            ) : (
               <AppIcon name={typeConfig.icon} size={28} color={typeConfig.color} />
-            </View>
-          )}
-        </View>
-
-        {/* Content */}
-        <View style={styles.content}>
-          {/* Name */}
-          <Text style={[styles.name, { color: colors.textPrimary }]} numberOfLines={1}>
-            {store.name}
-          </Text>
-
-          {/* Type + Certifier row */}
-          <View style={styles.metaRow}>
-            <View style={[styles.typeBadge, { backgroundColor: typeConfig.color + "18" }]}>
-              <AppIcon name={typeConfig.icon} size={12} color={typeConfig.color} />
-              <Text style={[styles.typeText, { color: typeConfig.color }]}>{storeTypeLabel}</Text>
-            </View>
-
-            {store.halalCertified && certifierLabel ? (
-              <View style={[styles.certBadge, { backgroundColor: brand.primary + "18" }]}>
-                <SealCheckIcon size={11} color={brand.primary} />
-                <Text style={[styles.certText, { color: brand.primary }]}>{certifierLabel}</Text>
-              </View>
-            ) : null}
+            )}
           </View>
 
-          {/* Rating + City */}
-          <View style={styles.metaRow}>
-            {hasRating && (
-              <View style={styles.ratingRow}>
-                <StarIcon size={14} color="#f59e0b" />
-                <Text style={[styles.ratingText, { color: colors.textSecondary }]}>
-                  {store.averageRating.toFixed(1)}
-                </Text>
-                {store.reviewCount > 0 && (
-                  <Text style={[styles.reviewCount, { color: colors.textMuted }]}>
-                    ({store.reviewCount})
-                  </Text>
-                )}
-              </View>
-            )}
-            <Text style={[styles.city, { color: colors.textMuted }]} numberOfLines={1}>
-              {hasRating ? " · " : ""}{store.city}
+          {/* Content — right side */}
+          <View style={styles.content}>
+            {/* Name */}
+            <Text
+              style={[styles.name, { color: colors.textPrimary }]}
+              numberOfLines={1}
+            >
+              {store.name}
             </Text>
-          </View>
 
-          {/* Action buttons */}
-          <View style={styles.actions}>
-            <PressableScale
-              onPress={handleDirections}
-              style={[styles.actionBtn, styles.dirBtn, { backgroundColor: brand.primary + "15" }]}
-              accessibilityLabel="Itinéraire"
-            >
-              <SignInIcon size={16} color={brand.primary} />
-            </PressableScale>
+            {/* Type + Certifier badges */}
+            <View style={styles.badgeRow}>
+              <View style={[styles.badge, { backgroundColor: `${typeConfig.color}15` }]}>
+                <AppIcon name={typeConfig.icon} size={11} color={typeConfig.color} />
+                <Text style={[styles.badgeText, { color: typeConfig.color }]}>
+                  {storeTypeLabel}
+                </Text>
+              </View>
 
-            {hasPhone && (
+              {store.halalCertified && certifierLabel ? (
+                <View style={[styles.badge, { backgroundColor: `${brand.primary}15` }]}>
+                  <SealCheckIcon size={11} color={brand.primary} weight="fill" />
+                  <Text style={[styles.badgeText, { color: brand.primary }]}>
+                    {certifierLabel}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+
+            {/* Rating + City */}
+            <View style={styles.metaRow}>
+              {hasRating && (
+                <>
+                  <StarIcon size={13} color="#f59e0b" weight="fill" />
+                  <Text style={[styles.ratingText, { color: colors.textPrimary }]}>
+                    {store.averageRating.toFixed(1)}
+                  </Text>
+                  {store.reviewCount > 0 && (
+                    <Text style={[styles.reviewCount, { color: colors.textMuted }]}>
+                      ({store.reviewCount})
+                    </Text>
+                  )}
+                  <View style={[styles.dot, { backgroundColor: colors.textMuted }]} />
+                </>
+              )}
+              <Text style={[styles.city, { color: colors.textMuted }]} numberOfLines={1}>
+                {store.city}
+              </Text>
+            </View>
+
+            {/* Action buttons row */}
+            <View style={styles.actions}>
+              {/* Directions CTA */}
               <PressableScale
-                onPress={handleCall}
-                style={[styles.actionBtn, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}
-                accessibilityLabel="Appeler"
+                onPress={handleDirections}
+                style={[styles.dirBtn, { backgroundColor: isDark ? `${gold[500]}15` : `${brand.primary}12` }]}
+                accessibilityLabel="Itinéraire"
               >
-                <PhoneIcon size={16} color={colors.textSecondary} />
+                <NavigationArrowIcon size={14} color={isDark ? gold[500] : brand.primary} weight="fill" />
+                <Text style={[styles.dirBtnText, { color: isDark ? gold[500] : brand.primary }]}>
+                  Itinéraire
+                </Text>
               </PressableScale>
-            )}
 
-            <PressableScale
-              onPress={handleRemove}
-              style={[styles.actionBtn, { backgroundColor: "rgba(239,68,68,0.1)" }]}
-              accessibilityLabel={t.favorites.removeConfirm}
-            >
-              <HeartIcon size={16} color="#ef4444" />
-            </PressableScale>
+              {/* Call */}
+              {hasPhone && (
+                <PressableScale
+                  onPress={handleCall}
+                  style={[styles.actionBtn, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}
+                  accessibilityLabel="Appeler"
+                >
+                  <PhoneIcon size={14} color={colors.textSecondary} />
+                </PressableScale>
+              )}
+
+              {/* Unfavorite */}
+              <PressableScale
+                onPress={handleRemove}
+                style={[styles.actionBtn, { backgroundColor: isDark ? "rgba(239,68,68,0.10)" : "rgba(239,68,68,0.06)" }]}
+                accessibilityLabel={t.favorites.removeConfirm}
+              >
+                <HeartIcon size={14} color="#ef4444" weight="fill" />
+              </PressableScale>
+            </View>
           </View>
         </View>
       </PressableScale>
@@ -194,73 +231,58 @@ export const StoreFavoriteCard = React.memo(function StoreFavoriteCard({
 });
 
 const styles = StyleSheet.create({
+  outer: { marginHorizontal: 16, marginBottom: 10 },
   card: {
     flexDirection: "row",
-    marginHorizontal: 16,
     borderRadius: 16,
     borderWidth: 1,
     overflow: "hidden",
-    padding: 12,
-    gap: 12,
+    padding: 14,
+    gap: 14,
   },
   imageBox: {
-    width: 72,
-    height: 72,
-    borderRadius: 12,
+    width: 80,
+    height: 80,
+    borderRadius: 14,
     overflow: "hidden",
-  },
-  image: {
-    width: 72,
-    height: 72,
-  },
-  placeholderImage: {
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 12,
   },
+  imageFill: { width: "100%", height: "100%" },
   content: {
     flex: 1,
-    gap: 4,
+    gap: 5,
   },
   name: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "700",
+    letterSpacing: -0.3,
     lineHeight: 20,
   },
-  metaRow: {
+  badgeRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
     flexWrap: "wrap",
   },
-  typeBadge: {
+  badge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 3,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    gap: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
     borderRadius: 6,
   },
-  typeText: {
+  badgeText: {
     fontSize: 10,
     fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
   },
-  certBadge: {
+  metaRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 3,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  certText: {
-    fontSize: 10,
-    fontWeight: "700",
-  },
-  ratingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
+    gap: 4,
   },
   ratingText: {
     fontSize: 12,
@@ -270,6 +292,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "500",
   },
+  dot: {
+    width: 2.5,
+    height: 2.5,
+    borderRadius: 1.25,
+  },
   city: {
     fontSize: 12,
     fontWeight: "500",
@@ -277,15 +304,27 @@ const styles = StyleSheet.create({
   },
   actions: {
     flexDirection: "row",
-    gap: 6,
-    marginTop: 4,
+    alignItems: "center",
+    gap: 8,
+    marginTop: 2,
+  },
+  dirBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 12,
+    height: 30,
+    borderRadius: 8,
+  },
+  dirBtnText: {
+    fontSize: 11,
+    fontWeight: "700",
   },
   actionBtn: {
-    width: 32,
-    height: 32,
+    width: 30,
+    height: 30,
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
   },
-  dirBtn: {},
 });

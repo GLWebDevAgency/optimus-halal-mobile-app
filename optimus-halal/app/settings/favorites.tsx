@@ -33,7 +33,6 @@ import {
 import {
   FavoritesTabBar,
   ProductFavoriteCard,
-  CARD_WIDTH,
   StoreFavoriteCard,
 } from "@/components/favorites";
 import { PressableScale } from "@/components/ui/PressableScale";
@@ -487,17 +486,14 @@ export default function FavoritesScreen() {
             <FlashList
               data={filteredProducts}
               keyExtractor={(item) => item.id}
-              numColumns={2}
               renderItem={({ item, index }) => (
-                <View style={styles.gridItem}>
-                  <ProductFavoriteCard
-                    product={item}
-                    index={index}
-                    onRemove={handleRemoveProduct}
-                  />
-                </View>
+                <ProductFavoriteCard
+                  product={item}
+                  index={index}
+                  onRemove={handleRemoveProduct}
+                />
               )}
-              contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+              contentContainerStyle={{ paddingBottom: 100 }}
               showsVerticalScrollIndicator={false}
               ListFooterComponent={
                 <ProductsFooter colors={colors} isDark={isDark} t={t} />
@@ -525,13 +521,11 @@ export default function FavoritesScreen() {
               data={filteredStores}
               keyExtractor={(item) => item.id}
               renderItem={({ item, index }) => (
-                <View style={{ marginBottom: 12 }}>
-                  <StoreFavoriteCard
-                    store={item}
-                    index={index}
-                    onRemove={handleRemoveStore}
-                  />
-                </View>
+                <StoreFavoriteCard
+                  store={item}
+                  index={index}
+                  onRemove={handleRemoveStore}
+                />
               )}
               contentContainerStyle={{ paddingBottom: 100 }}
               showsVerticalScrollIndicator={false}
@@ -813,11 +807,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
-  },
-  gridItem: {
-    flex: 1,
-    paddingHorizontal: 4,
-    marginBottom: 16,
   },
   emptyContainer: {
     flex: 1,
