@@ -24,7 +24,7 @@ import {
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowSquareOutIcon, BellRingingIcon, CaretRightIcon, ClockIcon, GlobeIcon, ShareNetworkIcon, SparkleIcon } from "phosphor-react-native";
+import { ArrowSquareOutIcon, BellRingingIcon, CaretRightIcon, ClockIcon, GlobeIcon, SparkleIcon } from "phosphor-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Shadow } from "react-native-shadow-2";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
@@ -36,6 +36,7 @@ import { useHaptics } from "@/hooks";
 import { useMe } from "@/hooks/useAuth";
 import { PremiumBackground } from "@/components/ui";
 import { BackButton } from "@/components/ui/BackButton";
+import { ShareButton } from "@/components/ui/ShareButton";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { NaqiyMarkdown } from "@/components/ui/NaqiyMarkdown";
 import { RecallInfoSection } from "@/components/content/RecallInfoSection";
@@ -264,16 +265,9 @@ export default function AlertDetailScreen() {
 
           {/* Top bar — glass icon buttons */}
           <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-            <BackButton />
+            <BackButton variant="overlay" />
 
-            <Pressable
-              onPress={handleShare}
-              style={styles.iconBtn}
-              accessibilityRole="button"
-              accessibilityLabel={t.alerts.share}
-            >
-              <ShareNetworkIcon size={22} color="#fff" />
-            </Pressable>
+            <ShareButton variant="overlay" onPress={handleShare} label={t.alerts.share} />
           </View>
 
           {/* Badges row — severity + category (glass pills) */}
@@ -489,14 +483,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-  },
-  iconBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    alignItems: "center",
-    justifyContent: "center",
   },
   badgesRow: {
     position: "absolute",

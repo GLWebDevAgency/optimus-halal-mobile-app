@@ -21,7 +21,7 @@ import {
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowSquareOutIcon, ArticleIcon, ClockIcon, ShareNetworkIcon, UserIcon } from "phosphor-react-native";
+import { ArrowSquareOutIcon, ArticleIcon, ClockIcon, UserIcon } from "phosphor-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
@@ -31,6 +31,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useHaptics } from "@/hooks";
 import { PremiumBackground } from "@/components/ui";
 import { BackButton } from "@/components/ui/BackButton";
+import { ShareButton } from "@/components/ui/ShareButton";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { NaqiyMarkdown } from "@/components/ui/NaqiyMarkdown";
 import { trpc } from "@/lib/trpc";
@@ -174,16 +175,9 @@ export default function ArticleDetailScreen() {
 
           {/* Top bar */}
           <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-            <BackButton />
+            <BackButton variant="overlay" />
 
-            <Pressable
-              onPress={handleShare}
-              style={styles.iconBtn}
-              accessibilityRole="button"
-              accessibilityLabel={t.articles.share}
-            >
-              <ShareNetworkIcon size={22} color="#fff" />
-            </Pressable>
+            <ShareButton variant="overlay" onPress={handleShare} label={t.articles.share} />
           </View>
 
           {/* Badge */}
@@ -332,14 +326,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-  },
-  iconBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    alignItems: "center",
-    justifyContent: "center",
   },
   badgeWrap: { position: "absolute", bottom: 20, left: 20 },
   badge: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20 },

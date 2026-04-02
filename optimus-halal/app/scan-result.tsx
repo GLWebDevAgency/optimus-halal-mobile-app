@@ -767,7 +767,7 @@ export default function ScanResultScreen() {
           { top: insets.top + 8 },
         ]}
       >
-        <BackButton onPress={handleGoBack} label={t.common.back} />
+        <BackButton variant="overlay" onPress={handleGoBack} label={t.common.back} />
       </Animated.View>
 
       {/* ── Floating InfoIcon Button (certified products only) ── */}

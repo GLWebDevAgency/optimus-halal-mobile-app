@@ -28,6 +28,7 @@ export type { PadlockBottomSheetProps } from "./PadlockBottomSheet";
 
 export { ForceUpdateModal, type ForceUpdateModalProps } from "./ForceUpdateModal";
 export { PressableScale } from "./PressableScale";
+export { ShareButton } from "./ShareButton";
 export { StatusPill } from "./StatusPill";
 export { TrustRing } from "./TrustRing";
 export { ShimmerSkeleton } from "./ShimmerSkeleton";

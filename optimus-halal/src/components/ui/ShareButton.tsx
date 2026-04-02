@@ -1,24 +1,22 @@
 /**
- * BackButton — Unified back navigation button across all screens.
+ * ShareButton — Unified share action button across all screens.
  *
- * Design: 44×44 circle, subtle border, gold arrow.
- * Single source of truth — never duplicate back button styles inline.
+ * Design: 44×44 circle, same variant system as BackButton.
+ * Single source of truth — never duplicate share button styles inline.
  */
 
 import React from "react";
 import { StyleSheet } from "react-native";
-import { router } from "expo-router";
-import { ArrowLeftIcon } from "phosphor-react-native";
+import { ShareNetworkIcon } from "phosphor-react-native";
 import { PressableScale } from "./PressableScale";
 import { useTheme } from "@/hooks/useTheme";
 import { gold } from "@/theme/colors";
 
-interface BackButtonProps {
-  /** Override default router.back() */
-  onPress?: () => void;
+interface ShareButtonProps {
+  onPress: () => void;
   /** Accessibility label override */
   label?: string;
-  /** "overlay" for use on images/heroes — white bg for visibility */
+  /** "overlay" for use on images/heroes */
   variant?: "default" | "overlay";
 }
 
@@ -33,22 +31,22 @@ const VARIANT_STYLES = {
   },
 } as const;
 
-export const BackButton = React.memo(function BackButton({
+export const ShareButton = React.memo(function ShareButton({
   onPress,
-  label = "Retour",
+  label = "Partager",
   variant = "default",
-}: BackButtonProps) {
+}: ShareButtonProps) {
   const { isDark } = useTheme();
   const v = VARIANT_STYLES[variant][isDark ? "dark" : "light"];
 
   return (
     <PressableScale
-      onPress={onPress ?? (() => router.back())}
+      onPress={onPress}
       style={[styles.button, v]}
       accessibilityRole="button"
       accessibilityLabel={label}
     >
-      <ArrowLeftIcon size={20} color={gold[500]} />
+      <ShareNetworkIcon size={20} color={gold[500]} />
     </PressableScale>
   );
 });
@@ -64,4 +62,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default BackButton;
+export default ShareButton;
