@@ -17,9 +17,8 @@ import { HeartIcon, FlaskIcon, PackageIcon } from "phosphor-react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { PressableScale } from "@/components/ui/PressableScale";
-import { CertifierTrustRow } from "@/components/scan/CertifierTrustRow";
 import { CertifierLogo } from "@/components/scan/CertifierLogo";
-import { getTrustGradeFromScore } from "@/components/scan/NaqiyGradeBadge";
+import { NaqiyGradeBadge, getTrustGradeFromScore } from "@/components/scan/NaqiyGradeBadge";
 import { useTheme, useTranslation, useHaptics } from "@/hooks";
 import { halalStatus as statusColors } from "@/theme/colors";
 import { AppIcon } from "@/lib/icons";
@@ -290,13 +289,7 @@ export const ProductFavoriteCard = React.memo(function ProductFavoriteCard({
                 </View>
                 {/* Line 2: Naqiy grade strip + adjective */}
                 <View style={styles.certifierGradeRow}>
-                  <CertifierTrustRow
-                    variant="inline"
-                    certifierId={certifierId}
-                    certifierName={getCertifierDisplayName(certifierId)}
-                    trustScore={trustScore}
-                    showScore={false}
-                  />
+                  <NaqiyGradeBadge variant="strip" grade={getTrustGradeFromScore(trustScore)} showLabel={false} />
                   {gradeLabel && (
                     <Text style={[styles.gradeAdjectif, { color: getTrustGradeFromScore(trustScore).color }]}>
                       {gradeLabel}
