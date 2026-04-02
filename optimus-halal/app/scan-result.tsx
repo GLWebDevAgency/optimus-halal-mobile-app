@@ -42,7 +42,7 @@ import Animated, {
   Extrapolation,
   withSpring,
 } from "react-native-reanimated";
-import { IconButton, LevelUpCelebration, PremiumBackground } from "@/components/ui";
+import { BackButton, IconButton, LevelUpCelebration, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { MadhabBottomSheet } from "@/components/scan/MadhabBottomSheet";
 import { TrustScoreBottomSheet } from "@/components/scan/TrustScoreBottomSheet";
@@ -767,13 +767,7 @@ export default function ScanResultScreen() {
           { top: insets.top + 8 },
         ]}
       >
-        <IconButton
-          icon="arrow-back"
-          variant="filled"
-          onPress={handleGoBack}
-          color={isDark ? brandTokens.white : lightTheme.textPrimary}
-          accessibilityLabel={t.common.back}
-        />
+        <BackButton onPress={handleGoBack} label={t.common.back} />
       </Animated.View>
 
       {/* ── Floating InfoIcon Button (certified products only) ── */}
