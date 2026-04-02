@@ -17,9 +17,9 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Platform } from "react-native";
-import * as Updates from "expo-updates";
 import { APP_VERSION } from "@/utils/appVersion";
 import { getApiConfig } from "@/services/api/config";
+import { checkAndFetchOta, reloadApp } from "@/utils/ota";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -186,18 +186,10 @@ export function useAppUpdate(): AppUpdateState {
   useEffect(() => {
     async function checkOta() {
       try {
-        const update = await Updates.checkForUpdateAsync();
-
-        if (update.isAvailable) {
-          const result = await Updates.fetchUpdateAsync();
-
-          if (result.isNew) {
-            setOtaReady(true);
-          }
-        }
+        const isNew = await checkAndFetchOta();
+        if (isNew) setOtaReady(true);
       } catch {
-        // Expected in dev / Expo Go where the native module is unavailable.
-        // Also catches network errors during OTA check — fail silently.
+        // Network errors during OTA check — fail silently
       }
     }
 
@@ -209,7 +201,7 @@ export function useAppUpdate(): AppUpdateState {
   // --------------------------------------------------
   const applyOtaUpdate = useCallback(async () => {
     try {
-      await Updates.reloadAsync();
+      await reloadApp();
     } catch {
       // Should not happen in production, but guard just in case
     }

@@ -4,33 +4,11 @@
 
 import { useCallback } from "react";
 import { Alert, I18nManager } from "react-native";
-import * as Updates from "expo-updates";
 import { useLanguageStore } from "@/store";
 import { getTranslation, isRTL, type Language, type TranslationKeys } from "@/i18n";
 import { setApiLanguage } from "@/services/api";
 import { scaleFontForRTL } from "@/theme/typography";
-
-/**
- * Restart the app after RTL direction change.
- * Uses expo-updates in production, DevSettings in dev.
- */
-async function restartApp(): Promise<void> {
-  try {
-    await Updates.reloadAsync();
-  } catch {
-    // Dev build: expo-updates native module not available
-    // Try DevSettings as fallback
-    try {
-      const { DevSettings } = require("react-native");
-      DevSettings.reload();
-    } catch {
-      Alert.alert(
-        "Redémarrage manuel requis",
-        "Veuillez fermer et rouvrir l'application.",
-      );
-    }
-  }
-}
+import { reloadApp } from "@/utils/ota";
 
 /**
  * Show a restart dialog when RTL direction changes.
@@ -55,7 +33,7 @@ function promptRTLRestartIfNeeded(newLang: Language): void {
     [
       {
         text: isNewRTL ? "إعادة التشغيل" : "Redémarrer",
-        onPress: () => restartApp(),
+        onPress: () => reloadApp(),
       },
       {
         text: isNewRTL ? "لاحقاً" : "Plus tard",
