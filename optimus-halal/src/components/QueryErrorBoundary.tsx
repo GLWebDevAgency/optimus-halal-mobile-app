@@ -3,45 +3,50 @@
  *
  * Error boundary integrated with QueryErrorResetBoundary from React Query.
  * Shows an error screen with a retry button that resets the React Query cache
- * and re-renders the component. Supports dark mode.
+ * and re-renders the component.
+ *
+ * Uses useColorScheme (RN built-in) instead of useTheme (Zustand) to avoid
+ * state subscriptions that fire before mount completes in class components.
+ * All styles are native StyleSheet — no NativeWind/className to avoid
+ * context loss inside the error boundary tree.
  */
 
 import React, { Component, type ErrorInfo, type ReactNode } from "react";
-import { View, Text, useColorScheme } from "react-native";
+import { View, Text, StyleSheet, useColorScheme } from "react-native";
 import { ArrowClockwiseIcon, WarningCircleIcon } from "phosphor-react-native";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
-import { semantic, darkTheme, lightTheme } from "@/theme/colors";
+import { semantic, darkTheme, lightTheme, brand } from "@/theme/colors";
 import { PressableScale } from "./ui/PressableScale";
 
 // ---------------------------------------------------------------------------
-// Error Fallback — uses only useColorScheme (React Native built-in, safe in
-// class component render). Avoids useTheme/useTranslation Zustand subscriptions
-// that trigger state updates before mount completes.
+// Error Fallback — pure native styles, no NativeWind, no Zustand
 // ---------------------------------------------------------------------------
 
 function ErrorFallback({ onRetry }: { onRetry: () => void }) {
   const isDark = useColorScheme() === "dark";
 
+  const bg = isDark ? darkTheme.background : lightTheme.backgroundSecondary;
+  const textPrimary = isDark ? darkTheme.textPrimary : lightTheme.textPrimary;
+  const textSecondary = isDark ? darkTheme.textSecondary : lightTheme.textSecondary;
+
   return (
-    <View
-      className="flex-1 items-center justify-center px-8"
-      style={{ backgroundColor: isDark ? darkTheme.background : lightTheme.backgroundSecondary }}
-    >
+    <View style={[styles.container, { backgroundColor: bg }]}>
       <View
-        className="w-20 h-20 rounded-full items-center justify-center mb-6"
-        style={{
-          backgroundColor: isDark
-            ? "rgba(239,68,68,0.1)"
-            : "rgba(239,68,68,0.08)",
-        }}
+        style={[
+          styles.iconCircle,
+          {
+            backgroundColor: isDark
+              ? "rgba(239,68,68,0.10)"
+              : "rgba(239,68,68,0.08)",
+          },
+        ]}
       >
-        <WarningCircleIcon size={36}
-          color={semantic.danger.base} />
+        <WarningCircleIcon size={36} color={semantic.danger.base} />
       </View>
-      <Text className="text-xl font-bold text-slate-900 dark:text-white text-center mb-2">
+      <Text style={[styles.title, { color: textPrimary }]}>
         Une erreur est survenue
       </Text>
-      <Text className="text-sm text-slate-500 dark:text-slate-400 text-center mb-8">
+      <Text style={[styles.subtitle, { color: textSecondary }]}>
         Impossible de charger le contenu. Vérifiez votre connexion.
       </Text>
       <PressableScale
@@ -49,9 +54,9 @@ function ErrorFallback({ onRetry }: { onRetry: () => void }) {
         accessibilityRole="button"
         accessibilityLabel="Réessayer"
       >
-        <View className="bg-primary px-8 py-3 rounded-xl flex-row items-center gap-2">
-          <ArrowClockwiseIcon size={20} color={lightTheme.textInverse} />
-          <Text className="font-bold text-sm text-white">Réessayer</Text>
+        <View style={styles.retryButton}>
+          <ArrowClockwiseIcon size={20} color="#ffffff" />
+          <Text style={styles.retryText}>Réessayer</Text>
         </View>
       </PressableScale>
     </View>
@@ -116,3 +121,49 @@ export const QueryErrorBoundary: React.FC<QueryErrorBoundaryProps> = ({
 );
 
 export default QueryErrorBoundary;
+
+// ---------------------------------------------------------------------------
+// Styles — native only, no NativeWind dependency
+// ---------------------------------------------------------------------------
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 32,
+  },
+  iconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: 32,
+  },
+  retryButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: brand.primary,
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  retryText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#ffffff",
+  },
+});
