@@ -116,13 +116,18 @@ jobs:
         run: eas build --platform android --profile preview --non-interactive --no-wait
 
   # ── EAS Update (OTA) ────────────────────────────
-  # Runs on: push to main (auto)
+  # Runs on: push to main (auto), ONLY if no native changes detected
   # Pushes JS bundle updates to existing installs (no new binary needed)
+  # Safety: fingerprint policy in app.config.ts ensures incompatible OTAs
+  #         are rejected client-side even if this guard is bypassed.
   eas-update:
     name: OTA Update
     runs-on: ubuntu-latest
-    needs: check
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [check, detect-changes]
+    if: |
+      github.ref == 'refs/heads/main' &&
+      github.event_name == 'push' &&
+      needs.detect-changes.outputs.native != 'true'
 
     steps:
       - uses: actions/checkout@v4
