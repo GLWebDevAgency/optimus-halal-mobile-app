@@ -17,7 +17,6 @@ import { HeartIcon, FlaskIcon, PackageIcon } from "phosphor-react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { PressableScale } from "@/components/ui/PressableScale";
-import { StatusPill } from "@/components/ui/StatusPill";
 import { CertifierTrustRow } from "@/components/scan/CertifierTrustRow";
 import { CertifierLogo } from "@/components/scan/CertifierLogo";
 import { getTrustGradeFromScore } from "@/components/scan/NaqiyGradeBadge";
@@ -243,25 +242,24 @@ export const ProductFavoriteCard = React.memo(function ProductFavoriteCard({
               {product.name}
             </Text>
 
-            {/* Brand · StatusPill */}
-            <View style={styles.metaRow}>
-              {product.brand && (
-                <>
-                  <Text style={[styles.brandText, { color: colors.textSecondary }]} numberOfLines={1}>
-                    {product.brand}
-                  </Text>
-                  <View style={[styles.dot, { backgroundColor: isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)" }]} />
-                </>
-              )}
-              <StatusPill status={status} size="sm" animated={false} />
-            </View>
+            {/* Brand */}
+            {product.brand && (
+              <Text style={[styles.brandText, { color: colors.textSecondary }]} numberOfLines={1}>
+                {product.brand}
+              </Text>
+            )}
 
-            {/* Certifier trust row or tier label */}
+            {/* Certifier: line 1 = logo + name, line 2 = grade strip + adjective */}
             {certifierId && certifierName && trustScore != null ? (
               <View style={styles.certifierBlock}>
-                <Text style={[styles.certifiedByLabel, { color: colors.textMuted }]}>
-                  {(t.scanHistory as Record<string, string>).certifiedBy ?? "Certification :"}
-                </Text>
+                {/* Line 1: micro-logo + certifier name */}
+                <View style={styles.certifierNameRow}>
+                  <CertifierLogo certifierId={certifierId} size={14} fallbackColor={effectiveConfig.color} />
+                  <Text style={[styles.certifierShort, { color: colors.textSecondary }]} numberOfLines={1}>
+                    {certifierName}
+                  </Text>
+                </View>
+                {/* Line 2: Naqiy grade strip + adjective */}
                 <View style={styles.certifierGradeRow}>
                   <CertifierTrustRow
                     variant="inline"
@@ -278,7 +276,7 @@ export const ProductFavoriteCard = React.memo(function ProductFavoriteCard({
                 </View>
               </View>
             ) : certifierId && certifierName ? (
-              <View style={styles.certifierSimpleRow}>
+              <View style={styles.certifierNameRow}>
                 <CertifierLogo certifierId={certifierId} size={14} fallbackColor={effectiveConfig.color} />
                 <Text style={[styles.certifierShort, { color: colors.textSecondary }]} numberOfLines={1}>
                   {certifierName}
@@ -354,11 +352,10 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 2 },
   brandText: { fontSize: 11, flexShrink: 1 },
   dot: { width: 2.5, height: 2.5, borderRadius: 1.25 },
-  certifierBlock: { marginTop: 3, gap: 2 },
-  certifiedByLabel: { fontSize: 9, fontWeight: "500", fontStyle: "italic" },
+  certifierBlock: { marginTop: 3, gap: 4 },
+  certifierNameRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 3 },
   certifierGradeRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   gradeAdjectif: { fontSize: 9, fontWeight: "700" },
-  certifierSimpleRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 3 },
   certifierShort: { fontSize: 10, fontWeight: "700", flexShrink: 1 },
   tierRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 3 },
   tierText: { fontSize: 10, fontWeight: "600", flexShrink: 1 },
