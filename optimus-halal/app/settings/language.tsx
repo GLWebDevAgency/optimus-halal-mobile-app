@@ -3,12 +3,12 @@
  */
 
 import React from "react";
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Text, ScrollView } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
+import { BackButton } from "@/components/ui/BackButton";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
-import { ArrowLeftIcon, CheckCircleIcon } from "phosphor-react-native";
+import { CheckCircleIcon } from "phosphor-react-native";
 import Animated, { FadeIn, FadeInDown, ZoomIn } from "react-native-reanimated";
 import { useTranslation, type Language } from "@/hooks/useTranslation";
 import { useTheme } from "@/hooks/useTheme";
@@ -45,16 +45,7 @@ export default function LanguageScreen() {
           borderBottomColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.12)",
         }}
       >
-        <Pressable
-          onPress={() => router.back()}
-          style={{ padding: 8, marginLeft: -8 }}
-          accessibilityRole="button"
-          accessibilityLabel="Retour"
-          accessibilityHint="Revenir à l'écran précédent"
-          hitSlop={8}
-        >
-          <ArrowLeftIcon size={24} color={colors.textPrimary} />
-        </Pressable>
+        <BackButton />
         <Text
           style={{ fontSize: 20, fontWeight: "700", color: colors.textPrimary, marginLeft: 8 }}
           accessibilityRole="header"

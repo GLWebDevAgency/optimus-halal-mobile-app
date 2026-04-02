@@ -21,11 +21,12 @@ import {
   Dimensions,
 } from "react-native";
 import { PremiumBackground } from "@/components/ui";
+import { BackButton } from "@/components/ui/BackButton";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeftIcon, CaretRightIcon, LeafIcon, MinusIcon, PlusIcon, SealCheckIcon, ShoppingCartIcon } from "phosphor-react-native";
+import { CaretRightIcon, LeafIcon, MinusIcon, PlusIcon, SealCheckIcon, ShoppingCartIcon } from "phosphor-react-native";
 import { useHaptics, useTheme } from "@/hooks";
 import { brand } from "@/theme/colors";
 import Animated, {
@@ -200,15 +201,7 @@ export default function ProductDetailScreen() {
         className="absolute top-0 left-0 right-0 z-50 flex-row items-center justify-between backdrop-blur-md p-4"
         style={{ paddingTop: insets.top + 8, backgroundColor: isDark ? "rgba(12,12,12,0.92)" : "rgba(243,241,237,0.92)" }}
       >
-        <Pressable
-          onPress={handleBack}
-          hitSlop={8}
-        >
-          <View className="h-10 w-10 items-center justify-center rounded-full">
-            <ArrowLeftIcon size={24}
-              color={isDark ? "#ffffff" : "#0d1b12"} />
-          </View>
-        </Pressable>
+        <BackButton />
 
         <Text className="text-base font-semibold text-slate-800 dark:text-white opacity-0">
           Détail Produit

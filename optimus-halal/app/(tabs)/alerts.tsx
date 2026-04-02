@@ -32,7 +32,6 @@ import { FlashList } from "@shopify/flash-list";
 import { router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
-  ArrowLeftIcon,
   CaretRightIcon,
   ChecksIcon,
   CloudSlashIcon,
@@ -41,6 +40,7 @@ import {
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 
 import { EmptyState, PremiumBackground } from "@/components/ui";
+import { BackButton } from "@/components/ui/BackButton";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { AlertsSkeleton } from "@/components/skeletons";
 import { useTranslation, useHaptics, useTheme, usePremium } from "@/hooks";
@@ -516,21 +516,7 @@ export default function AlertsScreen() {
           {/* Title row */}
           <View style={styles.headerRow}>
             <View style={styles.headerLeft}>
-              <Pressable
-                onPress={handleBack}
-                style={[
-                  styles.headerIconBtn,
-                  {
-                    backgroundColor: isDark
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(0,0,0,0.04)",
-                  },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={t.common.back}
-              >
-                <ArrowLeftIcon size={20} color={colors.textPrimary} />
-              </Pressable>
+              <BackButton />
               <Text
                 accessibilityRole="header"
                 style={[styles.headerTitle, { color: colors.textPrimary }]}

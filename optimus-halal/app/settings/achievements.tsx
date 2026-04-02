@@ -15,13 +15,14 @@ import {
 import { PressableScale } from "@/components/ui/PressableScale";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { ArrowLeftIcon, CheckCircleIcon, CloudSlashIcon, LockIcon, MedalIcon, TrophyIcon } from "phosphor-react-native";
+import { CheckCircleIcon, CloudSlashIcon, LockIcon, MedalIcon, TrophyIcon } from "phosphor-react-native";
 import Animated, { FadeInDown, FadeIn, ZoomIn } from "react-native-reanimated";
 
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { useAchievements, useLoyaltyBalance } from "@/hooks/useLoyalty";
 import { PremiumBackground } from "@/components/ui";
+import { BackButton } from "@/components/ui/BackButton";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { AppIcon, type IconName } from "@/lib/icons";
 
@@ -269,20 +270,7 @@ export default function AchievementsScreen() {
         <SafeAreaView style={[styles.container]}>
           {/* Header */}
           <View style={styles.header}>
-            <Pressable
-              onPress={handleBack}
-              style={[
-                styles.backButton,
-                {
-                  backgroundColor: colors.card,
-                  borderColor: colors.border,
-                },
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel={t.common.back}
-            >
-              <ArrowLeftIcon size={20} color={colors.textPrimary} />
-            </Pressable>
+            <BackButton onPress={handleBack} />
             <Text
               style={[styles.headerTitle, { color: colors.textPrimary }]}
               accessibilityRole="header"
@@ -313,20 +301,7 @@ export default function AchievementsScreen() {
         <PremiumBackground />
         <SafeAreaView style={[styles.container]}>
           <View style={styles.header}>
-            <Pressable
-              onPress={handleBack}
-              style={[
-                styles.backButton,
-                {
-                  backgroundColor: colors.card,
-                  borderColor: colors.border,
-                },
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel={t.common.back}
-            >
-              <ArrowLeftIcon size={20} color={colors.textPrimary} />
-            </Pressable>
+            <BackButton onPress={handleBack} />
             <Text
               style={[styles.headerTitle, { color: colors.textPrimary }]}
               accessibilityRole="header"
@@ -365,20 +340,7 @@ export default function AchievementsScreen() {
         <PremiumBackground />
         <SafeAreaView style={[styles.container]}>
           <View style={styles.header}>
-            <Pressable
-              onPress={handleBack}
-              style={[
-                styles.backButton,
-                {
-                  backgroundColor: colors.card,
-                  borderColor: colors.border,
-                },
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel={t.common.back}
-            >
-              <ArrowLeftIcon size={20} color={colors.textPrimary} />
-            </Pressable>
+            <BackButton onPress={handleBack} />
             <Text
               style={[styles.headerTitle, { color: colors.textPrimary }]}
               accessibilityRole="header"
@@ -419,20 +381,7 @@ export default function AchievementsScreen() {
           <>
             {/* Header */}
             <Animated.View entering={FadeIn.duration(400)} style={styles.header}>
-              <Pressable
-                onPress={handleBack}
-                style={[
-                  styles.backButton,
-                  {
-                    backgroundColor: colors.card,
-                    borderColor: colors.border,
-                  },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={t.common.back}
-              >
-                <ArrowLeftIcon size={20} color={colors.textPrimary} />
-              </Pressable>
+              <BackButton onPress={handleBack} />
               <Text
                 style={[styles.headerTitle, { color: colors.textPrimary }]}
                 accessibilityRole="header"
@@ -543,12 +492,6 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   backButton: {
-    height: 44,
-    width: 44,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 22,
-    borderWidth: 1,
     marginEnd: 12,
   },
   headerTitle: {

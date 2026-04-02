@@ -23,7 +23,6 @@ import {
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
-  ArrowLeftIcon,
   CopyIcon,
   ShareNetworkIcon,
   UsersIcon,
@@ -35,6 +34,7 @@ import * as Clipboard from "expo-clipboard";
 
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
+import { BackButton } from "@/components/ui/BackButton";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation, useHaptics } from "@/hooks";
 import { trpc } from "@/lib/trpc";
@@ -92,24 +92,7 @@ export default function ReferralScreen() {
           ]}
         >
           <View style={styles.headerRow}>
-            <PressableScale
-              onPress={() => router.back()}
-              accessibilityRole="button"
-              accessibilityLabel={t.common.back}
-            >
-              <View
-                style={[
-                  styles.backBtn,
-                  {
-                    backgroundColor: isDark
-                      ? "rgba(255,255,255,0.05)"
-                      : colors.card,
-                  },
-                ]}
-              >
-                <ArrowLeftIcon size={22} color={colors.textPrimary} />
-              </View>
-            </PressableScale>
+            <BackButton />
             <Text
               style={[styles.headerTitle, { color: colors.textPrimary }]}
               accessibilityRole="header"
@@ -384,11 +367,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   backBtn: {
-    height: 44,
-    width: 44,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 22,
   },
   headerTitle: {
     fontSize: 18,

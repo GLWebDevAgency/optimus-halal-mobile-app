@@ -17,11 +17,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { ArrowLeftIcon, CheckIcon, CheckCircleIcon, MagnifyingGlassIcon, PlusIcon, ProhibitIcon, ShieldCheckIcon, XIcon } from "phosphor-react-native";
+import { CheckIcon, CheckCircleIcon, MagnifyingGlassIcon, PlusIcon, ProhibitIcon, ShieldCheckIcon, XIcon } from "phosphor-react-native";
 import Animated, { FadeIn, FadeInDown, SlideInDown, ZoomIn } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground, PadlockBottomSheet } from "@/components/ui";
+import { BackButton } from "@/components/ui/BackButton";
 import { usePreferencesStore, useFeatureFlagsStore } from "@/store";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation, useCanAccessPremiumData } from "@/hooks";
@@ -454,23 +455,7 @@ export default function ExclusionsScreen() {
         }}
       >
         {/* Back Button */}
-        <PressableScale
-          onPress={() => router.back()}
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: themeColors.card,
-            alignItems: "center",
-            justifyContent: "center",
-            borderWidth: 1,
-            borderColor: themeColors.cardBorder,
-          }}
-          accessibilityRole="button"
-          accessibilityLabel={t.common.back}
-        >
-          <ArrowLeftIcon size={22} color={themeColors.textPrimary} />
-        </PressableScale>
+        <BackButton />
 
         {/* Title */}
         <Text

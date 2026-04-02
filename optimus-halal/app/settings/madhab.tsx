@@ -10,14 +10,14 @@ import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
-  Pressable,
   ScrollView,
 } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground, PadlockBottomSheet } from "@/components/ui";
+import { BackButton } from "@/components/ui/BackButton";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { ArrowLeftIcon, CheckIcon, InfoIcon, LockSimple as LockSimpleIcon } from "phosphor-react-native";
+import { CheckIcon, InfoIcon, LockSimple as LockSimpleIcon } from "phosphor-react-native";
 import Animated, { FadeIn, FadeInDown, ZoomIn } from "react-native-reanimated";
 import { useHaptics, useTranslation, useCanAccessPremiumData } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
@@ -100,20 +100,7 @@ export default function MadhabScreen() {
         entering={FadeIn.duration(400)}
         className="flex-row items-center px-4 pb-4 pt-2"
       >
-        <Pressable
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel={t.common.back}
-          hitSlop={8}
-        >
-          <View
-            className="w-10 h-10 items-center justify-center rounded-xl"
-            style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#f1f5f9" }}
-          >
-            <ArrowLeftIcon size={22}
-              color={isDark ? "#e2e8f0" : "#334155"} />
-          </View>
-        </Pressable>
+        <BackButton />
         <Text
           className="flex-1 text-center text-lg font-bold text-slate-900 dark:text-white"
           accessibilityRole="header"

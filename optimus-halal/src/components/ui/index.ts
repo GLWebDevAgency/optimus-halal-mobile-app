@@ -4,6 +4,7 @@
  * Export centralisé de tous les composants UI
  */
 
+export { BackButton } from "./BackButton";
 export { Button, type ButtonProps } from "./Button";
 export { Input, type InputProps } from "./Input";
 export { PhoneInput, type PhoneInputProps, type CountryCode, COUNTRY_CODES, validateFrenchPhone, getFullPhoneNumber, parseInternationalPhone } from "./PhoneInput";

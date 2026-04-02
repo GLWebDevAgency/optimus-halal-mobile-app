@@ -21,11 +21,12 @@ import {
   TextInput,
 } from "react-native";
 import { PremiumBackground } from "@/components/ui";
+import { BackButton } from "@/components/ui/BackButton";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppleLogoIcon, ArrowLeftIcon, ArrowRightIcon, CreditCardIcon, HandHeartIcon, LockIcon, MapPinIcon, QuestionIcon, SealCheckIcon } from "phosphor-react-native";
+import { AppleLogoIcon, ArrowRightIcon, CreditCardIcon, HandHeartIcon, LockIcon, MapPinIcon, QuestionIcon, SealCheckIcon } from "phosphor-react-native";
 import { useHaptics, useTheme } from "@/hooks";
 import Animated, {
   FadeIn,
@@ -75,15 +76,7 @@ export default function CheckoutScreen() {
         className="sticky top-0 z-50 flex-row items-center backdrop-blur-md px-4 py-2 justify-between border-b border-gray-100 dark:border-gray-800"
         style={{ paddingTop: insets.top + 4, backgroundColor: isDark ? "rgba(12,12,12,0.92)" : "rgba(243,241,237,0.92)" }}
       >
-        <Pressable
-          onPress={handleBack}
-          hitSlop={8}
-        >
-          <View className="p-2 -ml-2 rounded-full">
-            <ArrowLeftIcon size={24}
-              color={isDark ? "#ffffff" : "#0d1b12"} />
-          </View>
-        </Pressable>
+        <BackButton />
 
         <Text className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
           Paiement

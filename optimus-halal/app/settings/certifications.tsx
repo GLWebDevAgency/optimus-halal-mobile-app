@@ -16,11 +16,11 @@ import {
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
-import { ArrowLeftIcon, CloudSlashIcon } from "phosphor-react-native";
+import { CloudSlashIcon } from "phosphor-react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
+import { BackButton } from "@/components/ui/BackButton";
 import { usePreferencesStore } from "@/store";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
@@ -180,22 +180,7 @@ export default function CertificationsScreen() {
           ]}
         >
           <View style={styles.headerRow}>
-            <PressableScale
-              onPress={() => router.back()}
-              accessibilityRole="button"
-              accessibilityLabel={t.common.back}
-            >
-              <View
-                style={[
-                  styles.backBtn,
-                  {
-                    backgroundColor: isDark ? "rgba(255,255,255,0.05)" : colors.card,
-                  },
-                ]}
-              >
-                <ArrowLeftIcon size={22} color={colors.textPrimary} />
-              </View>
-            </PressableScale>
+            <BackButton />
             <Text
               style={[styles.headerTitle, { color: colors.textPrimary }]}
               accessibilityRole="header"
@@ -360,11 +345,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   backBtn: {
-    height: 44,
-    width: 44,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 22,
   },
   headerTitle: {
     fontSize: 18,

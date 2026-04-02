@@ -560,8 +560,8 @@ export const StoreDetailCard = React.memo(function StoreDetailCard({
                     {/* Website */}
                     {detail.website && (
                       <Pressable onPress={() => Linking.openURL(detail.website!)} className="flex-row items-center gap-2">
-                        <GlobeIcon size={14} color={isDark ? gold[400] : gold[700]} />
-                        <Text className="text-sm font-bold" style={{ color: isDark ? gold[400] : gold[700] }} numberOfLines={1}>
+                        <GlobeIcon size={14} color={gold[500]} />
+                        <Text className="text-sm font-bold" style={{ color: gold[500] }} numberOfLines={1}>
                           {detail.website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
                         </Text>
                       </Pressable>

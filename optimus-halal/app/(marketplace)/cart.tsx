@@ -16,11 +16,12 @@ import {
   ScrollView,
 } from "react-native";
 import { PremiumBackground } from "@/components/ui";
+import { BackButton } from "@/components/ui/BackButton";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeftIcon, ArrowRightIcon, LockIcon, MinusIcon, PlusIcon, ShoppingCartIcon, StorefrontIcon, TrashIcon } from "phosphor-react-native";
+import { ArrowRightIcon, LockIcon, MinusIcon, PlusIcon, ShoppingCartIcon, StorefrontIcon, TrashIcon } from "phosphor-react-native";
 import { useHaptics, useTheme } from "@/hooks";
 import { brand } from "@/theme/colors";
 import { ImpactFeedbackStyle } from "expo-haptics";
@@ -272,15 +273,7 @@ export default function CartScreen() {
         style={{ paddingTop: insets.top + 8, backgroundColor: isDark ? "rgba(12,12,12,0.90)" : "rgba(243,241,237,0.90)" }}
       >
         <View className="flex-row items-center justify-between">
-          <Pressable
-            onPress={handleBack}
-            hitSlop={8}
-          >
-            <View className="h-10 w-10 items-center justify-center rounded-full">
-              <ArrowLeftIcon size={24}
-                color={isDark ? "#ffffff" : "#0d1b12"} />
-            </View>
-          </Pressable>
+          <BackButton />
 
           <Text className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
             Panier ({itemCount} {itemCount === 1 ? "article" : "articles"})

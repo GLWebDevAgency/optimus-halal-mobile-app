@@ -15,13 +15,14 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { ArrowLeftIcon, CloudSlashIcon, ScanIcon, TrophyIcon, UserIcon, UsersIcon } from "phosphor-react-native";
+import { CloudSlashIcon, ScanIcon, TrophyIcon, UserIcon, UsersIcon } from "phosphor-react-native";
 import { Image } from "expo-image";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation, useMe, useLeaderboard, useHaptics } from "@/hooks";
 import { PremiumBackground } from "@/components/ui";
+import { BackButton } from "@/components/ui/BackButton";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { AppIcon, type IconName } from "@/lib/icons";
@@ -587,20 +588,7 @@ function Header({
 }) {
   return (
     <Animated.View entering={FadeIn.duration(400)} style={styles.header}>
-      <PressableScale
-        onPress={onBack}
-        style={[
-          styles.backButton,
-          {
-            backgroundColor: colors.card,
-            borderColor: colors.border,
-          },
-        ]}
-        accessibilityRole="button"
-        accessibilityLabel={t.common.back}
-      >
-        <ArrowLeftIcon size={20} color={colors.textPrimary} />
-      </PressableScale>
+      <BackButton onPress={onBack} />
 
       <View style={styles.headerTitleWrap}>
         <Text
@@ -646,12 +634,6 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
     marginEnd: 12,
   },
   headerTitleWrap: {

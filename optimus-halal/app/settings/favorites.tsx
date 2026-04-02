@@ -18,7 +18,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FlashList } from "@shopify/flash-list";
 import { router, useLocalSearchParams, useFocusEffect } from "expo-router";
-import { ArrowLeftIcon, CameraPlusIcon, CloudSlashIcon, HeartIcon, MapPinPlusIcon, MapTrifoldIcon, ScanIcon, StorefrontIcon } from "phosphor-react-native";
+import { CameraPlusIcon, CloudSlashIcon, HeartIcon, MapPinPlusIcon, MapTrifoldIcon, ScanIcon, StorefrontIcon } from "phosphor-react-native";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useFavoritesList, useRemoveFavorite } from "@/hooks/useFavorites";
 import {
@@ -37,6 +37,7 @@ import {
 } from "@/components/favorites";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
+import { BackButton } from "@/components/ui/BackButton";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { trpc } from "@/lib/trpc";
@@ -464,21 +465,7 @@ export default function FavoritesScreen() {
         >
           <View style={styles.headerRow}>
             <View style={styles.headerLeft}>
-              <PressableScale
-                onPress={() => router.back()}
-                style={[
-                  styles.backBtn,
-                  {
-                    backgroundColor: colors.card,
-                    borderColor: colors.borderLight,
-                  },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={t.common.back}
-              >
-                <ArrowLeftIcon size={20}
-                  color={colors.textPrimary} />
-              </PressableScale>
+              <BackButton />
               <View>
                 <Text
                   style={[styles.title, { color: colors.textPrimary }]}
@@ -595,21 +582,7 @@ function Header({
   return (
     <View style={styles.headerContainer}>
       <View style={styles.headerLeft}>
-        <PressableScale
-          onPress={() => router.back()}
-          style={[
-            styles.backBtn,
-            {
-              backgroundColor: colors.card,
-              borderColor: colors.borderLight,
-            },
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel={t.common.back}
-        >
-          <ArrowLeftIcon size={20}
-            color={colors.textPrimary} />
-        </PressableScale>
+        <BackButton />
         <Text style={[styles.title, { color: colors.textPrimary }]}>
           {t.favorites.title}
         </Text>
@@ -835,12 +808,6 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     marginRight: 12,
-    height: 40,
-    width: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 20,
-    borderWidth: 1,
   },
   title: {
     fontSize: 24,

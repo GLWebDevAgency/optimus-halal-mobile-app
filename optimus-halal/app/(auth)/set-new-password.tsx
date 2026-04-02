@@ -21,7 +21,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { CaretLeftIcon, InfoIcon, WarningCircleIcon } from "phosphor-react-native";
+import { InfoIcon, WarningCircleIcon } from "phosphor-react-native";
 import { useHaptics, useTheme, useTranslation } from "@/hooks";
 import { useResetPassword } from "@/hooks/useAuth";
 import { usePasswordResetStore } from "@/store";
@@ -40,6 +40,7 @@ import Animated, {
 import { LinearGradient } from "expo-linear-gradient";
 
 import { PressableScale } from "@/components/ui/PressableScale";
+import { BackButton } from "@/components/ui/BackButton";
 import { brand } from "@/theme/colors";
 import { AppIcon } from "@/lib/icons";
 
@@ -248,17 +249,7 @@ export default function SetNewPasswordScreen() {
           },
         ]}
       >
-        <PressableScale
-          onPress={handleGoBack}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel={t.common.back}
-        >
-          <CaretLeftIcon
-            size={24}
-            color={isDark ? "#ffffff" : "#1f2937"}
-          />
-        </PressableScale>
+        <BackButton />
 
         <Text
           style={[

@@ -23,7 +23,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { CaretLeftIcon, ShieldCheckIcon, WarningCircleIcon, ClockIcon } from "phosphor-react-native";
+import { ShieldCheckIcon, WarningCircleIcon, ClockIcon } from "phosphor-react-native";
 import { Image } from "expo-image";
 import { useHaptics, useTheme, useTranslation } from "@/hooks";
 import { usePasswordResetStore } from "@/store";
@@ -43,6 +43,7 @@ import Animated, {
 import { LinearGradient } from "expo-linear-gradient";
 
 import { PressableScale } from "@/components/ui/PressableScale";
+import { BackButton } from "@/components/ui/BackButton";
 import { PremiumBackground } from "@/components/ui";
 import { brand } from "@/theme/colors";
 
@@ -209,14 +210,7 @@ export default function ResetCodeScreen() {
             entering={FadeIn.delay(100).duration(400)}
             style={styles.header}
           >
-            <PressableScale
-              onPress={handleGoBack}
-              style={styles.backButton}
-              accessibilityRole="button"
-              accessibilityLabel={t.common.back}
-            >
-              <CaretLeftIcon size={24} color={brand.primary} />
-            </PressableScale>
+            <BackButton />
 
             <View style={styles.headerSpacer} />
 

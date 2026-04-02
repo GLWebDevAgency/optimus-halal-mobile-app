@@ -12,10 +12,11 @@ import {
 } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground, PadlockBottomSheet } from "@/components/ui";
+import { BackButton } from "@/components/ui/BackButton";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
-import { ArrowLeftIcon, CheckCircleIcon, CloudSlashIcon } from "phosphor-react-native";
+import { CheckCircleIcon, CloudSlashIcon } from "phosphor-react-native";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation, useCanAccessPremiumData } from "@/hooks";
@@ -228,17 +229,7 @@ export default function BoycottListScreen() {
         {/* Header */}
       <Animated.View entering={FadeIn.duration(400)} style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 }}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Pressable
-            onPress={() => router.back()}
-            style={{
-              marginEnd: 12, height: 44, width: 44, alignItems: "center", justifyContent: "center",
-              borderRadius: 22, backgroundColor: isDark ? "rgba(255,255,255,0.03)" : colors.card, borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)", borderWidth: 1,
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={t.common.back}
-          >
-            <ArrowLeftIcon size={20} color={colors.textPrimary} />
-          </Pressable>
+          <BackButton />
           <View>
             <Text style={{ fontSize: 24, fontWeight: "700", letterSpacing: -0.5, color: colors.textPrimary }} accessibilityRole="header">
               {t.boycott.title}

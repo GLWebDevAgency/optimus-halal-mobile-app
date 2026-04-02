@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeftIcon, CheckIcon, EnvelopeOpenIcon, QuestionIcon } from "phosphor-react-native";
+import { CheckIcon, EnvelopeOpenIcon, QuestionIcon } from "phosphor-react-native";
 import { useHaptics, useTheme, useTranslation } from "@/hooks";
 import { useRequestPasswordReset } from "@/hooks/useAuth";
 import { usePasswordResetStore } from "@/store";
@@ -38,6 +38,7 @@ import Animated, {
 import { LinearGradient } from "expo-linear-gradient";
 
 import { PressableScale } from "@/components/ui/PressableScale";
+import { BackButton } from "@/components/ui/BackButton";
 import { brand } from "@/theme/colors";
 
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -165,17 +166,7 @@ export default function ResetConfirmationScreen() {
         entering={FadeIn.delay(100).duration(400)}
         style={[styles.header, { paddingTop: insets.top + 16 }]}
       >
-        <PressableScale
-          onPress={handleGoBack}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel={t.common.back}
-        >
-          <ArrowLeftIcon
-            size={24}
-            color={isDark ? "#ffffff" : "#1f2937"}
-          />
-        </PressableScale>
+        <BackButton />
 
         <Text
           style={[

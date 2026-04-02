@@ -18,13 +18,14 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
-import { ArrowLeftIcon, CloudSlashIcon, PackageIcon } from "phosphor-react-native";
+import { CloudSlashIcon, PackageIcon } from "phosphor-react-native";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useScanHistory, useMe, usePremium } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { trpc } from "@/lib/trpc";
 import { EmptyState, PremiumBackground } from "@/components/ui";
+import { BackButton } from "@/components/ui/BackButton";
 import { PremiumGate } from "@/components/ui/PremiumGate";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { useLocalScanHistoryStore, useFeatureFlagsStore } from "@/store";
@@ -314,7 +315,7 @@ const ScanRow = React.memo(function ScanRow({ item, index, isDark, colors, t, la
             {/* 3. 🌿 Analyse Naqiy : */}
             <View style={styles.analyseNaqiyRow}>
               <Image source={NAQIY_LOGO} style={styles.naqiyLogo} contentFit="contain" />
-              <Text style={[styles.analyseNaqiyText, { color: isDark ? gold[400] : gold[700] }]}>
+              <Text style={[styles.analyseNaqiyText, { color: gold[500] }]}>
                 Analyse Naqiy :
               </Text>
             </View>
@@ -565,20 +566,7 @@ function Header({ isDark, colors, t, count }: { isDark: boolean; colors: any; t:
   return (
     <Animated.View entering={FadeIn.duration(400)} style={styles.header}>
       <View style={styles.headerRow}>
-        <PressableScale
-          onPress={() => router.back()}
-          style={[
-            styles.backButton,
-            {
-              backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "#ffffff",
-              borderColor: isDark ? `${gold[500]}25` : `${gold[500]}20`,
-            },
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel={t.common.back}
-        >
-          <ArrowLeftIcon size={20} color={colors.textPrimary} />
-        </PressableScale>
+        <BackButton />
         <View style={styles.flex}>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]} accessibilityRole="header">
             {t.scanHistory.title}
@@ -586,7 +574,7 @@ function Header({ isDark, colors, t, count }: { isDark: boolean; colors: any; t:
           {count !== undefined && (
             <View style={styles.headerSubRow}>
               <View style={styles.goldDot} />
-              <Text style={[styles.headerCount, { color: isDark ? `${gold[500]}B3` : `${gold[700]}CC` }]}>
+              <Text style={[styles.headerCount, { color: `${gold[500]}B3` }]}>
                 {(count > 1 ? t.scanHistory.scanCountPlural : t.scanHistory.scanCount).replace(
                   "{{count}}",
                   String(count),
@@ -612,12 +600,6 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: "row", alignItems: "center" },
   backButton: {
     marginEnd: 14,
-    height: 44,
-    width: 44,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 14,
-    borderWidth: 1,
   },
   headerTitle: { fontSize: 24, fontWeight: "800", letterSpacing: -0.5 },
   headerSubRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 3 },

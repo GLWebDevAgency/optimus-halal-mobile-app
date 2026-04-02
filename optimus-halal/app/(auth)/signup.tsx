@@ -45,6 +45,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { Image } from "expo-image";
 import { Button, Input, LocationPicker, PremiumBackground } from "@/components/ui";
+import { BackButton } from "@/components/ui/BackButton";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { useLocalAuthStore } from "@/store";
 import { authService } from "@/services/api/auth.service";
@@ -210,14 +211,7 @@ export default function SignUpScreen() {
             entering={FadeIn.delay(100).duration(400)}
             style={styles.header}
           >
-            <PressableScale
-              onPress={() => router.back()}
-              style={styles.backButton}
-              accessibilityRole="button"
-              accessibilityLabel={t.common.back}
-            >
-              <Text style={{ fontSize: 24, color: colors.textPrimary }}>←</Text>
-            </PressableScale>
+            <BackButton />
           </Animated.View>
 
           {/* Naqiy+ Welcome Badge */}

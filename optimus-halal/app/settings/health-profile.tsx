@@ -11,14 +11,14 @@ import {
   View,
   Text,
   Switch,
-  Pressable,
   ScrollView,
 } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PadlockBottomSheet, PremiumBackground } from "@/components/ui";
+import { BackButton } from "@/components/ui/BackButton";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { ArrowLeftIcon, BabyIcon, BabyCarriageIcon, CaretRightIcon, ProhibitInsetIcon, ShieldWarningIcon } from "phosphor-react-native";
+import { BabyIcon, BabyCarriageIcon, CaretRightIcon, ProhibitInsetIcon, ShieldWarningIcon } from "phosphor-react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useCanAccessPremiumData, useHaptics, useTranslation } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
@@ -58,20 +58,7 @@ export default function HealthProfileScreen() {
         entering={FadeIn.duration(400)}
         className="flex-row items-center px-4 pb-4 pt-2"
       >
-        <Pressable
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel={t.common.back}
-          hitSlop={8}
-        >
-          <View
-            className="w-10 h-10 items-center justify-center rounded-xl"
-            style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#f1f5f9" }}
-          >
-            <ArrowLeftIcon size={22}
-              color={isDark ? "#e2e8f0" : "#334155"} />
-          </View>
-        </Pressable>
+        <BackButton />
         <Text
           className="flex-1 text-center text-lg font-bold text-slate-900 dark:text-white"
           accessibilityRole="header"

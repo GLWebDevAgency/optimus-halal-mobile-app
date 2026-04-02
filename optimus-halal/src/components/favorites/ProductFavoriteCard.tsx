@@ -277,7 +277,7 @@ export const ProductFavoriteCard = React.memo(function ProductFavoriteCard({
             {/* 3. 🌿 Analyse Naqiy : (bold, doré) */}
             <View style={styles.analyseNaqiyRow}>
               <Image source={NAQIY_LOGO} style={styles.naqiyLogo} contentFit="contain" />
-              <Text style={[styles.analyseNaqiyText, { color: isDark ? gold[400] : gold[700] }]}>
+              <Text style={[styles.analyseNaqiyText, { color: gold[500] }]}>
                 Analyse Naqiy :
               </Text>
             </View>

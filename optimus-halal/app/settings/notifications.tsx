@@ -14,11 +14,11 @@ import {
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
-import { ArrowLeftIcon, CheckCircleIcon, DotsThreeVerticalIcon } from "phosphor-react-native";
+import { CheckCircleIcon, DotsThreeVerticalIcon } from "phosphor-react-native";
 import Animated, { FadeIn, FadeInDown, ZoomIn } from "react-native-reanimated";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
+import { BackButton } from "@/components/ui/BackButton";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks";
 import { trpc } from "@/lib/trpc";
@@ -407,25 +407,7 @@ export default function NotificationsScreen() {
         }}
       >
         {/* Back Button */}
-        <PressableScale
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel={t.common.back}
-          accessibilityHint={t.editProfile.backHint}
-        >
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: themeColors.card,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <ArrowLeftIcon size={22} color={themeColors.textPrimary} />
-          </View>
-        </PressableScale>
+        <BackButton />
 
         {/* Title Section */}
         <View style={{ flex: 1, marginLeft: 16 }}>

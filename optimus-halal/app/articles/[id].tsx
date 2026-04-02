@@ -21,7 +21,7 @@ import {
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeftIcon, ArrowSquareOutIcon, ArticleIcon, ClockIcon, ShareNetworkIcon, UserIcon } from "phosphor-react-native";
+import { ArrowSquareOutIcon, ArticleIcon, ClockIcon, ShareNetworkIcon, UserIcon } from "phosphor-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
@@ -30,6 +30,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useHaptics } from "@/hooks";
 import { PremiumBackground } from "@/components/ui";
+import { BackButton } from "@/components/ui/BackButton";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { NaqiyMarkdown } from "@/components/ui/NaqiyMarkdown";
 import { trpc } from "@/lib/trpc";
@@ -173,14 +174,7 @@ export default function ArticleDetailScreen() {
 
           {/* Top bar */}
           <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-            <Pressable
-              onPress={handleBack}
-              style={styles.iconBtn}
-              accessibilityRole="button"
-              accessibilityLabel={t.common.back}
-            >
-              <ArrowLeftIcon size={22} color="#fff" />
-            </Pressable>
+            <BackButton />
 
             <Pressable
               onPress={handleShare}

@@ -351,7 +351,7 @@ export const StoreFavoriteCard = React.memo(function StoreFavoriteCard({
                 style={[styles.actionIcon, { backgroundColor: isDark ? `${gold[500]}10` : `${gold[500]}08` }]}
                 accessibilityLabel="Partager"
               >
-                <ShareNetworkIcon size={16} color={isDark ? gold[400] : gold[700]} />
+                <ShareNetworkIcon size={16} color={gold[500]} />
               </PressableScale>
             </View>
           </View>

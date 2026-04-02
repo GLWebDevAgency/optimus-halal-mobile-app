@@ -20,11 +20,12 @@ import {
 } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
+import { BackButton } from "@/components/ui/BackButton";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { ArrowLeftIcon, CopyIcon, GiftIcon, SealCheckIcon, ShieldIcon, StarFourIcon, TagIcon } from "phosphor-react-native";
+import { CopyIcon, GiftIcon, SealCheckIcon, ShieldIcon, StarFourIcon, TagIcon } from "phosphor-react-native";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "@/hooks/useTheme";
@@ -487,21 +488,7 @@ export default function RewardsScreen() {
         <SafeAreaView style={[styles.container]}>
           {/* Header */}
           <View style={styles.header}>
-            <Pressable
-              onPress={() => router.back()}
-              style={[
-                styles.backButton,
-                {
-                  backgroundColor: colors.card,
-                  borderColor: colors.borderLight,
-                },
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel={t.common.back}
-            >
-              <ArrowLeftIcon size={20}
-                color={colors.textPrimary} />
-            </Pressable>
+            <BackButton />
             <Text
               style={[styles.headerTitle, { color: colors.textPrimary }]}
               accessibilityRole="header"
@@ -667,22 +654,7 @@ export default function RewardsScreen() {
       <SafeAreaView style={[styles.container]}>
         {/* Header */}
         <Animated.View entering={FadeIn.duration(400)} style={styles.header}>
-        <Pressable
-          onPress={() => router.back()}
-          style={[
-            styles.backButton,
-            {
-              backgroundColor: colors.card,
-              borderColor: colors.borderLight,
-            },
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel={t.common.back}
-          accessibilityHint={t.editProfile.backHint}
-        >
-          <ArrowLeftIcon size={20}
-            color={colors.textPrimary} />
-        </Pressable>
+        <BackButton />
         <Text
           style={[styles.headerTitle, { color: colors.textPrimary }]}
           accessibilityRole="header"
@@ -724,12 +696,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   backButton: {
-    height: 44,
-    width: 44,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 22,
-    borderWidth: 1,
+    marginEnd: 0,
   },
   headerTitle: {
     flex: 1,

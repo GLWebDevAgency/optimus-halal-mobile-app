@@ -17,11 +17,12 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { ArrowLeftIcon, CameraIcon, WarningCircleIcon } from "phosphor-react-native";
+import { CameraIcon, WarningCircleIcon } from "phosphor-react-native";
 import Animated, { FadeIn, FadeInDown, SlideInDown } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
 import { PressableScale } from "@/components/ui/PressableScale";
+import { BackButton } from "@/components/ui/BackButton";
 import { useMe } from "@/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { useTheme } from "@/hooks/useTheme";
@@ -343,28 +344,7 @@ export default function EditProfileScreen() {
           }}
         >
           {/* Back Button */}
-          <PressableScale
-            onPress={safeGoBack}
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              backgroundColor: isDark ? "rgba(255,255,255,0.03)" : colors.card,
-              alignItems: "center",
-              justifyContent: "center",
-              borderWidth: 1,
-              borderColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.1)",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.05,
-              shadowRadius: 2,
-              elevation: 1,
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={t.common.back}
-          >
-            <ArrowLeftIcon size={22} color={colors.textPrimary} />
-          </PressableScale>
+          <BackButton onPress={safeGoBack} />
 
           {/* Title */}
           <Text

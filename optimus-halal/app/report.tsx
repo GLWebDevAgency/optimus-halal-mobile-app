@@ -25,9 +25,10 @@ import {
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeftIcon, CameraPlusIcon, CheckIcon, LockIcon, MagnifyingGlassIcon, PaperPlaneRightIcon, ScanIcon, TrashIcon } from "phosphor-react-native";
+import { CameraPlusIcon, CheckIcon, LockIcon, MagnifyingGlassIcon, PaperPlaneRightIcon, ScanIcon, TrashIcon } from "phosphor-react-native";
 import { useHaptics, useTranslation, useTheme } from "@/hooks";
 import { PremiumBackground } from "@/components/ui";
+import { BackButton } from "@/components/ui/BackButton";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { ImpactFeedbackStyle } from "expo-haptics";
@@ -241,14 +242,7 @@ export default function ReportingFormScreen() {
           borderBottomColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.12)",
         }}
       >
-        <Pressable
-          onPress={handleBack}
-          style={{ width: 40, height: 40, alignItems: "flex-start", justifyContent: "center", borderRadius: 9999 }}
-          accessibilityRole="button"
-          accessibilityLabel={t.common.back}
-        >
-          <ArrowLeftIcon size={24} color={colors.textPrimary} />
-        </Pressable>
+        <BackButton />
 
         <View className="flex-1 items-center">
           <Text className="text-lg font-bold tracking-tight" style={{ color: colors.textPrimary }}>

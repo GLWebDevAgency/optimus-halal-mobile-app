@@ -19,7 +19,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { CaretLeftIcon, EnvelopeSimpleIcon, WarningCircleIcon } from "phosphor-react-native";
+import { EnvelopeSimpleIcon, WarningCircleIcon } from "phosphor-react-native";
 import { Image } from "expo-image";
 import { useHaptics, useTheme, useTranslation } from "@/hooks";
 import { useRequestPasswordReset } from "@/hooks/useAuth";
@@ -37,6 +37,7 @@ import Animated, {
 import { LinearGradient } from "expo-linear-gradient";
 import { PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
+import { BackButton } from "@/components/ui/BackButton";
 import { brand } from "@/theme/colors";
 
 const logoSource = require("@assets/images/logo_naqiy.webp");
@@ -144,15 +145,7 @@ export default function ForgotPasswordScreen() {
             entering={FadeIn.delay(100).duration(400)}
             style={styles.header}
           >
-            <PressableScale
-              onPress={handleGoBack}
-              style={styles.backButton}
-              accessibilityRole="button"
-              accessibilityLabel={t.common.back}
-            >
-              <CaretLeftIcon size={24}
-                color={brand.primary} />
-            </PressableScale>
+            <BackButton />
             
             <View style={styles.headerSpacer} />
             

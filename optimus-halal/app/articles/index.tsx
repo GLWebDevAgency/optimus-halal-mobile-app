@@ -20,12 +20,13 @@ import {
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeftIcon, MagnifyingGlassIcon, XIcon } from "phosphor-react-native";
+import { MagnifyingGlassIcon, XIcon } from "phosphor-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeIn, FadeInDown, FadeInRight } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 
 import { PremiumBackground, EmptyState } from "@/components/ui";
+import { BackButton } from "@/components/ui/BackButton";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -216,14 +217,7 @@ export default function ArticlesListScreen() {
       {/* ---- Header ---- */}
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <View style={styles.headerRow}>
-          <Pressable
-            onPress={handleBack}
-            style={[styles.headerIcon, { backgroundColor: colors.buttonSecondary }]}
-            accessibilityRole="button"
-            accessibilityLabel={t.common.back}
-          >
-            <ArrowLeftIcon size={20} color={colors.iconPrimary} />
-          </Pressable>
+          <BackButton />
 
           <View style={styles.headerTitleWrap}>
             <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>

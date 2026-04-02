@@ -8,14 +8,13 @@ import React from "react";
 import {
   View,
   Text,
-  Pressable,
   ScrollView,
 } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
+import { BackButton } from "@/components/ui/BackButton";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
-import { ArrowLeftIcon, CheckIcon, InfoIcon } from "phosphor-react-native";
+import { CheckIcon, InfoIcon } from "phosphor-react-native";
 import Animated, { FadeIn, FadeInDown, ZoomIn } from "react-native-reanimated";
 import { useHaptics, useTranslation } from "@/hooks";
 
@@ -68,20 +67,7 @@ export default function AppearanceScreen() {
         className="px-5 pt-4 pb-4"
       >
         <View className="flex-row items-center gap-3">
-          <Pressable
-            onPress={() => router.back()}
-            accessibilityRole="button"
-            accessibilityLabel={t.common.back}
-            accessibilityHint={t.common.back}
-            hitSlop={8}
-          >
-            <View
-              className="h-10 w-10 items-center justify-center rounded-full"
-              style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }}
-            >
-              <ArrowLeftIcon size={20} color={colors.textPrimary} />
-            </View>
-          </Pressable>
+          <BackButton />
           <Text
             style={{ color: colors.textPrimary }}
             className="text-xl font-bold tracking-tight"

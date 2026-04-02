@@ -24,7 +24,7 @@ import {
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeftIcon, ArrowSquareOutIcon, BellRingingIcon, CaretRightIcon, ClockIcon, GlobeIcon, ShareNetworkIcon, SparkleIcon } from "phosphor-react-native";
+import { ArrowSquareOutIcon, BellRingingIcon, CaretRightIcon, ClockIcon, GlobeIcon, ShareNetworkIcon, SparkleIcon } from "phosphor-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Shadow } from "react-native-shadow-2";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
@@ -35,6 +35,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useHaptics } from "@/hooks";
 import { useMe } from "@/hooks/useAuth";
 import { PremiumBackground } from "@/components/ui";
+import { BackButton } from "@/components/ui/BackButton";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { NaqiyMarkdown } from "@/components/ui/NaqiyMarkdown";
 import { RecallInfoSection } from "@/components/content/RecallInfoSection";
@@ -263,14 +264,7 @@ export default function AlertDetailScreen() {
 
           {/* Top bar — glass icon buttons */}
           <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-            <Pressable
-              onPress={handleBack}
-              style={styles.iconBtn}
-              accessibilityRole="button"
-              accessibilityLabel={t.common.back}
-            >
-              <ArrowLeftIcon size={22} color="#fff" />
-            </Pressable>
+            <BackButton />
 
             <Pressable
               onPress={handleShare}
