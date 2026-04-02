@@ -168,26 +168,37 @@ const CompactAlertCard = React.memo(function CompactAlertCard({
         {
           backgroundColor: isDark ? glass.dark.bg : glass.light.bg,
           borderColor: isDark ? glass.dark.border : glass.light.border,
-          opacity: isRead && !isGated ? 0.75 : 1,
+          opacity: isRead && !isGated ? 0.6 : 1,
         },
       ]}
       accessibilityRole="button"
       accessibilityLabel={alert.title}
       accessibilityHint={isGated ? t.alerts.unlockAll : undefined}
     >
-      {/* Severity dot */}
-      <View style={styles.cardLeft}>
-        <View style={[styles.severityDot, { backgroundColor: sevColor }]} />
-      </View>
+      {/* Severity accent — left edge strip */}
+      <View style={[styles.severityStrip, { backgroundColor: sevColor }]} />
+
+      {/* Thumbnail — right-aligned, prominent */}
+      {alert.imageUrl ? (
+        <Image
+          source={{ uri: alert.imageUrl }}
+          style={styles.cardThumb}
+          contentFit="cover"
+          transition={200}
+        />
+      ) : null}
 
       {/* Content */}
       <View style={styles.cardCenter}>
-        {/* Meta row: category + time */}
+        {/* Meta row: category pill + time */}
         <View style={styles.metaRow}>
           {categoryName ? (
-            <Text style={[styles.categoryLabel, { color: sevColor }]} numberOfLines={1}>
-              {categoryName}
-            </Text>
+            <View style={[styles.categoryPill, { backgroundColor: `${sevColor}18` }]}>
+              <View style={[styles.categoryPillDot, { backgroundColor: sevColor }]} />
+              <Text style={[styles.categoryLabel, { color: sevColor }]} numberOfLines={1}>
+                {categoryName}
+              </Text>
+            </View>
           ) : null}
           <Text style={[styles.timeLabel, { color: colors.textMuted }]}>
             {formatRelativeTime(alert.publishedAt, t, locale)}
@@ -201,9 +212,10 @@ const CompactAlertCard = React.memo(function CompactAlertCard({
             {
               color: colors.textPrimary,
               fontWeight: isRead ? "500" : "700",
+              fontFamily: isRead ? undefined : headingFontFamily.bold,
             },
           ]}
-          numberOfLines={1}
+          numberOfLines={2}
         >
           {alert.title}
         </Text>
@@ -211,21 +223,14 @@ const CompactAlertCard = React.memo(function CompactAlertCard({
         {/* Summary */}
         <Text
           style={[styles.cardSummary, { color: colors.textSecondary }]}
-          numberOfLines={1}
+          numberOfLines={2}
         >
           {alert.summary}
         </Text>
       </View>
 
-      {/* Right: thumbnail or chevron */}
-      {alert.imageUrl ? (
-        <Image
-          source={{ uri: alert.imageUrl }}
-          style={styles.cardThumb}
-          contentFit="cover"
-          transition={200}
-        />
-      ) : (
+      {/* Chevron when no thumbnail */}
+      {!alert.imageUrl && (
         <CaretRightIcon
           size={14}
           color={isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}
@@ -896,38 +901,49 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
-    paddingLeft: 12,
-    paddingRight: 14,
-    borderRadius: 16,
+    paddingVertical: 14,
+    paddingLeft: 0,
+    paddingRight: 16,
+    borderRadius: 14,
     borderWidth: 1,
-    marginBottom: 6,
-    gap: 10,
+    marginBottom: 10,
+    gap: 12,
     overflow: "hidden",
   },
-  cardLeft: {
-    width: 20,
-    alignItems: "center",
-  },
-  severityDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  severityStrip: {
+    width: 3,
+    alignSelf: "stretch",
+    borderTopLeftRadius: 14,
+    borderBottomLeftRadius: 14,
   },
   cardCenter: {
     flex: 1,
-    gap: 2,
+    gap: 4,
+    paddingVertical: 2,
   },
   metaRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 8,
+  },
+  categoryPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  categoryPillDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
   },
   categoryLabel: {
     fontSize: 10,
-    fontWeight: "700",
+    fontWeight: "800",
     textTransform: "uppercase",
-    letterSpacing: 0.3,
+    letterSpacing: 0.5,
   },
   timeLabel: {
     fontSize: 10,
@@ -935,26 +951,27 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 14,
-    lineHeight: 18,
-    letterSpacing: -0.1,
+    lineHeight: 19,
+    letterSpacing: -0.2,
   },
   cardSummary: {
     fontSize: 12,
-    lineHeight: 16,
-    opacity: 0.85,
+    lineHeight: 17,
+    opacity: 0.75,
+    marginTop: 1,
   },
   cardThumb: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
+    width: 56,
+    height: 56,
+    borderRadius: 12,
   },
   unreadDot: {
     position: "absolute",
-    top: 8,
-    right: 8,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    top: 10,
+    right: 10,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
   },
 
   // ── Blur gate for free tier ──
