@@ -29,6 +29,32 @@ const NAQIY_LOGO = require("../../../assets/images/logo_naqiy.webp");
 
 export const CARD_WIDTH = "100%";
 
+// ── Certifier short names (same mapping as scan-history) ──
+const CERTIFIER_SHORT: Record<string, string> = {
+  achahada: "Achahada",
+  "acmif-mosquee-d-evry": "ACMIF - Mosquée d'Évry-Courcouronnes",
+  afcai: "AFCAI",
+  alamane: "Alamane",
+  altakwa: "Al-Takwa",
+  "argml-mosquee-de-lyon": "ARGML - Mosquée de Lyon",
+  arrissala: "Arrissala",
+  "avs-a-votre-service": "AVS - À Votre Service",
+  "european-halal-trust": "European Halal Trust",
+  "halal-correct": "Halal Correct",
+  "halal-monitoring-committee": "HMC",
+  "halal-polska": "Halal Polska",
+  "halal-services": "Halal Services",
+  "islamic-centre-aachen": "ICA - Aachen",
+  "khalis-halal": "Khalis Halal",
+  "muslim-conseil-international-mci": "MCI",
+  "sfcvh-mosquee-de-paris": "SFCVH - Mosquée de Paris",
+  sidq: "SIDQ",
+};
+
+function getCertifierDisplayName(certifierId: string): string {
+  return CERTIFIER_SHORT[certifierId] ?? certifierId.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+}
+
 // ── Status visuals (identical to scan-history) ──────────
 type HalalStatus = "halal" | "haram" | "doubtful" | "unknown";
 
@@ -249,14 +275,17 @@ export const ProductFavoriteCard = React.memo(function ProductFavoriteCard({
               </Text>
             )}
 
-            {/* Certifier: line 1 = logo + name, line 2 = grade strip + adjective */}
-            {certifierId && certifierName && trustScore != null ? (
+            {/* Certifier: line 1 = "Certifieur :" + logo + name, line 2 = grade strip + adjective */}
+            {certifierId && trustScore != null ? (
               <View style={styles.certifierBlock}>
-                {/* Line 1: micro-logo + certifier name */}
+                {/* Line 1: label + micro-logo + Naqiy matched name */}
                 <View style={styles.certifierNameRow}>
+                  <Text style={[styles.certifierLabel, { color: colors.textMuted }]}>
+                    Certifieur :
+                  </Text>
                   <CertifierLogo certifierId={certifierId} size={14} fallbackColor={effectiveConfig.color} />
-                  <Text style={[styles.certifierShort, { color: colors.textSecondary }]} numberOfLines={1}>
-                    {certifierName}
+                  <Text style={[styles.certifierShort, { color: colors.textPrimary }]} numberOfLines={1}>
+                    {getCertifierDisplayName(certifierId)}
                   </Text>
                 </View>
                 {/* Line 2: Naqiy grade strip + adjective */}
@@ -264,7 +293,7 @@ export const ProductFavoriteCard = React.memo(function ProductFavoriteCard({
                   <CertifierTrustRow
                     variant="inline"
                     certifierId={certifierId}
-                    certifierName={certifierName}
+                    certifierName={getCertifierDisplayName(certifierId)}
                     trustScore={trustScore}
                     showScore={false}
                   />
@@ -275,11 +304,14 @@ export const ProductFavoriteCard = React.memo(function ProductFavoriteCard({
                   )}
                 </View>
               </View>
-            ) : certifierId && certifierName ? (
+            ) : certifierId ? (
               <View style={styles.certifierNameRow}>
+                <Text style={[styles.certifierLabel, { color: colors.textMuted }]}>
+                  Certifieur :
+                </Text>
                 <CertifierLogo certifierId={certifierId} size={14} fallbackColor={effectiveConfig.color} />
-                <Text style={[styles.certifierShort, { color: colors.textSecondary }]} numberOfLines={1}>
-                  {certifierName}
+                <Text style={[styles.certifierShort, { color: colors.textPrimary }]} numberOfLines={1}>
+                  {getCertifierDisplayName(certifierId)}
                 </Text>
               </View>
             ) : (
@@ -353,6 +385,7 @@ const styles = StyleSheet.create({
   brandText: { fontSize: 11, flexShrink: 1 },
   dot: { width: 2.5, height: 2.5, borderRadius: 1.25 },
   certifierBlock: { marginTop: 3, gap: 4 },
+  certifierLabel: { fontSize: 9, fontWeight: "500", fontStyle: "italic" },
   certifierNameRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 3 },
   certifierGradeRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   gradeAdjectif: { fontSize: 9, fontWeight: "700" },
