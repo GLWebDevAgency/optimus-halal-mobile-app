@@ -23,10 +23,8 @@ import { AppIcon, type IconName } from "@/lib/icons";
 
 const GOLD = "#d4af37";
 
-// TODO: Re-enable "system" option once the NativeWind setColorScheme
-// infinite loop is fixed (Appearance.setColorScheme(null) vs NativeWind race).
 const THEME_OPTIONS: { id: ThemeMode; labelKey: "automatic" | "light" | "dark"; icon: IconName }[] = [
-  // { id: "system", labelKey: "automatic", icon: "brightness-auto" },
+  { id: "system", labelKey: "automatic", icon: "brightness-auto" },
   {
     id: "light",
     labelKey: "light",
