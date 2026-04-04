@@ -72,7 +72,8 @@ interface ThemeState {
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
-      theme: "system",
+      // Default to "light" — "system" disabled until NativeWind loop is fixed
+      theme: "light",
       setTheme: (theme) => {
         // Sync native runtime for explicit choices only.
         // "system" → null resets to OS default (no forced override).
@@ -84,10 +85,16 @@ export const useThemeStore = create<ThemeState>()(
     {
       name: "theme-storage",
       storage: createJSONStorage(() => mmkvStorage),
-      onRehydrateStorage: () => (state) => {
-        if (!state || state.theme === "system") return;
-        // Restore explicit theme choice on app launch (light or dark only).
-        // Skip for "system" — OS preference is already the default.
+      onRehydrateStorage: () => (state, error) => {
+        if (error || !state) return;
+        // Migrate users stuck on "system" → resolve to current OS preference.
+        // "system" is disabled until the NativeWind render loop is fixed.
+        if (state.theme === "system") {
+          const resolved = Appearance.getColorScheme() ?? "light";
+          state.theme = resolved;
+          Appearance.setColorScheme(resolved);
+          return;
+        }
         Appearance.setColorScheme(state.theme);
       },
     }

@@ -114,8 +114,9 @@ docs/audits/
 docs/plan-final-*/
 optimus-halal/docs/
 
-# ── Design mockups (large PNGs, not source code) ─────────────
+# ── Design mockups & print assets ────────────────────────────
 stitch_onboarding_reliable_certifications/
+flyer/
 
 # ── Research / personal folders (not source code) ────────────
 apps-et-sources-infos-medias/
