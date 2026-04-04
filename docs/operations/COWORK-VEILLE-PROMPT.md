@@ -36,6 +36,22 @@ En dev : PRODUCTION_API_URL=http://localhost:3000
 En prod : PRODUCTION_API_URL=https://api.naqiy.app
 Utilise la valeur dans .env — elle pointe vers la prod par defaut.
 
+## ETAPE 0 — Charger le contenu existant (anti-doublons)
+
+AVANT de fetcher les RSS, tu DOIS recuperer tout le contenu existant (drafts + publies) :
+
+  cd backend && source .env
+  EXISTING=$(curl -s "${PRODUCTION_API_URL}/internal/existing-content" \
+    -H "Authorization: Bearer ${CRON_SECRET}")
+  echo "$EXISTING" | python3 -m json.tool
+
+Ce endpoint retourne :
+- articles[] : id, title, slug, externalLink, type, isPublished, createdAt
+- alerts[] : id, title, sourceUrl, categoryId, severity, isActive, createdAt
+- totalArticles, totalAlerts
+
+Conserve cette liste en memoire pour toute la session. Tu l'utiliseras a l'ETAPE 2b.
+
 ## ETAPE 1 — Fetch les sources
 
 Recupere les sources actives via l'API :
@@ -69,6 +85,52 @@ Pour chaque item dans le rapport :
   Severite : critical (danger immediat), warning (attention requise), info (bonne nouvelle)
 - ARTICLE : contenu long, educatif, analyse, guide, partenariat, tendance marche
   Types : blog, partner_news, educational, community
+
+## ETAPE 2b — Detection des doublons (OBLIGATOIRE)
+
+Pour CHAQUE item retenu a l'etape 2, tu DOIS le comparer au contenu existant (ETAPE 0).
+
+### Regles de deduplication :
+
+1. **DOUBLON STRICT (SKIP)** — Meme sujet ET meme source URL :
+   Un article/alerte existant a deja un externalLink ou sourceUrl identique (ou tres proche)
+   au lien de l'item RSS.
+   → Action : IGNORER completement. Ajoute-le a la liste "Elements ignores (doublons)".
+
+2. **DOUBLON THEMATIQUE — Meme sujet, source DIFFERENTE** :
+   Le titre ou le sujet est semantiquement tres proche d'un contenu existant
+   MAIS la source URL est differente (= un autre media couvre le meme sujet).
+   → Action : CREER un draft avec ces adaptations :
+     a) Titre : angle different, ne pas copier le titre existant.
+        Exemple existant : "Fraude viande halal a Rungis" (Le Monde)
+        Nouveau : "Rungis : ce que revele l'enquete de Mediapart sur la viande halal"
+     b) Contenu : apporte la perspective UNIQUE de cette nouvelle source.
+        Ne pas repeter les infos deja couvertes par l'article existant.
+        Privilegier les faits nouveaux, reactions differentes, ou angles complementaires.
+     c) Ajoute en fin de contenu une mention :
+        "> A lire aussi : [TITRE_ARTICLE_EXISTANT] (déjà disponible sur Naqiy)"
+     d) Tags : ajouter le tag "multi-source" pour signaler la couverture croisee.
+
+3. **SUJET NOUVEAU (CREER)** — Aucun contenu existant ne traite ce sujet.
+   → Action : CREER normalement (etapes 3 et 4).
+
+### Comment comparer :
+
+- **Match URL** : compare le domaine + path de sourceUrl/externalLink
+  (ignore les query params et fragments — ?utm_source, #anchor, etc.)
+- **Match semantique** : deux titres sont "meme sujet" si :
+  - Ils parlent du meme evenement specifique (meme lieu, meme marque, meme date)
+  - OU ils couvrent la meme annonce officielle (meme organisme, meme decision)
+  - Attention : "halal en France" et "certification halal" ne sont PAS le meme sujet
+    (trop generiques). Seuls les sujets SPECIFIQUES declenchent la detection.
+
+### Resume de deduplication :
+
+Avant de passer a l'etape 3, affiche un resume :
+  DEDUPLICATION :
+  - Doublons stricts ignores : X (lister titres + source)
+  - Doublons thematiques (angle complementaire) : Y (lister titre existant → nouveau titre)
+  - Sujets nouveaux : Z
 
 ## ETAPE 3 — Gestion des images de couverture
 
@@ -187,15 +249,24 @@ Nettoie le fichier temporaire a la fin : rm -f /tmp/naqiy-draft.json
 
 === VEILLE NAQIY — [DATE] ===
 
+Contenu existant en BDD : X articles (Y publies, Z drafts) + W alertes (V actives, U drafts)
+
 Sources verifiees : X
 Nouveaux elements detectes : Y
-Drafts crees via API : Z (A alertes, B articles)
-Images uploadees R2 : N
-Elements ignores : W (non pertinents)
+  - Doublons stricts ignores : A
+  - Angles complementaires (multi-source) : B
+  - Sujets nouveaux : C
+Drafts crees via API : D (E alertes, F articles)
+Images uploadees R2 : G
+Elements ignores (non pertinents) : H
+
+DOUBLONS IGNORES :
+1. "Titre" — source: URL — doublon de: "Titre existant" (draft/publie)
 
 DRAFTS CREES :
 1. [ALERTE] Titre — categorie — severite
 2. [ARTICLE] Titre — type — X min lecture — image source/fallback
+   (si multi-source : "Angle complementaire de : Titre existant")
 
 A VALIDER dans le dashboard admin.
 

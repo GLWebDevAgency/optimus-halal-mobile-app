@@ -7,7 +7,7 @@
  */
 
 import { Hono } from "hono";
-import { sql, and, gte, lte, isNotNull, isNull, eq } from "drizzle-orm";
+import { sql, and, gte, lte, isNotNull, isNull, eq, desc } from "drizzle-orm";
 import { env } from "../lib/env.js";
 import { db } from "../db/index.js";
 import { redis } from "../lib/redis.js";
@@ -166,6 +166,50 @@ internalRoutes.post("/create-draft", async (c) => {
     });
     return c.json({ error: "Création du draft échouée" }, 500);
   }
+});
+
+// ── GET /existing-content ────────────────────────────────────
+// Lists ALL articles + alerts (drafts included) for deduplication.
+// Used by Claude Cowork veille task to avoid creating duplicates.
+
+internalRoutes.get("/existing-content", async (c) => {
+  if (!verifyCronSecret(c)) {
+    return c.json({ error: "Non autorisé" }, 401);
+  }
+
+  const [existingArticles, existingAlerts] = await Promise.all([
+    db
+      .select({
+        id: articles.id,
+        title: articles.title,
+        slug: articles.slug,
+        externalLink: articles.externalLink,
+        type: articles.type,
+        isPublished: articles.isPublished,
+        createdAt: articles.createdAt,
+      })
+      .from(articles)
+      .orderBy(desc(articles.createdAt)),
+    db
+      .select({
+        id: alerts.id,
+        title: alerts.title,
+        sourceUrl: alerts.sourceUrl,
+        categoryId: alerts.categoryId,
+        severity: alerts.severity,
+        isActive: alerts.isActive,
+        createdAt: alerts.createdAt,
+      })
+      .from(alerts)
+      .orderBy(desc(alerts.createdAt)),
+  ]);
+
+  return c.json({
+    articles: existingArticles,
+    alerts: existingAlerts,
+    totalArticles: existingArticles.length,
+    totalAlerts: existingAlerts.length,
+  });
 });
 
 // ── GET /content-sources ─────────────────────────────────────
