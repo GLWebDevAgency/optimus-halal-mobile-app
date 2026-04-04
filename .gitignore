@@ -48,6 +48,7 @@ pnpm-debug.log*
 *.keystore
 **/credentials.json
 *.secret
+docs/naqiy/dossiers-recherches-naqiy/
 
 # ── TypeScript ───────────────────────────────────────────────
 *.tsbuildinfo
