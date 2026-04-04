@@ -19,10 +19,7 @@
       "channel": "preview",
       "android": {
         "buildType": "apk",
-        "credentialsSource": "remote",
-        "gradle": {
-          "buildType": "release"
-        }
+        "credentialsSource": "remote"
       },
       "ios": {
         "simulator": false
