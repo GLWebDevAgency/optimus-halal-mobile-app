@@ -16,6 +16,7 @@
     },
     "preview": {
       "distribution": "internal",
+      "channel": "preview",
       "android": {
         "buildType": "apk",
         "credentialsSource": "remote"
@@ -33,6 +34,7 @@
     },
     "production": {
       "distribution": "store",
+      "channel": "production",
       "autoIncrement": true,
       "env": {
         "APP_VARIANT": "production",
