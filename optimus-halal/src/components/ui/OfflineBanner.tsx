@@ -21,11 +21,13 @@ export function OfflineBanner() {
 
     const check = async () => {
       try {
-        // Check OUR backend health — not a third-party (blocked in some regions)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
         const resp = await fetch(`${API_CONFIG.baseUrl}/health`, {
           method: "GET",
-          signal: AbortSignal.timeout(5000),
+          signal: controller.signal,
         });
+        clearTimeout(timeoutId);
         if (mounted) setIsOffline(!resp.ok);
       } catch {
         if (mounted) setIsOffline(true);
