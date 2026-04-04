@@ -48,6 +48,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     bundler: "metro",
   },
   plugins: [
+    "./plugins/withAndroidApkOptimization",
     "expo-router",
     [
       "expo-camera",
