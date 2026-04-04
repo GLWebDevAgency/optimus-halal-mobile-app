@@ -1,3 +1,11 @@
+/**
+ * Loyalty Hooks — All queries require authentication.
+ *
+ * Each hook accepts an optional `enabled` override so callers can
+ * disable queries when the user is a guest (no account = no loyalty data).
+ * Default: true — callers MUST pass `enabled: !!user` or similar guard.
+ */
+
 import { trpc } from "@/lib/trpc";
 
 export function useLoyaltyBalance(options?: { enabled?: boolean }) {
@@ -7,30 +15,40 @@ export function useLoyaltyBalance(options?: { enabled?: boolean }) {
   });
 }
 
-export function useAchievements() {
+export function useAchievements(options?: { enabled?: boolean }) {
   return trpc.loyalty.getAchievements.useQuery(undefined, {
     staleTime: 1000 * 60 * 10,
+    enabled: options?.enabled ?? true,
   });
 }
 
-export function useLeaderboard(limit = 20) {
+export function useLeaderboard(limit = 20, options?: { enabled?: boolean }) {
   return trpc.loyalty.getLeaderboard.useQuery(
     { limit },
-    { staleTime: 1000 * 60 * 5 }
+    {
+      staleTime: 1000 * 60 * 5,
+      enabled: options?.enabled ?? true,
+    }
   );
 }
 
-export function useLoyaltyHistory(limit = 20, offset = 0) {
+export function useLoyaltyHistory(limit = 20, offset = 0, options?: { enabled?: boolean }) {
   return trpc.loyalty.getHistory.useQuery(
     { limit, offset },
-    { staleTime: 1000 * 60 * 2 }
+    {
+      staleTime: 1000 * 60 * 2,
+      enabled: options?.enabled ?? true,
+    }
   );
 }
 
-export function useRewards(category?: string) {
+export function useRewards(category?: string, options?: { enabled?: boolean }) {
   return trpc.loyalty.getRewards.useQuery(
     { category, limit: 20 },
-    { staleTime: 1000 * 60 * 10 }
+    {
+      staleTime: 1000 * 60 * 10,
+      enabled: options?.enabled ?? true,
+    }
   );
 }
 
@@ -45,8 +63,9 @@ export function useClaimReward() {
   });
 }
 
-export function useMyRewards() {
+export function useMyRewards(options?: { enabled?: boolean }) {
   return trpc.loyalty.getMyRewards.useQuery(undefined, {
     staleTime: 1000 * 60 * 5,
+    enabled: options?.enabled ?? true,
   });
 }

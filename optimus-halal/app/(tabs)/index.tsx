@@ -888,7 +888,7 @@ export default function HomeScreen() {
 
   const favoritesQuery = useFavoritesList({ limit: 8, enabled: !!me });
   const localFavorites = useLocalFavoritesStore((s) => s.favorites);
-  const localFavFull = useLocalFavoritesStore((s) => s.isFull());
+  const localFavFull = useLocalFavoritesStore((s) => s.isFull(isPremium));
   const storeFavoritesQuery = useStoreFavoritesList({ limit: 8, enabled: !!me });
   const localStoreFavorites = useLocalStoreFavoritesStore((s) => s.favorites);
 

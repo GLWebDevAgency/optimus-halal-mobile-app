@@ -220,7 +220,7 @@ export default function ScanResultScreen() {
           certifierId: p.certifierId ?? null,
           certifierName: p.certifierName ?? null,
           certifierTrustScore: scanMutation.data?.certifierData?.trustScore ?? null,
-        });
+        }, isPremium);
       }
     }
   }, [scanMutation.isSuccess, isGuest, isViewOnly, scanMutation.data, barcode]);
@@ -605,7 +605,7 @@ export default function ScanResultScreen() {
           name: product.name,
           imageUrl: product.imageUrl ?? null,
           halalStatus: product.halalStatus ?? "unknown",
-        });
+        }, isPremium);
         if (!added) {
           router.push({ pathname: "/paywall" as any, params: { trigger: "favorites" } });
         }
@@ -1132,7 +1132,7 @@ export default function ScanResultScreen() {
       </Animated.ScrollView>
 
       {/* Quota banner — anonymous users only, hidden during trial */}
-      {isGuest && !useTrialStore.getState().isTrialActive() && remainingScans !== null && remainingScans !== undefined && remainingScans <= Math.ceil(DAILY_SCAN_LIMIT * 0.1) && (
+      {isGuest && !isPremium && remainingScans !== null && remainingScans !== undefined && remainingScans <= Math.ceil(DAILY_SCAN_LIMIT * 0.1) && (
         <Animated.View
           entering={FadeInUp.delay(1000).duration(400)}
           style={{

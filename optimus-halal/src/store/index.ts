@@ -441,10 +441,11 @@ export interface LocalFavorite {
 
 interface LocalFavoritesState {
   favorites: LocalFavorite[];
-  addFavorite: (fav: Omit<LocalFavorite, "addedAt">) => boolean;
+  /** @param hasPremiumAccess — pass true for trial/premium users (no limit) */
+  addFavorite: (fav: Omit<LocalFavorite, "addedAt">, hasPremiumAccess?: boolean) => boolean;
   removeFavorite: (productId: string) => void;
   isFavorite: (productId: string) => boolean;
-  isFull: () => boolean;
+  isFull: (hasPremiumAccess?: boolean) => boolean;
   clear: () => void;
 }
 
@@ -453,10 +454,9 @@ export const useLocalFavoritesStore = create<LocalFavoritesState>()(
     (set, get) => ({
       favorites: [],
 
-      addFavorite: (fav) => {
+      addFavorite: (fav, hasPremiumAccess = false) => {
         const state = get();
-        const trialActive = useTrialStore.getState().isTrialActive();
-        if (!trialActive && state.favorites.length >= LOCAL_FAVORITES_LIMIT) return false;
+        if (!hasPremiumAccess && state.favorites.length >= LOCAL_FAVORITES_LIMIT) return false;
         if (state.favorites.some((f) => f.productId === fav.productId)) return true;
         set({
           favorites: [
@@ -475,8 +475,8 @@ export const useLocalFavoritesStore = create<LocalFavoritesState>()(
         return get().favorites.some((f) => f.productId === productId);
       },
 
-      isFull: () => {
-        if (useTrialStore.getState().isTrialActive()) return false;
+      isFull: (hasPremiumAccess = false) => {
+        if (hasPremiumAccess) return false;
         return get().favorites.length >= LOCAL_FAVORITES_LIMIT;
       },
 
@@ -509,10 +509,10 @@ export interface LocalStoreFavorite {
 
 interface LocalStoreFavoritesState {
   favorites: LocalStoreFavorite[];
-  addFavorite: (fav: Omit<LocalStoreFavorite, "addedAt">) => boolean;
+  addFavorite: (fav: Omit<LocalStoreFavorite, "addedAt">, hasPremiumAccess?: boolean) => boolean;
   removeFavorite: (storeId: string) => void;
   isFavorite: (storeId: string) => boolean;
-  isFull: () => boolean;
+  isFull: (hasPremiumAccess?: boolean) => boolean;
   clear: () => void;
 }
 
@@ -521,10 +521,9 @@ export const useLocalStoreFavoritesStore = create<LocalStoreFavoritesState>()(
     (set, get) => ({
       favorites: [],
 
-      addFavorite: (fav) => {
+      addFavorite: (fav, hasPremiumAccess = false) => {
         const state = get();
-        const trialActive = useTrialStore.getState().isTrialActive();
-        if (!trialActive && state.favorites.length >= LOCAL_STORE_FAVORITES_LIMIT) return false;
+        if (!hasPremiumAccess && state.favorites.length >= LOCAL_STORE_FAVORITES_LIMIT) return false;
         if (state.favorites.some((f) => f.storeId === fav.storeId)) return true;
         set({
           favorites: [
@@ -543,8 +542,8 @@ export const useLocalStoreFavoritesStore = create<LocalStoreFavoritesState>()(
         return get().favorites.some((f) => f.storeId === storeId);
       },
 
-      isFull: () => {
-        if (useTrialStore.getState().isTrialActive()) return false;
+      isFull: (hasPremiumAccess = false) => {
+        if (hasPremiumAccess) return false;
         return get().favorites.length >= LOCAL_STORE_FAVORITES_LIMIT;
       },
 
@@ -581,7 +580,8 @@ export interface LocalScanHistoryItem {
 
 interface LocalScanHistoryState {
   scans: LocalScanHistoryItem[];
-  addScan: (scan: Omit<LocalScanHistoryItem, "scannedAt">) => void;
+  /** @param hasPremiumAccess — true for trial/premium (keeps 50 items vs 10) */
+  addScan: (scan: Omit<LocalScanHistoryItem, "scannedAt">, hasPremiumAccess?: boolean) => void;
   clear: () => void;
 }
 
@@ -590,13 +590,10 @@ export const useLocalScanHistoryStore = create<LocalScanHistoryState>()(
     (set, get) => ({
       scans: [],
 
-      addScan: (scan) => {
+      addScan: (scan, hasPremiumAccess = false) => {
         const state = get();
-        const trialActive = useTrialStore.getState().isTrialActive();
-        // Remove duplicate if same barcode was scanned before
         const filtered = state.scans.filter((s) => s.barcode !== scan.barcode);
-        // Trial/premium: keep 50 locally as cache; free: keep only 3
-        const limit = trialActive ? 50 : LOCAL_HISTORY_LIMIT;
+        const limit = hasPremiumAccess ? 50 : LOCAL_HISTORY_LIMIT;
         set({
           scans: [
             { ...scan, scannedAt: new Date().toISOString() },
