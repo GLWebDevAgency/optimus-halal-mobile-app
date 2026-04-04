@@ -433,7 +433,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   const { isDark, effectiveTheme } = useTheme();
-  const { setColorScheme } = useNativeWindColorScheme();
+  const { colorScheme, setColorScheme } = useNativeWindColorScheme();
 
   const [nunitoLoaded] = useNunitoFonts({
     Nunito_400Regular,
@@ -453,13 +453,16 @@ export default function RootLayout() {
 
   const fontsLoaded = nunitoLoaded && nunitoSansLoaded;
 
-  // Sync NativeWind dark mode synchronously before paint to avoid
-  // a 1-frame flash where dark: classes lag behind inline colors.
-  // NOTE: setColorScheme intentionally excluded from deps — NativeWind
-  // returns a new function reference on each render, causing an infinite loop.
+  // Sync NativeWind dark mode — only when the value actually differs.
+  // Without the guard, switching to "system" causes a loop:
+  //   Appearance.setColorScheme(null) → useColorScheme() changes →
+  //   effectiveTheme changes → setColorScheme() → re-render → repeat.
+  // Comparing against NativeWind's current colorScheme breaks the cycle.
   useLayoutEffect(() => {
-    setColorScheme(effectiveTheme);
-  }, [effectiveTheme]);
+    if (colorScheme !== effectiveTheme) {
+      setColorScheme(effectiveTheme);
+    }
+  }, [effectiveTheme, colorScheme]);
 
   // Android navigation bar color — async native call, no layout impact
   useEffect(() => {
