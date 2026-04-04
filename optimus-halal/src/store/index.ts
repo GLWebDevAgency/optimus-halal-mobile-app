@@ -7,56 +7,34 @@
 import { Appearance } from "react-native";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { User, ScanRecord, Store } from "@/types";
+import type { ScanRecord, Store } from "@/types";
 import type { Language } from "@/i18n";
 import type { MadhabId } from "@/components/scan/scan-types";
 import { defaultFeatureFlags, type FeatureFlags } from "@constants/config";
 import { mmkvStorage } from "@/lib/storage";
 
 /**
- * Auth State — Naqiy+ subscribers only
+ * Auth Cleanup Store — Naqiy+ logout only
  *
- * Guest users never touch this store (no account, device-ID tracked).
- * Populated after Naqiy+ account creation (post-RevenueCat payment)
- * or login. Cleared on logout via clearTokens() + queryClient.clear().
+ * Source of truth for auth state is AuthContext (useMe() in _layout.tsx).
+ * This store exists ONLY to clear persisted MMKV data on logout/delete.
+ * It persists nothing meaningful — the `logout()` action resets it.
+ *
+ * Why persist? So that if the app is killed mid-logout, the next rehydration
+ * starts with a clean slate instead of stale user data.
  */
-interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  setUser: (user: User | null) => void;
+interface AuthCleanupState {
   logout: () => void;
-  _setLoading: (loading: boolean) => void;
 }
 
-export const useLocalAuthStore = create<AuthState>()(
+export const useLocalAuthStore = create<AuthCleanupState>()(
   persist(
     (set) => ({
-      user: null,
-      isAuthenticated: false,
-      isLoading: true,
-      setUser: (user) =>
-        set({
-          user,
-          isAuthenticated: !!user,
-          isLoading: false,
-        }),
-      logout: () =>
-        set({
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-        }),
-      _setLoading: (loading: boolean) => set({ isLoading: loading }),
+      logout: () => set({}),
     }),
     {
       name: "auth-storage",
       storage: createJSONStorage(() => mmkvStorage),
-      onRehydrateStorage: () => (_state, error) => {
-        if (error) {
-          console.warn("[Store] useLocalAuthStore rehydration error:", error);
-        }
-      },
     }
   )
 );
@@ -750,15 +728,38 @@ export const useLocalDietaryPreferencesStore = create<DietaryPreferencesState>()
 /**
  * Trial State — 7-day full access for new users
  *
- * On first app launch, users get 7 days of full Naqiy+ access.
- * After 7 days: downgrade to free tier (scans free, AI analyses limited, premium features locked).
- * trialStartDate is set once and never changes.
+ * **Source of truth**: Backend `devices.trialExpiresAt` (server-side, reinstall-safe).
+ * **MMKV cache**: Provides instant UX on startup; synced from server on each launch
+ * via `device.getTrialStatus` tRPC query.
+ *
+ * Flow:
+ * 1. First launch → backend upsertDevice() creates trial (7 days)
+ * 2. Client calls `syncFromServer()` → writes server dates to MMKV
+ * 3. `isTrialActive()` reads from MMKV cache (instant, no network)
+ * 4. After 7 days → server says expired → MMKV synced → free tier
+ *
+ * Anti-fraud: Device ID is in SecureStore (Keychain/EncryptedSharedPrefs),
+ * so reinstall doesn't generate a new trial. MMKV may reset, but
+ * `syncFromServer()` immediately restores the server state.
  */
-const TRIAL_DURATION_DAYS = 7;
 
 interface TrialState {
+  /** ISO string — synced from server `devices.trialStartedAt` */
   trialStartDate: string | null;
+  /** ISO string — synced from server `devices.trialExpiresAt` */
+  trialExpiresAt: string | null;
+  /** Server confirmed this trial has expired */
+  serverConfirmedExpired: boolean;
+  /** Seed local cache on first launch (before server sync) */
   startTrial: () => void;
+  /** Sync from server response — the authoritative source */
+  syncFromServer: (data: {
+    isActive: boolean;
+    hasExpired: boolean;
+    daysRemaining: number;
+    startsAt: string | null;
+    expiresAt: string | null;
+  }) => void;
   isTrialActive: () => boolean;
   getTrialDaysRemaining: () => number;
   hasTrialExpired: () => boolean;
@@ -769,13 +770,28 @@ export const useTrialStore = create<TrialState>()(
   persist(
     (set, get) => ({
       trialStartDate: null,
+      trialExpiresAt: null,
+      serverConfirmedExpired: false,
 
       startTrial: () => {
         const state = get();
-        // Only set once — idempotent
         if (!state.trialStartDate) {
-          set({ trialStartDate: new Date().toISOString() });
+          const now = new Date();
+          const expires = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+          set({
+            trialStartDate: now.toISOString(),
+            trialExpiresAt: expires.toISOString(),
+            serverConfirmedExpired: false,
+          });
         }
+      },
+
+      syncFromServer: (data) => {
+        set({
+          trialStartDate: data.startsAt,
+          trialExpiresAt: data.expiresAt,
+          serverConfirmedExpired: data.hasExpired,
+        });
       },
 
       hasTrialStarted: () => {
@@ -783,33 +799,24 @@ export const useTrialStore = create<TrialState>()(
       },
 
       isTrialActive: () => {
-        const { trialStartDate } = get();
-        if (!trialStartDate) return false;
-        const start = new Date(trialStartDate);
-        const now = new Date();
-        const diffMs = now.getTime() - start.getTime();
-        const diffDays = diffMs / (1000 * 60 * 60 * 24);
-        return diffDays < TRIAL_DURATION_DAYS;
+        const { trialExpiresAt, serverConfirmedExpired } = get();
+        if (serverConfirmedExpired) return false;
+        if (!trialExpiresAt) return false;
+        return new Date(trialExpiresAt) > new Date();
       },
 
       getTrialDaysRemaining: () => {
-        const { trialStartDate } = get();
-        if (!trialStartDate) return 0;
-        const start = new Date(trialStartDate);
-        const now = new Date();
-        const diffMs = now.getTime() - start.getTime();
-        const diffDays = diffMs / (1000 * 60 * 60 * 24);
-        return Math.max(0, Math.ceil(TRIAL_DURATION_DAYS - diffDays));
+        const { trialExpiresAt, serverConfirmedExpired } = get();
+        if (serverConfirmedExpired || !trialExpiresAt) return 0;
+        const remaining = new Date(trialExpiresAt).getTime() - Date.now();
+        return Math.max(0, Math.ceil(remaining / (1000 * 60 * 60 * 24)));
       },
 
       hasTrialExpired: () => {
-        const { trialStartDate } = get();
-        if (!trialStartDate) return false;
-        const start = new Date(trialStartDate);
-        const now = new Date();
-        const diffMs = now.getTime() - start.getTime();
-        const diffDays = diffMs / (1000 * 60 * 60 * 24);
-        return diffDays >= TRIAL_DURATION_DAYS;
+        const { trialExpiresAt, serverConfirmedExpired, trialStartDate } = get();
+        if (serverConfirmedExpired) return true;
+        if (!trialStartDate || !trialExpiresAt) return false;
+        return new Date(trialExpiresAt) <= new Date();
       },
     }),
     {

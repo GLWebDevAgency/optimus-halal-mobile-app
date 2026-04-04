@@ -28,7 +28,6 @@ import { Image } from "expo-image";
 import { useHaptics, useTheme, useTranslation } from "@/hooks";
 import { usePasswordResetStore } from "@/store";
 import { ImpactFeedbackStyle, NotificationFeedbackType } from "expo-haptics";
-import * as Clipboard from "expo-clipboard";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -80,10 +79,11 @@ export default function ResetCodeScreen() {
     );
   }, [shakeX]);
 
-  // Auto-paste from clipboard on mount
+  // Auto-paste from clipboard on mount (lazy import — module may be missing in Expo Go)
   useEffect(() => {
     const checkClipboard = async () => {
       try {
+        const Clipboard = await import("expo-clipboard");
         const hasString = await Clipboard.hasStringAsync();
         if (!hasString) return;
 
@@ -97,11 +97,10 @@ export default function ResetCodeScreen() {
           // Security: clear clipboard after paste (OWASP)
           await Clipboard.setStringAsync("");
           impact(ImpactFeedbackStyle.Light);
-          // Focus last box
           inputRefs.current[CODE_LENGTH - 1]?.focus();
         }
       } catch {
-        // Clipboard access denied — no-op
+        // Clipboard module unavailable or access denied — no-op
       }
     };
     checkClipboard();
@@ -121,8 +120,8 @@ export default function ResetCodeScreen() {
         setCode(chars.join(""));
         inputRefs.current[CODE_LENGTH - 1]?.focus();
         impact(ImpactFeedbackStyle.Light);
-        // Clear clipboard after paste
-        Clipboard.setStringAsync("").catch(() => {});
+        // Clear clipboard after paste (lazy — module may be absent)
+        import("expo-clipboard").then((C) => C.setStringAsync("")).catch(() => {});
         return;
       }
 

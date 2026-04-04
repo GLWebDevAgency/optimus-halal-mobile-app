@@ -31,7 +31,7 @@ import { useHaptics } from "@/hooks/useHaptics";
 import { usePremium } from "@/hooks/usePremium";
 import { useFeatureFlagsStore } from "@/store";
 import { trackEvent } from "@/lib/analytics";
-import { getOfferings, purchasePackage, restorePurchases } from "@/services/purchases";
+import { getOfferings, purchasePackage, restorePurchases, isPremiumCustomer } from "@/services/purchases";
 import { isAuthenticated as hasStoredTokens } from "@/services/api";
 import { APP_CONFIG } from "@/constants/config";
 import type { PurchasesPackage } from "react-native-purchases";
@@ -54,7 +54,7 @@ export default function PremiumPaywallScreen() {
   const { colors, isDark } = useTheme();
   const { t } = useTranslation();
   const { impact } = useHaptics();
-  const { isPremium } = usePremium();
+  const { isPaidPremium } = usePremium();
   const { flags } = useFeatureFlagsStore();
   const [selectedPlan, setSelectedPlan] = useState<PlanId>("annual");
   const [purchasing, setPurchasing] = useState(false);
@@ -151,8 +151,8 @@ export default function PremiumPaywallScreen() {
     );
   }
 
-  // If already premium, show status
-  if (isPremium) {
+  // If already a PAID subscriber, show status (trial users can still purchase)
+  if (isPaidPremium) {
     return (
       <View style={{ flex: 1 }}>
         <PremiumBackground />
@@ -193,7 +193,17 @@ export default function PremiumPaywallScreen() {
 
     try {
       setPurchasing(true);
-      await purchasePackage(plan.rcPackage);
+      const customerInfo = await purchasePackage(plan.rcPackage);
+
+      // Verify entitlement is actually active before proceeding.
+      // purchasePackage() can succeed (no throw) but the entitlement
+      // may not be active yet if receipt validation is pending.
+      if (!isPremiumCustomer(customerInfo)) {
+        trackEvent("premium_purchase_entitlement_missing", { product_id: selectedPlan });
+        Alert.alert("Naqiy+", "Achat en cours de validation...");
+        return;
+      }
+
       trackEvent("premium_purchase_completed", { product_id: selectedPlan });
       if (!hasStoredTokens()) {
         router.replace("/(auth)/signup" as any);
@@ -213,11 +223,18 @@ export default function PremiumPaywallScreen() {
     impact();
     try {
       setPurchasing(true);
-      await restorePurchases();
-      Alert.alert("Naqiy+", t.premium.enjoyFeatures);
+      const customerInfo = await restorePurchases();
+
+      if (!isPremiumCustomer(customerInfo)) {
+        Alert.alert("Naqiy+", "Aucun abonnement actif trouvé");
+        return;
+      }
+
+      trackEvent("premium_restore_success");
       if (!hasStoredTokens()) {
         router.replace("/(auth)/signup" as any);
       } else {
+        Alert.alert("Naqiy+", t.premium.enjoyFeatures);
         router.back();
       }
     } catch (err: any) {

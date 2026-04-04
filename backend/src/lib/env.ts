@@ -49,9 +49,16 @@ export type Env = z.infer<typeof envSchema>;
 function loadEnv(): Env {
   // In test mode, use test defaults — no real env needed
   if (process.env.VITEST) {
+    // TEST_DATABASE_URL takes precedence, then fallback to Docker default.
+    // IMPORTANT: We do NOT use process.env.DATABASE_URL here because .env
+    // points to the dev DB (PgBouncer/optimus_halal) — tests MUST use
+    // the isolated naqiy_test database to avoid corrupting dev data.
     const testEnv: Record<string, unknown> = {
       ...process.env,
-      DATABASE_URL: process.env.DATABASE_URL ?? "postgres://postgres:postgres@localhost:5433/naqiy_test",
+      // TEST_DATABASE_URL lets CI or local override the test DB connection.
+      // Default: Docker PostGIS on 5432. If local PG conflicts on 5432,
+      // set TEST_DATABASE_URL in .env or shell to point to the right host/port.
+      DATABASE_URL: process.env.TEST_DATABASE_URL ?? "postgres://postgres:postgres@localhost:5432/naqiy_test",
       REDIS_URL: process.env.REDIS_URL ?? "redis://localhost:6379",
       JWT_SECRET: process.env.JWT_SECRET ?? "test-secret-at-least-32-chars-long-for-vitest",
       JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET ?? "test-refresh-secret-at-least-32-chars-long",

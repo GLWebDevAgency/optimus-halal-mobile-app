@@ -1,7 +1,7 @@
 import type { Context as HonoContext } from "hono";
 import { eq, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { users, devices } from "../db/schema/index.js";
+import { users, devices, refreshTokens } from "../db/schema/index.js";
 import { redis } from "../lib/redis.js";
 import { verifyAccessToken } from "../services/auth.service.js";
 import { logger } from "../lib/logger.js";
@@ -37,8 +37,12 @@ export interface Context {
 }
 
 /**
- * Resolve subscription tier: Redis first, PgBouncer fallback.
- * Eliminates 1 DB roundtrip per authenticated request (~30-50% PgBouncer load reduction).
+ * Resolve subscription tier: Redis first, DB fallback.
+ *
+ * Defense-in-depth: even if the RevenueCat EXPIRATION webhook is delayed,
+ * we check `subscription_expires_at` here. If premium has lapsed, we
+ * auto-downgrade in DB and invalidate the cache — the user sees "free"
+ * on the very next request instead of waiting for a webhook that may never come.
  */
 async function resolveSubscriptionTier(userId: string): Promise<"free" | "premium"> {
   const cacheKey = `${TIER_CACHE_PREFIX}${userId}`;
@@ -52,9 +56,25 @@ async function resolveSubscriptionTier(userId: string): Promise<"free" | "premiu
 
   const user = await db.query.users.findFirst({
     where: eq(users.id, userId),
-    columns: { subscriptionTier: true },
+    columns: { subscriptionTier: true, subscriptionExpiresAt: true },
   });
-  const tier = user?.subscriptionTier ?? "free";
+
+  let tier: "free" | "premium" = user?.subscriptionTier ?? "free";
+
+  // Auto-downgrade if premium has lapsed (webhook may be delayed)
+  if (
+    tier === "premium" &&
+    user?.subscriptionExpiresAt &&
+    user.subscriptionExpiresAt < new Date()
+  ) {
+    tier = "free";
+    // Fire-and-forget: downgrade tier + revoke tokens (forces re-auth → logout)
+    db.update(users)
+      .set({ subscriptionTier: "free", subscriptionExpiresAt: null })
+      .where(eq(users.id, userId))
+      .then(() => db.delete(refreshTokens).where(eq(refreshTokens.userId, userId)))
+      .catch((err) => logger.warn("Auto-downgrade failed", { userId, error: String(err) }));
+  }
 
   try {
     await redis.setex(cacheKey, TIER_CACHE_TTL, tier);

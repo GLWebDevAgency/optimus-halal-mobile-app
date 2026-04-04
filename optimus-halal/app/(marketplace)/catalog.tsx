@@ -32,7 +32,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
 
-import { useLocalAuthStore, useLocalCartStore } from "@/store";
+import { useLocalCartStore } from "@/store";
+import { useAuth } from "../_layout";
 import { AppIcon } from "@/lib/icons";
 
 const CATEGORY_IDS = ["all", "food", "cosmetics", "supplements", "fashion"] as const;
@@ -222,7 +223,7 @@ export default function MarketplaceCatalogScreen() {
     label: t.catalog.categories[id],
   })), [t]);
 
-  const { user } = useLocalAuthStore();
+  const { user } = useAuth();
   const { itemCount } = useLocalCartStore();
 
   // Accept optional search/category params from scan-result navigation

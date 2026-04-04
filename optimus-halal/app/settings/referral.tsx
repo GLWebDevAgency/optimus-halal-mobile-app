@@ -30,7 +30,7 @@ import {
   CloudSlashIcon,
 } from "phosphor-react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
-import * as Clipboard from "expo-clipboard";
+// expo-clipboard: lazy import to avoid crash when native module is missing
 
 import { PressableScale } from "@/components/ui/PressableScale";
 import { PremiumBackground } from "@/components/ui";
@@ -58,7 +58,12 @@ export default function ReferralScreen() {
 
   const handleCopy = async () => {
     if (!data?.code) return;
-    await Clipboard.setStringAsync(data.code);
+    try {
+      const Clipboard = await import("expo-clipboard");
+      await Clipboard.setStringAsync(data.code);
+    } catch {
+      // Native module unavailable — silently fail
+    }
     notification();
     setCopied(true);
     trackEvent("referral_code_copied");

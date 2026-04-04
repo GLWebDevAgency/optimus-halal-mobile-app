@@ -1662,7 +1662,7 @@ export default function HomeScreen() {
         {/* ====================================================
             SECTION 3: FEATURED CONTENT (horizontal carousel)
             ==================================================== */}
-        {defaultFeatureFlags.featuredArticlesEnabled && !isGuest && (featuredItems.length > 0 || articlesQuery.isError) && (
+        {defaultFeatureFlags.featuredArticlesEnabled && isPremium && (featuredItems.length > 0 || articlesQuery.isError) && (
           <Animated.View
             entering={FadeInDown.delay(360).duration(500)}
             style={{ marginTop: 24 }}

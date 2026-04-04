@@ -24,9 +24,11 @@ import { featureFlagsRouter } from "./routers/feature-flags.js";
 import { analyticsRouter } from "./routers/analytics.js";
 import { recallRouter } from "./routers/recall.js";
 import { contentSourceRouter } from "./routers/content-source.js";
+import { deviceRouter } from "./routers/device.js";
 
 export const appRouter = router({
   auth: authRouter,
+  device: deviceRouter,
   profile: profileRouter,
   scan: scanRouter,
   product: productRouter,

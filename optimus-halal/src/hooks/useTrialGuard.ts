@@ -17,8 +17,8 @@ import { usePremium } from "./usePremium";
  * Use this to guard any consumer of premium-only local data.
  */
 export function useCanAccessPremiumData(): boolean {
-  const { isPremium, isTrialActive } = usePremium();
-  return isPremium || isTrialActive;
+  const { isPremium } = usePremium();
+  return isPremium; // isPremium = paid OR trial — both have full feature access
 }
 
 /**

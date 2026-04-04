@@ -28,7 +28,8 @@ import { useTheme, useTranslation } from "@/hooks";
 import { initializeTokens, isAuthenticated as hasStoredTokens, clearTokens, setApiLanguage, setOnAuthFailure } from "@/services/api";
 import { DevScanSeeder } from "@/utils/seed-scan-history";
 import { useMe } from "@/hooks/useAuth";
-import { usePremium } from "@/hooks/usePremium";
+// usePremium is consumed by child screens (profile, paywall, etc.) — not needed in root layout.
+// Subscription expiration is handled server-side (see comment below).
 import { useAppUpdate } from "@/hooks/useAppUpdate";
 import { ForceUpdateModal } from "@/components/ui/ForceUpdateModal";
 import { APP_VERSION } from "@/utils/appVersion";
@@ -38,11 +39,11 @@ import { useColorScheme as useNativeWindColorScheme } from "nativewind";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/ui";
 import { logger } from "@/lib/logger";
-import { initPurchases, logoutPurchases } from "@/services/purchases";
+import { initPurchases } from "@/services/purchases";
 import { useRemoteFlags } from "@/hooks/useRemoteFlags";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
-import { initSentry, setGuestContext, setUserContext, clearSentryUser } from "../src/lib/sentry";
-import { initAnalytics, identifyUser, setSuperProperties, resetUser } from "../src/lib/analytics";
+import { initSentry, setGuestContext, setUserContext } from "../src/lib/sentry";
+import { initAnalytics, identifyUser, setSuperProperties } from "../src/lib/analytics";
 import { getDeviceId } from "@/services/api/client";
 import { setNavigationBarTheme } from "@/lib/navigationBar";
 import {
@@ -251,6 +252,21 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // Step 1b: Sync trial state from server (anonymous users)
+  // The server's devices.trialExpiresAt is the source of truth — MMKV is just cache.
+  // This query runs for guests only (premium users don't need trial state).
+  const trialQuery = trpc.device.getTrialStatus.useQuery(undefined, {
+    enabled: tokensReady && !hasStoredTokens(),
+    staleTime: 1000 * 60 * 10, // 10 min — trial state rarely changes
+    retry: 1,
+  });
+
+  useEffect(() => {
+    if (trialQuery.data) {
+      useTrialStore.getState().syncFromServer(trialQuery.data);
+    }
+  }, [trialQuery.data]);
+
   // Step 2: Once tokens loaded, fetch user profile (only if tokens exist)
   const shouldFetchMe = tokensReady && hasStoredTokens();
   const meQuery = useMe({ enabled: shouldFetchMe });
@@ -278,23 +294,13 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
     };
   }, [tokensReady, meQuery.data, meQuery.isLoading, meQuery.isError, meQuery.refetch]);
 
-  // ── Force-logout: expired subscription ──
-  // If tokens exist but RevenueCat says not premium and meQuery resolved
-  // with a user → subscription expired, force logout to prevent stale access.
-  const { isPremium, isLoading: premiumLoading } = usePremium();
-
-  useEffect(() => {
-    if (premiumLoading) return;
-    const hasTokens = tokensReady && hasStoredTokens();
-    if (hasTokens && !isPremium && !meQuery.isLoading && meQuery.data) {
-      logger.warn("Auth", "Subscription expired — force logout");
-      clearTokens();
-      queryClient.clear();
-      resetUser();
-      clearSentryUser();
-      logoutPurchases().catch(() => {});
-    }
-  }, [tokensReady, isPremium, premiumLoading, meQuery.data, meQuery.isLoading]);
+  // ── Subscription expiration — server-authoritative ──
+  // Best practice (Spotify, Duolingo, Yuka): the client NEVER force-logouts
+  // based on local premium state. The natural auth cycle handles it:
+  //   1. Webhook EXPIRATION → backend sets tier=free + invalidates tier cache
+  //   2. Access token expires (15min) → client refreshes (succeeds)
+  //   3. Next /me query returns subscriptionTier=free → UI gates features
+  //   4. If refresh fails → onAuthFailure (registered above) → clean logout
 
   // Step 3: Version check + OTA updates
   const updateState = useAppUpdate();
@@ -446,10 +452,12 @@ export default function RootLayout() {
   const fontsLoaded = nunitoLoaded && nunitoSansLoaded;
 
   // Sync NativeWind dark mode synchronously before paint to avoid
-  // a 1-frame flash where dark: classes lag behind inline colors
+  // a 1-frame flash where dark: classes lag behind inline colors.
+  // NOTE: setColorScheme intentionally excluded from deps — NativeWind
+  // returns a new function reference on each render, causing an infinite loop.
   useLayoutEffect(() => {
     setColorScheme(effectiveTheme);
-  }, [effectiveTheme, setColorScheme]);
+  }, [effectiveTheme]);
 
   // Android navigation bar color — async native call, no layout impact
   useEffect(() => {

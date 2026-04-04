@@ -47,15 +47,12 @@ import { Image } from "expo-image";
 import { Button, Input, LocationPicker, PremiumBackground } from "@/components/ui";
 import { BackButton } from "@/components/ui/BackButton";
 import { PressableScale } from "@/components/ui/PressableScale";
-import { useLocalAuthStore } from "@/store";
-import { authService } from "@/services/api/auth.service";
 import type { City } from "@/constants/locations";
 import { useTranslation, useHaptics, useTheme } from "@/hooks";
+import { useRegister } from "@/hooks/useAuth";
 import { APP_CONFIG } from "@/constants/config";
 import { brand, gold } from "@/theme/colors";
-import { identifyUser as identifyPurchasesUser } from "@/services/purchases";
 import { trpc } from "@/lib/trpc";
-import { logger } from "@/lib/logger";
 
 const logoSource = require("@assets/images/logo_naqiy.webp");
 
@@ -63,18 +60,17 @@ export default function SignUpScreen() {
   const insets = useSafeAreaInsets();
   const { isDark, colors } = useTheme();
   const { impact, notification } = useHaptics();
-  const { t, language, isRTL } = useTranslation();
+  const { t, isRTL } = useTranslation();
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [referralCode, setReferralCode] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const { setUser } = useLocalAuthStore();
+  const registerMutation = useRegister();
   const applyReferralCode = trpc.referral.applyCode.useMutation();
 
   // Shake animation for error banner
@@ -117,75 +113,43 @@ export default function SignUpScreen() {
     setSelectedCity(city);
   }, []);
 
-  const handleSignUp = useCallback(async () => {
+  const handleSignUp = useCallback(() => {
     if (!validateForm()) return;
-
-    setIsLoading(true);
     impact();
 
-    try {
-      const response = await authService.register({
+    registerMutation.mutate(
+      {
         email: email.trim().toLowerCase(),
         password,
         displayName: fullName,
-        phoneNumber: "",
-        preferredLanguage: (["fr", "en", "ar"].includes(language) ? language : "fr") as "fr" | "en" | "ar",
-      });
+      },
+      {
+        onSuccess: () => {
+          // useRegister().onSuccess handles ALL side-effects:
+          // - setTokens + invalidateQueries(['auth', 'me'])
+          // - PostHog identify + Sentry context
+          // - RevenueCat identifyUser (links $RCAnonymousID → userId)
+          // - syncLocalDataToCloud (merges guest favorites, history, prefs)
 
-      if (response.success && response.user) {
-        setUser({
-          id: response.user.id,
-          email: response.user.email || email,
-          fullName: response.user.displayName || fullName,
-          location: selectedCity
-            ? { city: selectedCity.name, country: "France" }
-            : undefined,
-          preferences: {
-            preferredCertifications: [],
-            dietaryExclusions: [],
-            pushNotificationsEnabled: true,
-            darkModeEnabled: "system",
-            language,
-          },
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        });
+          // Apply referral code if provided — fire-and-forget
+          const trimmedCode = referralCode.trim();
+          if (trimmedCode.length >= 4) {
+            applyReferralCode.mutate({ code: trimmedCode });
+          }
 
-        // Link RevenueCat anonymous purchase to this new account.
-        // Critical: without this, the $RCAnonymousID purchase stays orphaned
-        // and webhooks can't match the user. Fire-and-forget — don't block navigation.
-        identifyPurchasesUser(response.user.id).catch((e) =>
-          logger.warn("Signup", "RevenueCat identify failed (will retry on next launch)", String(e))
-        );
-
-        // Apply referral code if provided — fire-and-forget, don't block navigation
-        const trimmedCode = referralCode.trim();
-        if (trimmedCode.length >= 4) {
-          applyReferralCode.mutate(
-            { code: trimmedCode },
-            {
-              onError: (e) =>
-                logger.warn("Signup", "Referral code failed (non-blocking)", String(e)),
-            },
-          );
-        }
-
-        notification(NotificationFeedbackType.Success);
-        router.replace("/(tabs)");
-      } else {
-        setServerError(response.message || t.auth.magicLink.signupFailed);
-        triggerShake();
-        notification(NotificationFeedbackType.Error);
-      }
-    } catch (error: any) {
-      console.error("[Signup] Error:", error);
-      setServerError(error.message || t.auth.magicLink.signupError);
-      triggerShake();
-      notification(NotificationFeedbackType.Error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [fullName, email, password, selectedCity, referralCode, validateForm, setUser, applyReferralCode, impact, notification, t, language, triggerShake]);
+          notification(NotificationFeedbackType.Success);
+          router.replace("/(tabs)");
+        },
+        onError: (error) => {
+          const message =
+            error instanceof Error ? error.message : t.auth.magicLink.signupError;
+          setServerError(message);
+          triggerShake();
+          notification(NotificationFeedbackType.Error);
+        },
+      },
+    );
+  }, [fullName, email, password, referralCode, validateForm, registerMutation, applyReferralCode, impact, notification, t, triggerShake]);
 
   return (
     <View style={styles.container}>
@@ -389,7 +353,7 @@ export default function SignUpScreen() {
                 variant="primary"
                 size="lg"
                 fullWidth
-                loading={isLoading}
+                loading={registerMutation.isPending}
                 onPress={handleSignUp}
                 accessibilityLabel={t.auth.signup.submit}
                 style={{

@@ -7,7 +7,6 @@
 
 import * as SecureStore from "expo-secure-store";
 import * as Crypto from "expo-crypto";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import superjson from "superjson";
 import { API_CONFIG, STORAGE_KEYS, HTTP_STATUS, ERROR_CODES } from "./config";
@@ -169,15 +168,46 @@ export function isAuthenticated(): boolean {
 // DEVICE ID MANAGEMENT
 // ============================================
 
+/**
+ * Persistent device identifier — survives app reinstalls.
+ *
+ * Uses SecureStore (iOS Keychain / Android EncryptedSharedPreferences)
+ * instead of AsyncStorage which is wiped on reinstall.
+ * This prevents trial abuse via reinstall (same pattern as Spotify/Duolingo).
+ *
+ * Migration: if a legacy AsyncStorage ID exists, we promote it to SecureStore
+ * once, then delete the AsyncStorage entry. This ensures existing devices
+ * keep their identity (and their trial/quota state) across the update.
+ */
 export async function getDeviceId(): Promise<string> {
   try {
-    let deviceId = await AsyncStorage.getItem(STORAGE_KEYS.DEVICE_ID);
-    if (!deviceId) {
-      deviceId = Crypto.randomUUID();
-      await AsyncStorage.setItem(STORAGE_KEYS.DEVICE_ID, deviceId);
+    // 1. Check SecureStore (primary, reinstall-safe)
+    const secureId = await SecureStore.getItemAsync(STORAGE_KEYS.DEVICE_ID);
+    if (secureId) return secureId;
+
+    // 2. Check if there's a legacy AsyncStorage ID to migrate
+    let legacyId: string | null = null;
+    try {
+      const { default: AsyncStorage } = await import(
+        "@react-native-async-storage/async-storage"
+      );
+      legacyId = await AsyncStorage.getItem(STORAGE_KEYS.DEVICE_ID);
+      if (legacyId) {
+        // Promote to SecureStore and clean up legacy
+        await SecureStore.setItemAsync(STORAGE_KEYS.DEVICE_ID, legacyId);
+        await AsyncStorage.removeItem(STORAGE_KEYS.DEVICE_ID);
+        return legacyId;
+      }
+    } catch {
+      // AsyncStorage unavailable or migration failed — proceed with new ID
     }
-    return deviceId;
+
+    // 3. First launch — generate and persist
+    const newId = Crypto.randomUUID();
+    await SecureStore.setItemAsync(STORAGE_KEYS.DEVICE_ID, newId);
+    return newId;
   } catch {
+    // SecureStore completely unavailable (rare) — ephemeral fallback
     return Crypto.randomUUID();
   }
 }

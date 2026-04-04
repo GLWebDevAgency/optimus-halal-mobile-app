@@ -102,14 +102,13 @@ export function isPremiumCustomer(info: CustomerInfo): boolean {
 }
 
 /**
- * Add listener for subscription changes.
- * RevenueCat's listener API returns void (no unsubscribe).
- * Returns a no-op for consistent cleanup pattern.
+ * Add listener for subscription changes (renewals, cancellations, etc.).
+ * Returns a cleanup function to remove the listener on unmount.
  */
 export function onCustomerInfoUpdated(
   listener: (info: CustomerInfo) => void,
 ): () => void {
   if (!isConfigured) return () => {};
-  Purchases.addCustomerInfoUpdateListener(listener);
-  return () => {};
+  const remove = Purchases.addCustomerInfoUpdateListener(listener);
+  return typeof remove === "function" ? remove : () => {};
 }

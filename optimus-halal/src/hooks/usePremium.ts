@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFeatureFlagsStore, useTrialStore } from "@/store";
 import { trpc } from "@/lib/trpc";
 import { router } from "expo-router";
@@ -7,10 +7,20 @@ import { getCustomerInfo, isPremiumCustomer, onCustomerInfoUpdated } from "@/ser
 import { useMe } from "@/hooks/useAuth";
 import type { PaywallTrigger } from "@/types/paywall";
 
-type PremiumTier = "free" | "premium";
+type PremiumTier = "free" | "trial" | "premium";
 
 interface PremiumState {
+  /**
+   * True when the user has full feature access — either via active trial OR paid subscription.
+   * Use this to gate features (scans, favorites, madhab, etc.).
+   */
   isPremium: boolean;
+  /**
+   * True ONLY for paying Naqiy+ subscribers (RevenueCat entitlement or backend tier=premium).
+   * Use this to guard paywall screens — trial users should still see the purchase CTA.
+   */
+  isPaidPremium: boolean;
+  /** True until ALL async sources (RC + backend) have resolved at least once. */
   isLoading: boolean;
   tier: PremiumTier;
   expiresAt: Date | null;
@@ -26,18 +36,23 @@ export function usePremium(): PremiumState {
   const meQuery = useMe({ enabled: hasTokens });
   const isGuest = !meQuery.data && (!hasTokens || meQuery.isError);
 
-  // RevenueCat local entitlement (works for both anonymous & identified users)
+  // ── RevenueCat local entitlement ──
   const [rcPremium, setRcPremium] = useState(false);
+  const [rcLoaded, setRcLoaded] = useState(false);
 
   useEffect(() => {
-    if (!flags.paymentsEnabled) return;
+    if (!flags.paymentsEnabled) {
+      setRcLoaded(true);
+      return;
+    }
 
-    // Check on mount
-    getCustomerInfo().then((info) => {
-      if (info) setRcPremium(isPremiumCustomer(info));
-    }).catch(() => {});
+    getCustomerInfo()
+      .then((info) => {
+        if (info) setRcPremium(isPremiumCustomer(info));
+      })
+      .catch(() => {})
+      .finally(() => setRcLoaded(true));
 
-    // Listen for changes (renewals, cancellations)
     const unsubscribe = onCustomerInfoUpdated((info) => {
       setRcPremium(isPremiumCustomer(info));
     });
@@ -45,7 +60,7 @@ export function usePremium(): PremiumState {
     return unsubscribe;
   }, [flags.paymentsEnabled]);
 
-  // Backend check (only for authenticated users — their subscription state)
+  // ── Backend subscription status (authenticated users only) ──
   const statusQuery = trpc.subscription.getStatus.useQuery(undefined, {
     enabled: flags.paymentsEnabled && !isGuest,
     staleTime: 5 * 60 * 1000,
@@ -60,16 +75,33 @@ export function usePremium(): PremiumState {
     }
   }, [flags.paymentsEnabled, flags.paywallEnabled]);
 
-  // Trial state — check if 7-day trial is currently active
-  const isTrialActive = useTrialStore((s) => s.isTrialActive());
-  const trialDaysRemaining = useTrialStore.getState().getTrialDaysRemaining();
+  // ── Trial state (anonymous users only) ──
+  // Read raw store values via selector (Zustand-reactive, referentially stable).
+  // NEVER call functions like isTrialActive() inside selectors — they read Date.now()
+  // and produce unstable return values that cause infinite re-render loops.
+  const trialExpiresAt = useTrialStore((s) => s.trialExpiresAt);
+  const serverConfirmedExpired = useTrialStore((s) => s.serverConfirmedExpired);
+
+  // Derive trial state from raw values (stable within the same render frame)
+  const isTrialActive = useMemo(() => {
+    if (serverConfirmedExpired) return false;
+    if (!trialExpiresAt) return false;
+    return new Date(trialExpiresAt) > new Date();
+  }, [trialExpiresAt, serverConfirmedExpired]);
+
+  const trialDaysRemaining = useMemo(() => {
+    if (serverConfirmedExpired || !trialExpiresAt) return 0;
+    const remaining = new Date(trialExpiresAt).getTime() - Date.now();
+    return Math.max(0, Math.ceil(remaining / (1000 * 60 * 60 * 24)));
+  }, [trialExpiresAt, serverConfirmedExpired]);
 
   return useMemo(() => {
     if (!flags.paymentsEnabled) {
       return {
         isPremium: false,
+        isPaidPremium: false,
         isLoading: false,
-        tier: "free",
+        tier: "free" as const,
         expiresAt: null,
         provider: null,
         isTrialActive: false,
@@ -78,19 +110,29 @@ export function usePremium(): PremiumState {
       };
     }
 
-    // RevenueCat is the source of truth for entitlement
+    const backendLoading = !isGuest && statusQuery.isLoading;
+    const loading = !rcLoaded || backendLoading;
+
     const backendData = statusQuery.data;
-    const premium = rcPremium || backendData?.tier === "premium" || isTrialActive;
+    const paidPremium = rcPremium || backendData?.tier === "premium";
+    const premium = paidPremium || isTrialActive;
+
+    const tier: PremiumTier = paidPremium
+      ? "premium"
+      : isTrialActive
+        ? "trial"
+        : "free";
 
     return {
       isPremium: premium,
-      isLoading: !isGuest && statusQuery.isLoading,
-      tier: premium ? "premium" : "free",
+      isPaidPremium: paidPremium,
+      isLoading: loading,
+      tier,
       expiresAt: backendData?.expiresAt ? new Date(backendData.expiresAt) : null,
       provider: backendData?.provider ?? (rcPremium ? "revenuecat" : null),
       isTrialActive,
       trialDaysRemaining,
       showPaywall,
     };
-  }, [flags.paymentsEnabled, statusQuery.data, statusQuery.isLoading, rcPremium, isGuest, isTrialActive, trialDaysRemaining, showPaywall]);
+  }, [flags.paymentsEnabled, statusQuery.data, statusQuery.isLoading, rcPremium, rcLoaded, isGuest, isTrialActive, trialDaysRemaining, showPaywall]);
 }

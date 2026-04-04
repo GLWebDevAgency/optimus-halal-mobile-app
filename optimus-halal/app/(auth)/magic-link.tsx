@@ -31,7 +31,7 @@ import Animated, {
 import { Image } from "expo-image";
 import { Input, IconButton, Button, PremiumBackground } from "@/components/ui";
 import { PressableScale } from "@/components/ui/PressableScale";
-import { useLocalAuthStore } from "@/store";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation, useHaptics, useTheme } from "@/hooks";
 const logoSource = require("@assets/images/logo_naqiy.webp");
 
@@ -60,7 +60,7 @@ export default function MagicLinkLoginScreen() {
   const [expiresIn, setExpiresIn] = useState(900); // 15 minutes
   const [isNewUser, setIsNewUser] = useState(false);
 
-  const { setUser } = useLocalAuthStore();
+  const queryClient = useQueryClient();
 
   // Load pending email on mount (if returning to screen)
   useEffect(() => {
@@ -162,22 +162,8 @@ export default function MagicLinkLoginScreen() {
           setAuthState("success");
           notification();
 
-          // Set user in store
-          setUser({
-            id: response.user.id,
-            email: response.user.email,
-            fullName: response.user.displayName || email.split("@")[0],
-            avatarUrl: response.user.avatarUrl,
-            preferences: {
-              preferredCertifications: [],
-              dietaryExclusions: [],
-              pushNotificationsEnabled: true,
-              darkModeEnabled: "system",
-              language: "fr",
-            },
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          });
+          // Invalidate useMe() query so AuthContext picks up the new user
+          await queryClient.invalidateQueries({ queryKey: [["auth", "me"]] });
 
           // Navigate to app after short delay
           setTimeout(() => {
@@ -194,7 +180,7 @@ export default function MagicLinkLoginScreen() {
         notification(NotificationFeedbackType.Error);
       }
     },
-    [email, setUser]
+    [email, queryClient]
   );
 
   const handleResend = useCallback(async () => {
