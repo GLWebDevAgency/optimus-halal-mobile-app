@@ -96,7 +96,9 @@ export const useThemeStore = create<ThemeState>()(
     (set) => ({
       theme: "system",
       setTheme: (theme) => {
-        // Sync native runtime: StatusBar, KeyboardAppearance, ActionSheets, etc.
+        // Sync native runtime for explicit choices only.
+        // "system" → null resets to OS default (no forced override).
+        // Must be called BEFORE set() to avoid render loop.
         Appearance.setColorScheme(theme === "system" ? null : theme);
         set({ theme });
       },
@@ -105,9 +107,10 @@ export const useThemeStore = create<ThemeState>()(
       name: "theme-storage",
       storage: createJSONStorage(() => mmkvStorage),
       onRehydrateStorage: () => (state) => {
-        if (!state) return;
-        // Restore native color scheme on app launch
-        Appearance.setColorScheme(state.theme === "system" ? null : state.theme);
+        if (!state || state.theme === "system") return;
+        // Restore explicit theme choice on app launch (light or dark only).
+        // Skip for "system" — OS preference is already the default.
+        Appearance.setColorScheme(state.theme);
       },
     }
   )
