@@ -6,20 +6,6 @@
  */
 
 // ============================================
-// API HOOKS
-// ============================================
-
-export {
-  useQuery,
-  useMutation,
-  useInfiniteQuery,
-  useDebouncedValue,
-  usePrevious,
-  useInterval,
-  useRefreshOnFocus,
-} from './useApi';
-
-// ============================================
 // THEME HOOKS
 // ============================================
 

@@ -133,7 +133,9 @@ const queryClient = new QueryClient({
       refetchOnReconnect: "always",
     },
     mutations: {
-      retry: 1,
+      // Never retry mutations — most are non-idempotent (register, scan, logout).
+      // Retrying can create duplicates. Individual mutations can override if needed.
+      retry: false,
     },
   },
 });

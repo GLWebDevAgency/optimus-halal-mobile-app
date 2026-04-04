@@ -10,6 +10,7 @@ import React, { useEffect, useState } from "react";
 import { AppState, Text } from "react-native";
 import Animated, { FadeInDown, FadeOutUp } from "react-native-reanimated";
 import { useTranslation } from "@/hooks";
+import { API_CONFIG } from "@/services/api/config";
 
 export function OfflineBanner() {
   const [isOffline, setIsOffline] = useState(false);
@@ -20,8 +21,10 @@ export function OfflineBanner() {
 
     const check = async () => {
       try {
-        const resp = await fetch("https://clients3.google.com/generate_204", {
-          method: "HEAD",
+        // Check OUR backend health — not a third-party (blocked in some regions)
+        const resp = await fetch(`${API_CONFIG.baseUrl}/health`, {
+          method: "GET",
+          signal: AbortSignal.timeout(5000),
         });
         if (mounted) setIsOffline(!resp.ok);
       } catch {
