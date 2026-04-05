@@ -18,6 +18,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     supportsTablet: true,
     bundleIdentifier: "com.naqiy.app",
     infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
       NSCameraUsageDescription:
         "Naqiy utilise la caméra pour scanner les codes-barres des produits.",
       NSFaceIDUsageDescription:
