@@ -30,11 +30,12 @@ module.exports = function withAndroidApkOptimization(config) {
     // and represents <1% of the market. Google Play requires arm64 since Aug 2019.
     setProperty("reactNativeArchitectures", "arm64-v8a");
 
-    // 2. R8 minification — removes unused Java/Kotlin code
-    setProperty("android.enableMinifyInReleaseBuilds", "true");
+    // 2. R8 minification — disabled for now (causes build failures on some
+    //    native modules; re-enable after testing with proguard-rules.pro)
+    // setProperty("android.enableMinifyInReleaseBuilds", "true");
 
-    // 3. Resource shrinking — removes unused Android resources
-    setProperty("android.enableShrinkResourcesInReleaseBuilds", "true");
+    // 3. Resource shrinking — requires minification enabled
+    // setProperty("android.enableShrinkResourcesInReleaseBuilds", "true");
 
     return config;
   });
