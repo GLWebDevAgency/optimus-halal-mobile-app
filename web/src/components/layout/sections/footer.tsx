@@ -1,6 +1,7 @@
 import { Envelope, Leaf } from "@phosphor-icons/react";
 import { NaqiyLogo } from "@/components/brand/naqiy-logo";
 import { InstagramIcon } from "@/components/icons/instagram-icon";
+import { FacebookIcon } from "@/components/icons/facebook-icon";
 import { XIcon } from "@/components/icons/x-icon";
 import { LinkedinIcon } from "@/components/icons/linkedin-icon";
 
@@ -9,6 +10,12 @@ const socialLinks = [
     label: "Instagram",
     href: "https://instagram.com/naqiy.app",
     icon: InstagramIcon,
+    active: true,
+  },
+  {
+    label: "Facebook",
+    href: "https://www.facebook.com/share/1F9U3BTZW3/",
+    icon: FacebookIcon,
     active: true,
   },
   {
