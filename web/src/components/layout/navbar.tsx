@@ -4,6 +4,8 @@ import { useState } from "react";
 import { List, Bell } from "@phosphor-icons/react";
 import { motion, useScroll, useTransform } from "motion/react";
 import { NaqiyLogo } from "@/components/brand/naqiy-logo";
+import { InstagramIcon } from "@/components/icons/instagram-icon";
+import { FacebookIcon } from "@/components/icons/facebook-icon";
 import { useTrack } from "@/lib/posthog";
 import { EVENTS } from "@/lib/analytics-events";
 
@@ -125,6 +127,28 @@ export function Navbar() {
                   <Bell className="size-4" weight="fill" />
                   <span>Rejoindre la liste</span>
                 </button>
+
+                {/* Social links */}
+                <div className="mt-6 flex items-center justify-center gap-3">
+                  <a
+                    href="https://instagram.com/naqiy.app"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex size-10 items-center justify-center rounded-full bg-accent text-muted-foreground transition-colors hover:text-foreground"
+                    aria-label="Instagram"
+                  >
+                    <InstagramIcon className="size-4.5" />
+                  </a>
+                  <a
+                    href="https://www.facebook.com/share/1F9U3BTZW3/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex size-10 items-center justify-center rounded-full bg-accent text-muted-foreground transition-colors hover:text-foreground"
+                    aria-label="Facebook"
+                  >
+                    <FacebookIcon className="size-4.5" />
+                  </a>
+                </div>
               </nav>
             </SheetContent>
           </Sheet>
