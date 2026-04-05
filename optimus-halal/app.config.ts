@@ -95,8 +95,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
   ],
+  // appVersion policy: runtime version = app version (1.0.0).
+  // Stable across JS-only changes → OTA updates work without rebuilds.
+  // Only bumping version in app.config triggers a new runtime version.
+  // "fingerprint" was causing EAS build failures on every dep/plugin change.
   runtimeVersion: {
-    policy: "fingerprint",
+    policy: "appVersion",
   },
   updates: {
     url: "https://u.expo.dev/74c0f55e-ea1c-4786-93a7-de4b27280104",
