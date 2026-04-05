@@ -133,3 +133,6 @@ stitch.zip
 
 # ── Generated trackers ─────────────────────────────────────
 *.xlsx
+
+# Google Play Service Account Key (secret — never commit)
+optimus-halal/google-services-key.json
