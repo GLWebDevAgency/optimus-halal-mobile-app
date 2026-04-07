@@ -40,5 +40,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "yearly",
       priority: 0.3,
     },
+    {
+      url: `${baseUrl}/suppression-compte`,
+      lastModified: new Date("2026-04-07"),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: `${baseUrl}/suppression-donnees`,
+      lastModified: new Date("2026-04-07"),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
   ];
 }
