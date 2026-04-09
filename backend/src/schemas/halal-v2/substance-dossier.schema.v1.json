@@ -1,0 +1,138 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://naqiy.app/schemas/halal-v2/substance-dossier.v1.json",
+  "title": "Naqiy Substance Dossier V1",
+  "description": "Canonical structure for a substance dossier (Tier 1-4 halal-sensitive ingredient). Each dossier file in dossiers_v2/json/ MUST validate against this schema.",
+  "type": "object",
+  "required": ["meta", "substance", "core_fiqhi_concepts", "fatwas_summary", "madhab_positions", "naqiy_position"],
+  "additionalProperties": true,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["dossier_id", "version", "generated_at", "language_primary", "languages"],
+      "properties": {
+        "dossier_id": { "type": "string", "pattern": "^SUBST-[0-9]{3}$" },
+        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "generated_at": { "type": "string", "format": "date" },
+        "language_primary": { "type": "string", "enum": ["fr", "en", "ar"] },
+        "languages": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["fr", "en", "ar"] },
+          "minItems": 1
+        },
+        "generator": { "type": "string" },
+        "anti_hallucination_protocol": { "type": "string" },
+        "verification_passes": { "type": "integer", "minimum": 0 },
+        "fatwas_verified_count": { "type": "integer", "minimum": 0 },
+        "key_finding": { "type": "string" }
+      }
+    },
+    "substance": {
+      "type": "object",
+      "required": ["id", "primary_name_fr", "primary_name_en", "issue_type", "match_vocabulary"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" },
+        "primary_name_fr": { "type": "string", "minLength": 2 },
+        "primary_name_en": { "type": "string", "minLength": 2 },
+        "primary_name_ar": { "type": "string" },
+        "e_number": { "type": ["string", "null"] },
+        "ins_number": { "type": ["string", "null"] },
+        "cas_number": { "type": ["string", "null"] },
+        "source_organism": { "type": ["string", "null"] },
+        "origin": { "type": ["string", "null"] },
+        "issue_type": {
+          "type": "string",
+          "enum": ["INSECT", "ANIMAL_FAT", "ENZYME", "ALCOHOL", "SLAUGHTER", "SOURCE_IDENTIFICATION", "PROCESS", "OTHER"]
+        },
+        "description_fr": { "type": "string" },
+        "match_vocabulary": {
+          "type": "object",
+          "required": ["canonical_fr", "canonical_en"],
+          "properties": {
+            "canonical_fr": { "type": "string", "minLength": 2 },
+            "canonical_en": { "type": "string", "minLength": 2 },
+            "canonical_ar": { "type": "string" },
+            "synonyms_fr": { "type": "array", "items": { "type": "string" }, "default": [] },
+            "synonyms_en": { "type": "array", "items": { "type": "string" }, "default": [] },
+            "synonyms_ar": { "type": "array", "items": { "type": "string" }, "default": [] },
+            "synonyms_other": {
+              "type": "object",
+              "patternProperties": {
+                "^[a-z]{2}$": { "type": "array", "items": { "type": "string" } }
+              },
+              "additionalProperties": false
+            },
+            "e_numbers": { "type": "array", "items": { "type": "string", "pattern": "^E[0-9]{3,4}[a-z]?$" }, "default": [] },
+            "off_tags": { "type": "array", "items": { "type": "string", "pattern": "^[a-z]{2}:[a-z0-9-]+$" }, "default": [] },
+            "semantic_descriptors": { "type": "array", "items": { "type": "string" }, "default": [] },
+            "disambiguation_hints": {
+              "type": "object",
+              "properties": {
+                "not_to_confuse_with": { "type": "array", "items": { "type": "string" } },
+                "context_clues": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "core_fiqhi_concepts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["en", "fr", "principle"],
+        "properties": {
+          "ar": { "type": "string" },
+          "en": { "type": "string" },
+          "fr": { "type": "string" },
+          "principle": { "type": "string" }
+        }
+      }
+    },
+    "fatwas_summary": {
+      "type": "object",
+      "required": ["halal_count", "haram_count"],
+      "properties": {
+        "halal_count": { "type": "integer", "minimum": 0 },
+        "haram_count": { "type": "integer", "minimum": 0 },
+        "halal_institutions": { "type": "array", "items": { "type": "object" } },
+        "haram_institutions": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "madhab_positions": {
+      "type": "object",
+      "required": ["hanafi", "maliki", "shafi'i", "hanbali"],
+      "properties": {
+        "hanafi": { "type": "object" },
+        "maliki": { "type": "object" },
+        "shafi'i": { "type": "object" },
+        "hanbali": { "type": "object" }
+      }
+    },
+    "naqiy_position": {
+      "type": "object",
+      "required": ["global_score", "verdict_internal_ingestion"],
+      "properties": {
+        "global_score": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "verdict_internal_ingestion": { "type": "string" },
+        "verdict_external_cosmetic": { "type": "string" },
+        "rationale": { "type": "string" }
+      }
+    },
+    "score_matrix": {
+      "type": "object",
+      "patternProperties": {
+        "^scenario_": {
+          "type": "object",
+          "required": ["context", "score", "verdict", "rationale"],
+          "properties": {
+            "context": { "type": "string" },
+            "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+            "verdict": { "type": "string" },
+            "rationale": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}
