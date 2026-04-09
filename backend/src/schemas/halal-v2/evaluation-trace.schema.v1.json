@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://naqiy.app/schemas/halal-v2/evaluation-trace.v1.json",
+  "title": "Naqiy Evaluation Trace V1",
+  "description": "Immutable audit trace stored in halal_evaluations.trace jsonb. Documents every scoring decision for replayability.",
+  "type": "object",
+  "required": ["engine_version", "track", "stages", "final"],
+  "additionalProperties": false,
+  "properties": {
+    "engine_version": { "type": "string" },
+    "track": { "type": "string", "enum": ["certified", "analyzed"] },
+    "gemini_source": { "type": "string", "enum": ["live", "cache", "fast_path_off", "fallback_regex", "unavailable"] },
+    "stages": {
+      "type": "object",
+      "properties": {
+        "resolve_ms": { "type": "number" },
+        "extract_ms": { "type": "number" },
+        "engine_ms": { "type": "number" },
+        "total_ms": { "type": "number" }
+      }
+    },
+    "modules_fired": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["substance_id", "score", "scenario_key"],
+        "properties": {
+          "substance_id": { "type": "string" },
+          "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "scenario_key": { "type": "string" },
+          "match_source": { "type": "string" },
+          "match_priority": { "type": "integer" },
+          "madhab_note": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "tuples_evaluated": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["practice_tuple_id", "base_score", "adjusted_score", "evidence_level"],
+        "properties": {
+          "practice_tuple_id": { "type": "string" },
+          "base_score": { "type": "integer" },
+          "adjusted_score": { "type": "integer" },
+          "evidence_level": { "type": "string" }
+        }
+      }
+    },
+    "certifier_id": { "type": ["string", "null"] },
+    "species_evaluated": { "type": ["string", "null"] },
+    "final": {
+      "type": "object",
+      "required": ["verdict", "score", "confidence"],
+      "properties": {
+        "verdict": { "type": "string" },
+        "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}
