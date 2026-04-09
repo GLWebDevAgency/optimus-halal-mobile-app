@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "dossier_id": "SUBST-999",
+    "version": "1.0.0",
+    "generated_at": "2026-04-09",
+    "language_primary": "fr",
+    "languages": ["fr", "en", "ar"]
+  },
+  "substance": {
+    "id": "TEST_SUBSTANCE",
+    "primary_name_fr": "Substance de test",
+    "primary_name_en": "Test substance",
+    "issue_type": "OTHER",
+    "match_vocabulary": {
+      "canonical_fr": "substance de test",
+      "canonical_en": "test substance",
+      "synonyms_fr": [],
+      "synonyms_en": [],
+      "e_numbers": [],
+      "off_tags": [],
+      "semantic_descriptors": []
+    }
+  },
+  "core_fiqhi_concepts": [
+    { "en": "test", "fr": "test", "principle": "test principle" }
+  ],
+  "fatwas_summary": { "halal_count": 0, "haram_count": 0 },
+  "madhab_positions": {
+    "hanafi": {},
+    "maliki": {},
+    "shafi'i": {},
+    "hanbali": {}
+  },
+  "naqiy_position": {
+    "global_score": 50,
+    "verdict_internal_ingestion": "mashbooh"
+  }
+}
