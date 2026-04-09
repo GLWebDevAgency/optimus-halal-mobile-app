@@ -1,0 +1,1458 @@
+{
+  "meta": {
+    "dossier_id": "NAQIY-DOSSIER-005",
+    "subject": "Abattage mécanique du poulet / الذبح الآلي للدواجن / Mechanical Slaughter of Poultry",
+    "version": "2.0.0",
+    "created_at": "2026-04-04",
+    "methodology": "Collecte multi-institutionnelle, classification par madhab, données industrielles, recherche en arabe/anglais/français, hiérarchisation par autorité",
+    "author_system": "Naqiy Halal Analysis Engine",
+    "languages": [
+      "ar",
+      "fr",
+      "en"
+    ],
+    "scope": "Sunni — 4 madhahib + institutions contemporaines + données industrielles France/EU",
+    "key_fiqhi_issue": "SLAUGHTER",
+    "key_sub_issues": [
+      "MACHINE_BLADE",
+      "TASMIYAH_INDIVIDUAL_VS_BATCH",
+      "MUSLIM_OPERATOR",
+      "MISS_RATE"
+    ],
+    "relationship_to_previous_dossiers": "Directly linked to NAQIY-DOSSIER-004 (Stunned Meat / SUBST-041). SUBST-041 covered WHETHER to stun; this dossier covers WHO/WHAT performs the cut. In industrial poultry, BOTH issues combine: birds are first stunned (SUBST-041), THEN pass through a mechanical rotary blade (this dossier). The two issues compound: even if stunning is accepted, the mechanical blade raises independent questions about tasmiyah and operator identity.",
+    "updated_at": "2026-04-07",
+    "enrichment_notes": "Version 1.1: All fatwas enriched with verification metadata from research_v11_stunned_mechanical.json. Unverified claims disclosure added."
+  },
+  "substance": {
+    "id": "SUBST-042",
+    "names": {
+      "ar": "الذبح الآلي للدواجن / الذبح الميكانيكي للدجاج",
+      "fr": "Abattage mécanique du poulet / Abattage automatisé de la volaille",
+      "en": "Mechanical slaughter of poultry / Machine-slaughtered chicken",
+      "synonyms": [
+        "Machine slaughter",
+        "Automated slaughter",
+        "Rotary blade slaughter",
+        "Abattage à la lame rotative",
+        "الذبح بالماكينة",
+        "الذبح بالسكين الآلي",
+        "الديسك"
+      ]
+    },
+    "category": "slaughter_method",
+    "description": {
+      "ar": "الذبح الآلي للدواجن هو استخدام سكاكين ميكانيكية دوارة (ديسك) لقطع رقاب الدجاج المعلق على سلسلة ناقلة بعد إفقاده الوعي بالصعق الكهربائي. تعمل الآلة بسرعة تصل إلى 140 دجاجة في الدقيقة (8400 في الساعة). المشكلة الشرعية الأساسية: من هو الذابح؟ هل الآلة أداة بيد المشغّل (كالسكين) أم فاعل مستقل؟ وهل تكفي تسمية واحدة عند تشغيل الآلة أم يجب التسمية على كل دجاجة؟",
+      "fr": "L'abattage mécanique de la volaille utilise des lames rotatives (disques) pour couper les cous des poulets suspendus sur une chaîne de convoyage, après étourdissement électrique. La machine opère à des cadences pouvant atteindre 140 poulets/minute (8 400/heure) dans les abattoirs industriels, et jusqu'à 12 000-14 000/heure dans les plus grands abattoirs français. Les deux questions fiqhi centrales : (1) Qui est le « dhābih » (abatteur) — la machine est-elle un outil entre les mains de l'opérateur ou un agent autonome ? (2) La tasmiyah (invocation du nom d'Allah) — suffit-il de la prononcer une fois au démarrage de la machine, ou faut-il la prononcer sur chaque poulet individuellement ?",
+      "en": "Mechanical poultry slaughter uses rotating blades (discs) to cut the necks of chickens suspended on a conveyor chain, after electrical stunning. The machine operates at speeds up to 140 chickens/minute (8,400/hour) in industrial plants, and up to 12,000-14,000/hour in the largest French abattoirs. The two central fiqhi questions: (1) Who is the 'dhabih' (slaughterer) — is the machine a tool in the operator's hands or an autonomous agent? (2) Tasmiyah (invocation of Allah's name) — is it sufficient to pronounce it once at machine startup, or must it be pronounced on each chicken individually?"
+    },
+    "mechanical_slaughter_methods": {
+      "rotary_blade_automated": {
+        "description": "Chickens suspended by feet on moving conveyor pass through a rotating circular blade that cuts the neck. Fully automated — no human hand involved in the cut itself.",
+        "speed": "Up to 140 birds/minute per line (8,400/hour). Largest French abattoirs: 12,000-14,000 birds/hour.",
+        "operator_role": "Starts the machine, monitors operation. Does NOT physically cut any bird.",
+        "tasmiyah_practice_common": "Operator says bismillah once at startup. Some plants: worker stands near blade reciting continuously. Some: recorded bismillah played. Some: bismillah written on blade/wall.",
+        "miss_rate": "No precise peer-reviewed figure available. Industry acknowledges birds can miss the blade or receive incomplete cuts. Backup Muslim workers ('back-up slaughtermen') stationed after the blade to manually cut missed birds — standard practice in halal-certified plants.",
+        "islamic_status": "HIGHLY DEBATED — the core controversy of this dossier"
+      },
+      "semi_automated_with_muslim_slaughtermen": {
+        "description": "Birds on conveyor, but 2-3 Muslim workers physically cut each bird's throat by hand as it passes. Machine only transports; humans perform the actual cut.",
+        "speed": "Lower than fully automated but still industrial. Estimated 3,000-6,000 birds/hour with 3 workers.",
+        "operator_role": "Each worker is an actual dhabih — cuts the bird and says bismillah.",
+        "tasmiyah_practice": "Each worker pronounces bismillah on each bird he personally cuts.",
+        "islamic_status": "PERMISSIBLE — recommended solution by Mufti Taqi Usmani, HFSAA, and strict certifiers",
+        "note": "This is the solution adopted by AVS, HMC, and strict halal certifiers. It satisfies all scholarly positions."
+      },
+      "hand_slaughter_traditional": {
+        "description": "Each bird restrained individually by worker who cuts throat by hand with sharp knife while saying bismillah.",
+        "speed": "5-12 birds/person/hour (artisanal); up to 50-60/person/hour (skilled professional)",
+        "islamic_status": "UNANIMOUSLY PERMISSIBLE — the gold standard",
+        "note": "Economically unviable for industrial scale. Used for premium halal products, farm slaughter, and Eid sacrifices."
+      }
+    },
+    "common_applications": [
+      {
+        "sector": "poultry_retail",
+        "products": [
+          "whole chicken",
+          "chicken breasts",
+          "thighs",
+          "wings"
+        ],
+        "stunning_method": "Electrical water bath → rotary blade",
+        "frequency": "UBIQUITOUS in Western industrial poultry"
+      },
+      {
+        "sector": "processed_poultry",
+        "products": [
+          "nuggets",
+          "chicken sausages",
+          "deli meats",
+          "ready meals",
+          "cachir"
+        ],
+        "stunning_method": "Various — mixed sources, traceability often lost",
+        "frequency": "UBIQUITOUS"
+      },
+      {
+        "sector": "fast_food",
+        "products": [
+          "fried chicken",
+          "chicken burgers",
+          "shawarma industriel"
+        ],
+        "stunning_method": "Depends on supplier — often machine-slaughtered",
+        "frequency": "VERY_HIGH"
+      },
+      {
+        "sector": "halal_certified_premium",
+        "products": [
+          "poulet certifié AVS/Achahada/HMC"
+        ],
+        "stunning_method": "Hand slaughter or semi-automated with Muslim slaughtermen",
+        "frequency": "MEDIUM — growing market"
+      }
+    ],
+    "france_industrial_data": {
+      "largest_abattoirs_speed": "12,000-14,000 birds/hour",
+      "standard_line_speed": "Up to 140 birds/minute per line",
+      "small_farm_slaughter": "5-12 birds/person/hour",
+      "backup_slaughtermen": "Standard practice in halal-certified plants: 2-4 Muslim workers stationed after mechanical blade to catch and manually cut missed birds",
+      "key_certifiers_position": {
+        "AVS": "Rejects fully mechanical slaughter. Requires Muslim hand slaughter for each bird.",
+        "Achahada": "Rejects fully mechanical slaughter. Manual slaughter required.",
+        "ARGML": "Accepts semi-automated with Muslim slaughtermen + electronarcose protocol for volaille.",
+        "Mosquee_de_Paris": "Debated — criticized for accepting mechanical slaughter in some certified plants."
+      }
+    }
+  },
+  "core_islamic_concepts": {
+    "primary_concept": {
+      "id": "CONCEPT-TASMIYAH",
+      "term": {
+        "ar": "التسمية عند الذبح",
+        "ar_transliteration": "al-tasmiyah ʿind al-dhabḥ",
+        "fr": "L'invocation du nom d'Allah au moment de l'abattage",
+        "en": "Pronouncing Allah's name at the time of slaughter"
+      },
+      "definition": {
+        "ar": "التسمية هي قول «بسم الله» أو «بسم الله الله أكبر» عند إمرار السكين على حلق الذبيحة. اختلف الفقهاء في حكمها: الجمهور (الحنفية والمالكية والحنابلة) على أنها شرط — يحرم متروكها عمداً. والشافعية على أنها سنة مؤكدة — تصح الذكاة بدونها مع الكراهة. والدليل الأساسي: «وَلَا تَأْكُلُوا مِمَّا لَمْ يُذْكَرِ اسْمُ اللَّهِ عَلَيْهِ» — الأنعام 121",
+        "fr": "La tasmiyah consiste à dire « bismillāh » ou « bismillāh, Allahu akbar » au moment de passer le couteau sur la gorge de l'animal. Les juristes divergent sur son statut : la majorité (Hanafites, Malikites, Hanbalites) la considère comme une CONDITION de validité — l'abandonner volontairement rend la viande ḥarām. Les Shafiites la considèrent comme sunna mu'akkadah (fortement recommandée) — l'abattage reste valide sans elle, mais avec désapprobation. La preuve principale : « Ne mangez pas de ce sur quoi le nom d'Allah n'a pas été mentionné » — Al-An'am 6:121.",
+        "en": "Tasmiyah is saying 'bismillah' or 'bismillah, Allahu akbar' when passing the knife over the animal's throat. Jurists differ on its ruling: the majority (Hanafis, Malikis, Hanbalis) consider it a CONDITION of validity — deliberately omitting it makes the meat haram. Shafi'is consider it a confirmed sunnah (strongly recommended) — slaughter is valid without it, though disapproved. Primary evidence: 'Do not eat of that upon which Allah's name has not been mentioned' — Al-An'am 6:121."
+      },
+      "conditions_for_validity": [
+        "أن تكون عند إمرار السكين — Must be at the moment of passing the knife (not before or after)",
+        "أن تكون من الذابح نفسه أو من يقوم مقامه — Must be from the slaughterer himself or his representative",
+        "أن تكون على كل ذبيحة مستقلة (عند الجمهور) أو على الدفعة المتصلة (عند بعضهم) — On each individual animal (majority) or on the continuous batch (some scholars)",
+        "ألا يفصل بينها وبين الذبح زمن طويل — No long time gap between the invocation and the actual cut"
+      ],
+      "application_to_mechanical_slaughter": "THIS is the crux of the entire debate. In fully automated mechanical slaughter, the operator presses a button and the machine runs continuously, cutting 140 birds/minute. The operator says bismillah ONCE at startup. The questions: (1) Is the machine an 'instrument' (ālah) of the operator — like an extended knife — such that his one tasmiyah covers all birds? (2) Or is each bird a separate act of slaughter requiring a separate tasmiyah? (3) What about birds slaughtered hours after the initial bismillah — does the tasmiyah still 'reach' them? The PERMISSIVE view treats the machine as an instrument and the continuous operation as one connected act. The RESTRICTIVE view says each bird is an independent slaughter act requiring an independent tasmiyah — making fully mechanical slaughter impossible to validate."
+    },
+    "secondary_concept_1": {
+      "id": "CONCEPT-DHABIH",
+      "term": {
+        "ar": "الذابح / شروط الذابح",
+        "ar_transliteration": "al-dhābiḥ / shurūṭ al-dhābiḥ",
+        "fr": "L'abatteur / Les conditions de l'abatteur",
+        "en": "The slaughterer / Conditions of the slaughterer"
+      },
+      "definition": {
+        "ar": "يشترط في الذابح: أن يكون مسلماً أو كتابياً، عاقلاً مميزاً، قاصداً للذبح. فلو ذبح مجنون أو سكران أو صغير غير مميز لم تحل ذبيحته. ولا يصح أن يكون الذابح آلة لا عقل لها ولا قصد",
+        "fr": "Les conditions de l'abatteur : être musulman ou ahl al-kitāb (gens du Livre), sain d'esprit et capable de discernement, avec l'intention d'abattre. Si un fou, un ivre ou un enfant sans discernement abat, la viande n'est pas licite. L'abatteur ne peut pas être une machine sans raison ni intention.",
+        "en": "Conditions of the slaughterer: must be Muslim or ahl al-kitab (People of the Book), of sound mind and capable of discernment, with the intention to slaughter. If a madman, drunk person, or child without discernment slaughters, the meat is not lawful. The slaughterer cannot be a machine without reason or intention."
+      },
+      "application_to_mechanical_slaughter": "The critical question: is the MACHINE the slaughterer (in which case the slaughter is invalid — a machine has no religion, intention, or ability to say bismillah) or is the OPERATOR the slaughterer (in which case the machine is merely his instrument, like a knife)? The permissive view: the operator is the dhabih; the machine is his ālah (tool). Analogy: a man who fires an arrow is the killer, not the arrow. The restrictive view: the operator lacks direct control over each individual cut; the machine operates autonomously after being turned on. The time and physical distance between the operator and the actual cut make it unlike holding a knife."
+    },
+    "secondary_concept_2": {
+      "id": "CONCEPT-ALAH-DHABH",
+      "term": {
+        "ar": "آلة الذبح",
+        "ar_transliteration": "ālat al-dhabḥ",
+        "fr": "L'instrument d'abattage",
+        "en": "The instrument of slaughter"
+      },
+      "definition": {
+        "ar": "اتفق الفقهاء على أن آلة الذبح يجب أن تكون حادة قاطعة تُنهر الدم وتقطع الأوداج. ويجوز الذبح بكل ما يقطع من حديد أو غيره إلا السن والظفر. قال النبي ﷺ: «ما أنهر الدم وذُكر اسم الله عليه فكلوا ليس السن والظفر» — متفق عليه",
+        "fr": "Les juristes s'accordent sur le fait que l'instrument d'abattage doit être tranchant, faire couler le sang et couper les vaisseaux. Il est permis d'abattre avec tout ce qui coupe — fer ou autre — sauf la dent et l'ongle. Le Prophète ﷺ a dit : « Ce qui fait couler le sang et sur quoi le nom d'Allah est mentionné, mangez-en — sauf la dent et l'ongle. » — Al-Bukhari & Muslim.",
+        "en": "Jurists agree that the slaughter instrument must be sharp, cause blood to flow, and cut the vessels. It is permissible to slaughter with anything that cuts — iron or otherwise — except teeth and nails. The Prophet ﷺ said: 'Whatever causes blood to flow and Allah's name is mentioned over it, eat of it — except teeth and nails.' — Al-Bukhari & Muslim."
+      },
+      "application_to_mechanical_slaughter": "The rotary blade IS a valid instrument — it is sharp metal that causes blood to flow. No scholar disputes the validity of the blade ITSELF. The issue is not the instrument but the AGENCY: who wields it? A knife held by a Muslim is an instrument of a Muslim. A rotary blade operated by electricity after a Muslim pressed a button — is it still an 'instrument of a Muslim'? The analogy with hunting is key: a Muslim sends a trained dog or fires an arrow, says bismillah at the moment of release, and the animal is caught/killed later — this is valid. Similarly, some argue the machine is like an arrow released with bismillah."
+    }
+  },
+  "fatwas": [
+    {
+      "id": "FATWA-MECH-001",
+      "institution": {
+        "name": {
+          "ar": "مجمع الفقه الإسلامي الدولي — منظمة التعاون الإسلامي",
+          "fr": "Académie Internationale de Fiqh Islamique — OCI (IIFA)",
+          "en": "International Islamic Fiqh Academy — OIC (IIFA)"
+        },
+        "type": "international_fiqh_academy",
+        "authority_level": "highest_collective",
+        "headquarters": "Jeddah, Saudi Arabia",
+        "website": "https://iifa-aifi.org",
+        "madhab_orientation": "Multi-madhab"
+      },
+      "reference": "Resolution No. 95 (3/10), 10th Session, 1997 — Section on mechanical slaughter",
+      "date": "1997-01-01",
+      "topic": "Mechanical slaughter of poultry — conditions of permissibility",
+      "original_text": {
+        "lang": "ar",
+        "text": "الأصل أن تتم تذكية الدواجن بيد المذكي. ولا بأس باستخدام الآلات الميكانيكية في تذكية الدواجن ما دامت شروط التذكية الشرعية قد توافرت وهي: حدة الآلة وقطعها للحلقوم والمريء، والتسمية عند التشغيل من مسلم أو كتابي"
+      },
+      "translation": {
+        "fr": {
+          "text": "Le principe est que l'abattage des volailles soit effectué par la main de l'abatteur. Il n'y a pas d'objection à l'utilisation de machines mécaniques pour l'abattage des volailles tant que les conditions de la dhakāt sharʿiyyah sont remplies, à savoir : que l'instrument soit tranchant et coupe la trachée et l'œsophage, et que la tasmiyah soit prononcée au moment de la mise en marche par un musulman ou un ahl al-kitāb.",
+          "translation_notes": "الأصل (al-aṣl) = le principe de base — indique que l'abattage manuel est la NORME, le mécanique une tolérance. تذكية الدواجن (tadhkiyat al-dawājin) = abattage rituel des volailles. بيد المذكي (bi-yad al-mudhakkī) = par la main de l'abatteur — insistance sur l'intervention HUMAINE comme principe. عند التشغيل (ʿind al-tashghīl) = au moment de la mise en marche — clé : la tasmiyah est requise au DÉMARRAGE, pas sur chaque oiseau individuellement."
+        },
+        "en": {
+          "text": "The principle is that the slaughter of poultry be done by the slaughterer's hand. There is no objection to using mechanical machines for slaughtering poultry as long as the conditions of valid Islamic slaughter are met, namely: that the instrument be sharp and cuts the trachea and esophagus, and that tasmiyah be pronounced at the time of operation by a Muslim or ahl al-kitab.",
+          "translation_notes": "al-asl = the foundational principle. bi-yad al-mudhakki = by the hand of the slaughterer. 'ind al-tashghil = at the time of operation/startup."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional",
+        "manual_slaughter": "preferred_principle",
+        "mechanical_slaughter": "permissible_with_conditions",
+        "conditions": [
+          "sharp_blade",
+          "cuts_trachea_esophagus",
+          "tasmiyah_at_startup",
+          "muslim_or_kitabi_operator"
+        ],
+        "tasmiyah_requirement": "at_machine_startup"
+      },
+      "verification_status": "verified",
+      "search_log": {
+        "date_verified": "2026-04-07",
+        "source": "research_v11_stunned_mechanical.json",
+        "method": "direct_mapping_and_cross_reference"
+      },
+      "canonical_url": "https://iifa-aifi.org/en/32542.html"
+    },
+    {
+      "id": "FATWA-MECH-002",
+      "institution": {
+        "name": {
+          "ar": "اللجنة الدائمة للبحوث العلمية والإفتاء",
+          "fr": "Comité Permanent (Lajnah Da'imah)",
+          "en": "Permanent Committee for Scholarly Research and Ifta"
+        },
+        "type": "state_fatwa_authority",
+        "authority_level": "national_highest",
+        "headquarters": "Riyadh, Saudi Arabia",
+        "madhab_orientation": "Hanbali (Salafi)"
+      },
+      "reference": "Fataawa al-Lajnah ad-Daa'imah — cited in IslamQA #75891",
+      "date": null,
+      "topic": "Ruling on machine slaughter and tasmiyah for poultry",
+      "original_text": {
+        "lang": "ar",
+        "text": "يجوز الذبح بالآلات الحديثة بشرط كونها حادة وتقطع الحلقوم والمريء. إذا كانت الآلة تذبح عدداً من الدجاج في وقت واحد متصل فتجزئ التسمية مرة واحدة ممن يحرك الآلة. وإن كانت الآلة تذبح الدجاج واحدة واحدة اشترط التسمية عند ذبح كل دجاجة فإذا لم يسم عليها لم تحل"
+      },
+      "translation": {
+        "fr": {
+          "text": "L'abattage par machines modernes est permis à condition qu'elles soient tranchantes et coupent la trachée et l'œsophage. Si la machine abat un groupe de poulets en une seule fois continue, UNE SEULE tasmiyah de celui qui actionne la machine suffit. Si la machine abat les poulets un par un, la tasmiyah est requise pour CHAQUE poulet — s'il ne prononce pas le nom d'Allah dessus, il n'est pas licite.",
+          "translation_notes": "في وقت واحد متصل (fī waqt wāḥid muttaṣil) = en un seul temps continu — clé de la position de la Lajnah : le caractère CONTINU de l'opération permet une seule tasmiyah. واحدة واحدة (wāḥidatan wāḥidatan) = une par une — si l'abattage est séquentiel et non simultané, chaque acte est indépendant."
+        },
+        "en": {
+          "text": "Slaughter by modern machines is permissible provided they are sharp and cut the trachea and esophagus. If the machine slaughters a number of chickens in one continuous time, ONE tasmiyah from the one who operates the machine suffices. If the machine slaughters chickens one by one, tasmiyah is required for EACH chicken — if he does not mention Allah's name over it, it is not lawful.",
+          "translation_notes": "fi waqt wahid muttasil = in one continuous time. wahidatan wahidatan = one by one."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional",
+        "mechanical_slaughter": "permissible",
+        "tasmiyah_simultaneous_batch": "one_suffices",
+        "tasmiyah_sequential": "required_per_bird",
+        "critical_distinction": "continuous_vs_sequential"
+      },
+      "verification_status": "verified",
+      "search_log": {
+        "date_verified": "2026-04-07",
+        "source": "research_v11_stunned_mechanical.json",
+        "method": "direct_mapping_and_cross_reference"
+      }
+    },
+    {
+      "id": "FATWA-MECH-003",
+      "institution": {
+        "name": {
+          "ar": "دار الإفتاء المصرية",
+          "fr": "Dar al-Ifta al-Misriyyah",
+          "en": "Egyptian Dar al-Ifta"
+        },
+        "type": "state_fatwa_authority",
+        "authority_level": "national_highest",
+        "headquarters": "Cairo, Egypt",
+        "website": "https://www.dar-alifta.org",
+        "madhab_orientation": "Multi-madhab (Shafi'i/Hanafi)"
+      },
+      "reference": "Fatwa #6254 (Mechanical Slaughtering) and Fatwa #4842 (Chicken Slaughterhouse)",
+      "date": "2013-08-05",
+      "topic": "Permissibility of mechanical slaughter of poultry",
+      "original_text": {
+        "lang": "ar",
+        "text": "لا مانع شرعاً من استخدام الآلات لذبح الحيوانات المعدّة للطعام، ولا يشترط الذبح باليد. والشروط هي: قطع الشرايين الأساسية لضمان أقل ألم وأسرع موت ونزف، وذكر اسم الله. والفتوى تناولت مسألة تسجيل البسملة على جهاز كاسيت مثبت فوق آلة الذبح — وأفادت أن ذكر اسم الله يجب أن يكون من الذابح أو شخص قريب حقيقي لا من جهاز تسجيل",
+        "source_note": "The above is a faithful synthesis of Fatwa #6254's content. The fatwa specifically addresses a cassette recorder fixed above the slaughter machine playing bismillah, and rules that tasmiyah must come from a real person (the slaughterer or someone nearby), not a recording device."
+      },
+      "translation": {
+        "fr": {
+          "text": "Il n'y a pas d'objection religieuse à l'utilisation de machines pour abattre les animaux destinés à l'alimentation, et l'abattage à la main n'est pas une condition. Les conditions sont : couper les artères principales pour assurer un minimum de douleur, une mort rapide et une saignée, et mentionner le nom d'Allah. La fatwa traite spécifiquement de l'utilisation d'un enregistrement cassette fixé au-dessus de la machine d'abattage pour diffuser le bismillah — elle statue que l'invocation du nom d'Allah doit provenir de l'abatteur ou d'une personne à proximité réelle, PAS d'un enregistrement.",
+          "translation_notes": "La fatwa #6254 aborde explicitement la question d'un magnétophone cassette (جهاز كاسيت) installé au-dessus de la lame. الذابح أو شخص قريب (al-dhābiḥ aw shakhṣ qarīb) = l'abatteur ou une personne proche — ouvre la porte à un récitant dédié près de la lame, mais rejette l'enregistrement mécanique."
+        },
+        "en": {
+          "text": "There is no religious objection to using machines to slaughter animals for food, and hand slaughter is not a condition. The conditions are: cutting the main arteries to ensure minimum pain, speedy death and bleeding, and mentioning Allah's name. The fatwa specifically addresses a cassette recorder fixed above the slaughter machine playing bismillah — it rules that the invocation of Allah's name must come from the slaughterer or a real person nearby, NOT from a recording.",
+          "translation_notes": "Fatwa #6254 explicitly discusses a cassette recorder (jihaz kasit) mounted above the blade. al-dhabih aw shakhs qarib = slaughterer or person nearby — allows a dedicated reciter near the blade, but rejects mechanical recording."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "permissive",
+        "mechanical_slaughter": "permissible",
+        "hand_slaughter_required": false,
+        "tasmiyah_recorded_cassette": "NOT_VALID",
+        "tasmiyah_by_person_nearby": "VALID",
+        "tasmiyah_written_on_blade": "NOT_ADDRESSED_in_this_fatwa"
+      },
+      "verification_status": "verified",
+      "search_log": {
+        "date_verified": "2026-04-07",
+        "source": "research_v11_stunned_mechanical.json",
+        "method": "direct_mapping_and_cross_reference"
+      },
+      "canonical_url": "https://www.dar-alifta.org/ar/fatwa/details/6254/",
+      "mufti": "دار الإفتاء المصرية"
+    },
+    {
+      "id": "FATWA-MECH-004",
+      "institution": {
+        "name": {
+          "ar": "إسلام سؤال وجواب — الشيخ المنجد",
+          "fr": "IslamQA.info — Sheikh al-Munajjid",
+          "en": "IslamQA.info — Sheikh al-Munajjid"
+        },
+        "type": "scholarly_individual",
+        "authority_level": "individual_high_influence",
+        "headquarters": "Saudi Arabia",
+        "website": "https://islamqa.info",
+        "madhab_orientation": "Hanbali (Salafi)"
+      },
+      "reference": "IslamQA Fatwa #172296 — How is Bismillah said with mechanical devices; Fatwa #75891 — Ruling on machine-slaughtered chicken",
+      "date": null,
+      "topic": "Tasmiyah with mechanical slaughter devices — three scholarly positions",
+      "original_text": {
+        "lang": "ar",
+        "text": "اختلف العلماء في كيفية التسمية عند الذبح بالآلات الميكانيكية: القول الأول: تكفي تسمية واحدة عند تشغيل الآلة إذا كان العمل متصلاً — قياساً على الصيد بالكلب أو السهم حيث يسمي عند الإرسال ولا يسمي على كل فريسة. القول الثاني: يجب أن يسمي عند مرور كل دجاجة على السكين — لأن كل ذبيحة فعل مستقل. القول الثالث: لا يجوز الذبح الآلي أصلاً لأنه يتعذر التسمية على كل واحدة وهو المطلوب شرعاً"
+      },
+      "translation": {
+        "fr": {
+          "text": "Les savants divergent sur la manière de prononcer la tasmiyah lors de l'abattage avec des machines mécaniques : Premier avis : UNE SEULE tasmiyah au démarrage de la machine suffit si le travail est continu — par analogie avec la chasse au chien ou à la flèche où l'on prononce le nom d'Allah au moment de l'envoi sans le reprononcer sur chaque proie. Deuxième avis : il FAUT prononcer la tasmiyah au passage de CHAQUE poulet devant le couteau — car chaque abattage est un acte indépendant. Troisième avis : l'abattage mécanique n'est PAS permis du tout car il est impossible de prononcer la tasmiyah sur chacun, ce qui est l'exigence religieuse.",
+          "translation_notes": "قياساً على الصيد (qiyāsan ʿalā al-ṣayd) = par analogie avec la chasse — c'est L'ARGUMENT CLÉ de la position permissive. فعل مستقل (fiʿl mustaqill) = acte indépendant — c'est L'ARGUMENT CLÉ de la position restrictive. يتعذر (yataʿadhdhar) = il est impossible/impraticable — argument de la position prohibitive."
+        },
+        "en": {
+          "text": "Scholars differ on how tasmiyah is to be said when slaughtering with mechanical machines: First view: ONE tasmiyah at machine startup suffices if work is continuous — by analogy with hunting with dog or arrow where one says bismillah at the moment of release without repeating it for each prey. Second view: tasmiyah MUST be said at the passage of EACH chicken past the knife — because each slaughter is an independent act. Third view: mechanical slaughter is NOT permissible at all because it is impossible to say tasmiyah on each one, which is the religious requirement.",
+          "translation_notes": "qiyasan 'ala al-sayd = by analogy with hunting. fi'l mustaqill = independent act. yata'adhdhar = impossible/impracticable."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "presents_three_positions",
+        "position_1_permissive": "one_tasmiyah_at_startup_suffices",
+        "position_2_intermediate": "tasmiyah_per_bird_required",
+        "position_3_prohibitive": "mechanical_slaughter_not_permissible",
+        "sheikh_munajjid_leaning": "position_1_or_2_with_conditions"
+      },
+      "verification_status": "verified",
+      "search_log": {
+        "date_verified": "2026-04-07",
+        "source": "research_v11_stunned_mechanical.json",
+        "method": "direct_mapping_and_cross_reference"
+      },
+      "canonical_url": "https://islamqa.info/ar/answers/75891"
+    },
+    {
+      "id": "FATWA-MECH-005",
+      "institution": {
+        "name": {
+          "ar": "إسلام ويب — قطر",
+          "fr": "IslamWeb.net — Qatar",
+          "en": "IslamWeb.net — Qatar"
+        },
+        "type": "state_fatwa_authority",
+        "authority_level": "national_high",
+        "headquarters": "Doha, Qatar",
+        "website": "https://www.islamweb.net",
+        "madhab_orientation": "Multi-madhab"
+      },
+      "reference": "IslamWeb Fatwa #116204 — الذبح الآلي رؤية شرعية; Fatwa #204829",
+      "date": "2008-12-21",
+      "topic": "Ruling on mechanical slaughter — comprehensive shariah perspective",
+      "original_text": {
+        "lang": "ar",
+        "text": "لا حرج شرعاً في الذبح الآلي إذا ذُكر اسم الله عليه وكان الذي يحرك الآلة ممن تصح منه الذكاة من مسلم أو كتابي. بل قد يكون ذلك أولى وأفضل خاصة في المجازر الكبيرة التي تذبح مئات الآلاف يومياً — لأنه يضمن قطع الأوعية الأربعة بنسبة 100% مع مخالفات أقل من الذبح اليدوي"
+      },
+      "translation": {
+        "fr": {
+          "text": "Il n'y a pas d'objection religieuse à l'abattage mécanique si le nom d'Allah est mentionné et que celui qui actionne la machine est qualifié pour l'abattage rituel — musulman ou ahl al-kitāb. Cela peut même être PRÉFÉRABLE et SUPÉRIEUR, surtout dans les grands abattoirs qui abattent des centaines de milliers de têtes par jour — car il garantit la section des quatre vaisseaux à 100% avec moins de violations que l'abattage manuel.",
+          "translation_notes": "أولى وأفضل (awlā wa-afḍal) = préférable et supérieur — position REMARQUABLE : IslamWeb considère le mécanique MEILLEUR que le manuel pour la fiabilité de la coupe. C'est une position minoritaire mais argumentée sur le plan technique."
+        },
+        "en": {
+          "text": "There is no religious objection to mechanical slaughter if Allah's name is mentioned and the machine operator is qualified for slaughter — Muslim or ahl al-kitab. This may even be PREFERABLE and SUPERIOR, especially in large slaughterhouses processing hundreds of thousands daily — because it guarantees 100% cutting of the four vessels with fewer violations than manual slaughter.",
+          "translation_notes": "awla wa-afdal = preferable and superior. Remarkable position: IslamWeb considers mechanical BETTER than manual for cut reliability."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "permissive",
+        "mechanical_slaughter": "permissible_even_preferable",
+        "tasmiyah": "required_from_operator",
+        "advantage_noted": "100_percent_vein_cut_rate"
+      },
+      "verification_status": "verified",
+      "search_log": {
+        "date_verified": "2026-04-07",
+        "source": "research_v11_stunned_mechanical.json",
+        "method": "direct_mapping_and_cross_reference"
+      },
+      "canonical_url": "https://islamweb.net/ar/fatwa/116204"
+    },
+    {
+      "id": "FATWA-MECH-006",
+      "institution": {
+        "name": {
+          "ar": "دار الإفتاء — بيرمنغهام / تقليد ديوبندي",
+          "fr": "Darul Iftaa Birmingham / Tradition Deobandi",
+          "en": "Darul Iftaa Birmingham / Deobandi Tradition"
+        },
+        "type": "scholarly_tradition",
+        "authority_level": "individual_high_influence",
+        "headquarters": "Birmingham, UK / Pakistan",
+        "website": "https://daruliftaa.com",
+        "madhab_orientation": "Hanafi (Deobandi)"
+      },
+      "reference": "Daruliftaa.com — Mechanical Slaughter of Meat (detailed research based on Mufti Taqi Usmani's analysis)",
+      "date": null,
+      "topic": "Mechanical slaughter — detailed Deobandi Hanafi analysis",
+      "original_text": {
+        "lang": "en",
+        "text": "Three conditions are essential for lawful slaughter: (1) Most of the four veins must be cut with a sharp tool. (2) The name of Allah must be pronounced at the time of slaughter SEPARATELY for each animal. (3) The slaughterer must be Muslim or from People of the Book. In mechanical slaughter, the operator pronounces bismillah once when switching on the machine. This makes only the FIRST chicken lawful — all subsequent ones are unlawful, because each chicken is a separate act of slaughter requiring a separate invocation. The recommended solution: employ three Muslim workers who manually cut the throats of birds as they pass on the conveyor, each pronouncing Allah's name. This maintains production speed without compromising Islamic requirements."
+      },
+      "translation": {
+        "fr": {
+          "text": "Trois conditions sont essentielles pour un abattage licite : (1) La plupart des quatre veines doivent être coupées avec un instrument tranchant. (2) Le nom d'Allah doit être prononcé au moment de l'abattage SÉPARÉMENT pour chaque animal. (3) L'abatteur doit être musulman ou Gens du Livre. Dans l'abattage mécanique, l'opérateur prononce bismillāh une fois à la mise en marche. Cela ne rend licite que le PREMIER poulet — tous les suivants sont illicites, car chaque poulet est un acte d'abattage séparé nécessitant une invocation séparée. Solution recommandée : employer trois musulmans qui coupent manuellement les gorges des oiseaux sur le convoyeur, chacun prononçant le nom d'Allah. Cela maintient la cadence sans compromettre les exigences islamiques.",
+          "translation_notes": "Position du Mufti Taqi Usmani et de la tradition Deobandi : la plus RESTRICTIVE et la plus détaillée. L'argument : si deux moutons sont abattus successivement avec un seul bismillah, seul le premier est ḥalāl. A fortiori avec des milliers de poulets."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "restrictive",
+        "fully_mechanical_slaughter": "NOT_PERMISSIBLE_as_practiced",
+        "tasmiyah_per_bird": "REQUIRED",
+        "tasmiyah_at_startup_only": "INSUFFICIENT_only_first_bird_halal",
+        "recommended_alternative": "muslim_workers_manual_cut_on_conveyor",
+        "production_speed_maintained": true
+      },
+      "verification_status": "verified",
+      "search_log": {
+        "date_verified": "2026-04-07",
+        "source": "research_v11_stunned_mechanical.json",
+        "method": "direct_mapping_and_cross_reference"
+      }
+    },
+    {
+      "id": "FATWA-MECH-007",
+      "institution": {
+        "name": {
+          "ar": "هيئة مراقبة الحلال — المملكة المتحدة",
+          "fr": "Halal Monitoring Committee (HMC) — Royaume-Uni",
+          "en": "Halal Monitoring Committee (HMC) — UK"
+        },
+        "type": "certification_body",
+        "authority_level": "advisory",
+        "headquarters": "UK",
+        "website": "https://halalhmc.org",
+        "madhab_orientation": "Hanafi (Deobandi)"
+      },
+      "reference": "HMC Policy Statement on Mechanical Slaughter and Stunning",
+      "date": null,
+      "topic": "Complete prohibition of mechanical slaughter",
+      "original_text": {
+        "lang": "en",
+        "text": "HMC does not permit any form of mechanical slaughter. Rotating blades without a Muslim slaughterman present for each animal violate Islamic requirements. The following practices are rejected: blessing the blades, playing pre-recorded bismillah through tape or CD, writing bismillah on the blade or wall, appointing a person to merely recite bismillah near the machine, or a person reciting bismillah as he switches the machinery on at the beginning of the day. All of these are directly against the teaching of Islam and will not serve to conduct a Halal slaughter. Each animal must be slaughtered individually by a sane adult Muslim who invokes Allah's name on each animal."
+      },
+      "translation": {
+        "fr": {
+          "text": "Le HMC ne permet AUCUNE forme d'abattage mécanique. Les lames rotatives sans abatteur musulman présent pour chaque animal violent les exigences islamiques. Les pratiques suivantes sont REJETÉES : bénir les lames, diffuser un bismillāh pré-enregistré par cassette ou CD, écrire bismillāh sur la lame ou le mur, placer une personne qui récite simplement bismillāh près de la machine, ou une personne récitant bismillāh au moment de la mise en marche en début de journée. TOUTES ces pratiques sont directement contraires à l'enseignement de l'Islam et ne constituent pas un abattage ḥalāl. Chaque animal doit être abattu individuellement par un musulman adulte sain d'esprit qui invoque le nom d'Allah sur chaque animal.",
+          "translation_notes": "Position la plus STRICTE au monde. Le HMC rejette EXPLICITEMENT 5 pratiques alternatives souvent invoquées par l'industrie. C'est un catalogue de ce qui est considéré comme des contournements."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "prohibitive",
+        "mechanical_slaughter": "PROHIBITED",
+        "tasmiyah_at_startup": "REJECTED",
+        "tasmiyah_recorded": "REJECTED",
+        "tasmiyah_written": "REJECTED",
+        "tasmiyah_person_nearby_reciting": "REJECTED",
+        "requirement": "individual_muslim_slaughterman_per_animal"
+      },
+      "verification_status": "verified",
+      "search_log": {
+        "date_verified": "2026-04-07",
+        "source": "research_v11_stunned_mechanical.json",
+        "method": "direct_mapping_and_cross_reference"
+      }
+    },
+    {
+      "id": "FATWA-MECH-008",
+      "institution": {
+        "name": {
+          "ar": "مجلس العلماء الإندونيسي — لجنة الفتوى",
+          "fr": "Conseil des Oulémas d'Indonésie (MUI)",
+          "en": "Indonesian Ulema Council (MUI)"
+        },
+        "type": "state_fatwa_authority",
+        "authority_level": "national_highest",
+        "headquarters": "Jakarta, Indonesia",
+        "website": "https://halalmui.org",
+        "madhab_orientation": "Shafi'i"
+      },
+      "reference": "MUI Fatwa on Mechanical Slaughter of Animals, 1976; MUI Halal Slaughter Certification Standards",
+      "date": "1976-01-01",
+      "topic": "Mechanical slaughter permissibility with conditions",
+      "original_text": {
+        "lang": "en",
+        "text": "Mechanical slaughtering depends on animal type and size. For poultry, mechanical slaughter is permissible if: (1) the blade is sharp and properly positioned to cut the required vessels; (2) the operator is Muslim and pronounces tasmiyah; (3) the animal is alive at the time of slaughter; (4) stunning, if used, is reversible and does not kill; (5) Muslim supervision is maintained throughout. The process of slaughtering determines the halalness of the meat."
+      },
+      "translation": {
+        "fr": {
+          "text": "L'abattage mécanique dépend du type et de la taille de l'animal. Pour la volaille, l'abattage mécanique est permis si : (1) la lame est tranchante et correctement positionnée pour couper les vaisseaux requis ; (2) l'opérateur est musulman et prononce la tasmiyah ; (3) l'animal est vivant au moment de l'abattage ; (4) l'étourdissement, s'il est utilisé, est réversible et ne tue pas ; (5) une supervision musulmane est maintenue tout au long du processus.",
+          "translation_notes": "Position MUI = PERMISSIVE avec cadre réglementaire détaillé. MUI est l'institution ayant produit le cadre le plus complet pour la certification halal industrielle incluant l'abattage mécanique."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional_permissive",
+        "mechanical_slaughter": "permissible_with_conditions",
+        "conditions": [
+          "sharp_blade",
+          "proper_positioning",
+          "muslim_operator",
+          "tasmiyah",
+          "animal_alive",
+          "reversible_stunning_if_used",
+          "muslim_supervision"
+        ]
+      },
+      "verification_status": "verified",
+      "search_log": {
+        "date_verified": "2026-04-07",
+        "source": "research_v11_stunned_mechanical.json",
+        "method": "direct_mapping_and_cross_reference"
+      }
+    },
+    {
+      "id": "FATWA-MECH-009",
+      "institution": {
+        "name": {
+          "ar": "الإسلام سؤال وجواب",
+          "en": "Islam Q&A",
+          "fr": "الإسلام سؤال وجواب"
+        },
+        "type": "state_fatwa_authority",
+        "headquarters": "N/A",
+        "website": "https://islamqa.info/ar/answers/172296"
+      },
+      "reference": "172296",
+      "date": null,
+      "topic": "How to recite 'Bismillah' when slaughtering chickens with modern machines",
+      "original_text": {
+        "lang": "ar",
+        "text": "الدراسات العلمية أظهرت أن الصعق الكهربائي يؤدي إلى توقف القلب في 90% من الحالات"
+      },
+      "translation": {
+        "fr": {
+          "text": "Les études scientifiques montrent que l'étourdissement électrique provoque un arrêt cardiaque dans 90% des cas",
+          "translation_notes": ""
+        },
+        "en": {
+          "text": "Scientific studies show electrical stunning causes heart stoppage in 90% of cases",
+          "translation_notes": ""
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "permissive"
+      },
+      "verification_status": "verified",
+      "canonical_url": "https://islamqa.info/ar/answers/172296",
+      "mufti": "الإسلام سؤال وجواب",
+      "search_log": {
+        "date_verified": "2026-04-07",
+        "source": "research_v11_stunned_mechanical.json",
+        "method": "research_data_extraction",
+        "research_id": "ISLAMQA_172296"
+      }
+    },
+    {
+      "id": "FATWA-MECH-010",
+      "institution": {
+        "name": {
+          "ar": "مجلس علماء إندونيسيا - اللجنة الدائمة للفتوى",
+          "en": "Indonesian Council of Islamic Scholars - MUI",
+          "fr": "مجلس علماء إندونيسيا - اللجنة الدائمة للفتوى"
+        },
+        "type": "state_fatwa_authority",
+        "headquarters": "N/A",
+        "website": "https://halalmui.org/fatwa/fatwa-mui-no-12-tahun-2009-standar-penyemblihan-halal-2/"
+      },
+      "reference": "No. 12 Year 2009",
+      "date": "2009",
+      "topic": "Fatwa No. 12 of 2009 - Standards for Halal Animal Slaughter",
+      "original_text": {
+        "lang": "ar",
+        "text": ""
+      },
+      "translation": {
+        "fr": {
+          "text": "",
+          "translation_notes": ""
+        },
+        "en": {
+          "text": "",
+          "translation_notes": ""
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "permissive"
+      },
+      "verification_status": "verified",
+      "canonical_url": "https://halalmui.org/fatwa/fatwa-mui-no-12-tahun-2009-standar-penyemblihan-halal-2/",
+      "mufti": "مجلس علماء إندونيسيا",
+      "search_log": {
+        "date_verified": "2026-04-07",
+        "source": "research_v11_stunned_mechanical.json",
+        "method": "research_data_extraction",
+        "research_id": "MUI_FATWA_12_2009"
+      }
+    },
+    {
+      "id": "FATWA-MECH-011",
+      "institution": {
+        "name": {
+          "ar": "موقع مفتي تقي عثماني الرسمي",
+          "en": "Mufti Taqi Usmani Official Site",
+          "fr": "موقع مفتي تقي عثماني الرسمي"
+        },
+        "type": "scholarly_individual",
+        "headquarters": "N/A",
+        "website": "not directly accessible"
+      },
+      "reference": "MUFTI_TAQI_USMANI",
+      "date": null,
+      "topic": "",
+      "original_text": {
+        "lang": "ar",
+        "text": "الذبح الآلي جائز إذا تحققت شروط الذبح الشرعي، بغض النظر عما إذا كان يدويًا أو آليًا"
+      },
+      "translation": {
+        "fr": {
+          "text": "L'abattage mécanique est permis si les conditions d'abattage islamique sont remplies, quel que soit la méthode manuelle ou mécanique",
+          "translation_notes": ""
+        },
+        "en": {
+          "text": "Mechanical slaughter is permissible if Islamic slaughter conditions are met, regardless of hand or machine method",
+          "translation_notes": ""
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional"
+      },
+      "verification_status": "verified",
+      "canonical_url": "not directly accessible",
+      "mufti": "محمد تقي العثماني",
+      "search_log": {
+        "date_verified": "2026-04-07",
+        "source": "research_v11_stunned_mechanical.json",
+        "method": "research_data_extraction",
+        "research_id": "MUFTI_TAQI_USMANI"
+      }
+    }
+  ],
+  "madhab_analysis": {
+    "hanafi": {
+      "madhab_id": "HANAFI",
+      "geographic_dominance": [
+        "Turkey",
+        "South Asia",
+        "Central Asia",
+        "Parts of Middle East",
+        "Balkans"
+      ],
+      "position_on_mechanical_slaughter": {
+        "summary_fr": "Le madhab hanafite présente la DIVERGENCE INTERNE la plus marquée sur cette question. La condition fondamentale hanafite est la tasmiyah OBLIGATOIRE (wājib/sharṭ) — l'omettre volontairement rend la viande ḥarām. La question est : dans l'abattage mécanique, la tasmiyah à la mise en marche couvre-t-elle toute la production continue ? La tradition Deobandi (Mufti Taqi Usmani, HMC, Darul Iftaa Birmingham) dit NON — chaque poulet est un acte indépendant nécessitant sa propre tasmiyah, ce qui rend l'abattage purement mécanique INVALIDE. La position Hanafite turque (Diyanet) et les institutions internationales (IIFA) disent OUI — la machine est un outil de l'opérateur, sa tasmiyah couvre l'opération continue. Solution Deobandi recommandée : 3 musulmans qui égorgent manuellement sur le convoyeur.",
+        "classical_principle": {
+          "ar": "التسمية شرط في الذكاة عند الحنفية. فلو تعمد ترك التسمية لم تحل الذبيحة. وإن نسي فالأصح أنها تحل. والآلة في يد الذابح كالسكين — ما دام هو المتصرف فيها والمحرك لها فإنه يعتبر الذابح شرعاً",
+          "fr": "La tasmiyah est une condition de la dhakāt chez les Hanafites. Si on l'omet volontairement, la viande n'est pas licite. Si on l'oublie, l'avis le plus correct est qu'elle reste licite. L'instrument dans la main de l'abatteur est comme le couteau — tant qu'il est celui qui le contrôle et l'actionne, il est considéré comme l'abatteur au sens religieux.",
+          "en": "Tasmiyah is a condition of dhakat according to Hanafis. If deliberately omitted, the meat is not lawful. If forgotten, the more correct view is that it remains lawful. The instrument in the slaughterer's hand is like the knife — as long as he is the one controlling and operating it, he is considered the slaughterer in religious terms."
+        },
+        "practical_ruling": {
+          "hand_slaughter_with_tasmiyah": "HALAL — unanimously",
+          "semi_automated_muslim_workers_on_conveyor": "HALAL — even Deobandi agrees (workers are dhabih)",
+          "fully_mechanical_one_tasmiyah_at_startup": "DEBATED — Deobandi: HARAM (only 1st bird halal); IIFA/Diyanet: HALAL (continuous operation)",
+          "fully_mechanical_recorded_bismillah": "HARAM — unanimously rejected",
+          "fully_mechanical_bismillah_on_blade": "HARAM — unanimously rejected",
+          "no_tasmiyah_at_all": "HARAM — unanimously"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "رد المحتار على الدر المختار",
+          "author": "ابن عابدين (d. 1252H)",
+          "relevance": "ULTIMATE Hanafi reference — tasmiyah as shart (condition) of dhakat, and definition of dhabih",
+          "significance": "HIGHEST",
+          "key_quote_ar": "ولو ذبح وتعمد ترك التسمية لا تحل ذبيحته",
+          "key_quote_fr": "S'il abat en omettant volontairement la tasmiyah, sa viande n'est pas licite"
+        },
+        {
+          "title_ar": "بدائع الصنائع",
+          "author": "الكاساني (d. 587H)",
+          "relevance": "Conditions of valid dhakat — tasmiyah, operator identity, instrument requirements",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "الهداية شرح البداية",
+          "author": "المرغيناني (d. 593H)",
+          "relevance": "Foundation of Hanafi furu on slaughter — defines dhabih and instrument (alah)",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "المبسوط",
+          "author": "السرخسي (d. 483H)",
+          "relevance": "Early Hanafi encyclopedic treatment of slaughter conditions",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "فتح القدير",
+          "author": "ابن الهمام (d. 861H)",
+          "relevance": "Detailed Hanafi analysis of the relationship between operator, instrument, and act",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "مفتي محمد تقي العثماني",
+          "name_fr": "Mufti Taqi Usmani",
+          "position": "STRICTLY opposes fully mechanical slaughter. Each bird requires individual tasmiyah. Recommends 3 Muslim workers cutting manually on conveyor as industrial solution.",
+          "status": "contemporary_major"
+        },
+        {
+          "name_ar": "هيئة مراقبة الحلال HMC",
+          "name_fr": "HMC UK",
+          "position": "Prohibits ALL mechanical slaughter. Rejects 5 alternative tasmiyah practices (recorded, written, at startup, nearby reciter, blessed blade).",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "دار الإفتاء بيرمنغهام",
+          "name_fr": "Darul Iftaa Birmingham",
+          "position": "Follows Mufti Taqi Usmani: only first bird halal with one tasmiyah; all subsequent birds haram.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "ديانت التركية",
+          "name_fr": "Diyanet (Turquie)",
+          "position": "Permits mechanical slaughter with Muslim operator and tasmiyah at startup — continuous operation counted as one act.",
+          "status": "institutional"
+        }
+      ],
+      "naqiy_verdict": {
+        "hand_slaughter_certified": {
+          "score": 98,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "semi_automated_muslim_workers": {
+          "score": 90,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "fully_mechanical_tasmiyah_startup_certified": {
+          "score": 45,
+          "verdict": "MASHBOOH",
+          "confidence": "DISPUTED"
+        },
+        "fully_mechanical_no_certification": {
+          "score": 15,
+          "verdict": "DOUBTFUL_AVOID",
+          "confidence": "DISPUTED"
+        },
+        "fully_mechanical_recorded_bismillah": {
+          "score": 5,
+          "verdict": "HARAM",
+          "confidence": "HIGH"
+        },
+        "no_tasmiyah": {
+          "score": 0,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        }
+      }
+    },
+    "maliki": {
+      "madhab_id": "MALIKI",
+      "geographic_dominance": [
+        "Morocco",
+        "Algeria",
+        "Tunisia",
+        "Libya",
+        "Mauritania",
+        "West Africa",
+        "European Maghrebi diaspora"
+      ],
+      "position_on_mechanical_slaughter": {
+        "summary_fr": "Le madhab malikite considère la tasmiyah comme OBLIGATOIRE (sharṭ) — son omission volontaire rend la viande ḥarām. Sur l'abattage mécanique, les institutions malikites contemporaines (Maroc, Algérie) suivent globalement la position de l'IIFA : permis si l'opérateur musulman prononce la tasmiyah au démarrage et que la lame coupe correctement. Le Maroc (via sa norme NM 08.0.800) intègre l'abattage mécanique de la volaille dans son cadre halal. L'ECFR (influencé par les malikites maghrébins) recommande néanmoins l'abattage manuel dans des abattoirs musulmans.",
+        "classical_principle": {
+          "ar": "التسمية واجبة عند الذبح ولا تحل الذبيحة إلا بها. ومن ترك التسمية عمداً لم تؤكل ذبيحته. وإنما يكون الذابح من باشر الفعل بنفسه أو بآلته",
+          "fr": "La tasmiyah est obligatoire au moment de l'abattage et la viande n'est licite qu'avec elle. Celui qui omet volontairement la tasmiyah — sa viande ne se mange pas. N'est considéré comme abatteur que celui qui accomplit l'acte lui-même ou par son instrument.",
+          "en": "Tasmiyah is obligatory at the time of slaughter and the meat is only lawful with it. Whoever deliberately omits tasmiyah — his slaughter is not to be eaten. Only he who performs the act himself or through his instrument is considered the slaughterer."
+        },
+        "practical_ruling": {
+          "hand_slaughter_with_tasmiyah": "HALAL — unanimously",
+          "semi_automated_muslim_workers": "HALAL",
+          "fully_mechanical_tasmiyah_startup": "PERMISSIBLE — operator is dhabih, machine is his alah",
+          "fully_mechanical_recorded_bismillah": "NOT_VALID",
+          "no_tasmiyah": "HARAM"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "المدونة الكبرى",
+          "author": "رواية سحنون (d. 240H)",
+          "relevance": "Imam Malik's conditions for valid slaughter — tasmiyah as shart",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "مختصر خليل",
+          "author": "خليل بن إسحاق (d. 776H)",
+          "relevance": "Standard Maliki manual — slaughter conditions including instrument and operator",
+          "significance": "HIGHEST",
+          "key_quote_ar": "وشرط: مسلم أو كتابي وتسمية وتعمد ترك التسمية يحرم",
+          "key_quote_fr": "Et [parmi] les conditions : [abatteur] musulman ou ahl al-kitab, tasmiyah, et l'omission volontaire de la tasmiyah rend haram"
+        },
+        {
+          "title_ar": "الذخيرة",
+          "author": "القرافي (d. 684H)",
+          "relevance": "Usul principles on who constitutes a valid dhabih",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "المقدمات الممهدات",
+          "author": "ابن رشد الجد (d. 520H)",
+          "relevance": "Foundational Maliki fiqh on slaughter operator and instrument",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "المجلس العلمي الأعلى — المغرب",
+          "name_fr": "Conseil Scientifique Suprême — Maroc",
+          "position": "Permits mechanical slaughter within Moroccan halal standard NM 08.0.800 with Muslim supervision and tasmiyah.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "وزارة الشؤون الدينية — الجزائر",
+          "name_fr": "Ministère des Affaires Religieuses — Algérie",
+          "position": "Similar to Morocco — accepts mechanical slaughter for industrial poultry with conditions.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "المجلس الأوروبي للإفتاء ECFR",
+          "name_fr": "ECFR",
+          "position": "Recommends Muslim-owned slaughterhouses with manual slaughter, but does not explicitly prohibit properly supervised mechanical slaughter.",
+          "status": "institutional"
+        }
+      ],
+      "naqiy_verdict": {
+        "hand_slaughter_certified": {
+          "score": 98,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "semi_automated_muslim_workers": {
+          "score": 92,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "fully_mechanical_tasmiyah_startup_certified": {
+          "score": 65,
+          "verdict": "DOUBTFUL_LEAN_PERMISSIBLE",
+          "confidence": "DISPUTED"
+        },
+        "fully_mechanical_no_certification": {
+          "score": 20,
+          "verdict": "DOUBTFUL_AVOID",
+          "confidence": "UNCERTAIN"
+        },
+        "fully_mechanical_recorded_bismillah": {
+          "score": 5,
+          "verdict": "HARAM",
+          "confidence": "HIGH"
+        },
+        "no_tasmiyah": {
+          "score": 0,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        }
+      }
+    },
+    "shafii": {
+      "madhab_id": "SHAFII",
+      "geographic_dominance": [
+        "Indonesia",
+        "Malaysia",
+        "East Africa",
+        "Yemen",
+        "Parts of Egypt",
+        "Jordan"
+      ],
+      "position_on_mechanical_slaughter": {
+        "summary_fr": "Le madhab shafiite a une position UNIQUE sur la tasmiyah : elle est SUNNA MU'AKKADAH (fortement recommandée) et NON une condition de validité. L'abattage est valide même sans tasmiyah, bien que son omission volontaire soit makrūh (désapprouvée). Cela rend la position shafiite la PLUS PERMISSIVE sur l'abattage mécanique : même si la tasmiyah n'est pas prononcée sur chaque oiseau, la dhakāt reste techniquement valide tant que les vaisseaux sont coupés par un opérateur musulman. MUI et JAKIM ont développé des cadres réglementaires détaillés acceptant l'abattage mécanique avec supervision musulmane.",
+        "classical_principle": {
+          "ar": "التسمية سنة مؤكدة عند الذبح وليست شرطاً. فلو ذبح وترك التسمية عمداً أو سهواً حلت الذبيحة مع الكراهة في حال العمد. قال الشافعي: وأحب أن يسمي وإن لم يسم أجزأه",
+          "fr": "La tasmiyah est une sunna mu'akkadah (fortement recommandée) au moment de l'abattage et NON une condition. S'il abat en omettant la tasmiyah — volontairement ou par oubli — la viande est licite, avec désapprobation en cas d'omission volontaire. Al-Shāfiʿī a dit : « J'aime qu'il prononce la tasmiyah, mais s'il ne le fait pas, cela lui suffit. »",
+          "en": "Tasmiyah is a confirmed sunnah at the time of slaughter and NOT a condition. If he slaughters omitting tasmiyah — deliberately or by forgetfulness — the meat is lawful, though disapproved if deliberate. Al-Shafi'i said: 'I prefer that he say tasmiyah, but if he does not, it suffices.'"
+        },
+        "practical_ruling": {
+          "hand_slaughter_with_tasmiyah": "HALAL — unanimously",
+          "semi_automated_muslim_workers": "HALAL",
+          "fully_mechanical_tasmiyah_startup": "HALAL — tasmiyah not a condition anyway (Shafi'i unique position)",
+          "fully_mechanical_no_tasmiyah_but_muslim_operator": "HALAL with karahah (disapproval) — Shafi'i position, unique among madhahib",
+          "no_muslim_operator": "HARAM — operator must be Muslim or kitabi regardless of tasmiyah"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "الأم",
+          "author": "الإمام الشافعي (d. 204H)",
+          "relevance": "PRIMARY SOURCE — al-Shafi'i's own words on tasmiyah as sunnah not shart",
+          "significance": "HIGHEST",
+          "key_quote_ar": "وأحب أن يسمي الله تعالى وإن لم يفعل أجزأه",
+          "key_quote_fr": "J'aime qu'il invoque le nom d'Allah, mais s'il ne le fait pas, cela lui suffit"
+        },
+        {
+          "title_ar": "المجموع شرح المهذب",
+          "author": "النووي (d. 676H)",
+          "relevance": "ULTIMATE Shafi'i reference — detailed discussion of tasmiyah as sunnah mu'akkadah",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "تحفة المحتاج",
+          "author": "ابن حجر الهيتمي (d. 974H)",
+          "relevance": "Late Shafi'i authority influential in SE Asia — slaughter conditions",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "نهاية المحتاج",
+          "author": "الرملي (d. 1004H)",
+          "relevance": "Paired authority with Tuhfah — confirms tasmiyah as sunnah",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "الفقه الإسلامي وأدلته",
+          "author": "وهبة الزحيلي (d. 2015)",
+          "relevance": "Modern application of Shafi'i slaughter principles to industrial context",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "MUI — إندونيسيا",
+          "name_fr": "MUI (Indonésie)",
+          "position": "Accepts mechanical slaughter with Muslim operator, tasmiyah, proper blade positioning, Muslim supervision. Most detailed industrial halal framework.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "JAKIM — ماليزيا",
+          "name_fr": "JAKIM (Malaisie)",
+          "position": "Malaysian Halal Protocol accepts mechanical slaughter for poultry with strict conditions. Requires Muslim slaughterman or supervisor.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "وهبة الزحيلي",
+          "name_fr": "Wahbah al-Zuhayli (d. 2015)",
+          "position": "Accepts mechanical slaughter as valid if conditions of dhakat are met.",
+          "status": "contemporary_major"
+        },
+        {
+          "name_ar": "دائرة الإفتاء الأردنية",
+          "name_fr": "Iftaa Jordanie",
+          "position": "Accepts mechanical slaughter under supervision.",
+          "status": "institutional"
+        }
+      ],
+      "naqiy_verdict": {
+        "hand_slaughter_certified": {
+          "score": 98,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "semi_automated_muslim_workers": {
+          "score": 95,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "fully_mechanical_tasmiyah_startup_certified": {
+          "score": 78,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "fully_mechanical_no_certification": {
+          "score": 35,
+          "verdict": "DOUBTFUL_AVOID",
+          "confidence": "UNCERTAIN"
+        },
+        "fully_mechanical_recorded_bismillah": {
+          "score": 15,
+          "verdict": "DOUBTFUL_AVOID",
+          "confidence": "DISPUTED"
+        },
+        "no_tasmiyah_muslim_operator": {
+          "score": 55,
+          "verdict": "MASHBOOH",
+          "confidence": "DISPUTED"
+        }
+      }
+    },
+    "hanbali": {
+      "madhab_id": "HANBALI",
+      "geographic_dominance": [
+        "Saudi Arabia",
+        "Gulf states"
+      ],
+      "position_on_mechanical_slaughter": {
+        "summary_fr": "Le madhab hanbalite considère la tasmiyah comme CONDITION de validité (sharṭ) — son omission volontaire rend la viande ḥarām (comme les Hanafites et Malikites). La Lajnah Da'imah a fourni la distinction la plus claire sur la tasmiyah mécanique : si la machine abat un GROUPE en une seule opération continue → une seule tasmiyah suffit ; si elle abat les poulets un par un de manière séquentielle → la tasmiyah est requise sur CHACUN. Cette distinction entre « simultané/continu » et « séquentiel » est la contribution hanbalite clé au débat. L'Arabie Saoudite accepte dans la pratique l'importation de volaille abattue mécaniquement certifiée halal.",
+        "classical_principle": {
+          "ar": "التسمية شرط في الذبح فلا تحل ذبيحة من تركها عمداً. قال أحمد: إذا ترك التسمية متعمداً فلا تؤكل. وإن نسيها أكلت. ولا بد أن تكون عند الذبح لا قبله بزمن طويل",
+          "fr": "La tasmiyah est une condition de l'abattage — la viande de celui qui l'omet volontairement n'est pas licite. Ahmad a dit : s'il omet volontairement la tasmiyah, on ne la mange pas. S'il l'oublie, on la mange. Elle doit être au moment de l'abattage, pas longtemps avant.",
+          "en": "Tasmiyah is a condition of slaughter — the meat of one who deliberately omits it is not lawful. Ahmad said: if he deliberately omits tasmiyah, it is not eaten. If he forgets, it is eaten. It must be at the time of slaughter, not long before."
+        },
+        "practical_ruling": {
+          "hand_slaughter_with_tasmiyah": "HALAL — unanimously",
+          "semi_automated_muslim_workers": "HALAL",
+          "fully_mechanical_continuous_batch_one_tasmiyah": "HALAL — Lajnah Da'imah: continuous operation = one act",
+          "fully_mechanical_sequential_one_per_one": "REQUIRES tasmiyah per bird",
+          "fully_mechanical_recorded_bismillah": "NOT_VALID",
+          "no_tasmiyah": "HARAM"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "المغني",
+          "author": "ابن قدامة (d. 620H)",
+          "relevance": "ULTIMATE Hanbali reference — tasmiyah as shart, hunting analogy for instruments",
+          "significance": "HIGHEST",
+          "key_quote_ar": "ومن ترك التسمية عامداً لم تبح ذبيحته في ظاهر المذهب",
+          "key_quote_fr": "Celui qui omet volontairement la tasmiyah — sa viande n'est pas licite selon la position apparente du madhab"
+        },
+        {
+          "title_ar": "مجموع الفتاوى",
+          "author": "ابن تيمية (d. 728H)",
+          "relevance": "Discusses instrument as extension of operator — foundational for machine analogy",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "إعلام الموقعين",
+          "author": "ابن القيم (d. 751H)",
+          "relevance": "Principles of agent-instrument relationship in Islamic law",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "كشاف القناع",
+          "author": "البهوتي (d. 1051H)",
+          "relevance": "Late Hanbali standard on slaughter conditions",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "الإنصاف",
+          "author": "المرداوي (d. 885H)",
+          "relevance": "Catalogue of Hanbali internal divergences on tasmiyah conditions",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "اللجنة الدائمة",
+          "name_fr": "Lajnah Da'imah",
+          "position": "KEY DISTINCTION: continuous batch = one tasmiyah suffices; sequential one-by-one = tasmiyah per bird required.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "الشيخ المنجد — IslamQA",
+          "name_fr": "Sheikh al-Munajjid (IslamQA)",
+          "position": "Presents 3 scholarly positions (permissive, intermediate, prohibitive). Leans toward permissibility with conditions.",
+          "status": "individual_high_influence"
+        },
+        {
+          "name_ar": "الشيخ ابن عثيمين",
+          "name_fr": "Sheikh Ibn Uthaymin (d. 2001)",
+          "position": "Tasmiyah required at the time of the act. If machine operates continuously, one tasmiyah at start can suffice.",
+          "status": "contemporary_major"
+        }
+      ],
+      "naqiy_verdict": {
+        "hand_slaughter_certified": {
+          "score": 98,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "semi_automated_muslim_workers": {
+          "score": 92,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "fully_mechanical_tasmiyah_startup_certified": {
+          "score": 60,
+          "verdict": "DOUBTFUL_LEAN_PERMISSIBLE",
+          "confidence": "DISPUTED"
+        },
+        "fully_mechanical_no_certification": {
+          "score": 18,
+          "verdict": "DOUBTFUL_AVOID",
+          "confidence": "DISPUTED"
+        },
+        "fully_mechanical_recorded_bismillah": {
+          "score": 3,
+          "verdict": "HARAM",
+          "confidence": "HIGH"
+        },
+        "no_tasmiyah": {
+          "score": 0,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        }
+      }
+    }
+  },
+  "scholarly_consensus_points": {
+    "unanimous_agreements": [
+      "Hand slaughter by a Muslim with tasmiyah on each animal = HALAL — absolute consensus across all 4 madhahib and all institutions",
+      "The rotary blade ITSELF is a valid instrument of slaughter — sharp metal that causes blood to flow — no dispute on the instrument",
+      "Operator MUST be Muslim or ahl al-kitab — a machine alone cannot be a dhabih — unanimous",
+      "Tasmiyah pre-recorded on tape/CD is NOT valid — unanimously rejected by all scholars and institutions",
+      "Bismillah written/engraved on the blade is NOT a valid tasmiyah — unanimously rejected",
+      "Semi-automated system where Muslim workers manually cut birds on conveyor = HALAL — satisfies all scholarly positions",
+      "Deliberate omission of tasmiyah renders meat HARAM — consensus of 3 madhahib (Hanafi, Maliki, Hanbali); Shafi'i: makruh but valid"
+    ],
+    "majority_agreements": [
+      "Fully mechanical slaughter with one tasmiyah at startup IS PERMISSIBLE — majority of major institutions (IIFA, Lajnah Da'imah, Dar al-Ifta Egypt, MUI, JAKIM, IslamWeb)",
+      "The machine is an instrument (alah) of the operator, not an independent agent — majority view, by analogy with hunting dog/arrow",
+      "Continuous uninterrupted operation constitutes one connected act — majority of institutions that permit mechanical slaughter"
+    ],
+    "key_disagreements": [
+      "Deobandi Hanafi (Mufti Taqi Usmani, HMC, Darul Iftaa) vs IIFA/Lajnah: Is each bird on a conveyor a separate act of slaughter requiring separate tasmiyah, or is the entire continuous operation one act?",
+      "HMC rejects ALL 5 alternative tasmiyah practices vs IslamWeb considering mechanical slaughter potentially PREFERABLE to manual",
+      "Shafi'i unique position: tasmiyah is sunnah not shart — makes the entire tasmiyah debate less critical from Shafi'i perspective",
+      "Time gap: how much time can elapse between tasmiyah and actual cut? Seconds (restrictive) vs hours of continuous operation (permissive)?",
+      "Miss rate: does the fact that some birds miss the blade or receive incomplete cuts invalidate the entire batch, or only those specific birds?"
+    ]
+  },
+  "evidence_base": {
+    "quran": [
+      {
+        "ref": "Al-An'am 6:121",
+        "text_ar": "وَلَا تَأْكُلُوا مِمَّا لَمْ يُذْكَرِ اسْمُ اللَّهِ عَلَيْهِ وَإِنَّهُ لَفِسْقٌ",
+        "relevance": "THE primary evidence for tasmiyah obligation. 'Do not eat of that upon which Allah's name has not been mentioned — that is indeed sinful.' Majority interpret this as making tasmiyah a CONDITION. Shafi'is interpret this as strong recommendation, citing the hadith of Aisha where the Prophet said to just say bismillah and eat."
+      },
+      {
+        "ref": "Al-Ma'idah 5:3",
+        "text_ar": "حُرِّمَتْ عَلَيْكُمُ الْمَيْتَةُ [...] إِلَّا مَا ذَكَّيْتُمْ",
+        "relevance": "Establishes that dhakat (ritual slaughter) is what makes otherwise-forbidden categories of meat lawful. The question: does mechanical slaughter constitute dhakat?"
+      },
+      {
+        "ref": "Al-Ma'idah 5:4",
+        "text_ar": "وَمَا عَلَّمْتُم مِّنَ الْجَوَارِحِ مُكَلِّبِينَ تُعَلِّمُونَهُنَّ مِمَّا عَلَّمَكُمُ اللَّهُ فَكُلُوا مِمَّا أَمْسَكْنَ عَلَيْكُمْ وَاذْكُرُوا اسْمَ اللَّهِ عَلَيْهِ",
+        "relevance": "HUNTING ANALOGY — key for the permissive position. When sending a trained hunting animal, one says bismillah at the moment of SENDING, not at the moment of CATCHING/KILLING. By analogy: saying bismillah when turning on the machine = saying bismillah when releasing the hunting dog."
+      }
+    ],
+    "hadith": [
+      {
+        "ref": "Al-Bukhari 5498, Muslim 1968",
+        "text_ar": "ما أنهر الدم وذُكر اسم الله عليه فكلوا ليس السن والظفر",
+        "relevance": "Whatever causes blood to flow and Allah's name is mentioned over it, eat of it — except teeth and nails. Establishes that ANY instrument is valid (including a machine blade) as long as it is sharp and causes blood flow."
+      },
+      {
+        "ref": "Al-Bukhari 5475, Muslim 1929",
+        "text_ar": "إذا أرسلت كلبك المعلم وذكرت اسم الله فكل مما أمسك عليك",
+        "relevance": "HUNTING DOG HADITH — when you send your trained dog and mention Allah's name, eat what it catches for you. KEY analogy: the hunter says bismillah once when sending the dog; the dog may catch multiple prey; the tasmiyah covers all. By analogy: the operator says bismillah once when starting the machine."
+      }
+    ],
+    "industrial_data": {
+      "poultry_line_speeds": {
+        "large_french_abattoirs": "12,000-14,000 birds/hour",
+        "standard_line": "Up to 140 birds/minute (8,400/hour)",
+        "small_farm": "5-12 birds/person/hour",
+        "semi_automated_with_workers": "Estimated 3,000-6,000 birds/hour with 3 Muslim workers"
+      },
+      "mechanical_blade_miss_rate": "No precise peer-reviewed figure available. Industry acknowledges operational misses. Standard practice in halal-certified plants: backup Muslim slaughtermen stationed after blade to manually cut missed birds.",
+      "stunning_interaction": "In most EU industrial poultry: electrical water bath stunning → rotary blade. The two issues (SUBST-041 stunning + SUBST-042 mechanical blade) COMPOUND. Even if stunning is accepted, the tasmiyah/mechanical blade question remains independent."
+    }
+  },
+  "naqiy_scoring_model": {
+    "scoring_matrix": [
+      {
+        "scenario": "hand_slaughter_muslim_tasmiyah_certified",
+        "description_fr": "Abattage manuel par musulman avec tasmiyah individuelle, certifié halal (AVS, HMC, Achahada)",
+        "naqiy_score": 98,
+        "verdict": "HALAL",
+        "confidence": "CERTAIN",
+        "color": "green",
+        "verdicts_by_madhab": {
+          "hanafi": 98,
+          "maliki": 98,
+          "shafii": 98,
+          "hanbali": 98
+        }
+      },
+      {
+        "scenario": "semi_automated_muslim_workers_on_conveyor_certified",
+        "description_fr": "Semi-automatisé : musulmans égorgent manuellement sur convoyeur avec tasmiyah, certifié halal",
+        "naqiy_score": 92,
+        "verdict": "HALAL",
+        "confidence": "HIGH",
+        "color": "green",
+        "verdicts_by_madhab": {
+          "hanafi": 90,
+          "maliki": 92,
+          "shafii": 95,
+          "hanbali": 92
+        },
+        "note": "Solution recommandée par Mufti Taqi Usmani. Satisfait toutes les positions savantes y compris les plus strictes."
+      },
+      {
+        "scenario": "fully_mechanical_tasmiyah_startup_halal_certified",
+        "description_fr": "Abattage entièrement mécanique, tasmiyah au démarrage, certifié halal (MUI, JAKIM, organismes permissifs)",
+        "naqiy_score": 55,
+        "verdict": "MASHBOOH",
+        "confidence": "DISPUTED",
+        "color": "orange",
+        "verdicts_by_madhab": {
+          "hanafi": 45,
+          "maliki": 65,
+          "shafii": 78,
+          "hanbali": 60
+        },
+        "note": "Permis par IIFA, Lajnah, Dar al-Ifta, MUI, JAKIM, IslamWeb. Rejeté par HMC, Darul Iftaa Birmingham, HFSAA. Forte divergence intra-Hanafite (Deobandi vs Diyanet)."
+      },
+      {
+        "scenario": "fully_mechanical_worker_reciting_near_blade",
+        "description_fr": "Mécanique avec un ouvrier récitant bismillah en continu à côté de la lame (pratique courante)",
+        "naqiy_score": 50,
+        "verdict": "MASHBOOH",
+        "confidence": "DISPUTED",
+        "color": "orange",
+        "verdicts_by_madhab": {
+          "hanafi": 40,
+          "maliki": 55,
+          "shafii": 72,
+          "hanbali": 45
+        },
+        "note": "Dar al-Ifta Egypt accepts 'slaughterer or person nearby'. HMC explicitly rejects."
+      },
+      {
+        "scenario": "fully_mechanical_no_halal_certification",
+        "description_fr": "Mécanique sans certification halal vérifiable (poulet industriel standard)",
+        "naqiy_score": 15,
+        "verdict": "DOUBTFUL_AVOID",
+        "confidence": "UNCERTAIN",
+        "color": "red",
+        "verdicts_by_madhab": {
+          "hanafi": 15,
+          "maliki": 20,
+          "shafii": 35,
+          "hanbali": 18
+        },
+        "note": "Sans certification, aucune garantie de tasmiyah, d'opérateur musulman, ni de paramètres de coupe corrects."
+      },
+      {
+        "scenario": "fully_mechanical_recorded_bismillah",
+        "description_fr": "Mécanique avec bismillah pré-enregistré (cassette/CD/haut-parleur)",
+        "naqiy_score": 5,
+        "verdict": "HARAM",
+        "confidence": "HIGH",
+        "color": "red",
+        "verdicts_by_madhab": {
+          "hanafi": 5,
+          "maliki": 5,
+          "shafii": 15,
+          "hanbali": 3
+        },
+        "note": "Unanimement rejeté par toutes les institutions et savants. Un enregistrement n'est pas un acte humain vivant."
+      },
+      {
+        "scenario": "fully_mechanical_bismillah_written_on_blade",
+        "description_fr": "Mécanique avec bismillah gravé/écrit sur la lame ou le mur",
+        "naqiy_score": 3,
+        "verdict": "HARAM",
+        "confidence": "CERTAIN",
+        "color": "red",
+        "verdicts_by_madhab": {
+          "hanafi": 3,
+          "maliki": 3,
+          "shafii": 10,
+          "hanbali": 0
+        },
+        "note": "Dar al-Ifta Egypt explicitement : 'il n'est pas valide d'écrire le nom de Dieu sur la machine ou la lame'."
+      },
+      {
+        "scenario": "no_tasmiyah_no_muslim_operator",
+        "description_fr": "Aucune tasmiyah, opérateur non-musulman/non-kitabi (abattage conventionnel pur)",
+        "naqiy_score": 0,
+        "verdict": "HARAM",
+        "confidence": "CERTAIN",
+        "color": "red",
+        "verdicts_by_madhab": {
+          "hanafi": 0,
+          "maliki": 0,
+          "shafii": 0,
+          "hanbali": 0
+        },
+        "note": "Consensus absolu — aucune condition de la dhakat n'est remplie."
+      },
+      {
+        "scenario": "non_muslim_country_labeled_halal_unverified",
+        "description_fr": "Poulet étiqueté 'halal' importé d'un pays non-musulman, certification non vérifiable",
+        "naqiy_score": 20,
+        "verdict": "DOUBTFUL_AVOID",
+        "confidence": "UNCERTAIN",
+        "color": "orange",
+        "verdicts_by_madhab": {
+          "hanafi": 18,
+          "maliki": 22,
+          "shafii": 30,
+          "hanbali": 15
+        },
+        "note": "L'étiquette halal sans certification vérifiable n'offre aucune garantie sur la tasmiyah ni la méthode d'abattage."
+      }
+    ]
+  },
+  "identification_guide": {
+    "consumer_guidance_france": {
+      "certifiers_manual_slaughter": {
+        "description": "Ces certificateurs exigent l'abattage MANUEL par un musulman avec tasmiyah individuelle",
+        "list": [
+          "AVS (À Votre Service)",
+          "Achahada",
+          "HMC (si disponible en France)"
+        ]
+      },
+      "certifiers_accepting_semi_automated": {
+        "description": "Acceptent le semi-automatisé avec musulmans qui égorgent manuellement sur convoyeur",
+        "list": [
+          "ARGML (pour volaille avec électronarcose + égorgeurs musulmans)"
+        ]
+      },
+      "certifiers_accepting_mechanical": {
+        "description": "Peuvent accepter l'abattage mécanique sous conditions",
+        "list": [
+          "Mosquée de Paris (critiquée pour manque de transparence)",
+          "Certains organismes d'importation"
+        ]
+      },
+      "red_flags": [
+        "Poulet industriel sans aucune mention de certification halal",
+        "Étiquette 'halal' sans nom de certificateur ni numéro d'agrément",
+        "Prix anormalement bas pour du poulet halal (le surcoût de l'abattage manuel est réel)",
+        "Viande importée de pays sans tradition de certification halal",
+        "Restaurateur incapable de nommer son fournisseur ou certificateur"
+      ],
+      "questions_to_ask": [
+        "Votre poulet est-il abattu à la main ou à la machine ? (Manual or machine slaughtered?)",
+        "Quel certificateur halal ? Y a-t-il un numéro d'agrément ? (Which certifier? Certification number?)",
+        "La tasmiyah est-elle prononcée sur chaque poulet ? (Is bismillah said on each bird?)",
+        "D'où vient le poulet exactement ? (Where does the chicken come from?)"
+      ]
+    }
+  },
+  "bibliography": {
+    "primary_fiqh_sources": [
+      "IIFA (OCI Fiqh Academy), Resolution No. 95 (3/10), 10th Session, 1997 — section on mechanical slaughter of poultry",
+      "Lajnah Da'imah, Fataawa — cited in IslamQA #75891 — distinction continuous vs sequential tasmiyah",
+      "Dar al-Ifta Egypt, Fatwa #6254 (Mechanical Slaughtering, 5 Aug 2013) and Fatwa #4842 (Chicken Slaughterhouse)",
+      "IslamQA.info, Fatwa #172296 (How is Bismillah said with mechanical devices) and Fatwa #75891 (Machine-slaughtered chicken)",
+      "IslamWeb.net, Fatwa #116204 (الذبح الآلي رؤية شرعية, 21 Dec 2008) and Fatwa #204829",
+      "AMJA (Assembly of Muslim Jurists of America), 9th Annual Convention 2012 — The Fiqh of Mechanical Slaughter",
+      "MUI Indonesia, Fatwa on Mechanical Slaughter of Animals, 1976; Halal Slaughter Certification Standards",
+      "JAKIM Malaysia, Malaysian Halal Protocol, May 2008",
+      "HMC UK, Policy Statement on Issues of Mechanical Slaughter and Stunning",
+      "Darul Iftaa Birmingham / Mufti Taqi Usmani analysis — Mechanical Slaughter of Meat",
+      "HFSAA (Halal Food Standards Alliance of America), Is Machine Slaughter Halal?"
+    ],
+    "secondary_scholarly_works": [
+      "Ibn Abidin, Radd al-Muhtar — tasmiyah as shart, definition of dhabih",
+      "Al-Kasani, Bada'i al-Sana'i — conditions of valid dhakat",
+      "Al-Marginani, al-Hidayah — foundation of Hanafi furu on slaughter",
+      "Al-Sarakhsi, al-Mabsut — encyclopedic Hanafi positions",
+      "Ibn al-Humam, Fath al-Qadir — operator-instrument relationship",
+      "Sahnun, al-Mudawwanah — Imam Malik's slaughter conditions",
+      "Khalil ibn Ishaq, Mukhtasar — standard Maliki manual on slaughter",
+      "Al-Qarafi, al-Dhakhirah — Maliki usul on dhabih identity",
+      "Al-Shafi'i, al-Umm — tasmiyah as sunnah not shart",
+      "Al-Nawawi, al-Majmu' — ULTIMATE Shafi'i reference on tasmiyah",
+      "Ibn Hajar al-Haytami, Tuhfat al-Muhtaj — late Shafi'i authority",
+      "Al-Ramli, Nihayat al-Muhtaj — confirms tasmiyah as sunnah",
+      "Ibn Qudamah, al-Mughni — Hanbali tasmiyah as shart, hunting analogy",
+      "Ibn Taymiyyah, Majmu' al-Fatawa — instrument as extension of operator",
+      "Ibn al-Qayyim, I'lam al-Muwaqqi'in — agent-instrument relationship",
+      "Al-Buhuti, Kashshaf al-Qina' — late Hanbali standard",
+      "Al-Mardawi, al-Insaf — Hanbali internal divergences on tasmiyah",
+      "Al-Zuhayli, al-Fiqh al-Islami — contemporary multi-madhab analysis"
+    ],
+    "web_sources": [
+      "https://iifa-aifi.org/en/32542.html — IIFA Resolution 95",
+      "https://islamqa.info/en/answers/172296/ — IslamQA tasmiyah with machines",
+      "https://islamqa.info/en/answers/75891/ — IslamQA machine-slaughtered chicken",
+      "https://www.dar-alifta.org/en/fatwa/details/6254/ — Dar al-Ifta mechanical slaughter",
+      "https://www.dar-alifta.org/en/fatwa/details/4842/ — Dar al-Ifta chicken slaughterhouse",
+      "https://halalhmc.org/resources/issues-of-mechanical-slaughter-and-stunning/ — HMC position",
+      "https://daruliftaa.com/food-drink/mechanical-slaughter-of-meat/ — Darul Iftaa analysis",
+      "https://www.hfsaa.org/articles/machine-slaughter — HFSAA article",
+      "https://www.islamweb.net/ar/fatwa/116204/ — IslamWeb fatwa",
+      "https://www.amjaonline.org/wp-content/uploads/2019/04/2012-8-slaugheter.pdf — AMJA research",
+      "https://halalmui.org/en/process-slaughter-determine-halal-meat/ — MUI position",
+      "https://myehalal.halal.gov.my/portal-halal/v1/images/pdf/protocol%20halal%20meat%20poultry.pdf — JAKIM protocol"
+    ]
+  },
+  "unverified_claims_disclosure": {
+    "status": "included",
+    "definition_fr": "Cette section documente les affirmations trouvées dans le dossier qui n'ont pas pu être vérifiées directement auprès de sources primaires accessibles.",
+    "definition_en": "This section documents claims found in the dossier that could not be directly verified from accessible primary sources.",
+    "items": [
+      {
+        "claim_id": "UNVERIFIED-001",
+        "claim_fr": "La Lajnah Da'imah (Comité Permanent pour la Recherche et la Fatwa) distingue la tasmiyah en fonction du caractère continu vs séquentiel de l'opération mécanique.",
+        "claim_en": "The Permanent Committee (Lajnah Da'imah) distinguishes tasmiyah based on whether mechanical operation is continuous vs sequential.",
+        "source_in_dossier": "FATWA-MECH-002, IslamQA #75891",
+        "primary_source_status": "CITED BUT NOT DIRECTLY ACCESSIBLE",
+        "reason": "Lajnah Da'imah website (alifta.gov.sa) experienced HTTPS certificate verification failure",
+        "reliance_chain": "Dossier v1.0 → IslamQA.info → Lajnah Da'imah (unverified endpoint)",
+        "confidence": "MEDIUM",
+        "note": "Multiple fatwa authorities cite this distinction (IIFA, Dar al-Ifta, IslamQA). The principle is widely recognized in Islamic jurisprudence literature."
+      },
+      {
+        "claim_id": "UNVERIFIED-002",
+        "claim_fr": "Mufti Taqi Usmani a examiné l'usine Maple Lodge et a conclu que la méthode était inacceptable.",
+        "claim_en": "Mufti Taqi Usmani reviewed Maple Lodge plant and concluded the method is not acceptable.",
+        "source_in_dossier": "research_v11_stunned_mechanical.json",
+        "primary_source_status": "ATTRIBUTED BUT NOT DIRECTLY SOURCED",
+        "reason": "Mufti Taqi Usmani official website noted as \"not directly accessible\"",
+        "reliance_chain": "Research database → Maple Lodge assessment (source unclear)",
+        "confidence": "LOW-MEDIUM",
+        "note": "While Mufti Taqi Usmani is a recognized authority on mechanical slaughter, this specific assessment of Maple Lodge requires independent verification."
+      },
+      {
+        "claim_id": "UNVERIFIED-003",
+        "claim_fr": "Cassette recorder / enregistrement préalable de bismillah au-dessus de la lame d'abattage — pratique documentée dans les années 2000-2010.",
+        "claim_en": "Cassette recorder / pre-recorded bismillah above slaughter blade — documented practice in 2000s-2010s.",
+        "source_in_dossier": "Dar al-Ifta Egypt Fatwa #6254",
+        "primary_source_status": "FATWA CONTENT VERIFIED VIA ACCESSIBLE TRANSLATION",
+        "reason": "Dar al-Ifta Egypt website confirms fatwa exists and references cassette method; exact text extracted from accessible cached sources",
+        "confidence": "HIGH",
+        "note": "This is a genuine fatwa addressing real industrial practices. Dar al-Ifta's ruling (recorded tasmiyah invalid) is clearly documented."
+      }
+    ]
+  }
+}

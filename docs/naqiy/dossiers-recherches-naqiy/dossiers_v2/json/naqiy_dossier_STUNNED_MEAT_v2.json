@@ -1,0 +1,1376 @@
+{
+  "meta": {
+    "dossier_id": "NAQIY-DOSSIER-004",
+    "subject": "Viande étourdie / اللحوم المذبوحة بعد التدويخ / Pre-Slaughter Stunned Meat",
+    "version": "2.0.0",
+    "created_at": "2026-04-03",
+    "merged_at": "2026-04-07",
+    "methodology": "Collecte multi-institutionnelle, classification par madhab, données scientifiques, terrain vidéo (7 sources YouTube FR), hiérarchisation par autorité",
+    "author_system": "Naqiy Halal Analysis Engine",
+    "languages": [
+      "ar",
+      "fr",
+      "en"
+    ],
+    "scope": "Sunni — 4 madhahib + institutions contemporaines + législation européenne + données terrain France",
+    "key_fiqhi_issue": "SLAUGHTER",
+    "key_difference_from_previous_dossiers": "Unlike food additives (gelatin, E471, alcohol) where the issue is the SUBSTANCE itself, stunned meat's issue is the PROCESS. The animal species is halal (bovine, ovine, poultry) — the question is whether the METHOD of slaughter invalidates the dhakat. This is the most impactful contemporary issue for Muslim consumers in the West, as virtually all industrial meat in Europe is stunned before slaughter.",
+    "v10_base": "Collecte complète: analyses scientifiques, vidéos, NaqiyScore, méthodologies",
+    "v11_integration": "8 fatwas vérifiées en direct + correction date IIFA Resolution 95 + divulgation claims non vérifiées",
+    "merge_notes": "v2.0 fusionne richesse v1.0 (analyses, vidéos, scoring) + intégrité v1.1 (fatwas vérifiées, métadonnées, date corrigée)"
+  },
+  "substance": {
+    "id": "SUBST-041",
+    "names": {
+      "ar": "اللحوم المذبوحة بعد التدويخ / التصعيق قبل الذبح",
+      "fr": "Viande étourdie avant abattage / Étourdissement pré-abattage",
+      "en": "Pre-slaughter stunned meat / Stunning before slaughter",
+      "synonyms": [
+        "Stunned meat",
+        "Viande étourdie",
+        "Électronarcose",
+        "Captive bolt",
+        "CO2 stunning",
+        "Assommage",
+        "اللحم المصعوق",
+        "الصعق الكهربائي قبل الذبح"
+      ]
+    },
+    "category": "slaughter_method",
+    "description": {
+      "ar": "التدويخ قبل الذبح هو إفقاد الحيوان وعيه قبل قطع الأوداج والحلقوم بأساليب مختلفة: الصعق الكهربائي (في الرأس فقط أو من الرأس إلى الجسم)، المسدس ذو المسمار الأسير (اختراقي أو غير اختراقي)، أو الغاز (ثاني أكسيد الكربون). تفرضه التشريعات الغربية لأسباب 'رفاهية الحيوان' مع استثناءات دينية متفاوتة",
+      "fr": "L'étourdissement pré-abattage consiste à rendre l'animal inconscient avant l'incision des vaisseaux sanguins du cou, par différentes méthodes : choc électrique (tête seule ou tête-corps), pistolet à tige captive (pénétrant ou non-pénétrant), ou gaz (CO₂). Il est imposé par les législations occidentales pour des raisons de 'bien-être animal' avec des exemptions religieuses variables.",
+      "en": "Pre-slaughter stunning renders the animal unconscious before cutting the neck blood vessels, using various methods: electrical shock (head-only or head-to-body), captive bolt gun (penetrative or non-penetrative), or gas (CO₂). It is mandated by Western legislation for 'animal welfare' reasons with variable religious exemptions."
+    },
+    "stunning_methods": {
+      "electrical_head_only": {
+        "description": "Two electrodes placed on temples/forehead. Causes temporary unconsciousness via brain disruption.",
+        "reversibility": "REVERSIBLE — animal regains consciousness if not slaughtered (30-120 seconds depending on species/parameters)",
+        "parameters_iifa": {
+          "voltage": "100-400V",
+          "current_sheep": "0.75-1.0A",
+          "current_cattle": "2.0-2.5A",
+          "duration": "3-6 seconds"
+        },
+        "islamic_status": "CONDITIONALLY PERMISSIBLE — if animal remains alive and recovers if left alone",
+        "death_rate_before_slaughter": "LOW — reversible by design; no precise peer-reviewed mortality figure available (EFSA literature confirms reversibility but does not quantify exact pre-slaughter mortality rate for head-only)",
+        "used_for": [
+          "Cattle",
+          "Sheep",
+          "Goats"
+        ]
+      },
+      "electrical_head_to_body": {
+        "description": "Current passes through head AND body, causing cardiac arrest (ventricular fibrillation).",
+        "reversibility": "NOT REVERSIBLE — designed to be LETHAL (stops the heart)",
+        "islamic_status": "PROHIBITED — animal dies from electrocution before slaughter = carrion (maytah)",
+        "death_rate_before_slaughter": "VERY HIGH (>90% — designed to kill)",
+        "used_for": [
+          "Sheep (most large EU plants)",
+          "Cattle (some plants)"
+        ],
+        "critical_note": "This is the MOST COMMON method in EU industrial sheep slaughter. Most large European sheep plants use head-to-back or head-to-side body stunning = cardiac arrest = animal dies BEFORE the knife."
+      },
+      "electrical_water_bath_poultry": {
+        "description": "Poultry shackled upside down on conveyor, heads pass through electrified water bath.",
+        "reversibility": "VARIABLE — depends on current. Often lethal.",
+        "islamic_status": "PROHIBITED by most institutions (IIFA, Lajnah, ECFR, HMC). Mortality rate 10-15% pre-slaughter (VID6 testimony: 15%).",
+        "death_rate_before_slaughter": "10-15% (industry data) to 30%+ (some studies)",
+        "used_for": [
+          "Poultry (chickens, turkeys)"
+        ],
+        "critical_note": "Poultry stunning is the most problematic for halal. Birds are often dead before reaching the blade. Even surviving birds may recover consciousness during slaughter."
+      },
+      "captive_bolt_penetrative": {
+        "description": "Metal bolt fired into skull, penetrating brain tissue. Causes permanent brain destruction.",
+        "reversibility": "NOT REVERSIBLE — permanent brain injury, animal cannot recover",
+        "islamic_status": "PROHIBITED UNANIMOUSLY — animal dies or suffers irreversible damage before slaughter",
+        "death_rate_before_slaughter": "EXTREMELY HIGH — designed to destroy brain",
+        "used_for": [
+          "Cattle (most EU beef plants)",
+          "Pigs (irrelevant for halal)"
+        ],
+        "effectiveness": "84-98% adequate stunning depending on facility; 2-16% require multiple shots"
+      },
+      "captive_bolt_non_penetrative": {
+        "description": "Mushroom-headed bolt strikes skull without penetrating. Causes concussion.",
+        "reversibility": "POTENTIALLY REVERSIBLE — if correctly applied, animal can recover",
+        "islamic_status": "DEBATED — some institutions permit (IIFA), others prohibit",
+        "death_rate_before_slaughter": "VARIABLE — higher risk than electrical head-only",
+        "used_for": [
+          "Cattle (some facilities)",
+          "Small ruminants"
+        ]
+      },
+      "co2_gas_stunning": {
+        "description": "Animals exposed to high-concentration CO₂ gas causing unconsciousness/asphyxiation.",
+        "reversibility": "DEPENDS ON CONCENTRATION — >70% CO₂ = lethal (suffocation); <55% = potentially reversible",
+        "islamic_status": "HIGHLY DEBATED — most Islamic authorities reject; some accept low-concentration",
+        "death_rate_before_slaughter": "HIGH at industrial concentrations (typically 70-90% CO₂ = lethal)",
+        "used_for": [
+          "Poultry (large-scale)",
+          "Pigs (irrelevant)"
+        ],
+        "welfare_note": "CO₂ is highly aversive and painful to poultry. Scientifically controversial even from animal welfare perspective."
+      }
+    },
+    "common_applications": [
+      {
+        "sector": "beef",
+        "products": [
+          "steaks",
+          "ground beef",
+          "roasts"
+        ],
+        "stunning_method": "Captive bolt (penetrative) — most EU/US",
+        "halal_compliant": "NO — penetrative bolt kills before slaughter",
+        "frequency": "UBIQUITOUS in Western industrial beef"
+      },
+      {
+        "sector": "lamb_mutton",
+        "products": [
+          "lamb chops",
+          "leg of lamb",
+          "merguez"
+        ],
+        "stunning_method": "Electrical head-to-body (most EU) or head-only (halal-certified)",
+        "halal_compliant": "CONDITIONAL — head-only = possible; head-to-body = NO",
+        "frequency": "VERY_HIGH in EU"
+      },
+      {
+        "sector": "poultry",
+        "products": [
+          "chicken",
+          "turkey",
+          "nuggets"
+        ],
+        "stunning_method": "Electrical water bath (most EU/US) or CO₂ gas",
+        "halal_compliant": "NO for water bath (high mortality); DEBATED for low-CO₂",
+        "frequency": "UBIQUITOUS"
+      },
+      {
+        "sector": "processed_meat",
+        "products": [
+          "sausages",
+          "cold cuts",
+          "ready meals",
+          "cachir/mortadelle"
+        ],
+        "stunning_method": "Various — depends on source meat",
+        "halal_compliant": "UNKNOWN — processed products mix sources, traceability lost",
+        "frequency": "UBIQUITOUS"
+      }
+    ],
+    "france_market_data_from_videos": {
+      "restaurants_halal_non_compliant": "70-80% (source: Bilel Achahada, VID1)",
+      "boucheries_without_certification": "~90% (source: VID1, VID5)",
+      "market_controlled_by_non_specialist_groups": "~80% (source: VID5, VID6, VID7)",
+      "meat_sourced_from_stunning_countries": "Significant proportion from Belgium, Netherlands, Germany, Poland, Romania — countries where stunning IS mandatory (Belgium Flanders/Wallonia ban confirmed by ECHR 2024; only Brussels Region exempts) (source: VID6, VID7)",
+      "cost_halal_vs_conventional": "Surcoût 0.50-1.00€/kg for genuine halal; conventional slaughter = 10-15 centimes (source: VID1)",
+      "key_french_certifiers": [
+        "AVS (A Votre Service)",
+        "Achahada",
+        "Mosquée de Paris",
+        "ARGML (Grande Mosquée de Lyon)"
+      ]
+    }
+  },
+  "core_islamic_concepts": {
+    "primary_concept": {
+      "id": "CONCEPT-DHAKAT",
+      "term": {
+        "ar": "الذكاة الشرعية",
+        "ar_transliteration": "al-dhakāt al-sharʿiyyah",
+        "fr": "L'abattage rituel islamique",
+        "en": "Islamic ritual slaughter (dhabihah)"
+      },
+      "definition": {
+        "ar": "الذكاة هي ذبح الحيوان المأكول أو نحره بقطع الحلقوم والمريء والودجين أو أحدهما مع التسمية، وشروطها: أن يكون الذابح مسلماً أو كتابياً، وأن تكون الآلة حادة، وأن يقطع ما يجب قطعه، وأن يذكر اسم الله تعالى",
+        "fr": "La dhakāt est l'abattage de l'animal comestible par section de la trachée (ḥulqūm), de l'œsophage (marīʾ), et des deux veines jugulaires (wadajayn) ou l'une d'elles, en mentionnant le nom d'Allah. Ses conditions : que l'abatteur soit musulman ou ahl al-kitāb, que l'instrument soit tranchant, que ce qui doit être coupé le soit, et que le nom d'Allah soit mentionné.",
+        "en": "Dhakat is the slaughter of an edible animal by cutting the trachea (hulqum), esophagus (mari'), and both jugular veins (wadajayn) or one of them, while mentioning Allah's name. Its conditions: the slaughterer must be Muslim or ahl al-kitab, the instrument must be sharp, what must be cut must be cut, and Allah's name must be mentioned."
+      },
+      "conditions_for_validity": [
+        "الحيوان حي وقت الذبح — The animal must be ALIVE at the time of slaughter",
+        "الذابح مسلم أو كتابي — The slaughterer must be Muslim or People of the Book",
+        "التسمية (بسم الله / الله أكبر) — Mention of Allah's name (bismillah / Allahu akbar)",
+        "الآلة حادة قاطعة — Sharp cutting instrument",
+        "قطع الحلقوم والمريء والودجين — Cutting the trachea, esophagus, and jugular veins",
+        "إنهار الدم (خروج الدم بقوة) — Blood must flow out forcefully"
+      ],
+      "application_to_stunning": "The CRITICAL condition is that the animal must be ALIVE at the moment the knife cuts the throat. If stunning kills the animal before the knife reaches it, the meat is CARRION (maytah) — haram by consensus. The entire debate revolves around: does the stunning method used in THIS specific case kill the animal before slaughter or not?"
+    },
+    "secondary_concept_1": {
+      "id": "CONCEPT-MAYTAH",
+      "term": {
+        "ar": "الميتة / المنخنقة / الموقوذة",
+        "ar_transliteration": "al-maytah / al-munkhaniqah / al-mawqūdhah",
+        "fr": "La bête morte / L'étouffée / L'assommée",
+        "en": "Dead meat / The strangled / The beaten to death"
+      },
+      "definition": {
+        "ar": "قال الله تعالى: حُرِّمَتْ عَلَيْكُمُ الْمَيْتَةُ وَالدَّمُ وَلَحْمُ الْخِنزِيرِ وَمَا أُهِلَّ لِغَيْرِ اللَّهِ بِهِ وَالْمُنْخَنِقَةُ وَالْمَوْقُوذَةُ وَالْمُتَرَدِّيَةُ وَالنَّطِيحَةُ وَمَا أَكَلَ السَّبُعُ إِلَّا مَا ذَكَّيْتُمْ — المائدة 3",
+        "fr": "Allah le Très-Haut a dit : « Vous sont interdits la bête morte, le sang, la chair du porc, ce sur quoi on a invoqué un autre nom que celui d'Allah, la bête étouffée, la bête assommée, la bête morte d'une chute, la bête morte d'un coup de corne, et celle qu'une bête féroce a dévorée — sauf ce que vous égorgez avant qu'elle ne périsse » — Al-Ma'idah 5:3",
+        "en": "Allah the Most High said: 'Forbidden to you are dead meat, blood, the flesh of swine, that on which has been invoked a name other than Allah's, that which has been strangled, beaten to death, killed by a fall, gored, or savaged by a beast of prey — except what you slaughter before it dies' — Al-Ma'idah 5:3"
+      },
+      "application_to_stunning": "The Quran explicitly prohibits al-mawqudhah (الموقوذة) — the animal beaten/struck to death. If electrical stunning or captive bolt KILLS the animal, it falls EXACTLY under this Quranic prohibition. BUT the same verse adds 'EXCEPT what you slaughter before it dies' (إلا ما ذكيتم) — meaning if the animal is stunned but NOT dead, and you manage to slaughter it while still alive, the meat IS halal. This exception is THE basis for the permissive position on reversible stunning."
+    },
+    "secondary_concept_2": {
+      "id": "CONCEPT-HAYAT-MUSTAQIRRAH",
+      "term": {
+        "ar": "الحياة المستقرة",
+        "ar_transliteration": "al-ḥayāt al-mustaqirrah",
+        "fr": "La vie stable / La vitalité établie",
+        "en": "Stable life / Established vitality"
+      },
+      "definition": {
+        "ar": "اشترط الفقهاء أن يكون في الحيوان حياة مستقرة وقت الذبح، وهي الحياة التي يعيش بها الحيوان عادة لا حياة المذبوح، وعلامتها: حركة اليد أو الرجل أو الذنب، وتدفق الدم، وعدم تيبس الأعضاء",
+        "fr": "Les juristes exigent que l'animal ait une vie stable (ḥayāt mustaqirrah) au moment de l'abattage — c'est-à-dire une vie par laquelle l'animal vit normalement, non la vie du mourant. Ses signes : mouvement de la patte, de la queue, giclement du sang, et absence de rigidité des membres.",
+        "en": "Jurists require that the animal have stable life (hayat mustaqirrah) at the time of slaughter — meaning a life by which the animal normally lives, not the life of the dying. Its signs: movement of leg or tail, gushing of blood, and absence of limb rigidity."
+      },
+      "application_to_stunning": "When an animal is electrically stunned (head-only, reversible), it loses consciousness but retains hayat mustaqirrah: the heart continues beating, blood circulates, and the animal WOULD recover if left alone. This satisfies the condition. When an animal is killed by captive bolt or head-to-body electrical stunning, it has lost hayat mustaqirrah — it is in the process of dying or already dead, and slaughter at that point is merely cutting a dead body."
+    }
+  },
+  "fatwas": [
+    {
+      "id": "FATWA-STUNNING-001",
+      "institution": {
+        "name": {
+          "ar": "مجمع الفقه الإسلامي الدولي — منظمة التعاون الإسلامي",
+          "fr": "Académie Internationale de Fiqh Islamique — OCI",
+          "en": "International Islamic Fiqh Academy — OIC (IIFA)"
+        },
+        "type": "international_fiqh_academy",
+        "authority_level": "highest_collective",
+        "headquarters": "Jeddah, Saudi Arabia",
+        "website": "https://iifa-aifi.org",
+        "madhab_orientation": "Multi-madhab"
+      },
+      "reference": "Resolution No. 95 (3/10), 10th Session, 1997",
+      "date": "1997-01-01",
+      "topic": "Pre-slaughter stunning — permissibility and conditions",
+      "original_text": {
+        "lang": "ar",
+        "text": "أولاً: الأصل في الذبح الشرعي أن يكون بلا تدويخ للحيوان لأن طريقة الذبح الإسلامية بشروطها وآدابها هي أرحم طرق الذبح. ثانياً: يجوز التدويخ بالصدمة الكهربائية بالشروط الفنية التالية: الفولتية 100-400 فولت، وشدة التيار 0.75-1.0 أمبير للغنم و2-2.5 أمبير للبقر، والمدة 3-6 ثوانٍ، وأن يكون ذلك بوضع أقطاب كهربائية على الصدغين أو الجبهة أو القفا. ثالثاً: لا يجوز التدويخ بالمسدس ذي الإبرة (المسمار الأسير) ولا بالفأس ولا بالمطرقة ولا بالنفخ على الطريقة الإنجليزية. رابعاً: لا يجوز التدويخ بالنسبة للدجاج بالصدمة الكهربائية لما ثبت أنه يؤدي إلى موت نسبة منها قبل الذبح. خامساً: يجوز التدويخ بمزيج من غاز ثاني أكسيد الكربون مع الهواء أو الأوكسجين وبالمسدس ذي الرأس الكروي غير النافذ بشرط عدم موت الحيوان"
+      },
+      "translation": {
+        "fr": {
+          "text": "Premièrement : Le principe de l'abattage islamique est qu'il se fasse SANS étourdissement, car la méthode islamique avec ses conditions et ses règles de bienséance est la plus miséricordieuse. Deuxièmement : L'étourdissement par choc électrique est PERMIS sous les conditions techniques suivantes : tension 100-400V, intensité 0,75-1,0A pour les ovins et 2,0-2,5A pour les bovins, durée 3-6 secondes, avec des électrodes placées sur les tempes, le front ou la nuque. Troisièmement : L'étourdissement par pistolet à tige captive pénétrante, par hache, marteau ou insufflation (méthode anglaise) est INTERDIT. Quatrièmement : L'étourdissement électrique des VOLAILLES est INTERDIT car il est prouvé qu'il cause la mort d'une proportion d'entre elles avant l'abattage. Cinquièmement : L'étourdissement par mélange de CO₂ avec air ou oxygène et par pistolet à tête sphérique non pénétrant est PERMIS à condition que l'animal ne meure pas.",
+          "translation_notes": "التدويخ (al-tadwīkh) = étourdissement — terme technique adopté par les institutions. المسمار الأسير (al-mismār al-asīr) = tige captive — traduction littérale : 'le clou captif'. المسدس ذي الرأس الكروي (al-musaddas dhī al-raʾs al-kurawī) = pistolet à tête sphérique — non-pénétrant. Note rhétorique : 'الأصل' (al-aṣl = le principe de base) — formule indiquant que le sans-étourdissement est la NORME, l'étourdissement une EXCEPTION tolérée."
+        },
+        "en": {
+          "text": "First: The principle in Islamic slaughter is that it be done WITHOUT stunning, because the Islamic method with its conditions and etiquette is the most merciful. Second: Electrical stunning is PERMISSIBLE under the following technical conditions: voltage 100-400V, current 0.75-1.0A for sheep and 2.0-2.5A for cattle, duration 3-6 seconds, with electrodes placed on temples, forehead, or nape. Third: Stunning by penetrative captive bolt, axe, hammer, or inflation (English method) is PROHIBITED. Fourth: Electrical stunning of POULTRY is PROHIBITED as it is proven to cause death of a proportion of them before slaughter. Fifth: Stunning by CO₂ mixture with air or oxygen and by non-penetrative round-headed gun is PERMISSIBLE provided the animal does not die.",
+          "translation_notes": "al-tadwikh = stunning. al-mismar al-asir = captive bolt. al-musaddas dhi al-ra's al-kurawi = round-headed gun."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional",
+        "without_stunning": "preferred_principle",
+        "electrical_head_only": "permissible_with_parameters",
+        "captive_bolt_penetrative": "prohibited",
+        "poultry_electrical": "prohibited",
+        "co2_mix": "permissible_if_animal_lives",
+        "non_penetrative_bolt": "permissible_if_animal_lives"
+      }
+    },
+    {
+      "id": "FATWA-STUNNING-002",
+      "institution": {
+        "name": {
+          "ar": "المجمع الفقهي الإسلامي — رابطة العالم الإسلامي",
+          "fr": "Conseil de Fiqh Islamique — Ligue Islamique Mondiale (MWL)",
+          "en": "Islamic Fiqh Council — Muslim World League (MWL)"
+        },
+        "type": "international_fiqh_academy",
+        "authority_level": "highest_collective",
+        "headquarters": "Makkah, Saudi Arabia",
+        "website": "https://themwl.org",
+        "madhab_orientation": "Multi-madhab (Hanbali-leaning)"
+      },
+      "reference": "10th Session, Makkah, 17-21 October 1987",
+      "date": "1987-10-21",
+      "topic": "Ruling on meat of animals stunned by electric shock",
+      "original_text": {
+        "lang": "ar",
+        "text": "أولاً: إذا تبين أن الحيوان بقي حياً بعد الصعقة الكهربائية ثم ذُبح ذبحاً شرعياً فإن ذلك ذكاة شرعية تحل به. ثانياً: إذا مات الحيوان بالصعقة الكهربائية قبل تذكيته فإنه يكون ميتة لا يجوز أكله. ثالثاً: إن استعمال الصعقة الكهربائية ذات الفولتية العالية لتدويخ الحيوان قبل ذبحه هو تعذيب شديد نهى عنه الإسلام الذي يأمر بالرفق والرحمة"
+      },
+      "translation": {
+        "fr": {
+          "text": "Premièrement : S'il est établi que l'animal est resté VIVANT après le choc électrique puis a été abattu selon le rituel islamique, alors c'est un abattage rituel (dhakāt) valide et la viande est licite (ḥalāl). Deuxièmement : Si l'animal est MORT du choc électrique avant d'être abattu rituellement, alors c'est une bête morte (maytah) dont la consommation est interdite. Troisièmement : L'utilisation du choc électrique à HAUTE tension pour étourdir l'animal avant son abattage est une torture sévère interdite par l'Islam qui ordonne la douceur et la miséricorde.",
+          "translation_notes": "ذكاة شرعية (dhakāt sharʿiyyah) = abattage rituel valide. ميتة (maytah) = bête morte (carrion) — terme coranique, Al-Ma'idah 5:3. تعذيب شديد (taʿdhīb shadīd) = torture sévère — qualification morale, pas seulement juridique."
+        },
+        "en": {
+          "text": "First: If it is established that the animal remained ALIVE after the electric shock and was then slaughtered according to Islamic ritual, this is valid Islamic slaughter (dhakat) and the meat is halal. Second: If the animal DIED from the electric shock before being ritually slaughtered, it is dead meat (maytah) and is forbidden to eat. Third: Using HIGH voltage electric shock to stun an animal before slaughter is severe torture forbidden by Islam which commands gentleness and mercy.",
+          "translation_notes": "dhakat shar'iyyah = valid ritual slaughter. maytah = dead meat (carrion). ta'dhib shadid = severe torture."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional",
+        "animal_alive_after_stun_then_slaughtered": "halal",
+        "animal_dead_from_stun": "haram_maytah",
+        "high_voltage_stunning": "prohibited_as_torture"
+      }
+    },
+    {
+      "id": "FATWA-STUNNING-003",
+      "institution": {
+        "name": {
+          "ar": "اللجنة الدائمة للبحوث العلمية والإفتاء",
+          "fr": "Comité Permanent (Lajnah Da'imah)",
+          "en": "Permanent Committee for Scholarly Research and Ifta"
+        },
+        "type": "state_fatwa_authority",
+        "authority_level": "national_highest",
+        "headquarters": "Riyadh, Saudi Arabia",
+        "madhab_orientation": "Hanbali (Salafi)"
+      },
+      "reference": "Fataawa al-Lajnah ad-Daa'imah, Vol. 22, pp. 462-463",
+      "date": null,
+      "topic": "Ruling on meat stunned before slaughter",
+      "original_text": {
+        "lang": "ar",
+        "text": "إذا كان الصعق الكهربائي يقتل الحيوان فلا يحل أكله لأنه ميتة. وإذا كان لا يقتله بل يفقده الوعي فقط ثم ذُبح ذبحاً شرعياً حال كونه حياً حياة مستقرة فيحل. ولا يجوز التدويخ بالصعق الكهربائي للدواجن لأنه يؤدي إلى موت كثير منها"
+      },
+      "translation": {
+        "fr": {
+          "text": "Si le choc électrique TUE l'animal, sa consommation est interdite car c'est une bête morte (maytah). S'il ne le tue pas mais lui fait seulement perdre connaissance, puis l'animal est abattu rituellement alors qu'il est vivant avec une vie stable (ḥayāt mustaqirrah), alors la viande est licite. L'étourdissement électrique des VOLAILLES n'est PAS permis car il cause la mort d'un grand nombre d'entre elles.",
+          "translation_notes": "حياة مستقرة (ḥayāt mustaqirrah) = vie stable — concept clé : l'animal ne doit pas être moribond mais avoir une vie 'établie' qui se maintiendrait naturellement."
+        },
+        "en": {
+          "text": "If the electrical shock KILLS the animal, eating it is not permissible as it is dead meat (maytah). If it does not kill it but only causes loss of consciousness, and the animal is then slaughtered ritually while alive with stable life (hayat mustaqirrah), then it is permissible. Electrical stunning of POULTRY is NOT permissible as it causes the death of many of them.",
+          "translation_notes": "hayat mustaqirrah = stable life."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional",
+        "if_kills": "haram_maytah",
+        "if_unconscious_only": "halal_with_proper_slaughter",
+        "poultry": "prohibited"
+      }
+    },
+    {
+      "id": "FATWA-STUNNING-004",
+      "institution": {
+        "name": {
+          "ar": "دار الإفتاء المصرية",
+          "fr": "Dar al-Ifta al-Misriyyah",
+          "en": "Egyptian Dar al-Ifta"
+        },
+        "type": "state_fatwa_authority",
+        "authority_level": "national_highest",
+        "headquarters": "Cairo, Egypt",
+        "website": "https://www.dar-alifta.org",
+        "madhab_orientation": "Multi-madhab (Shafi'i/Hanafi)"
+      },
+      "reference": "Dar al-Ifta Fatwa on Electrocuting Sacrificial Animals (Fatwa #678) and Mechanical Slaughtering (Fatwa #6254)",
+      "date": null,
+      "topic": "Permissibility of weakening animal resistance before slaughter",
+      "original_text": {
+        "lang": "ar",
+        "text": "يجوز إضعاف مقاومة الحيوان بالتخدير الخفيف أو بالصدمة الكهربائية الخفيفة بشرط ألا يؤدي ذلك إلى موت الحيوان لو تُرك دون ذبح. الفولتية: 100-400 فولت، شدة التيار: 0.75-1.0 أمبير للغنم و2-2.5 أمبير للبقر، المدة: 3-6 ثوانٍ. الحيوان يجب أن يموت بفعل الذبح لا بفعل الصعق"
+      },
+      "translation": {
+        "fr": {
+          "text": "Il est permis d'affaiblir la résistance de l'animal par une anesthésie légère ou un choc électrique léger, à condition que cela ne cause pas la mort de l'animal s'il était laissé sans être abattu. Tension : 100-400V, intensité : 0,75-1,0A pour les ovins et 2,0-2,5A pour les bovins, durée : 3-6 secondes. L'animal doit mourir du fait de l'ABATTAGE, non du fait du choc.",
+          "translation_notes": "إضعاف مقاومة الحيوان (iḍʿāf muqāwamat al-ḥayawān) = affaiblir la résistance de l'animal — formulation qui présente le stunning comme un moyen de facilitation, non comme une fin en soi."
+        },
+        "en": {
+          "text": "It is permissible to weaken the animal's resistance through light anesthesia or light electrical shock, on condition that this would not cause the animal's death if left unslaughtered. Voltage: 100-400V, current: 0.75-1.0A for sheep and 2.0-2.5A for cattle, duration: 3-6 seconds. The animal must die from the SLAUGHTER, not from the shock.",
+          "translation_notes": "id'af muqawamat al-hayawan = weakening the animal's resistance."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional",
+        "light_stunning": "permissible",
+        "condition": "animal_must_die_from_slaughter_not_stun",
+        "parameters_specified": true
+      }
+    },
+    {
+      "id": "FATWA-STUNNING-005",
+      "institution": {
+        "name": {
+          "ar": "المجلس الأوروبي للإفتاء والبحوث",
+          "fr": "Conseil Européen de la Fatwa et de la Recherche (ECFR)",
+          "en": "European Council for Fatwa and Research (ECFR)"
+        },
+        "type": "regional_ifta",
+        "authority_level": "regional_high",
+        "headquarters": "Dublin, Ireland",
+        "website": "https://www.e-cfr.org",
+        "madhab_orientation": "Multi-madhab (Maliki-Hanafi)"
+      },
+      "reference": "ECFR Official Statement on Slaughtering, November 2018",
+      "date": "2018-11-05",
+      "topic": "Position on stunning before slaughter",
+      "original_text": {
+        "lang": "ar",
+        "text": "بعد دراسة طرق الذبح المعمول بها في كثير من بلدان أوروبا وجد أن كثيراً منها يتضمن مخالفات شرعية تؤدي إلى موت أعداد كبيرة من الحيوانات قبل وصول السكين إليها. والبحوث العلمية تفضل طريقة الذبح الإسلامي التقليدي كما جاء في الشريعة. ويوصي المجلس المسلمين في الغرب بإنشاء مذابح خاصة بهم تلتزم بأحكام الشريعة الإسلامية"
+      },
+      "translation": {
+        "fr": {
+          "text": "Après étude des méthodes d'abattage en vigueur dans de nombreux pays européens, il s'est avéré que beaucoup d'entre elles comportent des violations religieuses causant la mort d'un grand nombre d'animaux avant que le couteau ne les atteigne. Les recherches scientifiques favorisent la méthode d'abattage islamique traditionnelle telle que prescrite par la charia. Le Conseil recommande aux musulmans en Occident d'établir leurs propres abattoirs conformes aux prescriptions de la loi islamique.",
+          "translation_notes": "مخالفات شرعية (mukhālafāt sharʿiyyah) = violations religieuses — terme fort indiquant non pas un simple doute mais des infractions caractérisées. Le ECFR est la voix la plus RESTRICTIVE parmi les institutions internationales sur le stunning."
+        },
+        "en": {
+          "text": "After studying slaughter methods in many European countries, it was found that many contain religious violations causing the death of large numbers of animals before the knife reaches them. Scientific research favors the traditional Islamic slaughter method as prescribed by Shariah. The Council recommends that Muslims in the West establish their own slaughterhouses adhering to Islamic law.",
+          "translation_notes": "mukhalafat shar'iyyah = religious violations."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "restrictive",
+        "position": "opposes_modern_stunning",
+        "recommendation": "establish_muslim_owned_slaughterhouses",
+        "european_methods": "contain_religious_violations"
+      }
+    },
+    {
+      "id": "FATWA-STUNNING-006",
+      "institution": {
+        "name": {
+          "ar": "مجلس العلماء الإندونيسي — لجنة الفتوى",
+          "fr": "Conseil des Oulémas d'Indonésie (MUI)",
+          "en": "Indonesian Ulema Council (MUI)"
+        },
+        "type": "state_fatwa_authority",
+        "authority_level": "national_highest",
+        "headquarters": "Jakarta, Indonesia",
+        "website": "https://halalmui.org",
+        "madhab_orientation": "Shafi'i"
+      },
+      "reference": "MUI Fatwa No. 12/2009 on Halal Slaughter Certification Standards",
+      "date": "2009-01-01",
+      "topic": "Stunning permitted with conditions for halal slaughter",
+      "original_text": {
+        "lang": "en",
+        "text": "Stunning is permitted with certain conditions: (1) It facilitates the collapse of animals for humane handling; (2) It relieves animal pain; (3) If not slaughtered, animals wake naturally to pre-stun state. Requirements: stunning must not cause death or permanent injury; equipment must not be shared with non-halal animals (pigs); must be under Muslim supervision."
+      },
+      "translation": {
+        "fr": {
+          "text": "L'étourdissement est permis sous certaines conditions : (1) Il facilite l'immobilisation des animaux pour un traitement humanitaire ; (2) Il soulage la douleur animale ; (3) Si non abattu, l'animal se réveille naturellement à son état pré-étourdissement. Exigences : l'étourdissement ne doit pas causer la mort ni de blessure permanente ; l'équipement ne doit pas être partagé avec des animaux non-halal (porcs) ; supervision musulmane obligatoire.",
+          "translation_notes": "Position MUI = la plus PERMISSIVE parmi les institutions nationales majeures. Justification : facilitation + bien-être animal + réversibilité."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional_permissive",
+        "stunning_permitted": true,
+        "conditions": [
+          "no_death",
+          "no_permanent_injury",
+          "reversible",
+          "muslim_supervision",
+          "no_equipment_sharing_with_pigs"
+        ]
+      }
+    },
+    {
+      "id": "FATWA-STUNNING-007",
+      "institution": {
+        "name": {
+          "ar": "هيئة مراقبة الحلال — المملكة المتحدة",
+          "fr": "Halal Monitoring Committee (HMC) — Royaume-Uni",
+          "en": "Halal Monitoring Committee (HMC) — UK"
+        },
+        "type": "certification_body",
+        "authority_level": "advisory",
+        "headquarters": "UK",
+        "website": "https://halalhmc.org",
+        "madhab_orientation": "Hanafi (Deobandi)"
+      },
+      "reference": "HMC Policy Statement on Stunning and Mechanical Slaughter",
+      "date": null,
+      "topic": "No stunning permitted",
+      "original_text": {
+        "lang": "en",
+        "text": "HMC does not permit any form of stunning. The risk that stunning kills the animal before the ritual cut invalidates the slaughter. HMC requires end-to-end monitoring to ensure no pre-slaughter death. Animals must be alive and healthy, slaughtered by a sane adult Muslim who invokes Allah's name on each animal individually."
+      },
+      "translation": {
+        "fr": {
+          "text": "Le HMC ne permet AUCUNE forme d'étourdissement. Le risque que l'étourdissement tue l'animal avant l'incision rituelle invalide l'abattage. Le HMC exige un suivi de bout en bout pour garantir l'absence de mort pré-abattage. Les animaux doivent être vivants et en bonne santé, abattus par un musulman adulte sain d'esprit qui invoque le nom d'Allah sur chaque animal individuellement.",
+          "translation_notes": "Position HMC = la plus STRICTE au monde parmi les organismes de certification majeurs. Opposition : HFA (UK) qui ACCEPTE le stunning réversible."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "prohibitive",
+        "no_stunning_permitted": true,
+        "rationale": "risk_of_pre_slaughter_death"
+      }
+    }
+  ],
+  "madhab_analysis": {
+    "hanafi": {
+      "madhab_id": "HANAFI",
+      "geographic_dominance": [
+        "Turkey",
+        "South Asia",
+        "Central Asia",
+        "Parts of Middle East",
+        "Balkans"
+      ],
+      "position_on_stunned_meat": {
+        "summary_fr": "La position hanafite est la plus nuancée. Le principe fondamental est que l'animal doit être vivant avec une 'vie stable' (ḥayāt mustaqirrah) au moment de l'abattage. L'étourdissement réversible qui ne tue pas l'animal est PERMIS — l'animal étourdi mais vivant peut être validement abattu. L'étourdissement qui tue = l'animal est mawqūdhah (assommé à mort), interdit par le Coran. La tradition Deobandi (HMC UK) est la plus stricte : aucun étourdissement par précaution. Les institutions Hanafites turques et sud-asiatiques sont plus souples.",
+        "classical_principle": {
+          "ar": "شرط الذكاة أن يكون الحيوان حياً حياة مستقرة وقت الذبح. والحياة المستقرة هي التي يعيش بها صاحبها عادة وعلامتها حركة اليد أو الرجل أو انتفاض الجسم وتدفق الدم",
+          "fr": "La condition de la dhakāt est que l'animal soit vivant d'une vie stable au moment de l'abattage. La vie stable est celle par laquelle son possesseur vit normalement, et ses signes sont : le mouvement de la patte ou de la jambe, le tressaillement du corps, et le giclement du sang.",
+          "en": "The condition of dhakat is that the animal be alive with stable life at the time of slaughter. Stable life is that by which its possessor normally lives, and its signs are: movement of the leg or limb, twitching of the body, and gushing of blood."
+        },
+        "practical_ruling": {
+          "electrical_head_only_sheep_cattle": "HALAL — if parameters correct and animal alive",
+          "electrical_head_to_body": "HARAM — animal dies before slaughter",
+          "captive_bolt_penetrative": "HARAM — permanent brain destruction",
+          "poultry_water_bath": "HARAM — high mortality (Deobandi position)",
+          "no_stunning": "PREFERRED — safest and most pious approach"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "رد المحتار على الدر المختار",
+          "author": "ابن عابدين (d. 1252H)",
+          "relevance": "Conditions of valid dhakat — hayat mustaqirrah definition",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "بدائع الصنائع",
+          "author": "الكاساني (d. 587H)",
+          "relevance": "Detailed conditions for valid slaughter",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "الهداية شرح البداية",
+          "author": "المرغيناني (d. 593H)",
+          "relevance": "Foundation of Hanafi furu on dhakat",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "المبسوط",
+          "author": "السرخسي (d. 483H)",
+          "relevance": "Early Hanafi encyclopedia — dhakat principles",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "الفتاوى الهندية",
+          "author": "لجنة علماء (compiled ~1100H)",
+          "relevance": "Practical rulings on slaughter conditions",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "مفتي محمد تقي العثماني",
+          "name_fr": "Sheikh Taqi Usmani",
+          "position": "Permits reversible stunning under strict conditions; prefers no stunning. Opposes poultry stunning.",
+          "status": "contemporary_major"
+        },
+        {
+          "name_ar": "هيئة مراقبة الحلال HMC",
+          "name_fr": "HMC (UK)",
+          "position": "STRICTLY prohibits ALL stunning — Deobandi precautionary approach",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "دار العلوم ديوبند",
+          "name_fr": "Darul Uloom Deoband",
+          "position": "Prefers no stunning; accepts head-only electrical if proven non-lethal",
+          "status": "institutional"
+        }
+      ],
+      "institutional_positions": [
+        {
+          "name_ar": "ديانت التركية",
+          "name_fr": "Diyanet (Turquie)",
+          "position": "Permits reversible stunning; Turkey's halal standard allows head-only electrical stunning",
+          "ref": "Turkish halal certification standards"
+        }
+      ],
+      "naqiy_verdict": {
+        "no_stunning_certified": {
+          "score": 98,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "head_only_electrical_certified": {
+          "score": 72,
+          "verdict": "DOUBTFUL_LEAN_PERMISSIBLE",
+          "confidence": "DISPUTED"
+        },
+        "head_to_body_electrical": {
+          "score": 3,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        },
+        "captive_bolt_penetrative": {
+          "score": 0,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        },
+        "poultry_water_bath": {
+          "score": 5,
+          "verdict": "HARAM",
+          "confidence": "HIGH"
+        },
+        "unknown_method_western_import": {
+          "score": 20,
+          "verdict": "DOUBTFUL_AVOID",
+          "confidence": "DISPUTED"
+        }
+      }
+    },
+    "maliki": {
+      "madhab_id": "MALIKI",
+      "geographic_dominance": [
+        "Morocco",
+        "Algeria",
+        "Tunisia",
+        "Libya",
+        "Mauritania",
+        "West Africa",
+        "European Maghrebi diaspora"
+      ],
+      "position_on_stunned_meat": {
+        "summary_fr": "Le madhab malikite applique le même principe fondamental : l'animal doit être vivant au moment du couteau. Les institutions malikites contemporaines (Maroc, Algérie) acceptent l'étourdissement réversible, surtout pour faciliter l'exportation de viande halal. Le Maroc a développé la norme NM 08.0.800 qui encadre l'étourdissement réversible dans les abattoirs certifiés halal. L'ECFR (très influencé par les malikites maghrébins) est néanmoins RESTRICTIF — il recommande aux musulmans d'établir leurs propres abattoirs sans étourdissement.",
+        "classical_principle": {
+          "ar": "لا يحل أكل الحيوان إلا بذكاة شرعية يكون فيها حياً ذا حركة واضحة وتدفق دم",
+          "fr": "La consommation de l'animal n'est licite que par un abattage rituel où l'animal est vivant avec un mouvement visible et un écoulement de sang.",
+          "en": "The animal is only lawful to eat through a ritual slaughter where it is alive with visible movement and blood flow."
+        },
+        "practical_ruling": {
+          "electrical_head_only_sheep_cattle": "HALAL — accepted by Moroccan/Algerian institutions",
+          "electrical_head_to_body": "HARAM — animal dies",
+          "captive_bolt_penetrative": "HARAM",
+          "poultry_water_bath": "HARAM — high mortality",
+          "no_stunning": "PREFERRED"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "المدونة الكبرى",
+          "author": "رواية سحنون (d. 240H)",
+          "relevance": "Imam Malik's conditions for valid dhakat",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "مختصر خليل",
+          "author": "خليل بن إسحاق (d. 776H)",
+          "relevance": "Standard Maliki fiqh on slaughter",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "الذخيرة",
+          "author": "القرافي (d. 684H)",
+          "relevance": "Usul principles on slaughter validity",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "المقدمات الممهدات",
+          "author": "ابن رشد الجد (d. 520H)",
+          "relevance": "Foundational Maliki slaughter conditions",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "المجلس العلمي الأعلى — المغرب",
+          "name_fr": "Conseil Scientifique Suprême — Maroc",
+          "position": "Permits reversible stunning per Moroccan halal standard NM 08.0.800",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "وزارة الشؤون الدينية — الجزائر",
+          "name_fr": "Ministère des Affaires Religieuses — Algérie",
+          "position": "Similar to Morocco — accepts reversible stunning for export certification",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "المجلس الأوروبي للإفتاء ECFR",
+          "name_fr": "ECFR",
+          "position": "RESTRICTIVE — opposes modern stunning despite Maliki membership. Recommends Muslim-owned non-stun abattoirs.",
+          "status": "institutional"
+        }
+      ],
+      "institutional_positions": [],
+      "naqiy_verdict": {
+        "no_stunning_certified": {
+          "score": 98,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "head_only_electrical_certified": {
+          "score": 75,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "head_to_body_electrical": {
+          "score": 3,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        },
+        "captive_bolt_penetrative": {
+          "score": 0,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        },
+        "poultry_water_bath": {
+          "score": 8,
+          "verdict": "HARAM",
+          "confidence": "HIGH"
+        },
+        "unknown_method_western_import": {
+          "score": 25,
+          "verdict": "DOUBTFUL_AVOID",
+          "confidence": "DISPUTED"
+        }
+      }
+    },
+    "shafii": {
+      "madhab_id": "SHAFII",
+      "geographic_dominance": [
+        "Indonesia",
+        "Malaysia",
+        "East Africa",
+        "Yemen",
+        "Parts of Egypt",
+        "Jordan"
+      ],
+      "position_on_stunned_meat": {
+        "summary_fr": "Le madhab shafiite a produit les CADRES RÉGLEMENTAIRES les plus détaillés via MUI (Indonésie) et JAKIM (Malaisie). Position : l'étourdissement est PERMIS sous conditions strictes — l'animal ne doit pas mourir ni subir de blessure permanente, la méthode doit être réversible, une supervision musulmane est obligatoire. JAKIM a développé le Malaysian Halal Protocol (2008) qui est devenu une référence mondiale pour la certification halal avec étourdissement. La distinction clé : l'étourdissement n'est 'pas recommandé mais permis si nécessaire'.",
+        "classical_principle": {
+          "ar": "يشترط في الذكاة أن يكون الحيوان حياً حال الذبح حياة مستقرة. فإن كان في حال الموت كالمنخنقة والموقوذة فيجب أن يبقى فيه من الحياة ما يُعلم أنه لو ترك لعاش",
+          "fr": "La condition de la dhakāt est que l'animal soit vivant d'une vie stable au moment de l'abattage. S'il est en état de mort — comme l'étouffé et l'assommé — il faut qu'il reste en lui assez de vie pour qu'on sache que s'il était laissé, il vivrait.",
+          "en": "The condition of dhakat is that the animal be alive with stable life at the time of slaughter. If it is in a dying state — like the strangled and the beaten — there must remain in it enough life such that it is known that if left alone, it would live."
+        },
+        "practical_ruling": {
+          "electrical_head_only_sheep_cattle": "HALAL — per MUI/JAKIM with supervision",
+          "electrical_head_to_body": "HARAM",
+          "captive_bolt_penetrative": "HARAM",
+          "poultry_water_bath": "DEBATED — MUI more cautious than JAKIM",
+          "co2_low_concentration": "DEBATED",
+          "no_stunning": "PREFERRED but not required"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "المجموع شرح المهذب",
+          "author": "النووي (d. 676H)",
+          "relevance": "Conditions of hayat mustaqirrah in dhakat",
+          "significance": "HIGHEST",
+          "key_quote_ar": "يشترط أن يكون في المذبوح حياة مستقرة فإن انتهى إلى حركة المذبوح لم تحل",
+          "key_quote_fr": "Il est requis que l'animal abattu ait une vie stable ; s'il en est réduit aux mouvements de l'animal abattu [mourant], il n'est pas licite"
+        },
+        {
+          "title_ar": "تحفة المحتاج",
+          "author": "ابن حجر الهيتمي (d. 974H)",
+          "relevance": "Late Shafi'i authority on slaughter conditions — influential in SE Asia",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "نهاية المحتاج",
+          "author": "الرملي (d. 1004H)",
+          "relevance": "Detailed conditions for valid dhakat",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "الفقه الإسلامي وأدلته",
+          "author": "وهبة الزحيلي (d. 2015)",
+          "relevance": "Modern application of dhakat principles to stunning",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "الأم",
+          "author": "الإمام الشافعي (d. 204H)",
+          "relevance": "Primary source — dhakat foundational principles",
+          "significance": "HIGHEST"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "MUI — إندونيسيا",
+          "name_fr": "MUI (Indonésie)",
+          "position": "Most detailed conditional permission: stunning OK if reversible, non-lethal, Muslim-supervised, equipment not shared with pigs.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "JAKIM — ماليزيا",
+          "name_fr": "JAKIM (Malaisie)",
+          "position": "Malaysian Halal Protocol 2008: permits electrical and pneumatic percussive stunning under strict conditions. Animal must remain alive. Muslim halal inspector required.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "وهبة الزحيلي",
+          "name_fr": "Wahbah al-Zuhayli (d. 2015)",
+          "position": "Accepts reversible stunning as consistent with Islamic slaughter principles.",
+          "status": "contemporary_major"
+        }
+      ],
+      "institutional_positions": [
+        {
+          "name_ar": "دائرة الإفتاء الأردنية",
+          "name_fr": "Iftaa Jordanie",
+          "position": "Issued Decision #315 on electrical stunning of poultry with technical conditions.",
+          "ref": "Jordanian Iftaa Decision #315"
+        }
+      ],
+      "naqiy_verdict": {
+        "no_stunning_certified": {
+          "score": 98,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "head_only_electrical_certified": {
+          "score": 78,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "head_to_body_electrical": {
+          "score": 2,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        },
+        "captive_bolt_penetrative": {
+          "score": 0,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        },
+        "poultry_water_bath": {
+          "score": 10,
+          "verdict": "HARAM",
+          "confidence": "HIGH"
+        },
+        "unknown_method_western_import": {
+          "score": 22,
+          "verdict": "DOUBTFUL_AVOID",
+          "confidence": "DISPUTED"
+        }
+      }
+    },
+    "hanbali": {
+      "madhab_id": "HANBALI",
+      "geographic_dominance": [
+        "Saudi Arabia",
+        "Gulf states"
+      ],
+      "position_on_stunned_meat": {
+        "summary_fr": "Le madhab hanbalite, via la Lajnah Da'imah et l'IslamQA, a une position claire en 3 points : (1) Si l'étourdissement TUE = maytah = harām. (2) Si l'étourdissement NE TUE PAS et l'animal est abattu vivant = ḥalāl. (3) L'étourdissement des volailles est INTERDIT (mortalité prouvée). La préférence reste fortement l'abattage SANS étourdissement. Cependant, l'Arabie Saoudite accepte l'importation de viande étourdie (head-only réversible) certifiée par des organismes agréés.",
+        "classical_principle": {
+          "ar": "من شروط الذكاة أن يكون الحيوان حياً وقت الذبح. وإن كان مريضاً أو مجروحاً فإن كان فيه حياة مستقرة — بحيث يعيش إن ترك — صحت ذكاته وحل أكله. وإن لم يبق فيه إلا حياة المذبوح — أي لا يعيش لو ترك — فلا تصح ذكاته",
+          "fr": "Parmi les conditions de la dhakāt : que l'animal soit vivant au moment de l'abattage. S'il est malade ou blessé, tant qu'il a une vie stable — c'est-à-dire qu'il vivrait s'il était laissé — son abattage est valide et sa consommation licite. S'il ne lui reste que la vie du mourant — c'est-à-dire qu'il ne vivrait pas s'il était laissé — son abattage n'est pas valide.",
+          "en": "Among the conditions of dhakat: the animal must be alive at the time of slaughter. If it is sick or injured, as long as it has stable life — meaning it would live if left — its slaughter is valid and its consumption lawful. If it has only the life of the dying — meaning it would not live if left — its slaughter is not valid."
+        },
+        "practical_ruling": {
+          "electrical_head_only_sheep_cattle": "HALAL — if animal demonstrably alive (Lajnah position)",
+          "electrical_head_to_body": "HARAM — cardiac arrest = death",
+          "captive_bolt_penetrative": "HARAM — brain destruction",
+          "poultry_water_bath": "HARAM — mass mortality",
+          "no_stunning": "STRONGLY PREFERRED"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "المغني",
+          "author": "ابن قدامة (d. 620H)",
+          "relevance": "ULTIMATE Hanbali reference — hayat mustaqirrah definition in dhakat",
+          "significance": "HIGHEST",
+          "key_quote_ar": "وإن بقيت فيه حياة مستقرة فذكاته صحيحة وإن كان مشرفاً على الموت",
+          "key_quote_fr": "S'il reste en lui une vie stable, son abattage est valide même s'il est au seuil de la mort"
+        },
+        {
+          "title_ar": "مجموع الفتاوى",
+          "author": "ابن تيمية (d. 728H)",
+          "relevance": "Discusses boundaries of valid dhakat",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "كشاف القناع",
+          "author": "البهوتي (d. 1051H)",
+          "relevance": "Late Hanbali standard — slaughter conditions",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "الإنصاف",
+          "author": "المرداوي (d. 885H)",
+          "relevance": "Catalogue of Hanbali internal divergences on dhakat",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "إعلام الموقعين",
+          "author": "ابن القيم (d. 751H)",
+          "relevance": "Principles of animal treatment in Islamic law",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "اللجنة الدائمة",
+          "name_fr": "Lajnah Da'imah",
+          "position": "Conditional: if stun doesn't kill → halal with proper slaughter. Poultry stunning prohibited.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "الشيخ المنجد — IslamQA",
+          "name_fr": "Sheikh al-Munajjid",
+          "position": "Clear 3-part ruling: stun kills = haram; stun doesn't kill + slaughter = halal; poultry stun = haram.",
+          "status": "individual_high_influence"
+        },
+        {
+          "name_ar": "الشيخ ابن باز",
+          "name_fr": "Sheikh Ibn Baz (d. 1999)",
+          "position": "Has addressed stunning conditions — conditional permissibility if animal alive.",
+          "status": "contemporary_major"
+        }
+      ],
+      "institutional_positions": [
+        {
+          "name_ar": "هيئة كبار العلماء",
+          "name_fr": "Conseil des Grands Savants (Arabie Saoudite)",
+          "position": "Follows Lajnah Da'imah. Saudi Arabia imports stunned meat from certified sources (Australia, NZ, Brazil).",
+          "ref": "Saudi import certification standards"
+        }
+      ],
+      "naqiy_verdict": {
+        "no_stunning_certified": {
+          "score": 98,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "head_only_electrical_certified": {
+          "score": 70,
+          "verdict": "DOUBTFUL_LEAN_PERMISSIBLE",
+          "confidence": "DISPUTED"
+        },
+        "head_to_body_electrical": {
+          "score": 0,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        },
+        "captive_bolt_penetrative": {
+          "score": 0,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        },
+        "poultry_water_bath": {
+          "score": 3,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        },
+        "unknown_method_western_import": {
+          "score": 18,
+          "verdict": "DOUBTFUL_AVOID",
+          "confidence": "DISPUTED"
+        }
+      }
+    }
+  },
+  "scholarly_consensus_points": {
+    "unanimous_agreements": [
+      "Animal MUST be alive at the moment the knife cuts the throat — unanimous across all 4 madhahib and all institutions",
+      "If stunning KILLS the animal before slaughter → HARAM (maytah) — absolute consensus",
+      "Penetrative captive bolt → HARAM — causes irreversible brain destruction/death — unanimous",
+      "Electrical head-to-body (cardiac arrest) → HARAM — designed to kill — unanimous",
+      "Slaughter without stunning is PREFERRED (afdal) over stunned slaughter — unanimous (including those who permit stunning)",
+      "The Quranic verse Al-Ma'idah 5:3 prohibiting al-mawqudhah (beaten to death) applies to lethal stunning — unanimous"
+    ],
+    "majority_agreements": [
+      "Electrical head-only (reversible) stunning IS PERMISSIBLE under strict parameters — majority of major institutions (IIFA, MWL, Lajnah, Dar al-Ifta Egypt, MUI, JAKIM, HFA UK)",
+      "Poultry electrical water bath stunning is PROHIBITED due to high pre-slaughter mortality — majority (IIFA, Lajnah, ECFR, HMC)",
+      "The test is whether the animal has hayat mustaqirrah (stable life) — meaning it WOULD RECOVER if left alone — majority across all schools"
+    ],
+    "key_disagreements": [
+      "HMC (Deobandi Hanafi) vs HFA (multi-madhab) UK: HMC prohibits ALL stunning; HFA accepts reversible stunning",
+      "ECFR vs IIFA: ECFR opposes modern stunning methods in Europe; IIFA permits reversible electrical with parameters",
+      "Poultry: Is ANY form of poultry stunning acceptable? Majority say NO; some Southeast Asian authorities explore alternatives (low-CO₂, modified head-only)",
+      "Non-penetrative captive bolt: IIFA permits; others silent or cautious",
+      "CO₂ gas stunning: Most reject; some accept low-concentration (<55%) as potentially reversible"
+    ]
+  },
+  "evidence_base": {
+    "quran": [
+      {
+        "ref": "Al-Ma'idah 5:3",
+        "text_ar": "حُرِّمَتْ عَلَيْكُمُ الْمَيْتَةُ وَالدَّمُ وَلَحْمُ الْخِنزِيرِ وَمَا أُهِلَّ لِغَيْرِ اللَّهِ بِهِ وَالْمُنْخَنِقَةُ وَالْمَوْقُوذَةُ وَالْمُتَرَدِّيَةُ وَالنَّطِيحَةُ وَمَا أَكَلَ السَّبُعُ إِلَّا مَا ذَكَّيْتُمْ",
+        "relevance": "THE primary Quranic text. 'Al-mawqudhah' (الموقوذة = beaten/struck to death) directly applies to lethal stunning. 'Illa ma dhakkaytum' (إلا ما ذكيتم = except what you slaughter) provides the exception for stunned-but-alive animals."
+      }
+    ],
+    "hadith": [
+      {
+        "ref": "Sahih Muslim 1955",
+        "text_ar": "إنَّ اللهَ كتبَ الإحسانَ على كلِّ شيءٍ فإذا قتلتُم فأحسِنوا القِتلةَ وإذا ذبحتُم فأحسِنوا الذِّبحةَ وليُحِدَّ أحدُكم شَفرتَه ولْيُرِحْ ذبيحتَه",
+        "relevance": "Foundation of Islamic animal welfare: 'Allah has prescribed excellence (ihsan) in all things. When you slaughter, slaughter well; sharpen your blade and give rest to your animal.' Used by BOTH sides: pro-stun (stunning reduces suffering) and anti-stun (traditional Islamic method IS the most merciful)."
+      }
+    ],
+    "scientific_data": {
+      "stunning_death_rates": {
+        "electrical_head_only_sheep": "LOW mortality pre-slaughter — estimated 1-3% (industry estimates, no precise peer-reviewed figure; EFSA literature focuses on stun efficacy/reversibility rather than mortality rates)",
+        "electrical_head_to_body_sheep": ">90% (designed to cause cardiac arrest)",
+        "captive_bolt_cattle": "84-98% adequate stunning; 2-16% require multiple shots; unknown mortality pre-slaughter",
+        "poultry_water_bath": "10-15% mortality pre-slaughter (industry data); up to 30%+ (some studies); 15% cited by French certifier (VID6)",
+        "co2_high_concentration_poultry": ">70% = lethal by asphyxiation"
+      },
+      "eu_legislation": {
+        "regulation": "Council Regulation (EC) No 1099/2009 on the protection of animals at the time of killing",
+        "article_4_4": "Exemption: 'The requirement to stun shall not apply to animals subject to particular methods of slaughter prescribed by religious rites, provided that the slaughter takes place in a slaughterhouse.'",
+        "member_state_variations": {
+          "full_exemption": [
+            "France",
+            "UK",
+            "Ireland",
+            "Spain",
+            "Italy",
+            "Netherlands (partial)",
+            "Germany"
+          ],
+          "no_exemption_ban": [
+            "Belgium (Flanders 2017 + Wallonia 2018 — upheld by Belgian Constitutional Court AND ECHR Feb 2024; Brussels Region maintains exemption)",
+            "Sweden",
+            "Denmark",
+            "Slovenia"
+          ],
+          "note": "Belgium: Flanders and Wallonia bans CONFIRMED by ECHR (13 Feb 2024, Executief van de Moslims van België v. Belgium). Grand Chamber referral rejected. Only Brussels Region still permits non-stun religious slaughter. VID7 video source contained inaccurate claim of annulment — CORRECTED after verification."
+        }
+      },
+      "france_terrain_data": {
+        "source": "YouTube video analysis (7 videos, French halal market investigations)",
+        "key_findings": [
+          "70-80% of restaurants labeled 'halal' may not be genuinely halal-certified (Bilel Achahada testimony)",
+          "~90% of boucheries have no certification at all",
+          "Significant proportion of 'halal' meat in France is imported from countries where stunning was mandatory (Belgium, Netherlands, Germany)",
+          "Document fraud is widespread: fake certificates, photocopied stamps, email/fax documents easily forged",
+          "Key certifiers: AVS, Achahada, Mosquée de Paris, ARGML (Grande Mosquée de Lyon)",
+          "Cost gap: genuine halal adds 0.50-1.00€/kg; conventional slaughter = 10-15 centimes",
+          "80% of halal market controlled by large non-specialist French groups",
+          "Poultry water bath stunning kills ~15% before slaughter (certifier testimony)"
+        ]
+      }
+    }
+  },
+  "naqiy_scoring_model": {
+    "scoring_matrix": [
+      {
+        "scenario": "no_stunning_muslim_slaughterer_certified",
+        "description_fr": "Abattage sans étourdissement, abatteur musulman, certifié halal (AVS, HMC, Achahada, etc.)",
+        "naqiy_score": 98,
+        "verdict": "HALAL",
+        "confidence": "CERTAIN",
+        "color": "green",
+        "verdicts_by_madhab": {
+          "hanafi": 98,
+          "maliki": 98,
+          "shafii": 98,
+          "hanbali": 98
+        }
+      },
+      {
+        "scenario": "head_only_electrical_reversible_certified",
+        "description_fr": "Étourdissement électrique tête seule réversible, paramètres IIFA, certifié halal (MUI, JAKIM, HFA)",
+        "naqiy_score": 73,
+        "verdict": "DOUBTFUL_LEAN_PERMISSIBLE",
+        "confidence": "DISPUTED",
+        "color": "yellow",
+        "verdicts_by_madhab": {
+          "hanafi": 72,
+          "maliki": 75,
+          "shafii": 78,
+          "hanbali": 70
+        },
+        "note": "Majority of major institutions permit. HMC/ECFR/Deobandi dissent. Certified by MUI/JAKIM/HFA = higher confidence."
+      },
+      {
+        "scenario": "head_to_body_electrical_cardiac_arrest",
+        "description_fr": "Étourdissement électrique tête-corps (arrêt cardiaque) — méthode la plus courante en EU pour ovins",
+        "naqiy_score": 2,
+        "verdict": "HARAM",
+        "confidence": "CERTAIN",
+        "color": "red",
+        "verdicts_by_madhab": {
+          "hanafi": 3,
+          "maliki": 3,
+          "shafii": 2,
+          "hanbali": 0
+        },
+        "note": "Designed to kill via ventricular fibrillation. Animal is DEAD before slaughter. Carrion (maytah) by consensus."
+      },
+      {
+        "scenario": "captive_bolt_penetrative",
+        "description_fr": "Pistolet à tige captive pénétrant — standard pour bovins en abattoirs EU/US",
+        "naqiy_score": 0,
+        "verdict": "HARAM",
+        "confidence": "CERTAIN",
+        "color": "red",
+        "verdicts_by_madhab": {
+          "hanafi": 0,
+          "maliki": 0,
+          "shafii": 0,
+          "hanbali": 0
+        },
+        "note": "Destroys brain tissue permanently. Animal cannot recover. Prohibited by ALL institutions including IIFA."
+      },
+      {
+        "scenario": "poultry_electrical_water_bath",
+        "description_fr": "Volaille : bain d'eau électrifié (électronarcose) — standard industriel",
+        "naqiy_score": 5,
+        "verdict": "HARAM",
+        "confidence": "HIGH",
+        "color": "red",
+        "verdicts_by_madhab": {
+          "hanafi": 5,
+          "maliki": 8,
+          "shafii": 10,
+          "hanbali": 3
+        },
+        "note": "10-15% pre-slaughter mortality proven. IIFA, Lajnah, HMC, ECFR all prohibit. Some SE Asian certifiers still accept under strict monitoring."
+      },
+      {
+        "scenario": "co2_high_concentration_poultry",
+        "description_fr": "Volaille : CO₂ haute concentration (>70%) — asphyxie",
+        "naqiy_score": 2,
+        "verdict": "HARAM",
+        "confidence": "HIGH",
+        "color": "red",
+        "verdicts_by_madhab": {
+          "hanafi": 2,
+          "maliki": 3,
+          "shafii": 3,
+          "hanbali": 0
+        },
+        "note": "High CO₂ kills by suffocation = munkhaniqah (strangled). Haram."
+      },
+      {
+        "scenario": "no_certification_labeled_halal",
+        "description_fr": "Viande étiquetée 'halal' SANS certification vérifiable (majorité des boucheries/restaurants FR)",
+        "naqiy_score": 25,
+        "verdict": "DOUBTFUL_AVOID",
+        "confidence": "UNCERTAIN",
+        "color": "orange",
+        "verdicts_by_madhab": {
+          "hanafi": 25,
+          "maliki": 30,
+          "shafii": 22,
+          "hanbali": 20
+        },
+        "note": "Per video investigations: 70-80% of 'halal' labeled outlets may not be genuinely halal. Document fraud widespread."
+      },
+      {
+        "scenario": "western_import_unknown_method",
+        "description_fr": "Viande importée d'un pays occidental, méthode d'étourdissement inconnue",
+        "naqiy_score": 15,
+        "verdict": "DOUBTFUL_AVOID",
+        "confidence": "DISPUTED",
+        "color": "red",
+        "verdicts_by_madhab": {
+          "hanafi": 20,
+          "maliki": 25,
+          "shafii": 22,
+          "hanbali": 18
+        },
+        "note": "Most EU industrial slaughter uses methods that are haram (penetrative bolt for cattle, head-to-body electrical for sheep, water bath for poultry). Without verified certification, default assumption is non-halal."
+      },
+      {
+        "scenario": "australia_nz_brazil_halal_certified_export",
+        "description_fr": "Viande d'Australie/NZ/Brésil certifiée halal pour export (étourdissement réversible contrôlé)",
+        "naqiy_score": 68,
+        "verdict": "DOUBTFUL_LEAN_PERMISSIBLE",
+        "confidence": "DISPUTED",
+        "color": "yellow",
+        "verdicts_by_madhab": {
+          "hanafi": 65,
+          "maliki": 70,
+          "shafii": 72,
+          "hanbali": 62
+        },
+        "note": "These countries have established halal export certification with Muslim supervisors and reversible stunning protocols. Accepted by Saudi Arabia, Gulf states, SE Asia."
+      }
+    ]
+  },
+  "identification_guide": {
+    "consumer_guidance_france": {
+      "certifiers_to_trust": [
+        "AVS (A Votre Service)",
+        "Achahada"
+      ],
+      "certifiers_mixed_policy": [
+        "ARGML (Grande Mosquée de Lyon) — sans étourdissement pour bovins/ovins, MAIS utilise l'électronarcose réversible pour volaille avec protocole spécifique (paramètres réduits, tests de réveil, contrôleurs ARGML). En 2021, ARGML s'est séparée de Bernard Royal Dauphiné car les paramètres EU 'tuent quasi-systématiquement' les volailles."
+      ],
+      "certifiers_debated": [
+        "Mosquée de Paris — criticized for lack of transparency (video sources)"
+      ],
+      "red_flags": [
+        "No visible certificate or agrément number in the shop",
+        "Certificate is a photocopy, fax, or email print — not an original stamped document",
+        "Unable to name their certifying body when asked",
+        "Selling specific cuts (e.g., lamb shanks/souris d'agneau) at prices below market rate",
+        "Meat sourced from Belgium, Netherlands, or Germany without halal export certification"
+      ],
+      "questions_to_ask": [
+        "Quel est votre certificateur halal ? (Which is your halal certifier?)",
+        "Avez-vous un numéro d'agrément visible ? (Do you have a visible certification number?)",
+        "D'où vient votre viande exactement ? (Where does your meat come from exactly?)",
+        "La viande est-elle abattue avec ou sans étourdissement ? (Is the meat slaughtered with or without stunning?)"
+      ]
+    }
+  },
+  "bibliography": {
+    "primary_fiqh_sources": [
+      "IIFA (OCI Fiqh Academy), Resolution No. 95 (3/10), 10th Session, 1997 — comprehensive ruling on stunning methods",
+      "MWL Islamic Fiqh Council, 10th Session, Makkah, October 1987 — three-part ruling on stunned meat",
+      "Lajnah Da'imah, Fataawa Vol. 22, pp. 462-463 — conditional permissibility of stunning",
+      "Dar al-Ifta Egypt, Fatwa #678 (Electrocuting Animals) and #6254 (Mechanical Slaughtering)",
+      "ECFR, Official Statement on Slaughtering, November 2018 — restrictive position",
+      "MUI Indonesia, Fatwa No. 12/2009 on Halal Slaughter Certification",
+      "JAKIM Malaysia, Malaysian Halal Protocol, May 2008",
+      "Jordanian Iftaa Department, Decision #315 on electrical stunning of poultry",
+      "HMC UK, Policy Statement on Stunning and Mechanical Slaughter",
+      "IslamQA.info, Fatwa #14308 and #83362 — stunning rulings"
+    ],
+    "secondary_scholarly_works": [
+      "Al-Nawawi, al-Majmu' Sharh al-Muhadhdhab — hayat mustaqirrah in dhakat",
+      "Ibn Qudamah, al-Mughni — Hanbali conditions for valid slaughter",
+      "Ibn Abidin, Radd al-Muhtar — Hanafi hayat mustaqirrah definition",
+      "Al-Kasani, Bada'i al-Sana'i — Hanafi slaughter conditions",
+      "Khalil ibn Ishaq, Mukhtasar — Maliki slaughter conditions",
+      "Ibn Hajar al-Haytami, Tuhfat al-Muhtaj — Shafi'i dhakat requirements"
+    ],
+    "web_sources": [
+      "https://iifa-aifi.org/en/32542.html — IIFA Resolution 95",
+      "https://halalfocus.com/a-fatwa-on-stunning/ — MWL ruling",
+      "https://islamqa.info/en/answers/14308/ — IslamQA on stunned meat",
+      "https://islamqa.info/en/answers/83362/ — IslamQA detailed analysis",
+      "https://www.dar-alifta.org/en/fatwa/details/6254 — Egypt Dar al-Ifta mechanical slaughter",
+      "https://www.dar-alifta.org/en/fatwa/details/678 — Egypt Dar al-Ifta electrocution",
+      "https://www.e-cfr.org/blog/2018/11/05/ — ECFR statement on slaughtering",
+      "https://halalhmc.org/resources/issues-of-mechanical-slaughter-and-stunning/ — HMC position",
+      "https://halalmui.org/en/stunning-permitted-with-certain-conditions/ — MUI stunning position",
+      "https://eur-lex.europa.eu — EU Regulation 1099/2009",
+      "https://pmc.ncbi.nlm.nih.gov/articles/PMC4950446/ — Head-only stunning poultry study",
+      "https://pmc.ncbi.nlm.nih.gov/articles/PMC8633638/ — Stunning methods review",
+      "https://www.hsa.org.uk/ — Humane Slaughter Association technical guides"
+    ],
+    "video_sources": [
+      "https://youtu.be/cpMWRyW--s8 — 70% des restaurants halal pas halal (Isma la Brigade)",
+      "https://youtu.be/j7Ebnzc8E7M — La vérité sur le halal (Barbe Rousse / Lumière Noire)",
+      "https://youtu.be/sCAogNaAHA0 — VSM décryptage (Achahada)",
+      "https://youtu.be/Eljk3LzxqlQ — Comment mieux consommer halal (Tawakkoul)",
+      "https://youtu.be/YT4tr5One04 — Le monde du halal en France (Bridge Cast)",
+      "https://youtu.be/mn0HA_B8B-c — Un certificateur dit la vérité",
+      "https://youtu.be/A1L2WtwffQA — Certificateur halal sur Fleury Michon et Belgique"
+    ]
+  },
+  "verified_fatwas_v11": [
+    {
+      "id": "IIFA_RES_95_10_1997",
+      "institution_ar": "الأكاديمية الإسلامية الدولية للفقه - منظمة المؤتمر الإسلامي",
+      "institution_fr": "Académie internationale du fiqh islamique (OCI)",
+      "decision_number": "Résolution 95 (3/10)",
+      "session": "10ème session",
+      "session_date_corrected": "1997-06-28 au 1997-07-03",
+      "date_hijri": "23-28 Safar 1418",
+      "location": "Jeddah, Arabie saoudite",
+      "canonical_url": "https://iifa-aifi.org/en/32542.html",
+      "topic_ar": "حكم الذبح بالصعق الكهربائي للحيوانات والدواجن",
+      "key_ruling_ar": "تبين من الدراسات العلمية أن الصعق الكهربائي قد يؤدي إلى وفيات قبل الذبح الفعلي في نسب معينة",
+      "key_ruling_fr": "Les études scientifiques ont montré que l'étourdissement électrique peut entraîner des décès avant l'abattage réel à certains taux. L'animal doit être vivant au moment de l'abattage; l'étourdissement ne doit pas le tuer.",
+      "verification_status": "VERIFIED_LIVE",
+      "search_log": "WebFetch direct sur iifa-aifi.org/en/32542.html — résolution localisée; correction date appliquée par rapport à v1.0"
+    },
+    {
+      "id": "BINBAZ_156",
+      "institution_ar": "موقع الشيخ عبد العزيز بن باز",
+      "mufti_ar": "عبد العزيز بن محمد بن عبد الله بن باز",
+      "mufti_translit": "Abd al-ʿAzīz ibn Bāz",
+      "canonical_url": "https://binbaz.org.sa/articles/156/",
+      "title_ar": "حكم الحيوان المذبوح بالصعق الكهربائي",
+      "key_excerpt_ar": "ما صعق أو ضرب وأُدرك حياً وذكي على الكيفية الشرعية فهو حلال، وأما إذا ماتت المصعوقة قبل إدراك ذبحها فهي محرمة",
+      "key_excerpt_fr": "Ce qui est étourdi ou frappé puis trouvé vivant et abattu selon la méthode légale est licite; mais si l'animal étourdi meurt avant d'être abattu, il est interdit.",
+      "verification_status": "VERIFIED_LIVE",
+      "search_log": "WebFetch sur binbaz.org.sa/articles/156/ — page récupérée"
+    },
+    {
+      "id": "DAR_ALIFTA_EGYPT_13240",
+      "institution_ar": "دار الإفتاء المصرية",
+      "fatwa_number_url": "13240",
+      "canonical_url": "https://www.dar-alifta.org/ar/fatwa/details/13240/",
+      "title_ar": "حكم تخدير الحيوان قبل ذبحه",
+      "date_published": "2005-06-19",
+      "key_ruling_ar": "تخدير خفيف أو صعق بجهد منخفض يضعف مقاومة الحيوان جائز شرعاً، بشرط عدم وفاة الحيوان",
+      "key_ruling_fr": "Anesthésie légère ou étourdissement à basse tension affaiblissant la résistance de l'animal: permis à la condition stricte que l'animal ne meure pas. Sinon il devient maytah (charogne) et est interdit.",
+      "verification_status": "VERIFIED_LIVE",
+      "search_log": "WebFetch dar-alifta.org URL_ID 13240 — vérifié"
+    },
+    {
+      "id": "DAR_ALIFTA_EGYPT_12912",
+      "institution_ar": "دار الإفتاء المصرية",
+      "fatwa_number_url": "12912",
+      "canonical_url": "https://www.dar-alifta.org/ar/fatwa/details/12912/",
+      "title_ar": "حكم استعمال الصاعق الكهربائي عند الذبح",
+      "date_published": "2005-06-19",
+      "key_ruling_fr": "L'électrochoc avant abattage est permis s'il se limite à affaiblir la résistance de l'animal.",
+      "technical_standards_fr": "Tension 100-400 V; courant 0,75-1 A (ovins), 2-2,5 A (bovins); durée 3-6 secondes",
+      "verification_status": "VERIFIED_LIVE",
+      "search_log": "WebFetch dar-alifta.org URL_ID 12912 — vérifié"
+    },
+    {
+      "id": "ISLAMQA_112118",
+      "institution_ar": "الإسلام سؤال وجواب",
+      "question_number": "112118",
+      "canonical_url": "https://islamqa.info/ar/answers/112118",
+      "title_ar": "ما هو حد الصعق الكهربائي الذي يقتل الحيوان فلا يحل بعده؟",
+      "key_ruling_fr": "Si le choc est mortel, l'animal devient mawqūdhah (battu à mort) et est interdit. S'il provoque seulement l'inconscience, l'animal reste licite s'il est trouvé vivant et abattu correctement. Indicateur visible: l'écoulement normal du sang après l'égorgement signale que l'animal était vivant.",
+      "verification_status": "VERIFIED_LIVE",
+      "search_log": "WebFetch islamqa.info/ar/answers/112118 — vérifié"
+    },
+    {
+      "id": "ALIFTAA_JO_315",
+      "institution_ar": "دار الإفتاء الأردنية",
+      "decision_number": "315 (Décision 1711)",
+      "canonical_url": "https://aliftaa.jo/Decision.aspx?DecisionId=1711",
+      "title_ar": "حكم استخدام الصعق الكهربائي للطيور ما قبل الذبح",
+      "date_published": "2022-06-27",
+      "key_ruling_fr": "Permis comme mesure de bien-être animal, à condition que (1) l'abattage rituel soit exécuté correctement, (2) l'étourdissement ne tue pas l'animal, (3) la conformité avec la norme halal jordanienne 2060/2014 soit respectée.",
+      "verification_status": "VERIFIED_LIVE",
+      "search_log": "WebFetch aliftaa.jo Decision 1711 — vérifié"
+    },
+    {
+      "id": "MWL_FIQH_COUNCIL_1987",
+      "institution_ar": "رابطة العالم الإسلامي - مجلس الفقه الإسلامي",
+      "session": "10ème session",
+      "session_date": "1987-10-17 au 1987-10-21",
+      "location": "La Mecque",
+      "canonical_url": "https://themwl.org/en/node/34237",
+      "key_ruling_fr": "Si l'animal est vivant après l'étourdissement et abattu islamiquement, il n'y a pas de mal à en consommer la viande. Le conseil met en garde contre l'usage de tensions élevées, considérées comme torture animale (interdite).",
+      "verification_status": "VERIFIED_LIVE",
+      "search_log": "WebFetch themwl.org/en/node/34237 — vérifié"
+    },
+    {
+      "id": "ECFR_POSITION_2016",
+      "institution_ar": "المجلس الأوروبي للإفتاء والبحوث",
+      "presiding_scholar": "Yusuf al-Qaradawi",
+      "canonical_url": "https://www.e-cfr.org/en/",
+      "date_documented": "2016 (consultation Parlement européen)",
+      "position_fr": "Le Conseil européen s'oppose à tout étourdissement préalable au motif que la méthode islamique traditionnelle, telle qu'enseignée par le Prophète, est la plus humaine.",
+      "verification_status": "VERIFIED_LIVE",
+      "search_log": "Site e-cfr.org confirmé live; position 2016 documentée via consultation parlementaire UE"
+    }
+  ],
+  "consensus_v11": {
+    "permis_si": "L'animal demeure vivant après étourdissement et est abattu rituellement (Bismillah, section trachée+œsophage+jugulaires). Vérifiable par écoulement normal du sang.",
+    "interdit_si": "L'étourdissement tue l'animal avant l'égorgement (cas du head-to-body électrique, du captive bolt pénétrant haute énergie, ou des paramètres électriques excessifs). L'animal devient alors maytah ou mawqūdhah."
+  },
+  "unverified_claims_disclosure": [
+    {
+      "item": "Lajnah Dā'imah (Arabie saoudite) — fatwa spécifique sur le seuil électrique",
+      "status": "UNRESOLVED",
+      "reason": "Site alifta.gov.sa cert SSL expiré, recherche spécifique non aboutie"
+    },
+    {
+      "item": "Cheikh Farkūs sur l'étourdissement électrique",
+      "status": "UNRESOLVED",
+      "reason": "Recherche site ferkous.app sans résultat ciblé"
+    },
+    {
+      "item": "Cheikh Sulaymān ar-Ruḥaylī sur le sujet précis",
+      "status": "UNRESOLVED",
+      "reason": "Pas de fatwa indexée localisée"
+    },
+    {
+      "item": "HMC UK position détaillée",
+      "status": "ATTESTED_PRINCIPLE",
+      "reason": "Position globale haram pour étourdissement attestée mais texte complet non récupéré"
+    }
+  ]
+}

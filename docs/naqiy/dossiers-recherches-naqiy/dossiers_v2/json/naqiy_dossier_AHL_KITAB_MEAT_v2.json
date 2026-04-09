@@ -1,0 +1,1333 @@
+{
+  "meta": {
+    "dossier_id": "NAQIY-DOSSIER-006",
+    "subject": "Viande des Gens du Livre / ذبائح أهل الكتاب / Meat of the People of the Book",
+    "version": "2.0.0",
+    "created_at": "2026-04-04",
+    "methodology": "Collecte multi-institutionnelle, classification par madhab, textes originaux en arabe avec traductions fidèles FR/EN, données sociologiques et industrielles France/EU, hiérarchisation par autorité",
+    "author_system": "Naqiy Halal Analysis Engine",
+    "languages": [
+      "ar",
+      "fr",
+      "en"
+    ],
+    "scope": "Sunni — 4 madhahib + institutions contemporaines + tafsir classique + données sociologiques",
+    "key_fiqhi_issue": "SLAUGHTER",
+    "key_sub_issues": [
+      "AHL_KITAB_IDENTITY",
+      "TASMIYAH_BY_NON_MUSLIM",
+      "SECULARISM_EFFECT",
+      "INDUSTRIAL_METHOD_VS_RITUAL",
+      "GHALABAT_AL_ZANN"
+    ],
+    "relationship_to_previous_dossiers": "Directly linked to NAQIY-DOSSIER-004 (Stunned Meat / SUBST-041) and NAQIY-DOSSIER-005 (Mechanical Slaughter / SUBST-042). SUBST-041 covers WHETHER to stun, SUBST-042 covers WHO/WHAT cuts, this dossier covers WHO IS PERMITTED TO SLAUGHTER. In Western industrial practice, all three issues COMPOUND: animals are stunned (041), mechanically cut (042), by workers whose religion and tasmiyah are unknown (this dossier). This is the FINAL piece of the slaughter trilogy.",
+    "updated_at": "2026-04-07",
+    "supersedes": [
+      "1.0.0",
+      "1.1.0"
+    ],
+    "update_notes": "v2.0 merge: retains all v1.0 content, integrates verified fatwas DAR_ALIFTA_11988 and DAR_ALIFTA_12515 from v1.1 with verification_status, canonical_url, and search_log metadata. Unverified claims disclosure merged.",
+    "verification_protocol": "v2 — Live access verification via WebFetch to canonical URLs, verification_status coded (VERIFIED_LIVE, UNRESOLVED), canonical_url + search_log preserved"
+  },
+  "substance": {
+    "id": "SUBST-039",
+    "names": {
+      "ar": "ذبائح أهل الكتاب / لحوم النصارى واليهود / طعام أهل الكتاب",
+      "fr": "Viande des Gens du Livre / Viande abattue par des chrétiens ou des juifs",
+      "en": "Meat of the People of the Book / Christian-slaughtered meat / Jewish-slaughtered meat",
+      "synonyms": [
+        "Ahl al-kitab meat",
+        "Christian meat",
+        "Jewish slaughter (shechita)",
+        "Western supermarket meat",
+        "Viande du supermarché",
+        "لحوم المسيحيين",
+        "لحم الكتابي",
+        "Non-halal-certified Western meat"
+      ]
+    },
+    "category": "slaughter_identity",
+    "description": {
+      "ar": "ذبائح أهل الكتاب هي الحيوانات التي يذبحها يهودي أو نصراني — وقد أحلها القرآن بنص صريح: «وَطَعَامُ الَّذِينَ أُوتُوا الْكِتَابَ حِلٌّ لَكُمْ» (المائدة 5:5). لكن الخلاف المعاصر يدور حول ثلاثة محاور: (1) هل المسيحيون واليهود المعاصرون في الغرب يحققون فعلاً صفة «أهل الكتاب» مع انتشار العلمانية والإلحاد؟ (2) هل يُشترط أن يسمي الكتابي اسم الله أم يكفي ذبحه دون تسمية؟ (3) هل الذبح الصناعي الغربي (آلي + تدويخ + بدون تسمية) يدخل أصلاً في مفهوم «طعام أهل الكتاب»؟",
+      "fr": "Les ذبائح أهل الكتاب (viandes des Gens du Livre) sont les animaux abattus par un juif ou un chrétien — explicitement autorisés par le Coran : « La nourriture de ceux à qui le Livre a été donné vous est permise » (Al-Ma'idah 5:5). Mais le débat contemporain porte sur trois axes : (1) Les chrétiens et juifs occidentaux contemporains remplissent-ils réellement la qualité d'« ahl al-kitab » avec la sécularisation massive et l'athéisme ? (2) Faut-il que le Kitabi invoque le nom d'Allah, ou suffit-il qu'il abatte sans invocation ? (3) L'abattage industriel occidental (mécanique + étourdissement + aucune invocation) entre-t-il dans le concept de « nourriture des Gens du Livre » ? C'est LA question halal la plus impactante pour les musulmans en Occident — car elle détermine si la viande « standard » du supermarché est licite ou non.",
+      "en": "Dhaba'ih ahl al-kitab (meat of the People of the Book) refers to animals slaughtered by Jews or Christians — explicitly permitted by the Quran: 'The food of those who were given the Scripture is lawful for you' (Al-Ma'idah 5:5). But the contemporary debate revolves around three axes: (1) Do modern Western Christians and Jews actually qualify as 'ahl al-kitab' given mass secularization and atheism? (2) Must the Kitabi invoke Allah's name, or is slaughter without invocation sufficient? (3) Does Western industrial slaughter (mechanical + stunning + no invocation) even fall under the concept of 'food of the People of the Book'? This is THE most impactful halal question for Muslims in the West — it determines whether standard supermarket meat is permissible or not."
+    },
+    "the_three_sub_questions": {
+      "Q1_who_is_kitabi": {
+        "question_ar": "هل المسيحي أو اليهودي المعاصر في الغرب يحقق صفة «أهل الكتاب» شرعاً؟",
+        "question_fr": "Le chrétien ou juif contemporain en Occident remplit-il la qualité d'« ahl al-kitab » au sens juridique islamique ?",
+        "positions": [
+          "YES — kitabi status is by lineage/civilization, not individual practice (Ibn Taymiyyah, Qaradawi)",
+          "NO — only PRACTICING believers who accept God and scripture qualify (Shafi'i strict, Deobandi)",
+          "CONDITIONAL — depends on whether they retain belief in God even if non-practicing (majority contemporary)"
+        ]
+      },
+      "Q2_tasmiyah_required": {
+        "question_ar": "هل يُشترط أن يذكر الكتابي اسم الله عند الذبح؟",
+        "question_fr": "Le Kitabi doit-il invoquer le nom d'Allah au moment de l'abattage ?",
+        "positions": [
+          "YES — tasmiyah is a condition, same as for Muslim (Hanafi, Hanbali majority)",
+          "NO — tasmiyah is sunnah not shart; kitabi meat halal even without it (Shafi'i on tasmiyah generally)",
+          "IF HE MENTIONS ANOTHER NAME (Christ, etc.) — HARAM by consensus of 3 madhahib; Maliki alone permits"
+        ]
+      },
+      "Q3_industrial_qualifies": {
+        "question_ar": "هل الذبح الصناعي الغربي (آلي + تدويخ + بدون تسمية + عامل مجهول الدين) يدخل في مفهوم «طعام أهل الكتاب»؟",
+        "question_fr": "L'abattage industriel occidental (mécanique + stunning + aucune invocation + religion de l'opérateur inconnue) entre-t-il dans le concept de « nourriture des Gens du Livre » ?",
+        "positions": [
+          "YES — the country is Christian, default assumption applies (extreme permissive, rarely held today)",
+          "NO — industrial method violates ALL conditions of valid dhakat regardless of who operates (majority contemporary)",
+          "CASE BY CASE — depends on the specific plant, method, and operator (moderate)"
+        ]
+      }
+    },
+    "common_applications": [
+      {
+        "sector": "supermarket_meat",
+        "products": [
+          "poulet",
+          "bœuf",
+          "agneau",
+          "steaks",
+          "viande hachée"
+        ],
+        "context": "Viande non certifiée halal vendue en grande surface en France/Europe",
+        "frequency": "UBIQUITOUS"
+      },
+      {
+        "sector": "restaurant_non_halal",
+        "products": [
+          "plats à base de viande dans les restaurants non-halal"
+        ],
+        "context": "Restaurants « français » classiques, fast-food international",
+        "frequency": "UBIQUITOUS"
+      },
+      {
+        "sector": "processed_food",
+        "products": [
+          "plats préparés",
+          "charcuterie",
+          "bouillon de viande",
+          "gélatine bovine"
+        ],
+        "context": "Produits transformés contenant de la viande d'origine non certifiée",
+        "frequency": "VERY_HIGH"
+      },
+      {
+        "sector": "import_meat",
+        "products": [
+          "viande importée des Pays-Bas, Irlande, UK, Belgique, Allemagne, Espagne"
+        ],
+        "context": "1/3 de la viande halal consommée en France est importée (~100 000 tonnes/an)",
+        "frequency": "HIGH"
+      },
+      {
+        "sector": "kosher_meat",
+        "products": [
+          "viande casher (shechita)",
+          "parties arrière non consommées par les juifs"
+        ],
+        "context": "Viande abattue par des juifs — cas spécial car la shechita est unanimement reconnue comme dhakat valide",
+        "frequency": "LOW"
+      }
+    ],
+    "france_sociological_data": {
+      "religious_demographics_france_2024": {
+        "non_religious_atheist": "40-56%",
+        "self_identified_atheists": "~20%",
+        "catholic_christian": "~47%",
+        "muslim": "~4%",
+        "jewish": "~1%",
+        "other": "~9%",
+        "source": "Statista 2023, Pew Research 2018, Eurobarometer",
+        "implication": "The majority of French people — and therefore the majority of French abattoir workers — are statistically secular or non-practicing. This fundamentally challenges the 'ahl al-kitab' assumption for French meat."
+      },
+      "abattoir_worker_demographics": {
+        "religion_tracked": false,
+        "legal_requirement_religion": "NONE — EU Regulation 1099/2009 requires only a certificate of competence, not religious affiliation",
+        "practical_reality": "No public data exists on the religion of French abattoir workers. France's laïcité (secularism) prohibits employers from collecting religious data.",
+        "scholarly_implication": "Without knowing the slaughterer's religion, the غلبة الظن (predominant assumption) principle is invoked — but in a 40-56% secular society, the 'predominant assumption' may favor atheism over Christianity."
+      },
+      "france_meat_imports_2024": {
+        "bovine_top_suppliers": [
+          {
+            "country": "Netherlands",
+            "value_usd": "539M"
+          },
+          {
+            "country": "Ireland",
+            "value_usd": "239M"
+          },
+          {
+            "country": "UK",
+            "value_usd": "176M"
+          },
+          {
+            "country": "Belgium",
+            "value_usd": "154M"
+          },
+          {
+            "country": "Germany",
+            "value_usd": "152M"
+          }
+        ],
+        "sheep_top_suppliers": [
+          {
+            "country": "UK",
+            "share": "64%"
+          },
+          {
+            "country": "Ireland",
+            "share": "14.4%"
+          },
+          {
+            "country": "Spain",
+            "share": "7.9%"
+          }
+        ],
+        "halal_import_share": "~1/3 of 300,000 tonnes halal meat consumed in France is imported (~100,000 tonnes/year)",
+        "source": "OEC, WorldTopExports, HalalRC"
+      }
+    }
+  },
+  "core_islamic_concepts": {
+    "primary_concept": {
+      "id": "CONCEPT-TAAM-AHL-KITAB",
+      "term": {
+        "ar": "طعام أهل الكتاب",
+        "ar_transliteration": "ṭaʿām ahl al-kitāb",
+        "fr": "La nourriture des Gens du Livre",
+        "en": "The food of the People of the Book"
+      },
+      "definition": {
+        "ar": "طعام أهل الكتاب هو ذبائحهم — أي ما ذبحه يهودي أو نصراني بالشروط المعتبرة. أحله الله تعالى بنص صريح: «وَطَعَامُ الَّذِينَ أُوتُوا الْكِتَابَ حِلٌّ لَكُمْ» (المائدة 5:5). واتفق المفسرون على أن «الطعام» هنا يعني خصوصاً الذبائح لا مطلق الطعام — لأن ما سوى الذبائح من طعامهم حلال بأصل الإباحة ولا يحتاج إلى نص خاص. قال ابن عباس: طعامهم ذبائحهم",
+        "fr": "Le « ṭaʿām ahl al-kitāb » désigne leurs animaux abattus — ce qu'un juif ou un chrétien a abattu selon les conditions requises. Allah l'a rendu licite par un texte explicite : « La nourriture de ceux à qui le Livre a été donné vous est permise » (Al-Ma'idah 5:5). Les exégètes s'accordent sur le fait que « nourriture » ici désigne spécifiquement les ANIMAUX ABATTUS et non la nourriture en général — car leur nourriture autre que la viande est licite par défaut (aṣl al-ibāḥah) et ne nécessite pas de texte spécial. Ibn Abbas a dit : « Leur nourriture signifie leurs animaux abattus. »",
+        "en": "The 'ta'am ahl al-kitab' refers to their slaughtered animals — what a Jew or Christian slaughtered under the required conditions. Allah made this lawful by explicit text: 'The food of those given the Scripture is lawful for you' (Al-Ma'idah 5:5). Exegetes agree that 'food' here specifically means SLAUGHTERED ANIMALS, not food in general — because their non-meat food is lawful by default (asl al-ibahah) and needs no special text. Ibn Abbas said: 'Their food means their slaughtered animals.'"
+      },
+      "conditions_for_validity": [
+        "أن يكون الذابح كتابياً حقيقياً — يؤمن بالله والكتاب المنزل — لا مجرد منسوب للنصرانية أو اليهودية اسمياً. Must be a GENUINE kitabi — believing in God and revealed scripture — not merely nominally Christian/Jewish.",
+        "أن يذبح ذبحاً شرعياً — بقطع الحلقوم والمريء والودجين بآلة حادة. Must slaughter properly — cutting trachea, esophagus, and jugular veins with a sharp instrument.",
+        "ألا يذكر على ذبيحته اسم غير الله — كأن يقول باسم المسيح أو باسم الصليب — فإن سمى غير الله حرم بالإجماع (أو بإجماع ثلاثة مذاهب على الأقل). Must not invoke a name other than Allah — such as 'in the name of Christ' or 'in the name of the Cross'. If he names other than Allah, it is haram by consensus (or by consensus of at least 3 madhahib).",
+        "ألا يكون الحيوان من المحرمات — كالخنزير. The animal must not be from the prohibited species — such as pig."
+      ],
+      "the_secularism_problem": "This is the CENTRAL contemporary challenge: In 2024, 40-56% of French people are secular/atheist. A person of 'Christian heritage' who does not believe in God, does not accept scripture, and identifies as secular — does he qualify as 'ahl al-kitab'? Most contemporary scholars say NO: he has lost the defining attribute (belief in God and revelation) that grants this status. This means most French abattoir workers — regardless of cultural background — likely do NOT qualify as ahl al-kitab in the fiqhi sense. The verse permits food of BELIEVERS among the People of the Book, not food of those with Christian-sounding last names."
+    },
+    "secondary_concept_1": {
+      "id": "CONCEPT-GHALABAT-ZANN",
+      "term": {
+        "ar": "غلبة الظن / الأصل في ذبيحة الكتابي الحل",
+        "ar_transliteration": "ghalbat al-ẓann / al-aṣl fī dhabīḥat al-kitābī al-ḥill",
+        "fr": "La présomption dominante / Le principe de base : la viande du Kitabi est licite",
+        "en": "Predominant assumption / Default principle: Kitabi slaughter is permissible"
+      },
+      "definition": {
+        "ar": "غلبة الظن هي أصل فقهي يقوم على أن الأحكام تُبنى على الظاهر والغالب لا على الاحتمال والنادر. فإذا كان الغالب في بلد أن أهله من أهل الكتاب وأن طريقة ذبحهم صحيحة — جاز الأكل من ذبائحهم دون تحقيق. والأصل في ذبيحة المسلم والكتابي الحل — أي أنها حلال ما لم يثبت العكس",
+        "fr": "La ghalbat al-zann est un principe juridique fondé sur le fait que les jugements se construisent sur l'apparent et le dominant, non sur le possible et le rare. Si dans un pays donné, la majorité des habitants sont ahl al-kitab et que leur méthode d'abattage est correcte — il est permis de manger de leurs viandes sans vérification. Et le principe de base (al-aṣl) pour l'abattage du musulman et du kitabi est la LICÉITÉ — c'est-à-dire que la viande est ḥalāl sauf preuve du contraire.",
+        "en": "Ghalbat al-zann is a jurisprudential principle based on building rulings on what is apparent and dominant, not on what is possible and rare. If in a given country the majority are ahl al-kitab and their slaughter method is correct — eating their meat without verification is permissible. The default principle (al-asl) for Muslim and Kitabi slaughter is PERMISSIBILITY — the meat is halal unless proven otherwise."
+      },
+      "application_to_modern_west": "This principle is FIERCELY debated for Western countries. The PERMISSIVE view: Western countries are historically Christian, so the 'predominant assumption' is that slaughterers are Christian (ahl al-kitab), making meat permissible by default. The RESTRICTIVE view: (1) the 'predominant assumption' fails when 40-56% of the population is secular/atheist — 'Christian majority' no longer holds; (2) even if the slaughterer is Christian, industrial methods (stunning, mechanical blade, no invocation) violate dhakat conditions regardless of the operator's religion; (3) knowledge of actual industrial practices NULLIFIES the non-inquiry principle — you CANNOT claim 'I didn't know' when industrial slaughter methods are widely documented."
+    },
+    "secondary_concept_2": {
+      "id": "CONCEPT-HADITH-SAMMU",
+      "term": {
+        "ar": "حديث «سموا أنتم وكلوا»",
+        "ar_transliteration": "ḥadīth 'sammū antum wa-kulū'",
+        "fr": "Le hadith « Invoquez le nom d'Allah vous-mêmes et mangez »",
+        "en": "The hadith 'Say bismillah yourselves and eat'"
+      },
+      "definition": {
+        "ar": "عن عائشة رضي الله عنها أن قوماً قالوا للنبي ﷺ: إن قوماً يأتوننا باللحم لا ندري أذُكر اسم الله عليه أم لا؟ فقال: «سمُّوا عليه أنتم وكلُوه» — رواه البخاري (5507). هذا الحديث أصل في مسألة الشك في التسمية: إذا لم يُعلم هل سمى الذابح أم لا — يسمي المسلم بنفسه ويأكل",
+        "fr": "D'après Aisha (que Dieu l'agrée), des gens dirent au Prophète ﷺ : « Des gens nous apportent de la viande, et nous ne savons pas s'ils ont mentionné le nom d'Allah dessus ou non. » Il dit : « Invoquez le nom d'Allah VOUS-MÊMES dessus et mangez-la. » — Rapporté par al-Bukhari (5507). Ce hadith est le fondement de la question du doute sur la tasmiyah : quand on ne sait pas si l'abatteur a dit bismillah — le musulman le dit lui-même et mange.",
+        "en": "From Aisha (may Allah be pleased with her): A group of people said to the Prophet ﷺ: 'People bring us meat and we don't know whether they mentioned Allah's name on it or not.' He said: 'Mention Allah's name on it YOURSELVES and eat.' — Al-Bukhari (5507). This hadith is the foundation for the question of doubt about tasmiyah: when it is unknown whether the slaughterer said bismillah — the Muslim says it himself and eats."
+      },
+      "scholarly_interpretation": {
+        "permissive": "The Prophet's instruction applies generally: when in doubt about tasmiyah, say bismillah yourself and eat. This covers Western supermarket meat where the slaughterer's invocation is unknown. Context: the people asking were recently converted Muslims receiving meat from new Muslim tribes.",
+        "restrictive": "This hadith applies ONLY when the slaughterer is known to be Muslim or Kitabi (the 'people' bringing meat were Muslims). It does NOT apply when the slaughterer might be an atheist, or when the slaughter METHOD itself is known to violate Islamic conditions (stunning, mechanical blade). You cannot 'cover' a fundamentally invalid slaughter by saying bismillah at the dinner table.",
+        "key_distinction": "The restrictive scholars emphasize: the hadith addresses DOUBT ABOUT TASMIYAH, not doubt about the ENTIRE SLAUGHTER METHOD. If the method itself is non-Islamic (captive bolt, CO2, etc.), saying bismillah yourself does not make the meat halal."
+      }
+    }
+  },
+  "fatwas": [
+    {
+      "id": "FATWA-AK-001",
+      "institution": {
+        "name": {
+          "ar": "مجمع الفقه الإسلامي الدولي — منظمة التعاون الإسلامي",
+          "fr": "Académie Internationale de Fiqh Islamique — OCI (IIFA)",
+          "en": "International Islamic Fiqh Academy — OIC (IIFA)"
+        },
+        "type": "international_fiqh_academy",
+        "authority_level": "highest_collective",
+        "headquarters": "Jeddah, Saudi Arabia",
+        "website": "https://iifa-aifi.org",
+        "madhab_orientation": "Multi-madhab"
+      },
+      "reference": "Resolution No. 95 (3/10), 10th Session, 1997 — Section on the person performing slaughter",
+      "date": "1997-06-28",
+      "topic": "Conditions of the person performing slaughter — including ahl al-kitab",
+      "original_text": {
+        "lang": "ar",
+        "text": "يشترط في الذابح أن يكون بالغاً أو مميزاً عاقلاً — مسلماً أو كتابياً. ويجوز أكل ذبائح أهل الكتاب إذا استوفت شروط التذكية الشرعية. واللحوم المستوردة من بلاد أهل الكتاب تحل إذا كانت مذكاة تذكية شرعية مع مراعاة الشروط الفنية"
+      },
+      "translation": {
+        "fr": {
+          "text": "Les conditions de l'abatteur : être adulte ou discernant et sain d'esprit — musulman ou Kitabi (ahl al-kitab). Il est permis de manger les viandes des Gens du Livre si les conditions de la dhakāt sharʿiyyah sont remplies. Les viandes importées des pays des Gens du Livre sont licites si elles sont abattues rituellement en respectant les conditions techniques.",
+          "translation_notes": "مسلماً أو كتابياً (musliman aw kitābiyyan) = musulman ou kitabi — confirmation que l'IIFA reconnaît le kitabi comme abatteur valide. مذكاة تذكية شرعية (mudhakkat tadhkiyah sharʿiyyah) = abattage conforme à la charia — la condition est sur la MÉTHODE, pas seulement sur la personne."
+        },
+        "en": {
+          "text": "Conditions of the slaughterer: must be adult or of discerning age and sound mind — Muslim or Kitabi (People of the Book). It is permissible to eat the meat of the People of the Book if the conditions of valid Islamic slaughter (dhakat shar'iyyah) are met. Meat imported from countries of the People of the Book is lawful if ritually slaughtered in accordance with technical conditions.",
+          "translation_notes": "musliman aw kitabiyyan = Muslim or Kitabi. mudhakkat tadhkiyah shar'iyyah = slaughtered in Islamic manner."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional_permissive",
+        "ahl_kitab_as_slaughterer": "VALID",
+        "conditions": [
+          "proper_islamic_slaughter_method",
+          "sharp_instrument",
+          "cuts_required_vessels",
+          "animal_alive"
+        ],
+        "imported_meat_from_kitab_countries": "PERMISSIBLE_IF_properly_slaughtered"
+      }
+    },
+    {
+      "id": "FATWA-AK-002",
+      "institution": {
+        "name": {
+          "ar": "دار الإفتاء المصرية",
+          "fr": "Dar al-Ifta al-Misriyyah",
+          "en": "Egyptian Dar al-Ifta"
+        },
+        "type": "state_fatwa_authority",
+        "authority_level": "national_highest",
+        "headquarters": "Cairo, Egypt",
+        "website": "https://www.dar-alifta.org",
+        "madhab_orientation": "Multi-madhab (Shafi'i/Hanafi)"
+      },
+      "reference": "Fatwa #11988 — حكم ذبائح أهل الكتاب إذا لم يذكروا اسم الله",
+      "date": "1981-10-31",
+      "mufti": "Sheikh Jad al-Haq Ali Jad al-Haq",
+      "topic": "Slaughter of People of the Book without mentioning Allah's name",
+      "original_text": {
+        "lang": "ar",
+        "text": "يجوز للمسلم أن يأكل من ذبائح أهل الكتاب وإن لم يذكروا اسم الله عليها — استدلالاً بحديث عائشة رضي الله عنها: أن قوماً قالوا يا رسول الله إن قوماً يأتوننا باللحم لا ندري أذُكر اسم الله عليه أم لا فقال: «سمُّوا عليه أنتم وكلُوه». والشرط: أن يكون الذبح بقطع الحلقوم والأوداج — لا بالخنق أو ضرب الرأس"
+      },
+      "translation": {
+        "fr": {
+          "text": "Il est permis au musulman de manger des viandes abattues par les Gens du Livre même s'ils n'ont PAS invoqué le nom d'Allah — en se fondant sur le hadith d'Aisha : des gens dirent au Prophète que des gens leur apportent de la viande sans qu'ils sachent si le nom d'Allah a été prononcé, et il dit : « Invoquez le nom d'Allah vous-mêmes et mangez. » La condition : que l'abattage se fasse par section de la trachée et des jugulaires — PAS par étouffement ou coup à la tête.",
+          "translation_notes": "وإن لم يذكروا اسم الله (wa-in lam yadhkurū ism Allāh) = même s'ils n'ont pas mentionné le nom d'Allah — position PERMISSIVE de Dar al-Ifta. بقطع الحلقوم والأوداج (bi-qaṭʿ al-ḥulqūm wal-awdāj) = par section de la trachée et des jugulaires — la condition porte sur la MÉTHODE, pas sur l'invocation."
+        },
+        "en": {
+          "text": "It is permissible for a Muslim to eat meat slaughtered by the People of the Book even if they did NOT mention Allah's name — based on the hadith of Aisha: people told the Prophet that people bring them meat without knowing if Allah's name was mentioned, and he said: 'Mention Allah's name yourselves and eat.' Condition: the slaughter must be by cutting the trachea and jugular veins — NOT by strangling or striking the head.",
+          "translation_notes": "wa-in lam yadhkuru = even if they did not mention. bi-qat' al-hulqum wal-awdaj = by cutting trachea and jugulars."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "permissive",
+        "tasmiyah_by_kitabi": "NOT_REQUIRED",
+        "slaughter_method": "MUST_be_proper_throat_cutting",
+        "stunning": "NOT_addressed_in_this_fatwa",
+        "basis": "hadith_aisha_bukhari_5507"
+      }
+    },
+    {
+      "id": "FATWA-AK-003",
+      "institution": {
+        "name": {
+          "ar": "دار الإفتاء المصرية",
+          "fr": "Dar al-Ifta al-Misriyyah",
+          "en": "Egyptian Dar al-Ifta"
+        },
+        "type": "state_fatwa_authority",
+        "authority_level": "national_highest",
+        "headquarters": "Cairo, Egypt",
+        "website": "https://www.dar-alifta.org",
+        "madhab_orientation": "Multi-madhab"
+      },
+      "reference": "Fatwa #6927 — حكم أكل اللحوم في بلاد غير إسلامية",
+      "date": "1997-07-10",
+      "mufti": "Prof. Dr. Nasr Farid Wasil",
+      "topic": "Ruling on eating meat in non-Muslim countries",
+      "original_text": {
+        "lang": "ar",
+        "text": "إذا كان المسلم في بلاد أهل الكتاب ولم يجد لحوماً إسلامية — فله أن يأكل من ذبائحهم بشرط: أن يكون الذبح بآلة حادة وقطع الحلقوم والأوداج — لا بالصعق ولا بالخنق. فإن جهل كيفية الذبح — يسمي الله ويأكل عملاً بحديث: «سمُّوا عليه أنتم وكلُوه». مع الأفضلية في البحث عن مصادر إسلامية تطبيقاً لقاعدة: «دع ما يريبك إلى ما لا يريبك»"
+      },
+      "translation": {
+        "fr": {
+          "text": "Si le musulman est dans un pays des Gens du Livre et ne trouve pas de viande islamique — il lui est permis de manger de leurs viandes à condition que : l'abattage se fasse par un instrument tranchant avec section de la trachée et des jugulaires — PAS par choc électrique ni par étouffement. S'il ignore la méthode d'abattage — il invoque le nom d'Allah et mange, conformément au hadith. Avec la préférence de chercher des sources islamiques, appliquant la règle : « Laisse ce qui te fait douter pour ce qui ne te fait pas douter. »",
+          "translation_notes": "لا بالصعق ولا بالخنق (lā bil-ṣaʿq wa-lā bil-khanq) = pas par choc électrique ni par étouffement — le Mufti exclut EXPLICITEMENT le stunning. دع ما يريبك إلى ما لا يريبك (daʿ mā yurībuk ilā mā lā yurībuk) = laisse le douteux pour le certain — hadith de precaution."
+        },
+        "en": {
+          "text": "If a Muslim is in a country of the People of the Book and cannot find Islamic meat — he may eat their meat on condition that slaughter is by sharp instrument with cutting of trachea and jugulars — NOT by electrical shock or strangling. If he doesn't know the slaughter method — he invokes Allah's name and eats, per the hadith. With preference for seeking Islamic sources, applying the rule: 'Leave what makes you doubt for what does not.'",
+          "translation_notes": "la bil-sa'q wa-la bil-khanq = not by shock or strangling. da' ma yuribuk = leave what causes doubt."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional_permissive",
+        "stunning_explicitly_excluded": true,
+        "unknown_method": "say_bismillah_and_eat",
+        "preference": "seek_islamic_sources",
+        "precautionary_principle": "da_ma_yuribuk"
+      }
+    },
+    {
+      "id": "FATWA-AK-004",
+      "institution": {
+        "name": {
+          "ar": "إسلام سؤال وجواب — الشيخ المنجد",
+          "fr": "IslamQA.info — Sheikh al-Munajjid",
+          "en": "IslamQA.info — Sheikh al-Munajjid"
+        },
+        "type": "scholarly_individual",
+        "authority_level": "individual_high_influence",
+        "headquarters": "Saudi Arabia",
+        "website": "https://islamqa.info",
+        "madhab_orientation": "Hanbali (Salafi)"
+      },
+      "reference": "IslamQA Fatwa #103 — حكم أكل ذبائح أهل الكتاب",
+      "topic": "Permissibility of eating meat slaughtered by Christians and Jews",
+      "original_text": {
+        "lang": "ar",
+        "text": "ذبائح أهل الكتاب من اليهود والنصارى حلال لنا بنص القرآن: «وَطَعَامُ الَّذِينَ أُوتُوا الْكِتَابَ حِلٌّ لَكُمْ». والشروط: أن يذبح بآلة حادة تقطع الأوداج — لا بالصعق ولا بالخنق ولا بالضرب. وأن لا يُهَلّ به لغير الله — فإن سمى باسم المسيح أو غيره حرمت. وإن جهلنا هل سمى أم لا — فالأصل الحل لحديث: «سموا أنتم وكلوا». ولا يجب السؤال والتحقيق"
+      },
+      "translation": {
+        "fr": {
+          "text": "Les viandes abattues par les Gens du Livre (juifs et chrétiens) nous sont licites par le texte du Coran. Conditions : que l'abattage se fasse par instrument tranchant coupant les vaisseaux — PAS par choc, ni étouffement, ni coup. Que le nom d'un autre que Dieu ne soit pas invoqué — s'il invoque le nom du Christ ou autre, la viande est ḥarām. Si nous ignorons s'il a invoqué ou non — le principe de base est la licéité, selon le hadith : « Invoquez vous-mêmes et mangez. » Et il n'est PAS obligatoire de questionner ni d'enquêter.",
+          "translation_notes": "لا يجب السؤال والتحقيق (lā yajib al-su'āl wal-taḥqīq) = il n'est pas obligatoire de questionner et d'enquêter — position EXPLICITEMENT facilitante de IslamQA sur ce point."
+        },
+        "en": {
+          "text": "Meat slaughtered by People of the Book (Jews and Christians) is lawful for us by Quranic text. Conditions: slaughter by sharp instrument cutting the vessels — NOT by shock, strangling, or striking. No name other than Allah's invoked — if he invokes Christ's name or other, it is haram. If we don't know whether he invoked or not — the default principle is permissibility, per the hadith. And it is NOT obligatory to question or investigate.",
+          "translation_notes": "la yajib al-su'al wal-tahqiq = not obligatory to question/investigate."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional_permissive",
+        "default_principle": "permissibility_when_unknown",
+        "investigation_required": false,
+        "name_of_christ_invoked": "HARAM",
+        "name_unknown": "HALAL_by_default"
+      }
+    },
+    {
+      "id": "FATWA-AK-005",
+      "institution": {
+        "name": {
+          "ar": "إسلام ويب — قطر",
+          "fr": "IslamWeb.net — Qatar",
+          "en": "IslamWeb.net — Qatar"
+        },
+        "type": "state_fatwa_authority",
+        "authority_level": "national_high",
+        "headquarters": "Doha, Qatar",
+        "website": "https://www.islamweb.net",
+        "madhab_orientation": "Multi-madhab"
+      },
+      "reference": "IslamWeb Fatwa #157453 — ذبائح أهل الكتاب وحرمة أكل ما أهل به لغير الله ; Fatwa #82899 — حكم أكل ذبائح أهل الكتاب في المذاهب الأربعة",
+      "date": "2011-05-26",
+      "topic": "Slaughter of People of the Book and prohibition of what is dedicated to other than Allah — four madhab comparison",
+      "ruling_classification": {
+        "global_ruling": "conditional_permissive",
+        "permissible_if": "proper_slaughter_method_and_no_non_allah_invocation",
+        "haram_if": "slaughtered_for_purposes_other_than_allah",
+        "four_madhab_comparison": {
+          "on_name_of_christ": {
+            "hanafi": "HARAM",
+            "shafii": "HARAM",
+            "hanbali": "HARAM",
+            "maliki": "PERMISSIBLE — Maliki alone permits even if other name mentioned"
+          },
+          "on_no_name_at_all": {
+            "consensus": "PERMISSIBLE — prevailing opinion across all madhahib that meat is lawful even if NO name mentioned during slaughter"
+          }
+        }
+      }
+    },
+    {
+      "id": "FATWA-AK-006",
+      "institution": {
+        "name": {
+          "ar": "جمعية علماء الفقه بأمريكا (AMJA)",
+          "fr": "Assemblée des Juristes Musulmans d'Amérique (AMJA)",
+          "en": "Assembly of Muslim Jurists of America (AMJA)"
+        },
+        "type": "scholarly_collective",
+        "authority_level": "regional_high",
+        "headquarters": "USA",
+        "website": "https://www.amjaonline.org",
+        "madhab_orientation": "Multi-madhab"
+      },
+      "reference": "AMJA Fatwa #80178 — Eating The Meat Of The People Of The Book",
+      "date": "2009-10-09",
+      "scholar": "Dr. Salah Al-Sawy",
+      "topic": "Ahl al-kitab status and meat consumption in America",
+      "key_rulings": {
+        "kitabi_status_persists": "Jews and Christians remain People of the Book EVEN IF they uphold the trinity, cross, or messianic sonship. Status lost ONLY if someone explicitly rejects all heavenly revelations and adopts absolute paganism or agnosticism.",
+        "non_inquiry_principle": "Do not inquire about what is hidden — permissible when actual knowledge is unavailable.",
+        "critical_limitation": "When you KNOW that the people don't slaughter properly, the permissive ruling CANNOT be applied.",
+        "practical_implication": "Knowledge of Western industrial slaughter practices (stunning, mechanical blade, no invocation) may nullify the non-inquiry principle."
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional_with_knowledge_test",
+        "kitabi_definition": "broad — includes trinitarian Christians",
+        "non_inquiry_when_unknown": true,
+        "nullified_when_methods_known": true
+      }
+    },
+    {
+      "id": "FATWA-AK-007",
+      "institution": {
+        "name": {
+          "ar": "الشيخ يوسف القرضاوي",
+          "fr": "Sheikh Yusuf al-Qaradawi",
+          "en": "Sheikh Yusuf al-Qaradawi"
+        },
+        "type": "scholarly_individual",
+        "authority_level": "individual_high_influence",
+        "headquarters": "Qatar",
+        "madhab_orientation": "Multi-madhab (tends Hanafi/permissive)"
+      },
+      "reference": "Al-Halal wal-Haram fil-Islam ; Various conference statements",
+      "topic": "Western meat and the ahl al-kitab ruling",
+      "position": {
+        "general_ruling": "PERMISSIVE — imports from Christian/Jewish countries are permissible",
+        "important_nuance": "At international conferences, when directly asked about McDonald's and supermarket meat, al-Qaradawi 'became exasperated' and ENCOURAGED Muslims in North America to buy from Muslim businesses instead of supermarkets. This indicates his permissive position applies to meat CLEARLY from identifiable Christian/Jewish sources, NOT to generic industrial slaughter.",
+        "practical_advice": "Seek Muslim-slaughtered meat when available; accept ahl al-kitab meat when Muslim alternatives are unavailable"
+      },
+      "ruling_classification": {
+        "global_ruling": "permissive_with_practical_caution",
+        "supermarket_meat": "DISCOURAGED_in_practice",
+        "identifiable_christian_jewish_slaughter": "PERMISSIBLE"
+      }
+    },
+    {
+      "id": "FATWA-AK-008",
+      "institution": {
+        "name": {
+          "ar": "المجلس الأوروبي للإفتاء والبحوث (ECFR)",
+          "fr": "Conseil Européen pour la Fatwa et la Recherche (ECFR)",
+          "en": "European Council for Fatwa and Research (ECFR)"
+        },
+        "type": "international_fiqh_council",
+        "authority_level": "highest_collective",
+        "headquarters": "Dublin, Ireland",
+        "website": "https://www.e-cfr.org",
+        "madhab_orientation": "Multi-madhab (Maghrebi influence)"
+      },
+      "reference": "ECFR field research report on European slaughter methods",
+      "topic": "Meat in Europe — field investigation results",
+      "key_findings": {
+        "poultry_and_cattle": "NOT slaughtered according to Islamic methods in European abattoirs = NOT PERMISSIBLE",
+        "sheep_and_small_calves": "Sometimes slaughtered in ways not contradicting Islamic law = PERMISSIBLE in those cases",
+        "practical_guidance": "If widespread reports confirm local meat is not slaughtered Islamically, precaution requires abstaining"
+      },
+      "ruling_classification": {
+        "global_ruling": "restrictive_based_on_field_investigation",
+        "european_poultry": "NOT_PERMISSIBLE",
+        "european_cattle": "NOT_PERMISSIBLE",
+        "european_sheep_sometimes": "PERMISSIBLE",
+        "recommendation": "abstain_when_in_doubt"
+      }
+    }
+  ],
+  "madhab_analysis": {
+    "hanafi": {
+      "madhab_id": "HANAFI",
+      "geographic_dominance": [
+        "Turkey",
+        "South Asia",
+        "Central Asia",
+        "Balkans",
+        "Parts of Middle East"
+      ],
+      "position_on_ahl_kitab_meat": {
+        "summary_fr": "Le madhab hanafite exige la tasmiyah comme CONDITION (sharṭ) de validité — même pour le kitabi. Si le chrétien ou le juif omet volontairement la tasmiyah, la viande est ḥarām. S'il invoque le nom du Christ au lieu d'Allah, la viande est UNANIMEMENT ḥarām chez les Hanafites. La tradition Deobandi est la plus STRICTE : elle considère que les « chrétiens » occidentaux contemporains ne sont généralement PAS de véritables ahl al-kitab (athéisme/agnosticisme répandu), et que l'abattage industriel occidental viole systématiquement les conditions de la dhakāt. La position turque/Diyanet est plus souple : elle accepte la présomption de base en pays chrétien.",
+        "classical_principle": {
+          "ar": "ذبائح أهل الكتاب حلال بنص القرآن. لكن التسمية شرط — فلو ترك الكتابي التسمية عمداً لم تحل ذبيحته كالمسلم. ولو سمى باسم المسيح أو الصليب حرمت — لأنها أُهلّت لغير الله. والأصل في ذبيحة الكتابي الحل ما لم يُعلم خلافه",
+          "fr": "Les viandes des ahl al-kitab sont ḥalāl par le texte du Coran. Mais la tasmiyah est une condition — si le kitabi l'omet volontairement, sa viande n'est pas licite (comme le musulman). S'il invoque le nom du Christ ou de la Croix, elle est ḥarām — car elle a été dédiée à un autre qu'Allah. Le principe de base pour la viande du kitabi est la licéité sauf preuve du contraire.",
+          "en": "Meat of ahl al-kitab is halal by Quranic text. But tasmiyah is a condition — if the kitabi deliberately omits it, his meat is not lawful (same as Muslim). If he invokes Christ's name or the Cross, it is haram — because it was dedicated to other than Allah. The default for kitabi meat is permissibility unless proven otherwise."
+        },
+        "practical_ruling": {
+          "kitabi_slaughters_with_bismillah": "HALAL — no dispute",
+          "kitabi_slaughters_in_name_of_christ": "HARAM — unanimously in Hanafi school",
+          "kitabi_slaughters_without_any_invocation": "DEBATED — majority Hanafi: HARAM (tasmiyah is shart); some say: HALAL (default permissibility of kitabi slaughter)",
+          "secular_person_of_christian_heritage": "HARAM — not a genuine kitabi (Deobandi position)",
+          "western_supermarket_meat": "HARAM — Deobandi: method violates dhakat, slaughterer likely not kitabi"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "رد المحتار على الدر المختار",
+          "author": "ابن عابدين (d. 1252H)",
+          "relevance": "ULTIMATE Hanafi reference — tasmiyah as shart including for kitabi slaughter",
+          "significance": "HIGHEST",
+          "key_quote_ar": "لا تحل ذبيحة الكتابي إن تعمد ترك التسمية كالمسلم",
+          "key_quote_fr": "La viande du Kitabi n'est pas licite s'il omet volontairement la tasmiyah — comme le musulman"
+        },
+        {
+          "title_ar": "بدائع الصنائع",
+          "author": "الكاساني (d. 587H)",
+          "relevance": "Tasmiyah as condition — reasoning: ahl al-kitab used to invoke Allah's name, hence the permission",
+          "significance": "HIGHEST",
+          "key_quote_ar": "إنما أحل الله طعامهم لأنهم كانوا يسمون الله على ذبائحهم",
+          "key_quote_fr": "Allah a rendu licite leur nourriture parce qu'ils invoquaient le nom d'Allah sur leurs viandes"
+        },
+        {
+          "title_ar": "الهداية شرح البداية",
+          "author": "المرغيناني (d. 593H)",
+          "relevance": "Foundation of Hanafi furu on kitabi slaughter conditions",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "المبسوط",
+          "author": "السرخسي (d. 483H)",
+          "relevance": "Encyclopedic Hanafi treatment of ahl al-kitab conditions",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "فتح القدير",
+          "author": "ابن الهمام (d. 861H)",
+          "relevance": "Analysis of the verse 5:5 and conditions for kitabi slaughter",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "مفتي محمد تقي العثماني",
+          "name_fr": "Mufti Taqi Usmani",
+          "position": "STRICT — Western Christians generally don't qualify as ahl al-kitab; their slaughter methods violate Islamic conditions",
+          "status": "contemporary_major"
+        },
+        {
+          "name_ar": "دار الإفتاء بيرمنغهام",
+          "name_fr": "Darul Iftaa Birmingham",
+          "position": "STRICT — Western supermarket meat is unlawful; modern 'Christians' are not genuine ahl al-kitab; industrial methods violate dhakat",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "ديانت التركية",
+          "name_fr": "Diyanet (Turquie)",
+          "position": "More lenient — accepts presumption of permissibility in Christian-majority countries",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "الشيخ فرز ربّاني",
+          "name_fr": "Shaykh Faraz Rabbani (SeekersGuidance)",
+          "position": "Meat from Western supermarkets is UNLAWFUL — slaughterers generally don't fulfill conditions and are usually NOT true Christians",
+          "status": "individual_high_influence"
+        }
+      ],
+      "naqiy_verdict": {
+        "kitabi_hand_slaughter_bismillah": {
+          "score": 95,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "kitabi_hand_slaughter_no_invocation": {
+          "score": 40,
+          "verdict": "MASHBOOH",
+          "confidence": "DISPUTED"
+        },
+        "kitabi_invokes_name_of_christ": {
+          "score": 0,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        },
+        "kosher_meat_shechita": {
+          "score": 88,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "western_supermarket_unknown": {
+          "score": 20,
+          "verdict": "DOUBTFUL_AVOID",
+          "confidence": "DISPUTED"
+        },
+        "secular_slaughterer": {
+          "score": 5,
+          "verdict": "HARAM",
+          "confidence": "HIGH"
+        }
+      }
+    },
+    "maliki": {
+      "madhab_id": "MALIKI",
+      "geographic_dominance": [
+        "Morocco",
+        "Algeria",
+        "Tunisia",
+        "Libya",
+        "Mauritania",
+        "West Africa",
+        "European Maghrebi diaspora"
+      ],
+      "position_on_ahl_kitab_meat": {
+        "summary_fr": "Le madhab malikite a la position la PLUS PERMISSIVE sur la viande des ahl al-kitab. Position unique : la viande du kitabi est ḥalāl MÊME s'il n'invoque pas le nom d'Allah — Mālik le réprouvait mais ne l'a PAS déclaré ḥarām. Position encore plus remarquable : même si le kitabi invoque le nom du Christ ou un autre, certains malikites considèrent la viande permise (c'est la seule école à le permettre). Le raisonnement : le verset Al-Ma'idah 5:5 est une CONCESSION divine (rukhṣah) qui allège les conditions normales de la dhakāt quand le dhābiḥ est kitabi.",
+        "classical_principle": {
+          "ar": "ذبائح أهل الكتاب حلال وإن لم يسموا الله عليها — كره ذلك مالك ولم يحرمه. وقال بعض أصحابنا: ولو سموا باسم المسيح تحل — لأن الله أحل طعامهم مطلقاً. وإنما يكون الذابح من باشر الفعل بنفسه أو بآلته ممن يدين بدين أهل الكتاب",
+          "fr": "Les viandes des ahl al-kitab sont ḥalāl même s'ils n'invoquent pas le nom d'Allah — Mālik l'a réprouvé mais ne l'a PAS interdit. Et certains de nos compagnons ont dit : même s'ils invoquent le nom du Christ, c'est permis — car Allah a rendu licite leur nourriture de manière ABSOLUE. N'est considéré comme abatteur que celui qui accomplit l'acte par lui-même ou par son instrument, parmi ceux qui pratiquent la religion des Gens du Livre.",
+          "en": "Meat of ahl al-kitab is halal even if they don't invoke Allah's name — Malik disliked this but did NOT forbid it. Some of our scholars said: even if they invoke Christ's name, it is permissible — because Allah made their food lawful absolutely. Only one who performs the act himself or through his instrument, from among those who profess the religion of the People of the Book, is the slaughterer."
+        },
+        "practical_ruling": {
+          "kitabi_slaughters_with_bismillah": "HALAL — no dispute",
+          "kitabi_slaughters_in_name_of_christ": "PERMISSIBLE — Maliki unique position (other 3 madhahib: HARAM)",
+          "kitabi_slaughters_without_any_invocation": "HALAL with karahah (disapproval) — Malik disliked but did not forbid",
+          "western_supermarket_meat_from_christian_country": "PERMISSIBLE — based on ghalbat al-zann + Maliki broad concession",
+          "secular_person_of_christian_heritage": "DEBATED — some Malikis accept cultural Christianity as sufficient; others require genuine belief"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "المدونة الكبرى",
+          "author": "رواية سحنون (d. 240H)",
+          "relevance": "Imam Malik's own positions on ahl al-kitab slaughter — the source of the permissive view",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "مختصر خليل",
+          "author": "خليل بن إسحاق (d. 776H)",
+          "relevance": "Standard Maliki manual — kitabi slaughter conditions",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "الجامع لأحكام القرآن (تفسير القرطبي)",
+          "author": "القرطبي (d. 671H)",
+          "relevance": "CRITICAL — al-Qurtubi reports that Christians saying 'in the name of Christ' and Jews saying 'in the name of Ezra' is addressed; earlier scholars permitted",
+          "significance": "HIGHEST",
+          "key_quote_ar": "واختلفوا فيما إذا سمى الكتابي على ذبيحته باسم المسيح",
+          "key_quote_fr": "Et ils divergèrent sur le cas où le Kitabi invoque le nom du Christ sur sa viande"
+        },
+        {
+          "title_ar": "الذخيرة",
+          "author": "القرافي (d. 684H)",
+          "relevance": "Usul principles on kitabi as valid dhabih",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "المقدمات الممهدات",
+          "author": "ابن رشد الجد (d. 520H)",
+          "relevance": "Foundational Maliki fiqh — conditions for kitabi slaughter",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "المجلس العلمي الأعلى — المغرب",
+          "name_fr": "Conseil Scientifique Suprême — Maroc",
+          "position": "Accepts meat from ahl al-kitab countries within Moroccan halal framework",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "يوسف القرضاوي",
+          "name_fr": "Yusuf al-Qaradawi",
+          "position": "PERMISSIVE on ahl al-kitab meat in principle, but CAUTIONS against relying on this for supermarket meat in practice",
+          "status": "individual_high_influence"
+        },
+        {
+          "name_ar": "قاضي أبو بكر ابن العربي",
+          "name_fr": "Qadi Abu Bakr ibn al-'Arabi (d. 1148)",
+          "position": "Classical Maliki: what ahl al-kitab consider lawful for themselves is lawful for us, except pork",
+          "status": "classical_major"
+        },
+        {
+          "name_ar": "المجلس الأوروبي للإفتاء ECFR",
+          "name_fr": "ECFR",
+          "position": "Despite Maliki influence: RESTRICTIVE on European meat after field investigation — poultry and cattle not slaughtered Islamically",
+          "status": "institutional"
+        }
+      ],
+      "naqiy_verdict": {
+        "kitabi_hand_slaughter_bismillah": {
+          "score": 98,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "kitabi_hand_slaughter_no_invocation": {
+          "score": 75,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "kitabi_invokes_name_of_christ": {
+          "score": 55,
+          "verdict": "MASHBOOH",
+          "confidence": "DISPUTED"
+        },
+        "kosher_meat_shechita": {
+          "score": 92,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "western_supermarket_unknown": {
+          "score": 40,
+          "verdict": "MASHBOOH",
+          "confidence": "DISPUTED"
+        },
+        "secular_slaughterer": {
+          "score": 15,
+          "verdict": "DOUBTFUL_AVOID",
+          "confidence": "DISPUTED"
+        }
+      }
+    },
+    "shafii": {
+      "madhab_id": "SHAFII",
+      "geographic_dominance": [
+        "Indonesia",
+        "Malaysia",
+        "East Africa",
+        "Yemen",
+        "Parts of Egypt",
+        "Jordan"
+      ],
+      "position_on_ahl_kitab_meat": {
+        "summary_fr": "Le madhab shafiite a une position PARADOXALE : sur la tasmiyah en général, il est le plus souple (sunna, pas sharṭ). Mais sur l'identité du kitabi, il est le plus STRICT. La position shafiite unique : le kitabi dont la viande est permise doit avoir une lignée chrétienne/juive ININTERROMPUE remontant à l'époque pré-islamique. Les convertis au christianisme/judaïsme après l'avènement de l'islam ne sont PAS considérés ahl al-kitab. En pratique contemporaine, la « vaste majorité des chrétiens vivants aujourd'hui ne remplissent pas ces conditions strictes » (IslamQA Shafi'i). MUI et JAKIM ont développé des cadres de certification qui CONTOURNENT la question en exigeant un abatteur musulman.",
+        "classical_principle": {
+          "ar": "طعام أهل الكتاب حلال بالنص. والتسمية سنة لا شرط عند الشافعية — فتحل ذبيحة الكتابي وإن لم يسم. لكن يشترط في الكتابي: أن يكون من نسل من دخل في دينه قبل نسخه — أي قبل بعثة محمد ﷺ. فمن دخل في النصرانية أو اليهودية بعد الإسلام لا تحل ذبيحته عند الشافعية",
+          "fr": "La nourriture des ahl al-kitab est ḥalāl par le texte. La tasmiyah est sunna non sharṭ chez les Shafiites — la viande du kitabi est licite même sans tasmiyah. MAIS la condition shafiite est stricte sur l'IDENTITÉ : le kitabi doit descendre de ceux qui ont embrassé leur religion AVANT son abrogation — c'est-à-dire avant la mission du Prophète Muhammad ﷺ. Celui qui s'est converti au christianisme ou au judaïsme APRÈS l'islam — sa viande n'est pas licite chez les Shafiites.",
+          "en": "Food of ahl al-kitab is halal by text. Tasmiyah is sunnah not shart for Shafi'is — kitabi meat is lawful even without tasmiyah. BUT the Shafi'i condition is strict on IDENTITY: the kitabi must descend from those who embraced their religion BEFORE its abrogation — before Prophet Muhammad's ﷺ mission. One who converted to Christianity/Judaism AFTER Islam — his meat is not lawful for Shafi'is."
+        },
+        "practical_ruling": {
+          "genuine_kitabi_hand_slaughter_any_invocation": "HALAL — tasmiyah not required as condition in Shafi'i school",
+          "kitabi_with_pre_islamic_lineage": "HALAL",
+          "christian_convert_after_islam": "HARAM — not genuine ahl al-kitab (Shafi'i unique restriction)",
+          "secular_person_no_faith": "HARAM — lost ahl al-kitab status",
+          "western_supermarket_unknown_slaughterer": "PROBLEMATIC — strict Shafi'i says most modern Christians don't qualify"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "الأم",
+          "author": "الإمام الشافعي (d. 204H)",
+          "relevance": "PRIMARY SOURCE — al-Shafi'i's conditions for valid kitabi status and tasmiyah as sunnah",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "المجموع شرح المهذب",
+          "author": "النووي (d. 676H)",
+          "relevance": "ULTIMATE Shafi'i reference — detailed conditions of ahl al-kitab identity",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "تحفة المحتاج",
+          "author": "ابن حجر الهيتمي (d. 974H)",
+          "relevance": "Late Shafi'i authority — kitabi lineage requirement",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "نهاية المحتاج",
+          "author": "الرملي (d. 1004H)",
+          "relevance": "Confirms Shafi'i lineage requirement for ahl al-kitab",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "الفقه الإسلامي وأدلته",
+          "author": "وهبة الزحيلي (d. 2015)",
+          "relevance": "Modern Shafi'i application to contemporary ahl al-kitab questions",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "MUI — إندونيسيا",
+          "name_fr": "MUI (Indonésie)",
+          "position": "Takes position that 'Ahl al-Kitab referred to in the verse was not the same as the current one' — therefore requires Muslim slaughterer, bypassing the ahl al-kitab question entirely",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "JAKIM — ماليزيا",
+          "name_fr": "JAKIM (Malaisie)",
+          "position": "Requires Muslim slaughterer for halal certification — does not rely on ahl al-kitab doctrine",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "وهبة الزحيلي",
+          "name_fr": "Wahbah al-Zuhayli (d. 2015)",
+          "position": "Accepts ahl al-kitab meat under proper conditions; more pragmatic than strict Shafi'i lineage requirement",
+          "status": "contemporary_major"
+        },
+        {
+          "name_ar": "IslamQA الشافعي",
+          "name_fr": "IslamQA Shafi'i Section",
+          "position": "The vast majority of Christians alive today don't meet the stringent Shafi'i lineage conditions — their meat is NOT permissible",
+          "status": "scholarly_reference"
+        }
+      ],
+      "naqiy_verdict": {
+        "genuine_kitabi_hand_slaughter": {
+          "score": 92,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "kitabi_no_invocation": {
+          "score": 80,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "kitabi_invokes_name_of_christ": {
+          "score": 10,
+          "verdict": "HARAM",
+          "confidence": "HIGH"
+        },
+        "kosher_meat_shechita": {
+          "score": 90,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "western_supermarket_unknown": {
+          "score": 15,
+          "verdict": "DOUBTFUL_AVOID",
+          "confidence": "UNCERTAIN"
+        },
+        "secular_slaughterer": {
+          "score": 0,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        }
+      }
+    },
+    "hanbali": {
+      "madhab_id": "HANBALI",
+      "geographic_dominance": [
+        "Saudi Arabia",
+        "Gulf states"
+      ],
+      "position_on_ahl_kitab_meat": {
+        "summary_fr": "Le madhab hanbalite a la position la plus PRAGMATIQUE grâce à Ibn Taymiyyah et son élève Ibn al-Qayyim. Position clé d'Ibn Taymiyyah : « Même si tu ne sais pas s'il a dit bismillah » — la viande du kitabi est ḥalāl par le principe de base (al-aṣl). Le concept de غلبة الظن (présomption dominante) est central : si la majorité des habitants d'un pays sont kitabis et que leur méthode d'abattage est correcte — il est permis de manger sans enquêter. La Lajnah Da'imah et IslamQA suivent cette ligne : permissibilité conditionnelle sans obligation d'enquête.",
+        "classical_principle": {
+          "ar": "ذبائح أهل الكتاب حلال بالقرآن. والتسمية شرط لكن لا يجب السؤال عنها. قال ابن تيمية: الأصل في ذبيحة المسلم والكتابي الحل. فإن كان الغالب في بلد أن أهله من أهل الكتاب وأن طريقة ذبحهم صحيحة — جاز الأكل دون تحقيق",
+          "fr": "Les viandes des ahl al-kitab sont ḥalāl par le Coran. La tasmiyah est une condition mais il n'est PAS obligatoire de s'en enquérir. Ibn Taymiyyah a dit : le principe de base pour l'abattage du musulman et du kitabi est la LICÉITÉ. Si la majorité d'un pays est ahl al-kitab et leur méthode d'abattage est correcte — manger est permis sans enquête.",
+          "en": "Meat of ahl al-kitab is halal by Quran. Tasmiyah is a condition but inquiry about it is NOT obligatory. Ibn Taymiyyah said: the default for Muslim and Kitabi slaughter is PERMISSIBILITY. If the majority of a country is ahl al-kitab and their slaughter method is correct — eating without investigation is permissible."
+        },
+        "practical_ruling": {
+          "kitabi_hand_slaughter_bismillah": "HALAL — no dispute",
+          "kitabi_hand_slaughter_unknown_invocation": "HALAL — default principle of permissibility (Ibn Taymiyyah)",
+          "kitabi_invokes_name_of_christ": "HARAM — consensus in Hanbali school",
+          "christian_majority_country_meat": "HALAL — ghalbat al-zann applies (IF method is correct)",
+          "secular_slaughterer": "HARAM — not ahl al-kitab"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "المغني",
+          "author": "ابن قدامة (d. 620H)",
+          "relevance": "ULTIMATE Hanbali reference — kitabi slaughter conditions and default permissibility",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "مجموع الفتاوى",
+          "author": "ابن تيمية (d. 728H)",
+          "relevance": "LANDMARK — famous permissive position on ahl al-kitab meat: 'even if you don't know if they said bismillah'",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "أحكام أهل الذمة",
+          "author": "ابن القيم (d. 751H)",
+          "relevance": "Comprehensive treatment of ahl al-kitab rules including slaughter",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "كشاف القناع",
+          "author": "البهوتي (d. 1051H)",
+          "relevance": "Late Hanbali standard on kitabi slaughter",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "الإنصاف",
+          "author": "المرداوي (d. 885H)",
+          "relevance": "Internal Hanbali divergences on tasmiyah by kitabi",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "اللجنة الدائمة",
+          "name_fr": "Lajnah Da'imah",
+          "position": "Permissible in non-Muslim countries if majority are Christians/Jews and no certain knowledge of improper slaughter. If slaughterer is atheist/pagan — HARAM.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "الشيخ المنجد — IslamQA",
+          "name_fr": "Sheikh al-Munajjid (IslamQA)",
+          "position": "Default is permissibility. No obligation to investigate. But if NAME OF CHRIST invoked — HARAM.",
+          "status": "individual_high_influence"
+        },
+        {
+          "name_ar": "الشيخ ابن باز",
+          "name_fr": "Sheikh Ibn Baz (d. 1999)",
+          "position": "Ahl al-kitab meat permissible; tasmiyah presumed unless known otherwise.",
+          "status": "contemporary_major"
+        }
+      ],
+      "naqiy_verdict": {
+        "kitabi_hand_slaughter_bismillah": {
+          "score": 98,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "kitabi_hand_slaughter_unknown_invocation": {
+          "score": 85,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "kitabi_invokes_name_of_christ": {
+          "score": 0,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        },
+        "kosher_meat_shechita": {
+          "score": 92,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "western_supermarket_unknown": {
+          "score": 45,
+          "verdict": "MASHBOOH",
+          "confidence": "DISPUTED"
+        },
+        "secular_slaughterer": {
+          "score": 5,
+          "verdict": "HARAM",
+          "confidence": "HIGH"
+        }
+      }
+    }
+  },
+  "scholarly_consensus_points": {
+    "unanimous_agreements": [
+      "Meat slaughtered by a genuine Kitabi (practicing Christian/Jew) who cuts the throat properly and says bismillah = HALAL — absolute consensus across all 4 madhahib",
+      "Meat slaughtered by an atheist, agnostic, or pagan = HARAM — unanimous consensus regardless of cultural heritage",
+      "Meat dedicated to other than Allah (sacrificed to idols, saints, etc.) = HARAM — Quranic prohibition in Al-Ma'idah 5:3",
+      "The verse Al-Ma'idah 5:5 'ta'am' means specifically SLAUGHTERED ANIMALS not food in general — consensus of mufassirun",
+      "Kosher meat (shechita by a practicing Jew) = HALAL — all 4 madhahib, as Jews are the clearest case of ahl al-kitab",
+      "Pork is HARAM regardless of who slaughters it — consensus, not covered by the ahl al-kitab permission"
+    ],
+    "majority_agreements": [
+      "Meat of kitabi who invokes the name of CHRIST (not Allah) = HARAM — consensus of 3 madhahib (Hanafi, Shafi'i, Hanbali). ONLY Maliki permits.",
+      "Meat of kitabi who invokes NO NAME at all = HALAL — prevailing opinion across all madhahib (each for different reasons: Shafi'i because tasmiyah is sunnah; others because of hadith 'sammu antum wa-kulu')",
+      "Default presumption for kitabi slaughter is PERMISSIBILITY — no obligation to investigate (majority, led by Hanbali/Ibn Taymiyyah)",
+      "Knowledge of improper industrial methods NULLIFIES the non-inquiry principle — majority of contemporary scholars"
+    ],
+    "key_disagreements": [
+      "Do modern Western 'Christians' qualify as ahl al-kitab? BROAD: yes, by lineage/civilization (Ibn Taymiyyah, Qaradawi, AMJA) vs STRICT: only practicing believers (Deobandi, MUI, strict Shafi'i lineage requirement)",
+      "Does the secular majority in France/Europe nullify the غلبة الظن presumption? YES (Deobandi, ECFR field findings) vs NO (Hanbali/Ibn Taymiyyah tradition, Qaradawi)",
+      "Is industrial Western slaughter (stunning + mechanical + no invocation) covered by 'ta'am ahl al-kitab'? NO — it violates dhakat conditions regardless (majority contemporary) vs CASE-BY-CASE (moderate view)",
+      "Maliki unique position: meat of kitabi invoking Christ's name = permissible (only school to allow this)",
+      "Shafi'i unique restriction: kitabi must have pre-Islamic lineage (only school to require this)"
+    ]
+  },
+  "evidence_base": {
+    "quran": [
+      {
+        "ref": "Al-Ma'idah 5:5",
+        "text_ar": "الْيَوْمَ أُحِلَّ لَكُمُ الطَّيِّبَاتُ وَطَعَامُ الَّذِينَ أُوتُوا الْكِتَابَ حِلٌّ لَكُمْ وَطَعَامُكُمْ حِلٌّ لَهُمْ",
+        "translation_fr": "Aujourd'hui vous sont rendues licites les bonnes choses, et la nourriture de ceux à qui le Livre a été donné vous est permise, et votre nourriture leur est permise.",
+        "relevance": "THE foundational verse. Explicitly permits food (= slaughtered animals) of ahl al-kitab. This is a divine concession (rukhsah) that relaxes normal dhakat conditions for kitabi slaughterers."
+      },
+      {
+        "ref": "Al-Ma'idah 5:3",
+        "text_ar": "حُرِّمَتْ عَلَيْكُمُ الْمَيْتَةُ [...] وَمَا أُهِلَّ لِغَيْرِ اللَّهِ بِهِ",
+        "translation_fr": "Vous sont interdits la bête morte [...] et ce sur quoi on a invoqué un autre nom que celui d'Allah.",
+        "relevance": "Prohibition of what is dedicated to other than Allah. This is the basis for prohibiting meat on which Christ's name (or other) is explicitly invoked — BUT the Maliki school interprets the kitabi's invocation as falling under 5:5's broader permission."
+      },
+      {
+        "ref": "Al-An'am 6:121",
+        "text_ar": "وَلَا تَأْكُلُوا مِمَّا لَمْ يُذْكَرِ اسْمُ اللَّهِ عَلَيْهِ وَإِنَّهُ لَفِسْقٌ",
+        "translation_fr": "Ne mangez pas de ce sur quoi le nom d'Allah n'a pas été mentionné — c'est certes un péché.",
+        "relevance": "The tasmiyah verse. 3 madhahib interpret this as making tasmiyah a CONDITION. Shafi'is interpret it as strong recommendation. Applied to ahl al-kitab slaughter: does the kitabi need to say bismillah?"
+      }
+    ],
+    "hadith": [
+      {
+        "ref": "Sahih al-Bukhari 5507",
+        "text_ar": "عن عائشة رضي الله عنها أن قوماً قالوا للنبي ﷺ: إن قوماً يأتوننا باللحم لا ندري أذُكر اسم الله عليه أم لا. فقال: «سمُّوا عليه أنتم وكلُوه»",
+        "translation_fr": "D'après Aisha : des gens dirent au Prophète ﷺ : « Des gens nous apportent de la viande, et nous ne savons pas s'ils ont mentionné le nom d'Allah ou non. » Il dit : « Invoquez le nom d'Allah VOUS-MÊMES et mangez. »",
+        "relevance": "THE key hadith for the non-inquiry principle. When tasmiyah is UNKNOWN, the Muslim says bismillah himself and eats. This is the foundation for the permissive position on Western meat. BUT: restrictive scholars argue this applies only when the slaughterer is KNOWN to be Muslim/kitabi and the doubt is ONLY about tasmiyah, not about the entire slaughter method."
+      },
+      {
+        "ref": "Sahih al-Bukhari 5498 / Muslim 1968",
+        "text_ar": "ما أنهر الدم وذُكر اسم الله عليه فكلوا ليس السن والظفر",
+        "translation_fr": "Ce qui fait couler le sang et sur quoi le nom d'Allah est mentionné, mangez-en — sauf la dent et l'ongle.",
+        "relevance": "Establishes conditions for valid slaughter: blood must flow, sharp instrument (not teeth/nails), Allah's name mentioned. Applied to ahl al-kitab: the kitabi's slaughter must also meet these material conditions."
+      }
+    ],
+    "sociological_data": {
+      "france_secularization": {
+        "non_religious_percentage": "40-56% (2024 estimates)",
+        "self_identified_atheists": "~20%",
+        "implication": "The 'Christian majority' assumption for ghalbat al-zann is increasingly challenged in France. A random French abattoir worker is MORE LIKELY to be secular/atheist than a practicing Christian.",
+        "source": "Statista 2023, Pew Research 2018, Eurobarometer"
+      },
+      "abattoir_worker_religion": {
+        "data_available": false,
+        "reason": "French laïcité (secularism) prohibits employers from collecting religious data",
+        "implication": "Impossible to verify ahl al-kitab status of French abattoir workers from public data"
+      }
+    }
+  },
+  "naqiy_scoring_model": {
+    "scoring_matrix": [
+      {
+        "scenario": "kosher_meat_shechita_certified",
+        "description_fr": "Viande casher (shechita) certifiée par un Beth Din — abattue par un juif pratiquant avec invocation",
+        "naqiy_score": 92,
+        "verdict": "HALAL",
+        "confidence": "CERTAIN",
+        "color": "green",
+        "verdicts_by_madhab": {
+          "hanafi": 88,
+          "maliki": 92,
+          "shafii": 90,
+          "hanbali": 92
+        },
+        "note": "La shechita juive est le cas le PLUS CLAIR d'ahl al-kitab — méthode manuelle, invocation, lignée pré-islamique. Unanime."
+      },
+      {
+        "scenario": "kitabi_hand_slaughter_bismillah_known",
+        "description_fr": "Chrétien ou juif pratiquant abattant manuellement en invoquant le nom d'Allah/de Dieu",
+        "naqiy_score": 95,
+        "verdict": "HALAL",
+        "confidence": "CERTAIN",
+        "color": "green",
+        "verdicts_by_madhab": {
+          "hanafi": 95,
+          "maliki": 98,
+          "shafii": 92,
+          "hanbali": 98
+        }
+      },
+      {
+        "scenario": "kitabi_hand_slaughter_no_invocation",
+        "description_fr": "Kitabi pratiquant abattant manuellement SANS invoquer de nom",
+        "naqiy_score": 62,
+        "verdict": "MASHBOOH",
+        "confidence": "DISPUTED",
+        "color": "orange",
+        "verdicts_by_madhab": {
+          "hanafi": 40,
+          "maliki": 75,
+          "shafii": 80,
+          "hanbali": 55
+        },
+        "note": "Shafi'i donne le score le plus haut car tasmiyah n'est pas sharṭ. Maliki également permissif. Hanafi le plus strict."
+      },
+      {
+        "scenario": "kitabi_invokes_name_of_christ",
+        "description_fr": "Chrétien abattant en disant « au nom du Christ » ou « au nom de la Trinité »",
+        "naqiy_score": 12,
+        "verdict": "HARAM",
+        "confidence": "HIGH",
+        "color": "red",
+        "verdicts_by_madhab": {
+          "hanafi": 0,
+          "maliki": 55,
+          "shafii": 10,
+          "hanbali": 0
+        },
+        "note": "UNIQUEMENT le Maliki permet (certains malikites). Les 3 autres madhahib : HARAM par consensus (uhilla li-ghayr Allah)."
+      },
+      {
+        "scenario": "western_supermarket_meat_france",
+        "description_fr": "Viande non certifiée halal d'un supermarché français (Carrefour, Leclerc, Lidl) — abatteur et méthode inconnus",
+        "naqiy_score": 22,
+        "verdict": "DOUBTFUL_AVOID",
+        "confidence": "UNCERTAIN",
+        "color": "red",
+        "verdicts_by_madhab": {
+          "hanafi": 20,
+          "maliki": 40,
+          "shafii": 15,
+          "hanbali": 45
+        },
+        "note": "Hanbali (Ibn Taymiyyah) donne le score le plus haut grâce au principe de ghalbat al-zann en pays historiquement chrétien. Shafi'i le plus bas : exigence de lignée pré-islamique + doute sur les méthodes. Maliki moyennement permissif. Hanafi Deobandi : interdit."
+      },
+      {
+        "scenario": "imported_meat_ireland_uk_certified",
+        "description_fr": "Viande importée d'Irlande/UK avec certification halal d'exportation",
+        "naqiy_score": 72,
+        "verdict": "HALAL",
+        "confidence": "HIGH",
+        "color": "green",
+        "verdicts_by_madhab": {
+          "hanafi": 70,
+          "maliki": 75,
+          "shafii": 72,
+          "hanbali": 72
+        },
+        "note": "Certification halal d'exportation implique supervision musulmane — le débat ahl al-kitab est contourné."
+      },
+      {
+        "scenario": "secular_atheist_slaughterer",
+        "description_fr": "Abatteur athée ou agnostique — sans aucune croyance religieuse",
+        "naqiy_score": 2,
+        "verdict": "HARAM",
+        "confidence": "CERTAIN",
+        "color": "red",
+        "verdicts_by_madhab": {
+          "hanafi": 0,
+          "maliki": 5,
+          "shafii": 0,
+          "hanbali": 0
+        },
+        "note": "Consensus ABSOLU : un athée n'est pas ahl al-kitab et ne peut pas être un dhābiḥ valide."
+      },
+      {
+        "scenario": "halal_certified_muslim_slaughterer_france",
+        "description_fr": "Viande certifiée halal (AVS, Achahada) avec abatteur musulman en France",
+        "naqiy_score": 97,
+        "verdict": "HALAL",
+        "confidence": "CERTAIN",
+        "color": "green",
+        "verdicts_by_madhab": {
+          "hanafi": 97,
+          "maliki": 97,
+          "shafii": 97,
+          "hanbali": 97
+        },
+        "note": "La question ahl al-kitab est SANS OBJET quand l'abatteur est musulman. Certifié = le plus sûr."
+      }
+    ]
+  },
+  "identification_guide": {
+    "consumer_guidance_france": {
+      "the_practical_answer": "Pour le consommateur musulman en France, la question 'la viande du supermarché est-elle halal car elle vient d'un pays chrétien?' se heurte à TROIS réalités : (1) 40-56% des Français sont non-religieux — l'abatteur est probablement séculier, pas chrétien pratiquant ; (2) l'abattage industriel (mécanique + stunning) viole les conditions de la dhakāt indépendamment de la religion de l'opérateur ; (3) tous les certificateurs halal français (AVS, Achahada, ARGML) exigent un abatteur MUSULMAN et ne se fondent PAS sur la doctrine ahl al-kitab. La SEULE viande de supermarché fiable est celle portant une certification halal vérifiable.",
+      "kosher_as_alternative": {
+        "description": "La viande casher (shechita) est une alternative légitime car : (1) abattue par un juif pratiquant (kitabi authentique) ; (2) méthode manuelle avec invocation ; (3) certifiée par un Beth Din. MAIS : les parties arrière du bœuf que les juifs ne consomment pas (nerf sciatique) sont souvent revendues sur le marché conventionnel — vérifier la certification casher.",
+        "status": "HALAL — unanimement reconnu comme ahl al-kitab valide"
+      },
+      "red_flags": [
+        "Viande non certifiée halal dans un supermarché français — religion et méthode de l'abatteur inconnues",
+        "Viande importée de pays européens sans certification halal d'exportation",
+        "Restaurant non-halal servant de la viande « de pays chrétien » comme justification",
+        "Argumentation 'les Français sont chrétiens donc c'est halal' — ne tient pas face aux données sociologiques"
+      ],
+      "questions_to_ask": [
+        "La viande est-elle certifiée halal ? Par quel organisme ? (AVS, Achahada, ARGML ?)",
+        "L'abatteur est-il musulman ? (Si la réponse est 'chrétien', c'est potentiellement acceptable selon certains savants, mais pas selon les certificateurs français)",
+        "Quelle est la méthode d'abattage ? (Manuel avec tasmiyah = le plus sûr ; industriel = problématique)",
+        "La viande est-elle casher ? (Si oui = ahl al-kitab authentique)"
+      ]
+    }
+  },
+  "bibliography": {
+    "primary_fiqh_sources": [
+      "IIFA (OCI Fiqh Academy), Resolution No. 95 (3/10), 10th Session, 1997 — section on slaughterer conditions",
+      "Dar al-Ifta Egypt, Fatwa #11988 — ذبائح أهل الكتاب إذا لم يذكروا اسم الله (31 Oct 1981)",
+      "Dar al-Ifta Egypt, Fatwa #6927 — أكل اللحوم في بلاد غير إسلامية (10 Jul 1997)",
+      "IslamQA.info, Fatwa #103 — حكم أكل ذبائح أهل الكتاب",
+      "IslamWeb.net, Fatwa #157453 — ذبائح أهل الكتاب وحرمة أكل ما أهل به لغير الله (26 May 2011)",
+      "IslamWeb.net, Fatwa #82899 — حكم أكل ذبائح أهل الكتاب في المذاهب الأربعة",
+      "AMJA, Fatwa #80178 — Eating The Meat Of The People Of The Book (9 Oct 2009)",
+      "ECFR, Field research report on European slaughter methods",
+      "Lajnah Da'imah, Fataawa — conditions of ahl al-kitab meat in non-Muslim countries"
+    ],
+    "secondary_scholarly_works": [
+      "Ibn Abidin, Radd al-Muhtar (5/298-299) — tasmiyah as shart for kitabi slaughter",
+      "Al-Kasani, Bada'i al-Sana'i (5/46) — reasoning for ahl al-kitab permission: they used to invoke Allah's name",
+      "Al-Marginani, al-Hidayah — Hanafi furu on kitabi slaughter",
+      "Al-Sarakhsi, al-Mabsut — encyclopedic Hanafi positions on ahl al-kitab",
+      "Sahnun, al-Mudawwanah — Imam Malik's positions on kitabi slaughter",
+      "Khalil ibn Ishaq, Mukhtasar — standard Maliki manual",
+      "Al-Qurtubi, al-Jami' li-Ahkam al-Quran — CRITICAL tafsir on 5:5 including 'name of Christ' debate",
+      "Al-Qarafi, al-Dhakhirah — Maliki usul on kitabi as valid dhabih",
+      "Al-Shafi'i, al-Umm — conditions for kitabi status (pre-Islamic lineage)",
+      "Al-Nawawi, al-Majmu' — Shafi'i conditions for valid ahl al-kitab identity",
+      "Ibn Hajar al-Haytami, Tuhfat al-Muhtaj — late Shafi'i authority",
+      "Ibn Qudamah, al-Mughni — Hanbali conditions for kitabi slaughter",
+      "Ibn Taymiyyah, Majmu' al-Fatawa — LANDMARK permissive position on ahl al-kitab",
+      "Ibn al-Qayyim, Ahkam Ahl al-Dhimmah — comprehensive treatment of ahl al-kitab rules",
+      "Al-Buhuti, Kashshaf al-Qina' — late Hanbali standard",
+      "Al-Zuhayli, al-Fiqh al-Islami wa-Adillatuh — modern application",
+      "Ibn Kathir, Tafsir al-Quran al-'Azim — tafsir on 5:5",
+      "Al-Tabari, Jami' al-Bayan — tafsir on 5:5 (ta'am = dhaba'ih)"
+    ],
+    "web_sources": [
+      "https://iifa-aifi.org/en/32542.html — IIFA Resolution 95",
+      "https://www.dar-alifta.org/ar/fatwa/details/11988/ — Dar al-Ifta Fatwa on ahl al-kitab without tasmiyah",
+      "https://www.dar-alifta.org/ar/fatwa/details/17563/ — Dar al-Ifta Fatwa on meat in non-Muslim countries",
+      "https://islamqa.info/en/answers/103/ — IslamQA on ahl al-kitab meat",
+      "https://www.islamweb.net/ar/fatwa/157453/ — IslamWeb on ahl al-kitab slaughter",
+      "https://www.islamweb.net/en/fatwa/82899/ — IslamWeb four madhab comparison",
+      "https://www.amjaonline.org/fatwa/en/80178/ — AMJA on People of the Book meat",
+      "https://sunnah.com/bukhari:5507 — Hadith of Aisha 'sammu antum wa-kulu'",
+      "https://seekersguidance.org/answers/hanafi-fiqh/the-issue-of-halal-meat-a-detailed-article/ — Hanafi position on Western meat",
+      "https://www.hfsaa.org/articles/ahlul-kitab-meat — HFSAA analysis",
+      "https://www.central-mosque.com/index.php/General-Fiqh/meat-of-ahlul-kitaab-people-of-the-book.html — Central Mosque analysis"
+    ],
+    "sociological_sources": [
+      "Statista 2023 — Religion in France statistics",
+      "Pew Research 2018 — Religious commitment in European countries",
+      "Eurobarometer — Religious demographics EU",
+      "OEC (Observatory of Economic Complexity) — France meat import data",
+      "HalalRC — Halal market in France (~300,000 tonnes/year)"
+    ]
+  },
+  "fatwas_ahlkitab_verified": [
+    {
+      "id": "DAR_ALIFTA_11988",
+      "substance": "ذبيحة أهل الكتاب | Meat of Ahl al-Kitab (People of the Book)",
+      "category": "Halal Meat & Slaughter",
+      "institution": "Dar Al-Ifta Al-Misriyyah",
+      "institution_ar": "دار الإفتاء المصرية",
+      "canonical_url": "https://www.dar-alifta.org/ar/fatwa/details/11988/حكم-ذبيحة-أهل-الكتاب-وعدم-تسميتهم-عليها",
+      "title_ar": "حكم ذبيحة أهل الكتاب وعدم تسميتهم عليها",
+      "title_fr": "Ruling on the Meat of Ahl al-Kitab and the Absence of Tasmiyah (Mentioning God's Name)",
+      "title_en": "Ruling on Eating Meat from People of the Book When God's Name Is Not Mentioned",
+      "mufti_ar": "دار الإفتاء المصرية",
+      "mufti_en": "Egyptian Dar Al-Ifta",
+      "date_iso": null,
+      "published_number": "11988",
+      "key_passage_ar": "ذبيحة من أوتوا الكتاب تشمل ذبائحهم، وسأل النبي صلى الله عليه وسلم عن ذبائح قوم لا يعلم حالهم فقال: سمّوا عليها وكلوا",
+      "key_passage_en": "The meat of those given the Book refers to their slaughtered animals. The Prophet was asked about meat from people whose status was unknown and replied: Mention God's name and eat",
+      "key_passage_fr": "La viande de ceux à qui le Livre a été donné se réfère à leurs animaux égorgés. Le Prophète a été interrogé sur la viande de gens dont le statut était inconnu et a répondu : Mentionnez le nom de Dieu et mangez",
+      "ruling_summary_ar": "جائز أكل لحم ذبيحة أهل الكتاب حتى وإن لم يسموا الله عليها، بشرط أن تكون الذبيحة محققة بالطريقة الإسلامية",
+      "ruling_summary_en": "Permissible to eat meat from People of the Book even if God's name was not mentioned, provided proper Islamic slaughter method was used",
+      "ruling_summary_fr": "Permis de manger la viande des Ahl al-Kitab même si le nom de Dieu n'a pas été mentionné, à condition qu'une méthode d'abattage islamique appropriée ait été utilisée",
+      "school_of_thought": "Hanafi, Shafi'i, Maliki consensus",
+      "madhabs_cited": [
+        "Hanafi",
+        "Shafi'i",
+        "Maliki"
+      ],
+      "verification_status": "VERIFIED_LIVE",
+      "access_verified": "2026-04-07",
+      "confidence_level": "high",
+      "search_log": [
+        "WebFetch: https://www.dar-alifta.org/ar/fatwa/details/11988/حكم-ذبيحة-أهل-الكتاب-وعدم-تسميتهم-عليها"
+      ]
+    },
+    {
+      "id": "DAR_ALIFTA_12515",
+      "substance": "حكم أكل الطلاب للحوم في المدارس الأوروبية | Meat in European Schools",
+      "category": "Halal Meat & Practical Application",
+      "institution": "Dar Al-Ifta Al-Misriyyah",
+      "institution_ar": "دار الإفتاء المصرية",
+      "canonical_url": "https://www.dar-alifta.org/ar/fatwa/details/12515/حكم-أكل-الطلاب-للحوم-التي-تقدم-في-المدارس-الأوروبية",
+      "title_ar": "حكم أكل الطلاب للحوم التي تقدم في المدارس الأوروبية",
+      "title_fr": "Ruling on Students Eating Meat Served in European Schools",
+      "title_en": "Ruling on Students Eating Meat in European Schools",
+      "mufti_ar": "د. شوقي إبراهيم علام، مفتي الجمهورية",
+      "mufti_en": "Dr. Shawqi Ibrahim Allam, Grand Mufti of Egypt",
+      "date_iso": "2013-10-24",
+      "date_islamic": "1434 Dhu al-Hijjah",
+      "published_number": "12515",
+      "key_passage_ar": "الأصل الحكم بإباحة اللحم، يجوز للمسلم أن يسمي الله ويأكل، بشرط أن تكون الذبيحة من الحيوانات المحللة وتكون مذبوحة بطريقة إسلامية والمذبح إما مسلم أو من أهل الكتاب",
+      "key_passage_en": "The original ruling is that meat is permissible; a Muslim may invoke God's name and eat, provided the animal is of a permitted species and properly slaughtered according to Islamic law",
+      "key_passage_fr": "La règle originale est que la viande est permise ; un musulman peut invoquer le nom de Dieu et manger, pourvu que l'animal soit d'une espèce autorisée et correctement égorgé selon la loi islamique",
+      "ruling_summary_ar": "جائز للطلاب المسلمين أكل اللحوم المقدمة في المدارس الأوروبية بشرط تحقق شروط الحل الشرعي",
+      "ruling_summary_en": "Muslim students may eat meat served in European schools provided the conditions of Islamic permissibility are met",
+      "ruling_summary_fr": "Les étudiants musulmans peuvent manger de la viande servie dans les écoles européennes à condition que les conditions de permissibilité islamique soient respectées",
+      "school_of_thought": "Hanafi, Shafi'i, Maliki consensus",
+      "madhabs_cited": [
+        "Hanafi",
+        "Shafi'i",
+        "Maliki"
+      ],
+      "verification_status": "VERIFIED_LIVE",
+      "access_verified": "2026-04-07",
+      "confidence_level": "high",
+      "search_log": [
+        "WebFetch: https://www.dar-alifta.org/ar/fatwa/details/12515/حكم-أكل-الطلاب-للحوم-التي-تقدم-في-المدارس-الأوروبية"
+      ]
+    }
+  ]
+}

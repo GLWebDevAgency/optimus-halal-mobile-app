@@ -1,0 +1,300 @@
+{
+  "meta": {
+    "project": "NAQIY — Halal Substance Analysis Pipeline",
+    "description": "Liste priorisée de toutes les substances nécessitant un dossier complet type gélatine (4 madhahib, textes originaux, traductions, scoring)",
+    "created": "2026-04-03",
+    "template_reference": "gelatin_halal_dossier_v3.json",
+    "total_substances": 42,
+    "estimated_hours_per_substance": 1,
+    "estimated_total_hours": 42
+  },
+
+  "priority_tiers": {
+
+    "TIER_1_CRITICAL": {
+      "description": "Présents dans >50% des produits industriels — impact maximal sur le NaqiyScore",
+      "substances": [
+        {
+          "id": "SUBST-002",
+          "name_fr": "Mono et diglycérides d'acides gras",
+          "name_en": "Mono and diglycerides of fatty acids",
+          "e_numbers": ["E471", "E472a", "E472b", "E472c", "E472d", "E472e", "E472f"],
+          "controversy": "Source animale (porc/bovin) vs végétale — impossible à distinguer sans contacter le fabricant",
+          "frequency": "UBIQUITOUS — pain, pâtisserie, margarine, glaces, biscuits",
+          "fiqh_issue": "istihalah + source_identification",
+          "priority_score": 99
+        },
+        {
+          "id": "SUBST-003",
+          "name_fr": "Alcool en arômes / supports d'arômes",
+          "name_en": "Alcohol in flavorings / flavor carriers",
+          "e_numbers": [],
+          "label_terms": ["ethanol", "natural flavors", "arômes naturels", "vanilla extract"],
+          "controversy": "Alcool utilisé comme solvant d'extraction — traces résiduelles dans le produit final",
+          "frequency": "UBIQUITOUS — presque tout produit aromatisé",
+          "fiqh_issue": "istihlak (absorption/disparition) + darurah + quantité négligeable",
+          "priority_score": 98
+        },
+        {
+          "id": "SUBST-004",
+          "name_fr": "Présure (Rennet)",
+          "name_en": "Rennet / Chymosin",
+          "e_numbers": ["E1105"],
+          "controversy": "Enzyme extraite de l'estomac de veau — souvent non halal abattu. Alternatives : microbienne, végétale, OGM",
+          "frequency": "HIGH — tous les fromages à pâte dure/semi-dure",
+          "fiqh_issue": "istihalah + source animale + enzyme vs substance",
+          "priority_score": 97
+        },
+        {
+          "id": "SUBST-005",
+          "name_fr": "Glycérol / Glycérine",
+          "name_en": "Glycerol / Glycerin / Glycerine",
+          "e_numbers": ["E422"],
+          "controversy": "Peut provenir de graisses animales (porc/bovin) ou végétales (huile de palme/soja)",
+          "frequency": "HIGH — confiseries, pâtisseries, médicaments, cosmétiques",
+          "fiqh_issue": "source_identification + istihalah",
+          "priority_score": 96
+        },
+        {
+          "id": "SUBST-006",
+          "name_fr": "Lécithine de soja / Émulsifiant E322",
+          "name_en": "Soy lecithin / Emulsifier E322",
+          "e_numbers": ["E322"],
+          "controversy": "Généralement végétal (halal) mais peut être d'origine animale (œufs). Certains process utilisent de l'alcool",
+          "frequency": "UBIQUITOUS — chocolat, confiserie, boulangerie",
+          "fiqh_issue": "source_verification + process_alcohol",
+          "priority_score": 92
+        }
+      ]
+    },
+
+    "TIER_2_HIGH": {
+      "description": "Présents dans 10-50% des produits — divergence savante forte",
+      "substances": [
+        {
+          "id": "SUBST-007",
+          "name_fr": "Carmin / Cochenille / Acide carminique",
+          "name_en": "Carmine / Cochineal / Carminic acid",
+          "e_numbers": ["E120"],
+          "controversy": "Colorant rouge extrait d'insectes (Dactylopius coccus) — les insectes sont-ils halal ?",
+          "frequency": "MEDIUM — bonbons rouges, yaourts, boissons, cosmétiques",
+          "fiqh_issue": "consommation d'insectes + position malékite unique (Imam Malik autorise via abattage)",
+          "priority_score": 90
+        },
+        {
+          "id": "SUBST-008",
+          "name_fr": "L-Cystéine",
+          "name_en": "L-Cysteine",
+          "e_numbers": ["E920"],
+          "controversy": "Acide aminé pouvant être extrait de cheveux humains, plumes de canard, ou synthétisé",
+          "frequency": "MEDIUM — boulangerie industrielle (améliorant de pâte)",
+          "fiqh_issue": "source humaine (dignité) + source animale + synthèse",
+          "priority_score": 88
+        },
+        {
+          "id": "SUBST-009",
+          "name_fr": "Stéarate de magnésium / Acide stéarique",
+          "name_en": "Magnesium stearate / Stearic acid",
+          "e_numbers": ["E470b", "E570"],
+          "controversy": "Graisse saturée pouvant venir du porc, bovin ou végétal",
+          "frequency": "HIGH — comprimés médicaux, compléments alimentaires",
+          "fiqh_issue": "source_identification + istihalah + darurah médicale",
+          "priority_score": 87
+        },
+        {
+          "id": "SUBST-010",
+          "name_fr": "Vinaigre / Vinaigre de vin / Vinaigre balsamique",
+          "name_en": "Vinegar / Wine vinegar / Balsamic vinegar",
+          "e_numbers": [],
+          "controversy": "Produit de la transformation du vin/alcool — cas classique d'istihalah unanime MAIS question du vinaigre intentionnellement produit vs naturel",
+          "frequency": "HIGH — sauces, assaisonnements, plats préparés",
+          "fiqh_issue": "istihalah classique + takhallul intentionnel vs naturel",
+          "priority_score": 85
+        },
+        {
+          "id": "SUBST-011",
+          "name_fr": "Whey / Lactosérum / Petit-lait",
+          "name_en": "Whey / Whey protein",
+          "e_numbers": [],
+          "controversy": "Sous-produit du fromage — peut contenir des traces de présure non halal",
+          "frequency": "HIGH — barres protéinées, compléments, boulangerie",
+          "fiqh_issue": "contamination indirecte + présure initiale + istihlak",
+          "priority_score": 83
+        },
+        {
+          "id": "SUBST-012",
+          "name_fr": "Shellac / Gomme laque",
+          "name_en": "Shellac",
+          "e_numbers": ["E904"],
+          "controversy": "Résine sécrétée par l'insecte lac (Kerria lacca) — même problématique que E120",
+          "frequency": "MEDIUM — enrobage de bonbons, fruits cirés, comprimés",
+          "fiqh_issue": "insectes + sécrétion vs corps de l'insecte",
+          "priority_score": 80
+        },
+        {
+          "id": "SUBST-013",
+          "name_fr": "Phosphate d'os comestible",
+          "name_en": "Edible bone phosphate",
+          "e_numbers": ["E542"],
+          "controversy": "Directement dérivé d'os animaux — source rarement spécifiée",
+          "frequency": "LOW-MEDIUM — compléments calcium, agents anti-agglomérants",
+          "fiqh_issue": "source animale directe + istihalah partielle",
+          "priority_score": 78
+        }
+      ]
+    },
+
+    "TIER_3_MEDIUM": {
+      "description": "Présents dans <10% des produits OU divergence savante plus faible",
+      "substances": [
+        {
+          "id": "SUBST-014",
+          "name_fr": "Collagène",
+          "name_en": "Collagen",
+          "e_numbers": [],
+          "controversy": "Précurseur de la gélatine — même problématique source mais sous forme non hydrolysée",
+          "frequency": "GROWING — compléments beauté, nutraceutique",
+          "fiqh_issue": "même cadre que gélatine",
+          "priority_score": 75
+        },
+        {
+          "id": "SUBST-015",
+          "name_fr": "Enzymes alimentaires (lipase, protéase, amylase)",
+          "name_en": "Food enzymes (lipase, protease, amylase)",
+          "e_numbers": ["E1104"],
+          "controversy": "Peuvent être d'origine animale (pancréas porc/bovin), microbienne ou végétale",
+          "frequency": "MEDIUM — boulangerie, fromagerie, brasserie",
+          "fiqh_issue": "source animale + istihalah + quantité catalytique",
+          "priority_score": 74
+        },
+        {
+          "id": "SUBST-016",
+          "name_fr": "Gélatine de poisson",
+          "name_en": "Fish gelatin",
+          "e_numbers": ["E441"],
+          "controversy": "Halal par consensus SAUF question des poissons sans écailles (shafi'ite vs hanafite)",
+          "frequency": "LOW — alternative halal en croissance",
+          "fiqh_issue": "poissons sans écailles (squid, catfish) — divergence hanafite",
+          "priority_score": 70
+        },
+        {
+          "id": "SUBST-017",
+          "name_fr": "Cire d'abeille",
+          "name_en": "Beeswax",
+          "e_numbers": ["E901"],
+          "controversy": "Sécrétion d'insecte — généralement considérée halal (comme le miel) mais divergences",
+          "frequency": "MEDIUM — enrobage, cosmétiques, bougies",
+          "fiqh_issue": "sécrétion d'insecte halal (analogie miel) vs interdit",
+          "priority_score": 65
+        },
+        {
+          "id": "SUBST-018",
+          "name_fr": "Vanilline / Extrait de vanille",
+          "name_en": "Vanillin / Vanilla extract",
+          "e_numbers": [],
+          "controversy": "L'extrait de vanille naturel contient ~35% d'alcool comme solvant",
+          "frequency": "UBIQUITOUS — pâtisserie, glaces, boissons",
+          "fiqh_issue": "alcool résiduel + istihlak + cuisson",
+          "priority_score": 82
+        },
+        {
+          "id": "SUBST-019",
+          "name_fr": "Protéines de lactosérum / Caséine",
+          "name_en": "Whey protein / Casein",
+          "e_numbers": [],
+          "controversy": "Traitement enzymatique parfois avec présure porcine",
+          "frequency": "HIGH — nutrition sportive, boulangerie",
+          "fiqh_issue": "contamination enzymatique indirecte",
+          "priority_score": 72
+        },
+        {
+          "id": "SUBST-020",
+          "name_fr": "Graisses / Huiles hydrogénées (non spécifiées)",
+          "name_en": "Hydrogenated fats/oils (unspecified)",
+          "e_numbers": [],
+          "controversy": "Quand la source n'est pas spécifiée — peut être suif de bœuf non halal ou saindoux",
+          "frequency": "MEDIUM — biscuits, snacks, margarines industrielles",
+          "fiqh_issue": "source_identification",
+          "priority_score": 68
+        }
+      ]
+    },
+
+    "TIER_4_SECONDARY": {
+      "description": "Cas plus rares ou consensus plus fort — à traiter en second",
+      "substances": [
+        {"id": "SUBST-021", "name_fr": "Charbon animal / Noir animal", "name_en": "Bone char / Animal charcoal", "e_numbers": ["E153"], "fiqh_issue": "istihalah complète (charbon)", "priority_score": 55},
+        {"id": "SUBST-022", "name_fr": "Gélatine halal certifiée (bovine)", "name_en": "Halal certified bovine gelatin", "fiqh_issue": "fiabilité certification + traçabilité", "priority_score": 50},
+        {"id": "SUBST-023", "name_fr": "Chitine / Chitosan", "name_en": "Chitin / Chitosan", "e_numbers": ["E1105"], "fiqh_issue": "crustacés — divergence hanafite", "priority_score": 60},
+        {"id": "SUBST-024", "name_fr": "Alcool cétylique / Alcool stéarylique", "name_en": "Cetyl alcohol / Stearyl alcohol", "fiqh_issue": "alcool non enivrant + cosmétique vs ingestion", "priority_score": 55},
+        {"id": "SUBST-025", "name_fr": "Arôme de fumée", "name_en": "Smoke flavoring", "fiqh_issue": "process industriel + tashbih (imitation)", "priority_score": 45},
+        {"id": "SUBST-026", "name_fr": "Insuline porcine", "name_en": "Porcine insulin", "fiqh_issue": "darurah médicale + istihalah + alternatives", "priority_score": 65},
+        {"id": "SUBST-027", "name_fr": "Pepsine", "name_en": "Pepsin", "fiqh_issue": "enzyme digestive porcine — même cadre que présure", "priority_score": 62},
+        {"id": "SUBST-028", "name_fr": "Lanoline", "name_en": "Lanolin", "e_numbers": ["E913"], "fiqh_issue": "graisse de laine de mouton — pas de dhakat requise pour la laine ?", "priority_score": 45},
+        {"id": "SUBST-029", "name_fr": "Vitamine D3 (cholécalciférol)", "name_en": "Vitamin D3 (cholecalciferol)", "fiqh_issue": "souvent extraite de lanoline ou huile de poisson", "priority_score": 58},
+        {"id": "SUBST-030", "name_fr": "Levure de bière", "name_en": "Brewer's yeast", "fiqh_issue": "sous-produit de brasserie — traces d'alcool ?", "priority_score": 52},
+        {"id": "SUBST-031", "name_fr": "Sauce soja (fermentée)", "name_en": "Soy sauce (fermented)", "fiqh_issue": "fermentation alcoolique naturelle — traces", "priority_score": 50},
+        {"id": "SUBST-032", "name_fr": "Oméga-3 / Huile de poisson", "name_en": "Omega-3 / Fish oil", "fiqh_issue": "poissons sans écailles + gélule gélatine", "priority_score": 55},
+        {"id": "SUBST-033", "name_fr": "Colorant E160a (bêta-carotène)", "name_en": "E160a (beta-carotene)", "fiqh_issue": "solvant d'extraction parfois alcoolique", "priority_score": 40},
+        {"id": "SUBST-034", "name_fr": "Lysozyme", "name_en": "Lysozyme", "e_numbers": ["E1105"], "fiqh_issue": "enzyme du blanc d'œuf — généralement halal mais process", "priority_score": 35},
+        {"id": "SUBST-035", "name_fr": "Catgut / sutures chirurgicales", "name_en": "Catgut / surgical sutures", "fiqh_issue": "intestin animal — usage médical + darurah", "priority_score": 30},
+        {"id": "SUBST-036", "name_fr": "Protéines végétales hydrolysées (HVP)", "name_en": "Hydrolyzed vegetable protein (HVP)", "fiqh_issue": "process acide parfois avec agents animaux", "priority_score": 38},
+        {"id": "SUBST-037", "name_fr": "Cire de carnauba", "name_en": "Carnauba wax", "e_numbers": ["E903"], "fiqh_issue": "végétal — halal par consensus — à confirmer", "priority_score": 20},
+        {"id": "SUBST-038", "name_fr": "Acide lactique", "name_en": "Lactic acid", "e_numbers": ["E270"], "fiqh_issue": "peut être fermenté avec substrats animaux", "priority_score": 42},
+        {"id": "SUBST-039", "name_fr": "Viande halal (ahl al-kitab)", "name_en": "Meat of People of the Book", "fiqh_issue": "viande chrétienne/juive sans bismillah — divergence majeure entre madhahib", "priority_score": 88},
+        {"id": "SUBST-040", "name_fr": "Fruits de mer (crevettes, crabe, homard)", "name_en": "Seafood (shrimp, crab, lobster)", "fiqh_issue": "divergence hanafite majeure vs autres madhahib", "priority_score": 85},
+        {"id": "SUBST-041", "name_fr": "Viande étourdie (stunned)", "name_en": "Stunned meat / Pre-slaughter stunning", "fiqh_issue": "étourdissement avant abattage — validité de la dhakat", "priority_score": 90},
+        {"id": "SUBST-042", "name_fr": "Abattage mécanique (poulet)", "name_en": "Machine slaughter (poultry)", "fiqh_issue": "validité de la tasmiyah et de la dhakat mécanique", "priority_score": 89}
+      ]
+    }
+  },
+
+  "execution_plan": {
+    "recommended_order": [
+      "SUBST-002 — E471 Mono/diglycérides (ubiquitaire)",
+      "SUBST-003 — Alcool en arômes (ubiquitaire)",
+      "SUBST-041 — Viande étourdie (impact direct scan)",
+      "SUBST-042 — Abattage mécanique poulet",
+      "SUBST-039 — Viande ahl al-kitab",
+      "SUBST-004 — Présure / Rennet (fromages)",
+      "SUBST-005 — Glycérol E422",
+      "SUBST-007 — Carmin E120",
+      "SUBST-010 — Vinaigre (cas classique istihalah)",
+      "SUBST-018 — Vanilline / extrait vanille",
+      "SUBST-040 — Fruits de mer (crustacés)",
+      "SUBST-008 — L-Cystéine E920",
+      "SUBST-009 — Stéarate de magnésium",
+      "SUBST-011 — Whey / lactosérum",
+      "SUBST-012 — Shellac E904",
+      "SUBST-006 — Lécithine E322",
+      "SUBST-026 — Insuline porcine",
+      "SUBST-014 — Collagène",
+      "SUBST-015 — Enzymes alimentaires",
+      "SUBST-016 — Gélatine de poisson",
+      "SUBST-013 — Phosphate d'os E542",
+      "SUBST-023 — Chitine/Chitosan",
+      "SUBST-027 — Pepsine",
+      "SUBST-029 — Vitamine D3",
+      "SUBST-019 — Protéines lactosérum/caséine",
+      "SUBST-020 — Graisses hydrogénées",
+      "SUBST-017 — Cire d'abeille",
+      "SUBST-030 — Levure de bière",
+      "SUBST-031 — Sauce soja",
+      "SUBST-032 — Oméga-3",
+      "SUBST-021 — Charbon animal",
+      "SUBST-024 — Alcool cétylique",
+      "SUBST-028 — Lanoline",
+      "SUBST-038 — Acide lactique",
+      "SUBST-036 — HVP",
+      "SUBST-025 — Arôme fumée",
+      "SUBST-022 — Gélatine halal certifiée",
+      "SUBST-033 — E160a bêta-carotène",
+      "SUBST-034 — Lysozyme",
+      "SUBST-035 — Catgut",
+      "SUBST-037 — Cire de carnauba"
+    ],
+    "batch_size": 1,
+    "format_per_substance": "gelatin_halal_dossier_v3.json template",
+    "output_naming": "naqiy_dossier_{substance_id}.json"
+  }
+}

@@ -48,7 +48,16 @@ pnpm-debug.log*
 *.keystore
 **/credentials.json
 *.secret
-docs/naqiy/dossiers-recherches-naqiy/
+# Dossiers V2 (scholarly corpus for Halal Engine V2) + substance
+# pipeline are tracked. Legacy v1 working directories (abbatage/,
+# additifs/) remain ignored as they are superseded by dossiers_v2/.
+!docs/naqiy/dossiers-recherches-naqiy/
+!docs/naqiy/dossiers-recherches-naqiy/dossiers_v2/
+!docs/naqiy/dossiers-recherches-naqiy/dossiers_v2/**
+!docs/naqiy/dossiers-recherches-naqiy/naqiy_substance_pipeline.json
+docs/naqiy/dossiers-recherches-naqiy/abbatage/
+docs/naqiy/dossiers-recherches-naqiy/additifs/
+docs/naqiy/dossiers-recherches-naqiy/.DS_Store
 
 # ── TypeScript ───────────────────────────────────────────────
 *.tsbuildinfo
