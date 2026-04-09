@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://naqiy.app/schemas/halal-v2/scenario.v1.json",
+  "title": "Naqiy Substance Scenario V1",
+  "description": "Exploded score_matrix row — one scenario per row, with match conditions and per-madhab/strictness score.",
+  "type": "object",
+  "required": ["substance_id", "scenario_key", "match_conditions", "score", "verdict", "rationale_fr"],
+  "additionalProperties": false,
+  "properties": {
+    "substance_id": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" },
+    "scenario_key": { "type": "string", "minLength": 3 },
+    "match_conditions": {
+      "type": "object",
+      "description": "Context filters. All must be satisfied for this scenario to apply.",
+      "additionalProperties": true,
+      "properties": {
+        "category": { "type": ["string", "array", "null"] },
+        "usage": { "type": ["string", "null"] },
+        "certified_halal": { "type": ["boolean", "null"] },
+        "madhab": { "type": ["string", "array", "null"] },
+        "strictness": { "type": ["string", "array", "null"] },
+        "species": { "type": ["string", "array", "null"] }
+      }
+    },
+    "specificity": { "type": "integer", "minimum": 0, "description": "Number of non-null match_conditions; higher = more specific" },
+    "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "verdict": {
+      "type": "string",
+      "enum": ["halal", "halal_with_caution", "mashbooh", "avoid", "haram"]
+    },
+    "rationale_fr": { "type": "string", "minLength": 5 },
+    "rationale_en": { "type": "string" },
+    "rationale_ar": { "type": "string" },
+    "dossier_section_ref": { "type": "string" }
+  }
+}
