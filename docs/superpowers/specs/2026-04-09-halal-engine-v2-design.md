@@ -395,9 +395,20 @@ interface GeminiSemanticResult {
 ║ STAGE 0 — CONTEXT BUILDER                                      ║
 ║   user = loadUser() | ANONYMOUS                                ║
 ║   entitlements = resolveEntitlements(user)                     ║
-║   scanContext = { userId, tier, madhab, strictness,            ║
-║                   allergens[], isPregnant, hasChildren,        ║
-║                   boycottOptIn, lang, entitlements, version }  ║
+║                                                                ║
+║   Two contexts are built and separated at the type level:     ║
+║                                                                ║
+║   HalalEvaluationContext (PURE — passed to Halal engines):    ║
+║     { madhab, strictness, species?, lang }                     ║
+║     ZERO tier/entitlement/user fields. This is a type-level   ║
+║     invariant: HalalEngineV2 and CertifierTrustEngine imports │
+║     ONLY accept this shape. It is impossible to branch engine │
+║     logic on user tier. Enforces ethical parity (§18.4).      │
+║                                                                ║
+║   RequestContext (passed to ResponseAssembler / gating):      ║
+║     { userId, tier, entitlements, allergens[], isPregnant,    ║
+║       hasChildren, boycottOptIn, lang, scanRequestId }        ║
+║     Gating + personalization happen ONLY in Stage 8.          ║
 ╠════════════════════════════════════════════════════════════════╣
 ║ STAGE 1 — PRODUCT RESOLUTION                                   ║
 ║   resolveProduct(db, barcode) → {product, offData, source}     ║
@@ -477,19 +488,25 @@ For certifier C, madhab M, optional species S:
   4. LIVE EVENTS DECAY PENALTY
      eventsPenalty = Σ |event.scoreImpact| × exp(-ln(2) × months_since / 12)
 
-  5. STRICTNESS OVERLAY
-     relaxed    : baseline + 3
-     moderate   : baseline
-     strict     : baseline - 5
-     very_strict: baseline - 10, downgrade 1 grade if any accepted tuple ≤ 50
+  5. STRICTNESS OVERLAY (delta ∈ [-∞, 0], never positive)
+     relaxed    : 0
+     moderate   : 0
+     strict     : -5
+     very_strict: -10, downgrade 1 grade if any accepted tuple ≤ 50
+     NOTE: strictness never INCREASES a score above the scholarly baseline.
+     A "relaxed" user still cannot receive a score better than the worst
+     tuple they accept — relaxed only means strictness doesn't penalize.
 
   6. FINAL
      trustScore[C, M, S?] = clip(baseline - eventsPenalty + strictnessDelta, 0, 100)
 
   7. HARD INVARIANT (anti-drift)
-     trustScore[C, M, S?] ≤ baseline[C, M, S?] + 0
-     No bonus ever exceeds worst accepted practice for this madhab.
+     trustScore[C, M, S?] ≤ baseline[C, M, S?]
+     No modifier ever exceeds worst accepted practice for this madhab.
+     This is a property-based test gate in CI — any violation fails the build.
 ```
+
+**Invariant correction note (review 2026-04-09):** the previous draft had `relaxed: +3` which mathematically contradicted the anti-drift invariant. The strictness overlay is now monotonically non-positive. See Appendix C for the full review log.
 
 ### 7.2 Seuils de grade
 
@@ -530,13 +547,13 @@ baseline = min(18, 88) = 18 → Trust 18 → N٥ (Non recommandé) → AVOID
 ```
 POULTRY_WATERBATH_REDUCED_VERIFIED(45) → adjusted 33
 POULTRY_SEMIAUTO(95) → adjusted 93
-baseline = 33, strictness relaxed +3 = 36 → N٤ → MASHBOOH
+baseline = 33, strictness relaxed 0 = 33 → N٥ → AVOID
 ```
 
 **Scan 4 — Même poulet, Shafi'i, mortalité maintenant publiée et vérifiée**
 ```
 POULTRY_WATERBATH_REDUCED_VERIFIED(45) → adjusted 43 (penalty levée)
-baseline = 43, relaxed +3 = 46 → N٤ → MASHBOOH (toujours)
+baseline = 43, relaxed 0 = 43 → N٤ → MASHBOOH
 ```
 
 ### 7.5 Defensive ingredient cross-check
@@ -989,6 +1006,119 @@ Chips discrets : HealthCard → "↔ E904, E471 aussi analysés dans Halal" (scr
 - `DOSSIER_AHL_KITAB_MEAT_V2.md` — à extraire en Phase 0
 - Autres substance dossiers — `dossiers_v2/json/*.json`
 - `naqiy_substance_pipeline.json` — registre canonique 42 substances
+
+---
+
+---
+
+## Appendix C — Port interfaces (hexagonal layering)
+
+All domain engines depend on these interfaces, never on concrete infrastructure. Each interface is a separate file in `backend/src/domain/ports/`. Implementations live in `backend/src/infra/`.
+
+```ts
+// backend/src/domain/ports/dossier-repo.ts
+export interface IDossierRepo {
+  getActiveSubstance(substanceId: string): Promise<SubstanceDossier | null>;
+  getActivePractice(practiceId: string): Promise<PracticeDossier | null>;
+  batchGetSubstances(ids: string[]): Promise<Map<string, SubstanceDossier>>;
+}
+
+// backend/src/domain/ports/scenario-repo.ts
+export interface IScenarioRepo {
+  forSubstance(substanceId: string): Promise<SubstanceScenario[]>;
+  batchForSubstances(ids: string[]): Promise<Map<string, SubstanceScenario[]>>;
+}
+
+// backend/src/domain/ports/tuple-repo.ts
+export interface IPracticeTupleRepo {
+  acceptedByCertifier(
+    certifierId: string,
+    family?: string,
+    species?: string,
+  ): Promise<Array<{ tuple: PracticeTuple; acceptance: TupleAcceptance }>>;
+}
+
+// backend/src/domain/ports/gemini-provider.ts
+export interface IGeminiSemanticProvider {
+  extract(
+    ingredientsText: string,
+    productHint: { name?: string; brand?: string; categories?: string[] },
+    vocabularyVersion: string,
+  ): Promise<GeminiSemanticResult>;
+}
+
+// backend/src/domain/ports/certifier-resolver.ts
+export interface ICertifierResolver {
+  resolveFromProduct(product: ProductContext): Promise<ResolvedCertifier | null>;
+}
+
+// backend/src/domain/ports/evaluation-store.ts
+export interface IEvaluationStore {
+  persist(eval: HalalEvaluation): Promise<void>;
+  getById(id: string): Promise<HalalEvaluation | null>;
+  byProduct(productId: string, limit: number): Promise<HalalEvaluation[]>;
+}
+```
+
+**Dependency direction rule:** `domain/*` imports nothing from `infra/*`, `trpc/*`, `db/*`. Enforced by ESLint boundary plugin (added in Phase 1).
+
+---
+
+## Appendix D — Known Issues Tracker (post-review 2026-04-09)
+
+World-class architectural review identified 23 issues (8 CRITICAL, 15 HIGH/MEDIUM). Each issue has a phase assignment. Fixing a CRITICAL outside its phase is forbidden unless CI gate requires it.
+
+### CRITICAL
+
+| # | Issue | Fix in | Resolution plan |
+|---|---|---|---|
+| C1 | Freemium ethical parity not type-enforced — engines received full scanContext with tier | **Fixed in §6 Stage 0** | Split `HalalEvaluationContext` (pure) from `RequestContext`. Engines import only the first. Property-based test in Phase 3 CI. |
+| C2 | Strictness overlay `relaxed: +3` contradicts anti-drift invariant §18.1 | **Fixed in §7.1** | Strictness delta is now monotonically non-positive. Invariant §18.1 strengthened to property test. |
+| C3 | `certifier_tuple_acceptance` has no temporal dimension — replay of past scans returns current verdict | **Phase 1** (data model) | Add SCD type 2 columns `valid_from, valid_to` + snapshot `trace.acceptance_snapshot` into `halal_evaluations`. Migration must preserve replayability. |
+| C4 | Naqiy Watch GDPR pseudonymization conflicts with event-sourced audit trail | **Phase 2bis** | Separate `reporter_pseudonym_id` (stable one-way hash, survives Art.17) in audit tables from `reporter_user_id` in mutable `report_owners` table. Document SAR flow explicitly. |
+| C5 | Stage 7 persistence has no transaction boundary; no client-side idempotency key | **Phase 5** (orchestrator) | `scan_request_id = UUIDv7` client-generated, passed in tRPC input. Stage 7 wraps all writes in one tx. Gamification becomes outbox event. |
+| C6 | Gemini prompt injection surface — no delimiter framing, no output-substring guard | **Phase 2** (Gemini V2) | (a) sentinel-delimited user text block, (b) post-validate every `matched_term` is a substring of source, (c) reject non-schema responses + fallback. |
+| C7 | Cache key `sha256(text)` is under-specified; hot-reload invalidates all caches | **Phase 2** | `key = sha256(text ‖ category_hint ‖ prompt_version ‖ vocabulary_hash)`. Per-substance vocabulary hashes. Singleflight coalescing. |
+| C8 | `applyEvidenceModifier` penalty stacking order undefined | **Phase 4** (CertifierTrustEngine) | Exact order of operations documented. Unit test matrix. Cap at -30 total. |
+
+### HIGH
+
+| # | Issue | Fix in |
+|---|---|---|
+| H9 | Defensive ingredient cross-check parallel sequencing unclear | Phase 5 — explicit DAG |
+| H10 | `ALTER TABLE products` — 11 new columns, zero-downtime checklist required | Phase 1 — all cols NULL, PG11+ metadata-only |
+| H11 | `practice_tuples.id text PRIMARY KEY` is fragile for history | Phase 1 — UUID PK + unique `slug` constraint |
+| H12 | `practice_tuples.dimensions jsonb` has no per-family schema | Phase 1 — `practice_families` table + JSON Schema per family |
+| H13 | Species filter undefined when empty intersection | Phase 4 — fallback to unknown-species floor |
+| H14 | `AlternativesEngine` query is N+1 / missing indexes | Phase 5 — composite `(category, halal_track, certifier_id)` index + materialized candidate table |
+| H15 | No error taxonomy in `halal_evaluations.trace` | Phase 5 — add `status enum('ok','degraded','failed')` + `degradation_reason` as first-class columns |
+| H16 | Vocabulary hot-reload = singleton, breaks blue/green | Phase 2 — pin vocabulary version per-request |
+| H17 | `HalalEngineV2.evaluate` has sequential awaits inside for-loop (N+1) | Phase 3 — batch-load all dossiers/scenarios/rulings after `matchModules` |
+| H18 | `canSeeAlternatives` gates at render but compute runs | Phase 5 — gate at compute level |
+| H19 | Dossier compiler has no rollback plan | Phase 1 — keep N previous versions, `is_active` toggle, rollback command |
+| H20 | Prompt version not in cache key | Phase 2 — covered by C7 |
+| H21 | No port interfaces — tests can't mock deps | **Fixed in Appendix C** |
+| H22 | Tuple `notes_fr/ar` but no `notes_en` — breaks trilingual claim | **Phase 0** — add `notes_en` to `practice-tuple.schema.v1.json` (Task 4) |
+| H23 | Migration kill-switches + convergence metric undefined | Phase 2 — define flag store (DB table `feature_flags`, already exists) + convergence = `verdict_exact_match AND score_within(±3)` |
+
+### MEDIUM
+
+- M1  Arabic numeral grades N١…N٥ — DB storage encoding. **Fix:** store as ASCII `N1..N5`, render Arabic in UI only.
+- M2  `thinkingBudget: 0` SDK compatibility check — Phase 2 integration test.
+- M3  Defensive alcohol >0.5 % threshold unsourced — Phase 0 add citation to spec §7.5.
+- M4  Watch rejection appeal flow — Phase 2bis.
+- M5  VoiceOver / RTL accessibility annotations — Phase 6 UI.
+- M6  HealthEngine `additives` table still joined to `additive_madhab_rulings` — Phase 3 drop cross-coupling.
+- M7  `scan_id` FK undefined — Phase 1 migration.
+- M8  Mobile/backend schema version negotiation — Phase 5 add `X-Naqiy-Schema-Version` header.
+- M9  `scan_feedback.evaluation_id` cascade behavior — Phase 5.
+- M10 JSON-Schema → TS types contract drift — **Phase 0** add `json-schema-to-typescript` step.
+- M11 `canSeeBoycott` field in entitlements is dead code — Phase 5 remove.
+- M12 `/scan` rate limit preservation confirmed — Phase 5 acceptance criterion.
+
+### Resolution tracking
+
+Each fix must reference its CRITICAL/HIGH number in the commit message (e.g., `feat(engine): apply C3 SCD type 2 on certifier_tuple_acceptance`). Phase exit criteria include "all issues assigned to this phase resolved".
 
 ---
 
