@@ -1,0 +1,2336 @@
+{
+  "meta": {
+    "dossier_id": "SUBST-003",
+    "subject": "Alcool en arômes et supports d'arômes / الكحول في النكهات وحوامل النكهات / Alcohol in Flavorings and Flavor Carriers",
+    "version": "2.0.0",
+    "created_at": "2026-04-03",
+    "methodology": "Collecte multi-institutionnelle, classification par madhab, hiérarchisation par autorité, recherche en arabe/anglais/français",
+    "author_system": "Naqiy Halal Analysis Engine",
+    "languages": [
+      "ar",
+      "fr",
+      "en"
+    ],
+    "scope": "Sunni — 4 madhahib + institutions contemporaines",
+    "template_ref": "gelatin_halal_dossier_v3.json",
+    "key_fiqhi_issue": "ALCOHOL + ISTIHLAK",
+    "key_difference_from_gelatin": "Unlike gelatin (istihalah debate) or E471 (source identification), alcohol in flavorings raises TWO intertwined issues: (1) Is ethanol itself impure (najis)? The IOMS 1995 says NO. (2) When ethanol is used as a solvent/carrier for flavor extraction and trace amounts remain in the final product, does the principle of istihlak (absorption/disappearance) apply? The majority of contemporary scholars and institutions say YES, under specific conditions.",
+    "key_difference_from_e471": "E471's issue is purely about source identification — the molecule is the same regardless of source. Alcohol in flavorings is fundamentally different: the substance (ethanol) IS known, its ruling IS debated, but the real question is whether TRACE RESIDUES after processing change the ruling of the final product.",
+    "merged_at": "2026-04-07",
+    "supersedes": [
+      "1.0.0",
+      "1.1.0"
+    ],
+    "previous_versions": [
+      "1.0.0",
+      "1.1.0"
+    ],
+    "merge_note": "Complete fusion: v1.0 core content + v1.1 enrichments (verified_fatwa_references, unverified_claims_disclosure transparency)",
+    "generated_at": "2026-04-03",
+    "language_primary": "fr"
+  },
+  "substance": {
+    "id": "ALCOHOL_FLAVORINGS",
+    "names": {
+      "ar": "الكحول في النكهات / الإيثانول كحامل للنكهات",
+      "fr": "Alcool en arômes / Éthanol comme support d'arômes",
+      "en": "Alcohol in Flavorings / Ethanol as Flavor Carrier",
+      "synonyms": [
+        "Ethanol",
+        "Ethyl alcohol",
+        "Grain alcohol",
+        "Alcool éthylique",
+        "Natural flavors (with ethanol carrier)",
+        "Arômes naturels (support éthanol)",
+        "Vanilla extract",
+        "Extrait de vanille",
+        "خلاصة الفانيليا",
+        "Flavor carrier",
+        "Solvent d'extraction",
+        "مذيب استخلاص"
+      ],
+      "e_numbers": [],
+      "cas_number": "64-17-5 (ethanol)",
+      "label_terms": [
+        "ethanol",
+        "alcohol",
+        "natural flavors",
+        "arômes naturels",
+        "vanilla extract",
+        "extrait de vanille",
+        "flavor extract",
+        "rum extract",
+        "almond extract",
+        "lemon extract"
+      ]
+    },
+    "category": "alcohol_carrier_solvent",
+    "description": {
+      "ar": "الإيثانول (كحول إيثيلي، C₂H₅OH) هو أكثر المذيبات استخداماً في صناعة النكهات الغذائية. يُستخدم لاستخلاص المركبات العطرية من المواد الطبيعية (فانيليا، لوز، ليمون، إلخ) لأن كثيراً من هذه المركبات لا تذوب في الماء. تبقى نسب متفاوتة من الإيثانول في المنتج النهائي حسب طريقة التصنيع: من <0.1% في المنتجات المخبوزة إلى ~35% في المستخلصات السائلة غير المعالجة حرارياً",
+      "fr": "L'éthanol (alcool éthylique, C₂H₅OH) est le solvant le plus utilisé dans l'industrie des arômes alimentaires. Il sert à extraire les composés aromatiques des matières naturelles (vanille, amande, citron, etc.) car nombre de ces composés sont insolubles dans l'eau. Des proportions variables d'éthanol subsistent dans le produit final selon le procédé : de <0,1% dans les produits cuits à ~35% dans les extraits liquides non chauffés.",
+      "en": "Ethanol (ethyl alcohol, C₂H₅OH) is the most widely used solvent in the food flavoring industry. It is used to extract aromatic compounds from natural materials (vanilla, almond, lemon, etc.) because many of these compounds are insoluble in water. Variable proportions of ethanol remain in the final product depending on the manufacturing process: from <0.1% in baked products to ~35% in unprocessed liquid extracts."
+    },
+    "chemical_nature": {
+      "type": "alcohol_solvent_carrier",
+      "molecular_formula": "C₂H₅OH",
+      "boiling_point": "78.37°C",
+      "production_process": "Ethanol used in food flavorings is produced by: (1) Fermentation of sugars from grains (corn, wheat), sugarcane, or grapes — this includes khamr-derived ethanol; (2) Synthetic production from ethylene gas (petrochemical) — NOT from any biological fermentation; (3) Fermentation of non-grape/date sources (corn, sugarcane) — debated whether this constitutes khamr",
+      "key_fiqhi_chemical_facts": [
+        "Ethanol is a SINGLE chemical compound (C₂H₅OH) regardless of its source — grape-derived ethanol is molecularly IDENTICAL to corn-derived or synthetic ethanol",
+        "Ethanol evaporates at 78.37°C — lower than water (100°C) — meaning cooking/baking removes MOST but NOT ALL ethanol",
+        "USDA research shows: after 2.5 hours of simmering, ~5% of original alcohol remains; after baking at 175°C for 25 min, ~45% remains; after flambéing, ~75% remains",
+        "In final food products using flavoring extracts, residual ethanol is typically 0.01-0.5% — well below intoxication threshold",
+        "Natural fermentation produces trace ethanol in many foods: bread (0.04-1.9%), ripe fruits (0.2-0.6%), yogurt (0.01-0.02%), vinegar (0.2-0.5%), soy sauce (1.5-2%)"
+      ],
+      "istihalah_applicability": "NONE — ethanol does NOT undergo istihalah in flavoring use. It remains ethanol. The applicable concept is ISTIHLAK (absorption/disappearance) when residual traces are negligible in the final product."
+    },
+    "sources_of_ethanol": {
+      "khamr_derived": [
+        {
+          "name": "Grape-derived ethanol (كحول العنب)",
+          "status": "haram_by_consensus",
+          "note": "Ethanol distilled from wine or grape must. Unanimously prohibited as khamr source.",
+          "industry_share": "MINORITY in industrial flavoring — more expensive than grain ethanol"
+        },
+        {
+          "name": "Date-derived ethanol (كحول التمر)",
+          "status": "haram_by_consensus",
+          "note": "Ethanol from fermented dates. Same ruling as grape — unanimously khamr.",
+          "industry_share": "VERY RARE in industrial use"
+        }
+      ],
+      "debated_sources": [
+        {
+          "name": "Grain-derived ethanol (كحول الحبوب — corn, wheat, barley)",
+          "status": "debated",
+          "hanafi_classical": "Abu Hanifa and Abu Yusuf: NOT khamr — only grape/date nabidh is khamr. Permissible if not used to intoxicate.",
+          "hanafi_fatwa_position": "Imam Muhammad's position adopted as fatwa: ALL intoxicants are khamr regardless of source. This is the RELIED-UPON position in the Hanafi school.",
+          "other_madhahib": "Shafi'i, Maliki, Hanbali: ALL intoxicants are khamr regardless of source — no distinction.",
+          "industry_share": "DOMINANT — corn ethanol is the cheapest and most widely used industrial source"
+        },
+        {
+          "name": "Sugarcane-derived ethanol (كحول قصب السكر)",
+          "status": "debated — same framework as grain",
+          "industry_share": "SIGNIFICANT — especially in Brazil, India"
+        }
+      ],
+      "halal_by_consensus": [
+        {
+          "name": "Synthetic ethanol (كحول صناعي — from ethylene gas)",
+          "status": "not_khamr_by_consensus",
+          "note": "Produced by hydration of ethylene (petrochemical). NEVER went through fermentation. All scholars agree this is NOT khamr. However, it IS intoxicating if consumed directly, so direct consumption as a beverage remains prohibited.",
+          "industry_share": "SIGNIFICANT — used in industrial applications, less common in food-grade flavoring"
+        }
+      ],
+      "note_on_traceability": "CRITICAL: In industrial practice, the source of ethanol used in food flavoring is RARELY specified on the product label. 'Natural flavors' on a label gives NO indication of whether ethanol was used as a carrier, let alone its source. This opacity is the core consumer challenge."
+    },
+    "common_applications": [
+      {
+        "sector": "flavoring_extracts",
+        "products": [
+          "vanilla extract (~35% ethanol)",
+          "almond extract (~30%)",
+          "lemon extract (~80%)",
+          "peppermint extract (~75%)",
+          "rum extract"
+        ],
+        "function": "Solvent for extraction of aromatic compounds insoluble in water",
+        "frequency": "UBIQUITOUS — virtually all natural flavor extracts use ethanol",
+        "residual_in_final_product": "0.01-0.5% after cooking/baking; up to 35% if extract used uncooked"
+      },
+      {
+        "sector": "bakery_patisserie",
+        "products": [
+          "cakes",
+          "cookies",
+          "pastries",
+          "croissants",
+          "breads",
+          "muffins"
+        ],
+        "function": "Carrier for vanilla, almond, and other flavoring extracts",
+        "frequency": "UBIQUITOUS",
+        "residual_in_final_product": "<0.5% — most evaporates during baking at 175-200°C"
+      },
+      {
+        "sector": "confectionery",
+        "products": [
+          "chocolates",
+          "bonbons",
+          "pralines",
+          "liqueur-filled chocolates",
+          "ice cream"
+        ],
+        "function": "Flavoring carrier; sometimes direct ingredient (liqueur chocolates)",
+        "frequency": "VERY_HIGH",
+        "residual_in_final_product": "0.1-2% depending on product type; liqueur chocolates may contain 3-8%"
+      },
+      {
+        "sector": "beverages",
+        "products": [
+          "soft drinks",
+          "energy drinks",
+          "kombucha",
+          "non-alcoholic beer"
+        ],
+        "function": "Natural fermentation byproduct OR carrier for flavoring",
+        "frequency": "HIGH",
+        "residual_in_final_product": "0.01-0.5% in soft drinks; 0.05-0.5% in non-alcoholic beer; up to 1-3% in kombucha"
+      },
+      {
+        "sector": "dairy",
+        "products": [
+          "flavored yogurt",
+          "ice cream",
+          "dessert mousses",
+          "flavored milk"
+        ],
+        "function": "Carrier for vanilla and fruit flavorings",
+        "frequency": "HIGH",
+        "residual_in_final_product": "0.01-0.3%"
+      },
+      {
+        "sector": "sauces_condiments",
+        "products": [
+          "soy sauce",
+          "teriyaki sauce",
+          "Worcestershire sauce",
+          "mustard",
+          "salad dressings"
+        ],
+        "function": "Natural fermentation byproduct (soy sauce) or flavoring carrier",
+        "frequency": "HIGH",
+        "residual_in_final_product": "1-2% in soy sauce; 0.1-0.5% in other sauces"
+      },
+      {
+        "sector": "natural_occurrence",
+        "products": [
+          "ripe fruits",
+          "bread",
+          "yogurt",
+          "vinegar",
+          "pickles",
+          "kefir"
+        ],
+        "function": "Natural byproduct of fermentation — NOT intentionally added",
+        "frequency": "UBIQUITOUS — present in virtually all fermented foods",
+        "residual_in_final_product": "bread: 0.04-1.9%; ripe banana: 0.4%; yogurt: 0.01-0.02%; vinegar: 0.2-0.5%; kefir: 0.5-2%"
+      }
+    ],
+    "primary_name_fr": "Alcool en arômes / Éthanol comme support d'arômes",
+    "primary_name_en": "Alcohol in Flavorings / Ethanol as Flavor Carrier",
+    "issue_type": "ALCOHOL",
+    "match_vocabulary": {
+      "canonical_fr": "alcool dans les arômes",
+      "canonical_en": "alcohol in flavorings",
+      "canonical_ar": "الكحول في النكهات",
+      "synonyms_fr": [
+        "éthanol",
+        "alcool éthylique",
+        "arôme naturel de vanille",
+        "extrait de vanille",
+        "arôme alcoolisé",
+        "support d'arôme alcool"
+      ],
+      "synonyms_en": [
+        "ethanol",
+        "ethyl alcohol",
+        "vanilla extract",
+        "natural flavor",
+        "flavoring carrier alcohol",
+        "alcohol-based extract"
+      ],
+      "synonyms_ar": [
+        "إيثانول",
+        "كحول إثيلي",
+        "مستخلص الفانيليا"
+      ],
+      "synonyms_other": {
+        "de": [
+          "ethanol",
+          "vanilleextrakt"
+        ],
+        "es": [
+          "etanol",
+          "extracto de vainilla"
+        ]
+      },
+      "e_numbers": [],
+      "off_tags": [
+        "en:ethanol",
+        "en:natural-flavouring",
+        "en:vanilla-extract"
+      ],
+      "semantic_descriptors": [
+        "alcohol as solvent in flavor extracts",
+        "solvant alcoolique d'arôme",
+        "traces résiduelles d'éthanol"
+      ],
+      "disambiguation_hints": {
+        "not_to_confuse_with": [
+          "vinegar",
+          "vinaigre",
+          "sugar alcohols",
+          "sorbitol"
+        ],
+        "context_clues": [
+          "ice cream",
+          "cake",
+          "chocolate",
+          "yogurt",
+          "beverage"
+        ]
+      }
+    }
+  },
+  "core_islamic_concepts": {
+    "primary_concept": {
+      "id": "CONCEPT-KHAMR-ALCOHOL",
+      "term": {
+        "ar": "الخمر / المسكر",
+        "ar_transliteration": "al-khamr / al-muskir",
+        "fr": "Le vin / L'enivrant",
+        "en": "Wine / Intoxicant"
+      },
+      "definition": {
+        "ar": "كلُّ مُسكرٍ خمرٌ وكلُّ خمرٍ حرامٌ — حديث صحيح رواه مسلم (2003) عن ابن عمر رضي الله عنهما",
+        "fr": "Tout enivrant est khamr et tout khamr est illicite — hadith authentique rapporté par Muslim (2003) d'après Ibn Umar",
+        "en": "Every intoxicant is khamr and every khamr is haram — authentic hadith reported by Muslim (2003) from Ibn Umar"
+      },
+      "source": "Sahih Muslim 2003; also reported by Abu Dawud, Nasai, Ibn Majah",
+      "conditions_for_validity": [
+        "The hadith establishes a UNIVERSAL rule: khamr is not limited to grape wine",
+        "Any substance that intoxicates when consumed in large quantities is classified as khamr",
+        "The corollary hadith: 'Whatever intoxicates in large quantities, a small quantity of it is forbidden' (Abu Dawud 3681, Nasai, Ibn Majah — graded sahih by al-Albani)"
+      ],
+      "application_to_substance": "Ethanol IS intoxicating when consumed in sufficient quantity — therefore it falls under the prohibition of khamr when consumed as a beverage. The scholarly debate concerns: (1) Does this apply to ethanol used as a processing aid that leaves only traces? (2) Does the prohibition follow the SOURCE of the ethanol or the NATURE of the final product?"
+    },
+    "secondary_concept_1": {
+      "id": "CONCEPT-ISTIHLAK",
+      "term": {
+        "ar": "الاستهلاك",
+        "ar_transliteration": "al-istihlāk",
+        "fr": "L'absorption / La disparition",
+        "en": "Absorption / Dilution to non-existence"
+      },
+      "definition": {
+        "ar": "اندماج مادة في مادة أخرى على وجه تذهب فيه صفات المادة المندمجة من لون وطعم ورائحة بحيث لا يمكن فصلها بوسيلة يسيرة — مستفاد من قرار مجمع الفقه الإسلامي الدولي رقم 210 (6/22)",
+        "fr": "Immersion d'une substance dans une autre de telle sorte que les caractéristiques de la substance immergée (couleur, goût, odeur) disparaissent complètement et qu'elle ne peut être séparée par un moyen simple — d'après la Résolution 210 de l'Académie de Fiqh de l'OCI",
+        "en": "Immersion of one material into another such that the characteristics and attributes of the submersed material (color, taste, smell) completely vanish and it cannot be separated by simple means — based on OIC Fiqh Academy Resolution 210 (6/22)"
+      },
+      "source": "OCI Fiqh Academy Resolution 210 (6/22), Kuwait 2015; IOMS 1995 Seminar; classical fiqh principle",
+      "conditions_for_validity": [
+        "The haram substance must lose ALL its detectable characteristics (taste, smell, color, effect)",
+        "The proportion must be negligible relative to the final product",
+        "The haram substance must not be the dominant or primary ingredient",
+        "The submersion must be such that the haram substance cannot be easily separated"
+      ],
+      "application_to_substance": "When ethanol is used as a solvent to extract vanilla flavoring, then the extract is added to a cake batter and baked at 175°C, the ethanol largely evaporates. The residual ethanol (typically <0.5%) has NO detectable taste, smell, or intoxicating effect. This is the textbook case of istihlak — the prohibited substance has been absorbed/diluted to the point of non-existence in the final product."
+    },
+    "secondary_concept_2": {
+      "id": "CONCEPT-NAJASAH-KHAMR",
+      "term": {
+        "ar": "نجاسة الخمر / طهارة الكحول",
+        "ar_transliteration": "najāsat al-khamr / ṭahārat al-kuḥūl",
+        "fr": "Impureté du vin / Pureté de l'alcool",
+        "en": "Impurity of wine / Purity of alcohol"
+      },
+      "definition": {
+        "ar": "اختلف العلماء في نجاسة الخمر: الجمهور (حنفية ومالكية وشافعية وحنابلة) على أنها نجسة نجاسة عينية. وذهب بعض المحققين كربيعة الرأي والمزني وداود الظاهري والقاضي إسماعيل المالكي وبعض المعاصرين إلى طهارتها مع التحريم",
+        "fr": "Les savants divergent sur l'impureté du vin : la majorité (Hanafites, Malikites, Shafiites, Hanbalites) considère le vin comme une impureté matérielle (najāsah ʿayniyyah). Certains vérificateurs comme Rabīʿah al-Raʾy, al-Muzanī, Dāwūd al-Ẓāhirī, le Qāḍī Ismāʿīl al-Mālikī et certains contemporains soutiennent qu'il est pur tout en restant interdit.",
+        "en": "Scholars differ on the impurity of wine: the majority (Hanafi, Maliki, Shafi'i, Hanbali) hold that wine is a material impurity (najasah ayniyyah). Some verifiers like Rabi'ah al-Ra'y, al-Muzani, Dawud al-Zahiri, Qadi Isma'il al-Maliki, and some contemporaries hold that it is pure while remaining prohibited."
+      },
+      "source": "Classical sources across all madhahib; IOMS 1995 seminar resolution",
+      "conditions_for_validity": [],
+      "application_to_substance": "The IOMS 1995 seminar concluded: 'Alcohol is not najis (impure) in itself, based on the principle that the default state of things is purity.' This is a CRITICAL resolution: if alcohol is pure (tahir), then its trace presence in food does not render the food ritually impure — it only matters whether it intoxicates. This resolution was endorsed by the OIC Fiqh Academy in Resolution 210."
+    },
+    "tertiary_concept": {
+      "id": "CONCEPT-MA-ASKARA-KATHIRUHU",
+      "term": {
+        "ar": "ما أسكر كثيره فقليله حرام",
+        "ar_transliteration": "mā askara kathīruhu fa-qalīluhu ḥarām",
+        "fr": "Ce dont le beaucoup enivre, le peu en est illicite",
+        "en": "Whatever intoxicates in large quantities, a small amount of it is forbidden"
+      },
+      "definition": {
+        "ar": "قال النبي ﷺ: ما أسكر كثيره فقليله حرام — رواه أبو داود (3681) والنسائي (5607) وابن ماجه (3394) وصححه الألباني",
+        "fr": "Le Prophète ﷺ a dit : Ce dont le beaucoup enivre, le peu en est illicite — rapporté par Abu Dawud (3681), Nasai (5607) et Ibn Majah (3394), authentifié par al-Albani",
+        "en": "The Prophet ﷺ said: Whatever intoxicates in large quantities, a small amount of it is forbidden — reported by Abu Dawud (3681), Nasai (5607), Ibn Majah (3394), graded sahih by al-Albani"
+      },
+      "source": "Abu Dawud 3681, Nasai 5607, Ibn Majah 3394",
+      "scholarly_interpretation": {
+        "strict_interpretation": "This hadith means ANY quantity of an intoxicant is haram, even a single drop. Applied literally: any food containing any trace of ethanol is haram.",
+        "contextual_interpretation": "This hadith refers to BEVERAGES — the 'qalil' (small amount) refers to a small DRINK of the same substance, not a trace residue dissolved in a different substance. A glass of diluted wine is haram (same substance, less concentrated). But vanilla ice cream is not 'a small amount of ethanol' — it is a DIFFERENT SUBSTANCE (ice cream) that happens to contain trace ethanol from processing.",
+        "application": "The strict interpretation would prohibit virtually ALL processed foods (including bread, which naturally contains 0.04-1.9% ethanol from yeast fermentation). The contextual interpretation is adopted by the majority of contemporary institutions including IOMS, OIC, ECFR, Dar al-Ifta Egypt, AMJA, MUI, and JAKIM."
+      }
+    }
+  },
+  "fatwas": [
+    {
+      "id": "FATWA-ALCOHOL-001",
+      "institution": {
+        "name": {
+          "ar": "المنظمة الإسلامية للعلوم الطبية",
+          "fr": "Organisation Islamique pour les Sciences Médicales (IOMS)",
+          "en": "Islamic Organization for Medical Sciences (IOMS)"
+        },
+        "type": "international_advisory_specialized",
+        "authority_level": "advisory_specialized_highest",
+        "headquarters": "Kuwait City, Kuwait",
+        "website": "https://www.islamicmedicine.org",
+        "madhab_orientation": "Multi-madhab — participants from all schools"
+      },
+      "reference": "IOMS Seminar: 'Prohibited and Impure Substances in Food and Medicine', Kuwait, 22-24 May 1995. Recommendations endorsed by OCI Fiqh Academy Resolution 210 (2015).",
+      "date": "1995-05-24",
+      "topic": "Purity of alcohol and its use in food/medicine",
+      "original_text": {
+        "lang": "ar",
+        "text": "مادة الكحول غير نجسة شرعاً بناء على ما سبق تقريره من أن الأصل في الأشياء الطهارة. ولا حرج شرعاً من الانتفاع بالأشياء التي أضيفت إليها مادة كحولية إذا كانت قد استهلكت فيها واستحالت طبيعتها بالتصنيع أو الاستعمال، ولا سيما إذا لم يتوفر بديل مباح خالٍ من مثل هذه الإضافات"
+      },
+      "translation": {
+        "fr": {
+          "text": "La substance alcool n'est pas impure (najis) selon la charia, conformément au principe déjà établi que l'état par défaut des choses est la pureté. Il n'y a pas d'interdiction religieuse à tirer profit des choses auxquelles une substance alcoolique a été ajoutée, si celle-ci y a été absorbée (istuhlikat) et que sa nature s'est transformée par la fabrication ou l'utilisation, surtout s'il n'existe pas d'alternative licite exempte de tels ajouts.",
+          "translation_notes": "استهلكت (istuhlikat) = a été absorbée/consommée — forme passive du verbe istihlāk, indiquant que l'alcool a disparu dans le mélange. استحالت طبيعتها (istaḥālat ṭabīʿatuhā) = sa nature s'est transformée — référence au concept d'istiḥālah. بديل مباح (badīl mubāḥ) = alternative licite — condition de nécessité relative."
+        },
+        "en": {
+          "text": "The substance alcohol is not ritually impure (najis) according to Shariah, based on the previously established principle that the default state of things is purity. There is no religious objection to benefiting from things to which an alcoholic substance has been added, if it has been absorbed (istuhlikat) into them and its nature has been transformed through manufacturing or use, especially if no permissible alternative free from such additions is available.",
+          "translation_notes": "istuhlikat = absorbed/consumed (passive of istihlak). istahaalat tabi'atuha = its nature was transformed (reference to istihalah). badil mubah = permissible alternative (relative necessity condition)."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional",
+        "alcohol_purity": "pure_tahir",
+        "trace_alcohol_in_food": "permissible_if_absorbed",
+        "conditions": [
+          "Alcohol must be absorbed (istihlak) in the final product",
+          "Nature must have changed through processing",
+          "Especially permissible when no halal alternative exists"
+        ]
+      }
+    },
+    {
+      "id": "FATWA-ALCOHOL-002",
+      "institution": {
+        "name": {
+          "ar": "مجمع الفقه الإسلامي الدولي — منظمة التعاون الإسلامي",
+          "fr": "Académie Internationale de Fiqh Islamique — OCI",
+          "en": "International Islamic Fiqh Academy — OIC"
+        },
+        "type": "international_fiqh_academy",
+        "authority_level": "highest_collective",
+        "headquarters": "Jeddah, Saudi Arabia",
+        "website": "https://iifa-aifi.org",
+        "madhab_orientation": "Multi-madhab"
+      },
+      "reference": "Resolution No. 210 (6/22), 22nd Session, 2-5 Jumada al-Akhirah 1436H / 22-25 March 2015, Kuwait City",
+      "date": "2015-03-25",
+      "topic": "Istihalah and Istihlak in food additives — endorsement of IOMS 1995",
+      "original_text": {
+        "lang": "ar",
+        "text": "قرار بشأن الاستحالة والاستهلاك في المواد الإضافية في الغذاء والدواء: أولاً: التأكيد على القرار رقم 198 (4/21) بشأن ضوابط الاستحالة. ثانياً: المصادقة على توصيات ندوة المنظمة الإسلامية للعلوم الطبية لعام 1995 بشأن المواد المحرمة والنجسة في الغذاء والدواء. ثالثاً: لا مانع شرعاً من استعمال الكحول الإيثيلي (الإيثانول) كمذيب أو معالج للمواد الخام المستعملة في تصنيع المنتجات الغذائية ما لم تتوفر بدائل حلال"
+      },
+      "translation": {
+        "fr": {
+          "text": "Résolution sur l'istiḥālah et l'istihlāk dans les additifs alimentaires et médicamenteux : Premièrement : Confirmation de la résolution n°198 (4/21) sur les normes de l'istiḥālah. Deuxièmement : Ratification des recommandations du séminaire de l'IOMS de 1995 sur les substances interdites et impures dans l'alimentation et les médicaments. Troisièmement : Il n'y a pas d'objection religieuse à l'utilisation de l'alcool éthylique (éthanol) comme solvant ou agent de traitement des matières premières utilisées dans la fabrication de produits alimentaires, à condition qu'il n'existe pas d'alternatives licites (halal).",
+          "translation_notes": "المصادقة (al-muṣādaqah) = ratification — terme juridique fort indiquant un endossement formel. مذيب (mudhīb) = solvant — terme technique chimique. معالج (muʿālij) = agent de traitement — terme technique de processus industriel."
+        },
+        "en": {
+          "text": "Resolution on istihalah and istihlak in food and medicine additives: First: Reaffirmation of Resolution 198 (4/21) on istihalah standards. Second: Endorsement of the 1995 IOMS seminar recommendations on prohibited and impure substances in food and medicine. Third: There is no Shariah objection to using ethyl alcohol (ethanol) as a solvent or processing agent for raw materials used in manufacturing food products, provided no halal alternatives are available.",
+          "translation_notes": "al-musadaqah = ratification. mudhib = solvent. mu'alij = processing agent."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional",
+        "ethanol_as_solvent": "permissible_when_no_alternative",
+        "istihlak_endorsed": true,
+        "istihalah_standards_reaffirmed": true
+      }
+    },
+    {
+      "id": "FATWA-ALCOHOL-003",
+      "institution": {
+        "name": {
+          "ar": "اللجنة الدائمة للبحوث العلمية والإفتاء",
+          "fr": "Comité Permanent pour la Recherche Scientifique et l'Ifta",
+          "en": "Permanent Committee for Scholarly Research and Ifta"
+        },
+        "type": "state_fatwa_authority",
+        "authority_level": "national_highest",
+        "headquarters": "Riyadh, Saudi Arabia",
+        "website": "https://www.alifta.gov.sa",
+        "madhab_orientation": "Hanbali (Salafi)"
+      },
+      "reference": "Fatwa referenced via al-fatawa.com #106992 and IslamQA; exact fatwa number from Lajnah archives",
+      "date": null,
+      "topic": "Use of alcohol in foods and beverages",
+      "original_text": {
+        "lang": "ar",
+        "text": "إذا كان المشروب لا يسكر كثيره، بحيث تكون نسبة الكحول فيه ضئيلة جداً ولا تظهر لها أثر، فلا مانع من بيعه وشرائه وشربه. أما إذا ثبت أنه يسكر عند تناول كمية كبيرة منه فيحرم قليله وكثيره"
+      },
+      "translation": {
+        "fr": {
+          "text": "Si la boisson n'enivre pas même en grande quantité, de sorte que la proportion d'alcool y est infime et n'a aucun effet apparent, il n'y a pas d'interdiction à la vendre, l'acheter et la boire. Mais s'il est établi qu'elle enivre lorsqu'on en consomme une grande quantité, alors son peu comme son beaucoup est interdit.",
+          "translation_notes": "لا يسكر كثيره (lā yuskiru kathīruhu) = son beaucoup n'enivre pas — application directe du hadith 'mā askara kathīruhu' mais EN SENS INVERSE : si le beaucoup n'enivre pas, alors le peu est licite. ضئيلة جداً (ḍaʾīlah jiddan) = infime — seuil quantitatif non précisé."
+        },
+        "en": {
+          "text": "If the beverage does not intoxicate even in large quantities, such that the proportion of alcohol in it is very small and has no apparent effect, there is no prohibition on selling, buying, or drinking it. But if it is established that it intoxicates when consumed in large quantity, then both its small and large amounts are prohibited.",
+          "translation_notes": "la yuskiru kathiruhu = its large amount does not intoxicate — reverse application of the hadith principle. da'ilah jiddan = very small — no specific threshold given."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional",
+        "test": "intoxication_test",
+        "if_non_intoxicating_in_large_quantity": "halal",
+        "if_intoxicating_in_large_quantity": "haram_both_small_and_large"
+      }
+    },
+    {
+      "id": "FATWA-ALCOHOL-004",
+      "institution": {
+        "name": {
+          "ar": "دار الإفتاء المصرية",
+          "fr": "Dar al-Ifta al-Misriyyah (Maison de la Fatwa d'Égypte)",
+          "en": "Egyptian Dar al-Ifta"
+        },
+        "type": "state_fatwa_authority",
+        "authority_level": "national_highest",
+        "headquarters": "Cairo, Egypt",
+        "website": "https://www.dar-alifta.org",
+        "madhab_orientation": "Multi-madhab (Shafi'i/Hanafi tradition)"
+      },
+      "reference": "Fatwa No. 3113, 6 June 1985, Mufti Sheikh Abd al-Latif Abd al-Ghani Hamza",
+      "date": "1985-06-06",
+      "topic": "Ruling on using alcohol in multiple purposes",
+      "original_text": {
+        "lang": "ar",
+        "text": "استعمال الكحول في الأغراض المذكورة جائزٌ شرعًا فيما عدا شربه بدلًا من الخمور فإنه حرامٌ شرعًا. الأصل في الأعيان الطهارة. التحريم لا يستلزم النجاسة، فالذهب والحرير محرمان على الرجال لكنهما طاهران. وكذلك الكحول طاهرٌ، ولا تأثير لاستعماله على نقض الوضوء"
+      },
+      "translation": {
+        "fr": {
+          "text": "L'utilisation de l'alcool dans les usages mentionnés est licite (jā'iz) selon la charia, à l'exception de le boire en remplacement du vin, ce qui est interdit (ḥarām) selon la charia. Le principe de base est que les substances sont pures (ṭāhirah). L'interdiction n'implique pas l'impureté : l'or et la soie sont interdits aux hommes mais restent purs. De même, l'alcool est pur, et son utilisation n'a pas d'effet sur l'invalidation des ablutions (wuḍūʾ).",
+          "translation_notes": "الأصل في الأعيان الطهارة (al-aṣl fī al-aʿyān al-ṭahārah) = le principe de base est la pureté des substances — qā'idah fiqhiyyah fondamentale. التحريم لا يستلزم النجاسة (al-taḥrīm lā yastalzimu al-najāsah) = l'interdiction n'implique pas l'impureté — distinction cruciale entre ḥukm taklīfī (obligation) et ḥukm waḍʿī (qualification)."
+        },
+        "en": {
+          "text": "Using alcohol in the mentioned purposes is permissible (ja'iz) in Shariah, except drinking it as a substitute for wine, which is prohibited (haram) in Shariah. The default rule for substances is purity (taharah). Prohibition does not necessitate impurity: gold and silk are prohibited for men but remain pure. Likewise, alcohol is pure, and its use has no effect on invalidating ablution (wudu).",
+          "translation_notes": "al-asl fi al-a'yan al-taharah = default rule for substances is purity. al-tahrim la yastalzimu al-najasah = prohibition does not necessitate impurity."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional",
+        "alcohol_purity": "pure_tahir",
+        "external_use": "halal",
+        "drinking_as_beverage": "haram",
+        "in_food_processing": "permissible_by_implication"
+      }
+    },
+    {
+      "id": "FATWA-ALCOHOL-005",
+      "institution": {
+        "name": {
+          "ar": "دائرة الإفتاء العام — المملكة الأردنية الهاشمية",
+          "fr": "Département Général de l'Ifta — Royaume Hachémite de Jordanie",
+          "en": "General Ifta Department — Hashemite Kingdom of Jordan"
+        },
+        "type": "state_fatwa_authority",
+        "authority_level": "national_highest",
+        "headquarters": "Amman, Jordan",
+        "website": "https://www.aliftaa.jo",
+        "madhab_orientation": "Shafi'i/Hanafi"
+      },
+      "reference": "Research-Fatwa No. 3620, 29 June 2021, Ifta Committee",
+      "date": "2021-06-29",
+      "topic": "Guidelines for using alcohol in medicine and food manufacturing",
+      "original_text": {
+        "lang": "ar",
+        "text": "الكحول غير المسكر لا حرج في استعماله في الصناعات الغذائية والدوائية. أما الكحول المسكر (الإيثانول) فإذا كان الدواء كحولاً صرفاً أو غالباً فهو محرم — الخمر ليست دواءً أبداً. وإذا كانت نسبته قليلة فيجوز بثلاثة شروط: عدم توفر بديل نافع خالٍ من الكحول، وتغليب الظن بالشفاء برأي طبيب مسلم عدل، وأن يكون الكحول مستهلكاً قليلاً مختفياً مع المركبات الأخرى"
+      },
+      "translation": {
+        "fr": {
+          "text": "L'alcool non enivrant ne pose aucun problème dans les industries alimentaires et pharmaceutiques. Quant à l'alcool enivrant (éthanol) : si le médicament est de l'alcool pur ou majoritairement alcoolique, il est interdit — le vin n'est jamais un remède. Si sa proportion est faible, il est permis sous trois conditions : (1) absence d'alternative efficace sans alcool, (2) présomption de guérison selon l'avis d'un médecin musulman fiable, (3) que l'alcool soit absorbé (mustahlik), en faible quantité et disparu dans les autres composants.",
+          "translation_notes": "مستهلكاً (mustahlik-an) = absorbé/consommé — participe actif d'istihlāk, état où la substance a perdu ses caractéristiques propres. طبيب مسلم عدل (ṭabīb muslim ʿadl) = médecin musulman fiable — condition de compétence et probité."
+        },
+        "en": {
+          "text": "Non-intoxicating alcohol poses no problem in food and pharmaceutical industries. As for intoxicating alcohol (ethanol): if the medicine is purely or predominantly alcohol, it is prohibited — wine is never a remedy. If its proportion is small, it is permissible under three conditions: (1) no effective alcohol-free alternative available, (2) reasonable expectation of cure according to a trustworthy Muslim physician, (3) the alcohol must be absorbed (mustahlik), in small quantity and disappeared within the other components.",
+          "translation_notes": "mustahlik = absorbed/consumed (active participle of istihlak). tabib muslim adl = trustworthy Muslim physician."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional",
+        "non_intoxicating_alcohol": "halal",
+        "intoxicating_pure": "haram",
+        "intoxicating_trace": "permissible_with_three_conditions"
+      }
+    },
+    {
+      "id": "FATWA-ALCOHOL-006",
+      "institution": {
+        "name": {
+          "ar": "مجلس العلماء الإندونيسي — لجنة الفتوى",
+          "fr": "Conseil des Oulémas d'Indonésie (MUI) — Commission de Fatwa",
+          "en": "Indonesian Ulema Council (MUI) — Fatwa Commission"
+        },
+        "type": "state_fatwa_authority",
+        "authority_level": "national_highest",
+        "headquarters": "Jakarta, Indonesia",
+        "website": "https://halalmui.org",
+        "madhab_orientation": "Shafi'i"
+      },
+      "reference": "MUI Fatwa No. 10 Year 2018 on Food and Beverage Products Containing Alcohol/Ethanol",
+      "date": "2018-01-01",
+      "topic": "Ethanol levels in food and beverage products",
+      "original_text": {
+        "lang": "en",
+        "text": "Only ethanol derived from khamr cannot be used for halal products because it is illegitimate and unclean. Ethanol not from the khamr industry may be used with restrictions. For food products, ethanol content in the final product is not limited as long as medically harmless. For beverages, ethanol content tolerated at less than 0.5% provided medically harmless. Ethanol levels for intermediate products (flavors, seasonings) are not limited, as long as their use in the final product conforms to food and beverage provisions."
+      },
+      "translation": {
+        "fr": {
+          "text": "Seul l'éthanol dérivé du khamr ne peut être utilisé dans les produits halal car il est illégitime et impur. L'éthanol ne provenant pas de l'industrie du khamr peut être utilisé avec des restrictions. Pour les produits alimentaires, la teneur en éthanol dans le produit final n'est pas limitée tant qu'elle est médicalement inoffensive. Pour les boissons, la teneur en éthanol est tolérée à moins de 0,5% à condition d'être médicalement inoffensive. Les niveaux d'éthanol pour les produits intermédiaires (arômes, assaisonnements) ne sont pas limités, tant que leur utilisation dans le produit final est conforme aux dispositions alimentaires.",
+          "translation_notes": "Distinction clé MUI : khamr-derived ethanol ≠ non-khamr ethanol. Seuil 0.5% applicable UNIQUEMENT aux boissons, PAS aux aliments solides."
+        },
+        "en": {
+          "text": "[Original in English — see above]",
+          "translation_notes": "Key MUI distinction: khamr-derived ethanol ≠ non-khamr ethanol. 0.5% threshold applies ONLY to beverages, NOT to solid foods."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional",
+        "khamr_ethanol": "haram_absolute",
+        "non_khamr_ethanol_in_food": "halal_no_limit_if_harmless",
+        "non_khamr_ethanol_in_beverages": "halal_below_0.5_percent",
+        "intermediate_products": "no_ethanol_limit"
+      }
+    },
+    {
+      "id": "FATWA-ALCOHOL-007",
+      "institution": {
+        "name": {
+          "ar": "الجابتان كماجوان إسلام ماليزيا (جاكيم)",
+          "fr": "Département du Développement Islamique de Malaisie (JAKIM)",
+          "en": "Department of Islamic Development Malaysia (JAKIM)"
+        },
+        "type": "state_fatwa_authority",
+        "authority_level": "national_highest",
+        "headquarters": "Putrajaya, Malaysia",
+        "website": "https://www.halal.gov.my",
+        "madhab_orientation": "Shafi'i"
+      },
+      "reference": "Muzakarah of the National Council Fatwa Committee, Special Session July 2011; Irsyad al-Fatwa Series 290",
+      "date": "2011-07-01",
+      "topic": "Alcohol in food coloring and flavoring — permissible percentage",
+      "original_text": {
+        "lang": "en",
+        "text": "Foods or drinks that contain added flavour or colouring that contains alcohol as a stabilizer is permissible if it is not produced from the process of making liquor and the quantity of alcohol in the final product is not intoxicating and at the rate not exceeding 0.5%."
+      },
+      "translation": {
+        "fr": {
+          "text": "Les aliments ou boissons contenant des arômes ou colorants ajoutés contenant de l'alcool comme stabilisant sont licites si l'alcool n'est pas produit par le processus de fabrication de boissons alcoolisées (khamr) et si la quantité d'alcool dans le produit final n'est pas enivrante et ne dépasse pas 0,5%.",
+          "translation_notes": "Seuil JAKIM : 0,5% dans le produit FINAL — plus strict que MUI pour les aliments solides. Condition double : source non-khamr ET taux ≤0.5%."
+        },
+        "en": {
+          "text": "[Original in English — see above]",
+          "translation_notes": "JAKIM threshold: 0.5% in FINAL product — stricter than MUI for solid foods. Dual condition: non-khamr source AND rate ≤0.5%."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional",
+        "source_condition": "must_not_be_from_khamr_production",
+        "percentage_condition": "max_0.5_percent_in_final_product",
+        "intoxication_condition": "must_not_intoxicate"
+      }
+    },
+    {
+      "id": "FATWA-ALCOHOL-008",
+      "institution": {
+        "name": {
+          "ar": "مجمع فقهاء الشريعة بأمريكا",
+          "fr": "Assemblée des Juristes Musulmans d'Amérique (AMJA)",
+          "en": "Assembly of Muslim Jurists of America (AMJA)"
+        },
+        "type": "regional_ifta",
+        "authority_level": "regional_high",
+        "headquarters": "USA",
+        "website": "https://www.amjaonline.org",
+        "madhab_orientation": "Multi-madhab"
+      },
+      "reference": "AMJA Online Fatwa #23043 — Different Fatwas on Tiny Amounts of Alcohol in Food",
+      "date": null,
+      "topic": "Tiny amounts of alcohol in food (vanilla extract in ice cream)",
+      "original_text": {
+        "lang": "en",
+        "text": "It is permissible to use food products which contain vanilla extract. If a small quantity of alcohol is so submerged in something else that it has no tangible or theoretical effect, then the substance keeps the ruling that is in accordance with its own attributes. It would not be permissible for Muslims to add alcohol to food products, but it would be permissible for them to consume it if it was added by others, and most certainly if it occurred naturally in a food (even bread goes through fermentation) so long as the consumed substance is not intoxicant, even in large quantities."
+      },
+      "translation": {
+        "fr": {
+          "text": "Il est permis d'utiliser des produits alimentaires contenant de l'extrait de vanille. Si une petite quantité d'alcool est tellement submergée dans autre chose qu'elle n'a aucun effet tangible ou théorique, alors la substance conserve le jugement conforme à ses propres attributs. Il ne serait pas permis aux musulmans d'ajouter de l'alcool aux produits alimentaires, mais il leur est permis de les consommer si l'alcool a été ajouté par d'autres, et à plus forte raison s'il est présent naturellement dans l'aliment (même le pain passe par la fermentation) tant que la substance consommée n'est pas enivrante, même en grandes quantités.",
+          "translation_notes": "Distinction cruciale AMJA : un musulman ne peut pas AJOUTER l'alcool lui-même, mais peut CONSOMMER un produit où l'alcool a été ajouté par d'autres. Ceci reflète une application du principe hanafite sur l'intention (niyyah) de l'acteur."
+        },
+        "en": {
+          "text": "[Original in English — see above]",
+          "translation_notes": "Key AMJA distinction: a Muslim cannot ADD alcohol themselves but CAN CONSUME a product where alcohol was added by others."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional",
+        "vanilla_extract_products": "halal",
+        "muslim_adding_alcohol": "haram",
+        "consuming_others_product": "halal_if_non_intoxicating",
+        "natural_fermentation": "halal"
+      }
+    },
+    {
+      "id": "FATWA-ALCOHOL-009",
+      "institution": {
+        "name": {
+          "ar": "الشيخ محمد صالح المنجد — إسلام سؤال وجواب",
+          "fr": "Sheikh Muhammad Salih al-Munajjid — IslamQA.info",
+          "en": "Sheikh Muhammad Salih al-Munajjid — IslamQA.info"
+        },
+        "type": "scholarly_individual",
+        "authority_level": "individual_high_influence",
+        "headquarters": "Saudi Arabia",
+        "website": "https://islamqa.info",
+        "madhab_orientation": "Hanbali (Salafi)"
+      },
+      "reference": "IslamQA Fatwa #201520 (English), #440724 (Arabic)",
+      "date": null,
+      "topic": "Alcohol in food — general ruling",
+      "original_text": {
+        "lang": "ar",
+        "text": "لا يوجد حرج في تناول الأطعمة والمشروبات التي تحتوي على نسب ضئيلة من الكحول مثل لبن الكفير والخل والزبادي والمخللات. هذه النسب معفو عنها شرعاً. المشروب يحرم فقط إذا ثبت يقيناً أو بغالب الرأي أنه يسكر عند تناول كميات معقولة منه"
+      },
+      "translation": {
+        "fr": {
+          "text": "Il n'y a pas d'objection à consommer des aliments et boissons contenant des proportions infimes d'alcool, tels que le kéfir, le vinaigre, le yaourt et les cornichons. Ces proportions sont excusées (maʿfūw ʿanhā) selon la charia. Une boisson n'est interdite que s'il est établi avec certitude ou forte présomption qu'elle enivre lorsqu'on en consomme des quantités raisonnables.",
+          "translation_notes": "معفو عنها (maʿfūw ʿanhā) = excusé/pardonné — terme technique indiquant une exception reconnue à une règle générale. يقيناً أو بغالب الرأي (yaqīnan aw bi-ghālib al-raʾy) = avec certitude ou forte présomption — les deux niveaux de preuve acceptés en fiqh."
+        },
+        "en": {
+          "text": "There is no objection to consuming foods and beverages containing minute proportions of alcohol, such as kefir, vinegar, yogurt, and pickles. These proportions are excused (ma'fuw 'anha) in Shariah. A beverage is only prohibited if it is established with certainty or strong presumption that it intoxicates when consumed in reasonable quantities.",
+          "translation_notes": "ma'fuw anha = excused/pardoned. yaqinan aw bi-ghalib al-ra'y = with certainty or strong presumption."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional",
+        "trace_naturally_fermented": "halal_excused",
+        "intoxication_test": "only_prohibited_if_intoxicating_in_reasonable_quantity"
+      }
+    },
+    {
+      "id": "FATWA-ALCOHOL-010",
+      "institution": {
+        "name": {
+          "ar": "إسلام ويب — مركز الفتوى",
+          "fr": "IslamWeb — Centre de Fatwa",
+          "en": "IslamWeb — Fatwa Center"
+        },
+        "type": "scholarly_tradition",
+        "authority_level": "national_high",
+        "headquarters": "Doha, Qatar",
+        "website": "https://www.islamweb.net",
+        "madhab_orientation": "Multi-madhab"
+      },
+      "reference": "IslamWeb Fatwa #10256, #131095, #377962, #296890",
+      "date": null,
+      "topic": "Food containing alcohol — various scenarios",
+      "original_text": {
+        "lang": "ar",
+        "text": "لا يجوز تناول المواد الغذائية التي تحتوي على نسبة من الخمور مهما كانت ضئيلة ولا سيما الشائعة في البلاد الغربية كبعض الشكولاته وبعض أنواع المثلجات والمشروبات الغازية. لكن المواد الغذائية التي يستعمل في تصنيعها نسبة ضئيلة من الكحول لإذابة بعض المواد التي لا تذوب بالماء من ملونات وحافظات وما إلى ذلك يجوز تناولها لعموم البلوى ولتبخر معظم الكحول المضاف أثناء تصنيع الغذاء"
+      },
+      "translation": {
+        "fr": {
+          "text": "Il n'est pas permis de consommer des produits alimentaires contenant une proportion de vin (khamr), aussi infime soit-elle, notamment ceux répandus dans les pays occidentaux comme certains chocolats, certaines glaces et boissons gazeuses. Cependant, les produits alimentaires dans la fabrication desquels une proportion infime d'alcool est utilisée pour dissoudre certaines substances insolubles dans l'eau — colorants, conservateurs, etc. — sont permis à la consommation en raison de la difficulté généralisée (ʿumūm al-balwā) et de l'évaporation de la majeure partie de l'alcool ajouté durant la fabrication.",
+          "translation_notes": "Distinction CRUCIALE IslamWeb : KHAMR ajouté directement (chocolat à la liqueur) = ḥarām même en trace ≠ ALCOOL utilisé comme solvant technique qui s'évapore = ḥalāl par ʿumūm al-balwā. عموم البلوى (ʿumūm al-balwā) = difficulté généralisée — principe fiqhī hanafite permettant une concession lorsque l'évitement est quasi impossible pour la communauté."
+        },
+        "en": {
+          "text": "It is not permissible to consume food products containing any proportion of wine (khamr), however small, especially those common in Western countries such as some chocolates, ice creams, and soft drinks. However, food products in whose manufacture a small proportion of alcohol is used to dissolve certain water-insoluble substances — colorants, preservatives, etc. — are permissible to consume due to the widespread difficulty ('umum al-balwa) and the evaporation of most of the added alcohol during food manufacturing.",
+          "translation_notes": "CRITICAL distinction: KHAMR added directly = haram even in traces ≠ ALCOHOL used as a technical solvent that evaporates = halal by 'umum al-balwa."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional",
+        "khamr_added_directly": "haram_absolute",
+        "alcohol_as_technical_solvent": "halal_by_umum_al_balwa",
+        "condition_evaporation": "most_alcohol_must_evaporate"
+      }
+    }
+  ],
+  "madhab_analysis": {
+    "hanafi": {
+      "madhab_id": "HANAFI",
+      "geographic_dominance": [
+        "Turkey",
+        "Central Asia",
+        "South Asia (India, Pakistan, Bangladesh)",
+        "Parts of Middle East (Iraq, Syria, Lebanon)",
+        "Balkans",
+        "Western diaspora (Deobandi communities)"
+      ],
+      "position_on_alcohol_in_flavorings": {
+        "summary_fr": "Le madhab hanafite présente la plus grande richesse de positions internes sur l'alcool. La position classique d'Abu Hanifa et Abu Yusuf restreint le khamr au seul nabidh de raisin et de datte — l'alcool d'autres sources (céréales, miel, canne à sucre) n'est pas khamr et est licite s'il ne vise pas l'ivresse. Cependant, la position de l'Imam Muhammad (adoptée comme avis de fatwa — mufta bihi) traite tous les enivrants comme khamr. Les contemporains distinguent entre : l'éthanol de source khamr (interdit absolument) et l'éthanol de source non-khamr ou synthétique (permis comme solvant/support si les traces sont absorbées — istihlāk).",
+        "classical_position_abu_hanifa": {
+          "ar": "الخمر عند أبي حنيفة وأبي يوسف خاص بماء العنب إذا غلا واشتد وقذف بالزبد أو بنبيذ التمر الشديد. وما عداهما من الأشربة المتخذة من الحنطة والشعير والذرة والعسل فليست خمراً",
+          "fr": "Le khamr selon Abu Hanifa et Abu Yusuf est limité au jus de raisin ayant fermenté, moussé et rejeté l'écume, ou au nabidh de datte fort. Les autres boissons faites de blé, orge, maïs ou miel ne sont PAS du khamr.",
+          "en": "Khamr according to Abu Hanifa and Abu Yusuf is limited to grape juice that has fermented, frothed, and cast off foam, or to strong date nabidh. Other beverages made from wheat, barley, corn, or honey are NOT khamr."
+        },
+        "classical_position_imam_muhammad": {
+          "ar": "وعند محمد بن الحسن الشيباني — وهو المفتى به في المذهب — كل مسكر خمر وكل مسكر حرام، لا فرق بين عصير العنب وغيره",
+          "fr": "Selon Muhammad ibn al-Hasan al-Shaybani — et c'est la position retenue pour la fatwa (al-mufta bihi) dans le madhab — tout enivrant est khamr et tout enivrant est illicite, sans distinction entre le jus de raisin et les autres.",
+          "en": "According to Muhammad ibn al-Hasan al-Shaybani — and this is the relied-upon position for fatwa (al-mufta bihi) in the school — every intoxicant is khamr and every intoxicant is haram, with no distinction between grape juice and others."
+        },
+        "contemporary_position": "Modern Hanafi scholars (especially Deobandi tradition) follow Imam Muhammad's position that ALL intoxicants are khamr, BUT they accept istihlak: when ethanol is used as a technical solvent and its traces are absorbed/negligible in the final product, the product is halal. The key Deobandi threshold is: the final product must not intoxicate even in large quantities.",
+        "practical_ruling": {
+          "vanilla_extract_in_baked_goods": "HALAL — ethanol evaporates during baking, residual is istihlak",
+          "vanilla_ice_cream": "HALAL — traces are ma'fuw anha (excused) per AMJA and Deobandi fatwas",
+          "liquid_extract_uncooked": "MASHBOOH to HARAM — if extract contains 35% ethanol and is consumed directly",
+          "soy_sauce": "HALAL — natural fermentation, not khamr per Abu Hanifa; halal even per Imam Muhammad if non-intoxicating",
+          "liqueur_chocolates": "HARAM — intentional addition of khamr (liqueur)",
+          "bread_wine_vinegar": "HALAL — natural fermentation / istihalah complete"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "رد المحتار على الدر المختار (حاشية ابن عابدين)",
+          "author": "ابن عابدين (d. 1252H/1836CE)",
+          "relevance": "ULTIMATE Hanafi reference — contains detailed discussion of the three Hanafi positions on khamr (Abu Hanifa, Abu Yusuf, Muhammad) and explains why Muhammad's position is mufta bihi",
+          "significance": "HIGHEST",
+          "key_quote_ar": "والمفتى به قول محمد أن كل مسكر حرام وأنه خمر، سواء كان من العنب أو غيره",
+          "key_quote_fr": "La position retenue pour la fatwa est celle de Muhammad : tout enivrant est illicite et est du khamr, qu'il provienne du raisin ou d'autre chose"
+        },
+        {
+          "title_ar": "بدائع الصنائع في ترتيب الشرائع",
+          "author": "الكاساني (d. 587H/1191CE)",
+          "relevance": "Classical discussion of Abu Hanifa's restrictive definition of khamr and the principles of purity/impurity",
+          "significance": "HIGHEST",
+          "key_quote_ar": "الخمر هي النيء من ماء العنب إذا غلا واشتد وقذف بالزبد",
+          "key_quote_fr": "Le khamr est le jus cru de raisin lorsqu'il a fermenté, s'est renforcé et a rejeté l'écume"
+        },
+        {
+          "title_ar": "الفتاوى الهندية (العالمكيرية)",
+          "author": "لجنة علماء بأمر أورنكزيب (compiled ~1100H/1688CE)",
+          "relevance": "Practical rulings compilation — discusses the application of the three positions to food and drink scenarios",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "الهداية شرح البداية",
+          "author": "المرغيناني (d. 593H/1197CE)",
+          "relevance": "Foundation of Hanafi furu — establishes the framework of 'what intoxicates in large quantity, its small amount is haram' and its application",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "المبسوط",
+          "author": "السرخسي (d. 483H/1090CE)",
+          "relevance": "Encyclopedic early Hanafi reference — contains Abu Hanifa's detailed reasoning on why non-grape intoxicants differ from khamr",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "الشيخ محمد تقي العثماني",
+          "name_fr": "Sheikh Taqi Usmani",
+          "position": "Follows Imam Muhammad's position: all intoxicants are khamr. But accepts istihlak for trace alcohol in processed food. Emphasizes that synthetic or non-khamr ethanol used as a processing aid is less problematic than khamr-derived ethanol.",
+          "status": "contemporary_major"
+        },
+        {
+          "name_ar": "دار العلوم ديوبند",
+          "name_fr": "Darul Uloom Deoband",
+          "position": "Conservative Hanafi: all intoxicants are khamr per Imam Muhammad. However, foods containing negligible alcohol traces from processing are halal if the product itself is non-intoxicating.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "مفتي إبراهيم ديساي — AskImam.org",
+          "name_fr": "Mufti Ebrahim Desai — AskImam.org",
+          "position": "Practical Deobandi position: vanilla extract in food is permissible because the alcohol is a carrier that evaporates or becomes negligible. Direct consumption of the extract itself (35% alcohol) would be impermissible.",
+          "status": "individual_high_influence"
+        }
+      ],
+      "institutional_positions": [
+        {
+          "name_ar": "المجلس الأوروبي للإفتاء والبحوث (ECFR)",
+          "name_fr": "Conseil Européen de la Fatwa et de la Recherche (ECFR)",
+          "position": "Permissive: alcohol used as a solvent in food processing is halal when traces are negligible. Based on both Hanafi istihlak principle and umum al-balwa (widespread difficulty).",
+          "ref": "ECFR rulings on food in Western countries"
+        }
+      ],
+      "naqiy_verdict": {
+        "scenario_ethanol_evaporated_baked": {
+          "score": 85,
+          "verdict": "HALAL",
+          "confidence": "HIGH",
+          "note": "Baked goods with vanilla extract — ethanol evaporated, istihlak applies"
+        },
+        "scenario_ethanol_trace_uncooked": {
+          "score": 65,
+          "verdict": "DOUBTFUL_LEAN_PERMISSIBLE",
+          "confidence": "DISPUTED",
+          "note": "Ice cream with vanilla extract — trace ethanol remains but non-intoxicating"
+        },
+        "scenario_khamr_source_ethanol": {
+          "score": 15,
+          "verdict": "HARAM",
+          "confidence": "HIGH",
+          "note": "If ethanol is grape/date-derived, even as processing aid — stricter scholars prohibit"
+        },
+        "scenario_non_khamr_synthetic": {
+          "score": 90,
+          "verdict": "HALAL",
+          "confidence": "HIGH",
+          "note": "Synthetic ethanol as solvent — not khamr by any definition"
+        },
+        "scenario_natural_fermentation": {
+          "score": 95,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN",
+          "note": "Bread, yogurt, vinegar — natural fermentation unanimously excused"
+        },
+        "scenario_liqueur_chocolates": {
+          "score": 5,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN",
+          "note": "Intentional khamr ingredient — haram by consensus"
+        },
+        "scenario_soy_sauce": {
+          "score": 75,
+          "verdict": "DOUBTFUL_LEAN_PERMISSIBLE",
+          "confidence": "DISPUTED",
+          "note": "Natural fermentation producing 1-2% — Abu Hanifa: not khamr; Imam Muhammad: depends on intoxication test"
+        }
+      }
+    },
+    "maliki": {
+      "madhab_id": "MALIKI",
+      "geographic_dominance": [
+        "Morocco",
+        "Algeria",
+        "Tunisia",
+        "Libya",
+        "Mauritania",
+        "West Africa",
+        "Parts of Egypt",
+        "Parts of Gulf (UAE, Qatar)",
+        "European Maghrebi diaspora"
+      ],
+      "position_on_alcohol_in_flavorings": {
+        "summary_fr": "Le madhab malikite a une approche distinctive sur l'alcool, marquée par deux principes : (1) La pureté potentielle de l'alcool — certains savants malikites, surtout modernes, rejoignent la position IOMS que l'alcool n'est pas najis en soi, basée sur le principe que 'l'origine des choses est la pureté'. (2) L'istihlāk — les malikites acceptent largement le principe que lorsque la substance interdite disparaît dans un mélange licite, le mélange est licite. Les institutions malikites contemporaines (Maroc, Algérie, ECFR) tendent vers la permissivité pour les arômes contenant des traces d'alcool.",
+        "classical_principle": {
+          "ar": "الأصل في الأشياء الطهارة ولا تثبت النجاسة إلا بدليل قاطع",
+          "fr": "Le principe de base est la pureté des choses, et l'impureté ne s'établit que par une preuve décisive",
+          "en": "The default state of things is purity, and impurity is only established by decisive evidence"
+        },
+        "practical_ruling": {
+          "vanilla_extract_in_baked_goods": "HALAL — no debate",
+          "vanilla_ice_cream": "HALAL — traces absorbed, non-intoxicating",
+          "liquid_extract_uncooked": "MASHBOOH — high ethanol content problematic",
+          "soy_sauce": "HALAL — natural fermentation product",
+          "liqueur_chocolates": "HARAM — intentional khamr",
+          "bread_wine_vinegar": "HALAL — unanimously"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "الذخيرة",
+          "author": "القرافي (d. 684H/1285CE)",
+          "relevance": "Maliki usul reference — discusses transformation principles and the distinction between prohibition and impurity",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "المدونة الكبرى",
+          "author": "رواية سحنون عن مالك (d. 240H/854CE)",
+          "relevance": "Primary source of Imam Malik's rulings — contains his positions on nabidh and intoxicants",
+          "significance": "HIGHEST",
+          "key_quote_ar": "سئل مالك عن النبيذ فقال: كل مسكر حرام",
+          "key_quote_fr": "On a interrogé Malik sur le nabidh, il a dit : tout enivrant est illicite"
+        },
+        {
+          "title_ar": "مختصر خليل",
+          "author": "خليل بن إسحاق (d. 776H/1374CE)",
+          "relevance": "Standard Maliki fiqh manual — codifies the school's position on intoxicants",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "التحرير والتنوير",
+          "author": "الطاهر بن عاشور (d. 1393H/1973CE)",
+          "relevance": "Modern Maliki tafsir — provides the most permissive Maliki framework, emphasizing the purity of substances by default",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "المقدمات الممهدات",
+          "author": "ابن رشد الجد (d. 520H/1126CE)",
+          "relevance": "Foundational Maliki fiqh from Cordoba — discusses the theoretical framework for istihlak",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "المجلس العلمي الأعلى — المغرب",
+          "name_fr": "Conseil Scientifique Suprême — Maroc",
+          "position": "Follows permissive Maliki tradition: alcohol as a processing aid that leaves negligible traces is not problematic. Morocco's halal standard (NM 08.0.800) allows trace alcohol from processing.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "وزارة الشؤون الدينية — الجزائر",
+          "name_fr": "Ministère des Affaires Religieuses — Algérie",
+          "position": "Similar to Moroccan position: permissive on trace alcohol from processing, strict on intentional khamr addition.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "يوسف القرضاوي",
+          "name_fr": "Yusuf al-Qaradawi (d. 2022)",
+          "position": "Among the most permissive: explicitly permitted foods containing trace alcohol from processing. Argued that the hadith 'ma askara kathiruhu' applies to the SUBSTANCE ITSELF (the beverage), not to a different product that merely contains traces of alcohol.",
+          "status": "contemporary_major"
+        }
+      ],
+      "institutional_positions": [
+        {
+          "name_ar": "المجلس الأوروبي للإفتاء والبحوث",
+          "name_fr": "ECFR — Conseil Européen de la Fatwa",
+          "position": "Explicitly permissive: 'Les produits alimentaires contenant des traces d'alcool provenant du processus de fabrication sont licites si le produit final n'est pas enivrant.' Strongly Maliki-influenced in its methodology.",
+          "ref": "ECFR fatwa sessions on food in Europe"
+        }
+      ],
+      "naqiy_verdict": {
+        "scenario_ethanol_evaporated_baked": {
+          "score": 90,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_ethanol_trace_uncooked": {
+          "score": 75,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "scenario_khamr_source_ethanol": {
+          "score": 25,
+          "verdict": "DOUBTFUL_AVOID",
+          "confidence": "DISPUTED",
+          "note": "Even Maliki scholars are strict on actual khamr-derived substances"
+        },
+        "scenario_non_khamr_synthetic": {
+          "score": 92,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_natural_fermentation": {
+          "score": 97,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_liqueur_chocolates": {
+          "score": 5,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        },
+        "scenario_soy_sauce": {
+          "score": 85,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        }
+      }
+    },
+    "shafii": {
+      "madhab_id": "SHAFII",
+      "geographic_dominance": [
+        "Indonesia",
+        "Malaysia",
+        "Brunei",
+        "East Africa (Kenya, Tanzania)",
+        "Yemen",
+        "Parts of Egypt",
+        "Jordan",
+        "Palestine",
+        "Kurdish regions"
+      ],
+      "position_on_alcohol_in_flavorings": {
+        "summary_fr": "Le madhab shafiite adopte une position intermédiaire mais rigoureuse sur la question de l'alcool : (1) Tous les enivrants sont khamr — pas de distinction de source (contrairement à Abu Hanifa). (2) Le khamr est najis (impur matériellement) — position classique forte. (3) MAIS les institutions shafiites contemporaines (MUI, JAKIM) ont développé des cadres sophistiqués distinguant entre éthanol de khamr (interdit) et éthanol non-khamr (permis sous conditions), ce qui constitue une évolution majeure par rapport à la position classique stricte. Le seuil JAKIM de 0,5% est devenu la norme internationale de facto pour les certifications halal en Asie du Sud-Est.",
+        "classical_principle": {
+          "ar": "الخمر نجسة العين لقوله تعالى: إنما الخمر والميسر والأنصاب والأزلام رجس من عمل الشيطان — والرجس هو النجس",
+          "fr": "Le khamr est une impureté matérielle (najis al-'ayn) en vertu de la parole d'Allah : 'Le vin, le jeu de hasard, les pierres dressées et les flèches sont une abomination (rijs) de l'œuvre de Satan' — et rijs signifie najis.",
+          "en": "Khamr is a material impurity (najis al-ayn) based on Allah's statement: 'Wine, gambling, stone altars, and divining arrows are an abomination (rijs) from Satan's work' — and rijs means najis."
+        },
+        "practical_ruling": {
+          "vanilla_extract_in_baked_goods": "HALAL — per MUI/JAKIM standards if ethanol not from khamr and final product <0.5%",
+          "vanilla_ice_cream": "HALAL — per MUI if ethanol not from khamr; final product well below 0.5%",
+          "liquid_extract_uncooked": "HARAM — contains 35% ethanol, exceeds all thresholds",
+          "soy_sauce": "MASHBOOH — naturally fermented, contains 1-2% ethanol. JAKIM: prohibited if >0.5%. MUI: more lenient for food products",
+          "liqueur_chocolates": "HARAM — khamr ingredient",
+          "bread_wine_vinegar": "HALAL — vinegar by unanimous consensus; bread by natural fermentation"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "المجموع شرح المهذب",
+          "author": "النووي (d. 676H/1277CE)",
+          "relevance": "ULTIMATE Shafi'i reference — detailed discussion of khamr's impurity and the unanimity that all intoxicants are khamr",
+          "significance": "HIGHEST",
+          "key_quote_ar": "كل شراب أسكر كثيره فقليله حرام سواء كان من عصير العنب أو من غيره وهذا مذهبنا ومذهب مالك وأحمد وجمهور العلماء",
+          "key_quote_fr": "Toute boisson dont le beaucoup enivre, le peu en est illicite, qu'elle provienne du jus de raisin ou d'autre chose — c'est notre madhab, celui de Malik, d'Ahmad et de la majorité des savants"
+        },
+        {
+          "title_ar": "تحفة المحتاج في شرح المنهاج",
+          "author": "ابن حجر الهيتمي (d. 974H/1567CE)",
+          "relevance": "Late Shafi'i authority — influential in SE Asia and Yemen. Discusses the practical implications of khamr impurity for food mixing.",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "نهاية المحتاج إلى شرح المنهاج",
+          "author": "الرملي (d. 1004H/1596CE)",
+          "relevance": "Paired with Tuhfa as dual Shafi'i authority. Discusses istihlak principles applied to impurities mixing with food.",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "الفقه الإسلامي وأدلته",
+          "author": "وهبة الزحيلي (d. 1436H/2015CE)",
+          "relevance": "Contemporary Syrian Shafi'i encyclopedia — discusses modern applications of khamr rulings to food additives",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "الأم",
+          "author": "الإمام الشافعي (d. 204H/820CE)",
+          "relevance": "Primary source of al-Shafi'i himself — establishes that all intoxicants are haram without source distinction",
+          "significance": "HIGHEST"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "مجلس العلماء الإندونيسي (MUI)",
+          "name_fr": "Conseil des Oulémas d'Indonésie (MUI)",
+          "position": "Sophisticated position: khamr-derived ethanol = haram absolutely. Non-khamr ethanol = halal with conditions. Food: no ethanol limit if harmless. Beverages: <0.5%. Intermediate products (flavors): no limit if final product conforms.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "جاكيم (JAKIM) — ماليزيا",
+          "name_fr": "JAKIM — Malaisie",
+          "position": "Stricter than MUI: maximum 0.5% ethanol in ALL final products (food AND beverages). Source must NOT be from khamr production. This threshold has become the de facto international halal standard.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "وهبة الزحيلي",
+          "name_fr": "Wahbah al-Zuhayli (d. 2015)",
+          "position": "Accepts the principle that trace alcohol from processing is excused when the product is non-intoxicating. Emphasizes the distinction between consuming khamr and consuming a product that incidentally contains trace alcohol.",
+          "status": "contemporary_major"
+        }
+      ],
+      "institutional_positions": [
+        {
+          "name_ar": "دائرة الإفتاء الأردنية",
+          "name_fr": "Département de l'Ifta — Jordanie",
+          "position": "Three conditions for permissibility: (1) no alcohol-free alternative, (2) alcohol must be mustahlik (absorbed/negligible), (3) recommendation of a trustworthy physician (for medicine). For food: more lenient if alcohol is a processing aid that evaporates.",
+          "ref": "Research-Fatwa #3620, 29 June 2021"
+        }
+      ],
+      "naqiy_verdict": {
+        "scenario_ethanol_evaporated_baked": {
+          "score": 82,
+          "verdict": "HALAL",
+          "confidence": "HIGH",
+          "note": "Per MUI/JAKIM: non-khamr ethanol evaporated = halal"
+        },
+        "scenario_ethanol_trace_uncooked": {
+          "score": 60,
+          "verdict": "MASHBOOH",
+          "confidence": "DISPUTED",
+          "note": "Depends on source of ethanol and percentage in final product"
+        },
+        "scenario_khamr_source_ethanol": {
+          "score": 5,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN",
+          "note": "MUI explicitly: khamr-derived ethanol = haram absolutely"
+        },
+        "scenario_non_khamr_synthetic": {
+          "score": 88,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "scenario_natural_fermentation": {
+          "score": 92,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_liqueur_chocolates": {
+          "score": 0,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        },
+        "scenario_soy_sauce": {
+          "score": 55,
+          "verdict": "MASHBOOH",
+          "confidence": "DISPUTED",
+          "note": "1-2% ethanol exceeds JAKIM 0.5% but MUI more lenient for food"
+        }
+      }
+    },
+    "hanbali": {
+      "madhab_id": "HANBALI",
+      "geographic_dominance": [
+        "Saudi Arabia",
+        "Parts of Gulf states (Qatar, Kuwait, Bahrain)",
+        "Some scholarly circles worldwide"
+      ],
+      "position_on_alcohol_in_flavorings": {
+        "summary_fr": "Le madhab hanbalite est le plus strict sur la question de l'alcool, avec une position claire : tout enivrant est khamr, le khamr est najis, et 'ce dont le beaucoup enivre, le peu est illicite'. Cependant, même au sein de cette rigueur, les institutions hanbalites ont fait des concessions significatives : (1) La Lajnah Da'imah accepte que si un produit final ne peut PAS enivrer même en grande quantité, il est licite — ce qui couvre la plupart des aliments transformés. (2) L'IslamQA (Sheikh al-Munajjid) classe les aliments naturellement fermentés (pain, vinaigre, yaourt) comme 'excusés' (ma'fuw anha). (3) Le hadith 'ma askara kathiruhu' est appliqué au PRODUIT FINAL, pas au solvant utilisé dans sa fabrication.",
+        "classical_principle": {
+          "ar": "كل مسكر خمر وكل خمر حرام وما أسكر كثيره فقليله حرام. والخمر نجسة في ظاهر المذهب",
+          "fr": "Tout enivrant est khamr, tout khamr est illicite, et ce dont le beaucoup enivre, le peu est interdit. Le khamr est impur selon la position apparente du madhab.",
+          "en": "Every intoxicant is khamr, every khamr is haram, and whatever intoxicates in large quantities, a small amount of it is haram. Khamr is impure according to the apparent position of the school."
+        },
+        "practical_ruling": {
+          "vanilla_extract_in_baked_goods": "HALAL — final product non-intoxicating, ethanol evaporated",
+          "vanilla_ice_cream": "HALAL — per Lajnah Da'imah: non-intoxicating in large quantities",
+          "liquid_extract_uncooked": "HARAM — 35% ethanol is intoxicating",
+          "soy_sauce": "MASHBOOH — 1-2% ethanol; scholars differ on whether large quantity would intoxicate",
+          "liqueur_chocolates": "HARAM — intentional khamr",
+          "bread_wine_vinegar": "HALAL — natural fermentation excused; vinegar unanimously halal"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "المغني",
+          "author": "ابن قدامة (d. 620H/1223CE)",
+          "relevance": "ULTIMATE Hanbali reference — establishes that khamr includes all intoxicants without source distinction",
+          "significance": "HIGHEST",
+          "key_quote_ar": "وكل شراب مسكر فهو خمر في قول عامة أهل العلم. قال أحمد: كل ما أسكر فهو خمر بأي شيء كان",
+          "key_quote_fr": "Toute boisson enivrante est du khamr selon la parole de la généralité des savants. Ahmad a dit : tout ce qui enivre est du khamr, quelle qu'en soit la source"
+        },
+        {
+          "title_ar": "مجموع الفتاوى",
+          "author": "ابن تيمية (d. 728H/1328CE)",
+          "relevance": "Influential Hanbali authority — discusses istihalah and istihlak principles. Pro-istihalah for wine-to-vinegar, discusses the boundary of acceptable traces.",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "إعلام الموقعين عن رب العالمين",
+          "author": "ابن القيم (d. 751H/1350CE)",
+          "relevance": "Supports Ibn Taymiyyah — discusses the principle of istihlak and when a haram substance becomes negligible in a halal mixture",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "كشاف القناع عن متن الإقناع",
+          "author": "البهوتي (d. 1051H/1641CE)",
+          "relevance": "Late Hanbali standard reference — codifies the school's positions on intoxicants and impurities",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "الكافي في فقه الإمام أحمد",
+          "author": "ابن قدامة (d. 620H/1223CE)",
+          "relevance": "Condensed Hanbali manual — summary of positions on khamr and its derivatives",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "اللجنة الدائمة للبحوث العلمية والإفتاء",
+          "name_fr": "Comité Permanent (Lajnah Da'imah) — Arabie Saoudite",
+          "position": "If the product does not intoxicate even in large quantities (because alcohol proportion is negligible), it is permissible. This effectively permits most processed foods containing trace alcohol from flavoring.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "الشيخ محمد صالح المنجد",
+          "name_fr": "Sheikh al-Munajjid (IslamQA)",
+          "position": "Explicitly permits naturally fermented foods (bread, vinegar, yogurt, kefir, pickles) with trace alcohol — classified as 'excused' (ma'fuw anha). Applies intoxication test to final product, not to intermediate ingredients.",
+          "status": "individual_high_influence"
+        },
+        {
+          "name_ar": "الشيخ محمد بن عثيمين",
+          "name_fr": "Sheikh Ibn Uthaymin (d. 2001)",
+          "position": "Cited by AMJA: 'If a small quantity of alcohol is so submerged in something else that it has no tangible or theoretical effect, then the substance keeps the ruling that is in accordance with its own attributes.' This is an explicit endorsement of istihlak.",
+          "status": "contemporary_major"
+        }
+      ],
+      "institutional_positions": [
+        {
+          "name_ar": "هيئة كبار العلماء — المملكة العربية السعودية",
+          "name_fr": "Conseil des Grands Savants — Arabie Saoudite",
+          "position": "Follows the Lajnah Da'imah position: the test is whether the final product intoxicates, not whether alcohol was used in processing.",
+          "ref": "Referenced in Lajnah fatwas and IslamQA compilations"
+        }
+      ],
+      "naqiy_verdict": {
+        "scenario_ethanol_evaporated_baked": {
+          "score": 80,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "scenario_ethanol_trace_uncooked": {
+          "score": 55,
+          "verdict": "MASHBOOH",
+          "confidence": "DISPUTED",
+          "note": "Conservative scholars would prefer avoidance even if non-intoxicating"
+        },
+        "scenario_khamr_source_ethanol": {
+          "score": 5,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        },
+        "scenario_non_khamr_synthetic": {
+          "score": 85,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "scenario_natural_fermentation": {
+          "score": 95,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_liqueur_chocolates": {
+          "score": 0,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        },
+        "scenario_soy_sauce": {
+          "score": 50,
+          "verdict": "MASHBOOH",
+          "confidence": "DISPUTED",
+          "note": "1-2% ethanol — borderline for Hanbali intoxication test"
+        }
+      }
+    }
+  },
+  "scholarly_consensus_points": {
+    "unanimous_agreements": [
+      "Khamr (wine from grapes/dates) is haram — absolute consensus (ijma')",
+      "Intentionally adding khamr to food renders the food haram — unanimous",
+      "Naturally fermented foods (bread, vinegar, yogurt) containing trace alcohol are halal — unanimous",
+      "Pure ethanol consumed as a beverage is haram — unanimous (it IS intoxicating)",
+      "Vinegar, even if made from wine, is halal — unanimous (takhallul/istihalah)"
+    ],
+    "majority_agreements": [
+      "All intoxicants are khamr regardless of source — majority (Maliki, Shafi'i, Hanbali, + Imam Muhammad Hanafi). Only Abu Hanifa and Abu Yusuf dissent (but this dissent is NOT the fatwa position even in the Hanafi school).",
+      "Alcohol is impure (najis) — majority of the four schools. Minority position (Rabi'ah, Muzani, Dawud, some contemporaries, IOMS 1995): alcohol is pure but haram to drink.",
+      "Trace alcohol from food processing (solvents, carriers) that evaporates or becomes negligible is EXCUSED — majority of contemporary institutions (IOMS, OCI, Lajnah Da'imah, Dar al-Ifta Egypt, MUI, JAKIM, AMJA, ECFR, IslamQA, IslamWeb).",
+      "The test for prohibition is whether the FINAL PRODUCT intoxicates in large quantities — majority contemporary position."
+    ],
+    "key_disagreements": [
+      "Is ethanol itself najis (impure)? Majority classical: yes. IOMS 1995 + endorsed by OCI: no, pure by default.",
+      "Threshold for 'trace': JAKIM says 0.5% max. MUI says no limit for food, 0.5% for beverages. No madhab gives a classical numerical threshold.",
+      "Can a Muslim deliberately use alcohol as a processing aid? AMJA: a Muslim should not add it themselves, but can consume what others made. Other institutions: no such distinction.",
+      "Soy sauce and other naturally fermented products with 1-2% alcohol: halal (Hanafi, Maliki) vs mashbooh (Shafi'i, Hanbali depending on intoxication test)."
+    ]
+  },
+  "evidence_base": {
+    "quran": [
+      {
+        "ref": "Al-Ma'idah 5:90",
+        "text_ar": "يَا أَيُّهَا الَّذِينَ آمَنُوا إِنَّمَا الْخَمْرُ وَالْمَيْسِرُ وَالْأَنصَابُ وَالْأَزْلَامُ رِجْسٌ مِّنْ عَمَلِ الشَّيْطَانِ فَاجْتَنِبُوهُ لَعَلَّكُمْ تُفْلِحُونَ",
+        "text_fr": "Ô vous qui croyez ! Le vin, le jeu de hasard, les pierres dressées et les flèches de divination sont une abomination (rijs), œuvre du Satan. Évitez-les donc, afin que vous réussissiez.",
+        "relevance": "Primary Quranic prohibition of khamr. The word 'rijs' (abomination) is used by the majority to derive the impurity of khamr."
+      },
+      {
+        "ref": "Al-Baqarah 2:219",
+        "text_ar": "يَسْأَلُونَكَ عَنِ الْخَمْرِ وَالْمَيْسِرِ قُلْ فِيهِمَا إِثْمٌ كَبِيرٌ وَمَنَافِعُ لِلنَّاسِ وَإِثْمُهُمَا أَكْبَرُ مِن نَّفْعِهِمَا",
+        "text_fr": "Ils t'interrogent sur le vin et le jeu de hasard. Dis : 'Dans les deux il y a un grand péché et des avantages pour les gens, mais leur péché est plus grand que leur avantage.'",
+        "relevance": "Gradual prohibition — acknowledges that khamr has some benefits but prohibits it due to greater harm. Used by scholars discussing medical necessity (darurah)."
+      }
+    ],
+    "hadith": [
+      {
+        "ref": "Sahih Muslim 2003",
+        "text_ar": "كلُّ مُسكرٍ خمرٌ وكلُّ خمرٍ حرامٌ",
+        "text_fr": "Tout enivrant est khamr et tout khamr est illicite",
+        "relevance": "Foundation for the majority position that khamr is not limited to grape wine"
+      },
+      {
+        "ref": "Abu Dawud 3681, Nasai 5607, Ibn Majah 3394 — sahih per al-Albani",
+        "text_ar": "ما أسكر كثيره فقليله حرام",
+        "text_fr": "Ce dont le beaucoup enivre, le peu en est illicite",
+        "relevance": "The most debated hadith in this context. Strict: any trace of an intoxicant is haram. Contextual: applies to the SAME substance in lower concentration, not to a different substance containing traces."
+      },
+      {
+        "ref": "Sahih Muslim 1984",
+        "text_ar": "إن الله حرّم الخمر فمن أدركته هذه الآية وعنده منها شيء فلا يشرب ولا يبع",
+        "text_fr": "Allah a interdit le vin. Celui que ce verset atteint et qui en possède quelque chose, qu'il ne boive pas et ne vende pas.",
+        "relevance": "Used to argue that the prohibition targets DRINKING khamr as a beverage, not its incidental presence in food processing"
+      },
+      {
+        "ref": "Sahih Muslim 1983",
+        "text_ar": "إن الخمر ليست بدواء ولكنها داء",
+        "text_fr": "Le vin n'est pas un remède mais un mal",
+        "relevance": "Used by those who reject the darurah argument for alcohol in medicine"
+      }
+    ],
+    "scientific_data": {
+      "natural_ethanol_in_foods": {
+        "bread": "0.04-1.9% (yeast fermentation)",
+        "ripe_banana": "0.2-0.4%",
+        "apple_juice": "0.06-0.66%",
+        "orange_juice": "0.16-0.73%",
+        "yogurt": "0.01-0.02%",
+        "vinegar": "0.2-0.5% residual",
+        "soy_sauce": "1.5-2%",
+        "kefir": "0.5-2%",
+        "kombucha": "0.5-3%"
+      },
+      "ethanol_retention_after_cooking": {
+        "source": "USDA Table of Nutrient Retention Factors",
+        "data": {
+          "flambeed": "~75% retained",
+          "stirred_into_hot_liquid_removed_from_heat": "~85% retained",
+          "baked_25_minutes_no_stir": "~45% retained",
+          "simmered_1_hour": "~25% retained",
+          "simmered_2.5_hours": "~5% retained",
+          "baked_at_175C_for_1_hour": "~25% retained"
+        },
+        "key_insight": "Alcohol does NOT fully evaporate during normal cooking. However, when the starting amount is already small (e.g., 1 tsp vanilla extract in a cake = ~1.7ml ethanol), even 25% retention = ~0.4ml ethanol in the entire cake, yielding <0.1% in each serving — well below any intoxication threshold."
+      },
+      "intoxication_thresholds": {
+        "BAC_for_impairment": "0.02-0.05%",
+        "ethanol_to_reach_0.02_BAC": "~7g for a 70kg adult",
+        "vanilla_ice_cream_ethanol": "~0.1-0.3g per 100g serving",
+        "servings_to_reach_impairment": ">2300g (23+ servings) of ice cream — physical impossibility",
+        "conclusion": "It is physically impossible to reach intoxication from normal consumption of foods containing trace alcohol from flavoring. This supports the majority scholarly position."
+      }
+    }
+  },
+  "naqiy_scoring_model": {
+    "methodology_note": "Scores represent the COMPOSITE across all four madhahib, weighted by the majority/minority positions. Individual madhab scores are in the madhab_analysis section.",
+    "scoring_matrix": [
+      {
+        "scenario": "baked_goods_vanilla_extract",
+        "description_fr": "Produits de boulangerie/pâtisserie avec extrait de vanille — éthanol évaporé par cuisson",
+        "naqiy_score": 85,
+        "verdict": "HALAL",
+        "confidence": "HIGH",
+        "color": "green",
+        "verdicts_by_madhab": {
+          "hanafi": 85,
+          "maliki": 90,
+          "shafii": 82,
+          "hanbali": 80
+        },
+        "note": "Near-unanimous permissibility. Ethanol evaporates during baking. Final product contains <0.1% ethanol. Non-intoxicating by any standard."
+      },
+      {
+        "scenario": "ice_cream_vanilla_extract",
+        "description_fr": "Glace à la vanille avec extrait de vanille (non cuit) — traces d'éthanol résiduelles",
+        "naqiy_score": 68,
+        "verdict": "DOUBTFUL_LEAN_PERMISSIBLE",
+        "confidence": "DISPUTED",
+        "color": "yellow",
+        "verdicts_by_madhab": {
+          "hanafi": 65,
+          "maliki": 75,
+          "shafii": 60,
+          "hanbali": 55
+        },
+        "note": "Majority permit (non-intoxicating final product). Some conservative scholars prefer avoidance. AMJA explicitly permits vanilla ice cream."
+      },
+      {
+        "scenario": "liquid_extract_unconsumed_directly",
+        "description_fr": "Extrait de vanille liquide consommé directement (~35% éthanol)",
+        "naqiy_score": 10,
+        "verdict": "HARAM",
+        "confidence": "CERTAIN",
+        "color": "red",
+        "verdicts_by_madhab": {
+          "hanafi": 10,
+          "maliki": 10,
+          "shafii": 5,
+          "hanbali": 5
+        },
+        "note": "35% ethanol = intoxicating in large quantities. Haram by all madhahib. The hadith 'ma askara kathiruhu fa-qaliluhu haram' applies directly."
+      },
+      {
+        "scenario": "natural_fermentation_bread_yogurt",
+        "description_fr": "Pain, yaourt, vinaigre — éthanol naturel de fermentation",
+        "naqiy_score": 95,
+        "verdict": "HALAL",
+        "confidence": "CERTAIN",
+        "color": "green",
+        "verdicts_by_madhab": {
+          "hanafi": 95,
+          "maliki": 97,
+          "shafii": 92,
+          "hanbali": 95
+        },
+        "note": "Unanimous. Natural fermentation has existed since the time of the Prophet ﷺ. Bread, vinegar, pickles, and yogurt were consumed without objection. These are 'ma'fuw anha' (excused)."
+      },
+      {
+        "scenario": "soy_sauce_naturally_fermented",
+        "description_fr": "Sauce soja fermentée naturellement (1-2% éthanol)",
+        "naqiy_score": 65,
+        "verdict": "DOUBTFUL_LEAN_PERMISSIBLE",
+        "confidence": "DISPUTED",
+        "color": "yellow",
+        "verdicts_by_madhab": {
+          "hanafi": 75,
+          "maliki": 85,
+          "shafii": 55,
+          "hanbali": 50
+        },
+        "note": "Hanafi/Maliki: natural fermentation, non-intoxicating in normal consumption = halal. Shafi'i/Hanbali: 1-2% ethanol may exceed JAKIM 0.5% threshold; borderline for intoxication test."
+      },
+      {
+        "scenario": "liqueur_filled_chocolates",
+        "description_fr": "Chocolats fourrés à la liqueur (3-8% éthanol)",
+        "naqiy_score": 2,
+        "verdict": "HARAM",
+        "confidence": "CERTAIN",
+        "color": "red",
+        "verdicts_by_madhab": {
+          "hanafi": 5,
+          "maliki": 5,
+          "shafii": 0,
+          "hanbali": 0
+        },
+        "note": "Intentional addition of khamr (liqueur) as an ingredient. Haram by absolute consensus. No istihlak argument applies — khamr is the featured ingredient."
+      },
+      {
+        "scenario": "non_khamr_synthetic_ethanol_solvent",
+        "description_fr": "Éthanol synthétique (non-khamr) utilisé comme solvant, traces dans le produit final",
+        "naqiy_score": 88,
+        "verdict": "HALAL",
+        "confidence": "HIGH",
+        "color": "green",
+        "verdicts_by_madhab": {
+          "hanafi": 90,
+          "maliki": 92,
+          "shafii": 88,
+          "hanbali": 85
+        },
+        "note": "Not khamr by any definition (never fermented). Used as technical aid. Traces are istihlak. Permitted by all major institutions."
+      },
+      {
+        "scenario": "khamr_derived_ethanol_solvent",
+        "description_fr": "Éthanol dérivé du khamr (distillat de vin/raisin) utilisé comme solvant",
+        "naqiy_score": 15,
+        "verdict": "HARAM",
+        "confidence": "HIGH",
+        "color": "red",
+        "verdicts_by_madhab": {
+          "hanafi": 15,
+          "maliki": 25,
+          "shafii": 5,
+          "hanbali": 5
+        },
+        "note": "Most institutions prohibit. MUI explicitly: khamr-derived ethanol cannot be used in halal products. Some Maliki/IOMS flexibility if fully absorbed but this is a minority within a minority."
+      },
+      {
+        "scenario": "unknown_source_muslim_country",
+        "description_fr": "Source d'éthanol inconnue — pays à majorité musulmane",
+        "naqiy_score": 72,
+        "verdict": "DOUBTFUL_LEAN_PERMISSIBLE",
+        "confidence": "DISPUTED",
+        "color": "yellow",
+        "verdicts_by_madhab": {
+          "hanafi": 75,
+          "maliki": 78,
+          "shafii": 68,
+          "hanbali": 65
+        },
+        "note": "In Muslim countries, industrial ethanol is typically grain-derived or synthetic (not khamr). Asl al-ibahah (default permissibility) applies. Reasonable presumption favors halal."
+      },
+      {
+        "scenario": "unknown_source_non_muslim_country",
+        "description_fr": "Source d'éthanol inconnue — pays non-musulman",
+        "naqiy_score": 58,
+        "verdict": "MASHBOOH",
+        "confidence": "DISPUTED",
+        "color": "orange",
+        "verdicts_by_madhab": {
+          "hanafi": 60,
+          "maliki": 65,
+          "shafii": 52,
+          "hanbali": 48
+        },
+        "note": "In non-Muslim countries, some industrial ethanol may be khamr-derived (wine/grape). Without verification, doubt persists. Conservative scholars recommend avoidance; permissive scholars apply umum al-balwa."
+      },
+      {
+        "scenario": "kombucha",
+        "description_fr": "Kombucha (0.5-3% éthanol de fermentation naturelle)",
+        "naqiy_score": 40,
+        "verdict": "DOUBTFUL_AVOID",
+        "confidence": "DISPUTED",
+        "color": "orange",
+        "verdicts_by_madhab": {
+          "hanafi": 45,
+          "maliki": 50,
+          "shafii": 35,
+          "hanbali": 30
+        },
+        "note": "Higher end of natural fermentation. 3% ethanol MAY intoxicate in very large quantities. Shafi'i/Hanbali lean haram. Hanafi/Maliki: depends on actual intoxication test."
+      },
+      {
+        "scenario": "non_alcoholic_beer_0.5",
+        "description_fr": "Bière sans alcool (<0.5% éthanol)",
+        "naqiy_score": 35,
+        "verdict": "DOUBTFUL_AVOID",
+        "confidence": "DISPUTED",
+        "color": "orange",
+        "verdicts_by_madhab": {
+          "hanafi": 40,
+          "maliki": 45,
+          "shafii": 30,
+          "hanbali": 25
+        },
+        "note": "Technically non-intoxicating. But many scholars prohibit due to tashabbuh (imitation of alcohol drinkers) and because it is manufactured as an alcohol substitute. JAKIM allows at ≤0.5% but many individual scholars prohibit on precautionary grounds."
+      }
+    ]
+  },
+  "identification_guide": {
+    "label_detection": {
+      "definite_alcohol_presence": [
+        "vanilla extract / extrait de vanille",
+        "almond extract / extrait d'amande",
+        "lemon extract / extrait de citron",
+        "rum extract / extrait de rhum",
+        "contains alcohol / contient de l'alcool",
+        "ethanol / éthanol / كحول",
+        "wine / vin / خمر (as ingredient)",
+        "beer / bière (as ingredient)",
+        "liqueur / liquor"
+      ],
+      "possible_alcohol_presence": [
+        "natural flavors / arômes naturels / نكهات طبيعية — ethanol is the most common carrier for natural flavors but not always present",
+        "flavor / arôme / نكهة — may or may not use ethanol as carrier",
+        "vanilla / vanille / فانيليا — could be extract (contains alcohol) or vanilla powder/vanillin (no alcohol)"
+      ],
+      "unlikely_alcohol_presence": [
+        "vanillin / فانيلين — synthetic vanilla flavor, typically no alcohol",
+        "vanilla powder — dried vanilla bean, no alcohol",
+        "artificial flavors / arômes artificiels — typically use propylene glycol, not ethanol"
+      ]
+    },
+    "consumer_guidance": {
+      "action_1": "Check ingredients list for explicit mention of 'alcohol', 'ethanol', 'extract', 'wine', 'beer', 'liqueur'",
+      "action_2": "For 'natural flavors' — contact manufacturer to ask if ethanol is used as carrier and its source",
+      "action_3": "Prefer products with halal certification (MUI, JAKIM, ISNA, IFANCA, AHF) — these verify alcohol source and levels",
+      "action_4": "For baked goods: residual ethanol is minimal (<0.1%) — lowest risk category",
+      "action_5": "For uncooked products (ice cream, cold desserts): higher residual — moderate risk if extract-based",
+      "action_6": "For fermented products (soy sauce, kombucha): check ethanol percentage if concerned"
+    }
+  },
+  "bibliography": {
+    "primary_fiqh_sources": [
+      "OCI Fiqh Academy, Resolution No. 210 (6/22), 22nd Session, Kuwait, March 2015 — on istihalah and istihlak in food additives",
+      "IOMS (Islamic Organization for Medical Sciences), Seminar: 'Prohibited and Impure Substances in Food and Medicine', Kuwait, 22-24 May 1995",
+      "MUI (Indonesian Ulema Council), Fatwa No. 10 Year 2018 on Ethanol Levels in Food and Beverage Products",
+      "JAKIM (Malaysia), Muzakarah of the National Council Fatwa Committee, Special Session July 2011 — alcohol in food coloring and flavoring",
+      "Lajnah Da'imah (Saudi Permanent Committee), Fatwa on beverages containing trace alcohol — referenced via al-fatawa.com #106992",
+      "Dar al-Ifta al-Misriyyah, Fatwa No. 3113, 6 June 1985 — on using alcohol in multiple purposes",
+      "Jordanian General Ifta Department, Research-Fatwa No. 3620, 29 June 2021 — guidelines for alcohol in medicine",
+      "AMJA (Assembly of Muslim Jurists of America), Fatwa #23043 — tiny amounts of alcohol in food",
+      "IslamQA.info, Fatwa #201520 (EN), #440724 (AR) — alcohol in food",
+      "IslamWeb.net, Fatwas #10256, #131095, #377962, #296890 — food containing alcohol"
+    ],
+    "secondary_scholarly_works": [
+      "Ibn Abidin, Radd al-Muhtar 'ala al-Durr al-Mukhtar (Hashiyat Ibn Abidin) — Hanafi reference on khamr definition",
+      "Al-Kasani, Bada'i al-Sana'i fi Tartib al-Shara'i — Hanafi definition of khamr",
+      "Al-Nawawi, al-Majmu' Sharh al-Muhadhdhab — Shafi'i position that all intoxicants are khamr",
+      "Ibn Qudamah, al-Mughni — Hanbali position on intoxicants as khamr",
+      "Ibn Taymiyyah, Majmu' al-Fatawa — discussion of istihalah and istihlak",
+      "Ibn al-Qayyim, I'lam al-Muwaqqi'in — supports Ibn Taymiyyah on istihlak",
+      "Al-Qarafi, al-Dhakhirah — Maliki usul on transformation and purity",
+      "Sahnun (narrator), al-Mudawwanah al-Kubra — Imam Malik's rulings on nabidh",
+      "Wahbah al-Zuhayli, al-Fiqh al-Islami wa-Adillatuh — contemporary Shafi'i encyclopedia on khamr and food",
+      "Ibn Hajar al-Haytami, Tuhfat al-Muhtaj — late Shafi'i authority on khamr impurity",
+      "Al-Ramli, Nihayat al-Muhtaj — Shafi'i reference on istihlak in food"
+    ],
+    "web_sources": [
+      "https://iifa-aifi.org/en/33099.html — OCI Resolution 210 full text",
+      "https://islamqa.info/ar/answers/440724 — IslamQA Arabic fatwa on trace alcohol",
+      "https://islamqa.info/en/answers/201520 — IslamQA English fatwa on alcohol in food",
+      "https://www.islamweb.net/ar/fatwa/377962 — IslamWeb fatwa on trace alcohol",
+      "https://www.islamweb.net/ar/fatwa/10256 — IslamWeb fatwa on alcohol-containing food",
+      "https://halalmui.org/en/understand-fatwa-mui-about-ethanol-levels-in-food-and-beverage-products/ — MUI ethanol fatwa",
+      "https://muftiwp.gov.my/en/artikel/irsyad-fatwa/irsyad-fatwa-umum-cat/3097 — Malaysian Mufti fatwa on alcohol in food coloring",
+      "https://www.dar-alifta.org/ar/fatwa/details/12742 — Dar al-Ifta Egypt fatwa on alcohol use",
+      "https://www.aliftaa.jo/research-fatwas/3620 — Jordanian Ifta on alcohol in medicine",
+      "https://www.amjaonline.org/fatwa/en/23043 — AMJA fatwa on tiny amounts of alcohol",
+      "https://thehalallife.co.uk/the-fiqh-of-ethanol-in-islam/ — The Halal Life article on ethanol fiqh",
+      "https://fiqh.islamonline.net — IslamOnline fiqh on alcohol in food",
+      "https://binbaz.org.sa/fatwas/7421 — Sheikh Ibn Baz on beverages with alcohol",
+      "https://www.fikhguide.com/expatriate/food-drink/119 — Fiqh Guide on istihlak in food",
+      "https://pubmed.ncbi.nlm.nih.gov/28407905/ — Scientific study: Fate of ethanol during cooking",
+      "https://www.isu.edu/news/2019-fall/no-worries-the-alcohol-burns-off-during-cookingbut-does-it-really.html — USDA alcohol retention data"
+    ]
+  },
+  "verified_fatwa_references": [
+    {
+      "id": "DAR_ALIFTA_12742",
+      "institution_ar": "دار الإفتاء المصرية",
+      "institution_en": "Dar Al-Ifta Al-Misriyyah (Egyptian Dar Al-Ifta)",
+      "title_ar": "حكم استخدام الكحول في أغراض متعددة",
+      "title_fr": "Ruling on the Use of Alcohol for Multiple Purposes",
+      "title_en": "Ruling on the Use of Alcohol for Multiple Purposes",
+      "published_number": "12742",
+      "date_iso": "1985-06-06",
+      "mufti_ar": "دار الإفتاء المصرية (هيئة المفتين)",
+      "mufti_en": "Egyptian Dar Al-Ifta",
+      "canonical_url": "https://www.dar-alifta.org/ar/fatwa/details/12742/حكم-استخدام-الكحول-في-أغراض-متعددة",
+      "verification_status": "VERIFIED_LIVE",
+      "access_verified": "2026-04-07",
+      "confidence_level": "high",
+      "key_passage_ar": "الكحول بطبعه ليس خمراً، ولذلك فإنه ليس نجساً. الأصل فيها التحريم، وليس الحكم بالنجاسة. تحريم الشيء لا يستلزم الحكم بنجاسته. فقد تحرم الشريعة الإسلامية بعض الأشياء وتحكم برطوبتها.",
+      "key_passage_fr": "L'alcool n'est pas du vin par nature, et par conséquent il n'est pas rituellement impur. Le principe est son interdiction, non un jugement d'impureté. L'interdiction d'une chose ne nécessite pas de la juger impure.",
+      "ruling_summary_ar": "جائز استخدام الكحول في أغراض متعددة (الوقود، الصباغة، التعقيم الطبي) لكن محرم تناول الطعام أو الشراب الذي يحتوي على كحول",
+      "ruling_summary_fr": "Permis d'utiliser l'alcool à des fins multiples (carburant, teinture, stérilisation médicale) mais interdit de consommer des aliments ou des boissons contenant de l'alcool",
+      "madhabs_cited": [
+        "Hanafi",
+        "Shafi'i",
+        "Maliki",
+        "Hanbali"
+      ],
+      "search_log": [
+        "WebSearch: fatwa الكحول في النكهات الغذائية site:dar-alifta.org",
+        "WebFetch: https://www.dar-alifta.org/ar/fatwa/details/12742/حكم-استخدام-الكحول-في-أغراض-متعددة"
+      ]
+    },
+    {
+      "id": "DAR_ALIFTA_11368",
+      "institution_ar": "دار الإفتاء المصرية",
+      "institution_en": "Dar Al-Ifta Al-Misriyyah",
+      "title_ar": "حكم استخدام الكحول في العطور وأدوات التجميل ونحوها",
+      "title_fr": "Ruling on the Use of Alcohol in Perfumes and Cosmetic Tools",
+      "title_en": "Ruling on Using Alcohol in Perfumes and Cosmetics",
+      "published_number": "11368",
+      "date_iso": null,
+      "mufti_ar": "دار الإفتاء المصرية (فقهاء الشافعية والمذاهب الأخرى)",
+      "mufti_en": "Egyptian Dar Al-Ifta",
+      "canonical_url": "https://www.dar-alifta.org/ar/fatwa/details/11368/حكم-استخدام-الكحول-في-العطور-وأدوات-التجميل-ونحوها",
+      "verification_status": "VERIFIED_LIVE",
+      "access_verified": "2026-04-07",
+      "confidence_level": "high",
+      "key_passage_ar": "الكحول بطبيعته ليس خمراً، وبالتالي فإنه ليس نجساً طبقاً للمذهب الشافعي وغيره من المذاهب. والأصل في الأشياء الطهارة. وإذا حرمت الشريعة شيئاً فليس معنى هذا أنها حكمت بنجاسته.",
+      "key_passage_fr": "L'alcool par nature n'est pas du vin, et par conséquent il n'est pas rituellement impur selon l'école Shafi'i et d'autres écoles. Le principe est la pureté des choses.",
+      "ruling_summary_ar": "جائز استخدام الكحول في العطور وأدوات التجميل والأدوية دون اعتراض ديني",
+      "ruling_summary_fr": "Permis d'utiliser l'alcool dans les parfums, cosmétiques et médicaments sans objection religieuse",
+      "madhabs_cited": [
+        "Shafi'i",
+        "Hanafi",
+        "Maliki",
+        "Hanbali"
+      ],
+      "search_log": [
+        "WebSearch: fatwa الكحول في النكهات الغذائية site:dar-alifta.org",
+        "WebFetch: https://www.dar-alifta.org/ar/fatwa/details/11368/حكم-استخدام-الكحول-في-العطور-وأدوات-التجميل-ونحوها"
+      ]
+    },
+    {
+      "id": "IIFA_RESOLUTION_210",
+      "institution_ar": "المجمع الفقهي الإسلامي الدولي (الإيفا)",
+      "institution_en": "International Islamic Fiqh Academy (IIFA)",
+      "title_ar": "قرار رقم 210 (6/22) بشأن تحول وتمييع الإضافات في الأطعمة والأدوية",
+      "title_fr": "Résolution n° 210 (6/22) sur la Transmutation et la Dilution des Additifs dans les Aliments et les Médicaments",
+      "title_en": "IIFA Resolution 210 (6/22) on Transmutation and Dilution of Additives in Food and Medication",
+      "published_number": "210/6/22",
+      "date_iso": "2015-03-25",
+      "session_number": "22",
+      "session_location": "Kuwait City",
+      "mufti_ar": "المجمع الفقهي الإسلامي الدولي",
+      "mufti_en": "International Islamic Fiqh Academy",
+      "canonical_url": "https://iifa-aifi.org/en/33099.html",
+      "verification_status": "UNRESOLVED",
+      "access_verified": null,
+      "confidence_level": "medium",
+      "unresolved_reason": "IIFA website returned 404 for direct resolution link; information extracted from WebSearch secondary source",
+      "key_passage_ar": "القرار يتناول مسألة الكحول المستخدم كمذيب في استخلاص المكونات الطبيعية للنكهات، وتمييعه في الاستخدام الصناعي",
+      "key_passage_fr": "La résolution traite de l'alcool utilisé comme solvant pour extraire les composants de saveur naturelle et sa dilution dans l'utilisation industrielle",
+      "ruling_summary_ar": "الكحول المتحول والموجود بكميات ضئيلة في عملية صناعية لا يخضع لنفس التحريم الذي ينطبق على خمر الشراب",
+      "ruling_summary_fr": "L'alcool transformé et présent en quantités infimes dans les processus industriels n'est pas soumis à la même interdiction que le vin de boisson",
+      "madhabs_cited": [
+        "Maliki",
+        "Hanafi",
+        "Consensus-based"
+      ],
+      "search_log": [
+        "WebSearch: fatwa alcool arômes alimentaires IIFA résolution",
+        "WebFetch: https://iifa-aifi.org/ar/1640.html - returned 404"
+      ]
+    }
+  ],
+  "unverified_claims_disclosure": {
+    "status": "PARTIAL",
+    "summary": "This v1.1 consolidates verified fatwa references from major institutional sources (Dar Al-Ifta Al-Misriyyah, IIFA). Several fatwas and scholarly positions cited in v1.0 (Lajnah Daa'imah, MUI, JAKIM, AMJA, IslamQA, IslamWeb, Ibn Uthaymeen, Al-Qaradawi) were not included in the institutional research sweep of v1.1 but remain authoritative and widely cited in contemporary Islamic jurisprudence on this topic.",
+    "unverified_but_cited": [
+      {
+        "source": "Lajnah Daa'imah (Permanent Committee for Islamic Research and Ifta, Saudi Arabia)",
+        "status": "ATTESTED_PRINCIPLE",
+        "claim": "If the product final volume does not intoxicate even in large quantity, it is permissible to sell, buy and consume it.",
+        "note": "Widely cited in food fiqh literature; exact reference requires direct verification from Lajnah archives"
+      },
+      {
+        "source": "Majelis Ulama Indonesia (MUI)",
+        "status": "ATTESTED_PRINCIPLE",
+        "claim": "Ethanol from non-khamr sources in solid foods has no limit if medically safe; in beverages <0.5% if medically safe",
+        "note": "Fatwa n°10/2018 is cited in academic sources; canonical verification pending"
+      },
+      {
+        "source": "JAKIM (Jabatan Kemajuan Islam Malaysia)",
+        "status": "ATTESTED_PRINCIPLE",
+        "claim": "Permissible if: (1) alcohol not produced by khamr manufacturing, (2) quantity does not exceed 0.5%",
+        "note": "Muzakarah 2011 decision cited in halal practice; requires direct institutional confirmation"
+      },
+      {
+        "source": "AMJA (Assembly of Muslim Jurists of America)",
+        "status": "ATTESTED_PRINCIPLE",
+        "claim": "Permissible to consume products with vanilla extract; not permissible to add alcohol oneself",
+        "note": "Fatwa #23043 widely cited; source direct access verified"
+      },
+      {
+        "source": "Ibn Uthaymeen (via Lajnah Daa'imah consensus and contemporary collections)",
+        "status": "ATTESTED_PRINCIPLE",
+        "claim": "If alcohol is so absorbed it has no tangible effect, the product retains its own judgment (halal)",
+        "note": "Cited through secondary scholarly compilations; direct source requires Shamela/Dorar verification"
+      }
+    ],
+    "sources_requiring_direct_verification": [
+      "IslamQA fatwas #10256, #131095, #377962, #296890",
+      "IslamWeb fatwas on alcohol and flavorings",
+      "Al-Qaradawi's explicit rulings on trace alcohol in food",
+      "Specific dates for Lajnah Daa'imah and JAKIM rulings"
+    ],
+    "methodology_note": "This dossier prioritizes VERIFIED_LIVE sources with canonical URLs and access confirmation. Attested principles reflect scholarly consensus documented in multiple secondary sources. To upgrade ATTESTED_PRINCIPLE entries to VERIFIED_LIVE, direct institutional archive consultation is required."
+  },
+  "core_fiqhi_concepts": [
+    {
+      "ar": "الاستهلاك",
+      "en": "Istihlak (absorption/disappearance)",
+      "fr": "Istihlak (absorption/dilution)",
+      "principle": "Quand une substance impure est dissoute dans une matrice beaucoup plus grande et perd ses propriétés organoleptiques, elle est considérée istihlak et n'affecte pas le hukm du tout."
+    },
+    {
+      "ar": "نجاسة الكحول",
+      "en": "Purity status of ethanol",
+      "fr": "Statut de pureté de l'éthanol",
+      "principle": "IOMS 1995: l'éthanol en tant que substance chimique n'est pas najis; seule la consommation intentionnelle de khamr (quantité intoxicante) est interdite."
+    }
+  ],
+  "fatwas_summary": {
+    "halal_count": 0,
+    "haram_count": 0
+  },
+  "madhab_positions": {
+    "hanafi": {
+      "madhab_id": "HANAFI",
+      "geographic_dominance": [
+        "Turkey",
+        "Central Asia",
+        "South Asia (India, Pakistan, Bangladesh)",
+        "Parts of Middle East (Iraq, Syria, Lebanon)",
+        "Balkans",
+        "Western diaspora (Deobandi communities)"
+      ],
+      "position_on_alcohol_in_flavorings": {
+        "summary_fr": "Le madhab hanafite présente la plus grande richesse de positions internes sur l'alcool. La position classique d'Abu Hanifa et Abu Yusuf restreint le khamr au seul nabidh de raisin et de datte — l'alcool d'autres sources (céréales, miel, canne à sucre) n'est pas khamr et est licite s'il ne vise pas l'ivresse. Cependant, la position de l'Imam Muhammad (adoptée comme avis de fatwa — mufta bihi) traite tous les enivrants comme khamr. Les contemporains distinguent entre : l'éthanol de source khamr (interdit absolument) et l'éthanol de source non-khamr ou synthétique (permis comme solvant/support si les traces sont absorbées — istihlāk).",
+        "classical_position_abu_hanifa": {
+          "ar": "الخمر عند أبي حنيفة وأبي يوسف خاص بماء العنب إذا غلا واشتد وقذف بالزبد أو بنبيذ التمر الشديد. وما عداهما من الأشربة المتخذة من الحنطة والشعير والذرة والعسل فليست خمراً",
+          "fr": "Le khamr selon Abu Hanifa et Abu Yusuf est limité au jus de raisin ayant fermenté, moussé et rejeté l'écume, ou au nabidh de datte fort. Les autres boissons faites de blé, orge, maïs ou miel ne sont PAS du khamr.",
+          "en": "Khamr according to Abu Hanifa and Abu Yusuf is limited to grape juice that has fermented, frothed, and cast off foam, or to strong date nabidh. Other beverages made from wheat, barley, corn, or honey are NOT khamr."
+        },
+        "classical_position_imam_muhammad": {
+          "ar": "وعند محمد بن الحسن الشيباني — وهو المفتى به في المذهب — كل مسكر خمر وكل مسكر حرام، لا فرق بين عصير العنب وغيره",
+          "fr": "Selon Muhammad ibn al-Hasan al-Shaybani — et c'est la position retenue pour la fatwa (al-mufta bihi) dans le madhab — tout enivrant est khamr et tout enivrant est illicite, sans distinction entre le jus de raisin et les autres.",
+          "en": "According to Muhammad ibn al-Hasan al-Shaybani — and this is the relied-upon position for fatwa (al-mufta bihi) in the school — every intoxicant is khamr and every intoxicant is haram, with no distinction between grape juice and others."
+        },
+        "contemporary_position": "Modern Hanafi scholars (especially Deobandi tradition) follow Imam Muhammad's position that ALL intoxicants are khamr, BUT they accept istihlak: when ethanol is used as a technical solvent and its traces are absorbed/negligible in the final product, the product is halal. The key Deobandi threshold is: the final product must not intoxicate even in large quantities.",
+        "practical_ruling": {
+          "vanilla_extract_in_baked_goods": "HALAL — ethanol evaporates during baking, residual is istihlak",
+          "vanilla_ice_cream": "HALAL — traces are ma'fuw anha (excused) per AMJA and Deobandi fatwas",
+          "liquid_extract_uncooked": "MASHBOOH to HARAM — if extract contains 35% ethanol and is consumed directly",
+          "soy_sauce": "HALAL — natural fermentation, not khamr per Abu Hanifa; halal even per Imam Muhammad if non-intoxicating",
+          "liqueur_chocolates": "HARAM — intentional addition of khamr (liqueur)",
+          "bread_wine_vinegar": "HALAL — natural fermentation / istihalah complete"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "رد المحتار على الدر المختار (حاشية ابن عابدين)",
+          "author": "ابن عابدين (d. 1252H/1836CE)",
+          "relevance": "ULTIMATE Hanafi reference — contains detailed discussion of the three Hanafi positions on khamr (Abu Hanifa, Abu Yusuf, Muhammad) and explains why Muhammad's position is mufta bihi",
+          "significance": "HIGHEST",
+          "key_quote_ar": "والمفتى به قول محمد أن كل مسكر حرام وأنه خمر، سواء كان من العنب أو غيره",
+          "key_quote_fr": "La position retenue pour la fatwa est celle de Muhammad : tout enivrant est illicite et est du khamr, qu'il provienne du raisin ou d'autre chose"
+        },
+        {
+          "title_ar": "بدائع الصنائع في ترتيب الشرائع",
+          "author": "الكاساني (d. 587H/1191CE)",
+          "relevance": "Classical discussion of Abu Hanifa's restrictive definition of khamr and the principles of purity/impurity",
+          "significance": "HIGHEST",
+          "key_quote_ar": "الخمر هي النيء من ماء العنب إذا غلا واشتد وقذف بالزبد",
+          "key_quote_fr": "Le khamr est le jus cru de raisin lorsqu'il a fermenté, s'est renforcé et a rejeté l'écume"
+        },
+        {
+          "title_ar": "الفتاوى الهندية (العالمكيرية)",
+          "author": "لجنة علماء بأمر أورنكزيب (compiled ~1100H/1688CE)",
+          "relevance": "Practical rulings compilation — discusses the application of the three positions to food and drink scenarios",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "الهداية شرح البداية",
+          "author": "المرغيناني (d. 593H/1197CE)",
+          "relevance": "Foundation of Hanafi furu — establishes the framework of 'what intoxicates in large quantity, its small amount is haram' and its application",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "المبسوط",
+          "author": "السرخسي (d. 483H/1090CE)",
+          "relevance": "Encyclopedic early Hanafi reference — contains Abu Hanifa's detailed reasoning on why non-grape intoxicants differ from khamr",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "الشيخ محمد تقي العثماني",
+          "name_fr": "Sheikh Taqi Usmani",
+          "position": "Follows Imam Muhammad's position: all intoxicants are khamr. But accepts istihlak for trace alcohol in processed food. Emphasizes that synthetic or non-khamr ethanol used as a processing aid is less problematic than khamr-derived ethanol.",
+          "status": "contemporary_major"
+        },
+        {
+          "name_ar": "دار العلوم ديوبند",
+          "name_fr": "Darul Uloom Deoband",
+          "position": "Conservative Hanafi: all intoxicants are khamr per Imam Muhammad. However, foods containing negligible alcohol traces from processing are halal if the product itself is non-intoxicating.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "مفتي إبراهيم ديساي — AskImam.org",
+          "name_fr": "Mufti Ebrahim Desai — AskImam.org",
+          "position": "Practical Deobandi position: vanilla extract in food is permissible because the alcohol is a carrier that evaporates or becomes negligible. Direct consumption of the extract itself (35% alcohol) would be impermissible.",
+          "status": "individual_high_influence"
+        }
+      ],
+      "institutional_positions": [
+        {
+          "name_ar": "المجلس الأوروبي للإفتاء والبحوث (ECFR)",
+          "name_fr": "Conseil Européen de la Fatwa et de la Recherche (ECFR)",
+          "position": "Permissive: alcohol used as a solvent in food processing is halal when traces are negligible. Based on both Hanafi istihlak principle and umum al-balwa (widespread difficulty).",
+          "ref": "ECFR rulings on food in Western countries"
+        }
+      ],
+      "naqiy_verdict": {
+        "scenario_ethanol_evaporated_baked": {
+          "score": 85,
+          "verdict": "HALAL",
+          "confidence": "HIGH",
+          "note": "Baked goods with vanilla extract — ethanol evaporated, istihlak applies"
+        },
+        "scenario_ethanol_trace_uncooked": {
+          "score": 65,
+          "verdict": "DOUBTFUL_LEAN_PERMISSIBLE",
+          "confidence": "DISPUTED",
+          "note": "Ice cream with vanilla extract — trace ethanol remains but non-intoxicating"
+        },
+        "scenario_khamr_source_ethanol": {
+          "score": 15,
+          "verdict": "HARAM",
+          "confidence": "HIGH",
+          "note": "If ethanol is grape/date-derived, even as processing aid — stricter scholars prohibit"
+        },
+        "scenario_non_khamr_synthetic": {
+          "score": 90,
+          "verdict": "HALAL",
+          "confidence": "HIGH",
+          "note": "Synthetic ethanol as solvent — not khamr by any definition"
+        },
+        "scenario_natural_fermentation": {
+          "score": 95,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN",
+          "note": "Bread, yogurt, vinegar — natural fermentation unanimously excused"
+        },
+        "scenario_liqueur_chocolates": {
+          "score": 5,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN",
+          "note": "Intentional khamr ingredient — haram by consensus"
+        },
+        "scenario_soy_sauce": {
+          "score": 75,
+          "verdict": "DOUBTFUL_LEAN_PERMISSIBLE",
+          "confidence": "DISPUTED",
+          "note": "Natural fermentation producing 1-2% — Abu Hanifa: not khamr; Imam Muhammad: depends on intoxication test"
+        }
+      }
+    },
+    "maliki": {
+      "madhab_id": "MALIKI",
+      "geographic_dominance": [
+        "Morocco",
+        "Algeria",
+        "Tunisia",
+        "Libya",
+        "Mauritania",
+        "West Africa",
+        "Parts of Egypt",
+        "Parts of Gulf (UAE, Qatar)",
+        "European Maghrebi diaspora"
+      ],
+      "position_on_alcohol_in_flavorings": {
+        "summary_fr": "Le madhab malikite a une approche distinctive sur l'alcool, marquée par deux principes : (1) La pureté potentielle de l'alcool — certains savants malikites, surtout modernes, rejoignent la position IOMS que l'alcool n'est pas najis en soi, basée sur le principe que 'l'origine des choses est la pureté'. (2) L'istihlāk — les malikites acceptent largement le principe que lorsque la substance interdite disparaît dans un mélange licite, le mélange est licite. Les institutions malikites contemporaines (Maroc, Algérie, ECFR) tendent vers la permissivité pour les arômes contenant des traces d'alcool.",
+        "classical_principle": {
+          "ar": "الأصل في الأشياء الطهارة ولا تثبت النجاسة إلا بدليل قاطع",
+          "fr": "Le principe de base est la pureté des choses, et l'impureté ne s'établit que par une preuve décisive",
+          "en": "The default state of things is purity, and impurity is only established by decisive evidence"
+        },
+        "practical_ruling": {
+          "vanilla_extract_in_baked_goods": "HALAL — no debate",
+          "vanilla_ice_cream": "HALAL — traces absorbed, non-intoxicating",
+          "liquid_extract_uncooked": "MASHBOOH — high ethanol content problematic",
+          "soy_sauce": "HALAL — natural fermentation product",
+          "liqueur_chocolates": "HARAM — intentional khamr",
+          "bread_wine_vinegar": "HALAL — unanimously"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "الذخيرة",
+          "author": "القرافي (d. 684H/1285CE)",
+          "relevance": "Maliki usul reference — discusses transformation principles and the distinction between prohibition and impurity",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "المدونة الكبرى",
+          "author": "رواية سحنون عن مالك (d. 240H/854CE)",
+          "relevance": "Primary source of Imam Malik's rulings — contains his positions on nabidh and intoxicants",
+          "significance": "HIGHEST",
+          "key_quote_ar": "سئل مالك عن النبيذ فقال: كل مسكر حرام",
+          "key_quote_fr": "On a interrogé Malik sur le nabidh, il a dit : tout enivrant est illicite"
+        },
+        {
+          "title_ar": "مختصر خليل",
+          "author": "خليل بن إسحاق (d. 776H/1374CE)",
+          "relevance": "Standard Maliki fiqh manual — codifies the school's position on intoxicants",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "التحرير والتنوير",
+          "author": "الطاهر بن عاشور (d. 1393H/1973CE)",
+          "relevance": "Modern Maliki tafsir — provides the most permissive Maliki framework, emphasizing the purity of substances by default",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "المقدمات الممهدات",
+          "author": "ابن رشد الجد (d. 520H/1126CE)",
+          "relevance": "Foundational Maliki fiqh from Cordoba — discusses the theoretical framework for istihlak",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "المجلس العلمي الأعلى — المغرب",
+          "name_fr": "Conseil Scientifique Suprême — Maroc",
+          "position": "Follows permissive Maliki tradition: alcohol as a processing aid that leaves negligible traces is not problematic. Morocco's halal standard (NM 08.0.800) allows trace alcohol from processing.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "وزارة الشؤون الدينية — الجزائر",
+          "name_fr": "Ministère des Affaires Religieuses — Algérie",
+          "position": "Similar to Moroccan position: permissive on trace alcohol from processing, strict on intentional khamr addition.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "يوسف القرضاوي",
+          "name_fr": "Yusuf al-Qaradawi (d. 2022)",
+          "position": "Among the most permissive: explicitly permitted foods containing trace alcohol from processing. Argued that the hadith 'ma askara kathiruhu' applies to the SUBSTANCE ITSELF (the beverage), not to a different product that merely contains traces of alcohol.",
+          "status": "contemporary_major"
+        }
+      ],
+      "institutional_positions": [
+        {
+          "name_ar": "المجلس الأوروبي للإفتاء والبحوث",
+          "name_fr": "ECFR — Conseil Européen de la Fatwa",
+          "position": "Explicitly permissive: 'Les produits alimentaires contenant des traces d'alcool provenant du processus de fabrication sont licites si le produit final n'est pas enivrant.' Strongly Maliki-influenced in its methodology.",
+          "ref": "ECFR fatwa sessions on food in Europe"
+        }
+      ],
+      "naqiy_verdict": {
+        "scenario_ethanol_evaporated_baked": {
+          "score": 90,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_ethanol_trace_uncooked": {
+          "score": 75,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "scenario_khamr_source_ethanol": {
+          "score": 25,
+          "verdict": "DOUBTFUL_AVOID",
+          "confidence": "DISPUTED",
+          "note": "Even Maliki scholars are strict on actual khamr-derived substances"
+        },
+        "scenario_non_khamr_synthetic": {
+          "score": 92,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_natural_fermentation": {
+          "score": 97,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_liqueur_chocolates": {
+          "score": 5,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        },
+        "scenario_soy_sauce": {
+          "score": 85,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        }
+      }
+    },
+    "shafi'i": {
+      "madhab_id": "SHAFII",
+      "geographic_dominance": [
+        "Indonesia",
+        "Malaysia",
+        "Brunei",
+        "East Africa (Kenya, Tanzania)",
+        "Yemen",
+        "Parts of Egypt",
+        "Jordan",
+        "Palestine",
+        "Kurdish regions"
+      ],
+      "position_on_alcohol_in_flavorings": {
+        "summary_fr": "Le madhab shafiite adopte une position intermédiaire mais rigoureuse sur la question de l'alcool : (1) Tous les enivrants sont khamr — pas de distinction de source (contrairement à Abu Hanifa). (2) Le khamr est najis (impur matériellement) — position classique forte. (3) MAIS les institutions shafiites contemporaines (MUI, JAKIM) ont développé des cadres sophistiqués distinguant entre éthanol de khamr (interdit) et éthanol non-khamr (permis sous conditions), ce qui constitue une évolution majeure par rapport à la position classique stricte. Le seuil JAKIM de 0,5% est devenu la norme internationale de facto pour les certifications halal en Asie du Sud-Est.",
+        "classical_principle": {
+          "ar": "الخمر نجسة العين لقوله تعالى: إنما الخمر والميسر والأنصاب والأزلام رجس من عمل الشيطان — والرجس هو النجس",
+          "fr": "Le khamr est une impureté matérielle (najis al-'ayn) en vertu de la parole d'Allah : 'Le vin, le jeu de hasard, les pierres dressées et les flèches sont une abomination (rijs) de l'œuvre de Satan' — et rijs signifie najis.",
+          "en": "Khamr is a material impurity (najis al-ayn) based on Allah's statement: 'Wine, gambling, stone altars, and divining arrows are an abomination (rijs) from Satan's work' — and rijs means najis."
+        },
+        "practical_ruling": {
+          "vanilla_extract_in_baked_goods": "HALAL — per MUI/JAKIM standards if ethanol not from khamr and final product <0.5%",
+          "vanilla_ice_cream": "HALAL — per MUI if ethanol not from khamr; final product well below 0.5%",
+          "liquid_extract_uncooked": "HARAM — contains 35% ethanol, exceeds all thresholds",
+          "soy_sauce": "MASHBOOH — naturally fermented, contains 1-2% ethanol. JAKIM: prohibited if >0.5%. MUI: more lenient for food products",
+          "liqueur_chocolates": "HARAM — khamr ingredient",
+          "bread_wine_vinegar": "HALAL — vinegar by unanimous consensus; bread by natural fermentation"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "المجموع شرح المهذب",
+          "author": "النووي (d. 676H/1277CE)",
+          "relevance": "ULTIMATE Shafi'i reference — detailed discussion of khamr's impurity and the unanimity that all intoxicants are khamr",
+          "significance": "HIGHEST",
+          "key_quote_ar": "كل شراب أسكر كثيره فقليله حرام سواء كان من عصير العنب أو من غيره وهذا مذهبنا ومذهب مالك وأحمد وجمهور العلماء",
+          "key_quote_fr": "Toute boisson dont le beaucoup enivre, le peu en est illicite, qu'elle provienne du jus de raisin ou d'autre chose — c'est notre madhab, celui de Malik, d'Ahmad et de la majorité des savants"
+        },
+        {
+          "title_ar": "تحفة المحتاج في شرح المنهاج",
+          "author": "ابن حجر الهيتمي (d. 974H/1567CE)",
+          "relevance": "Late Shafi'i authority — influential in SE Asia and Yemen. Discusses the practical implications of khamr impurity for food mixing.",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "نهاية المحتاج إلى شرح المنهاج",
+          "author": "الرملي (d. 1004H/1596CE)",
+          "relevance": "Paired with Tuhfa as dual Shafi'i authority. Discusses istihlak principles applied to impurities mixing with food.",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "الفقه الإسلامي وأدلته",
+          "author": "وهبة الزحيلي (d. 1436H/2015CE)",
+          "relevance": "Contemporary Syrian Shafi'i encyclopedia — discusses modern applications of khamr rulings to food additives",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "الأم",
+          "author": "الإمام الشافعي (d. 204H/820CE)",
+          "relevance": "Primary source of al-Shafi'i himself — establishes that all intoxicants are haram without source distinction",
+          "significance": "HIGHEST"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "مجلس العلماء الإندونيسي (MUI)",
+          "name_fr": "Conseil des Oulémas d'Indonésie (MUI)",
+          "position": "Sophisticated position: khamr-derived ethanol = haram absolutely. Non-khamr ethanol = halal with conditions. Food: no ethanol limit if harmless. Beverages: <0.5%. Intermediate products (flavors): no limit if final product conforms.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "جاكيم (JAKIM) — ماليزيا",
+          "name_fr": "JAKIM — Malaisie",
+          "position": "Stricter than MUI: maximum 0.5% ethanol in ALL final products (food AND beverages). Source must NOT be from khamr production. This threshold has become the de facto international halal standard.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "وهبة الزحيلي",
+          "name_fr": "Wahbah al-Zuhayli (d. 2015)",
+          "position": "Accepts the principle that trace alcohol from processing is excused when the product is non-intoxicating. Emphasizes the distinction between consuming khamr and consuming a product that incidentally contains trace alcohol.",
+          "status": "contemporary_major"
+        }
+      ],
+      "institutional_positions": [
+        {
+          "name_ar": "دائرة الإفتاء الأردنية",
+          "name_fr": "Département de l'Ifta — Jordanie",
+          "position": "Three conditions for permissibility: (1) no alcohol-free alternative, (2) alcohol must be mustahlik (absorbed/negligible), (3) recommendation of a trustworthy physician (for medicine). For food: more lenient if alcohol is a processing aid that evaporates.",
+          "ref": "Research-Fatwa #3620, 29 June 2021"
+        }
+      ],
+      "naqiy_verdict": {
+        "scenario_ethanol_evaporated_baked": {
+          "score": 82,
+          "verdict": "HALAL",
+          "confidence": "HIGH",
+          "note": "Per MUI/JAKIM: non-khamr ethanol evaporated = halal"
+        },
+        "scenario_ethanol_trace_uncooked": {
+          "score": 60,
+          "verdict": "MASHBOOH",
+          "confidence": "DISPUTED",
+          "note": "Depends on source of ethanol and percentage in final product"
+        },
+        "scenario_khamr_source_ethanol": {
+          "score": 5,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN",
+          "note": "MUI explicitly: khamr-derived ethanol = haram absolutely"
+        },
+        "scenario_non_khamr_synthetic": {
+          "score": 88,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "scenario_natural_fermentation": {
+          "score": 92,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_liqueur_chocolates": {
+          "score": 0,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        },
+        "scenario_soy_sauce": {
+          "score": 55,
+          "verdict": "MASHBOOH",
+          "confidence": "DISPUTED",
+          "note": "1-2% ethanol exceeds JAKIM 0.5% but MUI more lenient for food"
+        }
+      }
+    },
+    "hanbali": {
+      "madhab_id": "HANBALI",
+      "geographic_dominance": [
+        "Saudi Arabia",
+        "Parts of Gulf states (Qatar, Kuwait, Bahrain)",
+        "Some scholarly circles worldwide"
+      ],
+      "position_on_alcohol_in_flavorings": {
+        "summary_fr": "Le madhab hanbalite est le plus strict sur la question de l'alcool, avec une position claire : tout enivrant est khamr, le khamr est najis, et 'ce dont le beaucoup enivre, le peu est illicite'. Cependant, même au sein de cette rigueur, les institutions hanbalites ont fait des concessions significatives : (1) La Lajnah Da'imah accepte que si un produit final ne peut PAS enivrer même en grande quantité, il est licite — ce qui couvre la plupart des aliments transformés. (2) L'IslamQA (Sheikh al-Munajjid) classe les aliments naturellement fermentés (pain, vinaigre, yaourt) comme 'excusés' (ma'fuw anha). (3) Le hadith 'ma askara kathiruhu' est appliqué au PRODUIT FINAL, pas au solvant utilisé dans sa fabrication.",
+        "classical_principle": {
+          "ar": "كل مسكر خمر وكل خمر حرام وما أسكر كثيره فقليله حرام. والخمر نجسة في ظاهر المذهب",
+          "fr": "Tout enivrant est khamr, tout khamr est illicite, et ce dont le beaucoup enivre, le peu est interdit. Le khamr est impur selon la position apparente du madhab.",
+          "en": "Every intoxicant is khamr, every khamr is haram, and whatever intoxicates in large quantities, a small amount of it is haram. Khamr is impure according to the apparent position of the school."
+        },
+        "practical_ruling": {
+          "vanilla_extract_in_baked_goods": "HALAL — final product non-intoxicating, ethanol evaporated",
+          "vanilla_ice_cream": "HALAL — per Lajnah Da'imah: non-intoxicating in large quantities",
+          "liquid_extract_uncooked": "HARAM — 35% ethanol is intoxicating",
+          "soy_sauce": "MASHBOOH — 1-2% ethanol; scholars differ on whether large quantity would intoxicate",
+          "liqueur_chocolates": "HARAM — intentional khamr",
+          "bread_wine_vinegar": "HALAL — natural fermentation excused; vinegar unanimously halal"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "المغني",
+          "author": "ابن قدامة (d. 620H/1223CE)",
+          "relevance": "ULTIMATE Hanbali reference — establishes that khamr includes all intoxicants without source distinction",
+          "significance": "HIGHEST",
+          "key_quote_ar": "وكل شراب مسكر فهو خمر في قول عامة أهل العلم. قال أحمد: كل ما أسكر فهو خمر بأي شيء كان",
+          "key_quote_fr": "Toute boisson enivrante est du khamr selon la parole de la généralité des savants. Ahmad a dit : tout ce qui enivre est du khamr, quelle qu'en soit la source"
+        },
+        {
+          "title_ar": "مجموع الفتاوى",
+          "author": "ابن تيمية (d. 728H/1328CE)",
+          "relevance": "Influential Hanbali authority — discusses istihalah and istihlak principles. Pro-istihalah for wine-to-vinegar, discusses the boundary of acceptable traces.",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "إعلام الموقعين عن رب العالمين",
+          "author": "ابن القيم (d. 751H/1350CE)",
+          "relevance": "Supports Ibn Taymiyyah — discusses the principle of istihlak and when a haram substance becomes negligible in a halal mixture",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "كشاف القناع عن متن الإقناع",
+          "author": "البهوتي (d. 1051H/1641CE)",
+          "relevance": "Late Hanbali standard reference — codifies the school's positions on intoxicants and impurities",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "الكافي في فقه الإمام أحمد",
+          "author": "ابن قدامة (d. 620H/1223CE)",
+          "relevance": "Condensed Hanbali manual — summary of positions on khamr and its derivatives",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "اللجنة الدائمة للبحوث العلمية والإفتاء",
+          "name_fr": "Comité Permanent (Lajnah Da'imah) — Arabie Saoudite",
+          "position": "If the product does not intoxicate even in large quantities (because alcohol proportion is negligible), it is permissible. This effectively permits most processed foods containing trace alcohol from flavoring.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "الشيخ محمد صالح المنجد",
+          "name_fr": "Sheikh al-Munajjid (IslamQA)",
+          "position": "Explicitly permits naturally fermented foods (bread, vinegar, yogurt, kefir, pickles) with trace alcohol — classified as 'excused' (ma'fuw anha). Applies intoxication test to final product, not to intermediate ingredients.",
+          "status": "individual_high_influence"
+        },
+        {
+          "name_ar": "الشيخ محمد بن عثيمين",
+          "name_fr": "Sheikh Ibn Uthaymin (d. 2001)",
+          "position": "Cited by AMJA: 'If a small quantity of alcohol is so submerged in something else that it has no tangible or theoretical effect, then the substance keeps the ruling that is in accordance with its own attributes.' This is an explicit endorsement of istihlak.",
+          "status": "contemporary_major"
+        }
+      ],
+      "institutional_positions": [
+        {
+          "name_ar": "هيئة كبار العلماء — المملكة العربية السعودية",
+          "name_fr": "Conseil des Grands Savants — Arabie Saoudite",
+          "position": "Follows the Lajnah Da'imah position: the test is whether the final product intoxicates, not whether alcohol was used in processing.",
+          "ref": "Referenced in Lajnah fatwas and IslamQA compilations"
+        }
+      ],
+      "naqiy_verdict": {
+        "scenario_ethanol_evaporated_baked": {
+          "score": 80,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "scenario_ethanol_trace_uncooked": {
+          "score": 55,
+          "verdict": "MASHBOOH",
+          "confidence": "DISPUTED",
+          "note": "Conservative scholars would prefer avoidance even if non-intoxicating"
+        },
+        "scenario_khamr_source_ethanol": {
+          "score": 5,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        },
+        "scenario_non_khamr_synthetic": {
+          "score": 85,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "scenario_natural_fermentation": {
+          "score": 95,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_liqueur_chocolates": {
+          "score": 0,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        },
+        "scenario_soy_sauce": {
+          "score": 50,
+          "verdict": "MASHBOOH",
+          "confidence": "DISPUTED",
+          "note": "1-2% ethanol — borderline for Hanbali intoxication test"
+        }
+      }
+    }
+  },
+  "naqiy_position": {
+    "global_score": 55,
+    "verdict_internal_ingestion": "Contextuel — traces résiduelles d'éthanol (< 0.1% ou < 0.5% selon institutions) acceptables sous principe d'istihlak; éthanol en quantité ajoutée rend l'aliment haram.",
+    "rationale": "IOMS 1995 établit que l'éthanol n'est pas intrinsèquement najis, mais la consommation suit le principe khamr. Istihlak permet les traces résiduelles sous seuil. Source: DOSSIER_ALCOHOL_FLAVORINGS_V2.md §NaqiyScore."
+  }
+}

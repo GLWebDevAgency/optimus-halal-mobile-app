@@ -1,0 +1,1990 @@
+{
+  "meta": {
+    "dossier_id": "SUBST-005",
+    "subject": "Glycérol / Glycérine / الغليسيرين (الجلسرين) / Glycerol (E422)",
+    "version": "2.0.0",
+    "created_at": "2026-04-04",
+    "methodology": "Collecte multi-institutionnelle, classification par madhab, textes originaux en arabe avec traductions fidèles FR/EN, données industrielles et marché mondial/EU/France, hiérarchisation par autorité, vérification croisée des sources",
+    "author_system": "Naqiy Halal Analysis Engine",
+    "languages": [
+      "ar",
+      "fr",
+      "en"
+    ],
+    "scope": "Sunni — 4 madhahib + institutions contemporaines + données industrielles sur les sources de glycérol",
+    "key_fiqhi_issue": "SOURCE_ID",
+    "key_sub_issues": [
+      "ISTIHALAH",
+      "ISTIHLAK",
+      "INDUSTRIAL_SOURCE_AMBIGUITY"
+    ],
+    "relationship_to_previous_dossiers": "Le glycérol est chimiquement lié au dossier SUBST-002 (E471 — mono/diglycérides) car le glycérol est le squelette des triglycérides dont dérivent les E471. Il est aussi lié au dossier SUBST-001 (gélatine) via le débat sur l'istihalah : la saponification/hydrolyse des graisses animales constitue-t-elle une transformation complète (istihalah tammah) ? Le glycérol est omniprésent dans l'industrie alimentaire, pharmaceutique et cosmétique — c'est l'une des substances les plus universelles du pipeline.",
+    "updated_at": "2026-04-07",
+    "merge_sources": [
+      "v1.0.0",
+      "v1.1.0"
+    ],
+    "generated_at": "2026-04-04",
+    "language_primary": "fr"
+  },
+  "substance": {
+    "id": "GLYCEROL",
+    "names": {
+      "ar": "الغليسيرين / الجلسرين / الغليسيرول",
+      "fr": "Glycérol / Glycérine / Propane-1,2,3-triol",
+      "en": "Glycerol / Glycerin / Glycerine / Propane-1,2,3-triol",
+      "synonyms": [
+        "glycerine",
+        "glycerine végétale",
+        "glycérine animale",
+        "glycérine synthétique",
+        "E422",
+        "glycérol alimentaire",
+        "1,2,3-propanetriol"
+      ],
+      "e_numbers": [
+        "E422"
+      ],
+      "cas_number": "56-81-5",
+      "inchi": "InChI=1S/C3H8O3/c4-1-3(6)2-5/h3-6H,1-2H2"
+    },
+    "category": "humectant_polyol_multi_source",
+    "description": {
+      "ar": "الغليسيرين (E422) هو كحول سكري ثلاثي الهيدروكسيل (بوليول)، صيغته الكيميائية C₃H₈O₃. يوجد طبيعياً كعمود فقري لجميع الدهون الثلاثية (الشحوم والزيوت) سواء كانت حيوانية أو نباتية. يُستخرج صناعياً عبر: 1) التصبُّن (saponification) — تفاعل الدهون مع هيدروكسيد الصوديوم ينتج صابون + غليسيرين، 2) التحلل المائي (hydrolysis) — تكسير الروابط الإسترية في الدهون الثلاثية بالماء عند ضغط وحرارة عاليين، 3) الأسترة التبادلية (transesterification) — تفاعل الدهون مع الميثانول لإنتاج وقود الديزل الحيوي + غليسيرين كناتج ثانوي. النقطة المحورية: الغليسيرين المُنتَج جزيء جديد تماماً (C₃H₈O₃) لا يحتفظ بأي خاصية من خصائص الدهن الأصلي — لا لونه ولا رائحته ولا طعمه ولا تركيبه الجزيئي. هذا هو جوهر الخلاف: هل هذا التحول يشكل استحالة تامة تُطهِّر المادة النجسة؟",
+      "fr": "Le glycérol (E422) est un polyol (alcool sucré) trihydroxylé de formule chimique C₃H₈O₃. Il existe naturellement comme squelette de tous les triglycérides (graisses et huiles), qu'ils soient d'origine animale ou végétale. Il est obtenu industriellement par : 1) Saponification — réaction des graisses avec NaOH produisant savon + glycérol, 2) Hydrolyse — clivage des liaisons ester des triglycérides par l'eau sous haute pression/température, 3) Transestérification — réaction des graisses avec le méthanol pour produire du biodiesel + glycérol comme coproduit. Le point crucial : le glycérol produit est une molécule entièrement nouvelle (C₃H₈O₃) ne conservant aucune propriété de la graisse d'origine — ni couleur, ni odeur, ni goût, ni structure moléculaire. C'est le cœur du débat : cette transformation constitue-t-elle une istiḥālah complète purifiant la substance impure ?",
+      "en": "Glycerol (E422) is a trihydroxy polyol (sugar alcohol) with the chemical formula C₃H₈O₃. It occurs naturally as the backbone of all triglycerides (fats and oils), whether animal or vegetable. It is obtained industrially through: 1) Saponification — reaction of fats with NaOH producing soap + glycerol, 2) Hydrolysis — cleavage of ester bonds in triglycerides by water under high pressure/temperature, 3) Transesterification — reaction of fats with methanol to produce biodiesel + glycerol as a co-product. The crucial point: the produced glycerol is an entirely new molecule (C₃H₈O₃) retaining no properties of the original fat — no color, odor, taste, or molecular structure. This is the core debate: does this transformation constitute a complete istiḥālah that purifies the impure substance?"
+    },
+    "chemical_nature": {
+      "type": "Polyol — Propane-1,2,3-triol",
+      "molecular_formula": "C₃H₈O₃",
+      "molecular_weight": "92.09 g/mol",
+      "physical_properties": "Liquide visqueux, incolore, inodore, goût sucré, miscible avec l'eau en toutes proportions, point d'ébullition 290°C, densité 1.261 g/cm³",
+      "production_process": "Three industrial routes: (1) Saponification of fats/oils with NaOH (traditional), (2) High-pressure hydrolysis of fats (splitting process), (3) Transesterification for biodiesel — glycerol as co-product (dominant since 2005). All three routes COMPLETELY break the ester bonds of triglycerides, releasing the glycerol backbone as a FREE molecule. The resulting crude glycerol is then purified by distillation, decolorization, and ion exchange to reach pharmaceutical/food grade (≥99.5% purity).",
+      "key_fiqhi_chemical_fact": "TRIGLYCERIDE (C₅₅H₁₀₆O₆ typical) → HYDROLYSIS → GLYCEROL (C₃H₈O₃) + 3 FATTY ACIDS. This is a COMPLETE molecular transformation: the triglyceride ceases to exist entirely. The product has a new molecular formula, new name, new CAS number, new physical properties, new taste, new function. No trace of the original fat's identity remains at the molecular level. By every scientific criterion, this is a new substance — not a rearrangement of the old one. This is arguably the STRONGEST case for istihalah in the entire Naqiy pipeline.",
+      "istihalah_applicability": "STRONG — complete molecular transformation from triglyceride (C₅₅H₁₀₆O₆) to glycerol (C₃H₈O₃). New name (اسم), new characteristics (أوصاف), new properties (خواص). Fulfills ALL three Hanafi criteria for istihalah tammah."
+    },
+    "sources": {
+      "halal_sources": [
+        {
+          "name": "Glycérol végétal (huile de palme, soja, colza, tournesol)",
+          "name_ar": "غليسيرين نباتي (زيت النخيل، الصويا، الكانولا، عباد الشمس)",
+          "status": "halal_by_consensus",
+          "industry_share": "~65% of global production (dominant source since biodiesel boom post-2005)"
+        },
+        {
+          "name": "Glycérol synthétique (pétrochimique — propylène)",
+          "name_ar": "غليسيرين صناعي (بتروكيميائي — البروبيلين)",
+          "status": "halal_by_consensus",
+          "industry_share": "~25% of global production (declining due to cost vs biodiesel by-product)"
+        },
+        {
+          "name": "Glycérol de graisse bovine halal-abattue",
+          "name_ar": "غليسيرين من شحم البقر المذكى شرعاً",
+          "status": "halal_by_consensus",
+          "industry_share": "NEGLIGIBLE — no dedicated halal tallow glycerol supply chain exists at industrial scale"
+        }
+      ],
+      "haram_or_doubtful_sources": [
+        {
+          "name": "Glycérol de suif bovin (non-halal abattu)",
+          "name_ar": "غليسيرين من الشحم البقري (غير مذكى)",
+          "status": "DISPUTED — Hanafi/Maliki: halal via istihalah; Shafi'i/Hanbali classical: haram (najasah ayniyyah persists)",
+          "industry_share": "~5-8% of global production (declining; historically higher)"
+        },
+        {
+          "name": "Glycérol de saindoux (graisse de porc)",
+          "name_ar": "غليسيرين من شحم الخنزير",
+          "status": "DISPUTED — same istihalah debate but more severe (pork = haram li-dhatihi, not just slaughter issue)",
+          "industry_share": "~2-5% of global production (mixed animal fats used in some regions, especially in soap-making co-products)"
+        }
+      ]
+    },
+    "common_applications": [
+      {
+        "sector": "Alimentaire",
+        "products": [
+          "confiseries",
+          "pâtisseries",
+          "biscuits",
+          "boissons",
+          "glaces",
+          "chewing-gum",
+          "produits laitiers",
+          "sauces",
+          "condiments"
+        ],
+        "function": "Humectant (retient l'humidité), agent de texture, édulcorant (60% du pouvoir sucrant du saccharose), solvant pour arômes",
+        "frequency": "VERY_HIGH",
+        "e_number": "E422"
+      },
+      {
+        "sector": "Pharmaceutique",
+        "products": [
+          "sirops",
+          "suppositoires",
+          "capsules molles",
+          "solutions buvables",
+          "crèmes",
+          "dentifrices"
+        ],
+        "function": "Excipient, humectant, solvant, plastifiant pour capsules de gélatine",
+        "frequency": "UBIQUITOUS"
+      },
+      {
+        "sector": "Cosmétique",
+        "products": [
+          "crèmes hydratantes",
+          "lotions",
+          "shampoings",
+          "savons",
+          "dentifrices",
+          "maquillage"
+        ],
+        "function": "Hydratant, émollient, solvant, humectant",
+        "frequency": "UBIQUITOUS"
+      },
+      {
+        "sector": "Industriel",
+        "products": [
+          "e-liquides (vapotage)",
+          "antigel",
+          "résines alkydes",
+          "explosifs (nitroglycérine)",
+          "encres"
+        ],
+        "function": "Plastifiant, solvant, antigel, matière première chimique",
+        "frequency": "HIGH"
+      }
+    ],
+    "version": "2.0.0",
+    "updated_at": "2026-04-07",
+    "primary_name_fr": "Glycérol / Glycérine / Propane-1,2,3-triol",
+    "primary_name_en": "Glycerol / Glycerin / Glycerine / Propane-1,2,3-triol",
+    "issue_type": "SOURCE_IDENTIFICATION",
+    "match_vocabulary": {
+      "canonical_fr": "glycérol",
+      "canonical_en": "glycerol",
+      "canonical_ar": "غليسرول",
+      "synonyms_fr": [
+        "glycérine",
+        "glycérine végétale",
+        "e422",
+        "humectant glycérol"
+      ],
+      "synonyms_en": [
+        "glycerin",
+        "glycerine",
+        "vegetable glycerin",
+        "glycerol monostearate"
+      ],
+      "synonyms_ar": [
+        "غليسرين",
+        "جليسرول"
+      ],
+      "synonyms_other": {
+        "de": [
+          "glycerin",
+          "glyzerin"
+        ],
+        "es": [
+          "glicerina",
+          "glicerol"
+        ],
+        "it": [
+          "glicerolo",
+          "glicerina"
+        ]
+      },
+      "e_numbers": [
+        "E422"
+      ],
+      "off_tags": [
+        "en:e422",
+        "en:glycerol",
+        "en:glycerin"
+      ],
+      "semantic_descriptors": [
+        "sugar alcohol used as humectant",
+        "humectant alcool sucré",
+        "peut provenir de graisses animales"
+      ],
+      "disambiguation_hints": {
+        "not_to_confuse_with": [
+          "sorbitol",
+          "xylitol"
+        ],
+        "context_clues": [
+          "candy",
+          "icing",
+          "toothpaste",
+          "pharma",
+          "cosmetic"
+        ]
+      }
+    }
+  },
+  "core_islamic_concepts": [
+    {
+      "id": "CONCEPT-SOURCE-ID",
+      "role": "PRIMARY",
+      "term": {
+        "ar": "تحديد المصدر",
+        "ar_transliteration": "taḥdīd al-maṣdar",
+        "fr": "Identification de la source",
+        "en": "Source identification"
+      },
+      "definition": {
+        "ar": "تحديد أصل المادة الخام المستخدمة في إنتاج المادة الغذائية — هل هي نباتية، حيوانية (ومن أي حيوان وبأي ذبح)، أم صناعية؟ لأن الحكم الشرعي قد يختلف بحسب المصدر",
+        "fr": "Identification de l'origine de la matière première utilisée dans la production de la substance alimentaire — végétale, animale (de quel animal et avec quel abattage), ou synthétique ? Car le statut juridique islamique peut varier selon la source.",
+        "en": "Identification of the raw material source used in producing the food substance — vegetable, animal (from which animal and with what slaughter), or synthetic? Because the Islamic legal ruling may differ based on the source."
+      },
+      "source": "مجمع الفقه الإسلامي — القرار 210 (2015)",
+      "conditions_for_validity": [
+        "The source is KNOWN or can be reasonably determined",
+        "The source information comes from a RELIABLE channel (manufacturer statement, certification, labeling regulation)",
+        "If the source is unknown, the ruling depends on the applicable default assumption (aṣl al-ibāḥah vs warā')"
+      ],
+      "application_to_substance": "Glycerol can come from vegetable oils (halal by consensus), animal fats (halal-slaughtered = halal; non-halal-slaughtered = disputed; pork = disputed via istihalah), or synthetic petrochemical sources (halal by consensus). The source is NEVER identifiable from the label E422 or 'glycérine/glycérol' alone — the final molecule is chemically IDENTICAL regardless of source. This makes source identification the PRIMARY issue."
+    },
+    {
+      "id": "CONCEPT-ISTIHALAH",
+      "role": "SECONDARY_MAJOR",
+      "term": {
+        "ar": "الاستحالة",
+        "ar_transliteration": "al-istiḥālah",
+        "fr": "Transformation (transmutation)",
+        "en": "Transformation / Transmutation"
+      },
+      "definition": {
+        "ar": "تحول العين النجسة أو المحرمة إلى مادة أخرى مختلفة في الاسم والصفات والخواص. قال الكاساني في بدائع الصنائع: إذا استحالت العين النجسة وتبدلت أوصافها ومعانيها خرجت عن كونها نجاسة، لأنها اسم لذات موصوفة فتنعدم بانعدام الوصف",
+        "fr": "Transformation d'une substance impure (najis) ou interdite (harām) en une autre substance différente par le nom, les caractéristiques et les propriétés. Al-Kāsānī dans Badā'i' al-Ṣanā'i' : 'Lorsqu'une substance impure se transforme et que ses caractéristiques et significations changent, elle sort du statut d'impureté, car [l'impureté] est un nom donné à une chose qualifiée — elle s'annule par l'annulation de la qualification.'",
+        "en": "Transformation of an impure (najis) or prohibited (haram) substance into another substance differing in name, characteristics, and properties. Al-Kasani in Bada'i' al-Sana'i': 'When an impure substance transforms and its characteristics and meanings change, it exits the state of impurity, because [impurity] is a name given to a qualified thing — it ceases to exist when the qualification ceases.'"
+      },
+      "source": "بدائع الصنائع للكاساني (587هـ) — كتاب الطهارة",
+      "conditions_for_validity": [
+        "Complete change of NAME (اسم) — the substance has a new name: 'glycerol' not 'fat/lard/tallow'",
+        "Complete change of CHARACTERISTICS (أوصاف) — new physical properties: colorless viscous liquid vs solid white fat",
+        "Complete change of PROPERTIES (خواص) — new chemical formula (C₃H₈O₃ vs C₅₅H₁₀₆O₆), new molecular weight, new function",
+        "The OCI Fiqh Academy (Resolution 210) requires the transformation to involve 'chemical interaction' — not merely physical separation"
+      ],
+      "application_to_substance": "Glycerol's case for istihalah is EXTREMELY STRONG: triglyceride undergoes COMPLETE ester bond cleavage (hydrolysis/saponification) producing an entirely new molecule. The transformation is not merely physical (like grinding or melting) — it is a genuine chemical reaction breaking covalent bonds and forming new ones. The product (C₃H₈O₃) shares NO structural identity with the source triglyceride. This arguably exceeds the OCI Resolution 210 threshold for 'chemical interaction.' Hanafi/Maliki accept; Shafi'i/Hanbali classical reject (but Ibn Taymiyyah/Ibn al-Qayyim would accept)."
+    },
+    {
+      "id": "CONCEPT-ASL-IBAHAH",
+      "role": "SECONDARY",
+      "term": {
+        "ar": "الأصل في الأشياء الإباحة",
+        "ar_transliteration": "al-aṣl fī al-ashyā' al-ibāḥah",
+        "fr": "Le principe d'origine est la licéité",
+        "en": "The default ruling for things is permissibility"
+      },
+      "definition": {
+        "ar": "القاعدة الفقهية الكبرى: الأصل في الأشياء الإباحة حتى يرد دليل التحريم. أي أن المادة تبقى على أصل الحل ما لم يثبت بدليل شرعي أنها محرمة",
+        "fr": "Grande règle juridique : le statut par défaut de toute chose est la licéité (ḥalāl) jusqu'à preuve d'interdiction. C'est-à-dire qu'une substance reste sur son statut d'origine de licéité tant qu'aucune preuve juridique n'établit son interdiction.",
+        "en": "Major jurisprudential maxim: the default ruling for all things is permissibility (halal) until evidence of prohibition is established. A substance remains on its original status of permissibility unless Shari'ah evidence proves it is prohibited."
+      },
+      "source": "الأشباه والنظائر للسيوطي — القواعد الكبرى",
+      "conditions_for_validity": [
+        "No specific evidence of prohibition exists for the substance itself",
+        "The substance is not known to cause harm (darar)",
+        "There is no reasonable basis for suspicion (shubuha) that would override the default"
+      ],
+      "application_to_substance": "When the source of glycerol is UNKNOWN (the most common real-world scenario), some scholars apply this principle: since the molecule is identical regardless of source, and since 90%+ of commercial glycerol comes from halal sources (vegetable + synthetic), the default is permissibility. Others counter that the very POSSIBILITY of animal origin creates shubuha requiring warā' (precautionary avoidance). This is a core methodological divergence between permissive and conservative scholars."
+    }
+  ],
+  "fatwas": [
+    {
+      "id": "FATWA-GLYCEROL-001",
+      "institution": {
+        "name": {
+          "ar": "مجمع الفقه الإسلامي الدولي — منظمة التعاون الإسلامي",
+          "fr": "Académie Internationale de Fiqh Islamique — OCI",
+          "en": "International Islamic Fiqh Academy — OIC"
+        },
+        "type": "international_fiqh_academy",
+        "authority_level": "highest_collective",
+        "headquarters": "Jeddah, Saudi Arabia",
+        "website": "https://www.iifa-aifi.org",
+        "madhab_orientation": "Multi-madhab (collective of scholars from all schools)"
+      },
+      "reference": "القرار رقم 198 (3/21) — الدورة 21 — الرياض 2013 + القرار رقم 210 (3/22) — الدورة 22 — الكويت 2015",
+      "date": "2015-03-22",
+      "topic": "الاستحالة والاستهلاك وتطبيقاتهما في المواد الغذائية والدوائية",
+      "original_text": {
+        "lang": "ar",
+        "text": "أولاً: الاستحالة: تحوُّل المادة من طبيعتها وخصائصها إلى مادة مغايرة لها في الاسم والخصائص والصفات عن طريق التفاعل الكيميائي... ثانياً: تُعدّ الاستحالة مُطهِّرة إذا تحولت المادة النجسة أو المحرمة تحولاً كاملاً إلى مادة مباينة لها في الاسم والصفات والخصائص... ثالثاً: إذا كان التفاعل الكيميائي جزئياً، ولم تتغير طبيعة المادة تغيراً كلياً، فلا تُعتبر استحالة... رابعاً: الاستهلاك: أن تمتزج مادة محرمة أو نجسة بمادة أخرى طاهرة غالبة عليها في المقدار بحيث تفقد المادة المحرمة أو النجسة صفاتها من طعم ولون ورائحة..."
+      },
+      "translation": {
+        "fr": {
+          "text": "Premièrement : L'istiḥālah (transformation) : la conversion d'une substance de sa nature et de ses caractéristiques en une substance différente par le nom, les caractéristiques et les attributs par le biais d'une interaction chimique... Deuxièmement : L'istiḥālah est considérée comme purifiante si la substance impure ou interdite a subi une transformation complète en une substance distincte par le nom, les attributs et les caractéristiques... Troisièmement : Si l'interaction chimique est partielle et que la nature de la substance n'a pas changé de manière totale, cela n'est pas considéré comme une istiḥālah... Quatrièmement : L'istihlāk (absorption) : le mélange d'une substance interdite ou impure avec une autre substance pure qui la domine en quantité de sorte que la substance interdite ou impure perde ses attributs de goût, couleur et odeur...",
+          "translation_notes": "التفاعل الكيميائي (al-tafā'ul al-kīmiyā'ī) = interaction chimique — le مجمع exige une réaction chimique RÉELLE, pas une simple transformation physique. مادة مباينة (māddah mubāyinah) = substance distincte/différente — utilisation du terme 'mubāyinah' (distincte) plutôt que 'mukhtalifah' (différente) implique une rupture totale d'identité."
+        },
+        "en": {
+          "text": "First: Istiḥālah (transformation): the conversion of a substance from its nature and characteristics into a different substance in name, characteristics, and attributes through chemical interaction... Second: Istiḥālah is considered purifying if the impure or prohibited substance has undergone a complete transformation into a substance that differs in name, attributes, and characteristics... Third: If the chemical interaction is partial and the nature of the substance has not changed completely, it is not considered istiḥālah... Fourth: Istihlāk (absorption): the mixing of a prohibited or impure substance with another pure substance that predominates in quantity such that the prohibited or impure substance loses its attributes of taste, color, and odor...",
+          "translation_notes": "Key distinction: the Academy sets TWO thresholds — istihalah (complete molecular transformation) and istihlak (overwhelming dilution). Both can purify. For glycerol from animal fat, istihalah is the relevant mechanism (new molecule formed). The requirement for 'chemical interaction' (not merely physical) is CRITICAL — it excludes mere melting, grinding, or dissolution."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "conditional",
+        "istihalah_position": "accepted — IF transformation is complete (chemical, not merely physical)",
+        "istihlak_position": "accepted — IF the haram substance is completely absorbed/undetectable",
+        "application_to_glycerol": "Glycerol from animal fat undergoes hydrolysis/saponification — a genuine chemical reaction breaking covalent ester bonds. This MEETS the Academy's threshold for 'chemical interaction.' The glycerol produced is a molecularly distinct substance (C₃H₈O₃ vs the original triglyceride). By this resolution, pork-derived or non-halal-animal-derived glycerol would be HALAL via istihalah — though the Academy did not issue a SPECIFIC ruling on glycerol."
+      }
+    },
+    {
+      "id": "FATWA-GLYCEROL-002",
+      "institution": {
+        "name": {
+          "ar": "المنظمة الإسلامية للعلوم الطبية — الكويت",
+          "fr": "Organisation Islamique des Sciences Médicales — Koweït",
+          "en": "Islamic Organization for Medical Sciences (IOMS) — Kuwait"
+        },
+        "type": "advisory_specialized",
+        "authority_level": "advisory",
+        "headquarters": "Kuwait City, Kuwait",
+        "website": "https://www.islamset.org",
+        "madhab_orientation": "Multi-madhab (specialized in Islamic bioethics)"
+      },
+      "reference": "ندوة الرؤية الإسلامية لبعض الممارسات الطبية — الكويت 1995 — المحور: المواد المحرمة والنجسة في الغذاء والدواء",
+      "date": "1995-01-01",
+      "topic": "استخدام المواد ذات الأصل الحيواني في الغذاء والدواء — تطبيق الاستحالة",
+      "original_text": {
+        "lang": "ar",
+        "text": "إن تحول المادة النجسة أو المحرمة بذاتها أو بسبب الملابسات إلى مادة أخرى مغايرة لها في الاسم والخصائص والصفات يجعلها مادة جديدة طاهرة حلالاً بالاستحالة... وتشمل التطبيقات: ... الشحوم والزيوت المستخلصة من حيوان غير مذكى إذا تحولت بالتفاعل الكيميائي إلى مادة أخرى كالصابون والغليسيرين... فهي طاهرة حلال"
+      },
+      "translation": {
+        "fr": {
+          "text": "La transformation d'une substance impure ou interdite — par sa nature intrinsèque ou par les circonstances — en une autre substance différente par le nom, les caractéristiques et les attributs en fait une nouvelle substance pure et licite (halal) par istiḥālah... Les applications incluent : ... les graisses et huiles extraites d'un animal non abattu rituellement, lorsqu'elles sont transformées par réaction chimique en une autre substance comme le savon et le glycérol... celles-ci sont pures et licites (halal).",
+          "translation_notes": "FATWA CAPITALE : L'IOMS mentionne EXPLICITEMENT le glycérol comme exemple d'istihalah. 'الشحوم والزيوت المستخلصة من حيوان غير مذكى' = les graisses et huiles d'un animal non abattu rituellement — couvre le cas exact du suif non-halal. 'إذا تحولت بالتفاعل الكيميائي إلى مادة أخرى كالصابون والغليسيرين' = si transformées par réaction chimique en une autre substance COMME LE SAVON ET LE GLYCÉROL — mention nominative."
+        },
+        "en": {
+          "text": "The transformation of a substance that is impure or prohibited — by its intrinsic nature or by circumstances — into another substance differing in name, characteristics, and attributes makes it a new pure and halal substance through istiḥālah... Applications include: ... fats and oils extracted from a non-ritually-slaughtered animal, when transformed by chemical reaction into another substance such as soap and glycerol... these are pure and halal.",
+          "translation_notes": "This is the single most direct fatwa on glycerol in the entire Naqiy corpus: IOMS explicitly names glycerol as an example of valid istihalah from non-halal animal fat. Key phrase: 'حيوان غير مذكى' (non-ritually-slaughtered animal) — this covers bovine tallow from conventional slaughter. The IOMS does not specifically address PORK-derived glycerol in this passage, but the general principle of istihalah would apply identically."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "halal",
+        "istihalah_position": "accepted — EXPLICITLY for glycerol from non-halal animal fats",
+        "specific_mention_of_glycerol": true,
+        "note": "The IOMS seminar included major scholars from multiple madhahib. While advisory (not binding), this is THE most directly relevant fatwa on glycerol's istihalah status."
+      }
+    },
+    {
+      "id": "FATWA-GLYCEROL-003",
+      "institution": {
+        "name": {
+          "ar": "دار الإفتاء المصرية",
+          "fr": "Dar al-Ifta al-Misriyyah (Égypte)",
+          "en": "Egyptian Dar al-Ifta"
+        },
+        "type": "state_fatwa_authority",
+        "authority_level": "national_highest",
+        "headquarters": "Cairo, Egypt",
+        "website": "https://www.dar-alifta.org",
+        "madhab_orientation": "Multi-madhab (historically Shafi'i-Hanafi)"
+      },
+      "reference": "فتاوى دار الإفتاء المصرية — باب الاستحالة في الأطعمة والأدوية",
+      "date": null,
+      "topic": "حكم استخدام الغليسيرين في الأغذية والأدوية",
+      "original_text": {
+        "lang": "ar",
+        "text": "الاستحالة مُطهِّرة عند الحنفية والمالكية وطائفة من الحنابلة اختارها شيخ الإسلام ابن تيمية وتلميذه ابن القيم، وهو الراجح عندنا. فإذا تحولت المادة النجسة تحولاً كاملاً بالتفاعل الكيميائي إلى مادة جديدة مختلفة في الاسم والصفات والخواص فهي طاهرة حلال. والغليسيرين المستخلص من الشحوم الحيوانية بالتحلل المائي أو التصبُّن — إذا كان التحول كاملاً — يعتبر مادة جديدة طاهرة"
+      },
+      "translation": {
+        "fr": {
+          "text": "L'istiḥālah est purifiante selon les Hanafites, les Malékites, et un groupe de Hanbalites — choix adopté par Cheikh al-Islam Ibn Taymiyyah et son élève Ibn al-Qayyim — et c'est l'opinion que nous considérons comme prépondérante (rājiḥ). Si une substance impure se transforme complètement par réaction chimique en une nouvelle substance différente par le nom, les attributs et les propriétés, elle est pure et licite (halal). Le glycérol extrait des graisses animales par hydrolyse ou saponification — si la transformation est complète — est considéré comme une nouvelle substance pure.",
+          "translation_notes": "الراجح عندنا (al-rājiḥ 'indanā) = l'opinion prépondérante chez nous — formule technique signifiant que Dar al-Ifta Egypt adopte officiellement cette position. وطائفة من الحنابلة (wa-ṭā'ifah min al-ḥanābilah) = et un groupe de Hanbalites — référence à Ibn Taymiyyah/Ibn al-Qayyim, position minoritaire chez les Hanbalites."
+        },
+        "en": {
+          "text": "Istiḥālah is purifying according to the Hanafis, Malikis, and a group of Hanbalis — the position chosen by Shaykh al-Islam Ibn Taymiyyah and his student Ibn al-Qayyim — and it is the preponderant opinion in our view. If an impure substance undergoes complete transformation through chemical reaction into a new substance differing in name, attributes, and properties, it is pure and halal. Glycerol extracted from animal fats through hydrolysis or saponification — if the transformation is complete — is considered a new pure substance.",
+          "translation_notes": "Dar al-Ifta Egypt is the most permissive major state fatwa institution. They explicitly side with the Hanafi/Maliki position AND the Ibn Taymiyyah Hanbali minority. They specifically mention glycerol by name and the two production processes (hydrolysis + saponification)."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "halal",
+        "istihalah_position": "accepted — for glycerol from animal fats including non-halal-slaughtered",
+        "note": "Dar al-Ifta Egypt is consistently the most permissive major Arab state institution on istihalah questions."
+      }
+    },
+    {
+      "id": "FATWA-GLYCEROL-004",
+      "institution": {
+        "name": {
+          "ar": "اللجنة الدائمة للبحوث العلمية والإفتاء — السعودية",
+          "fr": "Comité Permanent de la Recherche Scientifique et de l'Ifta — Arabie Saoudite",
+          "en": "Permanent Committee for Scholarly Research and Ifta — Saudi Arabia"
+        },
+        "type": "state_fatwa_authority",
+        "authority_level": "national_highest",
+        "headquarters": "Riyadh, Saudi Arabia",
+        "website": "https://www.alifta.gov.sa",
+        "madhab_orientation": "Hanbali (Salafi orientation)"
+      },
+      "reference": "فتاوى اللجنة الدائمة — المجموعة الثانية — فتوى رقم 22659 — باب الأطعمة",
+      "date": null,
+      "topic": "حكم المواد الغذائية المشتملة على دهون أو مشتقات حيوانية مجهولة المصدر",
+      "original_text": {
+        "lang": "ar",
+        "text": "لا يجوز استعمال الشحوم ومشتقاتها المأخوذة من الخنزير أو من حيوان لم يُذكَّ ذكاة شرعية في الأطعمة والأدوية وغيرها... والاستحالة لا تُطهِّر النجاسة العينية عند الجمهور فيما عدا الخمر إذا تخللت بنفسها... فما كان أصله من الخنزير أو من الميتة فلا يحل وإن تغيرت صورته"
+      },
+      "translation": {
+        "fr": {
+          "text": "Il n'est pas permis d'utiliser les graisses et leurs dérivés provenant du porc ou d'un animal non abattu rituellement dans les aliments, les médicaments et autres... L'istiḥālah ne purifie pas l'impureté intrinsèque (najāsah 'ayniyyah) selon la majorité [des savants], sauf le vin s'il se transforme naturellement en vinaigre... Ce dont l'origine est le porc ou la bête morte (maytah) n'est pas licite même si sa forme a changé.",
+          "translation_notes": "النجاسة العينية (al-najāsah al-'ayniyyah) = impureté intrinsèque/essentielle — concept clé Shafi'i/Hanbali : certaines substances sont impures par leur essence même, et aucune transformation ne peut les purifier. فما كان أصله من الخنزير (fa-mā kāna aṣluhu min al-khinzīr) = ce dont l'origine est le porc — formule catégorique incluant TOUS les dérivés porcins. وإن تغيرت صورته (wa-in taghayyarat ṣūratuhu) = même si sa forme a changé — rejet explicite de l'istihalah."
+        },
+        "en": {
+          "text": "It is not permissible to use fats and their derivatives taken from pig or from an animal not slaughtered according to Shari'ah in foods, medicines, and other [products]... Istiḥālah does not purify intrinsic impurity (najāsah 'ayniyyah) according to the majority, except for wine if it naturally turns to vinegar... Whatever originates from pig or carrion (maytah) is not permissible even if its form has changed.",
+          "translation_notes": "The Lajnah Da'imah represents the strictest major institutional position: they reject istihalah entirely for pig and maytah derivatives. 'وإن تغيرت صورته' (even if its form changed) — this directly addresses the glycerol case: even though glycerol is a new molecule, they maintain the original ruling because they trace the ORIGIN, not the current state."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "haram",
+        "istihalah_position": "rejected — explicitly for pig and maytah derivatives",
+        "note": "This represents the strictest mainstream institutional position. However, it should be noted that the Lajnah claims 'majority' (jumhur) support, which is contested — many scholars consider the Hanafi/Maliki position (accepting istihalah) to be at least equally weighted historically."
+      }
+    },
+    {
+      "id": "FATWA-GLYCEROL-005",
+      "institution": {
+        "name": {
+          "ar": "إسلام سؤال وجواب (الشيخ محمد صالح المنجد)",
+          "fr": "IslamQA.info (Sheikh Muhammad Salih al-Munajjid)",
+          "en": "IslamQA.info (Sheikh Muhammad Salih al-Munajjid)"
+        },
+        "type": "scholarly_individual",
+        "authority_level": "individual_high_influence",
+        "headquarters": "Saudi Arabia (online)",
+        "website": "https://islamqa.info",
+        "madhab_orientation": "Hanbali-Salafi"
+      },
+      "reference": "فتوى رقم 97541 — حكم استخدام الجلسرين في الأطعمة والأدوية",
+      "date": null,
+      "topic": "حكم استخدام الغليسيرين المستخرج من شحوم حيوانية",
+      "original_text": {
+        "lang": "ar",
+        "text": "الجلسرين أو الغليسرين: مادة تستخرج من الدهون والزيوت النباتية أو الحيوانية... فإذا كان مصدره نباتياً فلا إشكال في استعماله، وإذا كان مصدره حيوانياً فينظر: إن كان الحيوان مأكول اللحم ومذكى ذكاة شرعية جاز استعماله، وإن كان من خنزير أو من حيوان غير مذكى ذكاة شرعية فلا يجوز استعماله، لأن الاستحالة عند جمهور أهل العلم لا تطهر النجاسة... وأما إذا جُهل مصدره فالأصل الإباحة ما لم يغلب على الظن أنه من مصدر محرم"
+      },
+      "translation": {
+        "fr": {
+          "text": "Le glycérol ou glycérine : substance extraite des graisses et huiles végétales ou animales... Si sa source est végétale, il n'y a aucun problème à l'utiliser. Si sa source est animale, on examine : si l'animal est de chair licite et abattu rituellement, son usage est permis ; s'il provient du porc ou d'un animal non abattu rituellement, son usage n'est pas permis, car l'istiḥālah selon la majorité des savants ne purifie pas l'impureté... Quant à celui dont la source est inconnue, le principe d'origine est la licéité (ibāḥah) tant qu'il ne prédomine pas dans l'esprit qu'il provient d'une source interdite.",
+          "translation_notes": "فلا إشكال في استعماله (fa-lā ishkāl fī isti'mālihi) = il n'y a aucun problème à l'utiliser — approbation sans réserve pour le végétal. فالأصل الإباحة (fa-l-aṣl al-ibāḥah) = le principe d'origine est la licéité — même IslamQA (conservateur) applique la présomption de licéité quand la source est inconnue. ما لم يغلب على الظن (mā lam yaghlib 'alā al-ẓann) = tant que la présomption [de source interdite] n'est pas dominante — nuance importante : il faut une RAISON de soupçonner, pas juste la possibilité théorique."
+        },
+        "en": {
+          "text": "Glycerol or glycerin: a substance extracted from vegetable or animal fats and oils... If its source is vegetable, there is no problem in using it. If its source is animal, we examine: if the animal is of permissible meat and ritually slaughtered, its use is permitted; if it comes from pig or an animal not ritually slaughtered, its use is not permitted, because istiḥālah according to the majority of scholars does not purify impurity... As for when its source is unknown, the default ruling is permissibility (ibāḥah) so long as there is no predominant presumption that it comes from a prohibited source.",
+          "translation_notes": "Notable: even the conservative IslamQA applies aṣl al-ibāḥah for unknown-source glycerol. This means that in practice, even for strict Hanbali followers, commercial E422 of UNKNOWN source is halal by default unless there is a specific reason to suspect pork/non-halal origin."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "source_dependent",
+        "istihalah_position": "rejected",
+        "vegetable_source": "halal_by_consensus",
+        "halal_slaughtered_animal": "halal",
+        "non_halal_animal_or_pork": "haram",
+        "unknown_source": "halal_by_default (asl al-ibahah) — unless predominant suspicion of haram source",
+        "note": "IslamQA's position is Hanbali-conservative on istihalah but PRACTICAL on unknown source — the asl al-ibahah concession is significant."
+      }
+    },
+    {
+      "id": "FATWA-GLYCEROL-006",
+      "institution": {
+        "name": {
+          "ar": "إسلام ويب — قطر",
+          "fr": "IslamWeb.net — Qatar",
+          "en": "IslamWeb.net — Qatar"
+        },
+        "type": "state_fatwa_authority",
+        "authority_level": "regional_high",
+        "headquarters": "Doha, Qatar",
+        "website": "https://www.islamweb.net",
+        "madhab_orientation": "Multi-madhab (Qatar Ministry of Awqaf)"
+      },
+      "reference": "فتوى رقم 82089 — مادة الجلسرين وحكم استخدامها",
+      "date": null,
+      "topic": "حكم الغليسيرين في الأطعمة والأدوية",
+      "original_text": {
+        "lang": "ar",
+        "text": "مادة الجلسرين تُستخرج من مصادر نباتية أو حيوانية أو صناعية... فإن كانت من مصدر نباتي أو صناعي فلا حرج فيها. وإن كانت من مصدر حيواني فإن كان الحيوان مما يحل أكله وذُكِّي ذكاة شرعية فهي حلال... وإن كان الحيوان مما لا يحل أكله كالخنزير أو كان مما يحل لكنه لم يُذكَّ فإن فيه خلافاً بين الفقهاء مبنياً على مسألة الاستحالة... والأحوط تجنب ما عُلم أو غلب على الظن أنه من مصدر محرم"
+      },
+      "translation": {
+        "fr": {
+          "text": "La substance glycérol est extraite de sources végétales, animales ou industrielles... Si elle provient d'une source végétale ou industrielle, il n'y a aucun inconvénient. Si elle provient d'une source animale dont la chair est licite et qui a été abattu rituellement, elle est halal... Si l'animal est de chair illicite comme le porc, ou de chair licite mais non abattu rituellement, il y a divergence entre les juristes basée sur la question de l'istiḥālah... La prudence (iḥtiyāṭ) recommande d'éviter ce qui est connu ou fortement présumé provenir d'une source interdite.",
+          "translation_notes": "والأحوط تجنب (wa-l-aḥwaṭ tajannub) = et la prudence [recommande] d'éviter — formule intermédiaire : IslamWeb ne dit pas 'يحرم' (c'est haram) mais 'الأحوط' (le plus prudent), laissant la porte ouverte à la position permissive."
+        },
+        "en": {
+          "text": "The substance glycerol is extracted from vegetable, animal, or industrial sources... If from a vegetable or industrial source, there is no issue. If from an animal whose meat is permissible and which was ritually slaughtered, it is halal... If the animal is of impermissible meat like pig, or of permissible meat but not ritually slaughtered, there is scholarly divergence based on the question of istiḥālah... Precaution (iḥtiyāṭ) recommends avoiding what is known or strongly presumed to come from a prohibited source.",
+          "translation_notes": "IslamWeb takes a MODERATE position: acknowledging the divergence without declaring one side definitively right. Their 'الأحوط' (precautionary) language stops short of prohibition. This is typical of institutions that want to respect both positions."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "source_dependent",
+        "istihalah_position": "acknowledged divergence — leans cautious",
+        "vegetable_source": "halal",
+        "halal_slaughtered_animal": "halal",
+        "non_halal_animal_or_pork": "disputed — precaution recommended",
+        "unknown_source": "permissible unless strong suspicion"
+      }
+    },
+    {
+      "id": "FATWA-GLYCEROL-007",
+      "institution": {
+        "name": {
+          "ar": "المجلس الأوروبي للإفتاء والبحوث",
+          "fr": "Conseil Européen de la Fatwa et de la Recherche (ECFR)",
+          "en": "European Council for Fatwa and Research (ECFR)"
+        },
+        "type": "regional_ifta",
+        "authority_level": "regional_high",
+        "headquarters": "Dublin, Ireland",
+        "website": "https://www.e-cfr.org",
+        "madhab_orientation": "Multi-madhab (Maliki-Hanafi dominant, fiqh al-aqalliyyat)"
+      },
+      "reference": "قرارات المجلس الأوروبي للإفتاء — الدورات المتعلقة بالأغذية — ص 235-236 + الفتاوى العامة حول الاستحالة",
+      "date": null,
+      "topic": "حكم المواد المستخلصة من مصادر حيوانية بالتحول الكيميائي في السياق الأوروبي",
+      "original_text": {
+        "lang": "ar",
+        "text": "إن المواد التي تحولت تحولاً كيميائياً كاملاً من أصلها الحيواني إلى مادة جديدة مغايرة — كالجيلاتين والغليسيرين والأحماض الدهنية — تعتبر طاهرة حلالاً عملاً بقاعدة الاستحالة المعتمدة عند الحنفية والمالكية، وهو ما نرجحه للمسلمين في أوروبا تيسيراً ورفعاً للحرج"
+      },
+      "translation": {
+        "fr": {
+          "text": "Les substances qui ont subi une transformation chimique complète de leur origine animale en une nouvelle substance différente — comme la gélatine, le glycérol et les acides gras — sont considérées comme pures et licites (halal), en application de la règle de l'istiḥālah adoptée par les Hanafites et les Malékites, et c'est ce que nous considérons comme prépondérant pour les musulmans en Europe, par facilitation et levée de la gêne.",
+          "translation_notes": "تيسيراً ورفعاً للحرج (taysīran wa-raf'an li-l-ḥaraj) = par facilitation et levée de la gêne — invocation explicite des principes de fiqh al-aqalliyyāt (jurisprudence des minorités musulmanes). Le ECFR mentionne NOMMÉMENT le glycérol parmi les exemples."
+        },
+        "en": {
+          "text": "Substances that have undergone complete chemical transformation from their animal origin into a new different substance — such as gelatin, glycerol, and fatty acids — are considered pure and halal, applying the rule of istiḥālah adopted by the Hanafis and Malikis, which is what we consider preponderant for Muslims in Europe, for facilitation and removal of hardship.",
+          "translation_notes": "The ECFR explicitly names glycerol alongside gelatin and fatty acids as examples of valid istihalah. They apply fiqh al-aqalliyyat principles — this is their standard methodology for European Muslim minorities."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "halal",
+        "istihalah_position": "accepted",
+        "context": "European Muslim minorities — fiqh al-aqalliyyat methodology",
+        "specific_mention_of_glycerol": true,
+        "note": "The ECFR position is among the most permissive institutional positions. They explicitly include glycerol in their list of substances purified by istihalah."
+      }
+    },
+    {
+      "id": "FATWA-GLYCEROL-008",
+      "institution": {
+        "name": {
+          "ar": "مجلس العلماء الإندونيسي (MUI) — لجنة فتوى MUI",
+          "fr": "Conseil des Oulémas d'Indonésie (MUI)",
+          "en": "Indonesian Ulema Council (MUI)"
+        },
+        "type": "state_fatwa_authority",
+        "authority_level": "national_highest",
+        "headquarters": "Jakarta, Indonesia",
+        "website": "https://mui.or.id",
+        "madhab_orientation": "Shafi'i (dominant Indonesian school)"
+      },
+      "reference": "معايير الحلال MUI — Halal Standard HAS 23000:2 — باب المكونات والمواد الإضافية",
+      "date": null,
+      "topic": "شروط حلال الغليسيرين في المنتجات الغذائية والدوائية",
+      "original_text": {
+        "lang": "en",
+        "text": "Glycerol/glycerin (E422) used in halal-certified products must meet the following requirements: (1) Must NOT be derived from pork or pork by-products; (2) If derived from animal sources, the animal must be halal species AND halal-slaughtered; (3) Vegetable-sourced glycerol and synthetic glycerol are acceptable; (4) Istihalah (chemical transformation) is NOT accepted as a basis for permitting pork-derived or non-halal-animal-derived glycerol."
+      },
+      "translation": {
+        "fr": {
+          "text": "Le glycérol/glycérine (E422) utilisé dans les produits certifiés halal doit respecter les exigences suivantes : (1) Ne doit PAS être dérivé du porc ou des sous-produits porcins ; (2) S'il est d'origine animale, l'animal doit être d'espèce halal ET abattu rituellement ; (3) Le glycérol d'origine végétale et le glycérol synthétique sont acceptables ; (4) L'istiḥālah (transformation chimique) n'est PAS acceptée comme base pour autoriser le glycérol dérivé du porc ou d'animaux non abattus rituellement.",
+          "translation_notes": "La MUI applique la position Shafi'ite stricte : najasah 'ayniyyah ne peut être purifiée par istihalah. L'Indonésie est le PLUS GRAND pays musulman du monde (280+ millions) et son régime de certification halal est parmi les plus stricts — cette position a un impact considérable sur le commerce international."
+        },
+        "en": {
+          "text": "[Original text is already in English — see above]",
+          "translation_notes": "MUI's position is the strictest institutional stance: complete rejection of istihalah for glycerol. This reflects the Shafi'i school's position on najasah 'ayniyyah (intrinsic impurity). MUI halal certification is one of the most widely recognized globally, making this position commercially significant."
+        }
+      },
+      "ruling_classification": {
+        "global_ruling": "source_dependent",
+        "istihalah_position": "rejected",
+        "vegetable_source": "halal",
+        "synthetic_source": "halal",
+        "halal_slaughtered_animal": "halal",
+        "non_halal_animal_or_pork": "haram — istihalah not accepted",
+        "note": "MUI's strict stance has major commercial implications: Indonesia is the world's largest Muslim consumer market. Any glycerol intended for Indonesian export must be from verified halal sources."
+      }
+    }
+  ],
+  "madhab_analysis": {
+    "hanafi": {
+      "madhab_id": "HANAFI",
+      "geographic_dominance": [
+        "Turkey",
+        "Central Asia",
+        "South Asia (Pakistan, India, Bangladesh, Afghanistan)",
+        "Parts of Egypt",
+        "Balkans",
+        "Levant"
+      ],
+      "position_on_glycerol": {
+        "summary_fr": "Position la PLUS PERMISSIVE. Les Hanafites acceptent pleinement l'istiḥālah comme moyen de purification. Si le glycérol est produit par hydrolyse/saponification complète de graisses animales (même porcines ou de maytah), il est considéré comme une substance NOUVELLE, pure et halal. La transformation chimique complète (changement de nom, de caractéristiques et de propriétés) suffit à purifier. C'est la position classique depuis Al-Kāsānī (587H) jusqu'aux Deobandis contemporains.",
+        "istihalah_applicable": true,
+        "reasoning": "The Hanafi school considers istihalah (complete transformation) as a means of purification. When a najis substance changes completely — new name, new characteristics, new properties — the impurity ruling ceases because 'impurity is a name for a qualified thing; it ceases when the qualification ceases' (al-Kasani). Glycerol from animal fat has undergone complete molecular transformation: new formula (C₃H₈O₃ vs C₅₅H₁₀₆O₆), new name, new physical/chemical properties. This meets ALL Hanafi criteria for istihalah tammah.",
+        "practical_ruling": {
+          "source_vegetable_or_synthetic": "HALAL — unanimement, score 95-100",
+          "source_halal_slaughtered_animal": "HALAL — unanimement, score 95",
+          "source_non_halal_slaughtered_bovine": "HALAL via istihalah — score 80-85",
+          "source_pork": "HALAL via istihalah — score 70-75 (certains Hanafites modernes sont plus prudents par warā')",
+          "source_unknown_muslim_country": "HALAL — aṣl al-ibāḥah + majorité végétale, score 85-90",
+          "source_unknown_non_muslim_country": "HALAL — istihalah couvre tous les cas, score 75-80"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "بدائع الصنائع في ترتيب الشرائع",
+          "author": "الإمام علاء الدين الكاساني (ت 587هـ)",
+          "relevance": "FOUNDATIONAL text on istihalah — establishes the Hanafi principle that transformation purifies",
+          "significance": "HIGHEST",
+          "key_quote_ar": "إذا استحالت العين النجسة وتبدلت أوصافها ومعانيها خرجت عن كونها نجاسة لأنها اسم لذات موصوفة فتنعدم بانعدام الوصف — كالخمر إذا تخللت والميتة إذا صارت ملحاً",
+          "key_quote_fr": "Lorsqu'une substance impure se transforme et que ses caractéristiques et significations changent, elle sort du statut d'impureté, car [l'impureté] est un nom donné à une chose qualifiée — elle s'annule par l'annulation de la qualification — comme le vin qui se transforme en vinaigre et la charogne qui devient sel."
+        },
+        {
+          "title_ar": "رد المحتار على الدر المختار (حاشية ابن عابدين)",
+          "author": "الإمام ابن عابدين الشامي (ت 1252هـ)",
+          "relevance": "Ultimate late Hanafi authority — confirms and expands the istihalah principle to industrial applications",
+          "significance": "HIGHEST",
+          "key_quote_ar": "والحاصل أن الاستحالة عندنا مطهرة... فالنجس إذا استحال طاهراً طهر بالاستحالة",
+          "key_quote_fr": "Le résultat est que l'istiḥālah chez nous [les Hanafites] est purifiante... l'impur lorsqu'il se transforme en pur est purifié par la transformation."
+        },
+        {
+          "title_ar": "الفتاوى الهندية (العالمكيرية)",
+          "author": "لجنة من علماء الهند بأمر السلطان أورنكزيب (ت ~1100هـ)",
+          "relevance": "Practical application of istihalah to various substances in daily life — precedent for industrial derivatives",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "المبسوط",
+          "author": "الإمام السرخسي (ت 483هـ)",
+          "relevance": "Early encyclopedic Hanafi reference — establishes the broad application of istihalah beyond wine→vinegar",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "الهداية شرح بداية المبتدي",
+          "author": "الإمام برهان الدين المرغيناني (ت 593هـ)",
+          "relevance": "Foundation of Hanafi furu' — discusses transformation of najis substances in the kitab al-taharah",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "الشيخ محمد تقي العثماني",
+          "name_fr": "Sheikh Taqi Usmani",
+          "position": "Accepts istihalah for glycerol — views it as a new substance after complete chemical transformation. Maintains warā' (precaution) recommendation for pork-derived if halal alternative available.",
+          "status": "contemporary_major"
+        },
+        {
+          "name_ar": "دار الإفتاء برمنغهام",
+          "name_fr": "Darul Ifta Birmingham",
+          "position": "Glycerol from non-halal animal sources: permissible via istihalah if transformation is complete. Vegetable/synthetic: halal without issue.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "دار العلوم ديوبند",
+          "name_fr": "Darul Uloom Deoband",
+          "position": "Applies the Kasani principle: glycerol is a transformed substance — new name, new properties. Permissible even from animal fat. Conservative recommendation to prefer vegetable source when available.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "مفتي محمد ابن آدم الكوثري",
+          "name_fr": "Mufti Muhammad ibn Adam al-Kawthari",
+          "position": "Glycerol from animal fat: halal via istihalah — the complete chemical transformation creates a new substance. Explicitly discusses glycerol in his works on food additives.",
+          "status": "contemporary_major"
+        }
+      ],
+      "institutional_positions": [
+        {
+          "name_ar": "دار الإفتاء المصرية",
+          "name_fr": "Dar al-Ifta al-Misriyyah",
+          "position": "Glycerol from any source = halal via istihalah (Hanafi-aligned position)",
+          "ref": "Fatwa on istihalah in food and medicine"
+        },
+        {
+          "name_ar": "ECFR — المجلس الأوروبي للإفتاء",
+          "name_fr": "ECFR — Conseil Européen de la Fatwa",
+          "position": "Glycerol explicitly named as example of valid istihalah — halal regardless of source",
+          "ref": "Decisions on food substances, pp.235-236"
+        },
+        {
+          "name_ar": "المنظمة الإسلامية للعلوم الطبية",
+          "name_fr": "IOMS — Organisation Islamique des Sciences Médicales",
+          "position": "EXPLICITLY names glycerol from non-halal animal fat as example of valid istihalah — halal",
+          "ref": "Kuwait Seminar 1995"
+        }
+      ],
+      "naqiy_verdict": {
+        "scenario_vegetable_synthetic": {
+          "score": 97,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_halal_animal": {
+          "score": 95,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_non_halal_bovine": {
+          "score": 82,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "scenario_pork_derived": {
+          "score": 72,
+          "verdict": "DOUBTFUL_LEAN_PERMISSIBLE",
+          "confidence": "DISPUTED"
+        },
+        "scenario_unknown_source": {
+          "score": 85,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        }
+      }
+    },
+    "maliki": {
+      "madhab_id": "MALIKI",
+      "geographic_dominance": [
+        "Morocco",
+        "Algeria",
+        "Tunisia",
+        "Libya",
+        "Mauritania",
+        "West Africa",
+        "Parts of Egypt",
+        "Parts of Gulf"
+      ],
+      "position_on_glycerol": {
+        "summary_fr": "Position PERMISSIVE, similaire aux Hanafites mais avec une particularité malékite unique : les Malékites considèrent le porc vivant comme PUR (ṭāhir) et ne le déclarent impur qu'après la mort (maytah). Cette distinction, combinée à l'acceptation de l'istiḥālah, rend la position malékite particulièrement permissive pour le glycérol d'origine porcine. Al-Qarāfī (684H) dans الذخيرة développe longuement les principes de transformation. Ibn 'Āshūr (d.1973) adopte une position ultra-permissive sur les dérivés transformés.",
+        "istihalah_applicable": true,
+        "reasoning": "The Maliki school has TWO reinforcing grounds for permissiveness: (1) Acceptance of istihalah as a purifying mechanism — shared with Hanafis. (2) The unique Maliki position that live pig is PURE (tahir) — its impurity attaches only upon death (as maytah). For glycerol: if the fat was from a living pig (e.g., extracted during life — rare but theoretically relevant), it was never najis in the first place under Maliki fiqh. If from a dead pig, the istihalah argument applies. Either way, the result is the same: permissibility.",
+        "practical_ruling": {
+          "source_vegetable_or_synthetic": "HALAL — unanimement, score 95-100",
+          "source_halal_slaughtered_animal": "HALAL — unanimement, score 95",
+          "source_non_halal_slaughtered_bovine": "HALAL via istihalah — score 80-85",
+          "source_pork": "HALAL via istihalah + Maliki pig purity position — score 72-78",
+          "source_unknown_muslim_country": "HALAL — aṣl al-ibāḥah + majorité végétale, score 85-90",
+          "source_unknown_non_muslim_country": "HALAL — istihalah couvre tous les cas, score 78-82"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "الذخيرة",
+          "author": "الإمام شهاب الدين القرافي (ت 684هـ)",
+          "relevance": "Develops transformation principles in Maliki uṣūl — foundational for istihalah acceptance",
+          "significance": "HIGHEST",
+          "key_quote_ar": "الحكم يدور مع العلة وجوداً وعدماً، فإذا زالت علة التحريم بالاستحالة زال الحكم",
+          "key_quote_fr": "Le jugement tourne avec sa cause ('illah) en existence et en absence ; si la cause de l'interdiction disparaît par transformation (istiḥālah), le jugement disparaît."
+        },
+        {
+          "title_ar": "المدونة الكبرى",
+          "author": "رواية سحنون عن الإمام مالك (ت 240هـ)",
+          "relevance": "Primary source of Malik's own rulings — establishes baseline Maliki positions on purity",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "مختصر خليل",
+          "author": "خليل بن إسحاق الجندي (ت 776هـ)",
+          "relevance": "Standard Maliki fiqh manual — reference for Maghrebi jurists",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "التحرير والتنوير",
+          "author": "الطاهر بن عاشور (ت 1393هـ/1973م)",
+          "relevance": "Ultra-permissive Tunisian Maliki — most liberal position on pig derivatives after transformation",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "المقدمات الممهدات",
+          "author": "ابن رشد الجد (ت 520هـ)",
+          "relevance": "Foundational Cordoba Maliki — discusses transformation principles",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "الطاهر بن عاشور",
+          "name_fr": "Tahir ibn Ashur (d.1973)",
+          "position": "Ultra-permissive: all transformed substances from pig are halal, including gelatin and glycerol. Based on Maliki principle of pig purity during life + istihalah.",
+          "status": "contemporary_major"
+        },
+        {
+          "name_ar": "المجلس العلمي الأعلى — المغرب",
+          "name_fr": "Conseil Scientifique Suprême — Maroc",
+          "position": "Accepts istihalah for food additives in general terms; no specific fatwa on glycerol found but general framework is permissive.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "يوسف القرضاوي",
+          "name_fr": "Yusuf al-Qaradawi",
+          "position": "Explicitly permits transformed substances (including glycerol) via istihalah. Cites both Hanafi and Maliki schools. فتاوى معاصرة 3/658.",
+          "status": "contemporary_major"
+        },
+        {
+          "name_ar": "وزارة الشؤون الدينية — الجزائر",
+          "name_fr": "Ministère des Affaires Religieuses — Algérie",
+          "position": "General Maliki framework: istihalah accepted. No specific glycerol fatwa found.",
+          "status": "institutional"
+        }
+      ],
+      "institutional_positions": [
+        {
+          "name_ar": "ECFR — المجلس الأوروبي للإفتاء",
+          "name_fr": "ECFR — Conseil Européen de la Fatwa",
+          "position": "Glycerol explicitly named as valid istihalah — halal",
+          "ref": "Food substances decisions, pp.235-236"
+        },
+        {
+          "name_ar": "دار الإفتاء المصرية",
+          "name_fr": "Dar al-Ifta al-Misriyyah",
+          "position": "Istihalah purifies — glycerol from any source is halal",
+          "ref": "Fatwa on istihalah"
+        },
+        {
+          "name_ar": "المنظمة الإسلامية للعلوم الطبية",
+          "name_fr": "IOMS",
+          "position": "Glycerol explicitly named as valid istihalah example",
+          "ref": "Kuwait 1995 Seminar"
+        }
+      ],
+      "naqiy_verdict": {
+        "scenario_vegetable_synthetic": {
+          "score": 97,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_halal_animal": {
+          "score": 95,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_non_halal_bovine": {
+          "score": 80,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "scenario_pork_derived": {
+          "score": 73,
+          "verdict": "DOUBTFUL_LEAN_PERMISSIBLE",
+          "confidence": "DISPUTED"
+        },
+        "scenario_unknown_source": {
+          "score": 85,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        }
+      }
+    },
+    "shafii": {
+      "madhab_id": "SHAFII",
+      "geographic_dominance": [
+        "Indonesia",
+        "Malaysia",
+        "East Africa",
+        "Yemen",
+        "Jordan",
+        "Palestine",
+        "Parts of Egypt",
+        "Brunei",
+        "Southern India (Kerala)"
+      ],
+      "position_on_glycerol": {
+        "summary_fr": "Position la PLUS STRICTE. Les Shafi'ites REJETTENT l'istiḥālah comme moyen de purification pour les substances intrinsèquement impures (نجاسة عينية). Le principe fondamental d'Abū Isḥāq al-Shīrāzī dans المهذب est sans appel : même si la substance brûle et devient cendres, elle reste impure car son impureté est 'intrinsèque' (لعينها). La seule exception est le vin qui se transforme naturellement en vinaigre. La MUI (Indonésie) et la JAKIM (Malaisie) — les deux plus grandes institutions de certification halal au monde — appliquent cette position, ce qui en fait la position la plus commercialement impactante.",
+        "istihalah_applicable": false,
+        "reasoning": "The Shafi'i school divides impurity into two categories: (1) najasah 'ayniyyah (intrinsic impurity) — the substance is impure by its very essence (pig, blood, dead animal parts), and NO transformation can purify it; (2) najasah hukmiyyah (circumstantial impurity) — impurity attached by contact or circumstance, which CAN be removed. Pig fat and non-halal-slaughtered animal fat fall under category 1. Therefore, glycerol derived from them remains najis regardless of the chemical transformation it has undergone. The ONLY exception to this rule is wine becoming vinegar — and the Shafi'is confine this exception strictly, arguing it is a specific textual exception (khamr → khall) that cannot be extended by analogy.",
+        "practical_ruling": {
+          "source_vegetable_or_synthetic": "HALAL — unanimement, score 95-100",
+          "source_halal_slaughtered_animal": "HALAL — unanimement, score 95",
+          "source_non_halal_slaughtered_bovine": "HARAM — najasah ayniyyah persists, score 5-10",
+          "source_pork": "HARAM — najasah ayniyyah, AUCUNE exception, score 0-5",
+          "source_unknown_muslim_country": "MASHBOOH — warā' recommended, score 50-60",
+          "source_unknown_non_muslim_country": "MASHBOOH tendant HARAM — higher probability of animal source, score 30-40"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "المهذب في فقه الإمام الشافعي",
+          "author": "أبو إسحاق الشيرازي (ت 476هـ)",
+          "relevance": "THE foundational text on najasah 'ayniyyah — establishes that intrinsic impurity is NEVER purified by transformation",
+          "significance": "HIGHEST",
+          "key_quote_ar": "وإن أحرق السرجين أو العذرة فصار رماداً لم يطهر لأن نجاستها لعينها ويخالف الخمر فإن نجاستها لمعنى معقول وقد زال",
+          "key_quote_fr": "Et si l'on brûle le fumier ou les excréments jusqu'à ce qu'ils deviennent cendres, cela ne les purifie pas, car leur impureté est intrinsèque (li-'aynihā). Cela diffère du vin dont l'impureté est liée à un sens rationnel (ma'nā ma'qūl) qui a cessé [l'intoxication]."
+        },
+        {
+          "title_ar": "المجموع شرح المهذب",
+          "author": "الإمام النووي (ت 676هـ)",
+          "relevance": "ULTIMATE Shafi'i reference — elaborates on al-Shirazi's principle with extensive discussion",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "تحفة المحتاج بشرح المنهاج",
+          "author": "ابن حجر الهيتمي (ت 974هـ)",
+          "relevance": "Late Shafi'i authority — standard reference in SE Asia and Yemen. Confirms strict rejection of istihalah.",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "نهاية المحتاج إلى شرح المنهاج",
+          "author": "شمس الدين الرملي (ت 1004هـ)",
+          "relevance": "Paired with Tuhfa as dual late Shafi'i authority — confirms the same position",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "الفقه الإسلامي وأدلته",
+          "author": "وهبة الزحيلي (ت 1436هـ/2015م)",
+          "relevance": "Major contemporary Syrian Shafi'i encyclopedia — discusses istihalah debate extensively, confirming the Shafi'i rejection while acknowledging the Hanafi/Maliki alternative",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "مجلس العلماء الإندونيسي (MUI)",
+          "name_fr": "Majelis Ulama Indonesia (MUI)",
+          "position": "STRICTEST institutional position: glycerol from pork or non-halal animal = haram. Istihalah rejected. All halal-certified products must use verified vegetable/synthetic glycerol.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "JAKIM — ماليزيا",
+          "name_fr": "JAKIM — Malaisie",
+          "position": "Same as MUI: glycerol must be from verified halal source. No istihalah exception. Malaysian halal standard MS1500 requires source verification.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "وهبة الزحيلي (ت 2015)",
+          "name_fr": "Wahba al-Zuhayli (d.2015)",
+          "position": "Confirms Shafi'i rejection of istihalah for najasah ayniyyah while acknowledging Hanafi/Maliki permissiveness. Presents both views in his encyclopedia.",
+          "status": "contemporary_major"
+        },
+        {
+          "name_ar": "دائرة الإفتاء الأردنية",
+          "name_fr": "Département de l'Ifta jordanien",
+          "position": "Leans toward source verification requirement, reflecting Shafi'i influence in Jordanian fiqh.",
+          "status": "institutional"
+        }
+      ],
+      "institutional_positions": [
+        {
+          "name_ar": "MUI — إندونيسيا",
+          "name_fr": "MUI — Indonésie",
+          "position": "Glycerol from pork/non-halal animal = HARAM. No istihalah. Source verification mandatory.",
+          "ref": "HAS 23000 Halal Standard"
+        },
+        {
+          "name_ar": "JAKIM — ماليزيا",
+          "name_fr": "JAKIM — Malaisie",
+          "position": "Same as MUI. Source verification required.",
+          "ref": "MS1500 Malaysian Halal Standard"
+        },
+        {
+          "name_ar": "مجمع الفقه الإسلامي — رابطة العالم الإسلامي",
+          "name_fr": "MWL Fiqh Academy",
+          "position": "Historically cautious on istihalah — leans toward Shafi'i/Hanbali rejection",
+          "ref": "Gelatin discussions, pp.85-90"
+        }
+      ],
+      "naqiy_verdict": {
+        "scenario_vegetable_synthetic": {
+          "score": 97,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_halal_animal": {
+          "score": 95,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_non_halal_bovine": {
+          "score": 8,
+          "verdict": "HARAM",
+          "confidence": "HIGH"
+        },
+        "scenario_pork_derived": {
+          "score": 3,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        },
+        "scenario_unknown_source": {
+          "score": 55,
+          "verdict": "MASHBOOH",
+          "confidence": "UNCERTAIN"
+        }
+      }
+    },
+    "hanbali": {
+      "madhab_id": "HANBALI",
+      "geographic_dominance": [
+        "Saudi Arabia",
+        "Qatar",
+        "Parts of Gulf States",
+        "Parts of Iraq"
+      ],
+      "position_on_glycerol": {
+        "summary_fr": "Position DIVISÉE avec DEUX rivāyāt (transmissions) de l'Imam Aḥmad. La position MAJORITAIRE (ẓāhir al-madhhab) rejette l'istiḥālah — identique au Shafi'isme. Mais la position DISSIDENTE d'Ibn Taymiyyah (728H) et Ibn al-Qayyim (751H) ACCEPTE l'istiḥālah comme purificatrice. Cette dissidence est ÉNORMÉMENT influente et est citée par TOUTES les institutions permissives (OCI, ECFR, Dar al-Ifta Egypt, IOMS). En pratique, les institutions saoudiennes (Lajnah Dā'imah, IslamQA) suivent le ẓāhir al-madhhab (rejet), tandis que les savants indépendants et les institutions internationales citent la dissidence de Ibn Taymiyyah.",
+        "istihalah_applicable": "DISPUTED — two rivayat from Imam Ahmad",
+        "reasoning": "Two positions within the Hanbali school: (1) MAJORITY (zahir al-madhhab per Ibn Qudamah in al-Mughni): istihalah does NOT purify, except wine→vinegar. Same as Shafi'i. This is the official Saudi position (Lajnah Da'imah). (2) MINORITY (Ibn Taymiyyah + Ibn al-Qayyim): istihalah DOES purify. Ibn Taymiyyah argues: 'الأصح أن الاستحالة مطهرة للنجاسات' (The more correct view is that istihalah purifies impurities). This minority view has gained enormous traction in modern collective fiqh (OCI, IOMS, ECFR). For glycerol: following the majority, pork/maytah-derived glycerol = haram. Following Ibn Taymiyyah, it = halal.",
+        "practical_ruling": {
+          "source_vegetable_or_synthetic": "HALAL — unanimement, score 95-100",
+          "source_halal_slaughtered_animal": "HALAL — unanimement, score 95",
+          "source_non_halal_slaughtered_bovine": "HARAM selon ẓāhir al-madhhab (score 10) / HALAL selon Ibn Taymiyyah (score 78)",
+          "source_pork": "HARAM selon ẓāhir al-madhhab (score 3) / DOUBTFUL_LEAN_PERMISSIBLE selon Ibn Taymiyyah (score 65)",
+          "source_unknown_muslim_country": "HALAL par aṣl al-ibāḥah — même IslamQA applique ce principe, score 70-80",
+          "source_unknown_non_muslim_country": "MASHBOOH — warā' recommandé, score 45-55"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "المغني",
+          "author": "الإمام موفق الدين ابن قدامة (ت 620هـ)",
+          "relevance": "ULTIMATE Hanbali reference — documents the TWO rivayat on istihalah",
+          "significance": "HIGHEST",
+          "key_quote_ar": "ظاهر المذهب أنه لا يطهر شيء من النجاسات بالاستحالة إلا الخمرة إذا انقلبت بنفسها خلاً وما عداها لا يطهر كالنجاسات إذا احترقت فصارت رماداً",
+          "key_quote_fr": "La position apparente du madhhab est que rien parmi les impuretés n'est purifié par la transformation (istiḥālah) sauf le vin s'il se transforme naturellement en vinaigre. Tout le reste n'est pas purifié, comme les impuretés brûlées devenues cendres."
+        },
+        {
+          "title_ar": "مجموع الفتاوى",
+          "author": "شيخ الإسلام ابن تيمية (ت 728هـ)",
+          "relevance": "THE dissenting voice — accepts istihalah as purifying, hugely influential on modern collective fiqh",
+          "significance": "HIGHEST",
+          "key_quote_ar": "الأصح أن الاستحالة مطهرة للنجاسات، فإن النجاسة حكم تابع للخبث، فإذا زال الخبث زال حكمه",
+          "key_quote_fr": "Le plus correct est que l'istiḥālah purifie les impuretés, car l'impureté est un jugement qui suit la souillure (khabath) — si la souillure disparaît, son jugement disparaît."
+        },
+        {
+          "title_ar": "إعلام الموقعين عن رب العالمين",
+          "author": "الإمام ابن القيم الجوزية (ت 751هـ)",
+          "relevance": "Supports Ibn Taymiyyah's position — adds hadith evidence on transformation",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "كشاف القناع عن متن الإقناع",
+          "author": "الإمام منصور البهوتي (ت 1051هـ)",
+          "relevance": "Late Hanbali standard — follows zahir al-madhhab (rejection of istihalah)",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "الإنصاف في معرفة الراجح من الخلاف",
+          "author": "الإمام علاء الدين المرداوي (ت 885هـ)",
+          "relevance": "Catalogue of all Hanbali internal divergences — documents the istihalah ikhtilaf",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "اللجنة الدائمة للإفتاء — السعودية",
+          "name_fr": "Comité Permanent de l'Ifta — Arabie Saoudite",
+          "position": "STRICTEST: glycerol from pork/maytah = haram. Istihalah rejected. Follows zahir al-madhhab.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "الشيخ محمد صالح المنجد (IslamQA)",
+          "name_fr": "Sheikh al-Munajjid (IslamQA)",
+          "position": "Rejects istihalah for animal-derived glycerol. But applies asl al-ibahah for unknown-source glycerol — a significant practical concession.",
+          "status": "individual_high_influence"
+        },
+        {
+          "name_ar": "هيئة كبار العلماء — السعودية",
+          "name_fr": "Hay'at Kibar al-'Ulama — Arabie Saoudite",
+          "position": "Follows zahir al-madhhab. Issued مجلة البحوث الإسلامية العدد 17 rejecting istihalah for najasah ayniyyah.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "مجمع الفقه الإسلامي الدولي (OCI)",
+          "name_fr": "Académie Internationale de Fiqh (OCI)",
+          "position": "Accepts istihalah as purifying (Resolution 210) — follows Ibn Taymiyyah's position despite being hosted in Saudi Arabia.",
+          "status": "institutional"
+        }
+      ],
+      "institutional_positions": [
+        {
+          "name_ar": "اللجنة الدائمة للإفتاء",
+          "name_fr": "Lajnah Da'imah",
+          "position": "Glycerol from pork/maytah = HARAM. Fatwa 22659.",
+          "ref": "Fatawa al-Lajnah al-Da'imah, Vol. 22"
+        },
+        {
+          "name_ar": "IslamQA.info",
+          "name_fr": "IslamQA.info",
+          "position": "Source-dependent: vegetable/synthetic = halal; pork/maytah = haram; unknown = halal by default (asl al-ibahah)",
+          "ref": "Fatwa 97541"
+        },
+        {
+          "name_ar": "مجمع الفقه — رابطة العالم الإسلامي",
+          "name_fr": "MWL Fiqh Academy",
+          "position": "Historically cautious — leans toward rejection of istihalah for animal derivatives",
+          "ref": "Gelatin sessions"
+        }
+      ],
+      "naqiy_verdict": {
+        "scenario_vegetable_synthetic": {
+          "score": 97,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_halal_animal": {
+          "score": 95,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_non_halal_bovine_zahir": {
+          "score": 8,
+          "verdict": "HARAM",
+          "confidence": "HIGH"
+        },
+        "scenario_non_halal_bovine_ibn_taymiyyah": {
+          "score": 78,
+          "verdict": "HALAL",
+          "confidence": "DISPUTED"
+        },
+        "scenario_pork_derived_zahir": {
+          "score": 3,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        },
+        "scenario_pork_derived_ibn_taymiyyah": {
+          "score": 65,
+          "verdict": "DOUBTFUL_LEAN_PERMISSIBLE",
+          "confidence": "DISPUTED"
+        },
+        "scenario_unknown_source": {
+          "score": 65,
+          "verdict": "MASHBOOH",
+          "confidence": "UNCERTAIN"
+        }
+      }
+    }
+  },
+  "scholarly_consensus_points": {
+    "unanimous_agreement": [
+      "Glycerol from VEGETABLE sources (palm, soy, rapeseed, sunflower) is HALAL — no scholarly disagreement exists.",
+      "Glycerol from SYNTHETIC/petrochemical sources is HALAL — no scholarly disagreement exists.",
+      "Glycerol from a HALAL-SLAUGHTERED animal (of permissible species) is HALAL — no scholarly disagreement exists.",
+      "The molecule C₃H₈O₃ is chemically IDENTICAL regardless of source — this is a scientific fact acknowledged by all parties.",
+      "The prohibition in Islam is on CONSUMING the haram substance itself, not on a new substance derived from it (Hanafi/Maliki view) vs the prohibition attaches to the ORIGIN and persists through transformation (Shafi'i/Hanbali classical view) — this is the fundamental methodological split."
+    ],
+    "majority_agreement": [
+      "When the source of glycerol is UNKNOWN and there is no specific reason to suspect haram origin, the default is permissibility (aṣl al-ibāḥah) — even conservative scholars like IslamQA's Sheikh al-Munajjid accept this.",
+      "The chemical transformation from triglyceride to glycerol constitutes a genuine change in substance — this is not disputed even by those who reject istihalah (they simply hold that the change doesn't affect the ruling)."
+    ],
+    "disputed_points": [
+      "Does istihalah (complete chemical transformation) purify an intrinsically impure (najis 'ayni) substance? Hanafi/Maliki: YES. Shafi'i/Hanbali classical: NO (except wine→vinegar). Ibn Taymiyyah/Ibn al-Qayyim (Hanbali dissenters): YES.",
+      "When the source is unknown in a NON-Muslim country: is the default ibahah or shubuha? Permissive scholars: ibahah (since 90%+ is vegetable/synthetic). Conservative scholars: shubuha (precaution warranted).",
+      "Pork-derived glycerol specifically: even among scholars who accept istihalah, some maintain warā' (precautionary avoidance) for pork-origin specifically, treating it as more severe than non-halal-slaughtered bovine."
+    ]
+  },
+  "evidence_base": {
+    "quran": [
+      {
+        "ayah": "سورة البقرة 2:173",
+        "text_ar": "إِنَّمَا حَرَّمَ عَلَيْكُمُ الْمَيْتَةَ وَالدَّمَ وَلَحْمَ الْخِنزِيرِ وَمَا أُهِلَّ بِهِ لِغَيْرِ اللَّهِ فَمَنِ اضْطُرَّ غَيْرَ بَاغٍ وَلَا عَادٍ فَلَا إِثْمَ عَلَيْهِ",
+        "relevance": "Foundational verse on prohibited foods: maytah, blood, pork. Permissive scholars argue 'لحم الخنزير' (pork flesh) does not cover a completely transformed derivative like glycerol. Conservative scholars argue the prohibition covers ALL derivatives of the prohibited origin."
+      },
+      {
+        "ayah": "سورة الأنعام 6:145",
+        "text_ar": "قُل لَّا أَجِدُ فِي مَا أُوحِيَ إِلَيَّ مُحَرَّمًا عَلَىٰ طَاعِمٍ يَطْعَمُهُ إِلَّا أَن يَكُونَ مَيْتَةً أَوْ دَمًا مَّسْفُوحًا أَوْ لَحْمَ خِنزِيرٍ فَإِنَّهُ رِجْسٌ",
+        "relevance": "The word 'رجس' (rijs = impure/filthy) is key: Shafi'i/Hanbali use it to argue intrinsic impurity that survives transformation. Hanafi/Maliki argue the 'rijs' applies to the described substance (flesh/blood/carrion) — not to a chemically different derivative."
+      }
+    ],
+    "hadith": [
+      {
+        "text_ar": "إن الله ورسوله حرّم بيع الخمر والميتة والخنزير والأصنام. فقيل: يا رسول الله، أرأيت شحوم الميتة فإنه يُطلى بها السفن ويُدهن بها الجلود ويستصبح بها الناس؟ قال: لا، هو حرام",
+        "source": "صحيح البخاري (2236) ومسلم (1581)",
+        "relevance": "CRITICAL hadith: the Prophet was asked about maytah fat used for industrial purposes (ships, leather, lamps) and said 'No, it is haram.' Conservative scholars cite this to forbid ALL maytah fat derivatives. Permissive scholars counter: (1) the question was about using the FAT ITSELF (not a transformed product), (2) the companions were asking about the fat in its original form, not after chemical transformation."
+      },
+      {
+        "text_ar": "خير خلكم خل خمركم",
+        "source": "attributed but disputed — see also صحيح مسلم on natural wine→vinegar transformation",
+        "relevance": "Vinegar from wine: universally accepted as halal (the one istihalah ALL madhahib accept). Conservative scholars confine this to wine→vinegar only. Permissive scholars extend the principle to any complete chemical transformation."
+      }
+    ],
+    "scientific_evidence": {
+      "molecular_transformation": "Triglyceride (e.g., tristearin C₅₇H₁₁₀O₆) undergoes hydrolysis → 3 stearic acid molecules (C₁₈H₃₆O₂) + 1 glycerol molecule (C₃H₈O₃). The ester bonds are COMPLETELY broken. The resulting glycerol shares NO structural subunit unique to the original fat — it is the universal backbone of ALL triglycerides, whether from pork, beef, palm, or soy. Chemical analysis cannot distinguish the origin.",
+      "purity_standards": "Pharmaceutical-grade glycerol (EP/USP): ≥99.5% pure C₃H₈O₃. Residual impurities are water, other polyols — NOT fat residues. The purification process (distillation at 290°C, decolorization, ion exchange) removes all traces of the original source material.",
+      "industry_source_data": {
+        "global_production": "~4.1 million tonnes/year (2024 estimate)",
+        "source_breakdown": {
+          "vegetable_biodiesel": "~65% (dominant since 2005 biodiesel boom — palm oil, rapeseed, soy)",
+          "synthetic_petrochemical": "~25% (from propylene via epichlorohydrin or allyl chloride — declining due to cost)",
+          "animal_fat": "~10% (tallow-based, declining — includes both bovine and mixed animal fats)",
+          "note": "Pork-specific glycerol is NOT separately tracked in industry statistics. It is estimated at 2-5% of global production, primarily from mixed animal fat rendering in regions where pork processing is prevalent."
+        },
+        "eu_regulation_2023_1329": "EU Regulation 2023/1329 updated the specification for E422 to state that glycerol should be obtained from 'vegetable oils or fats.' This regulatory shift reflects the industry trend toward vegetable sources and provides a de facto guarantee for E422 labeled products in the EU.",
+        "france_specific": "France is the EU's largest biodiesel consumer (3.6 million tonnes, 22% of EU consumption). The primary biodiesel feedstock in France is rapeseed oil (colza), making French glycerol predominantly rapeseed-derived. French pharmaceutical and food glycerol increasingly carries 'origine végétale' labeling."
+      }
+    }
+  },
+  "naqiy_scoring_model": {
+    "scoring_matrix": [
+      {
+        "scenario": "glycerol_vegetable_confirmed",
+        "description_fr": "Glycérol d'origine végétale confirmée (palme, soja, colza, tournesol)",
+        "naqiy_score": 97,
+        "verdict": "HALAL",
+        "confidence": "CERTAIN",
+        "color": "green",
+        "verdicts_by_madhab": {
+          "hanafi": 97,
+          "maliki": 97,
+          "shafii": 97,
+          "hanbali": 97
+        },
+        "note": "Consensus unanime — aucune divergence"
+      },
+      {
+        "scenario": "glycerol_synthetic_petrochemical",
+        "description_fr": "Glycérol synthétique (pétrochimique)",
+        "naqiy_score": 97,
+        "verdict": "HALAL",
+        "confidence": "CERTAIN",
+        "color": "green",
+        "verdicts_by_madhab": {
+          "hanafi": 97,
+          "maliki": 97,
+          "shafii": 97,
+          "hanbali": 97
+        },
+        "note": "Consensus unanime — substance minérale/chimique, aucun enjeu de source animale"
+      },
+      {
+        "scenario": "glycerol_halal_slaughtered_animal",
+        "description_fr": "Glycérol d'animal halal (espèce permise + abattage rituel confirmé)",
+        "naqiy_score": 95,
+        "verdict": "HALAL",
+        "confidence": "CERTAIN",
+        "color": "green",
+        "verdicts_by_madhab": {
+          "hanafi": 95,
+          "maliki": 95,
+          "shafii": 95,
+          "hanbali": 95
+        },
+        "note": "Consensus unanime — source animale licite, transformation n'est pas un enjeu"
+      },
+      {
+        "scenario": "glycerol_non_halal_bovine",
+        "description_fr": "Glycérol de suif bovin NON abattu rituellement (maytah)",
+        "naqiy_score": 45,
+        "verdict": "MASHBOOH",
+        "confidence": "DISPUTED",
+        "color": "orange",
+        "verdicts_by_madhab": {
+          "hanafi": 82,
+          "maliki": 80,
+          "shafii": 8,
+          "hanbali": 43
+        },
+        "note": "Divergence maximale. Hanafi/Maliki: halal via istihalah. Shafi'i: haram (najasah ayniyyah). Hanbali: deux positions (zahir = haram, Ibn Taymiyyah = halal). Score global = moyenne pondérée."
+      },
+      {
+        "scenario": "glycerol_pork_derived",
+        "description_fr": "Glycérol dérivé de graisse de PORC (saindoux)",
+        "naqiy_score": 35,
+        "verdict": "MASHBOOH",
+        "confidence": "DISPUTED",
+        "color": "red",
+        "verdicts_by_madhab": {
+          "hanafi": 72,
+          "maliki": 73,
+          "shafii": 3,
+          "hanbali": 34
+        },
+        "note": "Le cas le plus controversé. Même les permissifs (Hanafi/Maliki) recommandent warā' (évitement) pour le porc spécifiquement quand une alternative est disponible. Shafi'i/Hanbali classique: haram catégorique."
+      },
+      {
+        "scenario": "glycerol_unknown_source_muslim_country",
+        "description_fr": "Glycérol de source inconnue — pays musulman (Maroc, Algérie, Turquie, Indonésie...)",
+        "naqiy_score": 80,
+        "verdict": "HALAL",
+        "confidence": "HIGH",
+        "color": "green",
+        "verdicts_by_madhab": {
+          "hanafi": 88,
+          "maliki": 87,
+          "shafii": 65,
+          "hanbali": 75
+        },
+        "note": "Aṣl al-ibāḥah applicable. En pays musulman : infrastructures halal, peu de sources porcines, glycérol majoritairement végétal. Même les Shafi'ites accordent une présomption de pureté dans ce contexte."
+      },
+      {
+        "scenario": "glycerol_unknown_source_non_muslim_country_eu",
+        "description_fr": "Glycérol E422 de source inconnue — pays non-musulman (EU/France)",
+        "naqiy_score": 72,
+        "verdict": "DOUBTFUL_LEAN_PERMISSIBLE",
+        "confidence": "DISPUTED",
+        "color": "yellow",
+        "verdicts_by_madhab": {
+          "hanafi": 82,
+          "maliki": 80,
+          "shafii": 45,
+          "hanbali": 60
+        },
+        "note": "En EU post-2023: Règlement 2023/1329 spécifie E422 d'huiles végétales. 65%+ du glycérol mondial est végétal. Aṣl al-ibāḥah + statistiques favorables → tendance permissive. Mais source non vérifiable → prudence Shafi'ite."
+      },
+      {
+        "scenario": "glycerol_in_medication_unknown_source",
+        "description_fr": "Glycérol dans un médicament — source inconnue — nécessité médicale",
+        "naqiy_score": 85,
+        "verdict": "HALAL",
+        "confidence": "HIGH",
+        "color": "green",
+        "verdicts_by_madhab": {
+          "hanafi": 92,
+          "maliki": 90,
+          "shafii": 72,
+          "hanbali": 80
+        },
+        "note": "La ḍarūrah (nécessité) médicale élargit la permissibilité. Même les Shafi'ites acceptent l'usage de substances normalement interdites en cas de nécessité médicale sans alternative disponible. Al-Zuhayli: 'يجوز التداوي بالمحرم عند الحاجة إذا لم يوجد البديل المباح'."
+      },
+      {
+        "scenario": "glycerol_e_liquid_vaping",
+        "description_fr": "Glycérol dans e-liquide (vapotage/cigarette électronique) — source inconnue",
+        "naqiy_score": 60,
+        "verdict": "MASHBOOH",
+        "confidence": "UNCERTAIN",
+        "color": "orange",
+        "verdicts_by_madhab": {
+          "hanafi": 70,
+          "maliki": 68,
+          "shafii": 40,
+          "hanbali": 52
+        },
+        "note": "Double enjeu : source du glycérol + permissibilité du vapotage lui-même (débat séparé). Pas de ḍarūrah applicable. E-liquides utilisent majoritairement du glycérol végétal (VG = vegetable glycerin) mais pas toujours vérifié."
+      }
+    ]
+  },
+  "identification_guide": {
+    "how_to_identify_on_label": {
+      "fr": "Sur les étiquettes alimentaires européennes : 'glycérol', 'glycérine', 'E422', ou 'glycerin' (en anglais). En pharmacie : 'glycérol' dans la composition. En cosmétique : 'glycerin' dans la liste INCI. ATTENTION : l'étiquette ne mentionne JAMAIS la source (animale vs végétale) — la molécule E422 est chimiquement identique quelle que soit l'origine.",
+      "en": "On European food labels: 'glycerol', 'glycerine', 'E422', or 'glycerin'. In pharmaceuticals: 'glycerol' in the composition. In cosmetics: 'glycerin' in the INCI list. WARNING: the label NEVER mentions the source (animal vs vegetable) — the E422 molecule is chemically identical regardless of origin."
+    },
+    "consumer_guidance": {
+      "fr": [
+        "RÈGLE D'OR : En Europe post-2023, le Règlement 2023/1329 spécifie que l'E422 doit provenir 'd'huiles ou de graisses végétales.' Cela offre une garantie réglementaire pour le E422 étiqueté dans les aliments en EU.",
+        "INDICE FIABLE : Si le produit porte la mention 'convient aux végétariens' ou 'vegan', le glycérol est très probablement végétal.",
+        "PHARMA : Les glycérines pharmaceutiques en France sont massivement d'origine végétale (palme ou colza). Contacter le fabricant en cas de doute.",
+        "COSMÉTIQUE : La mention 'glycérine végétale' ou 'vegetable glycerin (VG)' est de plus en plus courante comme argument marketing. Son absence n'implique pas nécessairement une source animale.",
+        "E-LIQUIDES : Les e-liquides de qualité utilisent du 'VG' (Vegetable Glycerin). Vérifier auprès du fabricant.",
+        "CERTIFICATION HALAL : Les produits certifiés halal (MUI, JAKIM, ou organismes français) ont vérifié la source du glycérol."
+      ],
+      "en": [
+        "GOLDEN RULE: In Europe post-2023, Regulation 2023/1329 specifies E422 should come from 'vegetable oils or fats.' This provides a regulatory guarantee for labeled E422 in EU foods.",
+        "RELIABLE INDICATOR: If the product is labeled 'suitable for vegetarians' or 'vegan,' the glycerol is very likely vegetable-sourced.",
+        "PHARMA: Pharmaceutical glycerol in France is overwhelmingly vegetable-sourced (palm or rapeseed). Contact the manufacturer if in doubt.",
+        "COSMETICS: The mention 'vegetable glycerin' or 'VG' is increasingly common. Its absence doesn't necessarily imply animal source.",
+        "E-LIQUIDS: Quality e-liquids use 'VG' (Vegetable Glycerin). Verify with the manufacturer.",
+        "HALAL CERTIFICATION: Products with halal certification (MUI, JAKIM, or French halal bodies) have verified the glycerol source."
+      ]
+    },
+    "key_regulatory_note": {
+      "eu_regulation_2023_1329": "BREAKTHROUGH: EU Regulation 2023/1329, amending Regulation 231/2012, updated the E422 specification to state glycerol should be obtained from 'vegetable oils or fats.' While this is primarily a specification update (not an outright ban on animal sources), it reflects the overwhelming industry shift to vegetable glycerol and provides significant assurance for Muslim consumers in the EU."
+    }
+  },
+  "bibliography": {
+    "primary_fiqh_sources": [
+      "مجمع الفقه الإسلامي الدولي — القرار 198 (3/21) — الدورة 21 — الرياض 2013",
+      "مجمع الفقه الإسلامي الدولي — القرار 210 (3/22) — الدورة 22 — الكويت 2015 — الاستحالة والاستهلاك",
+      "المنظمة الإسلامية للعلوم الطبية — ندوة الرؤية الإسلامية لبعض الممارسات الطبية — الكويت 1995",
+      "اللجنة الدائمة للبحوث العلمية والإفتاء — فتوى رقم 22659 — المجموعة الثانية",
+      "دار الإفتاء المصرية — فتاوى الاستحالة في الأطعمة والأدوية",
+      "إسلام سؤال وجواب — فتوى رقم 97541 — حكم استخدام الجلسرين",
+      "إسلام ويب — فتوى رقم 82089 — مادة الجلسرين وحكم استخدامها",
+      "المجلس الأوروبي للإفتاء والبحوث — قرارات حول الاستحالة والمواد الغذائية — ص 235-236",
+      "MUI — Halal Standard HAS 23000:2 — Ingredient and Additive Requirements"
+    ],
+    "secondary_scholarly_works": [
+      "بدائع الصنائع في ترتيب الشرائع — الإمام الكاساني (ت 587هـ) — كتاب الطهارة، باب الاستحالة",
+      "رد المحتار على الدر المختار (حاشية ابن عابدين) — ابن عابدين الشامي (ت 1252هـ) — كتاب الطهارة",
+      "الفتاوى الهندية (العالمكيرية) — لجنة علماء الهند (~1100هـ)",
+      "المبسوط — الإمام السرخسي (ت 483هـ)",
+      "الهداية شرح بداية المبتدي — المرغيناني (ت 593هـ)",
+      "الذخيرة — القرافي (ت 684هـ)",
+      "المدونة الكبرى — رواية سحنون عن مالك (ت 240هـ)",
+      "مختصر خليل — خليل بن إسحاق (ت 776هـ)",
+      "التحرير والتنوير — الطاهر بن عاشور (ت 1393هـ/1973م)",
+      "المقدمات الممهدات — ابن رشد الجد (ت 520هـ)",
+      "المهذب في فقه الإمام الشافعي — أبو إسحاق الشيرازي (ت 476هـ)",
+      "المجموع شرح المهذب — الإمام النووي (ت 676هـ)",
+      "تحفة المحتاج بشرح المنهاج — ابن حجر الهيتمي (ت 974هـ)",
+      "نهاية المحتاج إلى شرح المنهاج — الرملي (ت 1004هـ)",
+      "الفقه الإسلامي وأدلته — وهبة الزحيلي (ت 1436هـ/2015م)",
+      "المغني — ابن قدامة (ت 620هـ)",
+      "مجموع الفتاوى — ابن تيمية (ت 728هـ)",
+      "إعلام الموقعين — ابن القيم (ت 751هـ)",
+      "كشاف القناع — البهوتي (ت 1051هـ)",
+      "الإنصاف — المرداوي (ت 885هـ)",
+      "فتاوى معاصرة — يوسف القرضاوي — ج3/ص658"
+    ],
+    "web_sources": [
+      "https://www.iifa-aifi.org — IIFA Resolutions database",
+      "https://islamqa.info/ar/answers/97541 — IslamQA fatwa on glycerol",
+      "https://www.islamweb.net/ar/fatwa/82089 — IslamWeb fatwa on glycerol",
+      "https://www.dar-alifta.org — Dar al-Ifta Egypt fatwa database",
+      "https://www.alifta.gov.sa — Saudi Lajnah Da'imah fatwa database",
+      "https://www.e-cfr.org — ECFR resolutions",
+      "https://mui.or.id — MUI halal standards",
+      "https://eur-lex.europa.eu — EU Regulation 2023/1329 (E422 specification update)",
+      "https://www.grandviewresearch.com — Glycerol market analysis",
+      "https://www.transparencymarketresearch.com — Global glycerol industry report"
+    ]
+  },
+  "core_fiqhi_concepts": [
+    {
+      "ar": "تحديد المصدر",
+      "en": "Source identification",
+      "fr": "Identification de la source",
+      "principle": "Glycérol produit par saponification peut dériver de graisses animales (incluant porc); la source commerciale n'est pas indiquée sur l'étiquette."
+    },
+    {
+      "ar": "الاستحالة",
+      "en": "Istihalah via saponification",
+      "fr": "Istihalah par saponification",
+      "principle": "La saponification transforme chimiquement les triglycérides. Débat: cette transformation est-elle suffisante pour changer le hukm ?"
+    }
+  ],
+  "fatwas_summary": {
+    "halal_count": 0,
+    "haram_count": 0
+  },
+  "madhab_positions": {
+    "hanafi": {
+      "madhab_id": "HANAFI",
+      "geographic_dominance": [
+        "Turkey",
+        "Central Asia",
+        "South Asia (Pakistan, India, Bangladesh, Afghanistan)",
+        "Parts of Egypt",
+        "Balkans",
+        "Levant"
+      ],
+      "position_on_glycerol": {
+        "summary_fr": "Position la PLUS PERMISSIVE. Les Hanafites acceptent pleinement l'istiḥālah comme moyen de purification. Si le glycérol est produit par hydrolyse/saponification complète de graisses animales (même porcines ou de maytah), il est considéré comme une substance NOUVELLE, pure et halal. La transformation chimique complète (changement de nom, de caractéristiques et de propriétés) suffit à purifier. C'est la position classique depuis Al-Kāsānī (587H) jusqu'aux Deobandis contemporains.",
+        "istihalah_applicable": true,
+        "reasoning": "The Hanafi school considers istihalah (complete transformation) as a means of purification. When a najis substance changes completely — new name, new characteristics, new properties — the impurity ruling ceases because 'impurity is a name for a qualified thing; it ceases when the qualification ceases' (al-Kasani). Glycerol from animal fat has undergone complete molecular transformation: new formula (C₃H₈O₃ vs C₅₅H₁₀₆O₆), new name, new physical/chemical properties. This meets ALL Hanafi criteria for istihalah tammah.",
+        "practical_ruling": {
+          "source_vegetable_or_synthetic": "HALAL — unanimement, score 95-100",
+          "source_halal_slaughtered_animal": "HALAL — unanimement, score 95",
+          "source_non_halal_slaughtered_bovine": "HALAL via istihalah — score 80-85",
+          "source_pork": "HALAL via istihalah — score 70-75 (certains Hanafites modernes sont plus prudents par warā')",
+          "source_unknown_muslim_country": "HALAL — aṣl al-ibāḥah + majorité végétale, score 85-90",
+          "source_unknown_non_muslim_country": "HALAL — istihalah couvre tous les cas, score 75-80"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "بدائع الصنائع في ترتيب الشرائع",
+          "author": "الإمام علاء الدين الكاساني (ت 587هـ)",
+          "relevance": "FOUNDATIONAL text on istihalah — establishes the Hanafi principle that transformation purifies",
+          "significance": "HIGHEST",
+          "key_quote_ar": "إذا استحالت العين النجسة وتبدلت أوصافها ومعانيها خرجت عن كونها نجاسة لأنها اسم لذات موصوفة فتنعدم بانعدام الوصف — كالخمر إذا تخللت والميتة إذا صارت ملحاً",
+          "key_quote_fr": "Lorsqu'une substance impure se transforme et que ses caractéristiques et significations changent, elle sort du statut d'impureté, car [l'impureté] est un nom donné à une chose qualifiée — elle s'annule par l'annulation de la qualification — comme le vin qui se transforme en vinaigre et la charogne qui devient sel."
+        },
+        {
+          "title_ar": "رد المحتار على الدر المختار (حاشية ابن عابدين)",
+          "author": "الإمام ابن عابدين الشامي (ت 1252هـ)",
+          "relevance": "Ultimate late Hanafi authority — confirms and expands the istihalah principle to industrial applications",
+          "significance": "HIGHEST",
+          "key_quote_ar": "والحاصل أن الاستحالة عندنا مطهرة... فالنجس إذا استحال طاهراً طهر بالاستحالة",
+          "key_quote_fr": "Le résultat est que l'istiḥālah chez nous [les Hanafites] est purifiante... l'impur lorsqu'il se transforme en pur est purifié par la transformation."
+        },
+        {
+          "title_ar": "الفتاوى الهندية (العالمكيرية)",
+          "author": "لجنة من علماء الهند بأمر السلطان أورنكزيب (ت ~1100هـ)",
+          "relevance": "Practical application of istihalah to various substances in daily life — precedent for industrial derivatives",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "المبسوط",
+          "author": "الإمام السرخسي (ت 483هـ)",
+          "relevance": "Early encyclopedic Hanafi reference — establishes the broad application of istihalah beyond wine→vinegar",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "الهداية شرح بداية المبتدي",
+          "author": "الإمام برهان الدين المرغيناني (ت 593هـ)",
+          "relevance": "Foundation of Hanafi furu' — discusses transformation of najis substances in the kitab al-taharah",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "الشيخ محمد تقي العثماني",
+          "name_fr": "Sheikh Taqi Usmani",
+          "position": "Accepts istihalah for glycerol — views it as a new substance after complete chemical transformation. Maintains warā' (precaution) recommendation for pork-derived if halal alternative available.",
+          "status": "contemporary_major"
+        },
+        {
+          "name_ar": "دار الإفتاء برمنغهام",
+          "name_fr": "Darul Ifta Birmingham",
+          "position": "Glycerol from non-halal animal sources: permissible via istihalah if transformation is complete. Vegetable/synthetic: halal without issue.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "دار العلوم ديوبند",
+          "name_fr": "Darul Uloom Deoband",
+          "position": "Applies the Kasani principle: glycerol is a transformed substance — new name, new properties. Permissible even from animal fat. Conservative recommendation to prefer vegetable source when available.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "مفتي محمد ابن آدم الكوثري",
+          "name_fr": "Mufti Muhammad ibn Adam al-Kawthari",
+          "position": "Glycerol from animal fat: halal via istihalah — the complete chemical transformation creates a new substance. Explicitly discusses glycerol in his works on food additives.",
+          "status": "contemporary_major"
+        }
+      ],
+      "institutional_positions": [
+        {
+          "name_ar": "دار الإفتاء المصرية",
+          "name_fr": "Dar al-Ifta al-Misriyyah",
+          "position": "Glycerol from any source = halal via istihalah (Hanafi-aligned position)",
+          "ref": "Fatwa on istihalah in food and medicine"
+        },
+        {
+          "name_ar": "ECFR — المجلس الأوروبي للإفتاء",
+          "name_fr": "ECFR — Conseil Européen de la Fatwa",
+          "position": "Glycerol explicitly named as example of valid istihalah — halal regardless of source",
+          "ref": "Decisions on food substances, pp.235-236"
+        },
+        {
+          "name_ar": "المنظمة الإسلامية للعلوم الطبية",
+          "name_fr": "IOMS — Organisation Islamique des Sciences Médicales",
+          "position": "EXPLICITLY names glycerol from non-halal animal fat as example of valid istihalah — halal",
+          "ref": "Kuwait Seminar 1995"
+        }
+      ],
+      "naqiy_verdict": {
+        "scenario_vegetable_synthetic": {
+          "score": 97,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_halal_animal": {
+          "score": 95,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_non_halal_bovine": {
+          "score": 82,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "scenario_pork_derived": {
+          "score": 72,
+          "verdict": "DOUBTFUL_LEAN_PERMISSIBLE",
+          "confidence": "DISPUTED"
+        },
+        "scenario_unknown_source": {
+          "score": 85,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        }
+      }
+    },
+    "maliki": {
+      "madhab_id": "MALIKI",
+      "geographic_dominance": [
+        "Morocco",
+        "Algeria",
+        "Tunisia",
+        "Libya",
+        "Mauritania",
+        "West Africa",
+        "Parts of Egypt",
+        "Parts of Gulf"
+      ],
+      "position_on_glycerol": {
+        "summary_fr": "Position PERMISSIVE, similaire aux Hanafites mais avec une particularité malékite unique : les Malékites considèrent le porc vivant comme PUR (ṭāhir) et ne le déclarent impur qu'après la mort (maytah). Cette distinction, combinée à l'acceptation de l'istiḥālah, rend la position malékite particulièrement permissive pour le glycérol d'origine porcine. Al-Qarāfī (684H) dans الذخيرة développe longuement les principes de transformation. Ibn 'Āshūr (d.1973) adopte une position ultra-permissive sur les dérivés transformés.",
+        "istihalah_applicable": true,
+        "reasoning": "The Maliki school has TWO reinforcing grounds for permissiveness: (1) Acceptance of istihalah as a purifying mechanism — shared with Hanafis. (2) The unique Maliki position that live pig is PURE (tahir) — its impurity attaches only upon death (as maytah). For glycerol: if the fat was from a living pig (e.g., extracted during life — rare but theoretically relevant), it was never najis in the first place under Maliki fiqh. If from a dead pig, the istihalah argument applies. Either way, the result is the same: permissibility.",
+        "practical_ruling": {
+          "source_vegetable_or_synthetic": "HALAL — unanimement, score 95-100",
+          "source_halal_slaughtered_animal": "HALAL — unanimement, score 95",
+          "source_non_halal_slaughtered_bovine": "HALAL via istihalah — score 80-85",
+          "source_pork": "HALAL via istihalah + Maliki pig purity position — score 72-78",
+          "source_unknown_muslim_country": "HALAL — aṣl al-ibāḥah + majorité végétale, score 85-90",
+          "source_unknown_non_muslim_country": "HALAL — istihalah couvre tous les cas, score 78-82"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "الذخيرة",
+          "author": "الإمام شهاب الدين القرافي (ت 684هـ)",
+          "relevance": "Develops transformation principles in Maliki uṣūl — foundational for istihalah acceptance",
+          "significance": "HIGHEST",
+          "key_quote_ar": "الحكم يدور مع العلة وجوداً وعدماً، فإذا زالت علة التحريم بالاستحالة زال الحكم",
+          "key_quote_fr": "Le jugement tourne avec sa cause ('illah) en existence et en absence ; si la cause de l'interdiction disparaît par transformation (istiḥālah), le jugement disparaît."
+        },
+        {
+          "title_ar": "المدونة الكبرى",
+          "author": "رواية سحنون عن الإمام مالك (ت 240هـ)",
+          "relevance": "Primary source of Malik's own rulings — establishes baseline Maliki positions on purity",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "مختصر خليل",
+          "author": "خليل بن إسحاق الجندي (ت 776هـ)",
+          "relevance": "Standard Maliki fiqh manual — reference for Maghrebi jurists",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "التحرير والتنوير",
+          "author": "الطاهر بن عاشور (ت 1393هـ/1973م)",
+          "relevance": "Ultra-permissive Tunisian Maliki — most liberal position on pig derivatives after transformation",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "المقدمات الممهدات",
+          "author": "ابن رشد الجد (ت 520هـ)",
+          "relevance": "Foundational Cordoba Maliki — discusses transformation principles",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "الطاهر بن عاشور",
+          "name_fr": "Tahir ibn Ashur (d.1973)",
+          "position": "Ultra-permissive: all transformed substances from pig are halal, including gelatin and glycerol. Based on Maliki principle of pig purity during life + istihalah.",
+          "status": "contemporary_major"
+        },
+        {
+          "name_ar": "المجلس العلمي الأعلى — المغرب",
+          "name_fr": "Conseil Scientifique Suprême — Maroc",
+          "position": "Accepts istihalah for food additives in general terms; no specific fatwa on glycerol found but general framework is permissive.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "يوسف القرضاوي",
+          "name_fr": "Yusuf al-Qaradawi",
+          "position": "Explicitly permits transformed substances (including glycerol) via istihalah. Cites both Hanafi and Maliki schools. فتاوى معاصرة 3/658.",
+          "status": "contemporary_major"
+        },
+        {
+          "name_ar": "وزارة الشؤون الدينية — الجزائر",
+          "name_fr": "Ministère des Affaires Religieuses — Algérie",
+          "position": "General Maliki framework: istihalah accepted. No specific glycerol fatwa found.",
+          "status": "institutional"
+        }
+      ],
+      "institutional_positions": [
+        {
+          "name_ar": "ECFR — المجلس الأوروبي للإفتاء",
+          "name_fr": "ECFR — Conseil Européen de la Fatwa",
+          "position": "Glycerol explicitly named as valid istihalah — halal",
+          "ref": "Food substances decisions, pp.235-236"
+        },
+        {
+          "name_ar": "دار الإفتاء المصرية",
+          "name_fr": "Dar al-Ifta al-Misriyyah",
+          "position": "Istihalah purifies — glycerol from any source is halal",
+          "ref": "Fatwa on istihalah"
+        },
+        {
+          "name_ar": "المنظمة الإسلامية للعلوم الطبية",
+          "name_fr": "IOMS",
+          "position": "Glycerol explicitly named as valid istihalah example",
+          "ref": "Kuwait 1995 Seminar"
+        }
+      ],
+      "naqiy_verdict": {
+        "scenario_vegetable_synthetic": {
+          "score": 97,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_halal_animal": {
+          "score": 95,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_non_halal_bovine": {
+          "score": 80,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        },
+        "scenario_pork_derived": {
+          "score": 73,
+          "verdict": "DOUBTFUL_LEAN_PERMISSIBLE",
+          "confidence": "DISPUTED"
+        },
+        "scenario_unknown_source": {
+          "score": 85,
+          "verdict": "HALAL",
+          "confidence": "HIGH"
+        }
+      }
+    },
+    "shafi'i": {
+      "madhab_id": "SHAFII",
+      "geographic_dominance": [
+        "Indonesia",
+        "Malaysia",
+        "East Africa",
+        "Yemen",
+        "Jordan",
+        "Palestine",
+        "Parts of Egypt",
+        "Brunei",
+        "Southern India (Kerala)"
+      ],
+      "position_on_glycerol": {
+        "summary_fr": "Position la PLUS STRICTE. Les Shafi'ites REJETTENT l'istiḥālah comme moyen de purification pour les substances intrinsèquement impures (نجاسة عينية). Le principe fondamental d'Abū Isḥāq al-Shīrāzī dans المهذب est sans appel : même si la substance brûle et devient cendres, elle reste impure car son impureté est 'intrinsèque' (لعينها). La seule exception est le vin qui se transforme naturellement en vinaigre. La MUI (Indonésie) et la JAKIM (Malaisie) — les deux plus grandes institutions de certification halal au monde — appliquent cette position, ce qui en fait la position la plus commercialement impactante.",
+        "istihalah_applicable": false,
+        "reasoning": "The Shafi'i school divides impurity into two categories: (1) najasah 'ayniyyah (intrinsic impurity) — the substance is impure by its very essence (pig, blood, dead animal parts), and NO transformation can purify it; (2) najasah hukmiyyah (circumstantial impurity) — impurity attached by contact or circumstance, which CAN be removed. Pig fat and non-halal-slaughtered animal fat fall under category 1. Therefore, glycerol derived from them remains najis regardless of the chemical transformation it has undergone. The ONLY exception to this rule is wine becoming vinegar — and the Shafi'is confine this exception strictly, arguing it is a specific textual exception (khamr → khall) that cannot be extended by analogy.",
+        "practical_ruling": {
+          "source_vegetable_or_synthetic": "HALAL — unanimement, score 95-100",
+          "source_halal_slaughtered_animal": "HALAL — unanimement, score 95",
+          "source_non_halal_slaughtered_bovine": "HARAM — najasah ayniyyah persists, score 5-10",
+          "source_pork": "HARAM — najasah ayniyyah, AUCUNE exception, score 0-5",
+          "source_unknown_muslim_country": "MASHBOOH — warā' recommended, score 50-60",
+          "source_unknown_non_muslim_country": "MASHBOOH tendant HARAM — higher probability of animal source, score 30-40"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "المهذب في فقه الإمام الشافعي",
+          "author": "أبو إسحاق الشيرازي (ت 476هـ)",
+          "relevance": "THE foundational text on najasah 'ayniyyah — establishes that intrinsic impurity is NEVER purified by transformation",
+          "significance": "HIGHEST",
+          "key_quote_ar": "وإن أحرق السرجين أو العذرة فصار رماداً لم يطهر لأن نجاستها لعينها ويخالف الخمر فإن نجاستها لمعنى معقول وقد زال",
+          "key_quote_fr": "Et si l'on brûle le fumier ou les excréments jusqu'à ce qu'ils deviennent cendres, cela ne les purifie pas, car leur impureté est intrinsèque (li-'aynihā). Cela diffère du vin dont l'impureté est liée à un sens rationnel (ma'nā ma'qūl) qui a cessé [l'intoxication]."
+        },
+        {
+          "title_ar": "المجموع شرح المهذب",
+          "author": "الإمام النووي (ت 676هـ)",
+          "relevance": "ULTIMATE Shafi'i reference — elaborates on al-Shirazi's principle with extensive discussion",
+          "significance": "HIGHEST"
+        },
+        {
+          "title_ar": "تحفة المحتاج بشرح المنهاج",
+          "author": "ابن حجر الهيتمي (ت 974هـ)",
+          "relevance": "Late Shafi'i authority — standard reference in SE Asia and Yemen. Confirms strict rejection of istihalah.",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "نهاية المحتاج إلى شرح المنهاج",
+          "author": "شمس الدين الرملي (ت 1004هـ)",
+          "relevance": "Paired with Tuhfa as dual late Shafi'i authority — confirms the same position",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "الفقه الإسلامي وأدلته",
+          "author": "وهبة الزحيلي (ت 1436هـ/2015م)",
+          "relevance": "Major contemporary Syrian Shafi'i encyclopedia — discusses istihalah debate extensively, confirming the Shafi'i rejection while acknowledging the Hanafi/Maliki alternative",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "مجلس العلماء الإندونيسي (MUI)",
+          "name_fr": "Majelis Ulama Indonesia (MUI)",
+          "position": "STRICTEST institutional position: glycerol from pork or non-halal animal = haram. Istihalah rejected. All halal-certified products must use verified vegetable/synthetic glycerol.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "JAKIM — ماليزيا",
+          "name_fr": "JAKIM — Malaisie",
+          "position": "Same as MUI: glycerol must be from verified halal source. No istihalah exception. Malaysian halal standard MS1500 requires source verification.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "وهبة الزحيلي (ت 2015)",
+          "name_fr": "Wahba al-Zuhayli (d.2015)",
+          "position": "Confirms Shafi'i rejection of istihalah for najasah ayniyyah while acknowledging Hanafi/Maliki permissiveness. Presents both views in his encyclopedia.",
+          "status": "contemporary_major"
+        },
+        {
+          "name_ar": "دائرة الإفتاء الأردنية",
+          "name_fr": "Département de l'Ifta jordanien",
+          "position": "Leans toward source verification requirement, reflecting Shafi'i influence in Jordanian fiqh.",
+          "status": "institutional"
+        }
+      ],
+      "institutional_positions": [
+        {
+          "name_ar": "MUI — إندونيسيا",
+          "name_fr": "MUI — Indonésie",
+          "position": "Glycerol from pork/non-halal animal = HARAM. No istihalah. Source verification mandatory.",
+          "ref": "HAS 23000 Halal Standard"
+        },
+        {
+          "name_ar": "JAKIM — ماليزيا",
+          "name_fr": "JAKIM — Malaisie",
+          "position": "Same as MUI. Source verification required.",
+          "ref": "MS1500 Malaysian Halal Standard"
+        },
+        {
+          "name_ar": "مجمع الفقه الإسلامي — رابطة العالم الإسلامي",
+          "name_fr": "MWL Fiqh Academy",
+          "position": "Historically cautious on istihalah — leans toward Shafi'i/Hanbali rejection",
+          "ref": "Gelatin discussions, pp.85-90"
+        }
+      ],
+      "naqiy_verdict": {
+        "scenario_vegetable_synthetic": {
+          "score": 97,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_halal_animal": {
+          "score": 95,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_non_halal_bovine": {
+          "score": 8,
+          "verdict": "HARAM",
+          "confidence": "HIGH"
+        },
+        "scenario_pork_derived": {
+          "score": 3,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        },
+        "scenario_unknown_source": {
+          "score": 55,
+          "verdict": "MASHBOOH",
+          "confidence": "UNCERTAIN"
+        }
+      }
+    },
+    "hanbali": {
+      "madhab_id": "HANBALI",
+      "geographic_dominance": [
+        "Saudi Arabia",
+        "Qatar",
+        "Parts of Gulf States",
+        "Parts of Iraq"
+      ],
+      "position_on_glycerol": {
+        "summary_fr": "Position DIVISÉE avec DEUX rivāyāt (transmissions) de l'Imam Aḥmad. La position MAJORITAIRE (ẓāhir al-madhhab) rejette l'istiḥālah — identique au Shafi'isme. Mais la position DISSIDENTE d'Ibn Taymiyyah (728H) et Ibn al-Qayyim (751H) ACCEPTE l'istiḥālah comme purificatrice. Cette dissidence est ÉNORMÉMENT influente et est citée par TOUTES les institutions permissives (OCI, ECFR, Dar al-Ifta Egypt, IOMS). En pratique, les institutions saoudiennes (Lajnah Dā'imah, IslamQA) suivent le ẓāhir al-madhhab (rejet), tandis que les savants indépendants et les institutions internationales citent la dissidence de Ibn Taymiyyah.",
+        "istihalah_applicable": "DISPUTED — two rivayat from Imam Ahmad",
+        "reasoning": "Two positions within the Hanbali school: (1) MAJORITY (zahir al-madhhab per Ibn Qudamah in al-Mughni): istihalah does NOT purify, except wine→vinegar. Same as Shafi'i. This is the official Saudi position (Lajnah Da'imah). (2) MINORITY (Ibn Taymiyyah + Ibn al-Qayyim): istihalah DOES purify. Ibn Taymiyyah argues: 'الأصح أن الاستحالة مطهرة للنجاسات' (The more correct view is that istihalah purifies impurities). This minority view has gained enormous traction in modern collective fiqh (OCI, IOMS, ECFR). For glycerol: following the majority, pork/maytah-derived glycerol = haram. Following Ibn Taymiyyah, it = halal.",
+        "practical_ruling": {
+          "source_vegetable_or_synthetic": "HALAL — unanimement, score 95-100",
+          "source_halal_slaughtered_animal": "HALAL — unanimement, score 95",
+          "source_non_halal_slaughtered_bovine": "HARAM selon ẓāhir al-madhhab (score 10) / HALAL selon Ibn Taymiyyah (score 78)",
+          "source_pork": "HARAM selon ẓāhir al-madhhab (score 3) / DOUBTFUL_LEAN_PERMISSIBLE selon Ibn Taymiyyah (score 65)",
+          "source_unknown_muslim_country": "HALAL par aṣl al-ibāḥah — même IslamQA applique ce principe, score 70-80",
+          "source_unknown_non_muslim_country": "MASHBOOH — warā' recommandé, score 45-55"
+        }
+      },
+      "classical_texts": [
+        {
+          "title_ar": "المغني",
+          "author": "الإمام موفق الدين ابن قدامة (ت 620هـ)",
+          "relevance": "ULTIMATE Hanbali reference — documents the TWO rivayat on istihalah",
+          "significance": "HIGHEST",
+          "key_quote_ar": "ظاهر المذهب أنه لا يطهر شيء من النجاسات بالاستحالة إلا الخمرة إذا انقلبت بنفسها خلاً وما عداها لا يطهر كالنجاسات إذا احترقت فصارت رماداً",
+          "key_quote_fr": "La position apparente du madhhab est que rien parmi les impuretés n'est purifié par la transformation (istiḥālah) sauf le vin s'il se transforme naturellement en vinaigre. Tout le reste n'est pas purifié, comme les impuretés brûlées devenues cendres."
+        },
+        {
+          "title_ar": "مجموع الفتاوى",
+          "author": "شيخ الإسلام ابن تيمية (ت 728هـ)",
+          "relevance": "THE dissenting voice — accepts istihalah as purifying, hugely influential on modern collective fiqh",
+          "significance": "HIGHEST",
+          "key_quote_ar": "الأصح أن الاستحالة مطهرة للنجاسات، فإن النجاسة حكم تابع للخبث، فإذا زال الخبث زال حكمه",
+          "key_quote_fr": "Le plus correct est que l'istiḥālah purifie les impuretés, car l'impureté est un jugement qui suit la souillure (khabath) — si la souillure disparaît, son jugement disparaît."
+        },
+        {
+          "title_ar": "إعلام الموقعين عن رب العالمين",
+          "author": "الإمام ابن القيم الجوزية (ت 751هـ)",
+          "relevance": "Supports Ibn Taymiyyah's position — adds hadith evidence on transformation",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "كشاف القناع عن متن الإقناع",
+          "author": "الإمام منصور البهوتي (ت 1051هـ)",
+          "relevance": "Late Hanbali standard — follows zahir al-madhhab (rejection of istihalah)",
+          "significance": "HIGH"
+        },
+        {
+          "title_ar": "الإنصاف في معرفة الراجح من الخلاف",
+          "author": "الإمام علاء الدين المرداوي (ت 885هـ)",
+          "relevance": "Catalogue of all Hanbali internal divergences — documents the istihalah ikhtilaf",
+          "significance": "HIGH"
+        }
+      ],
+      "contemporary_scholars": [
+        {
+          "name_ar": "اللجنة الدائمة للإفتاء — السعودية",
+          "name_fr": "Comité Permanent de l'Ifta — Arabie Saoudite",
+          "position": "STRICTEST: glycerol from pork/maytah = haram. Istihalah rejected. Follows zahir al-madhhab.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "الشيخ محمد صالح المنجد (IslamQA)",
+          "name_fr": "Sheikh al-Munajjid (IslamQA)",
+          "position": "Rejects istihalah for animal-derived glycerol. But applies asl al-ibahah for unknown-source glycerol — a significant practical concession.",
+          "status": "individual_high_influence"
+        },
+        {
+          "name_ar": "هيئة كبار العلماء — السعودية",
+          "name_fr": "Hay'at Kibar al-'Ulama — Arabie Saoudite",
+          "position": "Follows zahir al-madhhab. Issued مجلة البحوث الإسلامية العدد 17 rejecting istihalah for najasah ayniyyah.",
+          "status": "institutional"
+        },
+        {
+          "name_ar": "مجمع الفقه الإسلامي الدولي (OCI)",
+          "name_fr": "Académie Internationale de Fiqh (OCI)",
+          "position": "Accepts istihalah as purifying (Resolution 210) — follows Ibn Taymiyyah's position despite being hosted in Saudi Arabia.",
+          "status": "institutional"
+        }
+      ],
+      "institutional_positions": [
+        {
+          "name_ar": "اللجنة الدائمة للإفتاء",
+          "name_fr": "Lajnah Da'imah",
+          "position": "Glycerol from pork/maytah = HARAM. Fatwa 22659.",
+          "ref": "Fatawa al-Lajnah al-Da'imah, Vol. 22"
+        },
+        {
+          "name_ar": "IslamQA.info",
+          "name_fr": "IslamQA.info",
+          "position": "Source-dependent: vegetable/synthetic = halal; pork/maytah = haram; unknown = halal by default (asl al-ibahah)",
+          "ref": "Fatwa 97541"
+        },
+        {
+          "name_ar": "مجمع الفقه — رابطة العالم الإسلامي",
+          "name_fr": "MWL Fiqh Academy",
+          "position": "Historically cautious — leans toward rejection of istihalah for animal derivatives",
+          "ref": "Gelatin sessions"
+        }
+      ],
+      "naqiy_verdict": {
+        "scenario_vegetable_synthetic": {
+          "score": 97,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_halal_animal": {
+          "score": 95,
+          "verdict": "HALAL",
+          "confidence": "CERTAIN"
+        },
+        "scenario_non_halal_bovine_zahir": {
+          "score": 8,
+          "verdict": "HARAM",
+          "confidence": "HIGH"
+        },
+        "scenario_non_halal_bovine_ibn_taymiyyah": {
+          "score": 78,
+          "verdict": "HALAL",
+          "confidence": "DISPUTED"
+        },
+        "scenario_pork_derived_zahir": {
+          "score": 3,
+          "verdict": "HARAM",
+          "confidence": "CERTAIN"
+        },
+        "scenario_pork_derived_ibn_taymiyyah": {
+          "score": 65,
+          "verdict": "DOUBTFUL_LEAN_PERMISSIBLE",
+          "confidence": "DISPUTED"
+        },
+        "scenario_unknown_source": {
+          "score": 65,
+          "verdict": "MASHBOOH",
+          "confidence": "UNCERTAIN"
+        }
+      }
+    }
+  },
+  "naqiy_position": {
+    "global_score": 50,
+    "verdict_internal_ingestion": "MASHBOOH par défaut — glycérol peut provenir de graisses végétales, animales halal ou animales non-halal. Accepter uniquement avec certification.",
+    "rationale": "Comme E471, le glycérol est source-dépendant. La production par saponification peut utiliser des graisses animales. Débat istihalah entre institutions. Source: DOSSIER_GLYCEROL_V2.md §NaqiyScore."
+  }
+}
