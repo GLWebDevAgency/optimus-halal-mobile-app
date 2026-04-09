@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://naqiy.app/schemas/halal-v2/match-pattern.v1.json",
+  "title": "Naqiy Match Pattern V1",
+  "description": "Runtime detection pattern compiled from substance_dossiers.match_vocabulary. Used by HalalEngineV2 matchModules.",
+  "type": "object",
+  "required": ["substance_id", "pattern_type", "pattern_value", "priority", "confidence"],
+  "additionalProperties": false,
+  "properties": {
+    "substance_id": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" },
+    "pattern_type": {
+      "type": "string",
+      "enum": ["off_tag", "e_number", "keyword_fr", "keyword_en", "keyword_ar", "keyword_other", "regex", "category_tag", "semantic_descriptor"]
+    },
+    "pattern_value": { "type": "string", "minLength": 1 },
+    "lang": { "type": ["string", "null"], "pattern": "^[a-z]{2}$" },
+    "priority": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "source": { "type": "string", "default": "dossier_compiler" }
+  }
+}
