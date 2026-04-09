@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://naqiy.app/schemas/halal-v2/practice-dossier.v1.json",
+  "title": "Naqiy Practice Dossier V1",
+  "description": "Structure for a practice dossier (stunning, mechanical slaughter, ahl kitab, etc.). Mirrors substance-dossier where possible. Tuples are in a separate file (see practice-tuple schema).",
+  "type": "object",
+  "required": ["meta", "practice", "core_fiqhi_concepts", "fatwas_summary", "madhab_positions", "naqiy_position"],
+  "additionalProperties": true,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["dossier_id", "version", "generated_at", "language_primary", "languages", "practice_family"],
+      "properties": {
+        "dossier_id": { "type": "string", "pattern": "^PRAC-[0-9]{3}$" },
+        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "generated_at": { "type": "string", "format": "date" },
+        "language_primary": { "type": "string", "enum": ["fr", "en", "ar"] },
+        "languages": { "type": "array", "items": { "type": "string", "enum": ["fr", "en", "ar"] }, "minItems": 1 },
+        "practice_family": {
+          "type": "string",
+          "enum": ["stunning", "mechanical_slaughter", "ahl_kitab", "tasmiya_protocol", "cross_contamination", "traceability", "transport_prestun", "supervision_model", "meat_origin_country", "blessing_invocation", "slaughterer_qualification", "post_slaughter_treatment"]
+        },
+        "verification_passes": { "type": "integer", "minimum": 0 },
+        "fatwas_verified_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "practice": {
+      "type": "object",
+      "required": ["id", "name_fr", "name_en", "severity_tier"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" },
+        "name_fr": { "type": "string", "minLength": 2 },
+        "name_en": { "type": "string", "minLength": 2 },
+        "name_ar": { "type": "string" },
+        "severity_tier": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "description_fr": { "type": "string" }
+      }
+    },
+    "core_fiqhi_concepts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["en", "fr", "principle"]
+      }
+    },
+    "fatwas_summary": {
+      "type": "object",
+      "required": ["halal_count", "haram_count"]
+    },
+    "madhab_positions": {
+      "type": "object",
+      "required": ["hanafi", "maliki", "shafi'i", "hanbali"]
+    },
+    "naqiy_position": {
+      "type": "object",
+      "required": ["global_score", "verdict_default"],
+      "properties": {
+        "global_score": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "verdict_default": { "type": "string" },
+        "rationale": { "type": "string" }
+      }
+    }
+  }
+}
