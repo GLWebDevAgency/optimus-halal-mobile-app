@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://naqiy.app/schemas/halal-v2/practice-tuple.v1.json",
+  "title": "Naqiy Practice Tuple V1",
+  "description": "Array of practice tuples for a single practice family. Each tuple is a scholarly-scored combination of (dimensions × madhab verdict × required evidence) with literal dossier traceback.",
+  "type": "object",
+  "required": ["practice_family", "source_dossier", "tuples"],
+  "additionalProperties": false,
+  "properties": {
+    "practice_family": {
+      "type": "string",
+      "enum": ["stunning", "mechanical_slaughter", "ahl_kitab", "tasmiya_protocol", "cross_contamination", "traceability", "transport_prestun", "supervision_model", "meat_origin_country", "blessing_invocation", "slaughterer_qualification", "post_slaughter_treatment"]
+    },
+    "source_dossier": {
+      "type": "object",
+      "required": ["dossier_id", "version"],
+      "properties": {
+        "dossier_id": { "type": "string", "pattern": "^PRAC-[0-9]{3}$" },
+        "version": { "type": "string" }
+      }
+    },
+    "tuples": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "dimensions", "verdicts", "dossier_section_ref", "fatwa_refs"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" },
+          "dimensions": {
+            "type": "object",
+            "description": "Free-form JSON object describing the tuple dimensions. Schema-free to support arbitrary families.",
+            "additionalProperties": true
+          },
+          "verdicts": {
+            "type": "object",
+            "required": ["hanafi", "maliki", "shafii", "hanbali"],
+            "additionalProperties": false,
+            "properties": {
+              "hanafi": { "type": "integer", "minimum": 0, "maximum": 100 },
+              "maliki": { "type": "integer", "minimum": 0, "maximum": 100 },
+              "shafii": { "type": "integer", "minimum": 0, "maximum": 100 },
+              "hanbali": { "type": "integer", "minimum": 0, "maximum": 100 }
+            }
+          },
+          "required_evidence": {
+            "type": "array",
+            "items": { "type": "string" },
+            "default": []
+          },
+          "dossier_section_ref": {
+            "type": "string",
+            "minLength": 5,
+            "description": "Human-readable traceback, e.g. 'STUNNED_V1 §6 row 9'"
+          },
+          "fatwa_refs": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 0
+          },
+          "typical_mortality_pct_min": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
+          "typical_mortality_pct_max": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
+          "notes_fr": { "type": "string" },
+          "notes_en": { "type": "string" },
+          "notes_ar": { "type": "string" },
+          "is_active": { "type": "boolean", "default": true }
+        }
+      }
+    }
+  }
+}
