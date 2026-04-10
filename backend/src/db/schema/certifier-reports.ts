@@ -15,7 +15,7 @@ export const reportCategoryEnum = pgEnum("report_category", [
   "other",
 ]);
 
-export const reportStatusEnum = pgEnum("report_status", [
+export const certifierReportStatusEnum = pgEnum("certifier_report_status", [
   "submitted",
   "under_review",
   "verified",
@@ -46,7 +46,7 @@ export const certifierReports = pgTable(
     dateObserved: t.date("date_observed"),
     charterVersion: t.varchar("charter_version", { length: 30 }).notNull(),
     charterSignedAt: t.timestamp("charter_signed_at", { withTimezone: true }).notNull(),
-    status: reportStatusEnum("status").default("submitted").notNull(),
+    status: certifierReportStatusEnum("status").default("submitted").notNull(),
     priority: t.smallint().default(3).notNull(),
     assignedAdminId: t.uuid("assigned_admin_id")
       .references(() => users.id, { onDelete: "set null" }),

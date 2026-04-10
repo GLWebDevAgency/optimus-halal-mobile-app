@@ -26,3 +26,18 @@ export * from "./scan-feedback.js";
 export * from "./email-sends.js";
 export * from "./product-recalls.js";
 export * from "./content-sources.js";
+
+// ── Halal Engine V2 ──
+export * from "./substances.js";
+export * from "./substance-dossiers.js";
+export * from "./substance-match-patterns.js";
+export * from "./substance-scenarios.js";
+export * from "./substance-madhab-rulings.js";
+export * from "./practice-families.js";
+export * from "./practices.js";
+export * from "./practice-dossiers.js";
+export * from "./practice-tuples.js";
+export * from "./certifier-tuple-acceptance.js";
+export * from "./halal-evaluations.js";
+export * from "./charter-versions.js";
+export * from "./certifier-reports.js";

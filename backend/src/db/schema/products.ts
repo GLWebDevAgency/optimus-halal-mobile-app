@@ -95,6 +95,17 @@ export const products = pgTable(
     // "unreliable"=critical anomaly → force healthScore=null ("je ne sais pas")
     dataQualityFlag: t.varchar("data_quality_flag", { length: 20 }),
     dataQualityReasons: t.text("data_quality_reasons").array(),
+
+    // ── V2: HALAL ENGINE V2 ─────────────────────────────────────
+    // H10: ALL new columns are nullable for zero-downtime ADD COLUMN
+    categoriesTags: t.text("categories_tags").array(),
+    foodGroupsTags: t.text("food_groups_tags").array(),
+    statesTags: t.text("states_tags").array(),
+    packagingTags: t.text("packaging_tags").array(),
+    geminiExtract: t.jsonb("gemini_extract"),
+    geminiExtractHash: t.varchar("gemini_extract_hash", { length: 64 }),
+    halalEngineVersion: t.varchar("halal_engine_version", { length: 30 }),
+    halalTrack: t.varchar("halal_track", { length: 15 }),
   },
   (table) => [
     // V1 indexes
