@@ -39,7 +39,7 @@ jobs:
 
       - name: Run validator unit tests
         working-directory: backend
-        run: pnpm vitest run src/__tests__/unit/validate-dossiers.test.ts
+        run: pnpm vitest run --config vitest.unit.config.ts src/__tests__/unit/validate-dossiers.test.ts
 
       - name: Validate all dossiers against schemas
         working-directory: backend
