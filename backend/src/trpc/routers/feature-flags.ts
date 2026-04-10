@@ -70,6 +70,8 @@ function diffChanges(
 
 export const featureFlagsRouter = router({
   // ── Public: get global flags for guests (no auth required) ───
+  // Resolves all enabled flags without user overrides or user context.
+  // Returns the same flags for every guest (cacheable aggressively).
   getGlobal: publicProcedure
     .input(
       z.object({
@@ -77,16 +79,23 @@ export const featureFlagsRouter = router({
         appVersion: z.string().max(20).optional(),
       })
     )
-    .query(async ({ ctx, input }) => {
-      const guestCtx = {
-        tier: "free" as const,
-        madhab: null,
-        platform: input.platform ?? null,
-        appVersion: input.appVersion ?? null,
-      };
+    .query(async ({ ctx }) => {
+      const allFlags = await ctx.db.select().from(featureFlags);
 
-      // Use a synthetic guest ID for cache key differentiation
-      return resolveUserFlags(ctx.db, "__guest__", guestCtx);
+      const result: Record<string, unknown> = {};
+      for (const flag of allFlags) {
+        if (!flag.enabled) {
+          result[flag.key] = flag.defaultValue;
+          continue;
+        }
+        // For guests: boolean enabled flags → true, others → defaultValue
+        if (flag.flagType === "boolean") {
+          result[flag.key] = true;
+        } else {
+          result[flag.key] = flag.defaultValue;
+        }
+      }
+      return result;
     }),
 
   // ── Protected: get resolved flags for authenticated user ───
