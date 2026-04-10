@@ -59,7 +59,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 
 import { BackButton, IconButton, PremiumBackground } from "@/components/ui";
-import { TrustRing } from "@/components/ui/TrustRing";
+import { NaqiyGradeBadge, getTrustGradeFromScore } from "@/components/scan/NaqiyGradeBadge";
 import { ScanLoadingSkeleton } from "@/components/scan/ScanLoadingSkeleton";
 import { ScanErrorState, ScanNotFoundState } from "@/components/scan/ScanStates";
 
@@ -482,39 +482,33 @@ export function ScanResultScreenV2({ barcode, viewOnly }: ScanResultScreenV2Prop
              ════════════════════════════════════════════ */}
           {isCertifiedTrack && (
             <>
-              {/* Certifier Info with TrustRing */}
+              {/* Certifier Info with NaqiyGradeBadge strip */}
               <View style={[styles.certifierSection, { backgroundColor: innerCardBg }]}>
-                <View style={styles.certifierRow}>
-                  {/* TrustRing */}
-                  {data?.certifierTrustScores && trustGrade && (
-                    <TrustRing
-                      score={data.certifierTrustScores.trustScore}
-                      size={60}
-                      strokeWidth={4}
-                      color={trustGrade.color}
-                    >
-                      <Text style={[styles.trustGradeText, { color: trustGrade.color }]}>
-                        {formatTrustGrade(trustGrade)}
-                      </Text>
-                    </TrustRing>
-                  )}
+                {/* Certifier name + verified badge */}
+                <View style={styles.certifierNameRow}>
+                  <View style={[styles.certifierLogo, { backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "#e6e9e7" }]}>
+                    <Text style={[styles.certifierLogoText, { color: verdictColor }]}>
+                      {halalReport.certifier!.name.split(" ")[0]?.slice(0, 5) ?? "N"}
+                    </Text>
+                  </View>
                   <View style={styles.certifierInfo}>
-                    <View style={styles.certifierNameRow}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                       <Text style={[styles.certifierName, { color: colors.textPrimary }]} numberOfLines={1}>
                         {halalReport.certifier!.name}
                       </Text>
-                      <ShieldCheckIcon size={16} color={colors.statusExcellent} weight="fill" />
+                      <ShieldCheckIcon size={14} color={verdictColor} weight="fill" />
                     </View>
                     <Text style={[styles.certifierMeta, { color: colors.textSecondary }]} numberOfLines={1}>
-                      {`Madhab: ${halalReport.madhabApplied}`}
+                      {`Madhab: ${halalReport.madhabApplied} · ${data?.context.track === "certified" ? "Poulet" : ""}`}
                     </Text>
-                    {data?.certifierTrustScores && (
-                      <Text style={[styles.certifierTrustLabel, { color: colors.textMuted }]}>
-                        {`Trust ${data.certifierTrustScores.trustScore}`}
-                      </Text>
-                    )}
                   </View>
                 </View>
+                {/* NaqiyScore strip badge — our signature certifier trust indicator */}
+                {trustGrade && (
+                  <View style={{ marginTop: 12 }}>
+                    <NaqiyGradeBadge variant="strip" grade={trustGrade} showLabel showLogo />
+                  </View>
+                )}
               </View>
 
               {/* Blocking practices (red left border) */}
