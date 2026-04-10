@@ -1,18 +1,21 @@
 name: Validate Halal V2 Dossiers
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - 'docs/naqiy/dossiers-recherches-naqiy/dossiers_v2/**'
       - 'backend/src/schemas/halal-v2/**'
       - 'backend/scripts/validate-dossiers.ts'
       - 'backend/src/__tests__/unit/validate-dossiers.test.ts'
+      - '.github/workflows/validate-dossiers.yml'
   push:
     branches: [main, 'feat/halal-engine-v2']
     paths:
       - 'docs/naqiy/dossiers-recherches-naqiy/dossiers_v2/**'
       - 'backend/src/schemas/halal-v2/**'
       - 'backend/scripts/validate-dossiers.ts'
+      - '.github/workflows/validate-dossiers.yml'
 
 jobs:
   validate:
