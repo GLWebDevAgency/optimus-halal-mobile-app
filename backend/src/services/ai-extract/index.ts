@@ -15,9 +15,17 @@
 import crypto from "node:crypto";
 import { redis } from "../../lib/redis.js";
 import { logger } from "../../lib/logger.js";
-import type { IngredientExtractProvider, ExtractionResult } from "./types.js";
+import type { IngredientExtractProvider, ExtractionResult, GeminiSemanticResult } from "./types.js";
+import { db } from "../../db/index.js";
+import { featureFlags } from "../../db/schema/feature-flags.js";
+import { eq } from "drizzle-orm";
+import { loadVocabularyFromDB } from "./vocabulary.js";
+import { GeminiV2Provider } from "./providers/gemini-v2.provider.js";
+import { buildCacheKeyV2, getCachedV2, setCacheV2, singleflight } from "./cache-v2.js";
+import { runShadowExtraction, type ShadowResult } from "./shadow.js";
 
 export type { ExtractionResult } from "./types.js";
+export type { GeminiSemanticResult } from "./types.js";
 
 // ── Provider Registry ────────────────────────────────────────
 
@@ -244,4 +252,131 @@ export async function aiExtractIngredients(
     });
     return null;
   }
+}
+
+// ── V2 Orchestrator ─────────────────────────────────────────
+
+const V2_PROMPT_VERSION = "v2.0";
+
+let _geminiV2Provider: GeminiV2Provider | null | undefined;
+
+function resolveV2Provider(): GeminiV2Provider | null {
+  if (_geminiV2Provider !== undefined) return _geminiV2Provider;
+
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) {
+    logger.warn("GEMINI_API_KEY not set — V2 extraction disabled");
+    _geminiV2Provider = null;
+    return null;
+  }
+  _geminiV2Provider = new GeminiV2Provider(key);
+  logger.info(`V2 extraction provider: ${_geminiV2Provider.name}`);
+  return _geminiV2Provider;
+}
+
+async function resolveGeminiV2Flag(): Promise<"off" | "shadow" | "on"> {
+  try {
+    const rows = await db
+      .select({ enabled: featureFlags.enabled, defaultValue: featureFlags.defaultValue })
+      .from(featureFlags)
+      .where(eq(featureFlags.key, "gemini_v2"))
+      .limit(1);
+
+    if (rows.length === 0) return "off";
+    const flag = rows[0];
+    if (!flag.enabled) return "off";
+
+    const val = flag.defaultValue;
+    if (val === "shadow") return "shadow";
+    if (val === "on" || val === true) return "on";
+    return "off";
+  } catch (err) {
+    logger.warn("Failed to resolve gemini_v2 flag, defaulting to off", {
+      error: (err as Error).message,
+    });
+    return "off";
+  }
+}
+
+/**
+ * V2 AI Ingredient Extraction — feature-flag gated.
+ *
+ * Returns the extraction result + which version produced it.
+ * When flag is "off", delegates to V1. When "shadow", runs both.
+ * When "on", uses V2 exclusively.
+ */
+export async function aiExtractIngredientsV2(
+  ingredientsText: string,
+  productHint?: { name?: string; brand?: string; categories?: string[] },
+): Promise<{ result: GeminiSemanticResult | ExtractionResult | null; source: "v1" | "v2" }> {
+  const mode = await resolveGeminiV2Flag();
+
+  if (mode === "off") {
+    const result = await aiExtractIngredients(ingredientsText);
+    return { result, source: "v1" };
+  }
+
+  // V2 path — need vocabulary + provider
+  const v2Provider = resolveV2Provider();
+  if (!v2Provider) {
+    // No API key → fall back to V1
+    const result = await aiExtractIngredients(ingredientsText);
+    return { result, source: "v1" };
+  }
+
+  let vocabulary: Awaited<ReturnType<typeof loadVocabularyFromDB>>;
+  try {
+    vocabulary = await loadVocabularyFromDB();
+  } catch (err) {
+    logger.warn("Failed to load vocabulary, falling back to V1", {
+      error: (err as Error).message,
+    });
+    const result = await aiExtractIngredients(ingredientsText);
+    return { result, source: "v1" };
+  }
+
+  const categoryHint = productHint?.categories?.[0] ?? "other";
+  const cacheKey = buildCacheKeyV2(
+    ingredientsText,
+    categoryHint,
+    V2_PROMPT_VERSION,
+    vocabulary.signature,
+  );
+
+  // V2 extraction function (with cache + singleflight)
+  const v2Extract = async (): Promise<GeminiSemanticResult | null> => {
+    // Check V2 cache
+    const cached = await getCachedV2(cacheKey);
+    if (cached) {
+      logger.debug("V2 extraction cache hit");
+      return cached;
+    }
+
+    return singleflight(cacheKey, async () => {
+      try {
+        const result = await v2Provider.extract(
+          ingredientsText,
+          vocabulary.block,
+          vocabulary.signature,
+        );
+        await setCacheV2(cacheKey, result);
+        return result;
+      } catch (err) {
+        logger.warn("V2 extraction failed", {
+          provider: v2Provider.name,
+          error: (err as Error).message,
+        });
+        return null;
+      }
+    });
+  };
+
+  const shadowResult = await runShadowExtraction(
+    ingredientsText,
+    () => aiExtractIngredients(ingredientsText),
+    v2Extract,
+    mode,
+  );
+
+  return { result: shadowResult.primary, source: shadowResult.source };
 }
