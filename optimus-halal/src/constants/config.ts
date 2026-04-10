@@ -86,6 +86,8 @@ export interface FeatureFlags {
   healthProfileEnabled: boolean;
   // Certifications préférées (sélection certifieurs de confiance)
   certificationsPreferencesEnabled: boolean;
+  // Halal Engine V2 — new scan pipeline with dossier-based rulings
+  halalEngineV2Enabled: boolean;
   // Auth mode (variant flag: "v1" | "v2" | "hybrid")
   authMode: AuthMode;
 }
@@ -110,6 +112,7 @@ export const defaultFeatureFlags: FeatureFlags = {
   premiumMapEnabled: false,
   healthProfileEnabled: true,
   certificationsPreferencesEnabled: false,
+  halalEngineV2Enabled: false, // Désactivé — V2 halal engine gated behind backend flag
   authMode: "v1",
 };
 

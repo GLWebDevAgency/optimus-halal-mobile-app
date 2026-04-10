@@ -102,6 +102,7 @@ import { useFeatureFlagsStore, useQuotaStore, useLocalFavoritesStore, useLocalSc
 import { isAuthenticated as hasStoredTokens } from "@/services/api";
 import { trackEvent } from "@/lib/analytics";
 import { buildVerdictSummary, type MatrixLevel, type CompositionStatus } from "@/utils/verdict-summary";
+import { ScanResultScreenV2 } from "@/components/scan-v2";
 
 // ── Non-allergen tags incorrectly tagged by OpenFoodFacts ──
 const NON_ALLERGEN_TAGS = new Set([
@@ -114,11 +115,19 @@ const NON_ALLERGEN_TAGS = new Set([
 // ══════════════════════════════════════════════════════════════
 
 export default function ScanResultScreen() {
+  const { barcode, viewOnly } = useLocalSearchParams<{ barcode: string; viewOnly?: string }>();
+
+  // ── V2 Feature Flag Gate ──────────────────────────
+  const halalEngineV2 = useFeatureFlagsStore((s) => s.flags.halalEngineV2Enabled);
+  if (halalEngineV2 && barcode) {
+    return <ScanResultScreenV2 barcode={barcode} viewOnly={viewOnly} />;
+  }
+
+  // ── V1 Screen (existing) ──────────────────────────
   const insets = useSafeAreaInsets();
   const { isDark, colors } = useTheme();
   const { impact, notification } = useHaptics();
   const { t } = useTranslation();
-  const { barcode, viewOnly } = useLocalSearchParams<{ barcode: string; viewOnly?: string }>();
   const isViewOnly = viewOnly === "1";
 
   // ── tRPC Mutation ──────────────────────────────
