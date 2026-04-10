@@ -199,6 +199,22 @@ export async function seedReferenceData(db: PostgresJsDatabase): Promise<SeedSta
     console.warn(`    Feature Flags: skipped (${(err as Error).message})`);
   }
 
+  // ── Phase 12: Halal Engine V2 dossiers (gated) ──────────
+  // Only runs when HALAL_V2_SEED=true — seeds substance & practice knowledge base
+  if (process.env.HALAL_V2_SEED === "true") {
+    const t12 = Date.now();
+    try {
+      const { seedHalalV2 } = await import("./seed-halal-v2.js");
+      const count = await seedHalalV2(db);
+      stats.push({ phase: "Halal V2 Dossiers", count, durationMs: Date.now() - t12 });
+      console.log(`    Halal V2 Dossiers: ${count} records seeded (${Date.now() - t12}ms)`);
+    } catch (err) {
+      console.warn(`    Halal V2 Dossiers: skipped (${(err as Error).message})`);
+    }
+  } else {
+    console.log(`    Halal V2 seed skipped (set HALAL_V2_SEED=true to enable)`);
+  }
+
   // ── Summary ─────────────────────────────────────────────
   const totalCount = stats.reduce((sum, s) => sum + s.count, 0);
   console.log(`    ─── Total: ${totalCount} records across ${stats.length} phases`);

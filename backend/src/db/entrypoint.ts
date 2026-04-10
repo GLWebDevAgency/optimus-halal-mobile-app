@@ -126,6 +126,13 @@ try {
     "product_recalls",
     // Content Pipeline
     "content_sources",
+    // Halal Engine V2
+    "substances", "substance_dossiers", "substance_match_patterns",
+    "substance_scenarios", "substance_madhab_rulings",
+    "practice_families", "practices", "practice_dossiers", "practice_tuples",
+    "certifier_tuple_acceptance", "halal_evaluations",
+    "charter_versions", "user_charter_signatures",
+    "certifier_reports", "report_corroborations",
   ];
   const missing = requiredTables.filter((t) => !tables.includes(t));
 
