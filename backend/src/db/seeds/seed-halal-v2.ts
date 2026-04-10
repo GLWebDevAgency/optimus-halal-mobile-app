@@ -11,8 +11,23 @@
 import fs from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
-import { sql } from "drizzle-orm";
+import { fileURLToPath } from "node:url";
+import { eq } from "drizzle-orm";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import {
+  substances,
+  substanceDossiers,
+  substanceMatchPatterns,
+  substanceScenarios,
+  substanceMadhabRulings,
+  practiceFamilies,
+  practices,
+  practiceDossiers,
+  practiceTuples,
+} from "../schema/index.js";
 import {
   parseSubstanceDossier,
   extractMatchPatterns,
@@ -69,121 +84,149 @@ export async function seedHalalV2(db: PostgresJsDatabase): Promise<number> {
         continue;
       }
 
-      // Upsert substance
-      await db.execute(sql`
-        INSERT INTO substances (id, slug, name_fr, name_en, name_ar, e_numbers, tier, priority_score, fiqh_issues, issue_type, is_active, created_at)
-        VALUES (
-          ${parsed.substance.id},
-          ${parsed.substance.slug},
-          ${parsed.substance.nameFr},
-          ${parsed.substance.nameEn},
-          ${parsed.substance.nameAr},
-          ${parsed.substance.eNumbers},
-          ${parsed.substance.tier},
-          ${parsed.substance.priorityScore},
-          ${parsed.substance.fiqhIssues},
-          ${parsed.substance.issueType},
-          ${parsed.substance.isActive},
-          NOW()
-        )
-        ON CONFLICT (id) DO UPDATE SET
-          slug = EXCLUDED.slug,
-          name_fr = EXCLUDED.name_fr,
-          name_en = EXCLUDED.name_en,
-          name_ar = EXCLUDED.name_ar,
-          e_numbers = EXCLUDED.e_numbers,
-          tier = EXCLUDED.tier,
-          priority_score = EXCLUDED.priority_score,
-          fiqh_issues = EXCLUDED.fiqh_issues,
-          issue_type = EXCLUDED.issue_type,
-          is_active = EXCLUDED.is_active
-      `);
+      // Upsert substance using Drizzle ORM
+      // Drizzle handles JS arrays properly via postgres.js driver
+      await (db as any).insert(substances)
+        .values({
+          id: parsed.substance.id,
+          slug: parsed.substance.slug,
+          nameFr: parsed.substance.nameFr,
+          nameEn: parsed.substance.nameEn,
+          nameAr: parsed.substance.nameAr ?? null,
+          eNumbers: parsed.substance.eNumbers ?? [],
+          tier: parsed.substance.tier,
+          priorityScore: parsed.substance.priorityScore,
+          fiqhIssues: parsed.substance.fiqhIssues ?? [],
+          issueType: parsed.substance.issueType,
+          isActive: parsed.substance.isActive,
+        })
+        .onConflictDoUpdate({
+          target: substances.id,
+          set: {
+            slug: parsed.substance.slug,
+            nameFr: parsed.substance.nameFr,
+            nameEn: parsed.substance.nameEn,
+            nameAr: parsed.substance.nameAr ?? null,
+            eNumbers: parsed.substance.eNumbers ?? [],
+            tier: parsed.substance.tier,
+            priorityScore: parsed.substance.priorityScore,
+            fiqhIssues: parsed.substance.fiqhIssues ?? [],
+            issueType: parsed.substance.issueType,
+            isActive: parsed.substance.isActive,
+          },
+        });
       counts.substances++;
 
       // Check content_hash to decide if dossier needs update
-      const existing = await db.execute(sql`
-        SELECT content_hash FROM substance_dossiers
-        WHERE substance_id = ${parsed.dossier.substanceId}
-          AND version = ${parsed.dossier.version}
-        LIMIT 1
-      `);
+      const existing = await (db as any)
+        .select({ contentHash: substanceDossiers.contentHash })
+        .from(substanceDossiers)
+        .where(
+          eq(substanceDossiers.substanceId, parsed.dossier.substanceId)
+        )
+        .where(
+          eq(substanceDossiers.version, parsed.dossier.version)
+        )
+        .limit(1);
 
-      if (existing.length > 0 && (existing[0] as Record<string, unknown>).content_hash === parsed.dossier.contentHash) {
+      if (existing.length > 0 && existing[0].contentHash === parsed.dossier.contentHash) {
         counts.dossiersSkipped++;
       } else {
-        // Upsert dossier
-        const dossierResult = await db.execute(sql`
-          INSERT INTO substance_dossiers (substance_id, version, schema_version, dossier_json, content_hash, verified_at, verification_passes, fatwa_count, is_active, created_at)
-          VALUES (
-            ${parsed.dossier.substanceId},
-            ${parsed.dossier.version},
-            ${parsed.dossier.schemaVersion},
-            ${JSON.stringify(parsed.dossier.dossierJson)}::jsonb,
-            ${parsed.dossier.contentHash},
-            ${parsed.dossier.verifiedAt},
-            ${parsed.dossier.verificationPasses},
-            ${parsed.dossier.fatwaCount},
-            ${parsed.dossier.isActive},
-            NOW()
-          )
-          ON CONFLICT (substance_id, version) DO UPDATE SET
-            schema_version = EXCLUDED.schema_version,
-            dossier_json = EXCLUDED.dossier_json,
-            content_hash = EXCLUDED.content_hash,
-            verified_at = EXCLUDED.verified_at,
-            verification_passes = EXCLUDED.verification_passes,
-            fatwa_count = EXCLUDED.fatwa_count,
-            is_active = EXCLUDED.is_active
-          RETURNING id
-        `);
+        // Upsert dossier using Drizzle ORM
+        const dossierResult = await (db as any).insert(substanceDossiers)
+          .values({
+            substanceId: parsed.dossier.substanceId,
+            version: parsed.dossier.version,
+            schemaVersion: parsed.dossier.schemaVersion,
+            dossierJson: parsed.dossier.dossierJson,
+            contentHash: parsed.dossier.contentHash,
+            verifiedAt: parsed.dossier.verifiedAt,
+            verificationPasses: parsed.dossier.verificationPasses,
+            fatwaCount: parsed.dossier.fatwaCount,
+            isActive: parsed.dossier.isActive,
+          })
+          .onConflictDoUpdate({
+            target: [substanceDossiers.substanceId, substanceDossiers.version],
+            set: {
+              schemaVersion: parsed.dossier.schemaVersion,
+              dossierJson: parsed.dossier.dossierJson,
+              contentHash: parsed.dossier.contentHash,
+              verifiedAt: parsed.dossier.verifiedAt,
+              verificationPasses: parsed.dossier.verificationPasses,
+              fatwaCount: parsed.dossier.fatwaCount,
+              isActive: parsed.dossier.isActive,
+            },
+          })
+          .returning({ id: substanceDossiers.id });
         counts.dossiers++;
 
         // Update active_dossier_id on substance if this dossier is active
         if (parsed.dossier.isActive && dossierResult.length > 0) {
-          const dossierId = (dossierResult[0] as Record<string, unknown>).id as string;
-          await db.execute(sql`
-            UPDATE substances SET active_dossier_id = ${dossierId}::uuid
-            WHERE id = ${parsed.substance.id}
-          `);
+          const dossierId = dossierResult[0].id;
+          await (db as any).update(substances)
+            .set({ activeDossierId: dossierId })
+            .where(eq(substances.id, parsed.substance.id));
         }
 
         // Delete old match patterns + scenarios for this substance, re-insert
-        await db.execute(sql`
-          DELETE FROM substance_match_patterns WHERE substance_id = ${parsed.substance.id}
-        `);
+        await (db as any).delete(substanceMatchPatterns)
+          .where(eq(substanceMatchPatterns.substanceId, parsed.substance.id));
         const patterns = extractMatchPatterns(parsed);
         for (const p of patterns) {
-          await db.execute(sql`
-            INSERT INTO substance_match_patterns (substance_id, pattern_type, pattern_value, lang, priority, confidence, source)
-            VALUES (${p.substanceId}, ${p.patternType}, ${p.patternValue}, ${p.lang}, ${p.priority}, ${p.confidence}, ${p.source})
-          `);
+          await (db as any).insert(substanceMatchPatterns)
+            .values({
+              substanceId: p.substanceId,
+              patternType: p.patternType,
+              patternValue: p.patternValue,
+              lang: p.lang,
+              priority: p.priority,
+              confidence: p.confidence,
+              source: p.source,
+            });
         }
         counts.matchPatterns += patterns.length;
 
-        await db.execute(sql`
-          DELETE FROM substance_scenarios WHERE substance_id = ${parsed.substance.id}
-        `);
+        await (db as any).delete(substanceScenarios)
+          .where(eq(substanceScenarios.substanceId, parsed.substance.id));
         const scenarios = extractScenarios(parsed);
         for (const s of scenarios) {
-          await db.execute(sql`
-            INSERT INTO substance_scenarios (substance_id, scenario_key, match_conditions, specificity, score, verdict, rationale_fr, rationale_en, rationale_ar, dossier_section_ref)
-            VALUES (${s.substanceId}, ${s.scenarioKey}, ${JSON.stringify(s.matchConditions)}::jsonb, ${s.specificity}, ${s.score}, ${s.verdict}, ${s.rationaleFr}, ${s.rationaleEn}, ${s.rationaleAr}, ${s.dossierSectionRef})
-          `);
+          await (db as any).insert(substanceScenarios)
+            .values({
+              substanceId: s.substanceId,
+              scenarioKey: s.scenarioKey,
+              matchConditions: s.matchConditions,
+              specificity: s.specificity,
+              score: s.score,
+              verdict: s.verdict,
+              rationaleFr: s.rationaleFr,
+              rationaleEn: s.rationaleEn,
+              rationaleAr: s.rationaleAr,
+              dossierSectionRef: s.dossierSectionRef,
+            });
         }
         counts.scenarios += scenarios.length;
 
         // Madhab rulings — upsert (composite PK)
         const rulings = extractMadhabRulings(parsed);
         for (const r of rulings) {
-          await db.execute(sql`
-            INSERT INTO substance_madhab_rulings (substance_id, madhab, ruling, contemporary_split, classical_sources, contemporary_sources)
-            VALUES (${r.substanceId}, ${r.madhab}, ${r.ruling}, ${r.contemporarySplit}, ${r.classicalSources}, ${r.contemporarySources})
-            ON CONFLICT (substance_id, madhab) DO UPDATE SET
-              ruling = EXCLUDED.ruling,
-              contemporary_split = EXCLUDED.contemporary_split,
-              classical_sources = EXCLUDED.classical_sources,
-              contemporary_sources = EXCLUDED.contemporary_sources
-          `);
+          await (db as any).insert(substanceMadhabRulings)
+            .values({
+              substanceId: r.substanceId,
+              madhab: r.madhab,
+              ruling: r.ruling,
+              contemporarySplit: r.contemporarySplit,
+              classicalSources: r.classicalSources ?? [],
+              contemporarySources: r.contemporarySources ?? [],
+            })
+            .onConflictDoUpdate({
+              target: [substanceMadhabRulings.substanceId, substanceMadhabRulings.madhab],
+              set: {
+                ruling: r.ruling,
+                contemporarySplit: r.contemporarySplit,
+                classicalSources: r.classicalSources ?? [],
+                contemporarySources: r.contemporarySources ?? [],
+              },
+            });
         }
         counts.madhabRulings += rulings.length;
       }
@@ -213,77 +256,83 @@ export async function seedHalalV2(db: PostgresJsDatabase): Promise<number> {
         const practice = practiceJson.practice as Record<string, unknown>;
         const familyId = (meta?.practice_family as string) ?? familyDir;
 
-        // Upsert practice_family
-        await db.execute(sql`
-          INSERT INTO practice_families (id, name_fr, name_en, is_active)
-          VALUES (${familyId}, ${familyId}, ${familyId}, true)
-          ON CONFLICT (id) DO NOTHING
-        `);
+        // Upsert practice_family using Drizzle ORM
+        await (db as any).insert(practiceFamilies)
+          .values({
+            id: familyId,
+            nameFr: familyId,
+            nameEn: familyId,
+            isActive: true,
+          })
+          .onConflictDoNothing();
         counts.practiceFamilies++;
 
-        // Upsert practice
+        // Upsert practice using Drizzle ORM
         const practiceId = practice.id as string;
-        await db.execute(sql`
-          INSERT INTO practices (id, slug, family_id, name_fr, name_en, name_ar, severity_tier, is_active, created_at)
-          VALUES (
-            ${practiceId},
-            ${practiceId.toLowerCase()},
-            ${familyId},
-            ${practice.name_fr as string},
-            ${practice.name_en as string},
-            ${(practice.name_ar as string) ?? null},
-            ${practice.severity_tier as number},
-            true,
-            NOW()
-          )
-          ON CONFLICT (id) DO UPDATE SET
-            slug = EXCLUDED.slug,
-            family_id = EXCLUDED.family_id,
-            name_fr = EXCLUDED.name_fr,
-            name_en = EXCLUDED.name_en,
-            name_ar = EXCLUDED.name_ar,
-            severity_tier = EXCLUDED.severity_tier
-        `);
+        await (db as any).insert(practices)
+          .values({
+            id: practiceId,
+            slug: practiceId.toLowerCase(),
+            familyId,
+            nameFr: practice.name_fr as string,
+            nameEn: practice.name_en as string,
+            nameAr: (practice.name_ar as string) ?? null,
+            severityTier: practice.severity_tier as number,
+            isActive: true,
+          })
+          .onConflictDoUpdate({
+            target: practices.id,
+            set: {
+              slug: practiceId.toLowerCase(),
+              familyId,
+              nameFr: practice.name_fr as string,
+              nameEn: practice.name_en as string,
+              nameAr: (practice.name_ar as string) ?? null,
+              severityTier: practice.severity_tier as number,
+            },
+          });
         counts.practices++;
 
-        // Upsert practice dossier
+        // Upsert practice dossier using Drizzle ORM
         const dossierJsonStr = fs.readFileSync(path.join(familyPath, pFile), "utf8");
         const contentHash = createHash("sha256").update(dossierJsonStr).digest("hex");
         const version = (meta?.version as string) ?? "1.0.0";
 
-        const existingPD = await db.execute(sql`
-          SELECT content_hash FROM practice_dossiers
-          WHERE practice_id = ${practiceId} AND version = ${version}
-          LIMIT 1
-        `);
+        const existingPD = await (db as any)
+          .select({ contentHash: practiceDossiers.contentHash })
+          .from(practiceDossiers)
+          .where(eq(practiceDossiers.practiceId, practiceId))
+          .where(eq(practiceDossiers.version, version))
+          .limit(1);
 
-        if (existingPD.length === 0 || (existingPD[0] as Record<string, unknown>).content_hash !== contentHash) {
-          const pdResult = await db.execute(sql`
-            INSERT INTO practice_dossiers (practice_id, version, schema_version, dossier_json, content_hash, is_active, created_at)
-            VALUES (
-              ${practiceId},
-              ${version},
-              ${"practice-dossier.v1"},
-              ${dossierJsonStr}::jsonb,
-              ${contentHash},
-              true,
-              NOW()
-            )
-            ON CONFLICT (practice_id, version) DO UPDATE SET
-              dossier_json = EXCLUDED.dossier_json,
-              content_hash = EXCLUDED.content_hash,
-              is_active = EXCLUDED.is_active
-            RETURNING id
-          `);
+        if (existingPD.length === 0 || existingPD[0].contentHash !== contentHash) {
+          const dossierJson = JSON.parse(dossierJsonStr) as Record<string, unknown>;
+          const pdResult = await (db as any).insert(practiceDossiers)
+            .values({
+              practiceId,
+              version,
+              schemaVersion: "practice-dossier.v1",
+              dossierJson,
+              contentHash,
+              isActive: true,
+            })
+            .onConflictDoUpdate({
+              target: [practiceDossiers.practiceId, practiceDossiers.version],
+              set: {
+                dossierJson,
+                contentHash,
+                isActive: true,
+              },
+            })
+            .returning({ id: practiceDossiers.id });
           counts.practiceDossiers++;
 
           // Update active_dossier_id on practice
           if (pdResult.length > 0) {
-            const dossierId = (pdResult[0] as Record<string, unknown>).id as string;
-            await db.execute(sql`
-              UPDATE practices SET active_dossier_id = ${dossierId}::uuid
-              WHERE id = ${practiceId}
-            `);
+            const dossierId = pdResult[0].id;
+            await (db as any).update(practices)
+              .set({ activeDossierId: dossierId })
+              .where(eq(practices.id, practiceId));
           }
         }
       }
@@ -297,43 +346,44 @@ export async function seedHalalV2(db: PostgresJsDatabase): Promise<number> {
         for (const tFile of tupleFiles) {
           const tuples = parsePracticeTuples(path.join(tuplesDir, tFile));
           for (const tuple of tuples) {
-            await db.execute(sql`
-              INSERT INTO practice_tuples (slug, family_id, dimensions, verdict_hanafi, verdict_maliki, verdict_shafii, verdict_hanbali, required_evidence, dossier_section_ref, fatwa_refs, typical_mortality_pct_min, typical_mortality_pct_max, notes_fr, notes_en, notes_ar, is_active, created_at)
-              VALUES (
-                ${tuple.slug},
-                ${tuple.familyId},
-                ${JSON.stringify(tuple.dimensions)}::jsonb,
-                ${tuple.verdictHanafi},
-                ${tuple.verdictMaliki},
-                ${tuple.verdictShafii},
-                ${tuple.verdictHanbali},
-                ${tuple.requiredEvidence},
-                ${tuple.dossierSectionRef},
-                ${tuple.fatwaRefs},
-                ${tuple.typicalMortalityPctMin},
-                ${tuple.typicalMortalityPctMax},
-                ${tuple.notesFr},
-                ${tuple.notesEn},
-                ${tuple.notesAr},
-                true,
-                NOW()
-              )
-              ON CONFLICT (slug) DO UPDATE SET
-                family_id = EXCLUDED.family_id,
-                dimensions = EXCLUDED.dimensions,
-                verdict_hanafi = EXCLUDED.verdict_hanafi,
-                verdict_maliki = EXCLUDED.verdict_maliki,
-                verdict_shafii = EXCLUDED.verdict_shafii,
-                verdict_hanbali = EXCLUDED.verdict_hanbali,
-                required_evidence = EXCLUDED.required_evidence,
-                dossier_section_ref = EXCLUDED.dossier_section_ref,
-                fatwa_refs = EXCLUDED.fatwa_refs,
-                typical_mortality_pct_min = EXCLUDED.typical_mortality_pct_min,
-                typical_mortality_pct_max = EXCLUDED.typical_mortality_pct_max,
-                notes_fr = EXCLUDED.notes_fr,
-                notes_en = EXCLUDED.notes_en,
-                notes_ar = EXCLUDED.notes_ar
-            `);
+            await (db as any).insert(practiceTuples)
+              .values({
+                slug: tuple.slug,
+                familyId: tuple.familyId,
+                dimensions: tuple.dimensions,
+                verdictHanafi: tuple.verdictHanafi,
+                verdictMaliki: tuple.verdictMaliki,
+                verdictShafii: tuple.verdictShafii,
+                verdictHanbali: tuple.verdictHanbali,
+                requiredEvidence: tuple.requiredEvidence ?? [],
+                dossierSectionRef: tuple.dossierSectionRef,
+                fatwaRefs: tuple.fatwaRefs ?? [],
+                typicalMortalityPctMin: tuple.typicalMortalityPctMin,
+                typicalMortalityPctMax: tuple.typicalMortalityPctMax,
+                notesFr: tuple.notesFr,
+                notesEn: tuple.notesEn,
+                notesAr: tuple.notesAr,
+                isActive: true,
+              })
+              .onConflictDoUpdate({
+                target: practiceTuples.slug,
+                set: {
+                  familyId: tuple.familyId,
+                  dimensions: tuple.dimensions,
+                  verdictHanafi: tuple.verdictHanafi,
+                  verdictMaliki: tuple.verdictMaliki,
+                  verdictShafii: tuple.verdictShafii,
+                  verdictHanbali: tuple.verdictHanbali,
+                  requiredEvidence: tuple.requiredEvidence ?? [],
+                  dossierSectionRef: tuple.dossierSectionRef,
+                  fatwaRefs: tuple.fatwaRefs ?? [],
+                  typicalMortalityPctMin: tuple.typicalMortalityPctMin,
+                  typicalMortalityPctMax: tuple.typicalMortalityPctMax,
+                  notesFr: tuple.notesFr,
+                  notesEn: tuple.notesEn,
+                  notesAr: tuple.notesAr,
+                },
+              });
             counts.practiceTuples++;
           }
         }
@@ -359,4 +409,23 @@ export async function seedHalalV2(db: PostgresJsDatabase): Promise<number> {
   console.log(`      Practice tuples: ${counts.practiceTuples}`);
 
   return total;
+}
+
+// ── CLI: run directly with `tsx src/db/seeds/seed-halal-v2.ts` ──
+const isMainModule = process.argv[1]?.includes("seed-halal-v2");
+if (isMainModule) {
+  import("postgres").then(async (pg) => {
+    const { drizzle } = await import("drizzle-orm/postgres-js");
+    const dbUrl = process.env.DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5432/optimus_halal";
+    const client = pg.default(dbUrl, { max: 1 });
+    const db = drizzle(client);
+    console.log("[seed-halal-v2] Starting seed...");
+    const total = await seedHalalV2(db as any);
+    console.log(`[seed-halal-v2] Done — ${total} records seeded.`);
+    await client.end();
+    process.exit(0);
+  }).catch((err) => {
+    console.error("[seed-halal-v2] Fatal:", err);
+    process.exit(1);
+  });
 }
