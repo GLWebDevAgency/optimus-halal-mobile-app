@@ -4,7 +4,7 @@
   "title": "Naqiy Evaluation Trace V1",
   "description": "Immutable audit trace stored in halal_evaluations.trace jsonb. Documents every scoring decision for replayability.",
   "type": "object",
-  "required": ["engine_version", "track", "stages", "final"],
+  "required": ["engine_version", "track", "stages", "final", "decision_flow"],
   "additionalProperties": false,
   "properties": {
     "engine_version": { "type": "string" },
@@ -46,6 +46,12 @@
           "evidence_level": { "type": "string" }
         }
       }
+    },
+    "decision_flow": {
+      "type": "array",
+      "description": "Human-readable narrative of the algorithmic decision flow. Each entry is a step in the pipeline, written as plain French/English so a non-developer auditor can trace exactly WHY this verdict was reached.",
+      "items": { "type": "string" },
+      "minItems": 3
     },
     "certifier_id": { "type": ["string", "null"] },
     "species_evaluated": { "type": ["string", "null"] },
