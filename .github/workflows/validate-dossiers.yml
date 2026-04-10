@@ -1,0 +1,46 @@
+name: Validate Halal V2 Dossiers
+
+on:
+  pull_request:
+    paths:
+      - 'docs/naqiy/dossiers-recherches-naqiy/dossiers_v2/**'
+      - 'backend/src/schemas/halal-v2/**'
+      - 'backend/scripts/validate-dossiers.ts'
+      - 'backend/src/__tests__/unit/validate-dossiers.test.ts'
+  push:
+    branches: [main, 'feat/halal-engine-v2']
+    paths:
+      - 'docs/naqiy/dossiers-recherches-naqiy/dossiers_v2/**'
+      - 'backend/src/schemas/halal-v2/**'
+      - 'backend/scripts/validate-dossiers.ts'
+
+jobs:
+  validate:
+    name: Validate dossiers against V2 schemas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: backend/pnpm-lock.yaml
+
+      - name: Install backend deps
+        working-directory: backend
+        run: pnpm install --frozen-lockfile
+
+      - name: Run validator unit tests
+        working-directory: backend
+        run: pnpm vitest run src/__tests__/unit/validate-dossiers.test.ts
+
+      - name: Validate all dossiers against schemas
+        working-directory: backend
+        run: pnpm validate:dossiers
