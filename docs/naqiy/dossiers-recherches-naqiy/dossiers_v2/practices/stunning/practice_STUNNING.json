@@ -1,0 +1,74 @@
+{
+  "meta": {
+    "dossier_id": "PRAC-001",
+    "version": "1.0.0",
+    "generated_at": "2026-04-09",
+    "language_primary": "fr",
+    "languages": ["fr", "en", "ar"],
+    "practice_family": "stunning",
+    "verification_passes": 2,
+    "fatwas_verified_count": 8
+  },
+  "practice": {
+    "id": "STUNNING",
+    "name_fr": "Étourdissement pré-abattage",
+    "name_en": "Pre-slaughter stunning",
+    "name_ar": "التخدير قبل الذبح",
+    "severity_tier": 1,
+    "description_fr": "Techniques utilisées pour rendre un animal inconscient ou l'immobiliser avant l'égorgement. Méthodes variables par espèce (électrique tête-seule, tête-corps, bain d'eau, captive bolt, CO2). L'enjeu scholarly central : l'animal doit être vivant au moment de la section des vaisseaux. Toute méthode qui tue avant l'égorgement rend l'animal maytah (charogne) ou mawqudhah (Coran 5:3)."
+  },
+  "core_fiqhi_concepts": [
+    {
+      "ar": "الحياة المستقرة",
+      "en": "Stable residual life",
+      "fr": "Vie résiduelle stable",
+      "principle": "L'animal doit présenter des signes de vie (mouvement, écoulement normal du sang) au moment où le couteau sectionne les vaisseaux du cou. Critère unanime des 4 madhabs."
+    },
+    {
+      "ar": "المنخنقة والموقوذة",
+      "en": "Suffocated and beaten-to-death",
+      "fr": "Étranglé et assommé à mort",
+      "principle": "Interdits par texte coranique explicite (5:3). Un animal mort par étourdissement entre dans l'une de ces deux catégories selon la méthode."
+    }
+  ],
+  "fatwas_summary": {
+    "halal_count": 5,
+    "haram_count": 3,
+    "halal_institutions": [
+      { "name": "IIFA Résolution 95 (1997)", "url": "https://iifa-aifi.org/en/32542.html", "principle": "Conditionnel — animal vivant au moment de l'abattage" },
+      { "name": "Dar al-Iftaa Egypt #12912", "url": "https://www.dar-alifta.org/ar/fatwa/details/12912/" },
+      { "name": "Lajnah Daimah", "country": "Saudi Arabia" },
+      { "name": "MUI Indonesia", "url": "https://halalmui.org" },
+      { "name": "JAKIM Malaysia", "url": "https://myehalal.halal.gov.my" }
+    ],
+    "haram_institutions": [
+      { "name": "HMC UK", "url": "https://halalhmc.org" },
+      { "name": "ECFR", "scholar": "al-Qaradawi" },
+      { "name": "Darul Uloom Deoband" }
+    ]
+  },
+  "madhab_positions": {
+    "hanafi": {
+      "classical": "HALAL if animal alive at slaughter",
+      "contemporary_split": "Deobandi restrictive on poultry waterbath",
+      "key_scholars": ["Mufti Taqi Usmani", "Darul Iftaa Birmingham"]
+    },
+    "maliki": {
+      "classical": "HALAL if animal alive at slaughter",
+      "pragmatic": "Maghreb institutions accept reversible stunning"
+    },
+    "shafi'i": {
+      "classical": "HALAL if animal alive at slaughter",
+      "permissive": "Tasmiya is sunnah not condition — more lenient overall"
+    },
+    "hanbali": {
+      "classical": "HALAL if animal alive at slaughter",
+      "contemporary": "Lajnah Daimah most analytical — explicit poultry prohibition"
+    }
+  },
+  "naqiy_position": {
+    "global_score": 50,
+    "verdict_default": "MASHBOOH on European market by default — HALAL only with credible certification proving survival AND species-appropriate method",
+    "rationale": "Stunning is a family of 15+ techniques, each with different mortality profile. Cannot be evaluated as a single boolean. See practice_tuples for per-combination scores sourced from STUNNED_MEAT V1 §6 and MECHANICAL_SLAUGHTER V2 §7."
+  }
+}
