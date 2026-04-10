@@ -9,7 +9,7 @@ import {
 
 const milkAllergenMatch: AllergenMatch = {
   displayName: "Lait",
-  matchType: "direct",
+  matchType: "allergen",
   severity: "high",
 };
 

@@ -30,7 +30,7 @@ export interface RiskyAdditive {
 
 export interface AllergenMatch {
   displayName: string;
-  matchType: "direct" | "trace";
+  matchType: "allergen" | "trace";
   severity: "high" | "medium" | "low";
 }
 

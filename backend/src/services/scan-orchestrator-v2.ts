@@ -27,7 +27,8 @@ import type { HalalEvaluationContext } from "../domain/types/halal-evaluation-co
 import type { ProductContext } from "../domain/types/product-context.js";
 import type { HalalReport } from "../domain/types/halal-report.js";
 import type { GeminiSemanticResult, ProductCategory, MeatClassification } from "./ai-extract/types.js";
-import { evaluatePersonalAlerts, type PersonalReport, type AllergenMatch, type RiskyAdditive } from "./personal-engine.js";
+import { evaluatePersonalAlerts, type PersonalReport, type RiskyAdditive } from "./personal-engine.js";
+import type { AllergenMatch as AllergenMatchReal } from "./allergen.service.js";
 import { evaluateBoycott, type BoycottReport } from "./boycott-engine.js";
 import { buildEvaluationTrace, type TraceContext } from "../domain/engine/trace-builder.js";
 import { logger } from "../lib/logger.js";
@@ -96,7 +97,7 @@ export interface OrchestratorDeps {
   evaluationStore: IEvaluationStore;
   resolveProduct: (db: any, barcode: string) => Promise<any>;
   aiExtractIngredientsV2: (text: string, hint?: any) => Promise<{ result: any; source: string }>;
-  matchAllergens: (userAllergens: string[], allergenTags: string[], tracesTags: string[]) => AllergenMatch[];
+  matchAllergens: (userAllergens: string[], allergenTags: string[], tracesTags: string[]) => AllergenMatchReal[];
   lookupBrandCertifier: (db: any, brand: string) => Promise<{ certifierId: string; certifierName: string } | null>;
   fetchRiskyAdditives: (db: any, codes: string[]) => Promise<RiskyAdditive[]>;
 }
@@ -204,11 +205,16 @@ export class ScanOrchestratorV2 {
     const tracesTags = (storedOff?.traces_tags as string[]) ?? [];
     const additivesTags = (storedOff?.additives_tags as string[]) ?? [];
 
-    // Pre-compute allergen matches
-    const allergenMatches: AllergenMatch[] =
+    // Pre-compute allergen matches (map from allergen service type to personal engine type)
+    const rawAllergenMatches =
       requestCtx.allergens?.length
         ? this.deps.matchAllergens(requestCtx.allergens, allergensTags, tracesTags)
         : [];
+    const allergenMatches = rawAllergenMatches.map((m) => ({
+      displayName: m.displayName,
+      matchType: m.matchType as "allergen" | "trace",
+      severity: m.severity as "high" | "medium" | "low",
+    }));
 
     // Fetch risky additives for personal alerts
     const additiveCodes = [...new Set(additivesTags.map(this.normalizeAdditiveTag))];

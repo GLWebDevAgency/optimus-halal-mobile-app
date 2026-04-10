@@ -54,6 +54,19 @@ function normalizeAdditiveTag(tag: string): string {
 import { lookupBrandCertifier } from "../../services/brand-certifier.service.js";
 import { notFound } from "../../lib/errors.js";
 import { logger } from "../../lib/logger.js";
+import { featureFlags as featureFlagsTable } from "../../db/schema/feature-flags.js";
+import { ScanOrchestratorV2, type OrchestratorDeps } from "../../services/scan-orchestrator-v2.js";
+import { HalalEngineV2 } from "../../domain/engine/halal-engine-v2.js";
+import { CertifierTrustEngine } from "../../domain/engine/certifier-trust-engine.js";
+import { DrizzleEvaluationStore } from "../../infra/adapters/drizzle-evaluation-store.js";
+import { DrizzleDossierRepo } from "../../infra/adapters/drizzle-dossier-repo.js";
+import { DrizzleScenarioRepo } from "../../infra/adapters/drizzle-scenario-repo.js";
+import { DrizzleMadhabRulingRepo } from "../../infra/adapters/drizzle-madhab-ruling-repo.js";
+import { DrizzleMatchPatternRepo } from "../../infra/adapters/drizzle-match-pattern-repo.js";
+import { DrizzleCertifierTrustRepo } from "../../infra/adapters/drizzle-certifier-trust-repo.js";
+import { aiExtractIngredientsV2 } from "../../services/ai-extract/index.js";
+import type { RiskyAdditive } from "../../services/personal-engine.js";
+import type { AllergenMatch as AllergenMatchReal } from "../../services/allergen.service.js";
 
 // ── Level thresholds ──────────────────────────────────────────
 // XP required to REACH each level (index = level - 1)
@@ -1275,5 +1288,109 @@ export const scanRouter = router({
         });
 
       return { success: true };
+    }),
+
+  // ── V2 Halal Engine — gated behind feature flag ──────────
+  scanBarcodeV2: quotaCheckedProcedure
+    .input(
+      z.object({
+        barcode: z.string().regex(/^[0-9]{4,14}$/, "Code-barres invalide"),
+        latitude: z.number().min(-90).max(90).optional(),
+        longitude: z.number().min(-180).max(180).optional(),
+        viewOnly: z.boolean().optional(),
+        nutritionProfile: z.enum(["standard", "pregnant", "child", "athlete", "elderly"]).optional(),
+        scanRequestId: z.string().uuid().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Feature flag gate: halal_engine_v2 must be "on"
+      const [flagRow] = await ctx.db
+        .select({ enabled: featureFlagsTable.enabled, defaultValue: featureFlagsTable.defaultValue })
+        .from(featureFlagsTable)
+        .where(eq(featureFlagsTable.key, "halal_engine_v2"))
+        .limit(1);
+
+      const flagEnabled = flagRow?.enabled && flagRow?.defaultValue === "on";
+      if (!flagEnabled) {
+        throw new Error("halal_engine_v2 feature flag is not enabled");
+      }
+
+      // Fetch user profile
+      const userProfile = ctx.isAnonymous ? null : await ctx.db.query.users.findFirst({
+        where: eq(users.id, ctx.userId!),
+        columns: {
+          id: true,
+          madhab: true,
+          halalStrictness: true,
+          allergens: true,
+          isPregnant: true,
+          hasChildren: true,
+          subscriptionTier: true,
+        },
+      });
+
+      // Build dependencies
+      const deps: OrchestratorDeps = {
+        db: ctx.db,
+        halalEngine: new HalalEngineV2(
+          new DrizzleDossierRepo(),
+          new DrizzleScenarioRepo(),
+          new DrizzleMadhabRulingRepo(),
+          new DrizzleMatchPatternRepo(),
+        ),
+        certifierTrustEngine: new CertifierTrustEngine(new DrizzleCertifierTrustRepo()),
+        evaluationStore: new DrizzleEvaluationStore(),
+        resolveProduct: resolveProduct,
+        aiExtractIngredientsV2: aiExtractIngredientsV2,
+        matchAllergens: matchAllergens,
+        lookupBrandCertifier: lookupBrandCertifier,
+        fetchRiskyAdditives: async (db: any, codes: string[]): Promise<RiskyAdditive[]> => {
+          if (codes.length === 0) return [];
+          const rows = await db
+            .select({
+              code: additivesTable.code,
+              nameFr: additivesTable.nameFr,
+              riskPregnant: additivesTable.riskPregnant,
+              riskChildren: additivesTable.riskChildren,
+              healthEffectsFr: additivesTable.healthEffectsFr,
+            })
+            .from(additivesTable)
+            .where(inArray(additivesTable.code, codes));
+          return rows.map((r: any) => ({
+            code: r.code,
+            nameFr: r.nameFr,
+            riskPregnant: r.riskPregnant ?? false,
+            riskChildren: r.riskChildren ?? false,
+            healthEffectsFr: r.healthEffectsFr ?? null,
+          }));
+        },
+      };
+
+      const orchestrator = new ScanOrchestratorV2(deps);
+
+      const result = await orchestrator.execute(
+        {
+          barcode: input.barcode,
+          latitude: input.latitude,
+          longitude: input.longitude,
+          viewOnly: input.viewOnly,
+          nutritionProfile: input.nutritionProfile,
+          scanRequestId: input.scanRequestId,
+        },
+        userProfile
+          ? {
+              id: userProfile.id,
+              madhab: userProfile.madhab,
+              halalStrictness: userProfile.halalStrictness,
+              allergens: userProfile.allergens,
+              isPregnant: userProfile.isPregnant ?? false,
+              hasChildren: userProfile.hasChildren ?? false,
+              subscriptionTier: userProfile.subscriptionTier as "free" | "premium",
+              boycottOptIn: false, // TODO: read from user preferences when boycott UI is shipped
+            }
+          : null,
+      );
+
+      return result;
     }),
 });
