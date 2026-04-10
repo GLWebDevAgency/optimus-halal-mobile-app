@@ -9,6 +9,26 @@
 import fs from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+/**
+ * Normalize freeform verdict strings from dossiers into the closed enum
+ * expected by substance_scenarios.verdict VARCHAR(30).
+ * Maps verbose French/English descriptions → canonical short form.
+ */
+function normalizeVerdict(raw: string): string {
+  const lower = raw.toLowerCase().trim();
+  if (lower.includes("haram") || lower.includes("interdit")) return "haram";
+  if (lower.includes("avoid") || lower.includes("éviter") || lower.includes("eviter")) return "avoid";
+  if (lower.includes("mashbooh") || lower.includes("douteux") || lower.includes("doubtful") || lower.includes("discutable")) return "mashbooh";
+  if (lower.includes("acceptable") || lower.includes("caution") || lower.includes("prudence") || lower.includes("vigilance")) return "halal_with_caution";
+  if (lower.includes("halal") || lower.includes("permis") || lower.includes("permissible") || lower.includes("conforme")) return "halal";
+  if (raw.length > 25) return "mashbooh"; // fallback: long text = ambiguous = mashbooh
+  return raw.slice(0, 30); // last resort: truncate
+}
 
 // ── Types ───────────────────────────────────────────────────────────
 
@@ -352,8 +372,8 @@ export function extractScenarios(parsed: ParsedSubstance): ScenarioRecord[] {
           matchConditions: {},
           specificity: 0,
           score: (item.score as number) ?? 0,
-          verdict: (item.verdict as string) ?? "UNKNOWN",
-          rationaleFr: (item.reasoning_fr as string) ?? (item.rationale as string) ?? "",
+          verdict: normalizeVerdict((item.verdict as string) ?? "unknown"),
+          rationaleFr: (item.reasoning_fr as string) ?? (item.rationale as string) ?? (item.verdict as string) ?? "",
           rationaleEn: (item.reasoning_en as string) ?? null,
           rationaleAr: (item.reasoning_ar as string) ?? null,
           dossierSectionRef: "score_matrix",
@@ -373,7 +393,7 @@ export function extractScenarios(parsed: ParsedSubstance): ScenarioRecord[] {
       matchConditions: {},
       specificity: 0,
       score: (scenario.score as number) ?? 0,
-      verdict: (scenario.verdict as string) ?? "UNKNOWN",
+      verdict: normalizeVerdict((scenario.verdict as string) ?? "unknown"),
       rationaleFr: (scenario.rationale as string) ?? (scenario.reasoning_fr as string) ?? "",
       rationaleEn: (scenario.rationale_en as string) ?? (scenario.reasoning_en as string) ?? null,
       rationaleAr: (scenario.rationale_ar as string) ?? (scenario.reasoning_ar as string) ?? null,
