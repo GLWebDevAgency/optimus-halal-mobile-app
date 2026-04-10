@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { eq, ilike, desc, sql, and } from "drizzle-orm";
-import { router, protectedProcedure, adminProcedure } from "../trpc.js";
+import { router, publicProcedure, protectedProcedure, adminProcedure } from "../trpc.js";
 import { featureFlags, flagUserOverrides, flagAuditHistory, users } from "../../db/schema/index.js";
 import {
   resolveUserFlags,
@@ -69,7 +69,27 @@ function diffChanges(
 // ── Router ────────────────────────────────────────────────
 
 export const featureFlagsRouter = router({
-  // ── Public: get resolved flags for authenticated user ───
+  // ── Public: get global flags for guests (no auth required) ───
+  getGlobal: publicProcedure
+    .input(
+      z.object({
+        platform: z.string().max(20).optional(),
+        appVersion: z.string().max(20).optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const guestCtx = {
+        tier: "free" as const,
+        madhab: null,
+        platform: input.platform ?? null,
+        appVersion: input.appVersion ?? null,
+      };
+
+      // Use a synthetic guest ID for cache key differentiation
+      return resolveUserFlags(ctx.db, "__guest__", guestCtx);
+    }),
+
+  // ── Protected: get resolved flags for authenticated user ───
   getForUser: protectedProcedure
     .input(
       z.object({
