@@ -32,3 +32,6 @@ export { AlgorithmicTraceCard } from "./AlgorithmicTraceCard";
 // ── Bottom Sheets ──
 export { SubstanceDetailSheet } from "./SubstanceDetailSheet";
 export { CertifierDetailSheet } from "./CertifierDetailSheet";
+
+// ── Screen ──
+export { ScanResultScreenV2 } from "./ScanResultScreenV2";
