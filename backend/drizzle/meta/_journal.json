@@ -260,6 +260,48 @@
       "when": 1775390939820,
       "tag": "0036_product_recalls_full_data",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1775477339820,
+      "tag": "0037_halal_v2_substances",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1775563739820,
+      "tag": "0038_halal_v2_practices",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1775650139820,
+      "tag": "0039_halal_v2_certifier_tuples",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1775736539820,
+      "tag": "0040_halal_v2_evaluations",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1775822939820,
+      "tag": "0041_halal_v2_naqiy_watch",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1775909339820,
+      "tag": "0042_products_v2_engine_cols",
+      "breakpoints": true
     }
   ]
 }
