@@ -1,0 +1,237 @@
+{
+  "practice_family": "stunning",
+  "source_dossier": {
+    "dossier_id": "PRAC-001",
+    "version": "1.0.0"
+  },
+  "tuples": [
+    {
+      "id": "CATTLE_NOSTUN_MANUAL",
+      "dimensions": {
+        "species": "cattle",
+        "method": "no_stun",
+        "operator": "muslim",
+        "tasmiya": "per_animal"
+      },
+      "verdicts": { "hanafi": 98, "maliki": 98, "shafii": 98, "hanbali": 98 },
+      "required_evidence": [],
+      "dossier_section_ref": "STUNNED_V1 §6 row 1 (sans étourdissement certifié)",
+      "fatwa_refs": ["IIFA-95-1997", "LAJNAH-DAIMAH"],
+      "notes_fr": "Abattage manuel traditionnel — gold standard unanime",
+      "is_active": true
+    },
+    {
+      "id": "CATTLE_ESTUN_HEAD_ONLY_REV",
+      "dimensions": {
+        "species": "cattle",
+        "method": "electric_head_only",
+        "reversibility": "reversible",
+        "params": "IIFA_standard_100_400V_2_2.5A_3_6s"
+      },
+      "verdicts": { "hanafi": 72, "maliki": 75, "shafii": 78, "hanbali": 70 },
+      "required_evidence": ["mortality_rate_published", "wake_tests_performed"],
+      "dossier_section_ref": "STUNNED_V1 §6 row 2 + DAR_IFTAA_EGYPT_12912",
+      "fatwa_refs": ["DAR-IFTAA-EGYPT-12912", "IIFA-95-1997", "MUI-FATWA"],
+      "typical_mortality_pct_min": 0,
+      "typical_mortality_pct_max": 5,
+      "notes_fr": "Réversible par conception — paramètres IIFA obligatoires. Vérification individuelle de la survie requise.",
+      "is_active": true
+    },
+    {
+      "id": "CATTLE_CAPTIVE_BOLT_PENETRATING",
+      "dimensions": {
+        "species": "cattle",
+        "method": "captive_bolt_penetrating"
+      },
+      "verdicts": { "hanafi": 0, "maliki": 0, "shafii": 0, "hanbali": 0 },
+      "required_evidence": [],
+      "dossier_section_ref": "STUNNED_V1 §6 row 9 (tige captive pénétrante)",
+      "fatwa_refs": ["IIFA-95-1997", "DAR-IFTAA-EGYPT-12912"],
+      "typical_mortality_pct_min": 84,
+      "typical_mortality_pct_max": 98,
+      "notes_fr": "Destruction cérébrale — unanimement haram par toutes les institutions.",
+      "is_active": true
+    },
+    {
+      "id": "CATTLE_CAPTIVE_BOLT_NONPENETRATING",
+      "dimensions": {
+        "species": "cattle",
+        "method": "captive_bolt_nonpenetrating"
+      },
+      "verdicts": { "hanafi": 62, "maliki": 65, "shafii": 68, "hanbali": 60 },
+      "required_evidence": ["mortality_rate_published"],
+      "dossier_section_ref": "STUNNED_V1 §3.1 IIFA permet non-pénétrant",
+      "fatwa_refs": ["IIFA-95-1997"],
+      "notes_fr": "Non pénétrant — permis par IIFA sous conditions. Plus strictement regardé par Deobandis.",
+      "is_active": true
+    },
+    {
+      "id": "SHEEP_NOSTUN_MANUAL",
+      "dimensions": {
+        "species": "sheep",
+        "method": "no_stun",
+        "operator": "muslim"
+      },
+      "verdicts": { "hanafi": 98, "maliki": 98, "shafii": 98, "hanbali": 98 },
+      "required_evidence": [],
+      "dossier_section_ref": "STUNNED_V1 §6 row 1",
+      "fatwa_refs": ["UNANIMOUS"],
+      "is_active": true
+    },
+    {
+      "id": "SHEEP_ESTUN_HEAD_ONLY_REV",
+      "dimensions": {
+        "species": "sheep",
+        "method": "electric_head_only",
+        "reversibility": "reversible",
+        "params": "IIFA_standard_100_400V_0.75_1A_3_6s"
+      },
+      "verdicts": { "hanafi": 72, "maliki": 75, "shafii": 78, "hanbali": 70 },
+      "required_evidence": ["mortality_rate_published", "wake_tests_performed"],
+      "dossier_section_ref": "STUNNED_V1 §6 row 2 + DAR_IFTAA_EGYPT_12912",
+      "fatwa_refs": ["DAR-IFTAA-EGYPT-12912", "IIFA-95-1997"],
+      "typical_mortality_pct_min": 0,
+      "typical_mortality_pct_max": 5,
+      "is_active": true
+    },
+    {
+      "id": "SHEEP_ESTUN_HEAD_TO_BODY",
+      "dimensions": {
+        "species": "sheep",
+        "method": "electric_head_to_body",
+        "reversibility": "nonreversible"
+      },
+      "verdicts": { "hanafi": 2, "maliki": 2, "shafii": 2, "hanbali": 2 },
+      "required_evidence": [],
+      "dossier_section_ref": "STUNNED_V1 §6 row 6 (tête-corps standard EU)",
+      "fatwa_refs": ["IIFA-95-1997", "UNANIMOUS"],
+      "typical_mortality_pct_min": 90,
+      "typical_mortality_pct_max": 99,
+      "notes_fr": "Arrêt cardiaque par fibrillation ventriculaire — méthode conçue pour tuer. Unanimement haram.",
+      "is_active": true
+    },
+    {
+      "id": "POULTRY_NOSTUN_MANUAL",
+      "dimensions": {
+        "species": "poultry",
+        "method": "no_stun",
+        "operator": "muslim",
+        "tasmiya": "per_animal"
+      },
+      "verdicts": { "hanafi": 98, "maliki": 98, "shafii": 98, "hanbali": 98 },
+      "required_evidence": [],
+      "dossier_section_ref": "STUNNED_V1 §6 row 1 + MECH_V2 §7 hand slaughter",
+      "fatwa_refs": ["UNANIMOUS"],
+      "is_active": true
+    },
+    {
+      "id": "POULTRY_SEMIAUTO_MUSLIM_CUTTERS",
+      "dimensions": {
+        "species": "poultry",
+        "method": "semi_auto_muslim_cutters",
+        "operator": "muslim",
+        "tasmiya": "per_animal",
+        "backup_slaughtermen": true
+      },
+      "verdicts": { "hanafi": 90, "maliki": 92, "shafii": 95, "hanbali": 92 },
+      "required_evidence": ["fulltime_muslim_inspector"],
+      "dossier_section_ref": "MECH_V2 §7 semi-automatisé",
+      "fatwa_refs": ["MUI", "JAKIM", "IIFA-95-1997"],
+      "notes_fr": "Satisfait toutes les positions savantes — consensus contemporain.",
+      "is_active": true
+    },
+    {
+      "id": "POULTRY_WATERBATH_STANDARD",
+      "dimensions": {
+        "species": "poultry",
+        "method": "electric_waterbath",
+        "variant": "standard_industry",
+        "params": "high_voltage"
+      },
+      "verdicts": { "hanafi": 5, "maliki": 5, "shafii": 15, "hanbali": 3 },
+      "required_evidence": [],
+      "dossier_section_ref": "STUNNED_V1 §6 row 9 (bain d'eau standard industriel)",
+      "fatwa_refs": ["IIFA-95-1997", "LAJNAH-DAIMAH", "DAR-IFTAA-EGYPT", "ECFR", "HMC"],
+      "typical_mortality_pct_min": 10,
+      "typical_mortality_pct_max": 30,
+      "notes_fr": "Taux mortalité pré-abattage 10-30% (études EFSA). Haram majoritaire — contredit la condition de vie au moment de l'abattage.",
+      "is_active": true
+    },
+    {
+      "id": "POULTRY_WATERBATH_REDUCED_VERIFIED",
+      "dimensions": {
+        "species": "poultry",
+        "method": "electric_waterbath",
+        "variant": "reduced_params_verified",
+        "wake_tests": true,
+        "backup_slaughtermen": true
+      },
+      "verdicts": { "hanafi": 30, "maliki": 40, "shafii": 45, "hanbali": 30 },
+      "required_evidence": ["mortality_rate_published", "wake_tests_performed", "fulltime_muslim_inspector"],
+      "dossier_section_ref": "STUNNED_V1 §7 (note ARGML) + DAR_IFTAA_EGYPT_12912 (conditions techniques)",
+      "fatwa_refs": ["DAR-IFTAA-EGYPT-12912", "IIFA-95-1997-conditional"],
+      "typical_mortality_pct_min": 1,
+      "typical_mortality_pct_max": 10,
+      "notes_fr": "Position permissive minoritaire si protocole vérifié. La position majoritaire reste haram pour volaille. ARGML opère dans cette case.",
+      "is_active": true
+    },
+    {
+      "id": "POULTRY_CO2_HIGH",
+      "dimensions": {
+        "species": "poultry",
+        "method": "co2",
+        "concentration_pct_min": 70
+      },
+      "verdicts": { "hanafi": 2, "maliki": 2, "shafii": 5, "hanbali": 2 },
+      "required_evidence": [],
+      "dossier_section_ref": "STUNNED_V1 §6 row 11",
+      "fatwa_refs": ["UNANIMOUS"],
+      "notes_fr": "Létal par asphyxie (>70%) — munkhaniqah, unanimement haram.",
+      "is_active": true
+    },
+    {
+      "id": "POULTRY_CO2_LOW",
+      "dimensions": {
+        "species": "poultry",
+        "method": "co2",
+        "concentration_pct_max": 55
+      },
+      "verdicts": { "hanafi": 35, "maliki": 40, "shafii": 45, "hanbali": 30 },
+      "required_evidence": ["mortality_rate_published"],
+      "dossier_section_ref": "STUNNED_V1 §6 row 10 + MUI position",
+      "fatwa_refs": ["MUI", "IIFA-95-1997-conditional"],
+      "notes_fr": "Faible concentration — disputé. Minorité permissive.",
+      "is_active": true
+    },
+    {
+      "id": "MECH_SLAUGHTER_FULL_CERTIFIED_MUSLIM_OPERATOR",
+      "dimensions": {
+        "species": "poultry",
+        "method": "mechanical_full",
+        "tasmiya": "at_startup",
+        "operator": "muslim",
+        "certified_halal_body": true
+      },
+      "verdicts": { "hanafi": 45, "maliki": 65, "shafii": 78, "hanbali": 60 },
+      "required_evidence": ["fulltime_muslim_inspector", "protocol_published"],
+      "dossier_section_ref": "MECH_V2 §7 mécanique complet certifié",
+      "fatwa_refs": ["MUI", "JAKIM", "IIFA-95-1997"],
+      "notes_fr": "Débat central : Deobandi rejette (seul le 1er poulet halal), IIFA/MUI acceptent (opération continue = un acte). Shafi'i significativement plus permissif car tasmiya est sunna.",
+      "is_active": true
+    },
+    {
+      "id": "MECH_SLAUGHTER_RECORDED_BISMILLAH",
+      "dimensions": {
+        "species": "poultry",
+        "method": "mechanical_full",
+        "tasmiya": "recorded"
+      },
+      "verdicts": { "hanafi": 5, "maliki": 5, "shafii": 15, "hanbali": 3 },
+      "required_evidence": [],
+      "dossier_section_ref": "MECH_V2 §7 bismillah enregistré",
+      "fatwa_refs": ["UNANIMOUS-REJECTED"],
+      "notes_fr": "Unanimement rejeté — invocation enregistrée n'est pas une tasmiya valide.",
+      "is_active": true
+    }
+  ]
+}
