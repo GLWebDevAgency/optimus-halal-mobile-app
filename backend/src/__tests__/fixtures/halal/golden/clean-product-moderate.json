@@ -1,0 +1,13 @@
+{
+  "description": "Produit sans substance détectée",
+  "product": {
+    "barcode": "test-002", "category": "bread", "usage": "ingestion",
+    "substancesDetected": []
+  },
+  "context": { "madhab": "general", "strictness": "moderate", "lang": "fr" },
+  "expected": {
+    "verdict": "halal",
+    "tier": "analyzed_clean",
+    "signalCount": 0
+  }
+}

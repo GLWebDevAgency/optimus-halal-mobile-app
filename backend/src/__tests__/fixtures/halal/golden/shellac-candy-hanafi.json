@@ -1,0 +1,16 @@
+{
+  "description": "Bonbon avec shellac E904, user hanafi moderate",
+  "product": {
+    "barcode": "test-001", "category": "candy", "usage": "ingestion",
+    "substancesDetected": [
+      { "substance_id": "SHELLAC", "matched_term": "gomme-laque", "match_source": "canonical_fr", "confidence": 0.95 }
+    ]
+  },
+  "context": { "madhab": "hanafi", "strictness": "moderate", "lang": "fr" },
+  "expected": {
+    "verdict": "mashbooh",
+    "scoreRange": [30, 50],
+    "signalCount": 1,
+    "madhabDivergence": true
+  }
+}
