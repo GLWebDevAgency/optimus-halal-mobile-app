@@ -136,7 +136,7 @@ const CACHE_TTL = 7 * 24 * 3600; // 7 days
 const CACHE_PREFIX = "ai:extract:v3:";
 
 function cacheKey(text: string): string {
-  const hash = crypto.createHash("sha256").update(text).digest("hex").slice(0, 16);
+  const hash = crypto.createHash("sha256").update(text).digest("hex");
   return `${CACHE_PREFIX}${hash}`;
 }
 
@@ -194,10 +194,17 @@ export function cleanResult(raw: ExtractionResult): ExtractionResult {
  * Extract structured ingredients from raw text using the configured AI provider.
  * Returns null if AI is unavailable — caller falls back to regex.
  */
+const MAX_INPUT_BYTES = 8_000;
+
 export async function aiExtractIngredients(
   ingredientsText: string,
 ): Promise<ExtractionResult | null> {
   if (!ingredientsText || ingredientsText.trim().length < 5) return null;
+
+  if (Buffer.byteLength(ingredientsText, "utf8") > MAX_INPUT_BYTES) {
+    logger.warn("AI extraction input truncated", { bytes: Buffer.byteLength(ingredientsText, "utf8") });
+    ingredientsText = ingredientsText.slice(0, MAX_INPUT_BYTES);
+  }
 
   // L2 cache check
   const cached = await getCached(ingredientsText);
@@ -309,6 +316,11 @@ export async function aiExtractIngredientsV2(
   ingredientsText: string,
   productHint?: { name?: string; brand?: string; categories?: string[] },
 ): Promise<{ result: GeminiSemanticResult | ExtractionResult | null; source: "v1" | "v2" }> {
+  if (Buffer.byteLength(ingredientsText, "utf8") > MAX_INPUT_BYTES) {
+    logger.warn("V2 AI extraction input truncated", { bytes: Buffer.byteLength(ingredientsText, "utf8") });
+    ingredientsText = ingredientsText.slice(0, MAX_INPUT_BYTES);
+  }
+
   const mode = await resolveGeminiV2Flag();
 
   if (mode === "off") {

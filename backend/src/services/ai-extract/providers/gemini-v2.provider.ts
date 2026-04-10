@@ -29,10 +29,15 @@ export class GeminiV2Provider {
   async extract(
     ingredientsText: string,
     vocabularyBlock: string,
-    _vocabularySignature: string,
+    vocabularySignature: string,
   ): Promise<GeminiSemanticResult> {
     const systemPrompt = buildV2SystemPrompt(vocabularyBlock);
     const userContent = wrapUserText(ingredientsText);
+
+    logger.debug("Gemini V2 extraction starting", {
+      vocabSignature: vocabularySignature.slice(0, 12),
+      inputLength: ingredientsText.length,
+    });
 
     const model = this.client.getGenerativeModel({
       model: this.modelId,
@@ -48,7 +53,12 @@ export class GeminiV2Provider {
     });
 
     const result = await model.generateContent(userContent);
-    const raw = JSON.parse(result.response.text()) as GeminiSemanticResult;
+    let raw: GeminiSemanticResult;
+    try {
+      raw = JSON.parse(result.response.text()) as GeminiSemanticResult;
+    } catch {
+      throw new Error(`Gemini V2 non-JSON response: ${result.response.text().slice(0, 300)}`);
+    }
 
     // Post-output validation (C6 security guards)
     const validated = validateSemanticResult(raw, ingredientsText);

@@ -66,13 +66,28 @@ let _cached: {
   entries: VocabularyEntry[];
 } | null = null;
 
+let _loadingPromise: Promise<{
+  block: string;
+  signature: string;
+  entries: VocabularyEntry[];
+}> | null = null;
+
 export async function loadVocabularyFromDB(): Promise<{
   block: string;
   signature: string;
   entries: VocabularyEntry[];
 }> {
   if (_cached) return _cached;
+  if (_loadingPromise) return _loadingPromise;
+  _loadingPromise = _doLoad().finally(() => { _loadingPromise = null; });
+  return _loadingPromise;
+}
 
+async function _doLoad(): Promise<{
+  block: string;
+  signature: string;
+  entries: VocabularyEntry[];
+}> {
   // Load all active substances with their match patterns
   const activeSubstances = await db
     .select()

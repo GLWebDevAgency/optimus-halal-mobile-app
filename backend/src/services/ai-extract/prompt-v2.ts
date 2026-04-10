@@ -115,5 +115,8 @@ export const EXTRACTION_V2_JSON_SCHEMA = {
  * MUST be used before sending to Gemini.
  */
 export function wrapUserText(text: string): string {
-  return `<<<USER_TEXT>>>\n${text}\n<<<END_USER_TEXT>>>`;
+  const sanitized = text
+    .replace(/<<<USER_TEXT>>>/g, "<<USER_TEXT>>")
+    .replace(/<<<END_USER_TEXT>>>/g, "<<END_USER_TEXT>>");
+  return `<<<USER_TEXT>>>\n${sanitized}\n<<<END_USER_TEXT>>>`;
 }

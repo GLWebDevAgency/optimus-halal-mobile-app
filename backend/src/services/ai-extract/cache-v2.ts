@@ -13,7 +13,7 @@ export function buildCacheKeyV2(
   vocabularyHash: string,
 ): string {
   const payload = `${text}|${categoryHint}|${promptVersion}|${vocabularyHash}`;
-  const hash = crypto.createHash("sha256").update(payload).digest("hex").slice(0, 16);
+  const hash = crypto.createHash("sha256").update(payload).digest("hex");
   return `${CACHE_PREFIX}${hash}`;
 }
 
