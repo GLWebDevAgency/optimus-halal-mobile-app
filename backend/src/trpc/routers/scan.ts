@@ -1303,16 +1303,16 @@ export const scanRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // Feature flag gate: halal_engine_v2 must be "on"
+      // Feature flag gate: halalEngineV2Enabled must be enabled
       const [flagRow] = await ctx.db
         .select({ enabled: featureFlagsTable.enabled, defaultValue: featureFlagsTable.defaultValue })
         .from(featureFlagsTable)
-        .where(eq(featureFlagsTable.key, "halal_engine_v2"))
+        .where(eq(featureFlagsTable.key, "halalEngineV2Enabled"))
         .limit(1);
 
-      const flagEnabled = flagRow?.enabled && flagRow?.defaultValue === "on";
+      const flagEnabled = flagRow?.enabled === true;
       if (!flagEnabled) {
-        throw new Error("halal_engine_v2 feature flag is not enabled");
+        throw new Error("halalEngineV2Enabled feature flag is not enabled");
       }
 
       // Fetch user profile
